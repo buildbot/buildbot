@@ -67,9 +67,9 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
                     }
         self.expectCommands(
             Expect('downloadFile', args1)
-            + 0,
+            .add(0),
             Expect('downloadFile', args2)
-            + 0,
+            .add(0),
             )
 
         self.expectOutcome(
@@ -110,9 +110,9 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
                     }
         self.expectCommands(
             Expect('rmdir', args1)
-            + 0,
+            .add(0),
             Expect('rmdir', args2)
-            + 0,
+            .add(0),
             )
 
         self.expectOutcome(
@@ -150,9 +150,9 @@ class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
                     }
         self.expectCommands(
             Expect('rmfile', args1)
-            + 0,
+            .add(0),
             Expect('rmfile', args2)
-            + 0,
+            .add(0),
             )
 
         self.expectOutcome(

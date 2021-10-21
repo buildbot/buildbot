@@ -41,8 +41,8 @@ class TestDebLintian(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(lintian.DebLintian('foo_0.23_i386.changes'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['lintian', '-v', 'foo_0.23_i386.changes']) +
-            0)
+                        command=['lintian', '-v', 'foo_0.23_i386.changes'])
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string="Lintian")
         return self.runStep()
 
@@ -52,7 +52,7 @@ class TestDebLintian(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['lintian', '-v', 'foo_0.23_i386.changes',
-                                 '--suppress-tags', 'bad-distribution-in-changes-file']) +
-            0)
+                                 '--suppress-tags', 'bad-distribution-in-changes-file'])
+            .add(0))
         self.expectOutcome(result=SUCCESS)
         return self.runStep()

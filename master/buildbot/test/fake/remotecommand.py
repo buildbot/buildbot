@@ -200,8 +200,7 @@ class Expect:
         Expect('somecommand', { args='foo' })
             + Expect.log('stdio', stdout='foo!')
             + Expect.log('config.log', stdout='some info')
-            + Expect.update('status', 'running')
-            + 0,      # (specifies the rc)
+            + Expect.update('status', 'running').add(0), # (specifies the rc)
         ...
 
     """
@@ -234,7 +233,7 @@ class Expect:
     def update(self, name, value):
         return ('update', name, value)
 
-    def __add__(self, other):
+    def add(self, other):
         # special-case adding an integer (return code) or failure (error)
         if isinstance(other, int):
             self.behaviors.append(('rc', other))

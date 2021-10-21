@@ -145,7 +145,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 1,
+            .add(1)
         )
         self.expectException(WorkerSetupError)
         return self.runStep()
@@ -155,29 +155,29 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_corrupt)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml_corrupt))
+            .add(0)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -189,29 +189,29 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml_nonintegerrevision)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml_nonintegerrevision))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'a10', 'SVN')
@@ -230,29 +230,29 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=svn_info_stdout)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=svn_info_stdout))
+            .add(0)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -265,31 +265,31 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -305,34 +305,34 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -345,29 +345,29 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout="""<?xml version="1.0"?><url>http://svn.local/trunk</url>""")
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout="""<?xml version="1.0"?>""" +
+                                 """<url>http://svn.local/trunk</url>"""))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -380,30 +380,29 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log(
+            .add(ExpectShell.log(
                 'stdio',
-                stdout='<?xml version="1.0"?><url>http://svn.local/trunk/test%20app</url>')
-            + 0,
+                stdout='<?xml version="1.0"?><url>http://svn.local/trunk/test%20app</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -416,24 +415,23 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -446,30 +444,29 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -482,32 +479,31 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log(
+            .add(ExpectShell.log(
                 'stdio',  # expecting ../trunk/app
-                stdout='<?xml version="1.0"?><url>http://svn.local/branch/foo/app</url>')
-            + 0,
+                stdout='<?xml version="1.0"?><url>http://svn.local/branch/foo/app</url>'))
+            .add(0),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -522,29 +518,29 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -559,31 +555,31 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file=r'wkdir\.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file=r'wkdir\.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -598,31 +594,31 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '90', 'SVN')
@@ -641,31 +637,31 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=svn_info_stdout)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=svn_info_stdout))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -678,24 +674,23 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir',
                              'logEnviron': True,
                              'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout',
                                  'http://svn.local/app/trunk', '.',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -710,25 +705,24 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir',
                              'logEnviron': True,
                              'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout',
                                  'http://svn.local/app/trunk', '.',
                                  '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -741,37 +735,37 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--depth', 'infinite'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml', '--no-ignore',
                                  '--non-interactive', '--no-auth-cache',
                                  '--depth', 'infinite'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_empty)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml_empty))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache', '--depth', 'infinite'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + ExpectShell.log('stdio', stdout='\n')
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(ExpectShell.log('stdio', stdout='\n'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -784,36 +778,36 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + ExpectShell.log('stdio', stdout='\n')
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(ExpectShell.log('stdio', stdout='\n'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -828,37 +822,37 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--depth', 'infinite'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml', '--no-ignore',
                                  '--non-interactive', '--no-auth-cache',
                                  '--depth', 'infinite'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_empty)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml_empty))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache', '--depth', 'infinite'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + ExpectShell.log('stdio', stdout='\n')
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(ExpectShell.log('stdio', stdout='\n'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -873,40 +867,40 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml', '--no-ignore',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml))
+            .add(0),
             Expect('rmdir', {'dir':
                              ['wkdir/svn_external_path/unversioned_file2_uniçode'],
                              'logEnviron': True,
                              'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -919,35 +913,35 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_empty)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml_empty))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -962,35 +956,35 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_empty)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml_empty))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1003,23 +997,23 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1034,24 +1028,24 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1065,45 +1059,45 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml))
+            .add(0),
             Expect('rmdir', {'dir':
                              'wkdir/svn_external_path/unversioned_file1',
                              'logEnviron': True,
                              'timeout': 1200})
-            + 0,
+            .add(0),
             Expect('rmdir', {'dir':
                              'wkdir/svn_external_path/unversioned_file2_uniçode',
                              'logEnviron': True,
                              'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1118,41 +1112,41 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml))
+            .add(0),
             Expect('rmdir', {'dir':
                              ['wkdir/svn_external_path/unversioned_file1',
                               'wkdir/svn_external_path/unversioned_file2_uniçode'],
                              'logEnviron': True,
                              'timeout': 1200})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1166,37 +1160,37 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('stat', dict(file='source/app/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source/app',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='source/app',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             Expect('cpdir', {'fromdir': 'source/app',
                              'todir': 'wkdir',
                              'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', {'app': '100'}, 'SVN')
@@ -1211,37 +1205,37 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             Expect('cpdir', {'fromdir': 'source',
                              'todir': 'wkdir',
                              'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1254,36 +1248,36 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1297,67 +1291,66 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml))
+            .add(0),
             Expect('rmdir', dict(dir=['wkdir/svn_external_path/unversioned_file1',
                                       'wkdir/svn_external_path/unversioned_file2_uniçode'],
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
-            + 0,
+            .add(0),
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
-            + 0,
+            .add(0),
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
-            + 0,
+            .add(0),
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
                                  logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1372,67 +1365,66 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml))
+            .add(0),
             Expect('rmdir', dict(dir=['wkdir/svn_external_path/unversioned_file1',
                                       'wkdir/svn_external_path/unversioned_file2_uniçode'],
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
-            + 0,
+            .add(0),
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
-            + 0,
+            .add(0),
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
-            + 0,
+            .add(0),
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
                                  logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1447,40 +1439,40 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1))
-            + 0,
+            .add(0),
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         timeout=1,
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='source',
                         timeout=1,
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='',
                         timeout=1,
                         command=['svn', 'export', 'source', 'wkdir'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         timeout=1,
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1495,37 +1487,37 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='',
                         command=['svn', 'export', '--revision', '100',
                                  'source', 'wkdir'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1539,43 +1531,43 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache',
                                  '--username', 'svn_username',
                                  '--password', ('obfuscated', 'svn_password', 'XXXXXX')])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache',
                                  '--username', 'svn_username',
                                  '--password', ('obfuscated', 'svn_password', 'XXXXXX')])
-            + 0,
+            .add(0),
             ExpectShell(workdir='',
                         command=['svn', 'export',
                                  '--username', 'svn_username',
                                  '--password', ('obfuscated', 'svn_password', 'XXXXXX'), 'source',
                                  'wkdir'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1591,34 +1583,34 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'],
                         env={'abc': '123'})
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         env={'abc': '123'})
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         env={'abc': '123'})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'],
                         env={'abc': '123'})
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1634,34 +1626,34 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'],
                         logEnviron=False)
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=False))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=False))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         logEnviron=False)
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         logEnviron=False)
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'],
                         logEnviron=False)
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
@@ -1675,26 +1667,27 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 1,
+            .add(1)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -1707,35 +1700,34 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            +
+            .add(
             ExpectShell.log(
                 'stdio', stdout='<?xml version="1.0"?>'
                                 '<entry kind="dir" path="/a/b/c" revision="1">'
                                 '<url>http://svn.local/app/trunk</url>'
-                                '</entry>')
-            + 0,
+                                '</entry>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout='1x0y0')
-            + 0,
+            .add(ExpectShell.log('stdio', stdout='1x0y0'))
+            .add(0)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -1747,14 +1739,14 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', {'dir': 'wkdir',
                              'logEnviron': True,
                              'timeout': 1200})
-            + 1,
+            .add(1)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -1766,14 +1758,14 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
-            + 1,
+            .add(1)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -1785,32 +1777,33 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
-            + 0,
+            .add(0),
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .add(0),
             Expect('cpdir', {'fromdir': 'source',
                              'todir': 'wkdir',
                              'logEnviron': True})
-            + 1,
+            .add(1)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -1824,32 +1817,32 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml', '--no-ignore',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_st_xml))
+            .add(0),
             Expect('rmdir', {'dir':
                              ['wkdir/svn_external_path/unversioned_file2_uniçode'],
                              'logEnviron': True,
                              'timeout': 1200})
-            + 1,
+            .add(1)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -1862,7 +1855,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + ('err', error.ConnectionLost()),
+            .add(('err', error.ConnectionLost()))
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()
@@ -1875,31 +1868,31 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', '', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', '', 'XXXXXX'), '--random'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -1912,31 +1905,31 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .add(ExpectShell.log('stdio',
+                                 stdout='<?xml version="1.0"?>'
+                                 '<url>http://svn.local/app/trunk</url>'))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--random'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .add(ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()

@@ -33,35 +33,33 @@ class TestGitHub(test_source_git.TestGit):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
-            + ExpectShell.log('stdio',
-                              stdout='git version 1.7.5')
-            + 0,
+            .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('listdir', {'dir': 'wkdir'})
-            + Expect.update('files', ['.git'])
-            + 0,
+            .add(Expect.update('files', ['.git']))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
-            + 0,
+            .add(0),
             # here we always ignore revision, and fetch the merge branch
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'refs/pull/1234/merge', '--progress'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/pull/1234/merge'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
-            + ExpectShell.log('stdio',
-                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
-            + 0,
+            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -77,34 +75,32 @@ class TestGitHub(test_source_git.TestGit):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
-            + ExpectShell.log('stdio',
-                              stdout='git version 1.7.5')
-            + 0,
+            .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
+            .add(0),
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
-            + 1,
+            .add(1),
             Expect('listdir', {'dir': 'wkdir'})
-            + Expect.update('files', ['.git'])
-            + 0,
+            .add(Expect.update('files', ['.git']))
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
-            + 0,
+            .add(0),
             # in the case of the head, we try to find if the head is already present
             # and reset to that without fetching
             ExpectShell(workdir='wkdir',
                         command=['git', 'cat-file', '-e', '12345678'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', '12345678'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/pull/1234/head'])
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
-            + ExpectShell.log('stdio',
-                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
-            + 0,
+            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(

@@ -48,13 +48,13 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
                                      'build/state.log'],
                              'logEnviron': False})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT'],
                         logfiles={'build.log': 'build.log',
                                   'root.log': 'root.log',
                                   'state.log': 'state.log'})
-            + 0)
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string="'mock --root ...'")
         return self.runStep()
 
@@ -65,14 +65,14 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                      'build/RESULT/root.log',
                                      'build/RESULT/state.log'],
                              'logEnviron': False})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--resultdir', 'RESULT'],
                         logfiles={'build.log': 'RESULT/build.log',
                                   'root.log': 'RESULT/root.log',
                                   'state.log': 'RESULT/state.log'})
-            + 0)
+            .add(0))
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
@@ -85,14 +85,14 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                      'build/RESULT/root.log',
                                      'build/RESULT/state.log'],
                              'logEnviron': False})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--resultdir', 'RESULT'],
                         logfiles={'build.log': 'RESULT/build.log',
                                   'root.log': 'RESULT/root.log',
                                   'state.log': 'RESULT/state.log'})
-            + 0)
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string="'mock --root ...'")
         return self.runStep()
 
@@ -117,7 +117,7 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
             Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
                                      'build/state.log'],
                              'logEnviron': False})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--buildsrpm', '--spec', 'foo.spec',
@@ -125,7 +125,7 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
                         logfiles={'build.log': 'build.log',
                                   'root.log': 'root.log',
                                   'state.log': 'state.log'},)
-            + 0)
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string='mock buildsrpm')
         return self.runStep()
 
@@ -150,13 +150,13 @@ class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
             Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
                                      'build/state.log'],
                              'logEnviron': False})
-            + 0,
+            .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--rebuild', 'foo.src.rpm'],
                         logfiles={'build.log': 'build.log',
                                   'root.log': 'root.log',
                                   'state.log': 'state.log'},)
-            + 0)
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string='mock rebuild srpm')
         return self.runStep()

@@ -80,7 +80,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
             shellsequence.ShellSequence(commands=[arg1],
                                         workdir='build'))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
-        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST') + 0)
+        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST').add(0))
         # TODO: need to factor command-summary stuff into a utility method and
         # use it here
         self.expectOutcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
@@ -115,8 +115,8 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
-        self.expectCommands(ExpectShell(workdir='build', command='make p1') + 0,
-                            ExpectShell(workdir='build', command='deploy p1') + 0)
+        self.expectCommands(ExpectShell(workdir='build', command='make p1').add(0),
+                            ExpectShell(workdir='build', command='deploy p1').add(0))
         self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
         return self.runStep()
 
@@ -127,8 +127,8 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2, arg3],
                                         workdir='build'))
-        self.expectCommands(ExpectShell(workdir='build', command='make p1') + 0,
-                            ExpectShell(workdir='build', command='deploy p1') + 0)
+        self.expectCommands(ExpectShell(workdir='build', command='make p1').add(0),
+                            ExpectShell(workdir='build', command='deploy p1').add(0))
         self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
         return self.runStep()
 
@@ -140,8 +140,8 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
-        self.expectCommands(ExpectShell(workdir='build', command='make p1') + 1,
-                            ExpectShell(workdir='build', command='deploy p1') + 0)
+        self.expectCommands(ExpectShell(workdir='build', command='make p1').add(1),
+                            ExpectShell(workdir='build', command='deploy p1').add(0))
         self.expectOutcome(result=WARNINGS, state_string="'deploy p1' (warnings)")
         return self.runStep()
 
@@ -152,7 +152,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
-        self.expectCommands(ExpectShell(workdir='build', command='make p1') + 1)
+        self.expectCommands(ExpectShell(workdir='build', command='make p1').add(1))
         self.expectOutcome(result=FAILURE, state_string="'make p1' (failure)")
         return self.runStep()
 
@@ -168,7 +168,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         # First "build"
         self.setupStep(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-1", "TEST")
-        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1') + 0)
+        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').add(0))
         self.expectOutcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-1'")
         self.runStep()
@@ -176,7 +176,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         # Second "build"
         self.setupStep(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-2", "TEST")
-        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2') + 0)
+        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2').add(0))
         self.expectOutcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-2'")
 

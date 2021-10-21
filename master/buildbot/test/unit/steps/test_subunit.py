@@ -68,7 +68,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="test")
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="shell no tests run")
@@ -80,7 +80,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="test")
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=FAILURE,
                            state_string="shell no tests run (failure)")
@@ -96,8 +96,8 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
-            + Expect.log('stdio', stdout=stream.getvalue())
-            + 0
+            .add(Expect.log('stdio', stdout=stream.getvalue()))
+            .add(0)
         )
 
         self.expectOutcome(result=SUCCESS, state_string="shell 1 test passed")
@@ -114,8 +114,8 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
-            + Expect.log('stdio', stdout=stream.getvalue())
-            + 0
+            .add(Expect.log('stdio', stdout=stream.getvalue()))
+            .add(0)
         )
 
         self.expectOutcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
@@ -139,8 +139,8 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
-            + Expect.log('stdio', stdout=stream.getvalue())
-            + 0
+            .add(Expect.log('stdio', stdout=stream.getvalue()))
+            .add(0)
         )
 
         self.expectOutcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
@@ -165,8 +165,8 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
-            + Expect.log('stdio', stdout=stream.getvalue())
-            + 0
+            .add(Expect.log('stdio', stdout=stream.getvalue()))
+            .add(0)
         )
 
         self.expectOutcome(result=SUCCESS,  # N.B. not WARNINGS

@@ -48,9 +48,8 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '`pwd`" --define "_sourcedir `pwd`" --define "_specdir '
                         '`pwd`" --define "_srcrpmdir `pwd`" --define "dist .el5" '
                         '-ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='lalala')
-            + 0)
+            .add(ExpectShell.log('stdio', stdout='lalala'))
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
         return self.runStep()
 
@@ -62,9 +61,8 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '--define "_sourcedir `pwd`" --define "_specdir `pwd`" '
                         '--define "_srcrpmdir `pwd`" --define "_release 0" '
                         '--define "dist .el6" -ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='Your code has been rated at 10/10')
-            + 0)
+            .add(ExpectShell.log('stdio', stdout='Your code has been rated at 10/10'))
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
         return self.runStep()
 
@@ -79,9 +77,8 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '"_specdir `pwd`" --define "_srcrpmdir `pwd`" '
                         '--define "a 1" --define "b 2" --define "dist .el6" '
                         '-ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='Your code has been rated at 10/10')
-            + 0)
+            .add(ExpectShell.log('stdio', stdout='Your code has been rated at 10/10'))
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
         return self.runStep()
 
@@ -93,9 +90,8 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '`pwd`" --define "_sourcedir `pwd`" --define '
                         '"_specdir `pwd`" --define "_srcrpmdir `pwd`" '
                         '--define "dist .el6" -ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='Your code has been rated at 10/10')
-            + 0)
+            .add(ExpectShell.log('stdio', stdout='Your code has been rated at 10/10'))
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
         return self.runStep()
 
@@ -110,8 +106,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '`pwd`" --define "_sourcedir `pwd`" --define "_specdir '
                         '`pwd`" --define "_srcrpmdir `pwd`" --define "dist .el7" '
                         '-ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='lalala')
-            + 0)
+            .add(ExpectShell.log('stdio', stdout='lalala'))
+            .add(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
         yield self.runStep()

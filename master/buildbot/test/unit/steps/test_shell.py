@@ -65,7 +65,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         self.setupStep(shell.ShellCommand(workdir='build', command="echo hello"))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello')
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="'echo hello'")
         return self.runStep()
@@ -76,7 +76,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'])
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="'trial -b ...'")
@@ -91,7 +91,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'])
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string='test done suff ix')
@@ -103,7 +103,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'])
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="'trial -b ...'")
@@ -115,7 +115,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'])
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="'trial -b ...'")
@@ -127,7 +127,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', 'buildbot.test'])
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="'trial -b ...'")
@@ -139,7 +139,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
                         env=dict(DEF='HERE'))
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -151,7 +151,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
                         env=dict(ABC='123', DEF='HERE'))
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -161,7 +161,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
                         usePTY=False)
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -172,7 +172,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
             worker_version=dict(shell='1.1'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello')
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -182,7 +182,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                                           decodeRC={1: WARNINGS}))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello')
-            + rc
+            .add(rc)
         )
         self.expectOutcome(
             result=results, state_string="'echo hello'" + extra_text)
@@ -215,8 +215,8 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            + ExpectShell.log('stdio', stdout='9292    .\n')
-            + 0
+            .add(ExpectShell.log('stdio', stdout='9292    .\n'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="treesize 9292 KiB")
@@ -228,8 +228,8 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            + ExpectShell.log('stdio', stdout='abcdef\n')
-            + 0
+            .add(ExpectShell.log('stdio', stdout='abcdef\n'))
+            .add(0)
         )
         self.expectOutcome(result=WARNINGS,
                            state_string="treesize unknown (warnings)")
@@ -240,8 +240,8 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            + ExpectShell.log('stdio', stderr='abcdef\n')
-            + 1
+            .add(ExpectShell.log('stdio', stderr='abcdef\n'))
+            .add(1)
         )
         self.expectOutcome(result=FAILURE,
                            state_string="treesize unknown (failure)")
@@ -268,8 +268,8 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
-            + 0
+            .add(ExpectShell.log('stdio', stdout='\n\nabcdef\n'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
@@ -284,8 +284,8 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
-            + 0
+            .add(ExpectShell.log('stdio', stdout='\n\nabcdef\n'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
@@ -298,8 +298,8 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
-            + 0
+            .add(ExpectShell.log('stdio', stdout='\n\nabcdef\n'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
@@ -313,8 +313,8 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="blarg")
-            + ExpectShell.log('stdio', stderr='cannot blarg: File not found')
-            + 1
+            .add(ExpectShell.log('stdio', stderr='cannot blarg: File not found'))
+            .add(1)
         )
         self.expectOutcome(result=FAILURE,
                            state_string="'blarg' (failure)")
@@ -331,10 +331,10 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout='start', stderr='START')
-            + ExpectShell.log('stdio', stdout='end')
-            + ExpectShell.log('stdio', stderr='END')
-            + 0
+            .add(ExpectShell.log('stdio', stdout='start', stderr='START'))
+            .add(ExpectShell.log('stdio', stdout='end'))
+            .add(ExpectShell.log('stdio', stderr='END'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="2 properties set")
@@ -352,7 +352,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + 3
+            .add(3)
         )
         # note that extract_fn *is* called anyway
         self.expectOutcome(result=FAILURE,
@@ -369,7 +369,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + 3
+            .add(3)
         )
         # note that extract_fn *is* called anyway, but returns no properties
         self.expectOutcome(result=FAILURE,
@@ -385,7 +385,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + 0
+            .add(0)
         )
         # note that extract_fn *is* called anyway, but returns no properties
         self.expectOutcome(result=EXCEPTION,
@@ -425,14 +425,14 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
                     Test Summary Report
                     Result: PASS
                     Tests: 10 Failed: 0
                     Tests: 10 Failed: 0
-                    Files=93, Tests=20"""))
-            + 0
+                    Files=93, Tests=20""")))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='20 tests 20 passed')
         return self.runStep()
@@ -443,7 +443,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
                     Test Summary Report
                     -------------------
@@ -452,8 +452,8 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     OHNOES 1
                     OHNOES 2
                     Files=93, Tests=20,  0 wallclock secs ...
-                    Result: PASS"""))
-            + 0
+                    Result: PASS""")))
+            .add(0)
         )
         self.expectOutcome(
             result=WARNINGS,
@@ -465,12 +465,12 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
-                    foo.pl .. 1/4"""))
-            + ExpectShell.log('stdio', stderr=textwrap.dedent("""\
+            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+                    foo.pl .. 1/4""")))
+            .add(ExpectShell.log('stdio', stderr=textwrap.dedent("""\
                     # Failed test 2 in foo.pl at line 6
-                    #  foo.pl line 6 is: ok(0);"""))
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+                    #  foo.pl line 6 is: ok(0);""")))
+            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     foo.pl .. Failed 1/4 subtests
 
                     Test Summary Report
@@ -479,10 +479,10 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                       Failed test:  0
                     Files=1, Tests=4,  0 wallclock secs ( 0.06 usr  0.01 sys +  0.03 cusr
                     0.01 csys =  0.11 CPU)
-                    Result: FAIL"""))
-            + ExpectShell.log('stdio', stderr=textwrap.dedent("""\
-                    Failed 1/1 test programs. 1/4 subtests failed."""))
-            + 1
+                    Result: FAIL""")))
+            .add(ExpectShell.log('stdio', stderr=textwrap.dedent("""\
+                    Failed 1/1 test programs. 1/4 subtests failed.""")))
+            .add(1)
         )
         self.expectOutcome(result=FAILURE,
                            state_string='4 tests 3 passed 1 failed (failure)')
@@ -493,11 +493,11 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
                     All tests successful
-                    Files=10, Tests=20, 100 wall blah blah"""))
-            + 0
+                    Files=10, Tests=20, 100 wall blah blah""")))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string='20 tests 20 passed')
@@ -508,10 +508,10 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
-                    Failed 1/1 test programs, 3/20 subtests failed."""))
-            + 1
+                    Failed 1/1 test programs, 3/20 subtests failed.""")))
+            .add(1)
         )
         self.expectOutcome(result=FAILURE,
                            state_string='20 tests 17 passed 3 failed (failure)')
@@ -557,7 +557,7 @@ class Configure(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["./configure"])
-            + 0
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -580,8 +580,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='w',
                         command=["make"])
-            + ExpectShell.log('stdio', stdout='blarg success!')
-            + 0
+            .add(ExpectShell.log('stdio', stdout='blarg success!'))
+            .add(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty("warnings-count", 0)
@@ -592,10 +592,9 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            + ExpectShell.log('stdio',
-                              stdout='normal: foo\nwarning: blarg!\n'
-                                     'also normal\nWARNING: blarg!\n')
-            + 0
+            .add(ExpectShell.log('stdio', stdout='normal: foo\nwarning: blarg!\n'
+                                'also normal\nWARNING: blarg!\n'))
+            .add(0)
         )
         self.expectOutcome(result=WARNINGS)
         self.expectProperty("warnings-count", 2)
@@ -609,9 +608,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            + ExpectShell.log('stdio',
-                              stdout='scary: foo\nwarning: bar\nscary: bar')
-            + 0
+            .add(ExpectShell.log('stdio', stdout='scary: foo\nwarning: bar\nscary: bar'))
+            .add(0)
         )
         self.expectOutcome(result=WARNINGS)
         self.expectProperty("warnings-count", 2)
@@ -623,8 +621,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            + ExpectShell.log('stdio', stdout='warning: noo!\n' * 10)
-            + 0
+            .add(ExpectShell.log('stdio', stdout='warning: noo!\n' * 10))
+            .add(0)
         )
         self.expectOutcome(result=FAILURE)
         self.expectProperty("warnings-count", 10)
@@ -635,8 +633,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            + ExpectShell.log('stdio', stdout='warning: I might fail')
-            + 3
+            .add(ExpectShell.log('stdio', stdout='warning: I might fail'))
+            .add(3)
         )
         self.expectOutcome(result=FAILURE)
         self.expectProperty("warnings-count", 1)
@@ -650,8 +648,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             ExpectShell(workdir='wkdir',
                         command=["make"],
                         )
-            + ExpectShell.log('stdio', stdout='I might fail with rc')
-            + 3
+            .add(ExpectShell.log('stdio', stdout='I might fail with rc'))
+            .add(3)
         )
         self.expectOutcome(result=WARNINGS)
         self.expectProperty("warnings-count", 0)
@@ -681,20 +679,20 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
                 Expect('uploadFile', dict(blocksize=32768, maxsize=None,
                                           workersrc='supps', workdir='wkdir',
                                           writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
-                + Expect.behavior(upload_behavior),
+                .add(Expect.behavior(upload_behavior)),
 
                 # and then run the command
                 ExpectShell(workdir='wkdir',
                             command=["make"])
-                + ExpectShell.log('stdio', stdout=stdout)
-                + 0
+                .add(ExpectShell.log('stdio', stdout=stdout))
+                .add(0)
             )
         else:
             self.expectCommands(
                 ExpectShell(workdir='wkdir',
                             command=["make"])
-                + ExpectShell.log('stdio', stdout=stdout)
-                + 0
+                .add(ExpectShell.log('stdio', stdout=stdout))
+                .add(0)
             )
         if exp_exception:
             self.expectOutcome(result=EXCEPTION,
