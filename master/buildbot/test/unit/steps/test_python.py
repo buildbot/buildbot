@@ -167,7 +167,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='pylint')
         if store_results:
             self.expect_test_result_sets([('Pylint warnings', 'code_issue', 'message')])
-            self.expectTestResults([])
+            self.expect_test_results([])
         return self.run_step()
 
     @parameterized.expand([
@@ -296,7 +296,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-total', 2)
         if store_results:
             self.expect_test_result_sets([('Pylint warnings', 'code_issue', 'message')])
-            self.expectTestResults([
+            self.expect_test_results([
                 (1000, 'test.py:9:4: W0311: Bad indentation. Found 6 spaces, expected 4 ' +
                        '(bad-indentation)',
                  None, 'test.py', 9, None),
@@ -369,7 +369,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-total', 2)
         if store_results:
             self.expect_test_result_sets([('Pylint warnings', 'code_issue', 'message')])
-            self.expectTestResults([
+            self.expect_test_results([
                 (1000, 'test.py:9: [W0311] Bad indentation.', None, 'test.py', 9, None),
                 (1000, 'test.py:3: [C0111, foo123] Missing docstring', None, 'test.py', 3, None),
             ])

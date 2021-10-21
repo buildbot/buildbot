@@ -341,7 +341,7 @@ class BuildStepMixin:
     def expect_test_result_sets(self, sets):
         self._exp_test_result_sets = sets
 
-    def expectTestResults(self, results):
+    def expect_test_results(self, results):
         self._exp_test_results = results
 
     def _dump_logs(self):
