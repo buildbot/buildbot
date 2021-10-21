@@ -23,7 +23,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.steps import mswin
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.expect import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -37,33 +37,33 @@ class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def _run_simple_test(self, source, destination, expected_args=None, expected_code=0,
                          expected_res=SUCCESS, **kwargs):
         s = mswin.Robocopy(source, destination, **kwargs)
-        self.setupStep(s)
+        self.setup_step(s)
         s.rendered = True
 
         command = ['robocopy', source, destination]
         if expected_args:
             command += expected_args
         command += ['/TEE', '/NP']
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(
                 workdir='wkdir',
                 command=command,
-            ) +
-            expected_code
+            )
+        .exit(expected_code)
         )
         state_string = "'robocopy {} ...'".format(source)
         if expected_res != SUCCESS:
             state_string += ' ({})'.format(Results[expected_res])
-        self.expectOutcome(result=expected_res, state_string=state_string)
-        return self.runStep()
+        self.expect_outcome(result=expected_res, state_string=state_string)
+        return self.run_step()
 
     def test_copy(self):
         return self._run_simple_test(r'D:\source', r'E:\dest')

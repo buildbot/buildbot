@@ -34,14 +34,14 @@ class TestBuildStepNameIsRenderable(steps.BuildStepMixin, unittest.TestCase,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_name_is_renderable(self):
         step = TestBuildStep(name=Interpolate('%(kw:foo)s', foo='bar'))
-        self.setupStep(step)
-        self.expectProperty('name', 'bar')
-        self.expectOutcome(0)
-        return self.runStep()
+        self.setup_step(step)
+        self.expect_property('name', 'bar')
+        self.expect_outcome(0)
+        return self.run_step()

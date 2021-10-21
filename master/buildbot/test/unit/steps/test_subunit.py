@@ -22,8 +22,7 @@ from twisted.trial import unittest
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
-from buildbot.test.fake.remotecommand import Expect
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.expect import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -58,33 +57,33 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             raise unittest.SkipTest("Need to install python-subunit to test subunit step")
 
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_empty(self):
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="test")
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="shell no tests run")
-        return self.runStep()
+        return self.run_step()
 
     def test_empty_error(self):
-        self.setupStep(subunit.SubunitShellCommand(command='test',
+        self.setup_step(subunit.SubunitShellCommand(command='test',
                                                    failureOnNoTests=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="test")
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="shell no tests run (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_success(self):
         stream = io.BytesIO()
@@ -93,15 +92,15 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         client.startTest(test)
         client.stopTest(test)
 
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command="test")
-            + Expect.log('stdio', stdout=stream.getvalue())
-            + 0
+            .stdout(stream.getvalue())
+            .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS, state_string="shell 1 test passed")
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string="shell 1 test passed")
+        return self.run_step()
 
     def test_error(self):
         stream = io.BytesIO()
@@ -111,18 +110,18 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         client.addError(test, create_error('error1'))
         client.stopTest(test)
 
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command="test")
-            + Expect.log('stdio', stdout=stream.getvalue())
-            + 0
+            .stdout(stream.getvalue())
+            .exit(0)
         )
 
-        self.expectOutcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
-        self.expectLogfile('problems', re.compile(r'''test1
+        self.expect_outcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
+        self.expect_logfile('problems', re.compile(r'''test1
 testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error1'
 .*''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
-        return self.runStep()
+        return self.run_step()
 
     def test_multiple_errors(self):
         stream = io.BytesIO()
@@ -136,21 +135,21 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         client.addError(test2, create_error('error2'))
         client.stopTest(test2)
 
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command="test")
-            + Expect.log('stdio', stdout=stream.getvalue())
-            + 0
+            .stdout(stream.getvalue())
+            .exit(0)
         )
 
-        self.expectOutcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
-        self.expectLogfile('problems', re.compile(r'''test1
+        self.expect_outcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
+        self.expect_logfile('problems', re.compile(r'''test1
 testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error1'
 
 test2
 testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error2'
 .*''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
-        return self.runStep()
+        return self.run_step()
 
     def test_warnings(self):
         stream = io.BytesIO()
@@ -162,18 +161,18 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         client.addError(test2, create_error('error2'))
         client.stopTest(test2)
 
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command="test")
-            + Expect.log('stdio', stdout=stream.getvalue())
-            + 0
+            .stdout(stream.getvalue())
+            .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS,  # N.B. not WARNINGS
+        self.expect_outcome(result=SUCCESS,  # N.B. not WARNINGS
                            state_string="shell 1 test passed")
         # note that the warnings list is ignored..
-        self.expectLogfile('warnings', re.compile(r'''error: test2 \[.*
+        self.expect_logfile('warnings', re.compile(r'''error: test2 \[.*
 ValueError: invalid literal for int\(\) with base 10: '_error2'
 \]
 ''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
-        return self.runStep()
+        return self.run_step()

@@ -23,8 +23,7 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import python_twisted
-from buildbot.test.fake.remotecommand import Expect
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.expect import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -96,206 +95,206 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_run_env(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None,
                                  env={'PYTHONPATH': 'somepath'}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH='somepath'))
-            + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
-            + 0
+            .stdout("Ran 0 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='no tests run')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='no tests run')
+        return self.run_step()
 
     def test_run_env_supplement(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath='path1',
                                  env={'PYTHONPATH': ['path2', 'path3']}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH=['path1', 'path2', 'path3']))
-            + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
-            + 0
+            .stdout("Ran 0 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='no tests run')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='no tests run')
+        return self.run_step()
 
     def test_run_env_nodupe(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath='path2',
                                  env={'PYTHONPATH': ['path1', 'path2']}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH=['path1', 'path2']))
-            + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
-            + 0
+            .stdout("Ran 0 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='no tests run')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='no tests run')
+        return self.run_step()
 
     def test_run_singular(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
-            + 0
+            .stdout("Ran 1 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='1 test passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='1 test passed')
+        return self.run_step()
 
     def test_run_plural(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            + ExpectShell.log('stdio', stdout="Ran 2 tests\n")
-            + 0
+            .stdout("Ran 2 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
+        return self.run_step()
 
     def test_run_failure(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            + ExpectShell.log('stdio', stdout=failureLog)
-            + 1
+            .stdout(failureLog)
+            .exit(1)
         )
-        self.expectOutcome(
+        self.expect_outcome(
             result=FAILURE, state_string='tests 8 failures (failure)')
-        self.expectLogfile('problems', failureLog.split('\n\n', 1)[1][:-1])
-        self.expectLogfile('warnings', textwrap.dedent('''\
+        self.expect_logfile('problems', failureLog.split('\n\n', 1)[1][:-1])
+        self.expect_logfile('warnings', textwrap.dedent('''\
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_nodupe ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_supplement ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobs ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobsProperties ... [FAILURE]
                 '''))  # noqa pylint: disable=line-too-long
-        return self.runStep()
+        return self.run_step()
 
     def test_renderable_properties(self):
-        self.setupStep(python_twisted.Trial(workdir='build',
+        self.setup_step(python_twisted.Trial(workdir='build',
                                             tests=Property('test_list'),
                                             testpath=None))
         self.properties.setProperty('test_list', ['testname'], 'Test')
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            + ExpectShell.log('stdio', stdout="Ran 2 tests\n")
-            + 0
+            .stdout("Ran 2 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
+        return self.run_step()
 
     def test_build_changed_files(self):
-        self.setupStep(python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
+        self.setup_step(python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
                        buildFiles=['my/test/file.py', 'my/test/file2.py'])
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--testmodule=my/test/file.py',
                                  '--testmodule=my/test/file2.py'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            + ExpectShell.log('stdio', stdout="Ran 2 tests\n")
-            + 0
+            .stdout("Ran 2 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
+        return self.run_step()
 
     def test_test_path_env_python_path(self):
-        self.setupStep(python_twisted.Trial(workdir='build', tests='testname',
+        self.setup_step(python_twisted.Trial(workdir='build', tests='testname',
                                             testpath='custom/test/path',
                                             env={'PYTHONPATH': '/existing/pypath'}))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env={'PYTHONPATH': ['custom/test/path', '/existing/pypath']})
-            + Expect.log('stdio', stdout="Ran 2 tests\n")
-            + 0
+            .stdout("Ran 2 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
+        return self.run_step()
 
     def test_custom_reactor(self):
-        self.setupStep(python_twisted.Trial(workdir='build', reactor='customreactor',
+        self.setup_step(python_twisted.Trial(workdir='build', reactor='customreactor',
                                             tests='testname', testpath=None))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--reactor=customreactor',
                                  'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            + Expect.log('stdio', stdout="Ran 2 tests\n")
-            + 0
+            .stdout("Ran 2 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed (custom)')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed (custom)')
+        return self.run_step()
 
     def test_custom_python(self):
-        self.setupStep(python_twisted.Trial(workdir='build', tests='testname',
+        self.setup_step(python_twisted.Trial(workdir='build', tests='testname',
                                             python='/bin/mypython', testpath=None))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['/bin/mypython', 'trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            + Expect.log('stdio', stdout="Ran 2 tests\n")
-            + 0
+            .stdout("Ran 2 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
+        return self.run_step()
 
     def test_randomly(self):
-        self.setupStep(python_twisted.Trial(workdir='build',
+        self.setup_step(python_twisted.Trial(workdir='build',
                                             randomly=True,
                                             tests='testname',
                                             testpath=None))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--random=0', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            + Expect.log('stdio', stdout="Ran 2 tests\n")
-            + 0
+            .stdout("Ran 2 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
+        return self.run_step()
 
     def test_run_jobs(self):
         """
@@ -303,12 +302,12 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         included since Twisted 12.3.0), and make corresponding changes to
         logfiles.
         """
-        self.setupStep(python_twisted.Trial(workdir='build',
+        self.setup_step(python_twisted.Trial(workdir='build',
                                             tests='testname',
                                             testpath=None,
                                             jobs=2))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--jobs=2',
                                  'testname'],
@@ -320,23 +319,23 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             'err.1.log': '_trial_temp/1/err.log',
                             'out.1.log': '_trial_temp/1/out.log',
                         })
-            + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
-            + 0
+            .stdout("Ran 1 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='1 test passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='1 test passed')
+        return self.run_step()
 
     def test_run_jobsProperties(self):
         """
         C{jobs} should accept Properties
         """
-        self.setupStep(python_twisted.Trial(workdir='build',
+        self.setup_step(python_twisted.Trial(workdir='build',
                                             tests='testname',
                                             jobs=Property('jobs_count'),
                                             testpath=None))
         self.properties.setProperty('jobs_count', '2', 'Test')
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--jobs=2',
                                  'testname'],
@@ -348,98 +347,96 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             'err.1.log': '_trial_temp/1/err.log',
                             'out.1.log': '_trial_temp/1/out.log',
                         })
-            + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
-            + 0
+            .stdout("Ran 1 tests\n")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='1 test passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='1 test passed')
+        return self.run_step()
 
 
 class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_run_ok(self):
-        self.setupStep(python_twisted.HLint(workdir='build'),
+        self.setup_step(python_twisted.HLint(workdir='build'),
                        buildFiles=['foo.xhtml'])
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=[
                             'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
-            +
-            ExpectShell.log(
-                'stdio', stdout="dunno what hlint output looks like..\n")
-            + 0
+            .stdout("dunno what hlint output looks like..\n")
+            .exit(0)
         )
-        self.expectLogfile('files', 'foo.xhtml\n')
-        self.expectOutcome(result=SUCCESS, state_string='0 hlints')
-        return self.runStep()
+        self.expect_logfile('files', 'foo.xhtml\n')
+        self.expect_outcome(result=SUCCESS, state_string='0 hlints')
+        return self.run_step()
 
     def test_custom_python(self):
-        self.setupStep(python_twisted.HLint(workdir='build', python='/bin/mypython'),
+        self.setup_step(python_twisted.HLint(workdir='build', python='/bin/mypython'),
                        buildFiles=['foo.xhtml'])
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['/bin/mypython', 'bin/lore', '-p', '--output', 'lint',
                                  'foo.xhtml'])
-            + 0
+            .exit(0)
         )
-        self.expectLogfile('files', 'foo.xhtml\n')
-        self.expectOutcome(result=SUCCESS, state_string='0 hlints')
-        return self.runStep()
+        self.expect_logfile('files', 'foo.xhtml\n')
+        self.expect_outcome(result=SUCCESS, state_string='0 hlints')
+        return self.run_step()
 
     def test_command_failure(self):
-        self.setupStep(python_twisted.HLint(workdir='build'),
+        self.setup_step(python_twisted.HLint(workdir='build'),
                        buildFiles=['foo.xhtml'])
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
-            + 1
+            .exit(1)
         )
-        self.expectLogfile('files', 'foo.xhtml\n')
-        self.expectOutcome(result=FAILURE, state_string='hlint (failure)')
-        return self.runStep()
+        self.expect_logfile('files', 'foo.xhtml\n')
+        self.expect_outcome(result=FAILURE, state_string='hlint (failure)')
+        return self.run_step()
 
     def test_no_build_files(self):
-        self.setupStep(python_twisted.HLint(workdir='build'))
-        self.expectOutcome(result=SKIPPED, state_string='hlint (skipped)')
-        return self.runStep()
+        self.setup_step(python_twisted.HLint(workdir='build'))
+        self.expect_outcome(result=SKIPPED, state_string='hlint (skipped)')
+        return self.run_step()
 
     def test_run_warnings(self):
-        self.setupStep(python_twisted.HLint(workdir='build'),
+        self.setup_step(python_twisted.HLint(workdir='build'),
                        buildFiles=['foo.xhtml'])
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=[
                             'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'])
-            + ExpectShell.log('stdio', stdout="colon: meaning warning\n")
-            + 0
+            .stdout("colon: meaning warning\n")
+            .exit(0)
         )
-        self.expectLogfile('warnings', 'colon: meaning warning')
-        self.expectOutcome(result=WARNINGS, state_string='1 hlint (warnings)')
-        return self.runStep()
+        self.expect_logfile('warnings', 'colon: meaning warning')
+        self.expect_outcome(result=WARNINGS, state_string='1 hlint (warnings)')
+        return self.run_step()
 
 
 class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_run_ok(self):
-        self.setupStep(python_twisted.RemovePYCs())
-        self.expectCommands(
+        self.setup_step(python_twisted.RemovePYCs())
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['find', '.', '-name', '\'*.pyc\'', '-exec', 'rm', '{}', ';'])
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='remove .pycs')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='remove .pycs')
+        return self.run_step()

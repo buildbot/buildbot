@@ -24,7 +24,7 @@ from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.rpm import rpmbuild
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.expect import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -33,88 +33,83 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_no_specfile(self):
         with self.assertRaises(config.ConfigErrors):
             rpmbuild.RpmBuild()
 
     def test_success(self):
-        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", dist=".el5"))
-        self.expectCommands(
+        self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", dist=".el5"))
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
                         '`pwd`" --define "_sourcedir `pwd`" --define "_specdir '
                         '`pwd`" --define "_srcrpmdir `pwd`" --define "dist .el5" '
                         '-ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='lalala')
-            + 0)
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        return self.runStep()
+            .stdout('lalala')
+            .exit(0))
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
+        return self.run_step()
 
     @mock.patch('builtins.open', mock.mock_open())
     def test_autoRelease(self):
-        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", autoRelease=True))
-        self.expectCommands(
+        self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", autoRelease=True))
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir `pwd`" '
                         '--define "_sourcedir `pwd`" --define "_specdir `pwd`" '
                         '--define "_srcrpmdir `pwd`" --define "_release 0" '
                         '--define "dist .el6" -ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='Your code has been rated at 10/10')
-            + 0)
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        return self.runStep()
+            .stdout('Your code has been rated at 10/10')
+            .exit(0))
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
+        return self.run_step()
 
     def test_define(self):
         defines = [("a", "1"), ("b", "2")]
-        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec",
+        self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec",
                                          define=OrderedDict(defines)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
                         '`pwd`" --define "_sourcedir `pwd`" --define '
                         '"_specdir `pwd`" --define "_srcrpmdir `pwd`" '
                         '--define "a 1" --define "b 2" --define "dist .el6" '
                         '-ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='Your code has been rated at 10/10')
-            + 0)
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        return self.runStep()
+            .stdout('Your code has been rated at 10/10')
+            .exit(0))
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
+        return self.run_step()
 
     def test_define_none(self):
-        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", define=None))
-        self.expectCommands(
+        self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", define=None))
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
                         '`pwd`" --define "_sourcedir `pwd`" --define '
                         '"_specdir `pwd`" --define "_srcrpmdir `pwd`" '
                         '--define "dist .el6" -ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='Your code has been rated at 10/10')
-            + 0)
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        return self.runStep()
+            .stdout('Your code has been rated at 10/10')
+            .exit(0))
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_renderable_dist(self):
-        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec",
+        self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec",
                                          dist=Interpolate('%(prop:renderable_dist)s')))
         self.properties.setProperty('renderable_dist', '.el7', 'test')
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
                         '`pwd`" --define "_sourcedir `pwd`" --define "_specdir '
                         '`pwd`" --define "_srcrpmdir `pwd`" --define "dist .el7" '
                         '-ba foo.spec')
-            + ExpectShell.log('stdio',
-                              stdout='lalala')
-            + 0)
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        yield self.runStep()
+            .stdout('lalala')
+            .exit(0))
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
+        yield self.run_step()

@@ -72,28 +72,28 @@ class LogChunksJanitorTests(steps.BuildStepMixin,
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
-        yield self.setUpBuildStep()
+        yield self.setup_build_step()
         self.patch(janitor, "now", lambda: datetime.datetime(year=2017, month=1, day=1))
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     @defer.inlineCallbacks
     def test_basic(self):
-        self.setupStep(
+        self.setup_step(
             LogChunksJanitor(logHorizon=timedelta(weeks=1)))
         self.master.db.logs.deleteOldLogChunks = mock.Mock(return_value=3)
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="deleted 3 logchunks")
-        yield self.runStep()
+        yield self.run_step()
         expected_timestamp = datetime2epoch(datetime.datetime(year=2016, month=12, day=25))
         self.master.db.logs.deleteOldLogChunks.assert_called_with(expected_timestamp)
 
     @defer.inlineCallbacks
     def test_build_data(self):
-        self.setupStep(BuildDataJanitor(build_data_horizon=timedelta(weeks=1)))
+        self.setup_step(BuildDataJanitor(build_data_horizon=timedelta(weeks=1)))
         self.master.db.build_data.deleteOldBuildData = mock.Mock(return_value=4)
-        self.expectOutcome(result=SUCCESS, state_string="deleted 4 build data key-value pairs")
-        yield self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string="deleted 4 build data key-value pairs")
+        yield self.run_step()
         expected_timestamp = datetime2epoch(datetime.datetime(year=2016, month=12, day=25))
         self.master.db.build_data.deleteOldBuildData.assert_called_with(expected_timestamp)

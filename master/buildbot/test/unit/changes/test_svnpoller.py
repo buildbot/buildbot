@@ -24,7 +24,7 @@ from buildbot.changes import svnpoller
 from buildbot.process.properties import Interpolate
 from buildbot.test.util import changesource
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.runprocess import ExpectMaster
+from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 # this is the output of "svn info --xml
@@ -293,7 +293,7 @@ class TestSVNPoller(MasterRunProcessMixin,
     def do_test_get_prefix(self, base, output, expected):
         s = yield self.attachSVNPoller(base)
         self.expect_commands(
-            ExpectMaster(['svn', 'info', '--xml', '--non-interactive', base])
+            ExpectMasterShell(['svn', 'info', '--xml', '--non-interactive', base])
             .stdout(output)
         )
         prefix = yield s.get_prefix()
@@ -412,7 +412,7 @@ class TestSVNPoller(MasterRunProcessMixin,
                 '--username=dustin']
         if password is not None:
             args.append('--password=' + password)
-        return ExpectMaster(args)
+        return ExpectMasterShell(args)
 
     def makeLogExpect(self, password='bbrocks'):
         args = ['svn', 'log', '--xml', '--verbose', '--non-interactive',
@@ -420,7 +420,7 @@ class TestSVNPoller(MasterRunProcessMixin,
         if password is not None:
             args.append('--password=' + password)
         args.extend(['--limit=100', sample_base])
-        return ExpectMaster(args)
+        return ExpectMasterShell(args)
 
     @defer.inlineCallbacks
     def test_create_changes_overridden_project(self):

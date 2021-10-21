@@ -26,7 +26,7 @@ def _check_env_is_expected(test, expected_env, env):
                          'Expected environment to have {} = {}'.format(var, repr(value)))
 
 
-class ExpectMaster:
+class ExpectMasterShell:
     _stdout = b""
     _stderr = b""
     _exit = 0
@@ -67,7 +67,7 @@ class ExpectMaster:
         return (self._exit, self._stdout, self._stderr)
 
     def __repr__(self):
-        return "<ExpectMaster(command={})>".format(self._command)
+        return "<ExpectMasterShell(command={})>".format(self._command)
 
 
 class MasterRunProcessMixin:
@@ -117,8 +117,8 @@ class MasterRunProcessMixin:
 
     def expect_commands(self, *exp):
         for e in exp:
-            if not isinstance(e, ExpectMaster):
-                raise Exception('All expectation must be an instance of ExpectMaster')
+            if not isinstance(e, ExpectMasterShell):
+                raise Exception('All expectation must be an instance of ExpectMasterShell')
 
         self._patch_runprocess()
         self._expected_master_commands.extend(exp)

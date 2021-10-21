@@ -19,8 +19,8 @@ from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.rpm import mock
-from buildbot.test.fake.remotecommand import Expect
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.expect import ExpectRmdir
+from buildbot.test.expect import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -29,72 +29,71 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_no_root(self):
         with self.assertRaises(config.ConfigErrors):
             mock.Mock()
 
     def test_class_attrs(self):
-        step = self.setupStep(mock.Mock(root='TESTROOT'))
+        step = self.setup_step(mock.Mock(root='TESTROOT'))
         self.assertEqual(step.command, ['mock', '--root', 'TESTROOT'])
 
     def test_success(self):
-        self.setupStep(mock.Mock(root='TESTROOT'))
-        self.expectCommands(
-            Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
-                                     'build/state.log'],
-                             'logEnviron': False})
-            + 0,
+        self.setup_step(mock.Mock(root='TESTROOT'))
+        self.expect_commands(
+            ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
+                        logEnviron=False)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT'],
                         logfiles={'build.log': 'build.log',
                                   'root.log': 'root.log',
                                   'state.log': 'state.log'})
-            + 0)
-        self.expectOutcome(result=SUCCESS, state_string="'mock --root ...'")
-        return self.runStep()
+            .exit(0))
+        self.expect_outcome(result=SUCCESS, state_string="'mock --root ...'")
+        return self.run_step()
 
     def test_resultdir_success(self):
-        self.setupStep(mock.Mock(root='TESTROOT', resultdir='RESULT'))
-        self.expectCommands(
-            Expect('rmdir', {'dir': ['build/RESULT/build.log',
-                                     'build/RESULT/root.log',
-                                     'build/RESULT/state.log'],
-                             'logEnviron': False})
-            + 0,
+        self.setup_step(mock.Mock(root='TESTROOT', resultdir='RESULT'))
+        self.expect_commands(
+            ExpectRmdir(dir=['build/RESULT/build.log',
+                             'build/RESULT/root.log',
+                             'build/RESULT/state.log'],
+                        logEnviron=False)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--resultdir', 'RESULT'],
                         logfiles={'build.log': 'RESULT/build.log',
                                   'root.log': 'RESULT/root.log',
                                   'state.log': 'RESULT/state.log'})
-            + 0)
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+            .exit(0))
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
     def test_resultdir_renderable(self):
         resultdir_text = "RESULT"
-        self.setupStep(mock.Mock(root='TESTROOT', resultdir=Interpolate(
+        self.setup_step(mock.Mock(root='TESTROOT', resultdir=Interpolate(
             '%(kw:resultdir)s', resultdir=resultdir_text)))
-        self.expectCommands(
-            Expect('rmdir', {'dir': ['build/RESULT/build.log',
-                                     'build/RESULT/root.log',
-                                     'build/RESULT/state.log'],
-                             'logEnviron': False})
-            + 0,
+        self.expect_commands(
+            ExpectRmdir(dir=['build/RESULT/build.log',
+                             'build/RESULT/root.log',
+                             'build/RESULT/state.log'],
+                        logEnviron=False)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--resultdir', 'RESULT'],
                         logfiles={'build.log': 'RESULT/build.log',
                                   'root.log': 'RESULT/root.log',
                                   'state.log': 'RESULT/state.log'})
-            + 0)
-        self.expectOutcome(result=SUCCESS, state_string="'mock --root ...'")
-        return self.runStep()
+            .exit(0))
+        self.expect_outcome(result=SUCCESS, state_string="'mock --root ...'")
+        return self.run_step()
 
 
 class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
@@ -102,22 +101,21 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_no_spec(self):
         with self.assertRaises(config.ConfigErrors):
             mock.MockBuildSRPM(root='TESTROOT')
 
     def test_success(self):
-        self.setupStep(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
-        self.expectCommands(
-            Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
-                                     'build/state.log'],
-                             'logEnviron': False})
-            + 0,
+        self.setup_step(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
+        self.expect_commands(
+            ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
+                        logEnviron=False)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--buildsrpm', '--spec', 'foo.spec',
@@ -125,9 +123,9 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
                         logfiles={'build.log': 'build.log',
                                   'root.log': 'root.log',
                                   'state.log': 'state.log'},)
-            + 0)
-        self.expectOutcome(result=SUCCESS, state_string='mock buildsrpm')
-        return self.runStep()
+            .exit(0))
+        self.expect_outcome(result=SUCCESS, state_string='mock buildsrpm')
+        return self.run_step()
 
 
 class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
@@ -135,28 +133,27 @@ class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_no_srpm(self):
         with self.assertRaises(config.ConfigErrors):
             mock.MockRebuild(root='TESTROOT')
 
     def test_success(self):
-        self.setupStep(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))
-        self.expectCommands(
-            Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
-                                     'build/state.log'],
-                             'logEnviron': False})
-            + 0,
+        self.setup_step(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))
+        self.expect_commands(
+            ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
+                        logEnviron=False)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--rebuild', 'foo.src.rpm'],
                         logfiles={'build.log': 'build.log',
                                   'root.log': 'root.log',
                                   'state.log': 'state.log'},)
-            + 0)
-        self.expectOutcome(result=SUCCESS, state_string='mock rebuild srpm')
-        return self.runStep()
+            .exit(0))
+        self.expect_outcome(result=SUCCESS, state_string='mock rebuild srpm')
+        return self.run_step()

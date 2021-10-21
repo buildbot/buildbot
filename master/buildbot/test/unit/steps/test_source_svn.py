@@ -27,9 +27,12 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import svn
-from buildbot.test.fake.remotecommand import Expect
-from buildbot.test.fake.remotecommand import ExpectRemoteRef
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.expect import ExpectCpdir
+from buildbot.test.expect import ExpectDownloadFile
+from buildbot.test.expect import ExpectRemoteRef
+from buildbot.test.expect import ExpectRmdir
+from buildbot.test.expect import ExpectShell
+from buildbot.test.expect import ExpectStat
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.properties import ConstantRenderable
@@ -141,81 +144,75 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk', method='invalid')
 
     def test_svn_not_installed(self):
-        self.setupStep(svn.SVN(repourl='http://svn.local/app/trunk'))
-        self.expectCommands(
+        self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk'))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 1,
+            .exit(1)
         )
-        self.expectException(WorkerSetupError)
-        return self.runStep()
+        self.expect_exception(WorkerSetupError)
+        return self.run_step()
 
     def test_corrupt_xml(self):
-        self.setupStep(svn.SVN(repourl='http://svn.local/app/trunk'))
-        self.expectCommands(
+        self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk'))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_corrupt)
-            + 0,
+            .stdout(self.svn_st_xml_corrupt)
+            .exit(0)
         )
-        self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_revision_noninteger(self):
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
-        self.setupStep(svnTestStep)
-        self.expectCommands(
+        self.setup_step(svnTestStep)
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml_nonintegerrevision)
-            + 0,
+            .stdout(self.svn_info_stdout_xml_nonintegerrevision)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'a10', 'SVN')
-        yield self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', 'a10', 'SVN')
+        yield self.run_step()
 
         revision = self.step.getProperty('got_revision')
         with self.assertRaises(ValueError):
@@ -226,1720 +223,1544 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         svn_info_stdout = self.svn_info_stdout_xml.replace('entry', 'Blah')
 
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
-        self.setupStep(svnTestStep)
-        self.expectCommands(
+        self.setup_step(svnTestStep)
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=svn_info_stdout)
-            + 0,
+            .stdout(svn_info_stdout)
+            .exit(0)
         )
-        self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
 
     def test_mode_incremental(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_timeout(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     timeout=1,
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_repourl_renderable(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk'),
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout="""<?xml version="1.0"?><url>http://svn.local/trunk</url>""")
-            + 0,
+            .stdout("""<?xml version="1.0"?>""" +
+                    """<url>http://svn.local/trunk</url>""")
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_repourl_canonical(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/trunk/test app',
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log(
-                'stdio',
-                stdout='<?xml version="1.0"?><url>http://svn.local/trunk/test%20app</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?><url>http://svn.local/trunk/test%20app</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_repourl_not_updatable(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
                     mode='incremental',))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_retry(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
                     mode='incremental', retry=(0, 1)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_repourl_not_updatable_svninfo_mismatch(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log(
-                'stdio',  # expecting ../trunk/app
-                stdout='<?xml version="1.0"?><url>http://svn.local/branch/foo/app</url>')
-            + 0,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            # expecting ../trunk/app
+            .stdout('<?xml version="1.0"?><url>http://svn.local/branch/foo/app</url>')
+            .exit(0),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_win32path(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
         self.build.path_module = namedModule("ntpath")
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file=r'wkdir\.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file=r'wkdir\.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file=r'wkdir\.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file=r'wkdir\.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
     def test_mode_incremental_preferLastChangedRev(self):
         """Give the last-changed rev if 'preferLastChangedRev' is set"""
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     preferLastChangedRev=True,
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '90', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '90', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_preferLastChangedRev_butMissing(self):
         """If 'preferLastChangedRev' is set, but missing, fall back
         to the regular revision value."""
         svn_info_stdout = self.svn_info_stdout_xml.replace('commit', 'Blah')
 
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     preferLastChangedRev=True,
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=svn_info_stdout)
-            + 0,
+            .stdout(svn_info_stdout)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_clobber(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clobber'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir',
-                             'logEnviron': True,
-                             'timeout': 1200})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout',
                                  'http://svn.local/app/trunk', '.',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_clobber_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clobber'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir',
-                             'logEnviron': True,
-                             'timeout': 1200})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout',
                                  'http://svn.local/app/trunk', '.',
                                  '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_fresh(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='fresh', depth='infinite'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--depth', 'infinite'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml', '--no-ignore',
                                  '--non-interactive', '--no-auth-cache',
                                  '--depth', 'infinite'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_empty)
-            + 0,
+            .stdout(self.svn_st_xml_empty)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache', '--depth', 'infinite'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + ExpectShell.log('stdio', stdout='\n')
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .stdout('\n')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_fresh_retry(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='fresh', retry=(0, 2)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + ExpectShell.log('stdio', stdout='\n')
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .stdout('\n')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_fresh_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='fresh', depth='infinite'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--depth', 'infinite'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml', '--no-ignore',
                                  '--non-interactive', '--no-auth-cache',
                                  '--depth', 'infinite'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_empty)
-            + 0,
+            .stdout(self.svn_st_xml_empty)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache', '--depth', 'infinite'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + ExpectShell.log('stdio', stdout='\n')
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .stdout('\n')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_fresh_keep_on_purge(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full',
                     keep_on_purge=['svn_external_path/unversioned_file1']))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml', '--no-ignore',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
-            Expect('rmdir', {'dir':
-                             ['wkdir/svn_external_path/unversioned_file2_uniçode'],
-                             'logEnviron': True,
-                             'timeout': 1200})
-            + 0,
+            .stdout(self.svn_st_xml)
+            .exit(0),
+            ExpectRmdir(dir=['wkdir/svn_external_path/unversioned_file2_uniçode'],
+                        logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_clean(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_empty)
-            + 0,
+            .stdout(self.svn_st_xml_empty)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_clean_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml_empty)
-            + 0,
+            .stdout(self.svn_st_xml_empty)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_not_updatable(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_not_updatable_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_clean_old_rmdir(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'))
         self.patch_workerVersionIsOlderThan(True)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
-            Expect('rmdir', {'dir':
-                             'wkdir/svn_external_path/unversioned_file1',
-                             'logEnviron': True,
-                             'timeout': 1200})
-            + 0,
-            Expect('rmdir', {'dir':
-                             'wkdir/svn_external_path/unversioned_file2_uniçode',
-                             'logEnviron': True,
-                             'timeout': 1200})
-            + 0,
+            .stdout(self.svn_st_xml)
+            .exit(0),
+            ExpectRmdir(dir='wkdir/svn_external_path/unversioned_file1',
+                        logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectRmdir(dir='wkdir/svn_external_path/unversioned_file2_uniçode',
+                        logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_clean_new_rmdir(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'))
 
         self.patch_workerVersionIsOlderThan(False)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
-            Expect('rmdir', {'dir':
-                             ['wkdir/svn_external_path/unversioned_file1',
-                              'wkdir/svn_external_path/unversioned_file2_uniçode'],
-                             'logEnviron': True,
-                             'timeout': 1200})
-            + 0,
+            .stdout(self.svn_st_xml)
+            .exit(0),
+            ExpectRmdir(dir=['wkdir/svn_external_path/unversioned_file1',
+                             'wkdir/svn_external_path/unversioned_file2_uniçode'],
+                        logEnviron=True, timeout=1200)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_copy(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='copy',
                     codebase='app'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('stat', dict(file='source/app/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectStat(file='source/app/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source/app',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='source/app',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
-            Expect('cpdir', {'fromdir': 'source/app',
-                             'todir': 'wkdir',
-                             'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectCpdir(fromdir='source/app', todir='wkdir', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', {'app': '100'}, 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', {'app': '100'}, 'SVN')
+        return self.run_step()
 
     def test_mode_full_copy_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='copy'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectStat(file='source/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
-            Expect('cpdir', {'fromdir': 'source',
-                             'todir': 'wkdir',
-                             'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_export(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='export'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectStat(file='source/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_export_patch(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='export'),
             patch=(1, 'patch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
-            Expect('rmdir', dict(dir=['wkdir/svn_external_path/unversioned_file1',
-                                      'wkdir/svn_external_path/unversioned_file2_uniçode'],
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
-            + 0,
+            .stdout(self.svn_st_xml)
+            .exit(0),
+            ExpectRmdir(dir=['wkdir/svn_external_path/unversioned_file1',
+                             'wkdir/svn_external_path/unversioned_file2_uniçode'],
+                        logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectStat(file='source/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
-            + 0,
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
-            + 0,
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
-            + 0,
+            .exit(0),
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-diff', workdir='wkdir', mode=None)
+            .exit(0),
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-patched', workdir='wkdir', mode=None)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
-            + 0,
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_export_patch_worker_2_16(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='export'),
             patch=(1, 'patch'),
             worker_version={'*': '2.16'})
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
-            Expect('rmdir', dict(dir=['wkdir/svn_external_path/unversioned_file1',
-                                      'wkdir/svn_external_path/unversioned_file2_uniçode'],
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
-            + 0,
+            .stdout(self.svn_st_xml)
+            .exit(0),
+            ExpectRmdir(dir=['wkdir/svn_external_path/unversioned_file1',
+                             'wkdir/svn_external_path/unversioned_file2_uniçode'],
+                        logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectStat(file='source/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
-            + 0,
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
-            + 0,
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
-            + 0,
+            .exit(0),
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               slavedest='.buildbot-diff', workdir='wkdir', mode=None)
+            .exit(0),
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               slavedest='.buildbot-patched', workdir='wkdir', mode=None)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
-            + 0,
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_export_timeout(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     timeout=1,
                     mode='full', method='export'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1))
-            + 0,
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1)
+            .exit(0),
+            ExpectStat(file='source/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         timeout=1,
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='source',
                         timeout=1,
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='',
                         timeout=1,
                         command=['svn', 'export', 'source', 'wkdir'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='source',
                         timeout=1,
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_export_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='export'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectStat(file='source/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='',
                         command=['svn', 'export', '--revision', '100',
                                  'source', 'wkdir'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_full_export_auth(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='export', username='svn_username',
                     password='svn_password'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectStat(file='source/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache',
                                  '--username', 'svn_username',
                                  '--password', ('obfuscated', 'svn_password', 'XXXXXX')])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache',
                                  '--username', 'svn_username',
                                  '--password', ('obfuscated', 'svn_password', 'XXXXXX')])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='',
                         command=['svn', 'export',
                                  '--username', 'svn_username',
                                  '--password', ('obfuscated', 'svn_password', 'XXXXXX'), 'source',
                                  'wkdir'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_with_env(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random'],
                     env={'abc': '123'}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'],
                         env={'abc': '123'})
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         env={'abc': '123'})
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         env={'abc': '123'})
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'],
                         env={'abc': '123'})
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_mode_incremental_logEnviron(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random'],
                     logEnviron=False))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'],
                         logEnviron=False)
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=False))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=False))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=False)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=False)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         logEnviron=False)
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         logEnviron=False)
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'],
                         logEnviron=False)
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'SVN')
+        return self.run_step()
 
     def test_command_fails(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 1,
+            .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
 
     def test_bogus_svnversion(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            +
-            ExpectShell.log(
-                'stdio', stdout='<?xml version="1.0"?>'
-                                '<entry kind="dir" path="/a/b/c" revision="1">'
-                                '<url>http://svn.local/app/trunk</url>'
-                                '</entry>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<entry kind="dir" path="/a/b/c" revision="1">'
+                    '<url>http://svn.local/app/trunk</url>'
+                    '</entry>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout='1x0y0')
-            + 0,
+            .stdout('1x0y0')
+            .exit(0)
         )
-        self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
 
     def test_rmdir_fails_clobber(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clobber'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', {'dir': 'wkdir',
-                             'logEnviron': True,
-                             'timeout': 1200})
-            + 1,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
 
     def test_rmdir_fails_copy(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='copy'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 1,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
 
     def test_cpdir_fails_copy(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='copy'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
-            + 0,
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            .exit(0),
+            ExpectStat(file='source/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
-            + 0,
-            Expect('cpdir', {'fromdir': 'source',
-                             'todir': 'wkdir',
-                             'logEnviron': True})
-            + 1,
+            .exit(0),
+            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True)
+            .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
 
     def test_rmdir_fails_purge(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full',
                     keep_on_purge=['svn_external_path/unversioned_file1']))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
                                  'status', '--xml', '--no-ignore',
                                  '--non-interactive', '--no-auth-cache'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_st_xml)
-            + 0,
-            Expect('rmdir', {'dir':
-                             ['wkdir/svn_external_path/unversioned_file2_uniçode'],
-                             'logEnviron': True,
-                             'timeout': 1200})
-            + 1,
+            .stdout(self.svn_st_xml)
+            .exit(0),
+            ExpectRmdir(dir=['wkdir/svn_external_path/unversioned_file2_uniçode'],
+                        logEnviron=True, timeout=1200)
+            .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
 
     def test_worker_connection_lost(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + ('err', error.ConnectionLost()),
+            .error(error.ConnectionLost())
         )
-        self.expectOutcome(result=RETRY, state_string="update (retry)")
-        return self.runStep()
+        self.expect_outcome(result=RETRY, state_string="update (retry)")
+        return self.run_step()
 
     def test_empty_password(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', '', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', '', 'XXXXXX'), '--random'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
     def test_omit_password(self):
-        self.setupStep(
+        self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            + 0,
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
-            + 0,
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            .exit(1),
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--random'])
-            + ExpectShell.log('stdio',
-                              stdout='<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
-            + 0,
+            .stdout('<?xml version="1.0"?>'
+                    '<url>http://svn.local/app/trunk</url>')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--random'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
-            + ExpectShell.log('stdio',
-                              stdout=self.svn_info_stdout_xml)
-            + 0,
+            .stdout(self.svn_info_stdout_xml)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
 
 class TestGetUnversionedFiles(unittest.TestCase):

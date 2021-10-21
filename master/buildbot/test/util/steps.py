@@ -96,7 +96,7 @@ class BuildStepMixin:
 
      - surround a step with the mock objects that it needs to execute
 
-    The following instance variables are available after C{setupStep}:
+    The following instance variables are available after C{setup_step}:
 
     @ivar step: the step under test
     @ivar build: the fake build containing the step
@@ -105,7 +105,7 @@ class BuildStepMixin:
     @ivar properties: build properties (L{Properties} instance)
     """
 
-    def setUpBuildStep(self, wantData=True, wantDb=False, wantMq=False):
+    def setup_build_step(self, wantData=True, wantDb=False, wantMq=False):
         """
         @param wantData(bool): Set to True to add data API connector to master.
             Default value: True.
@@ -146,10 +146,10 @@ class BuildStepMixin:
 
         self.master = fakemaster.make_master(self, wantData=wantData, wantDb=wantDb, wantMq=wantMq)
 
-    def tearDownBuildStep(self):
+    def tear_down_build_step(self):
         pass
 
-    def setupStep(self, step, worker_version=None, worker_env=None,
+    def setup_step(self, step, worker_version=None, worker_env=None,
                   buildFiles=None, wantDefaultWorkdir=True):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
@@ -285,14 +285,14 @@ class BuildStepMixin:
 
         return step
 
-    def expectCommands(self, *exp):
+    def expect_commands(self, *exp):
         """
         Add to the expected remote commands, along with their results.  Each
         argument should be an instance of L{Expect}.
         """
         self.expected_remote_commands.extend(exp)
 
-    def expectOutcome(self, result, state_string=None):
+    def expect_outcome(self, result, state_string=None):
         """
         Expect the given result (from L{buildbot.process.results}) and status
         text (a list).
@@ -301,19 +301,19 @@ class BuildStepMixin:
         if state_string:
             self.exp_state_string = state_string
 
-    def expectProperty(self, property, value, source=None):
+    def expect_property(self, property, value, source=None):
         """
         Expect the given property to be set when the step is complete.
         """
         self.exp_properties[property] = (value, source)
 
-    def expectNoProperty(self, property):
+    def expect_no_property(self, property):
         """
         Expect the given property is *not* set when the step is complete
         """
         self.exp_missing_properties.append(property)
 
-    def expectLogfile(self, logfile, contents):
+    def expect_logfile(self, logfile, contents):
         """
         Expect a logfile with the given contents
         """
@@ -325,23 +325,23 @@ class BuildStepMixin:
     def expect_build_data(self, name, value, source):
         self._exp_build_data[name] = (value, source)
 
-    def expectHidden(self, hidden):
+    def expect_hidden(self, hidden):
         """
         Set whether the step is expected to be hidden.
         """
         self.exp_hidden = hidden
 
-    def expectException(self, exception_class):
+    def expect_exception(self, exception_class):
         """
         Set whether the step is expected to raise an exception.
         """
         self.exp_exception = exception_class
-        self.expectOutcome(EXCEPTION)
+        self.expect_outcome(EXCEPTION)
 
-    def expectTestResultSets(self, sets):
+    def expect_test_result_sets(self, sets):
         self._exp_test_result_sets = sets
 
-    def expectTestResults(self, results):
+    def expect_test_results(self, results):
         self._exp_test_results = results
 
     def _dump_logs(self):
@@ -352,9 +352,9 @@ class BuildStepMixin:
                 log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
 
     @defer.inlineCallbacks
-    def runStep(self):
+    def run_step(self):
         """
-        Run the step set up with L{setupStep}, and check the results.
+        Run the step set up with L{setup_step}, and check the results.
 
         @returns: Deferred
         """
@@ -492,7 +492,7 @@ class BuildStepMixin:
                 self._expected_remote_commands_popped += 1
         return command
 
-    def changeWorkerSystem(self, system):
+    def change_worker_system(self, system):
         self.worker.worker_system = system
         if system in ['nt', 'win32']:
             self.build.path_module = namedModule('ntpath')
