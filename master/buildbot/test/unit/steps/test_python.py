@@ -183,8 +183,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_ERROR)))
         self.expect_outcome(result=FAILURE,
                            state_string='pylint error=1 warning=1 (failure)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-error', 1)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-error', 1)
         if store_results:
             self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
             # note that no results are submitted for tests where we don't know the location
@@ -208,8 +208,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_FATAL)))
         self.expect_outcome(result=FAILURE,
                            state_string='pylint fatal=1 warning=1 (failure)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-fatal', 1)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-fatal', 1)
         return self.run_step()
 
     def test_failure_zero_returncode(self):
@@ -223,8 +223,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0))
         self.expect_outcome(result=FAILURE,
                            state_string='pylint error=1 warning=1 (failure)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-error', 1)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-error', 1)
         return self.run_step()
 
     def test_regex_text(self):
@@ -236,9 +236,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expect_outcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-convention', 1)
-        self.expectProperty('pylint-total', 2)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-convention', 1)
+        self.expect_property('pylint-total', 2)
         return self.run_step()
 
     def test_regex_text_0_24(self):
@@ -251,9 +251,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expect_outcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-convention', 1)
-        self.expectProperty('pylint-total', 2)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-convention', 1)
+        self.expect_property('pylint-total', 2)
         return self.run_step()
 
     def test_regex_text_1_3_1(self):
@@ -267,9 +267,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expect_outcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-convention', 1)
-        self.expectProperty('pylint-total', 2)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-convention', 1)
+        self.expect_property('pylint-total', 2)
         return self.run_step()
 
     @parameterized.expand([
@@ -291,9 +291,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expect_outcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-convention', 1)
-        self.expectProperty('pylint-total', 2)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-convention', 1)
+        self.expect_property('pylint-total', 2)
         if store_results:
             self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
             self.expectTestResults([
@@ -317,9 +317,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(stdout)
             .exit(python.PyLint.RC_CONVENTION))
         self.expect_outcome(result=SUCCESS, state_string='pylint')
-        self.expectProperty('pylint-warning', 0)
-        self.expectProperty('pylint-convention', 0)
-        self.expectProperty('pylint-total', 0)
+        self.expect_property('pylint-warning', 0)
+        self.expect_property('pylint-convention', 0)
+        self.expect_property('pylint-total', 0)
         return self.run_step()
 
     def test_regex_text_ids(self):
@@ -331,9 +331,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expect_outcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-convention', 1)
-        self.expectProperty('pylint-total', 2)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-convention', 1)
+        self.expect_property('pylint-total', 2)
         return self.run_step()
 
     def test_regex_text_ids_0_24(self):
@@ -346,9 +346,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expect_outcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-convention', 1)
-        self.expectProperty('pylint-total', 2)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-convention', 1)
+        self.expect_property('pylint-total', 2)
         return self.run_step()
 
     @parameterized.expand([
@@ -364,9 +364,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expect_outcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-convention', 1)
-        self.expectProperty('pylint-total', 2)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-convention', 1)
+        self.expect_property('pylint-total', 2)
         if store_results:
             self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
             self.expectTestResults([
@@ -384,9 +384,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expect_outcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-convention', 1)
-        self.expectProperty('pylint-total', 2)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-convention', 1)
+        self.expect_property('pylint-total', 2)
         return self.run_step()
 
     def test_regex_parseable_1_3_1(self):
@@ -405,9 +405,9 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expect_outcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
-        self.expectProperty('pylint-warning', 1)
-        self.expectProperty('pylint-convention', 1)
-        self.expectProperty('pylint-total', 2)
+        self.expect_property('pylint-warning', 1)
+        self.expect_property('pylint-convention', 1)
+        self.expect_property('pylint-total', 2)
         return self.run_step()
 
 
@@ -446,8 +446,8 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1))
         self.expect_outcome(result=WARNINGS,
                            state_string='pyflakes unused=1 (warnings)')
-        self.expectProperty('pyflakes-unused', 1)
-        self.expectProperty('pyflakes-total', 1)
+        self.expect_property('pyflakes-unused', 1)
+        self.expect_property('pyflakes-total', 1)
         return self.run_step()
 
     def test_undefined(self):
@@ -458,8 +458,8 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1))
         self.expect_outcome(result=FAILURE,
                            state_string='pyflakes undefined=1 (failure)')
-        self.expectProperty('pyflakes-undefined', 1)
-        self.expectProperty('pyflakes-total', 1)
+        self.expect_property('pyflakes-undefined', 1)
+        self.expect_property('pyflakes-total', 1)
         return self.run_step()
 
     def test_redefs(self):
@@ -470,8 +470,8 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1))
         self.expect_outcome(result=WARNINGS,
                            state_string='pyflakes redefs=1 (warnings)')
-        self.expectProperty('pyflakes-redefs', 1)
-        self.expectProperty('pyflakes-total', 1)
+        self.expect_property('pyflakes-redefs', 1)
+        self.expect_property('pyflakes-total', 1)
         return self.run_step()
 
     def test_importstar(self):
@@ -482,8 +482,8 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1))
         self.expect_outcome(result=WARNINGS,
                            state_string='pyflakes import*=1 (warnings)')
-        self.expectProperty('pyflakes-import*', 1)
-        self.expectProperty('pyflakes-total', 1)
+        self.expect_property('pyflakes-import*', 1)
+        self.expect_property('pyflakes-total', 1)
         return self.run_step()
 
     def test_misc(self):
@@ -494,8 +494,8 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1))
         self.expect_outcome(result=WARNINGS,
                            state_string='pyflakes misc=1 (warnings)')
-        self.expectProperty('pyflakes-misc', 1)
-        self.expectProperty('pyflakes-total', 1)
+        self.expect_property('pyflakes-misc', 1)
+        self.expect_property('pyflakes-total', 1)
         return self.run_step()
 
 

@@ -301,7 +301,7 @@ class BuildStepMixin:
         if state_string:
             self.exp_state_string = state_string
 
-    def expectProperty(self, property, value, source=None):
+    def expect_property(self, property, value, source=None):
         """
         Expect the given property to be set when the step is complete.
         """

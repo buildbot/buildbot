@@ -62,7 +62,7 @@ class TestGitHub(test_source_git.TestGit):
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'GitHub')
         return self.run_step()
 
@@ -102,6 +102,6 @@ class TestGitHub(test_source_git.TestGit):
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'GitHub')
         return self.run_step()

@@ -141,7 +141,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -176,7 +176,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -226,7 +226,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -275,7 +275,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -333,7 +333,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.run_step()
 
@@ -397,7 +397,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -455,7 +455,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -519,7 +519,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.run_step()
 
@@ -584,7 +584,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -645,7 +645,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -681,7 +681,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -731,7 +731,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -781,7 +781,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -835,7 +835,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -876,7 +876,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -933,7 +933,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -991,7 +991,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1075,7 +1075,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1105,7 +1105,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1290,7 +1290,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1339,7 +1339,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1371,7 +1371,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1400,7 +1400,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1454,7 +1454,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1494,7 +1494,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1526,7 +1526,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1558,7 +1558,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1590,7 +1590,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1626,7 +1626,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1661,7 +1661,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1712,7 +1712,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1747,7 +1747,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1781,7 +1781,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1813,7 +1813,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1850,7 +1850,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1898,7 +1898,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="update")
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d',
+        self.expect_property('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d',
                             self.sourceName)
         return self.run_step()
 
@@ -1946,7 +1946,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -1997,7 +1997,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2026,7 +2026,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2055,7 +2055,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2084,7 +2084,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2125,7 +2125,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2169,7 +2169,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2209,7 +2209,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2250,7 +2250,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2286,7 +2286,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2336,7 +2336,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2371,7 +2371,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2400,7 +2400,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2433,7 +2433,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2497,7 +2497,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2535,7 +2535,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2578,7 +2578,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2615,7 +2615,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2650,7 +2650,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2690,7 +2690,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2730,7 +2730,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2758,7 +2758,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
@@ -2801,9 +2801,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        self.expectProperty('commit-description', 'Tag-1234', self.sourceName)
+        self.expect_property('commit-description', 'Tag-1234', self.sourceName)
         return self.run_step()
 
     def test_getDescription_failed(self):
@@ -2848,7 +2848,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(128)  # error, but it's suppressed
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         self.expectNoProperty('commit-description')
         return self.run_step()
@@ -2900,17 +2900,17 @@ class TestGit(sourcesteps.SourceStepMixin,
         if codebase:
             self.expect_outcome(result=SUCCESS,
                                state_string="update " + codebase)
-            self.expectProperty('got_revision',
+            self.expect_property('got_revision',
                                 {codebase: 'f6ad368298bd941e934a41f3babc827b2aa95a1d'},
                                 self.sourceName)
-            self.expectProperty(
+            self.expect_property(
                 'commit-description', {codebase: 'Tag-1234'}, self.sourceName)
         else:
             self.expect_outcome(result=SUCCESS,
                                state_string="update")
-            self.expectProperty(
+            self.expect_property(
                 'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-            self.expectProperty('commit-description', 'Tag-1234', self.sourceName)
+            self.expect_property('commit-description', 'Tag-1234', self.sourceName)
 
     def test_getDescription_empty_dict(self):
         self.setup_getDescription_test(

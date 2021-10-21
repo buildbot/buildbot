@@ -89,7 +89,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
             .stdout('blah\ndpkg-genchanges  >../somefilename.changes\foo\n')
             .exit(0))
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('deb-changes',
+        self.expect_property('deb-changes',
                             'somefilename.changes',
                             'DebPbuilder')
         return self.run_step()

@@ -123,7 +123,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS, state_string="update")
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clean_and_login_worker_2_16(self):
@@ -170,7 +170,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS, state_string="update")
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clean_patch(self):
@@ -224,7 +224,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
@@ -279,7 +279,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clean_timeout(self):
@@ -320,7 +320,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clean_branch(self):
@@ -358,7 +358,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clean_branch_sourcestamp(self):
@@ -396,7 +396,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_fresh(self):
@@ -433,7 +433,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clobber(self):
@@ -457,7 +457,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clobber_retry(self):
@@ -498,7 +498,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_copy(self):
@@ -536,7 +536,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_copy_wrong_repo(self):
@@ -569,7 +569,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental(self):
@@ -603,7 +603,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_sticky_date(self):
@@ -642,7 +642,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_password_windows(self):
@@ -712,7 +712,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_special_case(self):
@@ -785,7 +785,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_not_loggedin(self):
@@ -819,7 +819,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_no_existing_repo(self):
@@ -846,7 +846,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_retry(self):
@@ -882,7 +882,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_wrong_repo(self):
@@ -910,7 +910,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_wrong_module(self):
@@ -943,7 +943,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clean_no_existing_repo(self):
@@ -968,7 +968,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_clean_wrong_repo(self):
@@ -994,7 +994,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_full_no_method(self):
@@ -1031,7 +1031,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_with_options(self):
@@ -1058,7 +1058,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_mode_incremental_with_env_logEnviron(self):
@@ -1097,7 +1097,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
     def test_command_fails(self):

@@ -222,7 +222,7 @@ class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
         self.properties.setProperty(
             'workername', 'testWorker', source='SetProperty', runtime=True)
         self.expect_outcome(result=SUCCESS, state_string="Set")
-        self.expectProperty(
+        self.expect_property(
             'testProperty', 'sch=force, worker=testWorker', source='SetProperty')
         return self.run_step()
 
@@ -265,7 +265,7 @@ class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
         # more or less dynamic methods
         self.setup_step(
             master.SetProperties(name="my-step", **kwargs))
-        self.expectProperty('a', 'b', 'my-step')
+        self.expect_property('a', 'b', 'my-step')
         self.expect_outcome(result=SUCCESS, state_string='Properties Set')
         return self.run_step()
 

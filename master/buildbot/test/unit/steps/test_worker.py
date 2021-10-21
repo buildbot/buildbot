@@ -70,12 +70,12 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
         self.properties.setProperty("six", 99, "them")
         self.expect_outcome(result=SUCCESS,
                            state_string="Set")
-        self.expectProperty('one', "1", source='me')
+        self.expect_property('one', "1", source='me')
         self.expectNoProperty('two')
         self.expectNoProperty('three')
-        self.expectProperty('four', 4, source='them')
-        self.expectProperty('five', 5, source='them')
-        self.expectProperty('six', '6', source='me')
+        self.expect_property('four', 4, source='them')
+        self.expect_property('five', 5, source='them')
+        self.expect_property('six', '6', source='me')
         self.expectLogfile("properties",
                            "one = '1'\nsix = '6'")
         return self.run_step()
@@ -87,7 +87,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
         self.worker.worker_system = 'win32'
         self.expect_outcome(result=SUCCESS,
                            state_string="Set")
-        self.expectProperty('eNv', 'EE', source='me')
+        self.expect_property('eNv', 'EE', source='me')
         self.expectLogfile("properties",
                            "eNv = 'EE'")
         return self.run_step()

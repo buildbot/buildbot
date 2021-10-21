@@ -73,7 +73,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Gerrit')
         return self.run_step()
 
@@ -115,7 +115,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Gerrit')
         return self.run_step()
 
@@ -157,7 +157,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty(
+        self.expect_property(
             'got_revision', {'buildbot': 'f6ad368298bd941e934a41f3babc827b2aa95a1d'}, 'Gerrit')
         return self.run_step()
 

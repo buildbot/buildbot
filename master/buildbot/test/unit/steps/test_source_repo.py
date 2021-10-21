@@ -375,7 +375,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
             .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
             .stderr("HEAD is now at 0123456789abcdef...\n"))
-        self.expectProperty(
+        self.expect_property(
             "repo_downloaded", "564/12 0123456789abcdef ", "Source")
         return self.myRunStep()
 
@@ -542,7 +542,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
             .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
             .stderr("HEAD is now at 0123456789abcdef...\n"))
-        self.expectProperty(
+        self.expect_property(
             "repo_downloaded", "564/12 0123456789abcdef ", "Source")
         return self.myRunStep()
 
@@ -573,7 +573,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
             .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
             .stderr("HEAD is now at 0123456789abcdef...\n"))
-        self.expectProperty(
+        self.expect_property(
             "repo_downloaded", "564/12 0123456789abcdef ", "Source")
         return self.myRunStep()
 

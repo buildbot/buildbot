@@ -161,7 +161,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'P4')
+        self.expect_property('got_revision', '100', 'P4')
         return self.run_step()
 
     def _incremental(self, client_stdin='', extra_args=None, workdir='wkdir', timeout=20 * 60):
@@ -195,7 +195,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'P4')
+        self.expect_property('got_revision', '100', 'P4')
         return self.run_step()
 
     def test_mode_incremental_p4base(self):
@@ -532,7 +532,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'P4')
+        self.expect_property('got_revision', '100', 'P4')
         return self.run_step()
 
     def test_mode_full_p4base(self):

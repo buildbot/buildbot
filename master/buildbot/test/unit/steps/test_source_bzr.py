@@ -69,7 +69,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="update")
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_win32path(self):
@@ -127,7 +127,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_revision(self):
@@ -155,7 +155,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clean(self):
@@ -182,7 +182,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clean_patched(self):
@@ -214,7 +214,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clean_patch(self):
@@ -255,7 +255,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
@@ -297,7 +297,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clean_revision(self):
@@ -325,7 +325,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_fresh(self):
@@ -352,7 +352,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clobber(self):
@@ -377,7 +377,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clobber_retry(self):
@@ -414,7 +414,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clobber_revision(self):
@@ -441,7 +441,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clobber_baseurl(self):
@@ -467,7 +467,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_clobber_baseurl_nodefault(self):
@@ -494,7 +494,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_full_copy(self):
@@ -522,7 +522,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_incremental(self):
@@ -546,7 +546,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_incremental_revision(self):
@@ -571,7 +571,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'Bzr')
+        self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
     def test_mode_incremental_no_existing_repo(self):
@@ -596,7 +596,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100\n', 'Bzr')
+        self.expect_property('got_revision', '100\n', 'Bzr')
         return self.run_step()
 
     def test_mode_incremental_retry(self):
@@ -627,7 +627,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100\n', 'Bzr')
+        self.expect_property('got_revision', '100\n', 'Bzr')
         return self.run_step()
 
     def test_bad_revparse(self):
