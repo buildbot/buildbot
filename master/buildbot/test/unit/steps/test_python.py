@@ -166,7 +166,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(python.PyLint.RC_OK))
         self.expect_outcome(result=SUCCESS, state_string='pylint')
         if store_results:
-            self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
+            self.expect_test_result_sets([('Pylint warnings', 'code_issue', 'message')])
             self.expectTestResults([])
         return self.run_step()
 
@@ -186,7 +186,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-warning', 1)
         self.expect_property('pylint-error', 1)
         if store_results:
-            self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
+            self.expect_test_result_sets([('Pylint warnings', 'code_issue', 'message')])
             # note that no results are submitted for tests where we don't know the location
         return self.run_step()
 
@@ -295,7 +295,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-convention', 1)
         self.expect_property('pylint-total', 2)
         if store_results:
-            self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
+            self.expect_test_result_sets([('Pylint warnings', 'code_issue', 'message')])
             self.expectTestResults([
                 (1000, 'test.py:9:4: W0311: Bad indentation. Found 6 spaces, expected 4 ' +
                        '(bad-indentation)',
@@ -368,7 +368,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-convention', 1)
         self.expect_property('pylint-total', 2)
         if store_results:
-            self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
+            self.expect_test_result_sets([('Pylint warnings', 'code_issue', 'message')])
             self.expectTestResults([
                 (1000, 'test.py:9: [W0311] Bad indentation.', None, 'test.py', 9, None),
                 (1000, 'test.py:3: [C0111, foo123] Missing docstring', None, 'test.py', 3, None),

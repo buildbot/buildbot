@@ -338,7 +338,7 @@ class BuildStepMixin:
         self.exp_exception = exception_class
         self.expect_outcome(EXCEPTION)
 
-    def expectTestResultSets(self, sets):
+    def expect_test_result_sets(self, sets):
         self._exp_test_result_sets = sets
 
     def expectTestResults(self, results):
