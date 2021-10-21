@@ -80,7 +80,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
             self.expectLogfile('stdio', "hello\r\n")
         else:
             self.expectLogfile('stdio', "hello\n")
-        self.expectOutcome(result=SUCCESS, state_string="Ran")
+        self.expect_outcome(result=SUCCESS, state_string="Ran")
         return self.run_step()
 
     def test_real_cmd_interrupted(self):
@@ -90,10 +90,10 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         if runtime.platformType == 'win32':
             # windows doesn't have signals, so we don't get 'killed',
             # but the "exception" part still works.
-            self.expectOutcome(result=EXCEPTION,
+            self.expect_outcome(result=EXCEPTION,
                                state_string="failed (1) (exception)")
         else:
-            self.expectOutcome(result=EXCEPTION,
+            self.expect_outcome(result=EXCEPTION,
                                state_string="killed (9) (exception)")
         d = self.run_step()
         self.step.interrupt("KILL")
@@ -104,7 +104,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(
             master.MasterShellCommand(command=cmd))
         self.expectLogfile('stdio', "")
-        self.expectOutcome(result=FAILURE, state_string="failed (1) (failure)")
+        self.expect_outcome(result=FAILURE, state_string="failed (1) (failure)")
         return self.run_step()
 
     def test_constr_args(self):
@@ -125,7 +125,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
                 ('err', 'world\n'),
                 ('rc', 0),
             ])
-        self.expectOutcome(result=SUCCESS, state_string='y')
+        self.expect_outcome(result=SUCCESS, state_string='y')
         return self.run_step()
 
     def test_env_subst(self):
@@ -137,7 +137,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
             self.expectLogfile('stdio', "hello\r\n")
         else:
             self.expectLogfile('stdio', "hello\n")
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
 
         d = self.run_step()
 
@@ -157,7 +157,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
             self.expectLogfile('stdio', "hello;world\r\n")
         else:
             self.expectLogfile('stdio', "hello:world\n")
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
 
         d = self.run_step()
 
@@ -179,7 +179,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
             self.expectLogfile('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
         else:
             self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_constr_args_descriptionSuffix(self):
@@ -200,7 +200,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
                 ('err', 'world\n'),
                 ('rc', 0),
             ])
-        self.expectOutcome(result=SUCCESS, state_string='y z')
+        self.expect_outcome(result=SUCCESS, state_string='y z')
         return self.run_step()
 
 
@@ -221,7 +221,7 @@ class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
             'scheduler', 'force', source='SetProperty', runtime=True)
         self.properties.setProperty(
             'workername', 'testWorker', source='SetProperty', runtime=True)
-        self.expectOutcome(result=SUCCESS, state_string="Set")
+        self.expect_outcome(result=SUCCESS, state_string="Set")
         self.expectProperty(
             'testProperty', 'sch=force, worker=testWorker', source='SetProperty')
         return self.run_step()
@@ -244,7 +244,7 @@ class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
             'scheduler', 'force', source='TestSetProperty', runtime=True)
         self.properties.setProperty(
             'workername', 'testWorker', source='TestSetProperty', runtime=True)
-        self.expectOutcome(result=SUCCESS, state_string='Logged')
+        self.expect_outcome(result=SUCCESS, state_string='Logged')
         self.expectLogfile(
             'Output', pprint.pformat('sch=force, worker=testWorker'))
         return self.run_step()
@@ -266,7 +266,7 @@ class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(
             master.SetProperties(name="my-step", **kwargs))
         self.expectProperty('a', 'b', 'my-step')
-        self.expectOutcome(result=SUCCESS, state_string='Properties Set')
+        self.expect_outcome(result=SUCCESS, state_string='Properties Set')
         return self.run_step()
 
     def test_basic(self):
@@ -297,14 +297,14 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(master.Assert(
             Property("test_prop") == "foo"))
         self.properties.setProperty("test_prop", "foo", "bar")
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_eq_fail(self):
         self.setup_step(master.Assert(
             Property("test_prop") == "bar"))
         self.properties.setProperty("test_prop", "foo", "bar")
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_renderable_pass(self):
@@ -313,7 +313,7 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
             return props.getProperty("test_prop") == "foo"
         self.setup_step(master.Assert(test_renderer))
         self.properties.setProperty("test_prop", "foo", "bar")
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_renderable_fail(self):
@@ -322,5 +322,5 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
             return props.getProperty("test_prop") == "bar"
         self.setup_step(master.Assert(test_renderer))
         self.properties.setProperty("test_prop", "foo", "bar")
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()

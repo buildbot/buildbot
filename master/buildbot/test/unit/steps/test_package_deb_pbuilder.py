@@ -55,7 +55,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='built')
+        self.expect_outcome(result=SUCCESS, state_string='built')
         return self.run_step()
 
     def test_update(self):
@@ -73,7 +73,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_buildonly_and_property(self):
@@ -88,7 +88,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .stdout('blah\ndpkg-genchanges  >../somefilename.changes\foo\n')
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('deb-changes',
                             'somefilename.changes',
                             'DebPbuilder')
@@ -112,7 +112,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--architecture', 'amd64', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-amd64-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_architecture_renderable(self):
@@ -133,7 +133,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--architecture', 'amd64', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-amd64-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_distribution(self):
@@ -152,7 +152,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/woody-local-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_basetgz(self):
@@ -171,7 +171,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/buildbot/stable-local.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mirror(self):
@@ -190,7 +190,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_extrapackages(self):
@@ -211,7 +211,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                                  '--extrapackages', 'buildbot'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_keyring(self):
@@ -231,7 +231,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_components(self):
@@ -251,7 +251,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_othermirror(self):
@@ -271,7 +271,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
 
@@ -301,7 +301,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_update(self):
@@ -319,7 +319,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_buildonly(self):
@@ -333,7 +333,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_update_reg(self):
@@ -347,7 +347,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                         command=['sudo', '/usr/sbin/cowbuilder', '--update',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
             .exit(1))
-        self.expectOutcome(result=FAILURE, state_string='built (failure)')
+        self.expect_outcome(result=FAILURE, state_string='built (failure)')
         return self.run_step()
 
     def test_buildonly_reg(self):
@@ -362,7 +362,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
             .exit(1))
-        self.expectOutcome(result=FAILURE, state_string='built (failure)')
+        self.expect_outcome(result=FAILURE, state_string='built (failure)')
         return self.run_step()
 
 
@@ -397,7 +397,7 @@ class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/oneiric-local-buildbot.tgz'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='built')
+        self.expect_outcome(result=SUCCESS, state_string='built')
         return self.run_step()
 
 
@@ -432,5 +432,5 @@ class TestUbuCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/oneiric-local-buildbot.cow/'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='built')
+        self.expect_outcome(result=SUCCESS, state_string='built')
         return self.run_step()

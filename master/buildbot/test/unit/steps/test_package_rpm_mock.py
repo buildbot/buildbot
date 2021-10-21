@@ -54,7 +54,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                   'root.log': 'root.log',
                                   'state.log': 'state.log'})
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string="'mock --root ...'")
+        self.expect_outcome(result=SUCCESS, state_string="'mock --root ...'")
         return self.run_step()
 
     def test_resultdir_success(self):
@@ -72,7 +72,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                   'root.log': 'RESULT/root.log',
                                   'state.log': 'RESULT/state.log'})
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_resultdir_renderable(self):
@@ -92,7 +92,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                   'root.log': 'RESULT/root.log',
                                   'state.log': 'RESULT/state.log'})
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string="'mock --root ...'")
+        self.expect_outcome(result=SUCCESS, state_string="'mock --root ...'")
         return self.run_step()
 
 
@@ -124,7 +124,7 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
                                   'root.log': 'root.log',
                                   'state.log': 'state.log'},)
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='mock buildsrpm')
+        self.expect_outcome(result=SUCCESS, state_string='mock buildsrpm')
         return self.run_step()
 
 
@@ -155,5 +155,5 @@ class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
                                   'root.log': 'root.log',
                                   'state.log': 'state.log'},)
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='mock rebuild srpm')
+        self.expect_outcome(result=SUCCESS, state_string='mock rebuild srpm')
         return self.run_step()

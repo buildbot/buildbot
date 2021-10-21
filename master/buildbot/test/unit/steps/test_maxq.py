@@ -46,7 +46,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, TestReactorMixin,
             .stdout('no failures\n')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='success')
+        self.expect_outcome(result=SUCCESS, state_string='success')
         return self.run_step()
 
     def test_nonzero_rc_no_failures(self):
@@ -57,7 +57,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, TestReactorMixin,
             .stdout('no failures\n')
             .exit(2)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string='1 maxq failures')
         return self.run_step()
 
@@ -69,6 +69,6 @@ class TestShellCommandExecution(steps.BuildStepMixin, TestReactorMixin,
             .stdout('\nTEST FAILURE: foo\n' * 10)
             .exit(2)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string='10 maxq failures')
         return self.run_step()

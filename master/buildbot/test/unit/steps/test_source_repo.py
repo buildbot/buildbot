@@ -93,7 +93,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.build.allChanges = lambda x=None: []
 
     def myRunStep(self, result=SUCCESS, state_string=None):
-        self.expectOutcome(result=result, state_string=state_string)
+        self.expect_outcome(result=result, state_string=state_string)
         return self.run_step()
 
     def expectClobber(self):

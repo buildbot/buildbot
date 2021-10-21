@@ -122,7 +122,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS, state_string="update")
+        self.expect_outcome(result=SUCCESS, state_string="update")
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -169,7 +169,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS, state_string="update")
+        self.expect_outcome(result=SUCCESS, state_string="update")
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -223,7 +223,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -278,7 +278,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -319,7 +319,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -357,7 +357,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -395,7 +395,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -432,7 +432,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -456,7 +456,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -497,7 +497,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -535,7 +535,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -568,7 +568,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -602,7 +602,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -641,7 +641,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -677,7 +677,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mode_incremental_branch(self):
@@ -711,7 +711,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -750,7 +750,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mode_incremental_branch_sourcestamp(self):
@@ -784,7 +784,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -818,7 +818,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -845,7 +845,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -881,7 +881,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -909,7 +909,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -942,7 +942,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -967,7 +967,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -993,7 +993,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -1030,7 +1030,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -1057,7 +1057,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  '-z3', 'checkout', '-d', 'wkdir', '-l', 'mozilla/browser/'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -1096,7 +1096,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
@@ -1110,7 +1110,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(128)
         )
 
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_cvsdiscard_fails(self):
@@ -1144,7 +1144,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(1)
         )
 
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_worker_connection_lost(self):
@@ -1157,5 +1157,5 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .error(error.ConnectionLost())
         )
 
-        self.expectOutcome(result=RETRY, state_string="update (retry)")
+        self.expect_outcome(result=RETRY, state_string="update (retry)")
         return self.run_step()

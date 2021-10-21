@@ -83,7 +83,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST').exit(0))
         # TODO: need to factor command-summary stuff into a utility method and
         # use it here
-        self.expectOutcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
+        self.expect_outcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
         return self.run_step()
 
     def createDynamicRun(self, commands):
@@ -92,20 +92,20 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsNone(self):
         self.setup_step(self.createDynamicRun(None))
-        self.expectOutcome(result=EXCEPTION,
+        self.expect_outcome(result=EXCEPTION,
                            state_string="finished (exception)")
         return self.run_step()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsString(self):
         self.setup_step(self.createDynamicRun(["one command"]))
-        self.expectOutcome(result=EXCEPTION,
+        self.expect_outcome(result=EXCEPTION,
                            state_string='finished (exception)')
         return self.run_step()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
         self.setup_step(
             self.createDynamicRun([shellsequence.ShellArg(command=1)]))
-        self.expectOutcome(result=EXCEPTION,
+        self.expect_outcome(result=EXCEPTION,
                            state_string='finished (exception)')
         return self.run_step()
 
@@ -117,7 +117,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
                                         workdir='build'))
         self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(0),
                             ExpectShell(workdir='build', command='deploy p1').exit(0))
-        self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
+        self.expect_outcome(result=SUCCESS, state_string="'deploy p1'")
         return self.run_step()
 
     def testSkipWorks(self):
@@ -129,7 +129,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
                                         workdir='build'))
         self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(0),
                             ExpectShell(workdir='build', command='deploy p1').exit(0))
-        self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
+        self.expect_outcome(result=SUCCESS, state_string="'deploy p1'")
         return self.run_step()
 
     def testWarningWins(self):
@@ -142,7 +142,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
                                         workdir='build'))
         self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(1),
                             ExpectShell(workdir='build', command='deploy p1').exit(0))
-        self.expectOutcome(result=WARNINGS, state_string="'deploy p1' (warnings)")
+        self.expect_outcome(result=WARNINGS, state_string="'deploy p1' (warnings)")
         return self.run_step()
 
     def testSequenceStopsOnHaltOnFailure(self):
@@ -153,7 +153,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
         self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(1))
-        self.expectOutcome(result=FAILURE, state_string="'make p1' (failure)")
+        self.expect_outcome(result=FAILURE, state_string="'make p1' (failure)")
         return self.run_step()
 
     def testShellArgsAreRenderedAnewAtEachBuild(self):
@@ -169,7 +169,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_step(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-1", "TEST")
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-1'")
         self.run_step()
 
@@ -177,7 +177,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_step(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-2", "TEST")
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2').exit(0))
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-2'")
 
         return self.run_step()

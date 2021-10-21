@@ -80,7 +80,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -109,7 +109,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -138,7 +138,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -163,7 +163,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -197,7 +197,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -237,7 +237,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -275,7 +275,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -307,7 +307,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -340,7 +340,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -366,7 +366,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
@@ -380,5 +380,5 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['darcs', '--version'])
             .error(error.ConnectionLost())
         )
-        self.expectOutcome(result=RETRY, state_string="update (retry)")
+        self.expect_outcome(result=RETRY, state_string="update (retry)")
         return self.run_step()

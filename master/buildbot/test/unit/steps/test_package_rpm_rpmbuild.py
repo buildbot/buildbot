@@ -50,7 +50,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '-ba foo.spec')
             .stdout('lalala')
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
         return self.run_step()
 
     def test_autoRelease(self):
@@ -63,7 +63,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '--define "dist .el6" -ba foo.spec')
             .stdout('Your code has been rated at 10/10')
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
         return self.run_step()
 
     def test_define(self):
@@ -79,7 +79,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '-ba foo.spec')
             .stdout('Your code has been rated at 10/10')
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
         return self.run_step()
 
     def test_define_none(self):
@@ -92,7 +92,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '--define "dist .el6" -ba foo.spec')
             .stdout('Your code has been rated at 10/10')
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
         return self.run_step()
 
     @defer.inlineCallbacks
@@ -108,5 +108,5 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '-ba foo.spec')
             .stdout('lalala')
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
+        self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
         yield self.run_step()

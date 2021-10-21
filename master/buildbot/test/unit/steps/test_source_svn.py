@@ -179,7 +179,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_st_xml_corrupt)
             .exit(0)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     @defer.inlineCallbacks
@@ -210,7 +210,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml_nonintegerrevision)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', 'a10', 'SVN')
         yield self.run_step()
 
@@ -248,7 +248,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(svn_info_stdout)
             .exit(0)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_mode_incremental(self):
@@ -282,7 +282,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -322,7 +322,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -354,7 +354,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -385,7 +385,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -412,7 +412,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -445,7 +445,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -479,7 +479,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -513,7 +513,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -549,7 +549,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mode_incremental_preferLastChangedRev(self):
@@ -585,7 +585,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '90', 'SVN')
         return self.run_step()
 
@@ -625,7 +625,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(svn_info_stdout)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -651,7 +651,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -680,7 +680,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -720,7 +720,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('\n')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -760,7 +760,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('\n')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -802,7 +802,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('\n')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -845,7 +845,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -883,7 +883,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -923,7 +923,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -950,7 +950,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -980,7 +980,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1025,7 +1025,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1069,7 +1069,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1106,7 +1106,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', {'app': '100'}, 'SVN')
         return self.run_step()
 
@@ -1144,7 +1144,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1181,7 +1181,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1243,7 +1243,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1306,7 +1306,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1349,7 +1349,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1389,7 +1389,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1434,7 +1434,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1474,7 +1474,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1514,7 +1514,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.run_step()
 
@@ -1545,7 +1545,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_bogus_svnversion(self):
@@ -1581,7 +1581,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('1x0y0')
             .exit(0)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_rmdir_fails_clobber(self):
@@ -1597,7 +1597,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_rmdir_fails_copy(self):
@@ -1613,7 +1613,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_cpdir_fails_copy(self):
@@ -1644,7 +1644,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True)
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_rmdir_fails_purge(self):
@@ -1678,7 +1678,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         logEnviron=True, timeout=1200)
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_worker_connection_lost(self):
@@ -1691,7 +1691,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['svn', '--version'])
             .error(error.ConnectionLost())
         )
-        self.expectOutcome(result=RETRY, state_string="update (retry)")
+        self.expect_outcome(result=RETRY, state_string="update (retry)")
         return self.run_step()
 
     def test_empty_password(self):
@@ -1725,7 +1725,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_omit_password(self):
@@ -1759,7 +1759,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(self.svn_info_stdout_xml)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
 

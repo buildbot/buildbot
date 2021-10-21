@@ -225,8 +225,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['command', 'here'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     @defer.inlineCallbacks
@@ -238,8 +237,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['command', 'here'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
         self.assertEqual(self.step.installdir, r'C:\I')
 
@@ -250,8 +248,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['command', 'here'])
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
-                           state_string="compile 0 projects 0 files (failure)")
+        self.expect_outcome(result=FAILURE, state_string="compile 0 projects 0 files (failure)")
         return self.run_step()
 
     def test_evaluate_result_errors(self):
@@ -262,8 +259,8 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('error ABC123: foo\r\n')
             .exit(0)
         )
-        self.expectOutcome(result=FAILURE,
-                           state_string="compile 0 projects 0 files 1 errors (failure)")
+        self.expect_outcome(result=FAILURE,
+                            state_string="compile 0 projects 0 files 1 errors (failure)")
         return self.run_step()
 
     def test_evaluate_result_warnings(self):
@@ -274,8 +271,8 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('foo: warning ABC123: foo\r\n')
             .exit(0)
         )
-        self.expectOutcome(result=WARNINGS,
-                           state_string="compile 0 projects 0 files 1 warnings (warnings)")
+        self.expect_outcome(result=WARNINGS,
+                            state_string="compile 0 projects 0 files 1 warnings (warnings)")
         return self.run_step()
 
     def test_env_setup(self):
@@ -292,8 +289,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             PATH=r'c:\P1;C:\P2;'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_env_setup_existing(self):
@@ -310,8 +306,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             PATH=r'c:\P1;C:\P2;'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     @defer.inlineCallbacks
@@ -328,8 +323,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['command', 'here'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
 
         self.assertEqual(
@@ -385,8 +379,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             r'C:\Program Files\Microsoft Visual Studio'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean(self):
@@ -400,8 +393,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             r'C:\Program Files\Microsoft Visual Studio'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_noproj_build(self):
@@ -415,8 +407,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             r'C:\Program Files\Microsoft Visual Studio'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_env_prepend(self):
@@ -433,8 +424,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             LIB='l', p='p', i='i'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
@@ -489,8 +479,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean(self):
@@ -504,8 +493,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_noproj_build(self):
@@ -518,8 +506,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_env_prepend(self):
@@ -535,8 +522,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             LIB='l', p='p', i='i'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
@@ -602,8 +588,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                             r'C:\Program Files\Microsoft Visual Studio 8'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_args_x64(self):
@@ -618,8 +603,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                             x64=True))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean(self):
@@ -633,8 +617,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                             r'C:\Program Files\Microsoft Visual Studio 8'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     @defer.inlineCallbacks
@@ -650,8 +633,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                             x64=True))  # property has expected effect
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
 
         self.assertEqual(self.step.arch, 'x64')
@@ -680,8 +662,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
                             r'C:\Program Files\Microsoft Visual Studio 8'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean(self):
@@ -696,8 +677,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
                             r'C:\Program Files\Microsoft Visual Studio 8'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_mode_build_env(self):
@@ -712,8 +692,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
                             i='i'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
@@ -738,8 +717,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                             r'C:\Program Files\Microsoft Visual Studio 9.0'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
@@ -764,8 +742,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                             r'C:\Program Files\Microsoft Visual Studio 10.0'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
@@ -790,8 +767,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                             r'C:\Program Files\Microsoft Visual Studio 11.0'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
@@ -809,7 +785,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.MsBuild(
                             projectfile='pf', config='cfg', platform=None, project='pj'))
 
-        self.expectOutcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
+        self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
         yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
@@ -823,8 +799,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="built pj for cfg|Win32")
+        self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
     def test_build_project(self):
@@ -837,8 +812,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="built pj for cfg|Win32")
+        self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
     def test_clean_project(self):
@@ -851,8 +825,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="built pj for cfg|Win32")
+        self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
     def test_rebuild_project_with_defines(self):
@@ -866,8 +839,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="built pj for cfg|Win32")
+        self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
     def test_rebuild_solution(self):
@@ -880,8 +852,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="built solution for cfg|x64")
+        self.expect_outcome(result=SUCCESS, state_string="built solution for cfg|x64")
         return self.run_step()
 
 
@@ -899,7 +870,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.MsBuild(
                             projectfile='pf', config='cfg', platform=None, project='pj'))
 
-        self.expectOutcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
+        self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
         yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
@@ -914,8 +885,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_build_project(self):
@@ -929,8 +899,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean_project(self):
@@ -944,8 +913,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_rebuild_project_with_defines(self):
@@ -960,8 +928,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_rebuild_solution(self):
@@ -975,8 +942,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
-                           state_string="compile 0 projects 0 files")
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 

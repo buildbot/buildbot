@@ -85,7 +85,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .upload_string("Hello world!\n")
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="uploading srcfile")
         d = self.run_step()
         return d
@@ -102,7 +102,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .upload_string("Hello world!\n")
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="uploading srcfile")
         d = self.run_step()
         return d
@@ -122,7 +122,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .upload_string('test\n', timestamp=timestamp)
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS,
             state_string="uploading {}".format(os.path.basename(__file__))
             )
@@ -152,7 +152,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .upload_string("Hello world!\n")
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS,
             state_string="Test File Uploaded")
 
@@ -173,7 +173,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .upload_string("Hello world!\n")
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS,
             state_string="uploading {}".format(os.path.basename(__file__))
             )
@@ -198,7 +198,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .upload_string("Hello world!\n")
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS,
             state_string="uploading {}".format(os.path.basename(__file__))
             )
@@ -218,7 +218,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
             .exit(1))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=FAILURE,
             state_string="uploading srcfile (failure)")
         d = self.run_step()
@@ -237,7 +237,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
             .upload_string("Hello world!\n", out_writers=writers, error=RuntimeError('uh oh')))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=EXCEPTION, state_string="uploading srcfile (exception)")
         yield self.run_step()
 
@@ -260,7 +260,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.interrupt_nth_remote_command(0)
 
-        self.expectOutcome(result=CANCELLED,
+        self.expect_outcome(result=CANCELLED,
                            state_string="uploading srcfile (cancelled)")
         self.expectLogfile('interrupt', 'interrupt reason')
         yield self.run_step()
@@ -311,7 +311,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="uploading srcdir")
         d = self.run_step()
         return d
@@ -329,7 +329,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="uploading srcdir")
         d = self.run_step()
         return d
@@ -348,7 +348,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="uploading srcdir")
 
         yield self.run_step()
@@ -369,7 +369,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="uploading srcdir")
 
         yield self.run_step()
@@ -387,7 +387,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
             .exit(1))
 
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="uploading srcdir (failure)")
         yield self.run_step()
 
@@ -405,7 +405,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"}, error=RuntimeError('uh oh'),
                              out_writers=writers))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=EXCEPTION,
             state_string="uploading srcdir (exception)")
         yield self.run_step()
@@ -457,7 +457,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expect_commands()
 
-        self.expectOutcome(result=SKIPPED, state_string="finished (skipped)")
+        self.expect_outcome(result=SKIPPED, state_string="finished (skipped)")
         d = self.run_step()
         return d
 
@@ -475,7 +475,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_string("Hello world!\n")
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
+        self.expect_outcome(result=SUCCESS, state_string="uploading 1 file")
         d = self.run_step()
         return d
 
@@ -493,7 +493,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
+        self.expect_outcome(result=SUCCESS, state_string="uploading 1 file")
         d = self.run_step()
         return d
 
@@ -505,7 +505,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectStat(file='srcdir', workdir='wkdir')
             .exit(1))
 
-        self.expectOutcome(result=FAILURE, state_string="uploading 1 file (failure)")
+        self.expect_outcome(result=FAILURE, state_string="uploading 1 file (failure)")
         self.expectLogfile('stderr',
                            "File wkdir/srcdir not available at worker")
 
@@ -520,7 +520,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .update('stat', [0, 99, 99])
             .exit(0))
 
-        self.expectOutcome(result=FAILURE, state_string="uploading 1 file (failure)")
+        self.expect_outcome(result=FAILURE, state_string="uploading 1 file (failure)")
         self.expectLogfile('stderr', 'srcdir is neither a regular file, nor a directory')
 
         yield self.run_step()
@@ -547,7 +547,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="uploading 2 files")
         d = self.run_step()
         return d
@@ -564,7 +564,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
             .upload_string("Hello world!\n")
             .exit(0))
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="uploading 1 file")
         d = self.run_step()
         return d
@@ -586,7 +586,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_string("Hello world!\n")
             .exit(0)
         )
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="uploading 1 file")
         d = self.run_step()
         return d
@@ -600,7 +600,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .update('files', [])
             .exit(1)
         )
-        self.expectOutcome(
+        self.expect_outcome(
             result=SKIPPED, state_string="uploading 0 files (skipped)")
         d = self.run_step()
         return d
@@ -621,7 +621,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_string("Hello world!\n")
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
+        self.expect_outcome(result=SUCCESS, state_string="uploading 1 file")
         d = self.run_step()
         return d
 
@@ -641,7 +641,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
+        self.expect_outcome(result=SUCCESS, state_string="uploading 1 file")
         d = self.run_step()
         return d
 
@@ -669,7 +669,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="uploading 2 files")
         d = self.run_step()
         return d
@@ -691,7 +691,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_string("Hello world!\n")
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="uploading 1 file")
 
         yield self.run_step()
@@ -715,7 +715,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_string("Hello world!\n")
             .exit(0))
 
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="uploading 1 file")
 
         yield self.run_step()
@@ -735,7 +735,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
             .exit(1))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=FAILURE, state_string="uploading 2 files (failure)")
         d = self.run_step()
         return d
@@ -756,7 +756,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
             .upload_string("Hello world!\n", out_writers=writers, error=RuntimeError('uh oh')))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=EXCEPTION, state_string="uploading 2 files (exception)")
         yield self.run_step()
 
@@ -794,7 +794,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="uploading 2 files")
 
         yield self.run_step()
@@ -876,7 +876,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
             .behavior(downloadString(read.append))
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS,
             state_string="downloading to {0}".format(
                 os.path.basename(self.destfile)))
@@ -906,7 +906,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
             .behavior(downloadString(read.append))
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS,
             state_string="downloading to {0}".format(
                 os.path.basename(self.destfile)))
@@ -926,7 +926,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expect_commands()
 
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="downloading to {0} (failure)".format(
                                os.path.basename(self.destfile)))
         self.expectLogfile('stderr',
@@ -969,7 +969,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
             .behavior(downloadString(read.append))
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="downloading to hello.txt")
         yield self.run_step()
 
@@ -995,7 +995,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
             .behavior(downloadString(read.append))
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="downloading to hello.txt")
         yield self.run_step()
 
@@ -1010,7 +1010,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
             .exit(1))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=FAILURE, state_string="downloading to hello.txt (failure)")
         return self.run_step()
 
@@ -1059,7 +1059,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
             .behavior(downloadString(read.append))
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="downloading to hello.json")
         yield self.run_step()
 
@@ -1075,7 +1075,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
             .exit(1))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=FAILURE, state_string="downloading to hello.json (failure)")
         return self.run_step()
 
@@ -1117,7 +1117,7 @@ class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittes
             .behavior(downloadString(read.append))
             .exit(0))
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="downloading to props.json")
         yield self.run_step()
         # we decode as key order is dependent of python version

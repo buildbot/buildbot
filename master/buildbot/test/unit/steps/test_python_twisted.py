@@ -114,7 +114,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 0 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='no tests run')
+        self.expect_outcome(result=SUCCESS, state_string='no tests run')
         return self.run_step()
 
     def test_run_env_supplement(self):
@@ -131,7 +131,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 0 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='no tests run')
+        self.expect_outcome(result=SUCCESS, state_string='no tests run')
         return self.run_step()
 
     def test_run_env_nodupe(self):
@@ -148,7 +148,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 0 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='no tests run')
+        self.expect_outcome(result=SUCCESS, state_string='no tests run')
         return self.run_step()
 
     def test_run_singular(self):
@@ -163,7 +163,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 1 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='1 test passed')
+        self.expect_outcome(result=SUCCESS, state_string='1 test passed')
         return self.run_step()
 
     def test_run_plural(self):
@@ -178,7 +178,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 2 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
     def test_run_failure(self):
@@ -193,7 +193,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout(failureLog)
             .exit(1)
         )
-        self.expectOutcome(
+        self.expect_outcome(
             result=FAILURE, state_string='tests 8 failures (failure)')
         self.expectLogfile('problems', failureLog.split('\n\n', 1)[1][:-1])
         self.expectLogfile('warnings', textwrap.dedent('''\
@@ -217,7 +217,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 2 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
     def test_build_changed_files(self):
@@ -232,7 +232,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 2 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
     def test_test_path_env_python_path(self):
@@ -248,7 +248,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 2 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
     def test_custom_reactor(self):
@@ -263,7 +263,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 2 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed (custom)')
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed (custom)')
         return self.run_step()
 
     def test_custom_python(self):
@@ -277,7 +277,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 2 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
     def test_randomly(self):
@@ -293,7 +293,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 2 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
+        self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
     def test_run_jobs(self):
@@ -322,7 +322,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 1 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='1 test passed')
+        self.expect_outcome(result=SUCCESS, state_string='1 test passed')
         return self.run_step()
 
     def test_run_jobsProperties(self):
@@ -350,7 +350,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("Ran 1 tests\n")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='1 test passed')
+        self.expect_outcome(result=SUCCESS, state_string='1 test passed')
         return self.run_step()
 
 
@@ -374,7 +374,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectLogfile('files', 'foo.xhtml\n')
-        self.expectOutcome(result=SUCCESS, state_string='0 hlints')
+        self.expect_outcome(result=SUCCESS, state_string='0 hlints')
         return self.run_step()
 
     def test_custom_python(self):
@@ -387,7 +387,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectLogfile('files', 'foo.xhtml\n')
-        self.expectOutcome(result=SUCCESS, state_string='0 hlints')
+        self.expect_outcome(result=SUCCESS, state_string='0 hlints')
         return self.run_step()
 
     def test_command_failure(self):
@@ -399,12 +399,12 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1)
         )
         self.expectLogfile('files', 'foo.xhtml\n')
-        self.expectOutcome(result=FAILURE, state_string='hlint (failure)')
+        self.expect_outcome(result=FAILURE, state_string='hlint (failure)')
         return self.run_step()
 
     def test_no_build_files(self):
         self.setup_step(python_twisted.HLint(workdir='build'))
-        self.expectOutcome(result=SKIPPED, state_string='hlint (skipped)')
+        self.expect_outcome(result=SKIPPED, state_string='hlint (skipped)')
         return self.run_step()
 
     def test_run_warnings(self):
@@ -418,7 +418,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectLogfile('warnings', 'colon: meaning warning')
-        self.expectOutcome(result=WARNINGS, state_string='1 hlint (warnings)')
+        self.expect_outcome(result=WARNINGS, state_string='1 hlint (warnings)')
         return self.run_step()
 
 
@@ -438,5 +438,5 @@ class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['find', '.', '-name', '\'*.pyc\'', '-exec', 'rm', '{}', ';'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='remove .pycs')
+        self.expect_outcome(result=SUCCESS, state_string='remove .pycs')
         return self.run_step()

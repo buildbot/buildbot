@@ -68,7 +68,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
         self.properties.setProperty("four", 4, "them")
         self.properties.setProperty("five", 5, "them")
         self.properties.setProperty("six", 99, "them")
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="Set")
         self.expectProperty('one', "1", source='me')
         self.expectNoProperty('two')
@@ -85,7 +85,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
             variables=["eNv"], source="me"))
         self.worker.worker_environ = {"ENV": 'EE'}
         self.worker.worker_system = 'win32'
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="Set")
         self.expectProperty('eNv', 'EE', source='me')
         self.expectLogfile("properties",
@@ -110,7 +110,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
             .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="File found.")
+        self.expect_outcome(result=SUCCESS, state_string="File found.")
         return self.run_step()
 
     def test_not_found(self):
@@ -120,7 +120,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
             .update('stat', [0, 99, 99])
             .exit(0)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="Not a file. (failure)")
         return self.run_step()
 
@@ -130,7 +130,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
             ExpectStat(file='x')
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="File not found. (failure)")
         return self.run_step()
 
@@ -141,7 +141,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
             ExpectStat(file='XXX')
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="File not found. (failure)")
         return self.run_step()
 
@@ -149,7 +149,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
     def test_old_version(self):
         self.setup_step(worker.FileExists(file="x"),
                        worker_version=dict())
-        self.expectOutcome(result=EXCEPTION,
+        self.expect_outcome(result=EXCEPTION,
                            state_string="finished (exception)")
         yield self.run_step()
         self.flushLoggedErrors(WorkerSetupError)
@@ -171,7 +171,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectCpdir(fromdir='s', todir='d', timeout=120)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
+        self.expect_outcome(result=SUCCESS, state_string="Copied s to d")
         return self.run_step()
 
     def test_timeout(self):
@@ -180,7 +180,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectCpdir(fromdir='s', todir='d', timeout=300)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
+        self.expect_outcome(result=SUCCESS, state_string="Copied s to d")
         return self.run_step()
 
     def test_maxTime(self):
@@ -189,7 +189,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectCpdir(fromdir='s', todir='d', maxTime=10, timeout=120)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
+        self.expect_outcome(result=SUCCESS, state_string="Copied s to d")
         return self.run_step()
 
     def test_failure(self):
@@ -198,7 +198,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectCpdir(fromdir='s', todir='d', timeout=120)
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="Copying s to d failed. (failure)")
         return self.run_step()
 
@@ -211,7 +211,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectCpdir(fromdir='XXX', todir='YYY', timeout=120)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="Copied XXX to YYY")
+        self.expect_outcome(result=SUCCESS, state_string="Copied XXX to YYY")
         return self.run_step()
 
 
@@ -231,7 +231,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectRmdir(dir='d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="Deleted")
         return self.run_step()
 
@@ -241,7 +241,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectRmdir(dir='d')
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="Delete failed. (failure)")
         return self.run_step()
 
@@ -252,7 +252,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectRmdir(dir='XXX')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="Deleted")
         return self.run_step()
 
@@ -273,7 +273,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectMkdir(dir='d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="Created")
+        self.expect_outcome(result=SUCCESS, state_string="Created")
         return self.run_step()
 
     def test_failure(self):
@@ -282,7 +282,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectMkdir(dir='d')
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE, state_string="Create failed. (failure)")
+        self.expect_outcome(result=FAILURE, state_string="Create failed. (failure)")
         return self.run_step()
 
     def test_render(self):
@@ -292,7 +292,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
             ExpectMkdir(dir='XXX')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="Created")
+        self.expect_outcome(result=SUCCESS, state_string="Created")
         return self.run_step()
 
 
@@ -328,7 +328,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(Expect(*cmd_args)
                             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
 
     def test_runRemoteCommandFail(self):
         cmd_args = ('foo', {'bar': False})
@@ -339,7 +339,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(Expect(*cmd_args)
                             .exit(1))
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     @defer.inlineCallbacks
@@ -354,7 +354,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(Expect(*cmd_args)
                             .exit(1))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         yield self.run_step()
         self.assertTrue(testFunc.ran)
 
@@ -364,7 +364,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             ExpectRmfile(path='d', logEnviron=False)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mkdir(self):
@@ -373,7 +373,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             ExpectMkdir(dir='d', logEnviron=False)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_rmdir(self):
@@ -382,7 +382,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             ExpectRmdir(dir='d', logEnviron=False)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mkdir_fail(self):
@@ -391,7 +391,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             ExpectMkdir(dir='d', logEnviron=False)
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_glob(self):
@@ -406,7 +406,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             .update('files', ["one.pyc", "two.pyc"])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_glob_fail(self):
@@ -415,7 +415,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             ExpectGlob(path='*.pyc', logEnviron=False)
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_abandonOnFailure(self):
@@ -428,7 +428,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             ExpectMkdir(dir='d', logEnviron=False)
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_notAbandonOnFailure(self):
@@ -443,7 +443,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             ExpectMkdir(dir='d', logEnviron=False)
             .exit(1)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_getFileContentFromWorker(self):
@@ -460,7 +460,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             .upload_string("Hello world!")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_getFileContentFromWorker2_16(self):
@@ -479,7 +479,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             .upload_string("Hello world!")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_downloadFileContentToWorker(self):
@@ -494,7 +494,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
                                reader=ExpectRemoteRef(remotetransfer.FileReader),
                                blocksize=32768, workerdest='/path/dest1')
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_downloadFileContentToWorkerWithFilePermissions(self):
@@ -509,5 +509,5 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
                                reader=ExpectRemoteRef(remotetransfer.FileReader),
                                blocksize=32768, workerdest='/path/dest1')
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()

@@ -50,7 +50,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
 
     def test_doStepIf_False(self):
         self.setup_step(shell.ShellCommand(command="echo hello", doStepIf=False))
-        self.expectOutcome(result=SKIPPED,
+        self.expect_outcome(result=SKIPPED,
                            state_string="'echo hello' (skipped)")
         return self.run_step()
 
@@ -67,7 +67,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
             ExpectShell(workdir='build', command='echo hello')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="'echo hello'")
+        self.expect_outcome(result=SUCCESS, state_string="'echo hello'")
         return self.run_step()
 
     def test_run_list(self):
@@ -78,7 +78,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                         command=['trial', '-b', '-B', 'buildbot.test'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'trial -b ...'")
         return self.run_step()
 
@@ -93,7 +93,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                         command=['trial', '-b', '-B', 'buildbot.test'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string='test done suff ix')
         return self.run_step()
 
@@ -105,7 +105,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                         command=['trial', '-b', '-B', 'buildbot.test'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'trial -b ...'")
         return self.run_step()
 
@@ -117,7 +117,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                         command=['trial', '-b', '-B', 'buildbot.test'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'trial -b ...'")
         return self.run_step()
 
@@ -129,7 +129,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                         command=['trial', '-b', 'buildbot.test'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'trial -b ...'")
         return self.run_step()
 
@@ -141,7 +141,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                         env=dict(DEF='HERE'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_run_env_override(self):
@@ -153,7 +153,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                         env=dict(ABC='123', DEF='HERE'))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_run_usePTY(self):
@@ -163,7 +163,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                         usePTY=False)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_run_usePTY_old_worker(self):
@@ -174,7 +174,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
             ExpectShell(workdir='build', command='echo hello')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_run_decodeRC(self, rc=1, results=WARNINGS, extra_text=" (warnings)"):
@@ -184,7 +184,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
             ExpectShell(workdir='build', command='echo hello')
             .exit(rc)
         )
-        self.expectOutcome(
+        self.expect_outcome(
             result=results, state_string="'echo hello'" + extra_text)
         return self.run_step()
 
@@ -218,7 +218,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('9292    .\n')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="treesize 9292 KiB")
         self.expectProperty('tree-size-KiB', 9292)
         return self.run_step()
@@ -231,7 +231,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('abcdef\n')
             .exit(0)
         )
-        self.expectOutcome(result=WARNINGS,
+        self.expect_outcome(result=WARNINGS,
                            state_string="treesize unknown (warnings)")
         return self.run_step()
 
@@ -243,7 +243,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stderr('abcdef\n')
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="treesize unknown (failure)")
         return self.run_step()
 
@@ -271,7 +271,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             .stdout('\n\nabcdef\n')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "abcdef")  # note: stripped
         self.expectLogfile('property changes', r"res: " + repr('abcdef'))
@@ -287,7 +287,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             .stdout('\n\nabcdef\n')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "abcdef")  # note: stripped
         self.expectLogfile('property changes', r"res: " + repr('abcdef'))
@@ -301,7 +301,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             .stdout('\n\nabcdef\n')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "\n\nabcdef\n")
         self.expectLogfile('property changes', r"res: " + repr('\n\nabcdef\n'))
@@ -316,7 +316,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             .stderr('cannot blarg: File not found')
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="'blarg' (failure)")
         self.expectNoProperty("res")
         return self.run_step()
@@ -337,7 +337,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             .stderr('END')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="2 properties set")
         self.expectLogfile('property changes', 'a: 1\nb: 2')
         self.expectProperty("a", 1)
@@ -356,7 +356,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             .exit(3)
         )
         # note that extract_fn *is* called anyway
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="2 properties set (failure)")
         self.expectLogfile('property changes', 'a: 1\nb: 2')
         return self.run_step()
@@ -373,7 +373,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             .exit(3)
         )
         # note that extract_fn *is* called anyway, but returns no properties
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="'cmd' (failure)")
         return self.run_step()
 
@@ -389,7 +389,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             .exit(0)
         )
         # note that extract_fn *is* called anyway, but returns no properties
-        self.expectOutcome(result=EXCEPTION,
+        self.expect_outcome(result=EXCEPTION,
                            state_string="'cmd' (exception)")
         yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
@@ -435,7 +435,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     Files=93, Tests=20"""))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='20 tests 20 passed')
+        self.expect_outcome(result=SUCCESS, state_string='20 tests 20 passed')
         return self.run_step()
 
     def test_new_version_warnings(self):
@@ -456,7 +456,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     Result: PASS"""))
             .exit(0)
         )
-        self.expectOutcome(
+        self.expect_outcome(
             result=WARNINGS,
             state_string='20 tests 20 passed 2 warnings (warnings)')
         return self.run_step()
@@ -485,7 +485,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     Failed 1/1 test programs. 1/4 subtests failed."""))
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string='4 tests 3 passed 1 failed (failure)')
         return self.run_step()
 
@@ -500,7 +500,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     Files=10, Tests=20, 100 wall blah blah"""))
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string='20 tests 20 passed')
         return self.run_step()
 
@@ -514,7 +514,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     Failed 1/1 test programs, 3/20 subtests failed."""))
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string='20 tests 17 passed 3 failed (failure)')
         return self.run_step()
 
@@ -560,7 +560,7 @@ class Configure(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=["./configure"])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
 
@@ -584,7 +584,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             .stdout('blarg success!')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty("warnings-count", 0)
         return self.run_step()
 
@@ -597,7 +597,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
                     'also normal\nWARNING: blarg!\n')
             .exit(0)
         )
-        self.expectOutcome(result=WARNINGS)
+        self.expect_outcome(result=WARNINGS)
         self.expectProperty("warnings-count", 2)
         self.expectLogfile("warnings (2)",
                            "warning: blarg!\nWARNING: blarg!\n")
@@ -612,7 +612,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             .stdout('scary: foo\nwarning: bar\nscary: bar')
             .exit(0)
         )
-        self.expectOutcome(result=WARNINGS)
+        self.expect_outcome(result=WARNINGS)
         self.expectProperty("warnings-count", 2)
         self.expectLogfile("warnings (2)", "scary: foo\nscary: bar\n")
         return self.run_step()
@@ -625,7 +625,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             .stdout('warning: noo!\n' * 10)
             .exit(0)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         self.expectProperty("warnings-count", 10)
         return self.run_step()
 
@@ -637,7 +637,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             .stdout('warning: I might fail')
             .exit(3)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         self.expectProperty("warnings-count", 1)
         self.expectLogfile("warnings (1)", "warning: I might fail\n")
         return self.run_step()
@@ -652,7 +652,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             .stdout('I might fail with rc')
             .exit(3)
         )
-        self.expectOutcome(result=WARNINGS)
+        self.expect_outcome(result=WARNINGS)
         self.expectProperty("warnings-count", 0)
         return self.run_step()
 
@@ -695,16 +695,16 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
                 .exit(0)
             )
         if exp_exception:
-            self.expectOutcome(result=EXCEPTION,
+            self.expect_outcome(result=EXCEPTION,
                                state_string="'make' (exception)")
         else:
             if exp_warning_count != 0:
-                self.expectOutcome(result=WARNINGS,
+                self.expect_outcome(result=WARNINGS,
                                    state_string="'make' (warnings)")
                 self.expectLogfile("warnings (%d)" % exp_warning_count,
                                    exp_warning_log)
             else:
-                self.expectOutcome(result=SUCCESS,
+                self.expect_outcome(result=SUCCESS,
                                    state_string="'make'")
             self.expectProperty("warnings-count", exp_warning_count)
         return self.run_step()

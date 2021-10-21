@@ -64,7 +64,7 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
             .exit(0),
             )
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="finished")
         d = self.run_step()
         return d
@@ -102,7 +102,7 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
             .exit(0),
             )
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="finished")
         d = self.run_step()
         return d
@@ -134,7 +134,7 @@ class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
             .exit(0),
             )
 
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string="finished")
         d = self.run_step()
         return d

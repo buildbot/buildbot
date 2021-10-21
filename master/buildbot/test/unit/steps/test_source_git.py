@@ -81,7 +81,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mode_full_filters_2_27(self):
@@ -107,7 +107,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mode_full_clean(self):
@@ -140,7 +140,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -175,7 +175,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -225,7 +225,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -274,7 +274,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -332,7 +332,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.run_step()
@@ -396,7 +396,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -454,7 +454,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -518,7 +518,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.run_step()
@@ -583,7 +583,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -644,7 +644,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -680,7 +680,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -730,7 +730,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -780,7 +780,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -834,7 +834,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -875,7 +875,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -932,7 +932,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -990,7 +990,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1037,7 +1037,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         initialStdin='patch')
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         self.expectNoProperty('got_revision')
         return self.run_step()
 
@@ -1074,7 +1074,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1104,7 +1104,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1137,7 +1137,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                     "'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n")
             .exit(128)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         self.expectNoProperty('got_revision')
         return self.run_step()
 
@@ -1164,7 +1164,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mode_full_clean_no_existing_repo_with_reference(self):
@@ -1190,7 +1190,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mode_full_clean_no_existing_repo_branch(self):
@@ -1217,7 +1217,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mode_full_clean_no_existing_repo_with_origin(self):
@@ -1243,7 +1243,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_mode_full_clean_submodule(self):
@@ -1289,7 +1289,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1338,7 +1338,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1370,7 +1370,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1399,7 +1399,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1424,7 +1424,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  '.', '--progress'])
             .exit(1)  # clone fails
         )
-        self.expectOutcome(result=FAILURE, state_string="update (failure)")
+        self.expect_outcome(result=FAILURE, state_string="update (failure)")
         self.expectNoProperty('got_revision')
         return self.run_step()
 
@@ -1453,7 +1453,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1493,7 +1493,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1525,7 +1525,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1557,7 +1557,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1589,7 +1589,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1625,7 +1625,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1660,7 +1660,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1711,7 +1711,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1746,7 +1746,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1780,7 +1780,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1812,7 +1812,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1849,7 +1849,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1897,7 +1897,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="update")
+        self.expect_outcome(result=SUCCESS, state_string="update")
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d',
                             self.sourceName)
         return self.run_step()
@@ -1945,7 +1945,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -1996,7 +1996,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2025,7 +2025,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2054,7 +2054,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2083,7 +2083,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2124,7 +2124,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2168,7 +2168,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2208,7 +2208,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2249,7 +2249,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2285,7 +2285,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2335,7 +2335,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2370,7 +2370,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2399,7 +2399,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2432,7 +2432,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2465,7 +2465,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ada95a1d')  # too short
             .exit(0)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         self.expectNoProperty('got_revision')
         return self.run_step()
 
@@ -2496,7 +2496,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2534,7 +2534,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2577,7 +2577,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2614,7 +2614,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2649,7 +2649,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2689,7 +2689,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2729,7 +2729,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2757,7 +2757,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
@@ -2800,7 +2800,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('Tag-1234')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         self.expectProperty('commit-description', 'Tag-1234', self.sourceName)
@@ -2847,7 +2847,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('')
             .exit(128)  # error, but it's suppressed
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         self.expectNoProperty('commit-description')
@@ -2898,7 +2898,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         )
 
         if codebase:
-            self.expectOutcome(result=SUCCESS,
+            self.expect_outcome(result=SUCCESS,
                                state_string="update " + codebase)
             self.expectProperty('got_revision',
                                 {codebase: 'f6ad368298bd941e934a41f3babc827b2aa95a1d'},
@@ -2906,7 +2906,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.expectProperty(
                 'commit-description', {codebase: 'Tag-1234'}, self.sourceName)
         else:
-            self.expectOutcome(result=SUCCESS,
+            self.expect_outcome(result=SUCCESS,
                                state_string="update")
             self.expectProperty(
                 'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
@@ -3165,7 +3165,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_worker_connection_lost(self):
@@ -3178,7 +3178,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .stdout('git version 1.7.5')
             .error(error.ConnectionLost())
         )
-        self.expectOutcome(result=RETRY, state_string="update (retry)")
+        self.expect_outcome(result=RETRY, state_string="update (retry)")
         return self.run_step()
 
     @defer.inlineCallbacks
@@ -3260,7 +3260,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'push', url, 'testbranch'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_push_force(self):
@@ -3278,7 +3278,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'push', url, 'testbranch', '--force'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_push_fail(self):
@@ -3297,7 +3297,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .stderr("error: failed to push some refs to <url>\n")
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_push_ssh_key_2_10(self):
@@ -3330,7 +3330,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_push_ssh_key_2_3(self):
@@ -3362,7 +3362,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_push_ssh_key_1_7(self):
@@ -3398,7 +3398,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_push_ssh_host_key_2_10(self):
@@ -3438,7 +3438,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_push_ssh_host_key_2_3(self):
@@ -3478,7 +3478,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_push_ssh_host_key_1_7(self):
@@ -3519,7 +3519,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_raise_no_git(self):
@@ -3532,7 +3532,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step = self.stepClass(workdir='wkdir', repourl=url, branch='testbranch')
         self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
         self.setup_step(step)
-        self.expectOutcome(result=EXCEPTION)
+        self.expect_outcome(result=EXCEPTION)
         self.run_step()
         self.flushLoggedErrors(WorkerSetupError)
 
@@ -3566,7 +3566,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'tag', '-a', 'myTag', '-m', 'msg1', '-m', 'msg2'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_tag_simple(self):
@@ -3582,7 +3582,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'tag', 'myTag'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_tag_force(self):
@@ -3598,7 +3598,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'tag', 'myTag', '--force'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_tag_fail_already_exist(self):
@@ -3615,7 +3615,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .stderr("fatal: tag \'%s\' already exist\n")
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_config_annotated_no_messages(self):
@@ -3647,7 +3647,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step = self.stepClass(workdir='wdir', tagName='myTag')
         self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
         self.setup_step(step)
-        self.expectOutcome(result=EXCEPTION)
+        self.expect_outcome(result=EXCEPTION)
         self.run_step()
         self.flushLoggedErrors(WorkerSetupError)
 
@@ -3683,7 +3683,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'add', 'file1.txt', 'file2.txt'])
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_commit(self):
@@ -3705,7 +3705,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'commit', '-m', 'my commit', '-m', '42'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_commit_empty_disallow(self):
@@ -3728,7 +3728,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'commit', '-m', 'my commit', '-m', '42'])
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_commit_empty_allow(self):
@@ -3751,7 +3751,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'commit', '-m', 'my commit', '-m', '42', '--allow-empty'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_commit_empty_ignore_withcommit(self):
@@ -3778,7 +3778,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'commit', '-m', 'my commit', '-m', '42'])
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_commit_empty_ignore_withoutcommit(self):
@@ -3802,7 +3802,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .stdout('?? file3.txt')
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_commit_empty_ignore_witherror(self):
@@ -3825,7 +3825,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'status', '--porcelain=v1'])
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_detached_head(self):
@@ -3841,7 +3841,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .stdout('')
             .exit(1)
         )
-        self.expectOutcome(result=FAILURE)
+        self.expect_outcome(result=FAILURE)
         return self.run_step()
 
     def test_config_no_files_arg(self):
@@ -3873,6 +3873,6 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step = self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list)
         self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
         self.setup_step(step)
-        self.expectOutcome(result=EXCEPTION)
+        self.expect_outcome(result=EXCEPTION)
         self.run_step()
         self.flushLoggedErrors(WorkerSetupError)

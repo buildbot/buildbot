@@ -43,7 +43,7 @@ class TestDebLintian(steps.BuildStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['lintian', '-v', 'foo_0.23_i386.changes'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string="Lintian")
+        self.expect_outcome(result=SUCCESS, state_string="Lintian")
         return self.run_step()
 
     def test_success_suppressTags(self):
@@ -54,5 +54,5 @@ class TestDebLintian(steps.BuildStepMixin, TestReactorMixin,
                         command=['lintian', '-v', 'foo_0.23_i386.changes',
                                  '--suppress-tags', 'bad-distribution-in-changes-file'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()

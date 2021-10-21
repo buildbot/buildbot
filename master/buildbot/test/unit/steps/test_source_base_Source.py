@@ -161,7 +161,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         step.startStep(mock.Mock())
 
-        self.expectOutcome(result=results.EXCEPTION)
+        self.expect_outcome(result=results.EXCEPTION)
         self.flushLoggedErrors(NotImplementedError)
 
 

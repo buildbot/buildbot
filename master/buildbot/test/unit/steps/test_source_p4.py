@@ -160,7 +160,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
         return self.run_step()
 
@@ -194,7 +194,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
         return self.run_step()
 
@@ -531,7 +531,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
         return self.run_step()
 
@@ -979,7 +979,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         command=['p4', '-V'])
             .error(error.ConnectionLost())
         )
-        self.expectOutcome(result=RETRY, state_string="update (retry)")
+        self.expect_outcome(result=RETRY, state_string="update (retry)")
         return self.run_step()
 
     def test_ticket_auth(self):
@@ -1036,5 +1036,5 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()

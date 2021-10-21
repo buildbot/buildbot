@@ -292,7 +292,7 @@ class BuildStepMixin:
         """
         self.expected_remote_commands.extend(exp)
 
-    def expectOutcome(self, result, state_string=None):
+    def expect_outcome(self, result, state_string=None):
         """
         Expect the given result (from L{buildbot.process.results}) and status
         text (a list).
@@ -336,7 +336,7 @@ class BuildStepMixin:
         Set whether the step is expected to raise an exception.
         """
         self.exp_exception = exception_class
-        self.expectOutcome(EXCEPTION)
+        self.expect_outcome(EXCEPTION)
 
     def expectTestResultSets(self, sets):
         self._exp_test_result_sets = sets

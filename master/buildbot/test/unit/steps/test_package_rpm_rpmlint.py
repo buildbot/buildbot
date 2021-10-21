@@ -37,7 +37,7 @@ class TestRpmLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['rpmlint', '-i', '.'])
             .exit(0))
-        self.expectOutcome(
+        self.expect_outcome(
             result=SUCCESS, state_string='Finished checking RPM/SPEC issues')
         return self.run_step()
 
@@ -47,7 +47,7 @@ class TestRpmLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['rpmlint', '-i', 'RESULT'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_config_success(self):
@@ -56,5 +56,5 @@ class TestRpmLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['rpmlint', '-i', '-f', 'foo.cfg', '.'])
             .exit(0))
-        self.expectOutcome(result=SUCCESS)
+        self.expect_outcome(result=SUCCESS)
         return self.run_step()

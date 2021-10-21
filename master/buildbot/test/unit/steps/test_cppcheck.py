@@ -41,7 +41,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
             .stdout('Checking file1.c...')
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string="cppcheck")
+        self.expect_outcome(result=SUCCESS, state_string="cppcheck")
         return self.run_step()
 
     def test_command_failure(self):
@@ -51,7 +51,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
             .stdout('Checking file1.c...')
             .exit(1))
-        self.expectOutcome(result=FAILURE, state_string="cppcheck (failure)")
+        self.expect_outcome(result=FAILURE, state_string="cppcheck (failure)")
         return self.run_step()
 
     def test_warnings(self):
@@ -66,7 +66,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     '(information) Cppcheck cannot find all the include files '
                     '(use --check-config for details)')
             .exit(0))
-        self.expectOutcome(result=WARNINGS,
+        self.expect_outcome(result=WARNINGS,
                            state_string="cppcheck warning=1 information=1 (warnings)")
         return self.run_step()
 
@@ -80,7 +80,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     '[file1.c:4]: (error) Memory leak: columns\n'
                     "[file1.c:7]: (style) The scope of the variable 'pid' can be reduced")
             .exit(0))
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="cppcheck error=2 style=1 (failure)")
         return self.run_step()
 
@@ -93,5 +93,5 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         'a', '.', 'f.c', '--p', '--p'])
             .stdout('Checking file1.c...')
             .exit(0))
-        self.expectOutcome(result=SUCCESS, state_string="cppcheck")
+        self.expect_outcome(result=SUCCESS, state_string="cppcheck")
         return self.run_step()

@@ -69,7 +69,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command="test")
             .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="shell no tests run")
         return self.run_step()
 
@@ -81,7 +81,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command="test")
             .exit(0)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="shell no tests run (failure)")
         return self.run_step()
 
@@ -99,7 +99,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS, state_string="shell 1 test passed")
+        self.expect_outcome(result=SUCCESS, state_string="shell 1 test passed")
         return self.run_step()
 
     def test_error(self):
@@ -117,7 +117,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
 
-        self.expectOutcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
+        self.expect_outcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
         self.expectLogfile('problems', re.compile(r'''test1
 testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error1'
 .*''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
@@ -142,7 +142,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
             .exit(0)
         )
 
-        self.expectOutcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
+        self.expect_outcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
         self.expectLogfile('problems', re.compile(r'''test1
 testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error1'
 
@@ -168,7 +168,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
             .exit(0)
         )
 
-        self.expectOutcome(result=SUCCESS,  # N.B. not WARNINGS
+        self.expect_outcome(result=SUCCESS,  # N.B. not WARNINGS
                            state_string="shell 1 test passed")
         # note that the warnings list is ignored..
         self.expectLogfile('warnings', re.compile(r'''error: test2 \[.*
