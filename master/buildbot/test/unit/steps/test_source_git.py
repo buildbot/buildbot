@@ -28,6 +28,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import git
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
@@ -2278,8 +2279,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='source',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
-                             'logEnviron': True, 'timeout': 1200})
+            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -2327,8 +2327,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='source',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
-                             'logEnviron': True, 'timeout': 1200})
+            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])

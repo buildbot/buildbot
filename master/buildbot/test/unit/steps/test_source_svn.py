@@ -27,7 +27,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import svn
-from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectRmdir
@@ -1120,9 +1120,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source/app',
-                             'todir': 'wkdir',
-                             'logEnviron': True})
+            ExpectCpdir(fromdir='source/app', todir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
@@ -1161,9 +1159,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['svn', 'update', '--revision', '100',
                                  '--non-interactive', '--no-auth-cache'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source',
-                             'todir': 'wkdir',
-                             'logEnviron': True})
+            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
@@ -1679,9 +1675,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source',
-                             'todir': 'wkdir',
-                             'logEnviron': True})
+            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True)
             .add(1)
         )
         self.expectOutcome(result=FAILURE)

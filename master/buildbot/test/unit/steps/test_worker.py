@@ -27,6 +27,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
@@ -165,7 +166,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_success(self):
         self.setupStep(worker.CopyDirectory(src="s", dest="d"))
         self.expectCommands(
-            Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'timeout': 120})
+            ExpectCpdir(fromdir='s', todir='d', timeout=120)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
@@ -174,7 +175,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_timeout(self):
         self.setupStep(worker.CopyDirectory(src="s", dest="d", timeout=300))
         self.expectCommands(
-            Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'timeout': 300})
+            ExpectCpdir(fromdir='s', todir='d', timeout=300)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
@@ -183,7 +184,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_maxTime(self):
         self.setupStep(worker.CopyDirectory(src="s", dest="d", maxTime=10))
         self.expectCommands(
-            Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'maxTime': 10, 'timeout': 120})
+            ExpectCpdir(fromdir='s', todir='d', maxTime=10, timeout=120)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
@@ -192,7 +193,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_failure(self):
         self.setupStep(worker.CopyDirectory(src="s", dest="d"))
         self.expectCommands(
-            Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'timeout': 120})
+            ExpectCpdir(fromdir='s', todir='d', timeout=120)
             .add(1)
         )
         self.expectOutcome(result=FAILURE,
@@ -205,7 +206,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
         self.properties.setProperty('x', 'XXX', 'here')
         self.properties.setProperty('y', 'YYY', 'here')
         self.expectCommands(
-            Expect('cpdir', {'fromdir': 'XXX', 'todir': 'YYY', 'timeout': 120})
+            ExpectCpdir(fromdir='XXX', todir='YYY', timeout=120)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="Copied XXX to YYY")

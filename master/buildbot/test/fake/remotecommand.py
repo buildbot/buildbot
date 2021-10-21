@@ -481,3 +481,20 @@ class ExpectRmdir(Expect):
 
     def __repr__(self):
         return "ExpectRmdir({})".format(repr(self.args['dir']))
+
+
+class ExpectCpdir(Expect):
+
+    def __init__(self, fromdir=None, todir=None, logEnviron=None, timeout=None, maxTime=None):
+        args = {'fromdir': fromdir, 'todir': todir}
+        if logEnviron is not None:
+            args['logEnviron'] = logEnviron
+        if timeout is not None:
+            args['timeout'] = timeout
+        if maxTime is not None:
+            args['maxTime'] = maxTime
+
+        super().__init__('cpdir', args)
+
+    def __repr__(self):
+        return "ExpectCpdir({}, {})".format(repr(self.args['fromdir']), repr(self.args['todir']))

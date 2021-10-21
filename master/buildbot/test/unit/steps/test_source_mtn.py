@@ -22,7 +22,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import mtn
-from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectRmdir
@@ -773,8 +773,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
-                             'logEnviron': True, 'timeout': 1200})
+            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='build',
                         command=['mtn', 'automate', 'select', 'w:'])
@@ -814,8 +813,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
-                             'logEnviron': True, 'timeout': 1200})
+            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='build',
                         command=['mtn', 'automate', 'select', 'w:'])

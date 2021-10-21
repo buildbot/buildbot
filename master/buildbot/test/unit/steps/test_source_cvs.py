@@ -24,6 +24,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import cvs
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectRmdir
@@ -548,8 +549,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='source',
                         command=['cvs', '-z3', 'update', '-dP'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
-                             'logEnviron': True, 'timeout': step.timeout})
+            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0)
         )
 
@@ -582,8 +582,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  '-z3', 'checkout', '-d', 'source', 'mozilla/browser/'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
-                             'logEnviron': True, 'timeout': step.timeout})
+            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0)
         )
 

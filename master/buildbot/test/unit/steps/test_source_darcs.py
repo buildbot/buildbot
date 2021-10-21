@@ -21,7 +21,7 @@ from buildbot.process import remotetransfer
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import darcs
-from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectRmdir
@@ -102,8 +102,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='source',
                         command=['darcs', 'pull', '--all', '--verbose'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
-                             'logEnviron': True, 'timeout': 1200})
+            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='build',
                         command=['darcs', 'changes', '--max-count=1'])
@@ -132,8 +131,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='source',
                         command=['darcs', 'pull', '--all', '--verbose'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
-                             'logEnviron': True, 'timeout': 1200})
+            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='build',
                         command=['darcs', 'changes', '--max-count=1'])
@@ -187,8 +185,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='source',
                         command=['darcs', 'pull', '--all', '--verbose'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
-                             'logEnviron': True, 'timeout': 1200})
+            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
             .add(0),
             ExpectStat(file='build/_darcs', logEnviron=True)
             .add(0),

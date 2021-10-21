@@ -25,7 +25,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import bzr
-from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectRmdir
@@ -514,9 +514,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='source',
                         command=['bzr', 'update'])
             .add(0),
-            Expect('cpdir', {'fromdir': 'source',
-                             'logEnviron': True,
-                             'todir': 'build'})
+            ExpectCpdir(fromdir='source', logEnviron=True, todir='build')
             .add(0),
             ExpectShell(workdir='source',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
