@@ -97,8 +97,8 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_get(self):
         url = self.getURL()
         self.setup_step(http.GET(url))
-        self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK".format(url))
-        self.expectLogfile('content', "OK")
+        self.expect_logfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK".format(url))
+        self.expect_logfile('content', "OK")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
 
@@ -136,16 +136,16 @@ Status: 200
  ------ Content ------
 OK'''.format(self.get_connection_string())
 
-        self.expectLogfile('log', expected_log)
-        self.expectLogfile('content', "OK")
+        self.expect_logfile('log', expected_log)
+        self.expect_logfile('content', "OK")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
 
     def test_404(self):
         url = self.getURL("404")
         self.setup_step(http.GET(url))
-        self.expectLogfile('log', "URL: {}\n ------ Content ------\n404".format(url))
-        self.expectLogfile('content', "404")
+        self.expect_logfile('log', "URL: {}\n ------ Content ------\n404".format(url))
+        self.expect_logfile('content', "404")
         self.expect_outcome(result=FAILURE, state_string="Status code: 404 (failure)")
         return self.run_step()
 
@@ -159,17 +159,17 @@ OK'''.format(self.get_connection_string())
         url = self.getURL("path")
         self.setup_step(http.POST(url))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
-        self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK:".format(url))
-        self.expectLogfile('content', "OK:")
+        self.expect_logfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK:".format(url))
+        self.expect_logfile('content', "OK:")
         return self.run_step()
 
     def test_post_data(self):
         url = self.getURL("path")
         self.setup_step(http.POST(url, data='mydata'))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
-        self.expectLogfile('log',
+        self.expect_logfile('log',
                            "URL: {}\nStatus: 200\n ------ Content ------\nOK:mydata".format(url))
-        self.expectLogfile('content', "OK:mydata")
+        self.expect_logfile('content', "OK:mydata")
         return self.run_step()
 
     def test_post_data_dict(self):
@@ -177,18 +177,18 @@ OK'''.format(self.get_connection_string())
 
         self.setup_step(http.POST(url, data={'key1': 'value1'}))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
-        self.expectLogfile('log', '''\
+        self.expect_logfile('log', '''\
 URL: {}
 Status: 200
  ------ Content ------
 OK:key1=value1'''.format(url))
-        self.expectLogfile('content', "OK:key1=value1")
+        self.expect_logfile('content', "OK:key1=value1")
         return self.run_step()
 
     def test_header(self):
         url = self.getURL("header")
         self.setup_step(http.GET(url, headers={"X-Test": "True"}))
-        self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
+        self.expect_logfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
 
@@ -198,7 +198,7 @@ OK:key1=value1'''.format(url))
         self.setup_step(http.GET(url, headers={"X-Test": "True"},
                                 hide_request_headers=["X-Test"],
                                 hide_response_headers=["Content-Length"]))
-        self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
+        self.expect_logfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         yield self.run_step()
         self.assertIn("X-Test: <HIDDEN>", self.step.logs['log'].header)
@@ -209,9 +209,9 @@ OK:key1=value1'''.format(url))
         self.setup_step(http.GET(url, params=properties.Property("x")))
         self.properties.setProperty(
             'x', {'param_1': 'param_1', 'param_2': 2}, 'here')
-        self.expectLogfile('log',
+        self.expect_logfile('log',
             ("URL: {}?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK"
              ).format(url))
-        self.expectLogfile('content', "OK")
+        self.expect_logfile('content', "OK")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()

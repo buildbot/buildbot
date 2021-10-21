@@ -274,7 +274,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expect_property("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: " + repr('abcdef'))
+        self.expect_logfile('property changes', r"res: " + repr('abcdef'))
         return self.run_step()
 
     def test_renderable_workdir(self):
@@ -290,7 +290,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expect_property("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: " + repr('abcdef'))
+        self.expect_logfile('property changes', r"res: " + repr('abcdef'))
         return self.run_step()
 
     def test_run_property_no_strip(self):
@@ -304,7 +304,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expect_property("res", "\n\nabcdef\n")
-        self.expectLogfile('property changes', r"res: " + repr('\n\nabcdef\n'))
+        self.expect_logfile('property changes', r"res: " + repr('\n\nabcdef\n'))
         return self.run_step()
 
     def test_run_failure(self):
@@ -339,7 +339,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         )
         self.expect_outcome(result=SUCCESS,
                            state_string="2 properties set")
-        self.expectLogfile('property changes', 'a: 1\nb: 2')
+        self.expect_logfile('property changes', 'a: 1\nb: 2')
         self.expect_property("a", 1)
         self.expect_property("b", 2)
         return self.run_step()
@@ -358,7 +358,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         # note that extract_fn *is* called anyway
         self.expect_outcome(result=FAILURE,
                            state_string="2 properties set (failure)")
-        self.expectLogfile('property changes', 'a: 1\nb: 2')
+        self.expect_logfile('property changes', 'a: 1\nb: 2')
         return self.run_step()
 
     def test_run_extract_fn_cmdfail_empty(self):
@@ -599,7 +599,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         )
         self.expect_outcome(result=WARNINGS)
         self.expect_property("warnings-count", 2)
-        self.expectLogfile("warnings (2)",
+        self.expect_logfile("warnings (2)",
                            "warning: blarg!\nWARNING: blarg!\n")
         return self.run_step()
 
@@ -614,7 +614,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         )
         self.expect_outcome(result=WARNINGS)
         self.expect_property("warnings-count", 2)
-        self.expectLogfile("warnings (2)", "scary: foo\nscary: bar\n")
+        self.expect_logfile("warnings (2)", "scary: foo\nscary: bar\n")
         return self.run_step()
 
     def test_maxWarnCount(self):
@@ -639,7 +639,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         )
         self.expect_outcome(result=FAILURE)
         self.expect_property("warnings-count", 1)
-        self.expectLogfile("warnings (1)", "warning: I might fail\n")
+        self.expect_logfile("warnings (1)", "warning: I might fail\n")
         return self.run_step()
 
     def test_warn_with_decoderc(self):
@@ -701,7 +701,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             if exp_warning_count != 0:
                 self.expect_outcome(result=WARNINGS,
                                    state_string="'make' (warnings)")
-                self.expectLogfile("warnings (%d)" % exp_warning_count,
+                self.expect_logfile("warnings (%d)" % exp_warning_count,
                                    exp_warning_log)
             else:
                 self.expect_outcome(result=SUCCESS,

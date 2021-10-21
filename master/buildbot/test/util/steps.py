@@ -313,7 +313,7 @@ class BuildStepMixin:
         """
         self.exp_missing_properties.append(property)
 
-    def expectLogfile(self, logfile, contents):
+    def expect_logfile(self, logfile, contents):
         """
         Expect a logfile with the given contents
         """

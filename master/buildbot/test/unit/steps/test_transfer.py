@@ -262,7 +262,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_outcome(result=CANCELLED,
                            state_string="uploading srcfile (cancelled)")
-        self.expectLogfile('interrupt', 'interrupt reason')
+        self.expect_logfile('interrupt', 'interrupt reason')
         yield self.run_step()
 
     def test_init_workersrc_keyword(self):
@@ -506,7 +506,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .exit(1))
 
         self.expect_outcome(result=FAILURE, state_string="uploading 1 file (failure)")
-        self.expectLogfile('stderr',
+        self.expect_logfile('stderr',
                            "File wkdir/srcdir not available at worker")
 
         yield self.run_step()
@@ -521,7 +521,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .exit(0))
 
         self.expect_outcome(result=FAILURE, state_string="uploading 1 file (failure)")
-        self.expectLogfile('stderr', 'srcdir is neither a regular file, nor a directory')
+        self.expect_logfile('stderr', 'srcdir is neither a regular file, nor a directory')
 
         yield self.run_step()
 
@@ -929,7 +929,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
         self.expect_outcome(result=FAILURE,
                            state_string="downloading to {0} (failure)".format(
                                os.path.basename(self.destfile)))
-        self.expectLogfile('stderr',
+        self.expect_logfile('stderr',
                            "File 'not existing file' not available at master")
         yield self.run_step()
 

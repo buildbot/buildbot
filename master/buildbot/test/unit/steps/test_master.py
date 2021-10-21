@@ -77,16 +77,16 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         cmd = [sys.executable, '-c', 'print("hello")']
         self.setup_step(master.MasterShellCommand(command=cmd))
         if runtime.platformType == 'win32':
-            self.expectLogfile('stdio', "hello\r\n")
+            self.expect_logfile('stdio', "hello\r\n")
         else:
-            self.expectLogfile('stdio', "hello\n")
+            self.expect_logfile('stdio', "hello\n")
         self.expect_outcome(result=SUCCESS, state_string="Ran")
         return self.run_step()
 
     def test_real_cmd_interrupted(self):
         cmd = [sys.executable, '-c', 'while True: pass']
         self.setup_step(master.MasterShellCommand(command=cmd))
-        self.expectLogfile('stdio', "")
+        self.expect_logfile('stdio', "")
         if runtime.platformType == 'win32':
             # windows doesn't have signals, so we don't get 'killed',
             # but the "exception" part still works.
@@ -103,7 +103,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         cmd = [sys.executable, '-c', 'import sys; sys.exit(1)']
         self.setup_step(
             master.MasterShellCommand(command=cmd))
-        self.expectLogfile('stdio', "")
+        self.expect_logfile('stdio', "")
         self.expect_outcome(result=FAILURE, state_string="failed (1) (failure)")
         return self.run_step()
 
@@ -134,9 +134,9 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(
             master.MasterShellCommand(command=cmd, env={'HELLO': '${WORLD}'}))
         if runtime.platformType == 'win32':
-            self.expectLogfile('stdio', "hello\r\n")
+            self.expect_logfile('stdio', "hello\r\n")
         else:
-            self.expectLogfile('stdio', "hello\n")
+            self.expect_logfile('stdio', "hello\n")
         self.expect_outcome(result=SUCCESS)
 
         d = self.run_step()
@@ -154,9 +154,9 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(master.MasterShellCommand(command=cmd,
                                                  env={'HELLO': ['${WORLD}', '${LIST}']}))
         if runtime.platformType == 'win32':
-            self.expectLogfile('stdio', "hello;world\r\n")
+            self.expect_logfile('stdio', "hello;world\r\n")
         else:
-            self.expectLogfile('stdio', "hello:world\n")
+            self.expect_logfile('stdio', "hello:world\n")
         self.expect_outcome(result=SUCCESS)
 
         d = self.run_step()
@@ -176,9 +176,9 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
                                                  env={'BUILD': WithProperties('%s', "project")}))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
         if runtime.platformType == 'win32':
-            self.expectLogfile('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
+            self.expect_logfile('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
         else:
-            self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
+            self.expect_logfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
@@ -245,7 +245,7 @@ class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
         self.properties.setProperty(
             'workername', 'testWorker', source='TestSetProperty', runtime=True)
         self.expect_outcome(result=SUCCESS, state_string='Logged')
-        self.expectLogfile(
+        self.expect_logfile(
             'Output', pprint.pformat('sch=force, worker=testWorker'))
         return self.run_step()
 
