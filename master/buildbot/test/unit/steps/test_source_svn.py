@@ -150,7 +150,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['svn', '--version'])
             .exit(1)
         )
-        self.expectException(WorkerSetupError)
+        self.expect_exception(WorkerSetupError)
         return self.run_step()
 
     def test_corrupt_xml(self):

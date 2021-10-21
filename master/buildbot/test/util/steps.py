@@ -331,7 +331,7 @@ class BuildStepMixin:
         """
         self.exp_hidden = hidden
 
-    def expectException(self, exception_class):
+    def expect_exception(self, exception_class):
         """
         Set whether the step is expected to raise an exception.
         """

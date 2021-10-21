@@ -1150,7 +1150,7 @@ class TestShellMixin(steps.BuildStepMixin,
     def test_build_workdir_callable_error(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
         self.build.workdir = lambda x: x.nosuchattribute  # will raise AttributeError
-        self.expectException(buildstep.CallableAttributeError)
+        self.expect_exception(buildstep.CallableAttributeError)
         yield self.run_step()
 
     @defer.inlineCallbacks
