@@ -26,6 +26,7 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process import remotetransfer
+from buildbot.process.properties import Interpolate
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -1044,6 +1045,30 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def testBasic(self):
         msg = dict(message="Hello World")
+        self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
+
+        self.step.worker = Mock()
+        self.step.remote = Mock()
+
+        # A place to store what gets read
+        read = []
+
+        self.expect_commands(
+            ExpectDownloadFile(workerdest="hello.json", workdir='wkdir',
+                               blocksize=16384, maxsize=None, mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader))
+            .behavior(downloadString(read.append))
+            .exit(0))
+
+        self.expect_outcome(
+            result=SUCCESS, state_string="downloading to hello.json")
+        yield self.run_step()
+
+        self.assertEqual(b''.join(read), b'{"message": "Hello World"}')
+
+    @defer.inlineCallbacks
+    def test_basic_with_renderable(self):
+        msg = dict(message=Interpolate("Hello World"))
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
         self.step.worker = Mock()
