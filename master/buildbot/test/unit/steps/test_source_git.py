@@ -1038,7 +1038,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(1)
         )
         self.expect_outcome(result=FAILURE)
-        self.expectNoProperty('got_revision')
+        self.expect_no_property('got_revision')
         return self.run_step()
 
     def test_mode_full_clean_branch(self):
@@ -1138,7 +1138,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(128)
         )
         self.expect_outcome(result=FAILURE)
-        self.expectNoProperty('got_revision')
+        self.expect_no_property('got_revision')
         return self.run_step()
 
     def test_mode_full_clean_no_existing_repo(self):
@@ -1425,7 +1425,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(1)  # clone fails
         )
         self.expect_outcome(result=FAILURE, state_string="update (failure)")
-        self.expectNoProperty('got_revision')
+        self.expect_no_property('got_revision')
         return self.run_step()
 
     def test_mode_full_clobber_branch(self):
@@ -2466,7 +2466,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=FAILURE)
-        self.expectNoProperty('got_revision')
+        self.expect_no_property('got_revision')
         return self.run_step()
 
     def test_mode_full_clobber_submodule(self):
@@ -2850,7 +2850,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expect_outcome(result=SUCCESS)
         self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        self.expectNoProperty('commit-description')
+        self.expect_no_property('commit-description')
         return self.run_step()
 
     def setup_getDescription_test(self, setup_args, output_args,

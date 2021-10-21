@@ -318,7 +318,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         )
         self.expect_outcome(result=FAILURE,
                            state_string="'blarg' (failure)")
-        self.expectNoProperty("res")
+        self.expect_no_property("res")
         return self.run_step()
 
     def test_run_extract_fn(self):

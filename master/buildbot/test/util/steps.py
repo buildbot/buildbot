@@ -307,7 +307,7 @@ class BuildStepMixin:
         """
         self.exp_properties[property] = (value, source)
 
-    def expectNoProperty(self, property):
+    def expect_no_property(self, property):
         """
         Expect the given property is *not* set when the step is complete
         """

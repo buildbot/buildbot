@@ -71,8 +71,8 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="Set")
         self.expect_property('one', "1", source='me')
-        self.expectNoProperty('two')
-        self.expectNoProperty('three')
+        self.expect_no_property('two')
+        self.expect_no_property('three')
         self.expect_property('four', 4, source='them')
         self.expect_property('five', 5, source='them')
         self.expect_property('six', '6', source='me')
