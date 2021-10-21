@@ -41,6 +41,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
 from buildbot.test.util import steps
@@ -981,7 +982,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_pathExists(self):
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expectCommands(
-            Expect('stat', {'file': '/some/path', 'logEnviron': False})
+            ExpectStat(file='/some/path', logEnviron=False)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -992,7 +993,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_pathExists_doesnt(self):
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expectCommands(
-            Expect('stat', {'file': '/some/path', 'logEnviron': False})
+            ExpectStat(file='/some/path', logEnviron=False)
             .add(1)
         )
         self.expectOutcome(result=SUCCESS)
@@ -1003,7 +1004,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_pathExists_logging(self):
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expectCommands(
-            Expect('stat', {'file': '/some/path', 'logEnviron': False})
+            ExpectStat(file='/some/path', logEnviron=False)
             .add(Expect.log('stdio', header='NOTE: never mind\n'))
             .add(1)
         )

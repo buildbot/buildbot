@@ -30,6 +30,7 @@ from buildbot.steps.source import svn
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.properties import ConstantRenderable
@@ -156,11 +157,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -190,11 +189,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -231,11 +228,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -266,11 +261,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -306,11 +299,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         timeout=1,
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -346,11 +337,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -381,11 +370,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -416,11 +403,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             .add(0),
@@ -445,11 +430,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             .add(0),
@@ -480,11 +463,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -519,11 +500,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -556,11 +535,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file=r'wkdir\.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file=r'wkdir\.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file=r'wkdir\.svn',
-                                logEnviron=True))
+            ExpectStat(file=r'wkdir\.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -595,11 +572,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -638,11 +613,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -675,8 +648,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', {'dir': 'wkdir',
                              'logEnviron': True,
@@ -706,8 +678,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', {'dir': 'wkdir',
                              'logEnviron': True,
@@ -736,11 +707,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -779,11 +748,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             .add(0),
@@ -823,11 +790,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -868,11 +833,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -914,11 +877,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -957,11 +918,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -998,11 +957,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             .add(0),
@@ -1029,11 +986,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             .add(0),
@@ -1060,11 +1015,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -1113,11 +1066,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -1161,15 +1112,13 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
             .add(0),
-            Expect('stat', dict(file='source/app/.svn',
-                                logEnviron=True))
+            ExpectStat(file='source/app/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='source/app',
                         command=['svn', 'info', '--xml',
@@ -1206,15 +1155,13 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
             .add(0),
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
+            ExpectStat(file='source/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
@@ -1249,15 +1196,13 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
             .add(0),
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
+            ExpectStat(file='source/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
@@ -1292,8 +1237,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
@@ -1310,8 +1254,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                                  logEnviron=True,
                                  timeout=1200))
             .add(0),
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
+            ExpectStat(file='source/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
@@ -1366,8 +1309,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn',
@@ -1384,8 +1326,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                                  logEnviron=True,
                                  timeout=1200))
             .add(0),
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
+            ExpectStat(file='source/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
@@ -1440,15 +1381,13 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         timeout=1,
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1))
             .add(0),
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
+            ExpectStat(file='source/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='source',
                         timeout=1,
@@ -1488,15 +1427,13 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
             .add(0),
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
+            ExpectStat(file='source/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
@@ -1532,15 +1469,13 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
             .add(0),
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
+            ExpectStat(file='source/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
@@ -1584,11 +1519,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['svn', '--version'],
                         env={'abc': '123'})
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -1627,11 +1560,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['svn', '--version'],
                         logEnviron=False)
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=False))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=False)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=False))
+            ExpectStat(file='wkdir/.svn', logEnviron=False)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -1668,11 +1599,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -1701,11 +1630,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -1740,8 +1667,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', {'dir': 'wkdir',
                              'logEnviron': True,
@@ -1759,8 +1685,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -1778,15 +1703,13 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200))
             .add(0),
-            Expect('stat', dict(file='source/.svn',
-                                logEnviron=True))
+            ExpectStat(file='source/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml',
@@ -1818,11 +1741,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', {'file': 'wkdir/.svn',
-                            'logEnviron': True})
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -1869,11 +1790,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',
@@ -1906,11 +1825,9 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.svn',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.svn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml',

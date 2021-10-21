@@ -22,6 +22,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.source import repo
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -97,8 +98,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
     def expectClobber(self):
         # stat return 1 so we clobber
         self.expectCommands(
-            Expect('stat', dict(file='wkdir/.repo',
-                                logEnviron=self.logEnviron))
+            ExpectStat(file='wkdir/.repo', logEnviron=self.logEnviron)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=self.logEnviron))
@@ -111,8 +111,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
     def expectnoClobber(self):
         # stat return 0, so nothing
         self.expectCommands(
-            Expect('stat', dict(file='wkdir/.repo',
-                                logEnviron=self.logEnviron))
+            ExpectStat(file='wkdir/.repo', logEnviron=self.logEnviron)
             .add(0)
         )
 
@@ -191,9 +190,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                          syncAllBranches=True)
         self.expectClobber()
         override_commands = [
-            Expect(
-                'stat', dict(file='wkdir/http://u.rl/test.manifest',
-                             logEnviron=False)),
+            ExpectStat(file='wkdir/http://u.rl/test.manifest', logEnviron=False),
             self.ExpectShell(logEnviron=False, command=['wget',
                                                         'http://u.rl/test.manifest',
                                                         '-O', 'manifest_override.xml']),
@@ -214,8 +211,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                          syncAllBranches=True)
         self.expectClobber()
         override_commands = [
-            Expect('stat', dict(file='wkdir/test.manifest',
-                                logEnviron=False)),
+            ExpectStat(file='wkdir/test.manifest', logEnviron=False),
             self.ExpectShell(logEnviron=False,
                              command=[
                                  'cp', '-f', 'test.manifest', 'manifest_override.xml']),

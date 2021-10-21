@@ -28,6 +28,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -98,7 +99,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
     def test_found(self):
         self.setupStep(worker.FileExists(file="x"))
         self.expectCommands(
-            Expect('stat', {'file': 'x'})
+            ExpectStat(file='x')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0)
         )
@@ -108,7 +109,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
     def test_not_found(self):
         self.setupStep(worker.FileExists(file="x"))
         self.expectCommands(
-            Expect('stat', {'file': 'x'})
+            ExpectStat(file='x')
             .add(Expect.update('stat', [0, 99, 99]))
             .add(0)
         )
@@ -119,7 +120,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
     def test_failure(self):
         self.setupStep(worker.FileExists(file="x"))
         self.expectCommands(
-            Expect('stat', {'file': 'x'})
+            ExpectStat(file='x')
             .add(1)
         )
         self.expectOutcome(result=FAILURE,
@@ -130,7 +131,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(worker.FileExists(file=properties.Property("x")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.expectCommands(
-            Expect('stat', {'file': 'XXX'})
+            ExpectStat(file='XXX')
             .add(1)
         )
         self.expectOutcome(result=FAILURE,

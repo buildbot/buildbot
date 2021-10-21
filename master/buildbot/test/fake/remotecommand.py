@@ -376,3 +376,18 @@ class ExpectShell(Expect):
 
     def __repr__(self):
         return "ExpectShell(" + repr(self.remote_command) + repr(self.args['command']) + ")"
+
+
+class ExpectStat(Expect):
+
+    def __init__(self, file, workdir=None, logEnviron=None):
+        args = {'file': file}
+        if workdir is not None:
+            args['workdir'] = workdir
+        if logEnviron is not None:
+            args['logEnviron'] = logEnviron
+
+        super().__init__('stat', args)
+
+    def __repr__(self):
+        return "ExpectStat(" + repr(self.args['file']) + ")"

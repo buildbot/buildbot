@@ -36,6 +36,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
@@ -508,8 +509,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(workersrcs=["srcfile"], masterdest=self.destdir))
 
         self.expectCommands(
-            Expect('stat', dict(file="srcfile",
-                                workdir='wkdir'))
+            ExpectStat(file="srcfile", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', dict(
@@ -528,8 +528,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir))
 
         self.expectCommands(
-            Expect('stat', dict(file="srcdir",
-                                workdir='wkdir'))
+            ExpectStat(file="srcdir", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
             .add(0),
             Expect('uploadDirectory', dict(
@@ -548,7 +547,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir))
 
         self.expectCommands(
-            Expect('stat', {'file': "srcdir", 'workdir': 'wkdir'})
+            ExpectStat(file='srcdir', workdir='wkdir')
             .add(1))
 
         self.expectOutcome(result=FAILURE, state_string="uploading 1 file (failure)")
@@ -562,7 +561,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir))
 
         self.expectCommands(
-            Expect('stat', {'file': "srcdir", 'workdir': 'wkdir'})
+            ExpectStat(file='srcdir', workdir='wkdir')
             .add(Expect.update('stat', [0, 99, 99]))
             .add(0))
 
@@ -576,8 +575,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir))
 
         self.expectCommands(
-            Expect('stat', dict(file="srcfile",
-                                workdir='wkdir'))
+            ExpectStat(file="srcfile", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', dict(
@@ -586,8 +584,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             .add(Expect.behavior(uploadString("Hello world!")))
             .add(0),
-            Expect('stat', dict(file="srcdir",
-                                workdir='wkdir'))
+            ExpectStat(file="srcdir", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
             .add(0),
             Expect('uploadDirectory', dict(
@@ -606,8 +603,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(
             transfer.MultipleFileUpload(workersrcs="srcfile", masterdest=self.destdir))
         self.expectCommands(
-            Expect('stat', dict(file="srcfile",
-                                workdir='wkdir'))
+            ExpectStat(file="srcfile", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', dict(
@@ -630,8 +626,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                 'wkdir', 'src*'), logEnviron=False))
             .add(Expect.update('files', ["srcfile"]))
             .add(0),
-            Expect('stat', dict(file="srcfile",
-                                workdir='wkdir'))
+            ExpectStat(file="srcfile", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', dict(
@@ -668,8 +663,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             worker_version={'*': '2.16'})
 
         self.expectCommands(
-            Expect('stat', dict(file="srcfile",
-                                workdir='wkdir'))
+            ExpectStat(file="srcfile", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', dict(
@@ -690,8 +684,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             worker_version={'*': '2.16'})
 
         self.expectCommands(
-            Expect('stat', dict(file="srcdir",
-                                workdir='wkdir'))
+            ExpectStat(file="srcdir", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
             .add(0),
             Expect('uploadDirectory', dict(
@@ -712,8 +705,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             worker_version={'*': '2.16'})
 
         self.expectCommands(
-            Expect('stat', dict(file="srcfile",
-                                workdir='wkdir'))
+            ExpectStat(file="srcfile", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', dict(
@@ -722,8 +714,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             .add(Expect.behavior(uploadString("Hello world!")))
             .add(0),
-            Expect('stat', dict(file="srcdir",
-                                workdir='wkdir'))
+            ExpectStat(file="srcdir", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
             .add(0),
             Expect('uploadDirectory', dict(
@@ -746,7 +737,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.step.addURL = Mock()
 
         self.expectCommands(
-            Expect('stat', {'file': "srcfile", 'workdir': 'wkdir'})
+            ExpectStat(file='srcfile', workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', {'workersrc': "srcfile", 'workdir': 'wkdir',
@@ -770,7 +761,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.step.addURL = Mock()
 
         self.expectCommands(
-            Expect('stat', {'file': "srcfile", 'workdir': 'wkdir'})
+            ExpectStat(file='srcfile', workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', {'workersrc': "srcfile", 'workdir': 'wkdir',
@@ -791,8 +782,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir))
 
         self.expectCommands(
-            Expect('stat', dict(file="srcfile",
-                                workdir='wkdir'))
+            ExpectStat(file="srcfile", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', dict(
@@ -814,8 +804,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         behavior = UploadError(uploadString("Hello world!"))
 
         self.expectCommands(
-            Expect('stat', dict(file="srcfile",
-                                workdir='wkdir'))
+            ExpectStat(file="srcfile", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', dict(
@@ -843,8 +832,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(step)
 
         self.expectCommands(
-            Expect('stat', dict(file="srcfile",
-                                workdir='wkdir'))
+            ExpectStat(file="srcfile", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
             .add(0),
             Expect('uploadFile', dict(
@@ -853,8 +841,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             .add(Expect.behavior(uploadString("Hello world!")))
             .add(0),
-            Expect('stat', dict(file="srcdir",
-                                workdir='wkdir'))
+            ExpectStat(file="srcdir", workdir='wkdir')
             .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
             .add(0),
             Expect('uploadDirectory', dict(

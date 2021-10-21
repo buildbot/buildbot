@@ -30,6 +30,7 @@ from buildbot.steps.source import git
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.unit.steps.test_transfer import downloadString
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
@@ -62,8 +63,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.26.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -89,8 +89,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.27.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -116,8 +115,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -152,8 +150,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -194,8 +191,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.10.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -249,8 +245,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.3.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -308,8 +303,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -382,8 +376,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.10.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -449,8 +442,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.3.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -517,8 +509,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -595,8 +586,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -672,8 +662,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.10.0'))
             .add(0),
-            Expect('stat', dict(file='/myworkdir/workdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='/myworkdir/workdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -730,8 +719,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file=r'wkdir\.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file=r'wkdir\.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -772,8 +760,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.10.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir\\.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir\\.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -828,8 +815,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.3.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir\\.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir\\.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -884,8 +870,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir\\.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir\\.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -943,8 +928,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -984,8 +968,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d', '-x'],
@@ -1048,8 +1031,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d', '-x'],
@@ -1111,8 +1093,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1161,8 +1142,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1200,8 +1180,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['file1', 'file2']))
@@ -1233,8 +1212,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1267,8 +1245,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -1294,8 +1271,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -1321,8 +1297,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -1349,8 +1324,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -1376,8 +1350,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1426,8 +1399,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1476,8 +1448,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             .add(0),
@@ -1509,8 +1480,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -1541,8 +1511,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -1568,8 +1537,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -1601,8 +1569,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.5.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -1644,11 +1611,9 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.git',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.git', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'fetch', '-f', '-t',
@@ -1677,8 +1642,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1710,8 +1674,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5.1'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1743,8 +1706,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -1782,8 +1744,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1825,8 +1786,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.10.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -1875,8 +1835,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1911,8 +1870,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1950,8 +1908,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -1983,8 +1940,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2019,8 +1975,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2068,8 +2023,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.6'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2119,8 +2073,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.8'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2170,8 +2123,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -2202,8 +2154,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -2234,8 +2185,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -2266,8 +2216,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2308,8 +2257,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2353,8 +2301,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2396,8 +2343,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2440,8 +2386,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -2485,8 +2430,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.10.0'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
@@ -2544,8 +2488,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -2575,11 +2518,9 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('stat', dict(file='wkdir/.git',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.git', logEnviron=True)
             .add(1),
             ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'clone',
@@ -2607,8 +2548,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -2643,8 +2583,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -2677,8 +2616,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -2717,8 +2655,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -2750,8 +2687,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -2799,8 +2735,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', []))
@@ -2838,8 +2773,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2875,8 +2809,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'abc': '123'})
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2916,8 +2849,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         logEnviron=False)
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=False))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=False)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2956,8 +2888,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(1),
@@ -2990,8 +2921,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -3038,8 +2968,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -3090,8 +3019,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -3363,8 +3291,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=prefix + ['--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))

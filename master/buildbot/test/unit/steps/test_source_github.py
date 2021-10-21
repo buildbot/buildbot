@@ -17,6 +17,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.source import github
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.unit.steps import test_source_git
 
 
@@ -35,8 +36,7 @@ class TestGitHub(test_source_git.TestGit):
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -77,8 +77,7 @@ class TestGitHub(test_source_git.TestGit):
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
             .add(0),
-            Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
+            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
