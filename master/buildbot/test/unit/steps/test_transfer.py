@@ -36,6 +36,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
+from buildbot.test.fake.remotecommand import ExpectGlob
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.fake.remotecommand import ExpectUploadDirectory
@@ -608,8 +609,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expectCommands(
-            Expect('glob', dict(path=os.path.join(
-                'wkdir', 'src*'), logEnviron=False))
+            ExpectGlob(path=os.path.join('wkdir', 'src*'), logEnviron=False)
             .add(Expect.update('files', ["srcfile"]))
             .add(0),
             ExpectStat(file="srcfile", workdir='wkdir')
@@ -631,8 +631,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expectCommands(
-            Expect('glob', {'path': os.path.join(
-                'wkdir', 'src*'), 'logEnviron': False})
+            ExpectGlob(path=os.path.join('wkdir', 'src*'), logEnviron=False)
             .add(Expect.update('files', []))
             .add(1)
         )

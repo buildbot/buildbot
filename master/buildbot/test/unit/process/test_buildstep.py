@@ -40,6 +40,7 @@ from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import worker
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectGlob
 from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
@@ -1023,7 +1024,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             self.assertEqual(res, ["one.pyc", "two.pyc"])
         self.step.testMethod = testFunc
         self.expectCommands(
-            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
+            ExpectGlob(path='*.pyc', logEnviron=False)
             .add(Expect.update('files', ["one.pyc", "two.pyc"]))
             .add(0)
         )
@@ -1033,7 +1034,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_glob_empty(self):
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expectCommands(
-            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
+            ExpectGlob(path='*.pyc', logEnviron=False)
             .add(Expect.update('files', []))
             .add(0)
         )
@@ -1043,7 +1044,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_glob_fail(self):
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expectCommands(
-            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
+            ExpectGlob(path='*.pyc', logEnviron=False)
             .add(1)
         )
         self.expectOutcome(result=FAILURE)

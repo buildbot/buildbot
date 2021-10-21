@@ -29,6 +29,7 @@ from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
+from buildbot.test.fake.remotecommand import ExpectGlob
 from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectRmdir
@@ -400,7 +401,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
 
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(
-            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
+            ExpectGlob(path='*.pyc', logEnviron=False)
             .add(Expect.update('files', ["one.pyc", "two.pyc"]))
             .add(0)
         )
@@ -410,7 +411,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_glob_fail(self):
         self.setupStep(CompositeUser(lambda x: x.runGlob("*.pyc")))
         self.expectCommands(
-            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
+            ExpectGlob(path='*.pyc', logEnviron=False)
             .add(1)
         )
         self.expectOutcome(result=FAILURE)

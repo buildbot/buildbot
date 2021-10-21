@@ -498,3 +498,16 @@ class ExpectCpdir(Expect):
 
     def __repr__(self):
         return "ExpectCpdir({}, {})".format(repr(self.args['fromdir']), repr(self.args['todir']))
+
+
+class ExpectGlob(Expect):
+
+    def __init__(self, path=None, logEnviron=None):
+        args = {'path': path}
+        if logEnviron is not None:
+            args['logEnviron'] = logEnviron
+
+        super().__init__('glob', args)
+
+    def __repr__(self):
+        return "ExpectGlob({})".format(repr(self.args['path']))
