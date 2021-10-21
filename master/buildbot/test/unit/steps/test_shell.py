@@ -241,7 +241,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            .add(ExpectShell.log('stdio', stderr='abcdef\n'))
+            .stderr('abcdef\n')
             .exit(1)
         )
         self.expectOutcome(result=FAILURE,
@@ -314,7 +314,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="blarg")
-            .add(ExpectShell.log('stdio', stderr='cannot blarg: File not found'))
+            .stderr('cannot blarg: File not found')
             .exit(1)
         )
         self.expectOutcome(result=FAILURE,
@@ -333,9 +333,9 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command="cmd")
             .stdout('start')
-            .add(ExpectShell.log('stdio', stderr='START'))
+            .stderr('START')
             .stdout('end')
-            .add(ExpectShell.log('stdio', stderr='END'))
+            .stderr('END')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
@@ -469,9 +469,9 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command="cmd")
             .stdout(textwrap.dedent("""\
                     foo.pl .. 1/4"""))
-            .add(ExpectShell.log('stdio', stderr=textwrap.dedent("""\
+            .stderr(textwrap.dedent("""\
                     # Failed test 2 in foo.pl at line 6
-                    #  foo.pl line 6 is: ok(0);""")))
+                    #  foo.pl line 6 is: ok(0);"""))
             .stdout(textwrap.dedent("""\
                     foo.pl .. Failed 1/4 subtests
 
@@ -482,8 +482,8 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     Files=1, Tests=4,  0 wallclock secs ( 0.06 usr  0.01 sys +  0.03 cusr
                     0.01 csys =  0.11 CPU)
                     Result: FAIL"""))
-            .add(ExpectShell.log('stdio', stderr=textwrap.dedent("""\
-                    Failed 1/1 test programs. 1/4 subtests failed.""")))
+            .stderr(textwrap.dedent("""\
+                    Failed 1/1 test programs. 1/4 subtests failed."""))
             .exit(1)
         )
         self.expectOutcome(result=FAILURE,

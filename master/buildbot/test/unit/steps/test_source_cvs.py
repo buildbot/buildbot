@@ -1170,7 +1170,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard', '--ignore'])
-            .add(ExpectShell.log('stdio', stderr='FAIL!\n'))
+            .stderr('FAIL!\n')
             .exit(1)
         )
 

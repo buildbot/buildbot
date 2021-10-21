@@ -669,7 +669,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
-            .add(ExpectShell.log('stdio', stderr='failed\n'))
+            .stderr('failed\n')
             .exit(128)
         )
         self.expectOutcome(result=FAILURE)

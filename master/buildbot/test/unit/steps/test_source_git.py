@@ -1134,9 +1134,8 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
-            .add(ExpectShell.log('stdio',
-                              stderr="fatal: Could not parse object "
-                              "'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n"))
+            .stderr("fatal: Could not parse object "
+                    "'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n")
             .exit(128)
         )
         self.expectOutcome(result=FAILURE)
@@ -3296,7 +3295,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'push', url, 'testbranch', '--force'])
-            .add(ExpectShell.log('stdio', stderr="error: failed to push some refs to <url>\n"))
+            .stderr("error: failed to push some refs to <url>\n")
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
@@ -3614,7 +3613,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'tag', 'myTag'])
-            .add(ExpectShell.log('stdio', stderr="fatal: tag \'%s\' already exist\n"))
+            .stderr("fatal: tag \'%s\' already exist\n")
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)

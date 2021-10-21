@@ -246,6 +246,10 @@ class Expect:
         self.behaviors.append(('log', 'stdio', {'stdout': output}))
         return self
 
+    def stderr(self, output):
+        self.behaviors.append(('log', 'stdio', {'stderr': output}))
+        return self
+
     def exit(self, code):
         self.behaviors.append(('rc', code))
         return self

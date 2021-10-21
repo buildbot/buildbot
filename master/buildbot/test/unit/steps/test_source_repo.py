@@ -20,7 +20,6 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import repo
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
@@ -256,7 +255,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(1))
         self.expectRepoSync()
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.tgz'])
-                            .add(Expect.log('stdio', stderr="file not found!"))
+                            .stderr("file not found!")
                             .exit(1),
                             self.ExpectShell(command=['tar', '-z',
                                                       '-cvf', '/tarball.tgz', '.repo'])
@@ -374,8 +373,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
             .exit(0)
-            .add(Expect.log('stdio', stderr="test/bla refs/changes/64/564/12 -> FETCH_HEAD\n"))
-            .add(Expect.log('stdio', stderr="HEAD is now at 0123456789abcdef...\n")))
+            .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
+            .stderr("HEAD is now at 0123456789abcdef...\n"))
         self.expectProperty(
             "repo_downloaded", "564/12 0123456789abcdef ", "Source")
         return self.myRunStep()
@@ -447,12 +446,12 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            .exit(1).
-            add(Expect.log("stdio", stderr="fatal: Couldn't find remote ref \n")),
+            .exit(1)
+            .stderr("fatal: Couldn't find remote ref \n"),
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
             .exit(1)
-            .add(Expect.log("stdio", stderr="fatal: Couldn't find remote ref \n")),
+            .stderr("fatal: Couldn't find remote ref \n"),
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
             .exit(0))
@@ -472,11 +471,11 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
             .exit(1)
-            .add(Expect.log("stdio", stderr="fatal: Couldn't find remote ref \n")),
+            .stderr("fatal: Couldn't find remote ref \n"),
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
             .exit(1)
-            .add(Expect.log("stdio", stderr="fatal: Couldn't find remote ref \n")),
+            .stderr("fatal: Couldn't find remote ref \n"),
         )
         return self.myRunStep(result=FAILURE,
                               state_string="repo: change test/bla 564/12 does not exist (failure)")
@@ -492,7 +491,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
             .exit(1)
-            .add(Expect.log("stdio", stderr="patch \n")),
+            .stderr("patch \n"),
             self.ExpectShell(
                 command=['repo', 'forall', '-c', 'git', 'diff', 'HEAD'])
             .exit(0)
@@ -511,7 +510,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
             .exit(0)
-            .add(Expect.log("stdio", stderr="Automatic cherry-pick failed \n")),
+            .stderr("Automatic cherry-pick failed \n"),
             self.ExpectShell(
                 command=['repo', 'forall', '-c', 'git', 'diff', 'HEAD'])
             .exit(0)
@@ -541,8 +540,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             self.ExpectShell(command=['repo', 'download', 'pr', '4321/12'])
             .exit(0)
-            .add(Expect.log('stdio', stderr="test/bla refs/changes/64/564/12 -> FETCH_HEAD\n"))
-            .add(Expect.log('stdio', stderr="HEAD is now at 0123456789abcdef...\n")))
+            .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
+            .stderr("HEAD is now at 0123456789abcdef...\n"))
         self.expectProperty(
             "repo_downloaded", "564/12 0123456789abcdef ", "Source")
         return self.myRunStep()
@@ -572,8 +571,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             self.ExpectShell(command=['repo', 'download', 'pr', '4321/12'])
             .exit(0)
-            .add(Expect.log('stdio', stderr="test/bla refs/changes/64/564/12 -> FETCH_HEAD\n"))
-            .add(Expect.log('stdio', stderr="HEAD is now at 0123456789abcdef...\n")))
+            .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
+            .stderr("HEAD is now at 0123456789abcdef...\n"))
         self.expectProperty(
             "repo_downloaded", "564/12 0123456789abcdef ", "Source")
         return self.myRunStep()
