@@ -53,7 +53,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -98,7 +98,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -160,7 +160,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -220,7 +220,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -262,7 +262,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -315,7 +315,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()

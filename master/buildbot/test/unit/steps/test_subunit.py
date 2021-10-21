@@ -57,7 +57,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             raise unittest.SkipTest("Need to install python-subunit to test subunit step")
 
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()

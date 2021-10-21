@@ -45,7 +45,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         if runtime.platformType == 'win32':
             self.comspec = os.environ.get(_COMSPEC_ENV)
             os.environ[_COMSPEC_ENV] = r'C:\WINDOWS\system32\cmd.exe'
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         if runtime.platformType == 'win32':
@@ -209,7 +209,7 @@ class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -232,7 +232,7 @@ class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -255,7 +255,7 @@ class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -288,7 +288,7 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()

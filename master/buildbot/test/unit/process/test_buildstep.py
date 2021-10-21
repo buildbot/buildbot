@@ -103,7 +103,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -903,7 +903,7 @@ class TestFakeItfc(unittest.TestCase,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.setUpBuildStep()
+        self.setup_build_step()
         self.setup_step(buildstep.BuildStep())
 
 
@@ -929,7 +929,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
-        yield self.setUpBuildStep()
+        yield self.setup_build_step()
         self.step = CommandMixinExample()
         self.setup_step(self.step)
 
@@ -1073,7 +1073,7 @@ class TestShellMixin(steps.BuildStepMixin,
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
-        yield self.setUpBuildStep()
+        yield self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()

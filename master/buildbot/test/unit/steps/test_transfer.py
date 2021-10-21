@@ -62,7 +62,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         if os.path.exists(self.destfile):
@@ -292,7 +292,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         if os.path.exists(self.destdir):
@@ -443,7 +443,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         if os.path.exists(self.destdir):
@@ -835,7 +835,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         if os.path.exists(self.destfile):
@@ -939,7 +939,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -1036,7 +1036,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -1100,7 +1100,7 @@ class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittes
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()

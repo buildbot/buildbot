@@ -3240,7 +3240,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -3547,7 +3547,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -3662,7 +3662,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.message_list = ['my commit', '42']
         self.path_list = ['file1.txt', 'file2.txt']
 
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()

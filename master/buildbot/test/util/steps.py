@@ -105,7 +105,7 @@ class BuildStepMixin:
     @ivar properties: build properties (L{Properties} instance)
     """
 
-    def setUpBuildStep(self, wantData=True, wantDb=False, wantMq=False):
+    def setup_build_step(self, wantData=True, wantDb=False, wantMq=False):
         """
         @param wantData(bool): Set to True to add data API connector to master.
             Default value: True.

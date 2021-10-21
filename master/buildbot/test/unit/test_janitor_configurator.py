@@ -72,7 +72,7 @@ class LogChunksJanitorTests(steps.BuildStepMixin,
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
-        yield self.setUpBuildStep()
+        yield self.setup_build_step()
         self.patch(janitor, "now", lambda: datetime.datetime(year=2017, month=1, day=1))
 
     def tearDown(self):

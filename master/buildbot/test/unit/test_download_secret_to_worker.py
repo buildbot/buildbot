@@ -42,7 +42,7 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -79,7 +79,7 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
@@ -118,7 +118,7 @@ class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
-        return self.setUpBuildStep()
+        return self.setup_build_step()
 
     def tearDown(self):
         return self.tearDownBuildStep()
