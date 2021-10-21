@@ -32,7 +32,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_success(self):
         self.setup_step(cppcheck.Cppcheck(enable=['all'], inconclusive=True))

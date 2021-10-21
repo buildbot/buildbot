@@ -86,7 +86,7 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         try:
             yield self.listener.stopListening()
         finally:
-            yield self.tearDownBuildStep()
+            yield self.tear_down_build_step()
 
     def get_connection_string(self):
         return "http://127.0.0.1:{}".format(self.port)

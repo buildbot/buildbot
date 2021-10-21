@@ -146,7 +146,7 @@ class BuildStepMixin:
 
         self.master = fakemaster.make_master(self, wantData=wantData, wantDb=wantDb, wantMq=wantMq)
 
-    def tearDownBuildStep(self):
+    def tear_down_build_step(self):
         pass
 
     def setup_step(self, step, worker_version=None, worker_env=None,

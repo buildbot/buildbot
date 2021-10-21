@@ -67,7 +67,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def testConstructorModeType(self):
         with self.assertRaises(config.ConfigErrors):
@@ -298,7 +298,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def testBasic(self):
         self.setup_step(
@@ -449,7 +449,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def testEmpty(self):
         self.setup_step(
@@ -840,7 +840,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
     def tearDown(self):
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_init_workerdest_keyword(self):
         step = transfer.FileDownload(
@@ -942,7 +942,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     # check that ConfigErrors is raised on invalid 'mode' argument
 
@@ -1039,7 +1039,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     @defer.inlineCallbacks
     def testBasic(self):
@@ -1103,7 +1103,7 @@ class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittes
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     @defer.inlineCallbacks
     def testBasic(self):

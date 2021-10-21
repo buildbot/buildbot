@@ -32,7 +32,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_no_root(self):
         with self.assertRaises(config.ConfigErrors):
@@ -104,7 +104,7 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_no_spec(self):
         with self.assertRaises(config.ConfigErrors):
@@ -136,7 +136,7 @@ class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_no_srpm(self):
         with self.assertRaises(config.ConfigErrors):

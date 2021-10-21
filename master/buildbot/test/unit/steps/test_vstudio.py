@@ -212,7 +212,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_default_config(self):
         vs = vstudio.VisualStudio()
@@ -344,7 +344,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def getExpectedEnv(self, installdir, LIB=None, p=None, i=None):
         include = [
@@ -445,7 +445,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def getExpectedEnv(self, installdir, LIB=None, p=None, i=None):
         include = [
@@ -589,7 +589,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_args(self):
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
@@ -666,7 +666,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_args(self):
         self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
@@ -725,7 +725,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_installdir(self):
         self.setup_step(vstudio.VC9(projectfile='pf', config='cfg',
@@ -751,7 +751,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_installdir(self):
         self.setup_step(vstudio.VC10(projectfile='pf', config='cfg',
@@ -777,7 +777,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_installdir(self):
         self.setup_step(vstudio.VC11(projectfile='pf', config='cfg',
@@ -802,7 +802,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     @defer.inlineCallbacks
     def test_no_platform(self):
@@ -892,7 +892,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     @defer.inlineCallbacks
     def test_no_platform(self):

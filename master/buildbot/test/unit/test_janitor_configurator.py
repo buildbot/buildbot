@@ -76,7 +76,7 @@ class LogChunksJanitorTests(steps.BuildStepMixin,
         self.patch(janitor, "now", lambda: datetime.datetime(year=2017, month=1, day=1))
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     @defer.inlineCallbacks
     def test_basic(self):

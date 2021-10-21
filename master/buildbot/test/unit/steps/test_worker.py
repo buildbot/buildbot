@@ -56,7 +56,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_simple(self):
         self.setup_step(worker.SetPropertiesFromEnv(
@@ -101,7 +101,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_found(self):
         self.setup_step(worker.FileExists(file="x"))
@@ -163,7 +163,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_success(self):
         self.setup_step(worker.CopyDirectory(src="s", dest="d"))
@@ -223,7 +223,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_success(self):
         self.setup_step(worker.RemoveDirectory(dir="d"))
@@ -265,7 +265,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_success(self):
         self.setup_step(worker.MakeDirectory(dir="d"))
@@ -318,7 +318,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_runRemoteCommand(self):
         cmd_args = ('foo', {'bar': False})

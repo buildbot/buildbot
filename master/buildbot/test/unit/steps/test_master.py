@@ -53,7 +53,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
                 os.environ[_COMSPEC_ENV] = self.comspec
             else:
                 del os.environ[_COMSPEC_ENV]
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def patchSpawnProcess(self, exp_cmd, exp_argv, exp_path, exp_usePTY,
                           exp_env, outputs):
@@ -212,7 +212,7 @@ class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_simple(self):
         self.setup_step(master.SetProperty(property="testProperty", value=Interpolate(
@@ -235,7 +235,7 @@ class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_simple(self):
         self.setup_step(master.LogRenderable(
@@ -258,7 +258,7 @@ class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def doOneTest(self, **kwargs):
         # all three tests should create a 'a' property with 'b' value, all with different
@@ -291,7 +291,7 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_eq_pass(self):
         self.setup_step(master.Assert(

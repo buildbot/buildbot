@@ -45,7 +45,7 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def testBasic(self):
         self.setup_step(
@@ -82,7 +82,7 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def testBasic(self):
         self.setup_step(RemoveWorkerFileSecret(
@@ -121,7 +121,7 @@ class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def testBasic(self):
         self.setup_step(

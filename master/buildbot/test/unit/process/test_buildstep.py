@@ -106,7 +106,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     # support
 
@@ -934,7 +934,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(self.step)
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     @defer.inlineCallbacks
     def test_runRmdir(self):
@@ -1076,7 +1076,7 @@ class TestShellMixin(steps.BuildStepMixin,
         yield self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_setupShellMixin_bad_arg(self):
         mixin = SimpleShellCommand()

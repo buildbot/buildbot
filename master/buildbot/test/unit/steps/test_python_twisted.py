@@ -98,7 +98,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_run_env(self):
         self.setup_step(
@@ -361,7 +361,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_run_ok(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
@@ -429,7 +429,7 @@ class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_run_ok(self):
         self.setup_step(python_twisted.RemovePYCs())

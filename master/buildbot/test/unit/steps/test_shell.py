@@ -46,7 +46,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_doStepIf_False(self):
         self.setup_step(shell.ShellCommand(command="echo hello", doStepIf=False))
@@ -208,7 +208,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_run_success(self):
         self.setup_step(shell.TreeSize())
@@ -256,7 +256,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_constructor_conflict(self):
         with self.assertRaises(config.ConfigErrors):
@@ -419,7 +419,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_new_version_success(self):
         self.setup_step(shell.PerlModuleTest(command="cmd"))
@@ -546,7 +546,7 @@ class Configure(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_class_attrs(self):
         step = shell.Configure()
@@ -574,7 +574,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_no_warnings(self):
         self.setup_step(shell.WarningCountingShellCommand(workdir='w', command=['make']))
@@ -916,7 +916,7 @@ class Compile(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_class_args(self):
         # since this step is just a pre-configured WarningCountingShellCommand,
@@ -939,7 +939,7 @@ class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_build_step()
 
     def tearDown(self):
-        self.tearDownBuildStep()
+        self.tear_down_build_step()
 
     def test_setTestResults(self):
         step = self.setup_step(shell.Test())

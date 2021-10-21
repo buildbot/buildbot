@@ -40,7 +40,7 @@ class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def _run_simple_test(self, source, destination, expected_args=None, expected_code=0,
                          expected_res=SUCCESS, **kwargs):

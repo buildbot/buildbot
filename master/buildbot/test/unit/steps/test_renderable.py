@@ -37,7 +37,7 @@ class TestBuildStepNameIsRenderable(steps.BuildStepMixin, unittest.TestCase,
         return self.setup_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_build_step()
 
     def test_name_is_renderable(self):
         step = TestBuildStep(name=Interpolate('%(kw:foo)s', foo='bar'))
