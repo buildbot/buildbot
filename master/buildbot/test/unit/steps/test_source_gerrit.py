@@ -47,7 +47,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
-            .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
+            .stdout('git version 1.7.5')
             .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
@@ -70,7 +70,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -89,7 +89,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
-            .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
+            .stdout('git version 1.7.5')
             .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
@@ -112,7 +112,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -131,7 +131,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
-            .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
+            .stdout('git version 1.7.5')
             .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
@@ -154,7 +154,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -173,7 +173,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
-            .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
+            .stdout('git version 1.7.5')
             .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
@@ -193,7 +193,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)

@@ -86,7 +86,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -98,8 +98,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -128,7 +128,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -140,8 +140,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -174,7 +174,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -189,8 +189,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                         timeout=1,
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -219,7 +219,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -246,8 +246,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -277,7 +277,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -304,8 +304,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -334,7 +334,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -384,8 +384,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -414,7 +414,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -442,7 +442,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -454,8 +454,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -485,8 +485,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -529,8 +529,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -562,8 +562,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -601,8 +601,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -639,8 +639,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -664,7 +664,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -676,8 +676,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -701,7 +701,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -713,8 +713,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -738,11 +738,11 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(ExpectShell.log('stdio', stdout='foo\nbar/baz\n'))
+            .stdout('foo\nbar/baz\n')
             .exit(1),
             ExpectRmdir(dir=['wkdir/foo', 'wkdir/bar/baz'], logEnviron=True)
             .exit(0),
@@ -753,8 +753,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -779,11 +779,11 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(ExpectShell.log('stdio', stdout='foo\nbar/baz\n'))
+            .stdout('foo\nbar/baz\n')
             .exit(1),
             ExpectRmdir(dir='wkdir/foo', logEnviron=True)
             .exit(0),
@@ -796,8 +796,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -824,7 +824,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -836,8 +836,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -863,7 +863,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True)
             .exit(0),
@@ -878,8 +878,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -906,7 +906,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
@@ -918,8 +918,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -949,7 +949,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'],
                         env={'abc': '123'})
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'],
@@ -962,8 +962,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'], env={'abc': '123'})
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -997,7 +997,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'],
                         logEnviron=False)
-            .add(ExpectShell.log('stdio', stdout='default'))
+            .stdout('default')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'],
@@ -1012,8 +1012,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'],
                         logEnviron=False)
-            .add(ExpectShell.log('stdio', stdout='\n'))
-            .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
+            .stdout('\n')
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)

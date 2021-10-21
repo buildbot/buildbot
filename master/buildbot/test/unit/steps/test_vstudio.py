@@ -259,7 +259,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
-            .add(ExpectShell.log('stdio', stdout='error ABC123: foo\r\n'))
+            .stdout('error ABC123: foo\r\n')
             .exit(0)
         )
         self.expectOutcome(result=FAILURE,
@@ -271,7 +271,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
-            .add(ExpectShell.log('stdio', stdout='foo: warning ABC123: foo\r\n'))
+            .stdout('foo: warning ABC123: foo\r\n')
             .exit(0)
         )
         self.expectOutcome(result=WARNINGS,

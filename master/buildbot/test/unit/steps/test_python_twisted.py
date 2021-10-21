@@ -23,7 +23,6 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import python_twisted
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
@@ -112,7 +111,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH='somepath'))
-            .add(ExpectShell.log('stdio', stdout="Ran 0 tests\n"))
+            .stdout("Ran 0 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='no tests run')
@@ -129,7 +128,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH=['path1', 'path2', 'path3']))
-            .add(ExpectShell.log('stdio', stdout="Ran 0 tests\n"))
+            .stdout("Ran 0 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='no tests run')
@@ -146,7 +145,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH=['path1', 'path2']))
-            .add(ExpectShell.log('stdio', stdout="Ran 0 tests\n"))
+            .stdout("Ran 0 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='no tests run')
@@ -161,7 +160,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            .add(ExpectShell.log('stdio', stdout="Ran 1 tests\n"))
+            .stdout("Ran 1 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='1 test passed')
@@ -176,7 +175,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            .add(ExpectShell.log('stdio', stdout="Ran 2 tests\n"))
+            .stdout("Ran 2 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
@@ -191,7 +190,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            .add(ExpectShell.log('stdio', stdout=failureLog))
+            .stdout(failureLog)
             .exit(1)
         )
         self.expectOutcome(
@@ -215,7 +214,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            .add(ExpectShell.log('stdio', stdout="Ran 2 tests\n"))
+            .stdout("Ran 2 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
@@ -230,7 +229,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', '--testmodule=my/test/file.py',
                                  '--testmodule=my/test/file2.py'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            .add(ExpectShell.log('stdio', stdout="Ran 2 tests\n"))
+            .stdout("Ran 2 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
@@ -246,7 +245,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env={'PYTHONPATH': ['custom/test/path', '/existing/pypath']})
-            .add(Expect.log('stdio', stdout="Ran 2 tests\n"))
+            .stdout("Ran 2 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
@@ -261,7 +260,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', '--reactor=customreactor',
                                  'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            .add(Expect.log('stdio', stdout="Ran 2 tests\n"))
+            .stdout("Ran 2 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed (custom)')
@@ -275,7 +274,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['/bin/mypython', 'trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            .add(Expect.log('stdio', stdout="Ran 2 tests\n"))
+            .stdout("Ran 2 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
@@ -291,7 +290,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--random=0', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
-            .add(Expect.log('stdio', stdout="Ran 2 tests\n"))
+            .stdout("Ran 2 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
@@ -320,7 +319,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             'err.1.log': '_trial_temp/1/err.log',
                             'out.1.log': '_trial_temp/1/out.log',
                         })
-            .add(ExpectShell.log('stdio', stdout="Ran 1 tests\n"))
+            .stdout("Ran 1 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='1 test passed')
@@ -348,7 +347,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             'err.1.log': '_trial_temp/1/err.log',
                             'out.1.log': '_trial_temp/1/out.log',
                         })
-            .add(ExpectShell.log('stdio', stdout="Ran 1 tests\n"))
+            .stdout("Ran 1 tests\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='1 test passed')
@@ -371,8 +370,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=[
                             'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
-            .add(ExpectShell.log(
-                'stdio', stdout="dunno what hlint output looks like..\n"))
+            .stdout("dunno what hlint output looks like..\n")
             .exit(0)
         )
         self.expectLogfile('files', 'foo.xhtml\n')
@@ -416,7 +414,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=[
                             'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'])
-            .add(ExpectShell.log('stdio', stdout="colon: meaning warning\n"))
+            .stdout("colon: meaning warning\n")
             .exit(0)
         )
         self.expectLogfile('warnings', 'colon: meaning warning')

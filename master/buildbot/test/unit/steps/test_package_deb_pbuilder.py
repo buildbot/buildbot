@@ -88,9 +88,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout='blah\ndpkg-genchanges  >../somefilename.changes\foo\n'))
+            .stdout('blah\ndpkg-genchanges  >../somefilename.changes\foo\n')
             .exit(0))
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('deb-changes',

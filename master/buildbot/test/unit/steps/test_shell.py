@@ -216,7 +216,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            .add(ExpectShell.log('stdio', stdout='9292    .\n'))
+            .stdout('9292    .\n')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
@@ -229,7 +229,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            .add(ExpectShell.log('stdio', stdout='abcdef\n'))
+            .stdout('abcdef\n')
             .exit(0)
         )
         self.expectOutcome(result=WARNINGS,
@@ -269,7 +269,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            .add(ExpectShell.log('stdio', stdout='\n\nabcdef\n'))
+            .stdout('\n\nabcdef\n')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
@@ -285,7 +285,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            .add(ExpectShell.log('stdio', stdout='\n\nabcdef\n'))
+            .stdout('\n\nabcdef\n')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
@@ -299,7 +299,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            .add(ExpectShell.log('stdio', stdout='\n\nabcdef\n'))
+            .stdout('\n\nabcdef\n')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
@@ -332,8 +332,9 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            .add(ExpectShell.log('stdio', stdout='start', stderr='START'))
-            .add(ExpectShell.log('stdio', stdout='end'))
+            .stdout('start')
+            .add(ExpectShell.log('stdio', stderr='START'))
+            .stdout('end')
             .add(ExpectShell.log('stdio', stderr='END'))
             .exit(0)
         )
@@ -426,13 +427,13 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     This junk ignored
                     Test Summary Report
                     Result: PASS
                     Tests: 10 Failed: 0
                     Tests: 10 Failed: 0
-                    Files=93, Tests=20""")))
+                    Files=93, Tests=20"""))
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='20 tests 20 passed')
@@ -444,7 +445,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     This junk ignored
                     Test Summary Report
                     -------------------
@@ -453,7 +454,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     OHNOES 1
                     OHNOES 2
                     Files=93, Tests=20,  0 wallclock secs ...
-                    Result: PASS""")))
+                    Result: PASS"""))
             .exit(0)
         )
         self.expectOutcome(
@@ -466,12 +467,12 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
-                    foo.pl .. 1/4""")))
+            .stdout(textwrap.dedent("""\
+                    foo.pl .. 1/4"""))
             .add(ExpectShell.log('stdio', stderr=textwrap.dedent("""\
                     # Failed test 2 in foo.pl at line 6
                     #  foo.pl line 6 is: ok(0);""")))
-            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     foo.pl .. Failed 1/4 subtests
 
                     Test Summary Report
@@ -480,7 +481,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                       Failed test:  0
                     Files=1, Tests=4,  0 wallclock secs ( 0.06 usr  0.01 sys +  0.03 cusr
                     0.01 csys =  0.11 CPU)
-                    Result: FAIL""")))
+                    Result: FAIL"""))
             .add(ExpectShell.log('stdio', stderr=textwrap.dedent("""\
                     Failed 1/1 test programs. 1/4 subtests failed.""")))
             .exit(1)
@@ -494,10 +495,10 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     This junk ignored
                     All tests successful
-                    Files=10, Tests=20, 100 wall blah blah""")))
+                    Files=10, Tests=20, 100 wall blah blah"""))
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
@@ -509,9 +510,9 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            .add(ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     This junk ignored
-                    Failed 1/1 test programs, 3/20 subtests failed.""")))
+                    Failed 1/1 test programs, 3/20 subtests failed."""))
             .exit(1)
         )
         self.expectOutcome(result=FAILURE,
@@ -581,7 +582,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='w',
                         command=["make"])
-            .add(ExpectShell.log('stdio', stdout='blarg success!'))
+            .stdout('blarg success!')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -593,8 +594,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            .add(ExpectShell.log('stdio', stdout='normal: foo\nwarning: blarg!\n'
-                                'also normal\nWARNING: blarg!\n'))
+            .stdout('normal: foo\nwarning: blarg!\n'
+                    'also normal\nWARNING: blarg!\n')
             .exit(0)
         )
         self.expectOutcome(result=WARNINGS)
@@ -609,7 +610,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            .add(ExpectShell.log('stdio', stdout='scary: foo\nwarning: bar\nscary: bar'))
+            .stdout('scary: foo\nwarning: bar\nscary: bar')
             .exit(0)
         )
         self.expectOutcome(result=WARNINGS)
@@ -622,7 +623,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            .add(ExpectShell.log('stdio', stdout='warning: noo!\n' * 10))
+            .stdout('warning: noo!\n' * 10)
             .exit(0)
         )
         self.expectOutcome(result=FAILURE)
@@ -634,7 +635,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            .add(ExpectShell.log('stdio', stdout='warning: I might fail'))
+            .stdout('warning: I might fail')
             .exit(3)
         )
         self.expectOutcome(result=FAILURE)
@@ -649,7 +650,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             ExpectShell(workdir='wkdir',
                         command=["make"],
                         )
-            .add(ExpectShell.log('stdio', stdout='I might fail with rc'))
+            .stdout('I might fail with rc')
             .exit(3)
         )
         self.expectOutcome(result=WARNINGS)
@@ -685,14 +686,14 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
                 # and then run the command
                 ExpectShell(workdir='wkdir',
                             command=["make"])
-                .add(ExpectShell.log('stdio', stdout=stdout))
+                .stdout(stdout)
                 .exit(0)
             )
         else:
             self.expectCommands(
                 ExpectShell(workdir='wkdir',
                             command=["make"])
-                .add(ExpectShell.log('stdio', stdout=stdout))
+                .stdout(stdout)
                 .exit(0)
             )
         if exp_exception:

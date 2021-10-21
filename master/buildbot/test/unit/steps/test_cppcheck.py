@@ -39,7 +39,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
-            .add(ExpectShell.log('stdio', stdout='Checking file1.c...'))
+            .stdout('Checking file1.c...')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string="cppcheck")
         return self.runStep()
@@ -49,7 +49,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
-            .add(ExpectShell.log('stdio', stdout='Checking file1.c...'))
+            .stdout('Checking file1.c...')
             .exit(1))
         self.expectOutcome(result=FAILURE, state_string="cppcheck (failure)")
         return self.runStep()
@@ -60,13 +60,11 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', 'file1.c', '--enable=warning,performance'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('Checking file1.c...\n'
-                        '[file1.c:3]: (warning) Logical disjunction always '
-                        'evaluates to true: t >= 0 || t < 65.\n'
-                        '(information) Cppcheck cannot find all the include files '
-                        '(use --check-config for details)')))
+            .stdout('Checking file1.c...\n'
+                    '[file1.c:3]: (warning) Logical disjunction always '
+                    'evaluates to true: t >= 0 || t < 65.\n'
+                    '(information) Cppcheck cannot find all the include files '
+                    '(use --check-config for details)')
             .exit(0))
         self.expectOutcome(result=WARNINGS,
                            state_string="cppcheck warning=1 information=1 (warnings)")
@@ -77,12 +75,10 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--my-param=5'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('Checking file1.c...\n'
-                        '[file1.c:3]: (error) Possible null pointer dereference: filter\n'
-                        '[file1.c:4]: (error) Memory leak: columns\n'
-                        "[file1.c:7]: (style) The scope of the variable 'pid' can be reduced")))
+            .stdout('Checking file1.c...\n'
+                    '[file1.c:3]: (error) Possible null pointer dereference: filter\n'
+                    '[file1.c:4]: (error) Memory leak: columns\n'
+                    "[file1.c:7]: (style) The scope of the variable 'pid' can be reduced")
             .exit(0))
         self.expectOutcome(result=FAILURE,
                            state_string="cppcheck error=2 style=1 (failure)")
@@ -95,7 +91,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'a', '.', 'f.c', '--p', '--p'])
-            .add(ExpectShell.log('stdio', stdout='Checking file1.c...'))
+            .stdout('Checking file1.c...')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string="cppcheck")
         return self.runStep()

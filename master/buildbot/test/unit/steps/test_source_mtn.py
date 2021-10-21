@@ -56,13 +56,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -75,7 +75,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
-            .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
+            .stdout('file1\nfile2')
             .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .exit(0),
@@ -85,7 +85,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -101,13 +101,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -120,7 +120,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
-            .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
+            .stdout('file1\nfile2')
             .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .exit(0),
@@ -144,7 +144,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -161,13 +161,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -180,7 +180,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
-            .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
+            .stdout('file1\nfile2')
             .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .exit(0),
@@ -204,7 +204,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -220,13 +220,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -239,7 +239,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
-            .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
+            .stdout('file1\nfile2')
             .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .exit(0),
@@ -273,7 +273,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(1),
@@ -291,7 +291,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
-            .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
+            .stdout('file1\nfile2')
             .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .exit(0),
@@ -301,7 +301,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -316,13 +316,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -341,7 +341,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0),
         )
         self.expectOutcome(result=SUCCESS)
@@ -356,7 +356,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(1),
@@ -380,7 +380,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -395,13 +395,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -416,7 +416,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -431,7 +431,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(1),
@@ -451,7 +451,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -466,7 +466,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(1),
@@ -488,7 +488,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -503,13 +503,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -528,7 +528,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -543,7 +543,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(1),
@@ -567,7 +567,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -582,13 +582,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -605,7 +605,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -620,13 +620,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -648,7 +648,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -663,13 +663,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -682,11 +682,11 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
-            .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
+            .stdout('file1\nfile2')
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'ignored'])
-            .add(ExpectShell.log('stdio', stdout='file3\nfile4'))
+            .stdout('file3\nfile4')
             .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2', 'wkdir/file3', 'wkdir/file4'],
                         logEnviron=True)
@@ -697,7 +697,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -713,13 +713,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -736,7 +736,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout='abcdef019a9f8b6f5c9664e3807cd34617ea928c'))
+            .stdout('abcdef019a9f8b6f5c9664e3807cd34617ea928c')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -752,13 +752,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -777,7 +777,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='build',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -792,13 +792,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -817,7 +817,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='build',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -852,13 +852,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout=''))
+            .stdout('')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
@@ -869,7 +869,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
-            .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
+            .stdout('file1\nfile2')
             .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .exit(0),
@@ -881,7 +881,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -896,7 +896,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .add(('err', error.ConnectionLost()))
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
@@ -910,13 +910,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout='migration needed'))
+            .stdout('migration needed')
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'migrate', '--db', 'db.mtn'])
@@ -936,7 +936,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -951,13 +951,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout='not a monotone database'))
+            .stdout('not a monotone database')
             .exit(0)
         )
         self.expectOutcome(result=FAILURE)
@@ -971,13 +971,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout='too new, cannot use'))
+            .stdout('too new, cannot use')
             .exit(0),
             ExpectRmdir(dir='db.mtn', logEnviron=True)
             .exit(0),
@@ -999,7 +999,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -1014,13 +1014,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
-            .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
+            .stdout(self.MTN_VER)
             .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
-            .add(ExpectShell.log('stdio', stdout='database has no tables'))
+            .stdout('database has no tables')
             .exit(0),
             ExpectRmdir(dir='db.mtn', logEnviron=True)
             .exit(0),
@@ -1042,7 +1042,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
-            .add(ExpectShell.log('stdio', stdout=self.REVID))
+            .stdout(self.REVID)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)

@@ -65,7 +65,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="update")
@@ -93,7 +93,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -123,7 +123,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -151,7 +151,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -178,7 +178,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -210,7 +210,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -251,7 +251,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -293,7 +293,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -321,7 +321,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -348,7 +348,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -373,7 +373,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -410,7 +410,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -437,7 +437,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -463,7 +463,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -490,7 +490,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -518,7 +518,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='source',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -542,7 +542,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -567,7 +567,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100'))
+            .stdout('100')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -592,7 +592,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100\n'))
+            .stdout('100\n')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -623,7 +623,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='100\n'))
+            .stdout('100\n')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -648,7 +648,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
-            .add(ExpectShell.log('stdio', stdout='oiasdfj010laksjfd'))
+            .stdout('oiasdfj010laksjfd')
             .exit(0)
         )
         self.expectOutcome(result=FAILURE)

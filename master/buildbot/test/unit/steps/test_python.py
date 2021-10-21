@@ -137,7 +137,7 @@ class BuildEPYDoc(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.BuildEPYDoc())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'epydocs'])
-            .add(ExpectShell.log('stdio', stdout=epydoc_output))
+            .stdout(epydoc_output)
             .exit(1),
         )
         self.expectOutcome(result=FAILURE,
@@ -162,7 +162,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=store_results))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log('stdio', stdout='Your code has been rated at 10/10'))
+            .stdout('Your code has been rated at 10/10')
             .exit(python.PyLint.RC_OK))
         self.expectOutcome(result=SUCCESS, state_string='pylint')
         if store_results:
@@ -178,10 +178,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=store_results))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
-                        'E: 12: Undefined variable \'foo\'\n')))
+            .stdout('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
+                    'E: 12: Undefined variable \'foo\'\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_ERROR)))
         self.expectOutcome(result=FAILURE,
                            state_string='pylint error=1 warning=1 (failure)')
@@ -207,10 +205,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
-                        'F: 13: something really strange happened\n')))
+            .stdout('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
+                    'F: 13: something really strange happened\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_FATAL)))
         self.expectOutcome(result=FAILURE,
                            state_string='pylint fatal=1 warning=1 (failure)')
@@ -224,10 +220,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
-                        'E: 12: Undefined variable \'foo\'\n')))
+            .stdout('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
+                    'E: 12: Undefined variable \'foo\'\n')
             .exit(0))
         self.expectOutcome(result=FAILURE,
                            state_string='pylint error=1 warning=1 (failure)')
@@ -239,10 +233,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
-                        'C:  1:foo123: Missing docstring\n')))
+            .stdout('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
+                    'C:  1:foo123: Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
@@ -256,10 +248,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('W: 11,0: Bad indentation. Found 6 spaces, expected 4\n'
-                        'C:  3,10:foo123: Missing docstring\n')))
+            .stdout('W: 11,0: Bad indentation. Found 6 spaces, expected 4\n'
+                    'C:  3,10:foo123: Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
@@ -274,10 +264,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('W: 11, 0: Bad indentation. Found 6 spaces, expected 4\n'
-                        'C:  3,10:foo123: Missing docstring\n')))
+            .stdout('W: 11, 0: Bad indentation. Found 6 spaces, expected 4\n'
+                    'C:  3,10:foo123: Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
@@ -301,7 +289,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log('stdio', stdout=stdout))
+            .stdout(stdout)
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
@@ -328,7 +316,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log('stdio', stdout=stdout))
+            .stdout(stdout)
             .exit(python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=SUCCESS, state_string='pylint')
         self.expectProperty('pylint-warning', 0)
@@ -340,10 +328,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('W0311: 11: Bad indentation.\n'
-                        'C0111:  1:funcName: Missing docstring\n')))
+            .stdout('W0311: 11: Bad indentation.\n'
+                    'C0111:  1:funcName: Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
@@ -357,10 +343,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('W0311: 11,0: Bad indentation.\n'
-                        'C0111:  3,10:foo123: Missing docstring\n')))
+            .stdout('W0311: 11,0: Bad indentation.\n'
+                    'C0111:  3,10:foo123: Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
@@ -377,10 +361,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=store_results))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('test.py:9: [W0311] Bad indentation.\n'
-                        'test.py:3: [C0111, foo123] Missing docstring\n')))
+            .stdout('test.py:9: [W0311] Bad indentation.\n'
+                    'test.py:3: [C0111, foo123] Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
@@ -399,10 +381,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout=('test.py:9: [W] Bad indentation.\n'
-                        'test.py:3: [C, foo123] Missing docstring\n')))
+            .stdout('test.py:9: [W] Bad indentation.\n'
+                    'test.py:3: [C, foo123] Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
@@ -419,12 +399,11 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log('stdio',
-                                 stdout=('test.py:9: [W0311(bad-indentation), ] '
-                        'Bad indentation. Found 6 '
-                        'spaces, expected 4\n'
-                        'test.py:3: [C0111(missing-docstring), myFunc] Missing '
-                        'function docstring\n')))
+            .stdout('test.py:9: [W0311(bad-indentation), ] '
+                    'Bad indentation. Found 6 '
+                    'spaces, expected 4\n'
+                    'test.py:3: [C0111(missing-docstring), myFunc] Missing '
+                    'function docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION)))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')
@@ -467,9 +446,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout="foo.py:1: 'bar' imported but unused\n"))
+            .stdout("foo.py:1: 'bar' imported but unused\n")
             .exit(1))
         self.expectOutcome(result=WARNINGS,
                            state_string='pyflakes unused=1 (warnings)')
@@ -481,9 +458,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout="foo.py:1: undefined name 'bar'\n"))
+            .stdout("foo.py:1: undefined name 'bar'\n")
             .exit(1))
         self.expectOutcome(result=FAILURE,
                            state_string='pyflakes undefined=1 (failure)')
@@ -495,9 +470,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout="foo.py:2: redefinition of unused 'foo' from line 1\n"))
+            .stdout("foo.py:2: redefinition of unused 'foo' from line 1\n")
             .exit(1))
         self.expectOutcome(result=WARNINGS,
                            state_string='pyflakes redefs=1 (warnings)')
@@ -509,9 +482,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout="foo.py:1: 'from module import *' used; unable to detect undefined names\n"))
+            .stdout("foo.py:1: 'from module import *' used; unable to detect undefined names\n")
             .exit(1))
         self.expectOutcome(result=WARNINGS,
                            state_string='pyflakes import*=1 (warnings)')
@@ -523,9 +494,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
-            .add(ExpectShell.log(
-                'stdio',
-                stdout="foo.py:2: redefinition of function 'bar' from line 1\n"))
+            .stdout("foo.py:2: redefinition of function 'bar' from line 1\n")
             .exit(1))
         self.expectOutcome(result=WARNINGS,
                            state_string='pyflakes misc=1 (warnings)')
@@ -556,7 +525,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['sphinx-build', '.', '_build'])
-            .add(ExpectShell.log('stdio', stdout=log_output_success))
+            .stdout(log_output_success)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="sphinx 0 warnings")
@@ -567,7 +536,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['sphinx-build', '.', '_build'])
-            .add(ExpectShell.log('stdio', stdout='oh noes!'))
+            .stdout('oh noes!')
             .exit(1)
         )
         self.expectOutcome(result=FAILURE,
@@ -579,7 +548,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['sphinx-build', '-W', '.', '_build'])
-            .add(ExpectShell.log('stdio', stdout=log_output_warnings_strict))
+            .stdout(log_output_warnings_strict)
             .exit(1)
         )
         self.expectOutcome(result=FAILURE,
@@ -591,7 +560,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['sphinx-build', '.', '_build'])
-            .add(ExpectShell.log('stdio', stdout=log_output_nochange))
+            .stdout(log_output_nochange)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
@@ -604,7 +573,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['sphinx-build', '.', '_build'])
-            .add(ExpectShell.log('stdio', stdout=log_output_warnings))
+            .stdout(log_output_warnings)
             .exit(0)
         )
         self.expectOutcome(result=WARNINGS,
@@ -630,7 +599,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  '-t', 'a', '-t', 'b', '-D', 'empty',
                                  '-D', 'f=0', '-D', 's=str', '-D', 't=1',
                                  '-E', '-W', 'src', 'bld'])
-            .add(ExpectShell.log('stdio', stdout=log_output_success))
+            .stdout(log_output_success)
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="sphinx 0 warnings")

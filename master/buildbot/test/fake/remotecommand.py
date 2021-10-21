@@ -227,6 +227,8 @@ class Expect:
 
     @classmethod
     def log(self, name, **streams):
+        if name == 'stdio' and 'stdout' in streams:
+            raise NotImplementedError()
         return ('log', name, streams)
 
     @classmethod
@@ -238,6 +240,10 @@ class Expect:
             self.behaviors.append(('err', other))
         else:
             self.behaviors.append(other)
+        return self
+
+    def stdout(self, output):
+        self.behaviors.append(('log', 'stdio', {'stdout': output}))
         return self
 
     def exit(self, code):

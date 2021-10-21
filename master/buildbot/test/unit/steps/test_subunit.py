@@ -22,7 +22,6 @@ from twisted.trial import unittest
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
@@ -96,7 +95,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
-            .add(Expect.log('stdio', stdout=stream.getvalue()))
+            .stdout(stream.getvalue())
             .exit(0)
         )
 
@@ -114,7 +113,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
-            .add(Expect.log('stdio', stdout=stream.getvalue()))
+            .stdout(stream.getvalue())
             .exit(0)
         )
 
@@ -139,7 +138,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
-            .add(Expect.log('stdio', stdout=stream.getvalue()))
+            .stdout(stream.getvalue())
             .exit(0)
         )
 
@@ -165,7 +164,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
-            .add(Expect.log('stdio', stdout=stream.getvalue()))
+            .stdout(stream.getvalue())
             .exit(0)
         )
 

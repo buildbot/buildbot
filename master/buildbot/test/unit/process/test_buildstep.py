@@ -1212,7 +1212,7 @@ class TestShellMixin(steps.BuildStepMixin,
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
                         logfiles={'logname': 'logpath.log'})
             .add(Expect.log('logname', stdout='logline\nlogline2\n'))
-            .add(Expect.log('stdio', stdout="some log\n"))
+            .stdout("some log\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -1225,7 +1225,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'])
-            .add(Expect.log('stdio', stdout="some log\n"))
+            .stdout("some log\n")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)

@@ -157,8 +157,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'changes', '-m1', '#have'])
-            .add(ExpectShell.log('stdio',
-                                 stdout="Change 100 on 2013/03/21 by user@machine \'duh\'"))
+            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -192,8 +191,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'changes', '-m1', '#have'])
-            .add(ExpectShell.log('stdio',
-                                 stdout="Change 100 on 2013/03/21 by user@machine \'duh\'"))
+            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -530,8 +528,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass, '-c', p4client,
                                  'changes', '-m1', '#have'])
-            .add(ExpectShell.log('stdio',
-                                 stdout="Change 100 on 2013/03/21 by user@machine \'duh\'"))
+            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -1036,8 +1033,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-c', 'p4_client1', 'changes', '-m1', '#have'])
-            .add(ExpectShell.log('stdio',
-                                 stdout="Change 100 on 2013/03/21 by user@machine \'duh\'"))
+            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)

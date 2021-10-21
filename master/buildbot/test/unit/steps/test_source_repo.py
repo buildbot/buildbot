@@ -234,10 +234,10 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0))
         self.expectRepoSync()
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.tar'])
-                            .add(Expect.log('stdio', stdout=str(10000)))
+                            .stdout(str(10000))
                             .exit(0))
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '.'])
-                            .add(Expect.log('stdio', stdout=str(10000 + 7 * 24 * 3600)))
+                            .stdout(str(10000 + 7 * 24 * 3600))
                             .exit(0))
         return self.myRunStep()
 
@@ -273,10 +273,10 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0))
         self.expectRepoSync()
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
-                            .add(Expect.log('stdio', stdout=str(10000)))
+                            .stdout(str(10000))
                             .exit(0),
                             self.ExpectShell(command=['stat', '-c%Y', '.'])
-                            .add(Expect.log('stdio', stdout=str(10001 + 7 * 24 * 3600)))
+                            .stdout(str(10001 + 7 * 24 * 3600))
                             .exit(0),
                             self.ExpectShell(command=['tar'] + option +
                                              ['-cvf', '/tarball.' + suffix, '.repo'])
@@ -323,10 +323,10 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0))
         self.expectRepoSync()
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
-                            .add(Expect.log('stdio', stdout=str(10000)))
+                            .stdout(str(10000))
                             .exit(0),
                             self.ExpectShell(command=['stat', '-c%Y', '.'])
-                            .add(Expect.log('stdio', stdout=str(10001 + 7 * 24 * 3600)))
+                            .stdout(str(10001 + 7 * 24 * 3600))
                             .exit(0),
                             self.ExpectShell(command=['tar'] + option +
                                              ['-cvf', '/tarball.' + suffix, '.repo'])
@@ -347,10 +347,10 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0))
         self.expectRepoSync()
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
-                            .add(Expect.log('stdio', stdout=str(10000)))
+                            .stdout(str(10000))
                             .exit(0),
                             self.ExpectShell(command=['stat', '-c%Y', '.'])
-                            .add(Expect.log('stdio', stdout=str(10001 + 7 * 24 * 3600)))
+                            .stdout(str(10001 + 7 * 24 * 3600))
                             .exit(0),
                             self.ExpectShell(command=['tar'] + option +
                                              ['-cvf', '/tarball.' + suffix, '.repo'])

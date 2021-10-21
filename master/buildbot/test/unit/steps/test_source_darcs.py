@@ -77,7 +77,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -106,7 +106,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='build',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -135,7 +135,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='build',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -160,7 +160,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -194,7 +194,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='build',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -234,7 +234,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -272,7 +272,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -304,7 +304,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -337,7 +337,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -363,7 +363,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
-            .add(ExpectShell.log('stdio', stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com'))
+            .stdout('Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
