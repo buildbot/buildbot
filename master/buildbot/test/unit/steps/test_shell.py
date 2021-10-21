@@ -31,6 +31,7 @@ from buildbot.steps import shell
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.fake.remotecommand import ExpectUploadFile
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
@@ -676,9 +677,9 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         if supps_file is not None:
             self.expectCommands(
                 # step will first get the remote suppressions file
-                Expect('uploadFile', dict(blocksize=32768, maxsize=None,
-                                          workersrc='supps', workdir='wkdir',
-                                          writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
+                ExpectUploadFile(blocksize=32768, maxsize=None,
+                                 workersrc='supps', workdir='wkdir',
+                                 writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
                 .add(Expect.behavior(upload_behavior)),
 
                 # and then run the command

@@ -29,6 +29,7 @@ from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectStat
+from buildbot.test.fake.remotecommand import ExpectUploadFile
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -447,10 +448,9 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
 
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(
-            Expect('uploadFile', dict(
-                workersrc="file.txt", workdir='wkdir',
-                blocksize=32 * 1024, maxsize=None,
-                writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
+            ExpectUploadFile(workersrc="file.txt", workdir='wkdir',
+                             blocksize=32 * 1024, maxsize=None,
+                             writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .add(Expect.behavior(uploadString("Hello world!")))
             .add(0)
         )
@@ -467,10 +467,9 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             CompositeUser(testFunc),
             worker_version={'*': '2.16'})
         self.expectCommands(
-            Expect('uploadFile', dict(
-                slavesrc="file.txt", workdir='wkdir',
-                blocksize=32 * 1024, maxsize=None,
-                writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
+            ExpectUploadFile(slavesrc="file.txt", workdir='wkdir',
+                             blocksize=32 * 1024, maxsize=None,
+                             writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .add(Expect.behavior(uploadString("Hello world!")))
             .add(0)
         )

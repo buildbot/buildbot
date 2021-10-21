@@ -391,3 +391,23 @@ class ExpectStat(Expect):
 
     def __repr__(self):
         return "ExpectStat(" + repr(self.args['file']) + ")"
+
+
+class ExpectUploadFile(Expect):
+
+    def __init__(self, blocksize=None, maxsize=None, workersrc=None, workdir=None,
+                 writer=None, keepstamp=None, slavesrc=None, interrupted=False):
+        args = {'workdir': workdir, 'writer': writer,
+                'blocksize': blocksize, 'maxsize': maxsize}
+        if keepstamp is not None:
+            args['keepstamp'] = keepstamp
+        if slavesrc is not None:
+            args['slavesrc'] = slavesrc
+        if workersrc is not None:
+            args['workersrc'] = workersrc
+
+        super().__init__('uploadFile', args, interrupted=interrupted)
+
+    def __repr__(self):
+        return "ExpectUploadFile({},{})".format(repr(self.args['workdir']),
+                                                repr(self.args['workersrc']))
