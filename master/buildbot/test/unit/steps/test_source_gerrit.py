@@ -18,6 +18,7 @@ from twisted.trial import unittest
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import gerrit
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectListdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import config
@@ -50,7 +51,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('listdir', {'dir': 'wkdir'})
+            ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
             .add(0),
             ExpectShell(workdir='wkdir',
@@ -92,7 +93,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('listdir', {'dir': 'wkdir'})
+            ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
             .add(0),
             ExpectShell(workdir='wkdir',
@@ -134,7 +135,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('listdir', {'dir': 'wkdir'})
+            ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
             .add(0),
             ExpectShell(workdir='wkdir',
@@ -176,7 +177,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('listdir', {'dir': 'wkdir'})
+            ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
             .add(0),
             ExpectShell(workdir='wkdir',

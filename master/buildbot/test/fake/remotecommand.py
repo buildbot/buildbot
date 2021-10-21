@@ -511,3 +511,14 @@ class ExpectGlob(Expect):
 
     def __repr__(self):
         return "ExpectGlob({})".format(repr(self.args['path']))
+
+
+class ExpectListdir(Expect):
+
+    def __init__(self, dir=None):
+        args = {'dir': dir}
+
+        super().__init__('listdir', args)
+
+    def __repr__(self):
+        return "ExpectListdir({})".format(repr(self.args['dir']))
