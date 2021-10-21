@@ -224,6 +224,10 @@ class Expect:
         self.behaviors.append(('callable', callable))
         return self
 
+    def error(self, callable):
+        self.behaviors.append(('err', callable))
+        return self
+
     def upload_string(self, string, timestamp=None, out_writers=None, error=None):
         def behavior(command):
             writer = command.args['writer']
@@ -270,13 +274,6 @@ class Expect:
         if name == 'stdio' and 'sterr' in streams:
             raise NotImplementedError()
         self.behaviors.append(('log', name, streams))
-        return self
-
-    def add(self, other):
-        if isinstance(other, failure.Failure):
-            self.behaviors.append(('err', other))
-        else:
-            self.behaviors.append(other)
         return self
 
     def update(self, name, value):

@@ -977,7 +977,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['p4', '-V'])
-            .add(('err', error.ConnectionLost()))
+            .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()

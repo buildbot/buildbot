@@ -897,7 +897,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
-            .add(('err', error.ConnectionLost()))
+            .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()

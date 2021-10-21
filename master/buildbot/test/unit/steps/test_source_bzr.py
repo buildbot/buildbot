@@ -682,7 +682,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(('err', error.ConnectionLost())),
+            .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY,
                            state_string="update (retry)")

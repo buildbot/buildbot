@@ -1689,7 +1689,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
-            .add(('err', error.ConnectionLost()))
+            .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()

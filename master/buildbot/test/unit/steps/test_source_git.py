@@ -3176,7 +3176,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
-            .add(('err', error.ConnectionLost()))
+            .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()

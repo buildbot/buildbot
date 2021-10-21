@@ -1154,7 +1154,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
-            .add(('err', error.ConnectionLost()))
+            .error(error.ConnectionLost())
         )
 
         self.expectOutcome(result=RETRY, state_string="update (retry)")

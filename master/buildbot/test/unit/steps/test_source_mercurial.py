@@ -1038,7 +1038,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(('err', error.ConnectionLost()))
+            .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()
