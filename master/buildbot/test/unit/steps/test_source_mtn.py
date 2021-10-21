@@ -57,36 +57,36 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -102,50 +102,50 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest='.buildbot-diff', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest='.buildbot-patched', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -162,50 +162,50 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                slavedest='.buildbot-diff', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                slavedest='.buildbot-patched', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -221,46 +221,46 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest='.buildbot-diff', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest='.buildbot-patched', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(result=FAILURE, state_string="update (failure)")
         return self.runStep()
@@ -274,35 +274,35 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -317,32 +317,32 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
                                  '--db', 'db.mtn', '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0),
+            .exit(0),
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -357,31 +357,31 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
                                  '--db', 'db.mtn', '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -396,28 +396,28 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
                                  '--db', 'db.mtn', '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -432,27 +432,27 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
                                  '--db', 'db.mtn', '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -467,29 +467,29 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -504,32 +504,32 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
                                  '--db', 'db.mtn', '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -544,31 +544,31 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
                                  '--db', 'db.mtn', '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -583,30 +583,30 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -621,35 +621,35 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -664,41 +664,41 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'ignored'])
             .add(ExpectShell.log('stdio', stdout='file3\nfile4'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2', 'wkdir/file3', 'wkdir/file4'],
                         logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -714,30 +714,30 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'abcdef01',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout='abcdef019a9f8b6f5c9664e3807cd34617ea928c'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -753,32 +753,32 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
-            .add(0),
+            .exit(0),
             ExpectStat(file='source/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='build',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -793,32 +793,32 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
-            .add(0),
+            .exit(0),
             ExpectStat(file='source/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='build',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -853,36 +853,36 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout=''))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -911,33 +911,33 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout='migration needed'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'migrate', '--db', 'db.mtn'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -952,13 +952,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout='not a monotone database'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -972,35 +972,35 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout='too new, cannot use'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
@@ -1015,35 +1015,35 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .add(ExpectShell.log('stdio', stdout=self.MTN_VER))
-            .add(0),
+            .exit(0),
             ExpectStat(file='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout='database has no tables'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='db.mtn', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'pull',
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
             .add(ExpectShell.log('stdio', stdout=self.REVID))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')

@@ -234,13 +234,14 @@ class Expect:
         return ('update', name, value)
 
     def add(self, other):
-        # special-case adding an integer (return code) or failure (error)
-        if isinstance(other, int):
-            self.behaviors.append(('rc', other))
-        elif isinstance(other, failure.Failure):
+        if isinstance(other, failure.Failure):
             self.behaviors.append(('err', other))
         else:
             self.behaviors.append(other)
+        return self
+
+    def exit(self, code):
+        self.behaviors.append(('rc', code))
         return self
 
     def runBehavior(self, behavior, args, command):

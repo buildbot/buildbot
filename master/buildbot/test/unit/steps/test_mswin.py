@@ -57,7 +57,7 @@ class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
                 workdir='wkdir',
                 command=command,
             )
-        .add(expected_code)
+        .exit(expected_code)
         )
         state_string = "'robocopy {} ...'".format(source)
         if expected_res != SUCCESS:

@@ -52,21 +52,21 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="update")
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -80,21 +80,21 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file=r'wkdir\.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file=r'wkdir\.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -107,24 +107,24 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['bzr', 'clean-tree', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -138,21 +138,21 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update', '-r', '3730'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -165,21 +165,21 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--ignored', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -192,26 +192,26 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(0),
+            .exit(0),
             # clean up the applied patch
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--ignored', '--force'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             # this clean is from 'mode=clean'
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--ignored', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -224,35 +224,35 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--ignored', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.FileReader),
                                workerdest='.buildbot-diff', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.FileReader),
                                workerdest='.buildbot-patched', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -266,35 +266,35 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--ignored', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.FileReader),
                                slavedest='.buildbot-diff', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.FileReader),
                                slavedest='.buildbot-patched', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -308,21 +308,21 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--ignored', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update', '-r', '2345'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -335,21 +335,21 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--force'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -362,19 +362,19 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -387,31 +387,31 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -425,20 +425,20 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk',
                                  '.', '-r', '3730'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -451,20 +451,20 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  os.path.join('http://bzr.squid-cache.org/bzr/squid3', 'trunk'),
                                  '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -478,20 +478,20 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  os.path.join('http://bzr.squid-cache.org/bzr/squid3',
                                  'branches/SQUID_3_0'), '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -504,22 +504,22 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='build', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectStat(file='source/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectCpdir(fromdir='source', logEnviron=True, todir='build')
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='source',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -532,18 +532,18 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -557,18 +557,18 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update', '-r', '9384'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
@@ -581,19 +581,19 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100\n'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100\n', 'Bzr')
@@ -606,25 +606,25 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='100\n'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100\n', 'Bzr')
@@ -637,19 +637,19 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             .add(ExpectShell.log('stdio', stdout='oiasdfj010laksjfd'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -661,16 +661,16 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.bzr', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
             .add(ExpectShell.log('stdio', stderr='failed\n'))
-            .add(128)
+            .exit(128)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()

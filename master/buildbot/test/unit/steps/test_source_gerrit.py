@@ -48,30 +48,30 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'gerrit_branch', '--progress'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'gerrit_branch'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -90,30 +90,30 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'refs/changes/34/1234/567', '--progress'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/changes/34/1234/567'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -132,30 +132,30 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'refs/changes/34/1234/567', '--progress'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/changes/34/1234/567'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -174,27 +174,27 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()

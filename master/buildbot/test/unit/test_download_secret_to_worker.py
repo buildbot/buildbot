@@ -56,12 +56,12 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                blocksize=32 * 1024,
                                workerdest=os.path.join(self.temp_path, "pathA"), workdir="wkdir")
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(maxsize=None, mode=stat.S_IRUSR | stat.S_IWUSR,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                blocksize=32 * 1024,
                                workerdest=os.path.join(self.temp_path, "pathB"), workdir="wkdir")
-            .add(0),
+            .exit(0),
             )
 
         self.expectOutcome(
@@ -94,11 +94,11 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
             ExpectRmdir(path=os.path.join(self.temp_path, "pathA"),
                         dir=os.path.abspath(os.path.join(self.temp_path, "pathA")),
                         logEnviron=False)
-            .add(0),
+            .exit(0),
             ExpectRmdir(path=os.path.join(self.temp_path, "pathB"),
                         dir=os.path.abspath(os.path.join(self.temp_path, "pathB")),
                         logEnviron=False)
-            .add(0),
+            .exit(0),
             )
 
         self.expectOutcome(
@@ -128,9 +128,9 @@ class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
                                     (os.path.join(self.temp_path, "pathB"), "somethingmore")]))
         self.expectCommands(
             ExpectRmfile(path=os.path.join(self.temp_path, "pathA"), logEnviron=False)
-            .add(0),
+            .exit(0),
             ExpectRmfile(path=os.path.join(self.temp_path, "pathB"), logEnviron=False)
-            .add(0),
+            .exit(0),
             )
 
         self.expectOutcome(

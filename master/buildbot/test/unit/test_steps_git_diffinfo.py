@@ -44,7 +44,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .add(Expect.log('stdio-merge-base', stderr='fatal: Not a valid object name'))
-            .add(128))
+            .exit(128))
         self.expect_log_file_stderr('stdio-merge-base', 'fatal: Not a valid object name')
         self.expectOutcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
         return self.runStep()
@@ -54,11 +54,11 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .add(Expect.log('stdio-merge-base', stdout='1234123412341234'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'])
             .add(Expect.log('stdio-diff', stderr='fatal: ambiguous argument'))
-            .add(1),
+            .exit(1),
             )
         self.expectLogfile('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', 'fatal: ambiguous argument')
@@ -70,11 +70,11 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .add(Expect.log('stdio-merge-base', stdout='1234123412341234'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'])
             .add(Expect.log('stdio-diff', stdout=''))
-            .add(0),
+            .exit(0),
             )
         self.expectLogfile('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', '')
@@ -87,7 +87,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .add(Expect.log('stdio-merge-base', stdout='1234123412341234'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'])
             .add(Expect.log('stdio-diff', stdout='''\
@@ -122,7 +122,7 @@ index 0000000..632e269
 +line32
 +line33
 '''))
-            .add(0)
+            .exit(0)
             )
         self.expectLogfile('stdio-merge-base', '1234123412341234')
         self.expectOutcome(result=results.SUCCESS, state_string="GitDiffInfo")

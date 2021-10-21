@@ -223,7 +223,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -236,7 +236,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -248,7 +248,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(result=FAILURE,
                            state_string="compile 0 projects 0 files (failure)")
@@ -260,7 +260,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
             .add(ExpectShell.log('stdio', stdout='error ABC123: foo\r\n'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=FAILURE,
                            state_string="compile 0 projects 0 files 1 errors (failure)")
@@ -272,7 +272,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
             .add(ExpectShell.log('stdio', stdout='foo: warning ABC123: foo\r\n'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=WARNINGS,
                            state_string="compile 0 projects 0 files 1 warnings (warnings)")
@@ -290,7 +290,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             INCLUDE=r'c:\INC1;c:\INC2;',
                             LIB=r'c:\LIB1;C:\LIB2;',
                             PATH=r'c:\P1;C:\P2;'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -308,7 +308,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             INCLUDE=r'c:\INC1;c:\INC2;',
                             LIB=r'c:\LIB1;C:\LIB2;',
                             PATH=r'c:\P1;C:\P2;'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -326,7 +326,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -383,7 +383,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  'pj - cfg', '/REBUILD'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -398,7 +398,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  'pj - cfg', '/CLEAN'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -413,7 +413,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  'ALL - cfg', '/BUILD'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -431,7 +431,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio',
                             LIB='l', p='p', i='i'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -487,7 +487,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  '/Project', 'pj'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -502,7 +502,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  '/Project', 'pj'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -516,7 +516,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['devenv.com', 'pf', '/Build', 'cfg'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -533,7 +533,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio .NET 2003',
                             LIB='l', p='p', i='i'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -600,7 +600,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio 8'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -616,7 +616,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio 8',
                             x64=True))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -631,7 +631,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio 8'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -648,7 +648,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio 8',
                             x64=True))  # property has expected effect
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -678,7 +678,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
                         env=self.getExpectedEnv(
                             # note: still uses version 8 (?!)
                             r'C:\Program Files\Microsoft Visual Studio 8'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -694,7 +694,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
                         env=self.getExpectedEnv(
                             # note: still uses version 8 (?!)
                             r'C:\Program Files\Microsoft Visual Studio 8'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -710,7 +710,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio 8',
                             i='i'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -736,7 +736,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio 9.0'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -762,7 +762,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio 10.0'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -788,7 +788,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio 11.0'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -820,7 +820,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built pj for cfg|Win32")
@@ -834,7 +834,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built pj for cfg|Win32")
@@ -848,7 +848,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built pj for cfg|Win32")
@@ -863,7 +863,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built pj for cfg|Win32")
@@ -877,7 +877,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built solution for cfg|x64")
@@ -910,7 +910,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -925,7 +925,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -940,7 +940,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -956,7 +956,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
@@ -971,7 +971,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
                              'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")

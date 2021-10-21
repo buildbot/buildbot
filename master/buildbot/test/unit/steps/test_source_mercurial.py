@@ -71,36 +71,36 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--config',
                                  'extensions.purge=', 'purge'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -113,36 +113,36 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file=r'wkdir\.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file=r'wkdir\.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--config',
                                  'extensions.purge=', 'purge'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -156,42 +156,42 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--verbose', '--config',
                                  'extensions.purge=', 'purge'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -204,51 +204,51 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--config',
                                  'extensions.purge=', 'purge'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest='.buildbot-diff', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest='.buildbot-patched', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=[
                             'hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
                         initialStdin='patch')
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -262,51 +262,51 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--config',
                                  'extensions.purge=', 'purge'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                slavedest='.buildbot-diff', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                slavedest='.buildbot-patched', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=[
                             'hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
                         initialStdin='patch')
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -319,43 +319,43 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--config',
                                  'extensions.purge=', 'purge'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest='.buildbot-diff', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest='.buildbot-patched', workdir='wkdir', mode=None)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=[
                             'hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
                         initialStdin='patch')
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(result=FAILURE, state_string="update (failure)")
         return self.runStep()
@@ -367,26 +367,26 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'],
                         logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -398,24 +398,24 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -427,36 +427,36 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--config',
                                  'extensions.purge=', 'purge', '--all'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -468,26 +468,26 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'],
                         logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -500,38 +500,38 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'],
                         logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -544,27 +544,27 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(1),  # does not exist
+            .exit(1),  # does not exist
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -577,33 +577,33 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(1),  # does not exist
+            .exit(1),  # does not exist
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -617,31 +617,31 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org/stable'])
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org/stable', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -653,32 +653,32 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(1),  # does not exist
+            .exit(1),  # does not exist
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
                                  '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -690,32 +690,32 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),  # directory exists
+            .exit(0),  # directory exists
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
                                  '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -727,35 +727,35 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),  # directory exists
+            .exit(0),  # directory exists
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
             .add(ExpectShell.log('stdio', stdout='foo\nbar/baz\n'))
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir=['wkdir/foo', 'wkdir/bar/baz'], logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
                                  '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -768,37 +768,37 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),  # directory exists
+            .exit(0),  # directory exists
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
             .add(ExpectShell.log('stdio', stdout='foo\nbar/baz\n'))
-            .add(1),
+            .exit(1),
             ExpectRmdir(dir='wkdir/foo', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir/bar/baz', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
                                  '--rev', 'default'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -813,32 +813,32 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'abcdef01'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
                                  '--rev', 'abcdef01'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -852,35 +852,35 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'stable'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'stable'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -895,32 +895,32 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'stable'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'])
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'stable'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'])
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -933,38 +933,38 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'], env={'abc': '123'})
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=True)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--config',
                                  'extensions.purge=', 'purge'], env={'abc': '123'})
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'], env={'abc': '123'})
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'],
                         env={'abc': '123'})
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'],
                         env={'abc': '123'})
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
                                  '--rev', 'default'], env={'abc': '123'})
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'], env={'abc': '123'})
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -979,42 +979,42 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'],
                         logEnviron=False)
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=False)
-            .add(1),
+            .exit(1),
             ExpectStat(file='wkdir/.hg', logEnviron=False)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--config',
                                  'extensions.purge=', 'purge'],
                         logEnviron=False)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org', '--rev', 'default'],
                         logEnviron=False)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'],
                         logEnviron=False)
             .add(ExpectShell.log('stdio', stdout='default'))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'locate', 'set:added()'],
                         logEnviron=False)
-            .add(1),
+            .exit(1),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'],
                         logEnviron=False)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
                                  '--template', '{node}\\n'],
                         logEnviron=False)
             .add(ExpectShell.log('stdio', stdout='\n'))
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -1026,7 +1026,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()

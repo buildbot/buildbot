@@ -942,7 +942,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.runRmdir('/some/path')
         self.expectCommands(
             ExpectRmdir(dir='/some/path', logEnviron=False)
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -953,7 +953,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.runMkdir('/some/path')
         self.expectCommands(
             ExpectMkdir(dir='/some/path', logEnviron=False)
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -964,7 +964,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.runMkdir('/some/path')
         self.expectCommands(
             ExpectMkdir(dir='/some/path', logEnviron=False)
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(result=FAILURE)
         yield self.runStep()
@@ -975,7 +975,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             '/some/path', abandonOnFailure=False)
         self.expectCommands(
             ExpectMkdir(dir='/some/path', logEnviron=False)
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -986,7 +986,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expectCommands(
             ExpectStat(file='/some/path', logEnviron=False)
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -997,7 +997,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expectCommands(
             ExpectStat(file='/some/path', logEnviron=False)
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1009,7 +1009,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectStat(file='/some/path', logEnviron=False)
             .add(Expect.log('stdio', header='NOTE: never mind\n'))
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1026,7 +1026,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectGlob(path='*.pyc', logEnviron=False)
             .add(Expect.update('files', ["one.pyc", "two.pyc"]))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -1036,7 +1036,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectGlob(path='*.pyc', logEnviron=False)
             .add(Expect.update('files', []))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -1045,7 +1045,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expectCommands(
             ExpectGlob(path='*.pyc', logEnviron=False)
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(result=FAILURE)
         return self.runStep()
@@ -1110,7 +1110,7 @@ class TestShellMixin(steps.BuildStepMixin,
                                           make_cmd_kwargs={'command': ['cmd', 'arg']}))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1120,7 +1120,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.setupStep(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1131,7 +1131,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.build.workdir = '/alternate'
         self.expectCommands(
             ExpectShell(workdir='/alternate', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1142,7 +1142,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.build.workdir = lambda x: '/alternate'
         self.expectCommands(
             ExpectShell(workdir='/alternate', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1161,7 +1161,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.properties.setProperty("myproperty", "/myproperty", "test")
         self.expectCommands(
             ExpectShell(workdir='/myproperty', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1172,7 +1172,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.build.workdir = '/builddir'
         self.expectCommands(
             ExpectShell(workdir='/stepdir', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1187,7 +1187,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.build.workdir = '/builddir'
         self.expectCommands(
             ExpectShell(workdir='/stepdir', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1199,7 +1199,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.build.workdir = '/builddir'
         self.expectCommands(
             ExpectShell(workdir='/overridden', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1213,7 +1213,7 @@ class TestShellMixin(steps.BuildStepMixin,
                         logfiles={'logname': 'logpath.log'})
             .add(Expect.log('logname', stdout='logline\nlogline2\n'))
             .add(Expect.log('stdio', stdout="some log\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1226,7 +1226,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'])
             .add(Expect.log('stdio', stdout="some log\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1238,7 +1238,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1252,7 +1252,7 @@ class TestShellMixin(steps.BuildStepMixin,
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
                         logfiles={'logname': 'logpath.log'})
             .add(Expect.log('logname', stdout='logline\nlogline2\n'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1266,7 +1266,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
                         logfiles={'logname': 'logpath.log'})
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1280,7 +1280,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
                         env={'FOO': 'FOO', 'BAR': 'BAR'})
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1292,7 +1292,7 @@ class TestShellMixin(steps.BuildStepMixin,
                        worker_version={'*': "1.1"})
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
             # note missing parameters
         )
         self.expectOutcome(result=SUCCESS)
@@ -1309,7 +1309,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY=False, interruptSignal='DIE',
                         command=['cmd', 'arg'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -1320,7 +1320,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.setupStep(SimpleShellCommand(command=['foo', properties.Property('bar', 'BAR')]))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['foo', 'BAR'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="'foo BAR'")
         yield self.runStep()

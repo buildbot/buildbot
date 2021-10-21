@@ -140,26 +140,26 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir',  # defaults to this, only changes if it has a copy mode.
                         command=['p4', '-V'])  # expected remote command
-            .add(0),  # expected exit status
+            .exit(0),  # expected exit status
 
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'client', '-i'],
                         initialStdin=client_spec)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'sync', '//depot...@100'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'changes', '-m1', '#have'])
             .add(ExpectShell.log('stdio',
                                  stdout="Change 100 on 2013/03/21 by user@machine \'duh\'"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
@@ -172,7 +172,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir=workdir,
                         command=['p4', '-V'])  # expected remote command
-            .add(0),  # expected exit status
+            .exit(0),  # expected exit status
 
             ExpectShell(workdir=workdir,
                         timeout=timeout,
@@ -180,13 +180,13 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'client', '-i'],
                         initialStdin=client_stdin,)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=(['p4', '-p', 'localhost:12000', '-u', 'user',
                                   '-P', ('obfuscated', 'pass', 'XXXXXX'), '-c', 'p4_client1']
                                  + extra_args + ['sync']))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
@@ -194,7 +194,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                                  '-c', 'p4_client1', 'changes', '-m1', '#have'])
             .add(ExpectShell.log('stdio',
                                  stdout="Change 100 on 2013/03/21 by user@machine \'duh\'"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
@@ -503,36 +503,36 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         self.expectCommands(
             ExpectShell(workdir=workdir,
                         command=['p4', '-V'])  # expected remote command
-            .add(0),  # expected exit status
+            .exit(0),  # expected exit status
 
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass,
                                  '-c', p4client, 'client', '-i'],
                         initialStdin=client_stdin)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass, '-c', p4client]
                         + extra_args
                         + ['sync', '#none'])
-            .add(0),
+            .exit(0),
 
             ExpectRmdir(dir=workdir, logEnviron=True)
-            .add(0),
+            .exit(0),
 
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass, '-c', p4client]
                         + extra_args + ['sync'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass, '-c', p4client,
                                  'changes', '-m1', '#have'])
             .add(ExpectShell.log('stdio',
                                  stdout="Change 100 on 2013/03/21 by user@machine \'duh\'"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
@@ -1014,7 +1014,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['p4', '-V'])
-            .add(0),
+            .exit(0),
 
             # This is the extra step that gets run when using tickets,
             # and the password is not passed anymore after that.
@@ -1022,23 +1022,23 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-c', 'p4_client1', 'login'],
                         initialStdin='pass\n')
-            .add(0),
+            .exit(0),
 
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-c', 'p4_client1', 'client', '-i'],
                         initialStdin=client_spec)
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=(['p4', '-p', 'localhost:12000', '-u', 'user',
                                   '-c', 'p4_client1', 'sync']))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-c', 'p4_client1', 'changes', '-m1', '#have'])
             .add(ExpectShell.log('stdio',
                                  stdout="Change 100 on 2013/03/21 by user@machine \'duh\'"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()

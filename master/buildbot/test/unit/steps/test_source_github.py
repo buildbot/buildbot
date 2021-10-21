@@ -36,31 +36,31 @@ class TestGitHub(test_source_git.TestGit):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
-            .add(0),
+            .exit(0),
             # here we always ignore revision, and fetch the merge branch
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'refs/pull/1234/merge', '--progress'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/pull/1234/merge'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -77,30 +77,30 @@ class TestGitHub(test_source_git.TestGit):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.5'))
-            .add(0),
+            .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
-            .add(1),
+            .exit(1),
             ExpectListdir(dir='wkdir')
             .add(Expect.update('files', ['.git']))
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
-            .add(0),
+            .exit(0),
             # in the case of the head, we try to find if the head is already present
             # and reset to that without fetching
             ExpectShell(workdir='wkdir',
                         command=['git', 'cat-file', '-e', '12345678'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', '12345678'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/pull/1234/head'])
-            .add(0),
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(

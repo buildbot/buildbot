@@ -40,7 +40,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
             .add(ExpectShell.log('stdio', stdout='Checking file1.c...'))
-            .add(0))
+            .exit(0))
         self.expectOutcome(result=SUCCESS, state_string="cppcheck")
         return self.runStep()
 
@@ -50,7 +50,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
             .add(ExpectShell.log('stdio', stdout='Checking file1.c...'))
-            .add(1))
+            .exit(1))
         self.expectOutcome(result=FAILURE, state_string="cppcheck (failure)")
         return self.runStep()
 
@@ -67,7 +67,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         'evaluates to true: t >= 0 || t < 65.\n'
                         '(information) Cppcheck cannot find all the include files '
                         '(use --check-config for details)')))
-            .add(0))
+            .exit(0))
         self.expectOutcome(result=WARNINGS,
                            state_string="cppcheck warning=1 information=1 (warnings)")
         return self.runStep()
@@ -83,7 +83,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         '[file1.c:3]: (error) Possible null pointer dereference: filter\n'
                         '[file1.c:4]: (error) Memory leak: columns\n'
                         "[file1.c:7]: (style) The scope of the variable 'pid' can be reduced")))
-            .add(0))
+            .exit(0))
         self.expectOutcome(result=FAILURE,
                            state_string="cppcheck error=2 style=1 (failure)")
         return self.runStep()
@@ -96,6 +96,6 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', command=[
                         'a', '.', 'f.c', '--p', '--p'])
             .add(ExpectShell.log('stdio', stdout='Checking file1.c...'))
-            .add(0))
+            .exit(0))
         self.expectOutcome(result=SUCCESS, state_string="cppcheck")
         return self.runStep()

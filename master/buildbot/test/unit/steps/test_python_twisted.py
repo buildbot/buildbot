@@ -113,7 +113,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH='somepath'))
             .add(ExpectShell.log('stdio', stdout="Ran 0 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='no tests run')
         return self.runStep()
@@ -130,7 +130,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH=['path1', 'path2', 'path3']))
             .add(ExpectShell.log('stdio', stdout="Ran 0 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='no tests run')
         return self.runStep()
@@ -147,7 +147,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH=['path1', 'path2']))
             .add(ExpectShell.log('stdio', stdout="Ran 0 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='no tests run')
         return self.runStep()
@@ -162,7 +162,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
             .add(ExpectShell.log('stdio', stdout="Ran 1 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='1 test passed')
         return self.runStep()
@@ -177,7 +177,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
             .add(ExpectShell.log('stdio', stdout="Ran 2 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
         return self.runStep()
@@ -192,7 +192,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
             .add(ExpectShell.log('stdio', stdout=failureLog))
-            .add(1)
+            .exit(1)
         )
         self.expectOutcome(
             result=FAILURE, state_string='tests 8 failures (failure)')
@@ -216,7 +216,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
             .add(ExpectShell.log('stdio', stdout="Ran 2 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
         return self.runStep()
@@ -231,7 +231,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  '--testmodule=my/test/file2.py'],
                         logfiles={'test.log': '_trial_temp/test.log'})
             .add(ExpectShell.log('stdio', stdout="Ran 2 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
         return self.runStep()
@@ -247,7 +247,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env={'PYTHONPATH': ['custom/test/path', '/existing/pypath']})
             .add(Expect.log('stdio', stdout="Ran 2 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
         return self.runStep()
@@ -262,7 +262,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
             .add(Expect.log('stdio', stdout="Ran 2 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed (custom)')
         return self.runStep()
@@ -276,7 +276,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['/bin/mypython', 'trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
             .add(Expect.log('stdio', stdout="Ran 2 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
         return self.runStep()
@@ -292,7 +292,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['trial', '--reporter=bwverbose', '--random=0', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
             .add(Expect.log('stdio', stdout="Ran 2 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
         return self.runStep()
@@ -321,7 +321,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             'out.1.log': '_trial_temp/1/out.log',
                         })
             .add(ExpectShell.log('stdio', stdout="Ran 1 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='1 test passed')
         return self.runStep()
@@ -349,7 +349,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             'out.1.log': '_trial_temp/1/out.log',
                         })
             .add(ExpectShell.log('stdio', stdout="Ran 1 tests\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='1 test passed')
         return self.runStep()
@@ -373,7 +373,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
             .add(ExpectShell.log(
                 'stdio', stdout="dunno what hlint output looks like..\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectLogfile('files', 'foo.xhtml\n')
         self.expectOutcome(result=SUCCESS, state_string='0 hlints')
@@ -386,7 +386,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['/bin/mypython', 'bin/lore', '-p', '--output', 'lint',
                                  'foo.xhtml'])
-            .add(0)
+            .exit(0)
         )
         self.expectLogfile('files', 'foo.xhtml\n')
         self.expectOutcome(result=SUCCESS, state_string='0 hlints')
@@ -398,7 +398,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
-            .add(1)
+            .exit(1)
         )
         self.expectLogfile('files', 'foo.xhtml\n')
         self.expectOutcome(result=FAILURE, state_string='hlint (failure)')
@@ -417,7 +417,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=[
                             'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'])
             .add(ExpectShell.log('stdio', stdout="colon: meaning warning\n"))
-            .add(0)
+            .exit(0)
         )
         self.expectLogfile('warnings', 'colon: meaning warning')
         self.expectOutcome(result=WARNINGS, state_string='1 hlint (warnings)')
@@ -438,7 +438,7 @@ class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['find', '.', '-name', '\'*.pyc\'', '-exec', 'rm', '{}', ';'])
-            .add(0)
+            .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='remove .pycs')
         return self.runStep()

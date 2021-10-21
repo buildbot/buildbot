@@ -37,7 +37,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         command = [CMake.DEFAULT_CMAKE] + list(params)
 
         self.expectCommands(
-            ExpectShell(command=command, workdir='wkdir').add(0))
+            ExpectShell(command=command, workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
@@ -52,7 +52,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_plain(self):
         self.setupStep(CMake())
         self.expectCommands(
-            ExpectShell(command=[CMake.DEFAULT_CMAKE], workdir='wkdir').add(0))
+            ExpectShell(command=[CMake.DEFAULT_CMAKE], workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
@@ -61,7 +61,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.setupStep(CMake(cmake=cmake_bin))
         self.expectCommands(
-            ExpectShell(command=[cmake_bin], workdir='wkdir').add(0))
+            ExpectShell(command=[cmake_bin], workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
@@ -73,7 +73,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.properties.setProperty(prop, value, source='test')
 
         self.expectCommands(
-            ExpectShell(command=[value], workdir='wkdir').add(0))
+            ExpectShell(command=[value], workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
@@ -90,7 +90,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(CMake(env=environment))
         self.expectCommands(
             ExpectShell(
-                command=command, workdir='wkdir', env={'a': 'b'}).add(0))
+                command=command, workdir='wkdir', env={'a': 'b'}).exit(0))
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
