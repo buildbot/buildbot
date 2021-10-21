@@ -522,3 +522,16 @@ class ExpectListdir(Expect):
 
     def __repr__(self):
         return "ExpectListdir({})".format(repr(self.args['dir']))
+
+
+class ExpectRmfile(Expect):
+
+    def __init__(self, path=None, logEnviron=None):
+        args = {'path': path}
+        if logEnviron is not None:
+            args['logEnviron'] = logEnviron
+
+        super().__init__('rmfile', args)
+
+    def __repr__(self):
+        return "ExpectRmfile({})".format(repr(self.args['path']))

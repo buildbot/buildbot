@@ -33,6 +33,7 @@ from buildbot.test.fake.remotecommand import ExpectGlob
 from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectRmdir
+from buildbot.test.fake.remotecommand import ExpectRmfile
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.fake.remotecommand import ExpectUploadFile
 from buildbot.test.util import steps
@@ -360,7 +361,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_rmfile(self):
         self.setupStep(CompositeUser(lambda x: x.runRmFile("d")))
         self.expectCommands(
-            Expect('rmfile', {'path': 'd', 'logEnviron': False})
+            ExpectRmfile(path='d', logEnviron=False)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
