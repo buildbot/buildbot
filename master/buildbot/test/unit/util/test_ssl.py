@@ -31,10 +31,16 @@ class Tests(unittest.TestCase):
 
     @ssl.skipUnless
     def test_ConfigError(self):
-        ssl.ssl_import_error = "lib xxx do not exist"
-        ssl.has_ssl = False
-        self.patch(config, "_errors", mock.Mock())
-        ssl.ensureHasSSL("myplugin")
-        config._errors.addError.assert_called_with(
-            "TLS dependencies required for myplugin are not installed : "
-            "lib xxx do not exist\n pip install 'buildbot[tls]'")
+        old_error = ssl.ssl_import_error
+        old_has_ssl = ssl.has_ssl
+        try:
+            ssl.ssl_import_error = "lib xxx do not exist"
+            ssl.has_ssl = False
+            self.patch(config, "_errors", mock.Mock())
+            ssl.ensureHasSSL("myplugin")
+            config._errors.addError.assert_called_with(
+                "TLS dependencies required for myplugin are not installed : "
+                "lib xxx do not exist\n pip install 'buildbot[tls]'")
+        finally:
+            ssl.ssl_import_error = old_error
+            ssl.has_ssl = old_has_ssl
