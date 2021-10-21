@@ -28,7 +28,7 @@ from buildbot.machine.generic import RemoteSshWOLAction
 from buildbot.test.fake.private_tempdir import MockPrivateTemporaryDirectory
 from buildbot.test.util import config
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.runprocess import ExpectMaster
+from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 
@@ -55,10 +55,10 @@ class TestActions(MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMi
     @defer.inlineCallbacks
     def test_local_wake_action(self):
         self.expect_commands(
-            ExpectMaster(['cmd', 'arg1', 'arg2'])
+            ExpectMasterShell(['cmd', 'arg1', 'arg2'])
             .exit(1),
 
-            ExpectMaster(['cmd', 'arg1', 'arg2'])
+            ExpectMasterShell(['cmd', 'arg1', 'arg2'])
             .exit(0),
         )
 
@@ -75,10 +75,10 @@ class TestActions(MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMi
     @defer.inlineCallbacks
     def test_local_wol_action(self):
         self.expect_commands(
-            ExpectMaster(['wol', '00:11:22:33:44:55'])
+            ExpectMasterShell(['wol', '00:11:22:33:44:55'])
             .exit(1),
 
-            ExpectMaster(['wakeonlan', '00:11:22:33:44:55'])
+            ExpectMasterShell(['wakeonlan', '00:11:22:33:44:55'])
             .exit(0),
         )
 
@@ -97,10 +97,10 @@ class TestActions(MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMi
     def test_remote_ssh_wake_action_no_keys(self, write_local_file_mock,
                                             temp_dir_mock):
         self.expect_commands(
-            ExpectMaster(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'remotebin', 'arg1'])
+            ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'remotebin', 'arg1'])
             .exit(1),
 
-            ExpectMaster(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'remotebin', 'arg1'])
+            ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'remotebin', 'arg1'])
             .exit(0),
         )
 
@@ -124,7 +124,7 @@ class TestActions(MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMi
         ssh_known_hosts_path = os.path.join(temp_dir_path, 'ssh-known-hosts')
 
         self.expect_commands(
-            ExpectMaster(['ssh', '-o', 'BatchMode=yes', '-i', ssh_key_path,
+            ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', '-i', ssh_key_path,
                           '-o', 'UserKnownHostsFile={0}'.format(ssh_known_hosts_path),
                           'remote_host', 'remotebin', 'arg1'])
             .exit(0),
@@ -166,11 +166,11 @@ class TestActions(MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMi
     def test_remote_ssh_wol_action_no_keys(self, write_local_file_mock,
                                            temp_dir_mock):
         self.expect_commands(
-            ExpectMaster(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'wakeonlan',
+            ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'wakeonlan',
                           '00:11:22:33:44:55'])
             .exit(0),
 
-            ExpectMaster(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'wolbin',
+            ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'wolbin',
                           '00:11:22:33:44:55'])
             .exit(0),
         )
@@ -194,10 +194,10 @@ class TestActions(MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMi
     def test_remote_ssh_suspend_action_no_keys(self, write_local_file_mock,
                                                temp_dir_mock):
         self.expect_commands(
-            ExpectMaster(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'systemctl', 'suspend'])
+            ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'systemctl', 'suspend'])
             .exit(0),
 
-            ExpectMaster(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'dosuspend', 'arg1'])
+            ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', 'remote_host', 'dosuspend', 'arg1'])
             .exit(0),
         )
 

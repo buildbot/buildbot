@@ -26,7 +26,7 @@ from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.test.fake import libvirt as libvirtfake
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.runprocess import ExpectMaster
+from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
@@ -130,7 +130,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
     @defer.inlineCallbacks
     def test_prepare_base_image_cheap(self):
         self.expect_commands(
-            ExpectMaster(["qemu-img", "create", "-b", "o", "-f", "qcow2", "p"])
+            ExpectMasterShell(["qemu-img", "create", "-b", "o", "-f", "qcow2", "p"])
         )
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
@@ -141,7 +141,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
     @defer.inlineCallbacks
     def test_prepare_base_image_full(self):
         self.expect_commands(
-            ExpectMaster(["cp", "o", "p"])
+            ExpectMasterShell(["cp", "o", "p"])
         )
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
@@ -153,7 +153,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
     @defer.inlineCallbacks
     def test_prepare_base_image_fail(self):
         self.expect_commands(
-            ExpectMaster(["cp", "o", "p"])
+            ExpectMasterShell(["cp", "o", "p"])
             .exit(1)
         )
 

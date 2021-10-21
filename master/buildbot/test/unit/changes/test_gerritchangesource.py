@@ -30,7 +30,7 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.change import Change
 from buildbot.test.util import changesource
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.runprocess import ExpectMaster
+from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 
@@ -547,9 +547,9 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         ]
 
         self.expect_commands(
-            ExpectMaster(exp_argv)
+            ExpectMasterShell(exp_argv)
             .stdout(self.query_files_success),
-            ExpectMaster(exp_argv)
+            ExpectMasterShell(exp_argv)
             .stdout(self.query_files_failure)
         )
 
@@ -564,7 +564,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
     @defer.inlineCallbacks
     def test_getFilesFromEvent(self):
         self.expect_commands(
-            ExpectMaster(['ssh', '-o', 'BatchMode=yes', 'user@host', '-p', '29418', 'gerrit',
+            ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', 'user@host', '-p', '29418', 'gerrit',
                           'query', '4321', '--format', 'JSON', '--files', '--patch-sets'])
             .stdout(self.query_files_success)
         )
