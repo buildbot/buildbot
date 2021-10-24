@@ -83,46 +83,6 @@ class Expect:
         self.behaviors.append(('err', callable))
         return self
 
-    def upload_string(self, string, timestamp=None, out_writers=None, error=None):
-        def behavior(command):
-            writer = command.args['writer']
-            if out_writers is not None:
-                out_writers.append(writer)
-
-            writer.remote_write(string)
-            writer.remote_close()
-            if timestamp:
-                writer.remote_utime(timestamp)
-
-            if error is not None:
-                writer.cancel = Mock(wraps=writer.cancel)
-                raise error
-
-        self.behavior(behavior)
-        return self
-
-    def upload_tar_file(self, filename, members, error=None, out_writers=None):
-        def behavior(command):
-            f = BytesIO()
-            archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
-            for name, content in members.items():
-                content = unicode2bytes(content)
-                archive.addfile(tarfile.TarInfo(name), BytesIO(content))
-
-            writer = command.args['writer']
-            if out_writers is not None:
-                out_writers.append(writer)
-
-            writer.remote_write(f.getvalue())
-            writer.remote_unpack()
-
-            if error is not None:
-                writer.cancel = Mock(wraps=writer.cancel)
-                raise error
-
-        self.behavior(behavior)
-        return self
-
     def log(self, name, **streams):
         if name == 'stdio' and 'stdout' in streams:
             raise NotImplementedError()
@@ -325,6 +285,24 @@ class ExpectUploadFile(Expect):
 
         super().__init__('uploadFile', args, interrupted=interrupted)
 
+    def upload_string(self, string, timestamp=None, out_writers=None, error=None):
+        def behavior(command):
+            writer = command.args['writer']
+            if out_writers is not None:
+                out_writers.append(writer)
+
+            writer.remote_write(string)
+            writer.remote_close()
+            if timestamp:
+                writer.remote_utime(timestamp)
+
+            if error is not None:
+                writer.cancel = Mock(wraps=writer.cancel)
+                raise error
+
+        self.behavior(behavior)
+        return self
+
     def __repr__(self):
         return "ExpectUploadFile({},{})".format(repr(self.args['workdir']),
                                                 repr(self.args['workersrc']))
@@ -344,6 +322,28 @@ class ExpectUploadDirectory(Expect):
             args['workersrc'] = workersrc
 
         super().__init__('uploadDirectory', args, interrupted=interrupted)
+
+    def upload_tar_file(self, filename, members, error=None, out_writers=None):
+        def behavior(command):
+            f = BytesIO()
+            archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
+            for name, content in members.items():
+                content = unicode2bytes(content)
+                archive.addfile(tarfile.TarInfo(name), BytesIO(content))
+
+            writer = command.args['writer']
+            if out_writers is not None:
+                out_writers.append(writer)
+
+            writer.remote_write(f.getvalue())
+            writer.remote_unpack()
+
+            if error is not None:
+                writer.cancel = Mock(wraps=writer.cancel)
+                raise error
+
+        self.behavior(behavior)
+        return self
 
     def __repr__(self):
         return "ExpectUploadDirectory({}, {})".format(repr(self.args['workdir']),
