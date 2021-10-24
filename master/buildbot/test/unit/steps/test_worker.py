@@ -403,7 +403,7 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin,
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(
             ExpectGlob(path='*.pyc', logEnviron=False)
-            .update('files', ["one.pyc", "two.pyc"])
+            .files(["one.pyc", "two.pyc"])
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)

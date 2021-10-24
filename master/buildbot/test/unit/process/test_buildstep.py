@@ -1024,7 +1024,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
         self.step.testMethod = testFunc
         self.expect_commands(
             ExpectGlob(path='*.pyc', logEnviron=False)
-            .update('files', ["one.pyc", "two.pyc"])
+            .files(["one.pyc", "two.pyc"])
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -1034,7 +1034,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expect_commands(
             ExpectGlob(path='*.pyc', logEnviron=False)
-            .update('files', [])
+            .files()
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)

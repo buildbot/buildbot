@@ -426,6 +426,12 @@ class ExpectGlob(Expect):
 
         super().__init__('glob', args)
 
+    def files(self, files=None):
+        if files is None:
+            files = []
+        self.update('files', files)
+        return self
+
     def __repr__(self):
         return "ExpectGlob({})".format(repr(self.args['path']))
 
