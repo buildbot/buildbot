@@ -940,7 +940,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
     def test_runRmdir(self):
         self.step.testMethod = lambda: self.step.runRmdir('/some/path')
         self.expect_commands(
-            ExpectRmdir(dir='/some/path', logEnviron=False)
+            ExpectRmdir(dir='/some/path', log_environ=False)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -951,7 +951,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
     def test_runMkdir(self):
         self.step.testMethod = lambda: self.step.runMkdir('/some/path')
         self.expect_commands(
-            ExpectMkdir(dir='/some/path', logEnviron=False)
+            ExpectMkdir(dir='/some/path', log_environ=False)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -962,7 +962,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
     def test_runMkdir_fails(self):
         self.step.testMethod = lambda: self.step.runMkdir('/some/path')
         self.expect_commands(
-            ExpectMkdir(dir='/some/path', logEnviron=False)
+            ExpectMkdir(dir='/some/path', log_environ=False)
             .exit(1)
         )
         self.expect_outcome(result=FAILURE)
@@ -973,7 +973,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.runMkdir(
             '/some/path', abandonOnFailure=False)
         self.expect_commands(
-            ExpectMkdir(dir='/some/path', logEnviron=False)
+            ExpectMkdir(dir='/some/path', log_environ=False)
             .exit(1)
         )
         self.expect_outcome(result=SUCCESS)
@@ -984,7 +984,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
     def test_pathExists(self):
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expect_commands(
-            ExpectStat(file='/some/path', logEnviron=False)
+            ExpectStat(file='/some/path', log_environ=False)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -995,7 +995,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
     def test_pathExists_doesnt(self):
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expect_commands(
-            ExpectStat(file='/some/path', logEnviron=False)
+            ExpectStat(file='/some/path', log_environ=False)
             .exit(1)
         )
         self.expect_outcome(result=SUCCESS)
@@ -1006,7 +1006,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
     def test_pathExists_logging(self):
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expect_commands(
-            ExpectStat(file='/some/path', logEnviron=False)
+            ExpectStat(file='/some/path', log_environ=False)
             .log('stdio', header='NOTE: never mind\n')
             .exit(1)
         )
@@ -1023,7 +1023,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
             self.assertEqual(res, ["one.pyc", "two.pyc"])
         self.step.testMethod = testFunc
         self.expect_commands(
-            ExpectGlob(path='*.pyc', logEnviron=False)
+            ExpectGlob(path='*.pyc', log_environ=False)
             .files(["one.pyc", "two.pyc"])
             .exit(0)
         )
@@ -1033,7 +1033,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
     def test_glob_empty(self):
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expect_commands(
-            ExpectGlob(path='*.pyc', logEnviron=False)
+            ExpectGlob(path='*.pyc', log_environ=False)
             .files()
             .exit(0)
         )
@@ -1043,7 +1043,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
     def test_glob_fail(self):
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expect_commands(
-            ExpectGlob(path='*.pyc', logEnviron=False)
+            ExpectGlob(path='*.pyc', log_environ=False)
             .exit(1)
         )
         self.expect_outcome(result=FAILURE)
@@ -1306,7 +1306,7 @@ class TestShellMixin(TestBuildStepMixin,
                                           interruptSignal='DIE'),
                        worker_version={'*': "3.0"})
         self.expect_commands(
-            ExpectShell(workdir='wkdir', usePTY=False, interruptSignal='DIE',
+            ExpectShell(workdir='wkdir', use_pty=False, interrupt_signal='DIE',
                         command=['cmd', 'arg'])
             .exit(0)
         )

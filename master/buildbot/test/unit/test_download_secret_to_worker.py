@@ -94,11 +94,11 @@ class TestRemoveWorkerFileSecretCommand30(TestBuildStepMixin,
         self.expect_commands(
             ExpectRmdir(path=os.path.join(self.temp_path, "pathA"),
                         dir=os.path.abspath(os.path.join(self.temp_path, "pathA")),
-                        logEnviron=False)
+                        log_environ=False)
             .exit(0),
             ExpectRmdir(path=os.path.join(self.temp_path, "pathB"),
                         dir=os.path.abspath(os.path.join(self.temp_path, "pathB")),
-                        logEnviron=False)
+                        log_environ=False)
             .exit(0),
             )
 
@@ -128,9 +128,9 @@ class TestRemoveFileSecretToWorkerCommand(TestBuildStepMixin,
             RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA"), "something"),
                                     (os.path.join(self.temp_path, "pathB"), "somethingmore")]))
         self.expect_commands(
-            ExpectRmfile(path=os.path.join(self.temp_path, "pathA"), logEnviron=False)
+            ExpectRmfile(path=os.path.join(self.temp_path, "pathA"), log_environ=False)
             .exit(0),
-            ExpectRmfile(path=os.path.join(self.temp_path, "pathB"), logEnviron=False)
+            ExpectRmfile(path=os.path.join(self.temp_path, "pathB"), log_environ=False)
             .exit(0),
             )
 

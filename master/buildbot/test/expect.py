@@ -222,20 +222,29 @@ class ExpectShell(Expect):
     """
 
     def __init__(self, workdir, command, env=None,
-                 want_stdout=1, want_stderr=1, initialStdin=None,
-                 timeout=20 * 60, maxTime=None, logfiles=None,
-                 usePTY=None, logEnviron=True, interruptSignal=None):
+                 want_stdout=1, want_stderr=1, initial_stdin=None,
+                 timeout=20 * 60, max_time=None, logfiles=None,
+                 use_pty=None, log_environ=True, interrupt_signal=None):
         if env is None:
             env = {}
         if logfiles is None:
             logfiles = {}
-        args = dict(workdir=workdir, command=command, env=env,
-                    want_stdout=want_stdout, want_stderr=want_stderr,
-                    initial_stdin=initialStdin,
-                    timeout=timeout, maxTime=maxTime, logfiles=logfiles,
-                    usePTY=usePTY, logEnviron=logEnviron)
-        if interruptSignal is not None:
-            args['interruptSignal'] = interruptSignal
+        args = {
+            'workdir': workdir,
+            'command': command,
+            'env': env,
+            'want_stdout': want_stdout,
+            'want_stderr': want_stderr,
+            'initial_stdin': initial_stdin,
+            'timeout': timeout,
+            'maxTime': max_time,
+            'logfiles': logfiles,
+            'usePTY': use_pty,
+            'logEnviron': log_environ
+        }
+
+        if interrupt_signal is not None:
+            args['interruptSignal'] = interrupt_signal
         super().__init__("shell", args)
 
     def __repr__(self):
@@ -244,12 +253,12 @@ class ExpectShell(Expect):
 
 class ExpectStat(Expect):
 
-    def __init__(self, file, workdir=None, logEnviron=None):
+    def __init__(self, file, workdir=None, log_environ=None):
         args = {'file': file}
         if workdir is not None:
             args['workdir'] = workdir
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
 
         super().__init__('stat', args)
 
@@ -387,10 +396,10 @@ class ExpectDownloadFile(Expect):
 
 class ExpectMkdir(Expect):
 
-    def __init__(self, dir=None, logEnviron=None):
+    def __init__(self, dir=None, log_environ=None):
         args = {'dir': dir}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
 
         super().__init__('mkdir', args)
 
@@ -400,10 +409,10 @@ class ExpectMkdir(Expect):
 
 class ExpectRmdir(Expect):
 
-    def __init__(self, dir=None, logEnviron=None, timeout=None, path=None):
+    def __init__(self, dir=None, log_environ=None, timeout=None, path=None):
         args = {'dir': dir}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
         if timeout is not None:
             args['timeout'] = timeout
         if path is not None:
@@ -417,14 +426,14 @@ class ExpectRmdir(Expect):
 
 class ExpectCpdir(Expect):
 
-    def __init__(self, fromdir=None, todir=None, logEnviron=None, timeout=None, maxTime=None):
+    def __init__(self, fromdir=None, todir=None, log_environ=None, timeout=None, max_time=None):
         args = {'fromdir': fromdir, 'todir': todir}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
         if timeout is not None:
             args['timeout'] = timeout
-        if maxTime is not None:
-            args['maxTime'] = maxTime
+        if max_time is not None:
+            args['maxTime'] = max_time
 
         super().__init__('cpdir', args)
 
@@ -434,10 +443,10 @@ class ExpectCpdir(Expect):
 
 class ExpectGlob(Expect):
 
-    def __init__(self, path=None, logEnviron=None):
+    def __init__(self, path=None, log_environ=None):
         args = {'path': path}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
 
         super().__init__('glob', args)
 
@@ -470,10 +479,10 @@ class ExpectListdir(Expect):
 
 class ExpectRmfile(Expect):
 
-    def __init__(self, path=None, logEnviron=None):
+    def __init__(self, path=None, log_environ=None):
         args = {'path': path}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
 
         super().__init__('rmfile', args)
 

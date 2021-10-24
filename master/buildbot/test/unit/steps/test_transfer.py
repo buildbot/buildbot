@@ -561,7 +561,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expect_commands(
-            ExpectGlob(path=os.path.join('wkdir', 'src*'), logEnviron=False)
+            ExpectGlob(path=os.path.join('wkdir', 'src*'), log_environ=False)
             .files(["srcfile"])
             .exit(0),
             ExpectStat(file="srcfile", workdir='wkdir')
@@ -583,7 +583,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expect_commands(
-            ExpectGlob(path=os.path.join('wkdir', 'src*'), logEnviron=False)
+            ExpectGlob(path=os.path.join('wkdir', 'src*'), log_environ=False)
             .files()
             .exit(1)
         )

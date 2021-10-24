@@ -58,7 +58,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -69,15 +69,15 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -103,7 +103,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -114,15 +114,15 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -140,7 +140,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .exit(0),
-            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
+            ExpectRmdir(dir='wkdir/.buildbot-diff', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
@@ -163,7 +163,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -174,15 +174,15 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -200,7 +200,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .exit(0),
-            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
+            ExpectRmdir(dir='wkdir/.buildbot-diff', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
@@ -222,7 +222,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -233,15 +233,15 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -259,7 +259,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .exit(0),
-            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
+            ExpectRmdir(dir='wkdir/.buildbot-diff', log_environ=True)
             .exit(1)
         )
         self.expect_outcome(result=FAILURE, state_string="update (failure)")
@@ -275,7 +275,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
@@ -285,15 +285,15 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -318,7 +318,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -329,11 +329,11 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -358,7 +358,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
@@ -368,11 +368,11 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -397,7 +397,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -408,7 +408,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -433,7 +433,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
@@ -443,7 +443,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -468,7 +468,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
@@ -478,9 +478,9 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -505,7 +505,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -516,11 +516,11 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -545,7 +545,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(1),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
@@ -555,11 +555,11 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -584,7 +584,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -595,9 +595,9 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -622,7 +622,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -638,9 +638,9 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -665,7 +665,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -676,9 +676,9 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
@@ -689,7 +689,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .stdout('file3\nfile4')
             .exit(0),
             ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2', 'wkdir/file3', 'wkdir/file4'],
-                        logEnviron=True)
+                        log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -715,7 +715,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -726,9 +726,9 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'abcdef01',
@@ -754,7 +754,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -765,15 +765,15 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200)
             .exit(0),
-            ExpectStat(file='source/_MTN', logEnviron=True)
+            ExpectStat(file='source/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='source',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             .exit(0),
-            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
+            ExpectCpdir(fromdir='source', todir='build', log_environ=True, timeout=1200)
             .exit(0),
             ExpectShell(workdir='build',
                         command=['mtn', 'automate', 'select', 'w:'])
@@ -794,7 +794,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -805,15 +805,15 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200)
             .exit(0),
-            ExpectStat(file='source/_MTN', logEnviron=True)
+            ExpectStat(file='source/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='source',
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             .exit(0),
-            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
+            ExpectCpdir(fromdir='source', todir='build', log_environ=True, timeout=1200)
             .exit(0),
             ExpectShell(workdir='build',
                         command=['mtn', 'automate', 'select', 'w:'])
@@ -854,7 +854,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -865,15 +865,15 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True)
             .exit(0),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -912,7 +912,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -926,9 +926,9 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -953,7 +953,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
@@ -973,13 +973,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .stdout('too new, cannot use')
             .exit(0),
-            ExpectRmdir(dir='db.mtn', logEnviron=True)
+            ExpectRmdir(dir='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
@@ -989,9 +989,9 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -1016,13 +1016,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
             .exit(0),
-            ExpectStat(file='db.mtn', logEnviron=True)
+            ExpectStat(file='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .stdout('database has no tables')
             .exit(0),
-            ExpectRmdir(dir='db.mtn', logEnviron=True)
+            ExpectRmdir(dir='db.mtn', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
@@ -1032,9 +1032,9 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_MTN', logEnviron=True)
+            ExpectStat(file='wkdir/_MTN', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',

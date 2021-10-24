@@ -159,8 +159,7 @@ class TestShellCommandExecution(TestBuildStepMixin,
     def test_run_usePTY(self):
         self.setup_step(shell.ShellCommand(workdir='build', command="echo hello", usePTY=False))
         self.expect_commands(
-            ExpectShell(workdir='build', command='echo hello',
-                        usePTY=False)
+            ExpectShell(workdir='build', command='echo hello', use_pty=False)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)

@@ -63,7 +63,7 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
             .files(['.git'])
