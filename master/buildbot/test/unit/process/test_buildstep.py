@@ -1116,7 +1116,7 @@ class TestShellMixin(TestBuildStepMixin,
 
     @defer.inlineCallbacks
     def test_no_default_workdir(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.expect_commands(
             ExpectShell(workdir='build', command=['cmd', 'arg'])
             .exit(0)
@@ -1126,7 +1126,7 @@ class TestShellMixin(TestBuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_workdir(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = '/alternate'
         self.expect_commands(
             ExpectShell(workdir='/alternate', command=['cmd', 'arg'])
@@ -1137,7 +1137,7 @@ class TestShellMixin(TestBuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_workdir_callable(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = lambda x: '/alternate'
         self.expect_commands(
             ExpectShell(workdir='/alternate', command=['cmd', 'arg'])
@@ -1148,14 +1148,14 @@ class TestShellMixin(TestBuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_workdir_callable_error(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = lambda x: x.nosuchattribute  # will raise AttributeError
         self.expect_exception(buildstep.CallableAttributeError)
         yield self.run_step()
 
     @defer.inlineCallbacks
     def test_build_workdir_renderable(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = properties.Property("myproperty")
         self.properties.setProperty("myproperty", "/myproperty", "test")
         self.expect_commands(

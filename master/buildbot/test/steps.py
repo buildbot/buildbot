@@ -105,15 +105,15 @@ class TestBuildStepMixin:
     @ivar properties: build properties (L{Properties} instance)
     """
 
-    def setup_build_step(self, wantData=True, wantDb=False, wantMq=False):
+    def setup_build_step(self, want_data=True, want_db=False, want_mq=False):
         """
-        @param wantData(bool): Set to True to add data API connector to master.
+        @param want_data(bool): Set to True to add data API connector to master.
             Default value: True.
 
-        @param wantDb(bool): Set to True to add database connector to master.
+        @param want_db(bool): Set to True to add database connector to master.
             Default value: False.
 
-        @param wantMq(bool): Set to True to add mq connector to master.
+        @param want_mq(bool): Set to True to add mq connector to master.
             Default value: False.
         """
 
@@ -144,13 +144,14 @@ class TestBuildStepMixin:
         self.expected_remote_commands = []
         self._expected_remote_commands_popped = 0
 
-        self.master = fakemaster.make_master(self, wantData=wantData, wantDb=wantDb, wantMq=wantMq)
+        self.master = fakemaster.make_master(self, wantData=want_data, wantDb=want_db,
+                                             wantMq=want_mq)
 
     def tear_down_build_step(self):
         pass
 
     def setup_step(self, step, worker_version=None, worker_env=None,
-                  buildFiles=None, wantDefaultWorkdir=True):
+                   build_files=None, want_default_work_dir=True):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the factory
@@ -174,19 +175,19 @@ class TestBuildStepMixin:
         if worker_env is None:
             worker_env = dict()
 
-        if buildFiles is None:
-            buildFiles = list()
+        if build_files is None:
+            build_files = list()
 
         step = self.step = buildstep.create_step_from_step_or_factory(step)
 
         # set defaults
-        if wantDefaultWorkdir:
+        if want_default_work_dir:
             step.workdir = step._workdir or 'wkdir'
 
         # step.build
 
         b = self.build = fakebuild.FakeBuild(master=self.master)
-        b.allFiles = lambda: buildFiles
+        b.allFiles = lambda: build_files
         b.master = self.master
 
         def getWorkerVersion(cmd, oldversion):

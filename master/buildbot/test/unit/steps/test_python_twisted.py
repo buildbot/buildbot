@@ -222,7 +222,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_build_changed_files(self):
         self.setup_step(python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
-                       buildFiles=['my/test/file.py', 'my/test/file2.py'])
+                        build_files=['my/test/file.py', 'my/test/file2.py'])
 
         self.expect_commands(
             ExpectShell(workdir='build',
@@ -365,7 +365,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_run_ok(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
-                       buildFiles=['foo.xhtml'])
+                        build_files=['foo.xhtml'])
         self.expect_commands(
             ExpectShell(workdir='build',
                         command=[
@@ -379,7 +379,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_custom_python(self):
         self.setup_step(python_twisted.HLint(workdir='build', python='/bin/mypython'),
-                       buildFiles=['foo.xhtml'])
+                        build_files=['foo.xhtml'])
         self.expect_commands(
             ExpectShell(workdir='build',
                         command=['/bin/mypython', 'bin/lore', '-p', '--output', 'lint',
@@ -392,7 +392,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_command_failure(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
-                       buildFiles=['foo.xhtml'])
+                        build_files=['foo.xhtml'])
         self.expect_commands(
             ExpectShell(workdir='build',
                         command=['bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
@@ -409,7 +409,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_run_warnings(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
-                       buildFiles=['foo.xhtml'])
+                        build_files=['foo.xhtml'])
         self.expect_commands(
             ExpectShell(workdir='build',
                         command=[

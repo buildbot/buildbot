@@ -593,7 +593,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'),
-            wantDefaultWorkdir=False)
+            want_default_work_dir=False)
         workdir = '/myworkdir/workdir'
         self.build.workdir = workdir
 
