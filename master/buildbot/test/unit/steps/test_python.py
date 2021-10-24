@@ -25,7 +25,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import python
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 log_output_success = '''\
 Making output directory...
@@ -124,7 +124,7 @@ Warning: Unable to extract the base list for
 '''
 
 
-class BuildEPYDoc(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class BuildEPYDoc(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
@@ -145,7 +145,7 @@ class BuildEPYDoc(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
@@ -411,7 +411,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
@@ -499,7 +499,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()

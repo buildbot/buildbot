@@ -22,10 +22,10 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import cppcheck
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class Cppcheck(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()

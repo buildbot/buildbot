@@ -25,7 +25,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import python_twisted
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 failureLog = '''\
 buildbot.test.unit.test_steps_python_twisted.Trial.testProperties ... [FAILURE]
@@ -91,7 +91,7 @@ FAILED (failures=8)
 '''  # noqa pylint: disable=line-too-long
 
 
-class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
@@ -354,7 +354,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
@@ -422,7 +422,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class RemovePYCs(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()

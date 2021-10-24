@@ -36,10 +36,10 @@ from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.unit.steps.test_transfer import downloadString
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
-from buildbot.test.util import steps
 from buildbot.util import unicode2bytes
 
 
@@ -3233,7 +3233,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='unknown')
 
 
-class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
+class TestGitPush(TestBuildStepMixin, config.ConfigErrorsMixin,
                   TestReactorMixin,
                   unittest.TestCase):
     stepClass = git.GitPush
@@ -3541,7 +3541,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             self.stepClass(workdir='wkdir', repourl="url")
 
 
-class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
+class TestGitTag(TestBuildStepMixin, config.ConfigErrorsMixin,
                  TestReactorMixin, unittest.TestCase):
     stepClass = git.GitTag
 
@@ -3652,7 +3652,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.flushLoggedErrors(WorkerSetupError)
 
 
-class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
+class TestGitCommit(TestBuildStepMixin, config.ConfigErrorsMixin,
                     TestReactorMixin,
                     unittest.TestCase):
     stepClass = git.GitCommit

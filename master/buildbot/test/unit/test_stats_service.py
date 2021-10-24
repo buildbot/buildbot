@@ -30,8 +30,8 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import logging
-from buildbot.test.util import steps
 
 
 class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
@@ -179,7 +179,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         self.assertLogged("Service.*not initialized")
 
 
-class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
+class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
 
     """
     Test the stats service from a fake step

@@ -23,8 +23,8 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import shellsequence
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
-from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -35,7 +35,7 @@ class DynamicRun(shellsequence.ShellSequence):
         return self.runShellSequence(self.dynamicCommands)
 
 
-class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
+class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
                           TestReactorMixin, unittest.TestCase):
 
     def setUp(self):

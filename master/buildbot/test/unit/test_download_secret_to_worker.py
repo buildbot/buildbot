@@ -29,11 +29,11 @@ from buildbot.test.expect import ExpectRemoteRef
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectRmfile
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
-from buildbot.test.util import steps
 
 
-class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
+class TestDownloadFileSecretToWorkerCommand(TestBuildStepMixin,
                                             TestReactorMixin,
                                             unittest.TestCase):
 
@@ -70,7 +70,7 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
         return d
 
 
-class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
+class TestRemoveWorkerFileSecretCommand30(TestBuildStepMixin,
                                           TestReactorMixin,
                                           unittest.TestCase):
 
@@ -108,7 +108,7 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
         return d
 
 
-class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
+class TestRemoveFileSecretToWorkerCommand(TestBuildStepMixin,
                                           configmixin.ConfigErrorsMixin,
                                           TestReactorMixin,
                                           unittest.TestCase):

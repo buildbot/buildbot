@@ -19,7 +19,7 @@ from buildbot.process import results
 from buildbot.steps import gitdiffinfo
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 try:
     import unidiff
@@ -27,7 +27,7 @@ except ImportError:
     unidiff = None
 
 
-class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     if not unidiff:
         skip = 'unidiff is required for GitDiffInfo tests'
 

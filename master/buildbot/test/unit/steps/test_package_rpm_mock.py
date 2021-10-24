@@ -22,10 +22,10 @@ from buildbot.steps.package.rpm import mock
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
@@ -96,7 +96,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
+class TestMockBuildSRPM(TestBuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
@@ -128,7 +128,7 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
+class TestMockRebuild(TestBuildStepMixin, TestReactorMixin,
                       unittest.TestCase):
 
     def setUp(self):

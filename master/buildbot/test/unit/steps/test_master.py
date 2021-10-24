@@ -32,12 +32,12 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import master
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 _COMSPEC_ENV = 'COMSPEC'
 
 
-class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
+class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
@@ -204,7 +204,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
+class TestSetProperty(TestBuildStepMixin, TestReactorMixin,
                       unittest.TestCase):
 
     def setUp(self):
@@ -227,7 +227,7 @@ class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
+class TestLogRenderable(TestBuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
@@ -250,7 +250,7 @@ class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
+class TestsSetProperties(TestBuildStepMixin, TestReactorMixin,
                          unittest.TestCase):
 
     def setUp(self):
@@ -283,7 +283,7 @@ class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
         return self.doOneTest(properties=manipulate)
 
 
-class TestAssert(steps.BuildStepMixin, TestReactorMixin,
+class TestAssert(TestBuildStepMixin, TestReactorMixin,
                  unittest.TestCase):
 
     def setUp(self):

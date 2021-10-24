@@ -86,7 +86,7 @@ def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
     return text
 
 
-class BuildStepMixin:
+class TestBuildStepMixin:
 
     """
     Support for testing build steps.  This class adds two capabilities:

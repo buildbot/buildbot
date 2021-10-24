@@ -33,9 +33,9 @@ from buildbot.process.results import SUCCESS
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.timed import Nightly
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import configurators
-from buildbot.test.util import steps
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
 
@@ -64,7 +64,7 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
         self.expectNoConfigError()
 
 
-class LogChunksJanitorTests(steps.BuildStepMixin,
+class LogChunksJanitorTests(TestBuildStepMixin,
                             configmixin.ConfigErrorsMixin,
                             TestReactorMixin,
                             unittest.TestCase):

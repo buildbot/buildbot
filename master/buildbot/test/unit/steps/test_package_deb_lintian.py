@@ -20,10 +20,10 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import lintian
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestDebLintian(steps.BuildStepMixin, TestReactorMixin,
+class TestDebLintian(TestBuildStepMixin, TestReactorMixin,
                      unittest.TestCase):
 
     def setUp(self):

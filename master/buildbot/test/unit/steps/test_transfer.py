@@ -40,7 +40,7 @@ from buildbot.test.expect import ExpectStat
 from buildbot.test.expect import ExpectUploadDirectory
 from buildbot.test.expect import ExpectUploadFile
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 
 def downloadString(memoizer, timestamp=None):
@@ -56,7 +56,7 @@ def downloadString(memoizer, timestamp=None):
     return behavior
 
 
-class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
@@ -284,7 +284,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             transfer.FileUpload('src')
 
 
-class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
+class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin,
                           unittest.TestCase):
 
     def setUp(self):
@@ -435,7 +435,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.DirectoryUpload('src')
 
 
-class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
+class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
@@ -828,7 +828,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(['srcfile'])
 
 
-class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
+class TestFileDownload(TestBuildStepMixin, TestReactorMixin,
                        unittest.TestCase):
 
     def setUp(self):
@@ -935,7 +935,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
         yield self.run_step()
 
 
-class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
+class TestStringDownload(TestBuildStepMixin, TestReactorMixin,
                          unittest.TestCase):
 
     def setUp(self):
@@ -1032,7 +1032,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
             transfer.StringDownload('srcfile')
 
 
-class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
+class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
@@ -1121,7 +1121,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
             transfer.JSONStringDownload('srcfile')
 
 
-class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestJSONPropertiesDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()

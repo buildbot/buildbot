@@ -25,10 +25,10 @@ from buildbot.process.results import Results
 from buildbot.steps import mswin
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
+class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin,
                          unittest.TestCase):
 
     """

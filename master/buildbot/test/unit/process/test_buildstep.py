@@ -45,9 +45,9 @@ from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import worker
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
-from buildbot.test.util import steps
 from buildbot.util.eventual import eventually
 
 
@@ -63,7 +63,7 @@ class CustomActionBuildStep(buildstep.BuildStep):
         return self.action()
 
 
-class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
+class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
                     TestReactorMixin,
                     unittest.TestCase):
 
@@ -784,7 +784,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
 class InterfaceTests(interfaces.InterfaceTests):
 
-    # ensure that steps.BuildStepMixin creates a convincing facsimile of the
+    # ensure that TestBuildStepMixin creates a convincing facsimile of the
     # real BuildStep
 
     def test_signature_attributes(self):
@@ -898,7 +898,7 @@ class InterfaceTests(interfaces.InterfaceTests):
 
 
 class TestFakeItfc(unittest.TestCase,
-                   steps.BuildStepMixin, TestReactorMixin,
+                   TestBuildStepMixin, TestReactorMixin,
                    InterfaceTests):
 
     def setUp(self):
@@ -923,7 +923,7 @@ class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
         return SUCCESS
 
 
-class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
+class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
                        unittest.TestCase):
 
     @defer.inlineCallbacks
@@ -1065,7 +1065,7 @@ class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         return cmd.results()
 
 
-class TestShellMixin(steps.BuildStepMixin,
+class TestShellMixin(TestBuildStepMixin,
                      config.ConfigErrorsMixin,
                      TestReactorMixin,
                      unittest.TestCase):

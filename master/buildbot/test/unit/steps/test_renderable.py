@@ -18,8 +18,8 @@ from twisted.trial import unittest
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.properties import Interpolate
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
-from buildbot.test.util import steps
 
 
 class TestBuildStep(BuildStep):
@@ -28,7 +28,7 @@ class TestBuildStep(BuildStep):
         return 0
 
 
-class TestBuildStepNameIsRenderable(steps.BuildStepMixin, unittest.TestCase,
+class TestBuildStepNameIsRenderable(TestBuildStepMixin, unittest.TestCase,
                                     TestReactorMixin,
                                     configmixin.ConfigErrorsMixin):
 

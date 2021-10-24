@@ -26,10 +26,10 @@ from buildbot.steps.package.deb import pbuilder
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
+class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin,
                       unittest.TestCase):
 
     def setUp(self):
@@ -275,7 +275,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
+class TestDebCowbuilder(TestBuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
@@ -366,7 +366,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
+class TestUbuPbuilder(TestBuildStepMixin, TestReactorMixin,
                       unittest.TestCase):
 
     def setUp(self):
@@ -401,7 +401,7 @@ class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestUbuCowbuilder(steps.BuildStepMixin, TestReactorMixin,
+class TestUbuCowbuilder(TestBuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):

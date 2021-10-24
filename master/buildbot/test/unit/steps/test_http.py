@@ -27,7 +27,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import http
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 try:
     import txrequests
@@ -61,7 +61,7 @@ class TestPage(Resource):
         return b"OK:" + request.content.read()
 
 
-class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     timeout = 3  # those tests should not run long
 

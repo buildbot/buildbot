@@ -24,7 +24,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 try:
     from subunit import TestProtocolClient
@@ -50,7 +50,7 @@ def create_error(name):
         return (exctype, value, None)
 
 
-class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestSubUnit(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         if TestProtocolClient is None:

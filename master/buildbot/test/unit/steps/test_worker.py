@@ -37,7 +37,7 @@ from buildbot.test.expect import ExpectRmfile
 from buildbot.test.expect import ExpectStat
 from buildbot.test.expect import ExpectUploadFile
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 
 def uploadString(string):
@@ -48,7 +48,7 @@ def uploadString(string):
     return behavior
 
 
-class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
+class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin,
                                unittest.TestCase):
 
     def setUp(self):
@@ -93,7 +93,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
+class TestFileExists(TestBuildStepMixin, TestReactorMixin,
                      unittest.TestCase):
 
     def setUp(self):
@@ -155,7 +155,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
         self.flushLoggedErrors(WorkerSetupError)
 
 
-class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
+class TestCopyDirectory(TestBuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
@@ -215,7 +215,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
+class TestRemoveDirectory(TestBuildStepMixin, TestReactorMixin,
                           unittest.TestCase):
 
     def setUp(self):
@@ -257,7 +257,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
+class TestMakeDirectory(TestBuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
@@ -310,7 +310,7 @@ class CompositeUser(buildstep.BuildStep, worker.CompositeStepMixin):
         return FAILURE if res else SUCCESS
 
 
-class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
+class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):

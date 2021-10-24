@@ -21,8 +21,8 @@ from twisted.trial import unittest
 from buildbot.process import results
 from buildbot.steps.source import Source
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import sourcesteps
-from buildbot.test.util import steps
 
 
 class OldStyleSourceStep(Source):
@@ -165,7 +165,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.flushLoggedErrors(NotImplementedError)
 
 
-class TestSourceDescription(steps.BuildStepMixin, TestReactorMixin,
+class TestSourceDescription(TestBuildStepMixin, TestReactorMixin,
                             unittest.TestCase):
 
     def setUp(self):

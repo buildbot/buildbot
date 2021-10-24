@@ -19,10 +19,10 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.package.rpm import rpmlint
 from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestRpmLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestRpmLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
