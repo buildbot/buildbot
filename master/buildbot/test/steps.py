@@ -89,16 +89,6 @@ def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
 class TestBuildStepMixin:
 
     """
-    Support for testing build steps.  This class adds two capabilities:
-
-     - patch out RemoteCommand with fake versions that check expected
-       commands and produce the appropriate results
-
-     - surround a step with the mock objects that it needs to execute
-
-    The following instance variables are available after C{setup_step}:
-
-    @ivar step: the step under test
     @ivar build: the fake build containing the step
     @ivar progress: mock progress object
     @ivar worker: mock worker object
@@ -106,17 +96,6 @@ class TestBuildStepMixin:
     """
 
     def setup_test_build_step(self, want_data=True, want_db=False, want_mq=False):
-        """
-        @param want_data(bool): Set to True to add data API connector to master.
-            Default value: True.
-
-        @param want_db(bool): Set to True to add database connector to master.
-            Default value: False.
-
-        @param want_mq(bool): Set to True to add mq connector to master.
-            Default value: False.
-        """
-
         if not hasattr(self, 'reactor'):
             raise Exception('Reactor has not yet been setup for step')
 
@@ -152,21 +131,7 @@ class TestBuildStepMixin:
 
     def setup_step(self, step, worker_version=None, worker_env=None,
                    build_files=None, want_default_work_dir=True):
-        """
-        Set up C{step} for testing.  This begins by using C{step} as a factory
-        to create a I{new} step instance, thereby testing that the factory
-        arguments are handled correctly.  It then creates a comfortable
-        environment for the worker to run in, replete with a fake build and a
-        fake worker.
 
-        As a convenience, it can set the step's workdir with C{'wkdir'}.
-
-        @param worker_version: worker version to present, as a dictionary mapping
-            command name to version.  A command name of '*' will apply for all
-            commands.
-
-        @param worker_env: environment from the worker at worker startup
-        """
         if worker_version is None:
             worker_version = {
                 '*': '99.99'
@@ -287,37 +252,20 @@ class TestBuildStepMixin:
         return step
 
     def expect_commands(self, *exp):
-        """
-        Add to the expected remote commands, along with their results.  Each
-        argument should be an instance of L{Expect}.
-        """
         self.expected_remote_commands.extend(exp)
 
     def expect_outcome(self, result, state_string=None):
-        """
-        Expect the given result (from L{buildbot.process.results}) and status
-        text (a list).
-        """
         self.exp_result = result
         if state_string:
             self.exp_state_string = state_string
 
     def expect_property(self, property, value, source=None):
-        """
-        Expect the given property to be set when the step is complete.
-        """
         self.exp_properties[property] = (value, source)
 
     def expect_no_property(self, property):
-        """
-        Expect the given property is *not* set when the step is complete
-        """
         self.exp_missing_properties.append(property)
 
     def expect_log_file(self, logfile, contents):
-        """
-        Expect a logfile with the given contents
-        """
         self.exp_logfiles[logfile] = contents
 
     def expect_log_file_stderr(self, logfile, contents):
@@ -327,15 +275,9 @@ class TestBuildStepMixin:
         self._exp_build_data[name] = (value, source)
 
     def expect_hidden(self, hidden=True):
-        """
-        Set whether the step is expected to be hidden.
-        """
         self.exp_hidden = hidden
 
     def expect_exception(self, exception_class):
-        """
-        Set whether the step is expected to raise an exception.
-        """
         self.exp_exception = exception_class
         self.expect_outcome(EXCEPTION)
 
