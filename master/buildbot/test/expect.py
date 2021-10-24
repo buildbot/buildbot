@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import functools
+import stat
 import tarfile
 from io import BytesIO
 
@@ -291,6 +292,19 @@ class ExpectStat(Expect):
             args['logEnviron'] = logEnviron
 
         super().__init__('stat', args)
+
+    def stat(self, mode, inode=99, dev=99, nlink=1, uid=0, gid=0, size=99,
+             atime=0, mtime=0, ctime=0):
+        self.update('stat', [mode, inode, dev, nlink, uid, gid, size, atime, mtime, ctime])
+        return self
+
+    def stat_file(self, mode=0, size=99, atime=0, mtime=0, ctime=0):
+        self.stat(stat.S_IFREG, size=size, atime=atime, mtime=mtime, ctime=ctime)
+        return self
+
+    def stat_dir(self, mode=0, size=99, atime=0, mtime=0, ctime=0):
+        self.stat(stat.S_IFDIR, size=size, atime=atime, mtime=mtime, ctime=ctime)
+        return self
 
     def __repr__(self):
         return "ExpectStat(" + repr(self.args['file']) + ")"

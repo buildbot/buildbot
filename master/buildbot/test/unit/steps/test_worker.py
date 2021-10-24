@@ -107,7 +107,7 @@ class TestFileExists(TestBuildStepMixin, TestReactorMixin,
         self.setup_step(worker.FileExists(file="x"))
         self.expect_commands(
             ExpectStat(file='x')
-            .update('stat', [stat.S_IFREG, 99, 99])
+            .stat_file()
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="File found.")
@@ -117,7 +117,7 @@ class TestFileExists(TestBuildStepMixin, TestReactorMixin,
         self.setup_step(worker.FileExists(file="x"))
         self.expect_commands(
             ExpectStat(file='x')
-            .update('stat', [0, 99, 99])
+            .stat(mode=0)
             .exit(0)
         )
         self.expect_outcome(result=FAILURE,
