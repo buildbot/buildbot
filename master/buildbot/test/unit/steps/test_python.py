@@ -128,10 +128,10 @@ class BuildEPYDoc(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_sample(self):
         self.setup_step(python.BuildEPYDoc())
@@ -149,10 +149,10 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     @parameterized.expand([
         ('no_results', True),
@@ -415,10 +415,10 @@ class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_success(self):
         self.setup_step(python.PyFlakes())
@@ -503,10 +503,10 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_builddir_required(self):
         with self.assertRaises(config.ConfigErrors):

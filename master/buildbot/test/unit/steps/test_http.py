@@ -78,7 +78,7 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         # port 0 means random unused port
         self.listener = reactor.listenTCP(0, Site(TestPage()))
         self.port = self.listener.getHost().port
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -86,7 +86,7 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         try:
             yield self.listener.stopListening()
         finally:
-            yield self.tear_down_build_step()
+            yield self.tear_down_test_build_step()
 
     def get_connection_string(self):
         return "http://127.0.0.1:{}".format(self.port)

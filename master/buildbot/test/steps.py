@@ -105,7 +105,7 @@ class TestBuildStepMixin:
     @ivar properties: build properties (L{Properties} instance)
     """
 
-    def setup_build_step(self, want_data=True, want_db=False, want_mq=False):
+    def setup_test_build_step(self, want_data=True, want_db=False, want_mq=False):
         """
         @param want_data(bool): Set to True to add data API connector to master.
             Default value: True.
@@ -147,7 +147,7 @@ class TestBuildStepMixin:
         self.master = fakemaster.make_master(self, wantData=want_data, wantDb=want_db,
                                              wantMq=want_mq)
 
-    def tear_down_build_step(self):
+    def tear_down_test_build_step(self):
         pass
 
     def setup_step(self, step, worker_version=None, worker_env=None,

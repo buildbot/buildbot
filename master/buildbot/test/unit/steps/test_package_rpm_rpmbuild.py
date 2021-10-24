@@ -33,10 +33,10 @@ class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_no_specfile(self):
         with self.assertRaises(config.ConfigErrors):

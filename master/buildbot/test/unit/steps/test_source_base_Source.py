@@ -36,10 +36,10 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def setup_deferred_mock(self):
         m = mock.Mock()
@@ -170,10 +170,10 @@ class TestSourceDescription(TestBuildStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_constructor_args_strings(self):
         step = Source(workdir='build',
@@ -207,10 +207,10 @@ class TestSourceAttrGroup(sourcesteps.SourceStepMixin, TestReactorMixin,
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_attrgroup_hasattr(self):
         step = AttrGroup()

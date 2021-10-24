@@ -34,10 +34,10 @@ class SourceStepMixin(TestBuildStepMixin):
     """
 
     def setUpSourceStep(self):
-        return super().setup_build_step()
+        return super().setup_test_build_step()
 
     def tearDownSourceStep(self):
-        return super().tear_down_build_step()
+        return super().tear_down_test_build_step()
 
     # utilities
 

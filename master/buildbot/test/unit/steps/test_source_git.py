@@ -3240,10 +3240,10 @@ class TestGitPush(TestBuildStepMixin, config.ConfigErrorsMixin,
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_push_simple(self):
         url = 'ssh://github.com/test/test.git'
@@ -3547,10 +3547,10 @@ class TestGitTag(TestBuildStepMixin, config.ConfigErrorsMixin,
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_tag_annotated(self):
         messages = ['msg1', 'msg2']
@@ -3662,10 +3662,10 @@ class TestGitCommit(TestBuildStepMixin, config.ConfigErrorsMixin,
         self.message_list = ['my commit', '42']
         self.path_list = ['file1.txt', 'file2.txt']
 
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_add_fail(self):
         self.setup_step(

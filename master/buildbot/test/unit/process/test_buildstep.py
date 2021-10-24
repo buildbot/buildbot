@@ -103,10 +103,10 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     # support
 
@@ -903,7 +903,7 @@ class TestFakeItfc(unittest.TestCase,
 
     def setUp(self):
         self.setup_test_reactor()
-        self.setup_build_step()
+        self.setup_test_build_step()
         self.setup_step(buildstep.BuildStep())
 
 
@@ -929,12 +929,12 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        yield self.setup_build_step()
+        yield self.setup_test_build_step()
         self.step = CommandMixinExample()
         self.setup_step(self.step)
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     @defer.inlineCallbacks
     def test_runRmdir(self):
@@ -1073,10 +1073,10 @@ class TestShellMixin(TestBuildStepMixin,
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        yield self.setup_build_step()
+        yield self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_setupShellMixin_bad_arg(self):
         mixin = SimpleShellCommand()

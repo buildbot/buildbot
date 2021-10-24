@@ -28,10 +28,10 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
-        self.setup_build_step()
+        self.setup_test_build_step()
 
     def tearDown(self):
-        self.tear_down_build_step()
+        self.tear_down_test_build_step()
 
     def expect_and_run_command(self, *params):
         command = [CMake.DEFAULT_CMAKE] + list(params)
