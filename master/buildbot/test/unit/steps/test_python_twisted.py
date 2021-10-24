@@ -195,8 +195,8 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_outcome(
             result=FAILURE, state_string='tests 8 failures (failure)')
-        self.expect_logfile('problems', failureLog.split('\n\n', 1)[1][:-1])
-        self.expect_logfile('warnings', textwrap.dedent('''\
+        self.expect_log_file('problems', failureLog.split('\n\n', 1)[1][:-1])
+        self.expect_log_file('warnings', textwrap.dedent('''\
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_nodupe ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_supplement ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobs ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
@@ -373,7 +373,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("dunno what hlint output looks like..\n")
             .exit(0)
         )
-        self.expect_logfile('files', 'foo.xhtml\n')
+        self.expect_log_file('files', 'foo.xhtml\n')
         self.expect_outcome(result=SUCCESS, state_string='0 hlints')
         return self.run_step()
 
@@ -386,7 +386,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  'foo.xhtml'])
             .exit(0)
         )
-        self.expect_logfile('files', 'foo.xhtml\n')
+        self.expect_log_file('files', 'foo.xhtml\n')
         self.expect_outcome(result=SUCCESS, state_string='0 hlints')
         return self.run_step()
 
@@ -398,7 +398,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
             .exit(1)
         )
-        self.expect_logfile('files', 'foo.xhtml\n')
+        self.expect_log_file('files', 'foo.xhtml\n')
         self.expect_outcome(result=FAILURE, state_string='hlint (failure)')
         return self.run_step()
 
@@ -417,7 +417,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("colon: meaning warning\n")
             .exit(0)
         )
-        self.expect_logfile('warnings', 'colon: meaning warning')
+        self.expect_log_file('warnings', 'colon: meaning warning')
         self.expect_outcome(result=WARNINGS, state_string='1 hlint (warnings)')
         return self.run_step()
 

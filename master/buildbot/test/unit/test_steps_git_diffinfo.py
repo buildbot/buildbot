@@ -59,7 +59,7 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             .log('stdio-diff', stderr='fatal: ambiguous argument')
             .exit(1),
             )
-        self.expect_logfile('stdio-merge-base', '1234123412341234')
+        self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', 'fatal: ambiguous argument')
         self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
         return self.run_step()
@@ -75,7 +75,7 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             .log('stdio-diff', stdout='')
             .exit(0),
             )
-        self.expect_logfile('stdio-merge-base', '1234123412341234')
+        self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', '')
         self.expect_outcome(result=results.SUCCESS, state_string="GitDiffInfo")
         self.expect_build_data('diffinfo-master', b'[]', 'GitDiffInfo')
@@ -123,7 +123,7 @@ index 0000000..632e269
 ''')
             .exit(0)
             )
-        self.expect_logfile('stdio-merge-base', '1234123412341234')
+        self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_outcome(result=results.SUCCESS, state_string="GitDiffInfo")
 
         diff_info = (

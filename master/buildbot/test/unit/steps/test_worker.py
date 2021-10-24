@@ -76,7 +76,7 @@ class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin,
         self.expect_property('four', 4, source='them')
         self.expect_property('five', 5, source='them')
         self.expect_property('six', '6', source='me')
-        self.expect_logfile("properties",
+        self.expect_log_file("properties",
                            "one = '1'\nsix = '6'")
         return self.run_step()
 
@@ -88,7 +88,7 @@ class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="Set")
         self.expect_property('eNv', 'EE', source='me')
-        self.expect_logfile("properties",
+        self.expect_log_file("properties",
                            "eNv = 'EE'")
         return self.run_step()
 

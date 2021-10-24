@@ -314,7 +314,7 @@ class TestBuildStepMixin:
         """
         self.exp_missing_properties.append(property)
 
-    def expect_logfile(self, logfile, contents):
+    def expect_log_file(self, logfile, contents):
         """
         Expect a logfile with the given contents
         """

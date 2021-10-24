@@ -574,7 +574,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_outcome(result=WARNINGS,
                            state_string="sphinx 2 warnings (warnings)")
-        self.expect_logfile("warnings", warnings)
+        self.expect_log_file("warnings", warnings)
         yield self.run_step()
 
         self.assertEqual(self.step.statistics, {'warnings': 2})
