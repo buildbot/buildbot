@@ -51,7 +51,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .update('files', ['.git'])
+            .files(['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -93,7 +93,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .update('files', ['.git'])
+            .files(['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -135,7 +135,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .update('files', ['.git'])
+            .files(['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -177,7 +177,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .update('files', ['.git'])
+            .files(['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
