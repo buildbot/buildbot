@@ -365,6 +365,21 @@ class ExpectDownloadFile(Expect):
 
         super().__init__('downloadFile', args, interrupted=interrupted)
 
+    def download_string(self, dest_callable, size=1000, timestamp=None):
+        def behavior(command):
+            reader = command.args['reader']
+            read = reader.remote_read(size)
+
+            dest_callable(read)
+
+            reader.remote_close()
+            if timestamp:
+                reader.remote_utime(timestamp)
+            return read
+
+        self.behavior(behavior)
+        return self
+
     def __repr__(self):
         return "ExpectUploadDirectory({}, {})".format(repr(self.args['workdir']),
                                                       repr(self.args['workerdest']))

@@ -37,7 +37,6 @@ from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import TestBuildStepMixin
-from buildbot.test.unit.steps.test_transfer import downloadString
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 from buildbot.util import unicode2bytes
@@ -308,7 +307,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
-            .behavior(downloadString(read.append))
+            .download_string(read.append)
             .exit(0),
             ExpectListdir(dir='wkdir')
             .files(['.git'])
@@ -494,7 +493,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
-            .behavior(downloadString(read.append))
+            .download_string(read.append)
             .exit(0),
             ExpectListdir(dir='wkdir')
             .files(['.git'])

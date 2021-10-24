@@ -42,19 +42,6 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import TestBuildStepMixin
 
 
-def downloadString(memoizer, timestamp=None):
-    def behavior(command):
-        reader = command.args['reader']
-        read = reader.remote_read(1000)
-        # save what we read so we can check it
-        memoizer(read)
-        reader.remote_close()
-        if timestamp:
-            reader.remote_utime(timestamp)
-        return read
-    return behavior
-
-
 class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
@@ -873,7 +860,7 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin,
             ExpectDownloadFile(workerdest=self.destfile, workdir='wkdir',
                                blocksize=16384, maxsize=None, mode=None,
                                reader=ExpectRemoteRef(remotetransfer.FileReader))
-            .behavior(downloadString(read.append))
+            .download_string(read.append, size=1000)
             .exit(0))
 
         self.expect_outcome(
@@ -884,7 +871,6 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin,
 
         with open(master_file, "rb") as f:
             contents = f.read()
-        # Only first 1000 bytes transferred in downloadString() helper
         contents = contents[:1000]
         self.assertEqual(b''.join(read), contents)
 
@@ -903,7 +889,7 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin,
             ExpectDownloadFile(slavedest=self.destfile, workdir='wkdir',
                                blocksize=16384, maxsize=None, mode=None,
                                reader=ExpectRemoteRef(remotetransfer.FileReader))
-            .behavior(downloadString(read.append))
+            .download_string(read.append, size=1000)
             .exit(0))
 
         self.expect_outcome(
@@ -915,7 +901,6 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin,
         def checkCalls(res):
             with open(master_file, "rb") as f:
                 contents = f.read()
-            # Only first 1000 bytes transferred in downloadString() helper
             contents = contents[:1000]
             self.assertEqual(b''.join(read), contents)
 
@@ -966,7 +951,7 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin,
             ExpectDownloadFile(workerdest="hello.txt", workdir='wkdir',
                                blocksize=16384, maxsize=None, mode=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
-            .behavior(downloadString(read.append))
+            .download_string(read.append)
             .exit(0))
 
         self.expect_outcome(
@@ -992,7 +977,7 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin,
             ExpectDownloadFile(slavedest="hello.txt", workdir='wkdir',
                                blocksize=16384, maxsize=None, mode=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
-            .behavior(downloadString(read.append))
+            .download_string(read.append)
             .exit(0))
 
         self.expect_outcome(
@@ -1056,7 +1041,7 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin,
             ExpectDownloadFile(workerdest="hello.json", workdir='wkdir',
                                blocksize=16384, maxsize=None, mode=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
-            .behavior(downloadString(read.append))
+            .download_string(read.append)
             .exit(0))
 
         self.expect_outcome(
@@ -1080,7 +1065,7 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin,
             ExpectDownloadFile(workerdest="hello.json", workdir='wkdir',
                                blocksize=16384, maxsize=None, mode=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
-            .behavior(downloadString(read.append))
+            .download_string(read.append)
             .exit(0))
 
         self.expect_outcome(
@@ -1138,7 +1123,7 @@ class TestJSONPropertiesDownload(TestBuildStepMixin, TestReactorMixin, unittest.
             ExpectDownloadFile(workerdest="props.json", workdir='wkdir',
                                blocksize=16384, maxsize=None, mode=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
-            .behavior(downloadString(read.append))
+            .download_string(read.append)
             .exit(0))
 
         self.expect_outcome(
