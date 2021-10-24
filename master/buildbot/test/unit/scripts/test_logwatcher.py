@@ -24,8 +24,8 @@ from buildbot.scripts.logwatcher import BuildmasterStartupError
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import ReconfigError
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
 
 

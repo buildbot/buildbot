@@ -27,7 +27,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import toJson
 
 try:

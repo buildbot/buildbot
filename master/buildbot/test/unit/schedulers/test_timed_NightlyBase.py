@@ -19,8 +19,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.schedulers import timed
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 try:
     from multiprocessing import Process

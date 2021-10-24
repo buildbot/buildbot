@@ -24,8 +24,8 @@ from buildbot.process.results import WARNINGS
 from buildbot.schedulers import base
 from buildbot.schedulers import dependent
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 SUBMITTED_AT_TIME = 111111111
 COMPLETE_AT_TIME = 222222222

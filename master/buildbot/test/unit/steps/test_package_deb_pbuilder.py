@@ -25,8 +25,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import pbuilder
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,

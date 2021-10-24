@@ -32,9 +32,9 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 from buildbot.test.util import logging
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
 

@@ -20,9 +20,9 @@ from twisted.trial import unittest
 
 from buildbot.process import results
 from buildbot.steps.source import Source
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class OldStyleSourceStep(Source):

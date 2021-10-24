@@ -17,8 +17,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import authz
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
 from buildbot.www.authz.endpointmatchers import BranchEndpointMatcher

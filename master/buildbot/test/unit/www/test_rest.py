@@ -23,8 +23,8 @@ from twisted.trial import unittest
 
 from buildbot.data.exceptions import InvalidQueryParameter
 from buildbot.test.fake import endpoint
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import authz

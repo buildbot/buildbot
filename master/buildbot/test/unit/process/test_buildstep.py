@@ -44,10 +44,10 @@ from buildbot.test.expect import ExpectStat
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import worker
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import eventually
 
 

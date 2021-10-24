@@ -19,9 +19,9 @@ from twisted.internet import defer
 from buildbot.data import base
 from buildbot.data import resultspec
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import pathmatch
 
 

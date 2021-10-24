@@ -24,9 +24,9 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces as util_interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 A_TIMESTAMP = 1341700729

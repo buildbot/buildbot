@@ -27,7 +27,7 @@ from buildbot import interfaces
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker import openstack
 
 

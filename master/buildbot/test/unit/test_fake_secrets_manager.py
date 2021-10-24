@@ -6,7 +6,7 @@ from buildbot.secrets.manager import SecretManager
 from buildbot.secrets.secret import SecretDetails
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.secrets import FakeSecretStorage
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class TestSecretsManager(TestReactorMixin, unittest.TestCase):

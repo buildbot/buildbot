@@ -23,8 +23,8 @@ from twisted.trial import unittest
 from buildbot.data import connector
 from buildbot.data.graphql import GraphQLConnector
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 try:
     import graphql

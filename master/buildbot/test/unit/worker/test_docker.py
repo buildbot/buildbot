@@ -24,7 +24,7 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.test.fake import docker
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker import docker as dockerworker
 
 

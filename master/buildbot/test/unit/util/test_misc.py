@@ -17,7 +17,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import util
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import misc
 
 

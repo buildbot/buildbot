@@ -31,8 +31,8 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import master
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 _COMSPEC_ENV = 'COMSPEC'
 

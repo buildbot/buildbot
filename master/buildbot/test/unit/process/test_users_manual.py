@@ -23,7 +23,7 @@ from twisted.trial import unittest
 
 from buildbot.process.users import manual
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class ManualUsersMixin:

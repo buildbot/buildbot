@@ -23,7 +23,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
 from buildbot.test.fake.fakeprotocol import FakeTrivialConnection as FakeBot
 from buildbot.test.fake.kube import KubeClientService
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.kubeclientservice import KubeError
 from buildbot.util.kubeclientservice import KubeHardcodedConfig
 from buildbot.worker import kubernetes

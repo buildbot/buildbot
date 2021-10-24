@@ -21,7 +21,7 @@ from twisted.trial import unittest
 from buildbot.mq import base
 from buildbot.mq import connector
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import service
 
 

@@ -17,7 +17,7 @@ from twisted.trial import unittest
 
 from buildbot.data import patches
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class Patch(TestReactorMixin, unittest.TestCase):

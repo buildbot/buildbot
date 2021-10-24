@@ -23,7 +23,7 @@ from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.www import change_hook
 from buildbot.www.hooks.gitlab import _HEADER_EVENT
 from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN

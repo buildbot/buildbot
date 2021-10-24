@@ -30,8 +30,8 @@ from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
 from buildbot.test.expect import ExpectUploadFile
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import sourcesteps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,

@@ -32,10 +32,10 @@ from buildbot.configurators.janitor import LogChunksJanitor
 from buildbot.process.results import SUCCESS
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.timed import Nightly
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import configurators
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
 

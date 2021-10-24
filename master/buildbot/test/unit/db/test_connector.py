@@ -24,8 +24,8 @@ from buildbot import config
 from buildbot.db import connector
 from buildbot.db import exceptions
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,

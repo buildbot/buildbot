@@ -34,9 +34,9 @@ from buildbot.schedulers.forcesched import PatchParameter
 from buildbot.schedulers.forcesched import StringParameter
 from buildbot.schedulers.forcesched import UserNameParameter
 from buildbot.schedulers.forcesched import oneCodebase
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,

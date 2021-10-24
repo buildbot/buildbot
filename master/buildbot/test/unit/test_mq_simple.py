@@ -20,7 +20,7 @@ from twisted.trial import unittest
 
 from buildbot.mq import simple
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class SimpleMQ(TestReactorMixin, unittest.TestCase):

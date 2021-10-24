@@ -23,7 +23,7 @@ from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.fakeprotocol import FakeTrivialConnection as FakeBot
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker.marathon import MarathonLatentWorker
 
 

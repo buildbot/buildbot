@@ -35,11 +35,11 @@ from buildbot.test.expect import ExpectRemoteRef
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.unit.steps.test_transfer import downloadString
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
 
 

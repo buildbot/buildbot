@@ -20,9 +20,9 @@ from twisted.trial import unittest
 
 from buildbot.mq import simple
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 from buildbot.test.util import tuplematching
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class Tests(interfaces.InterfaceTests):

@@ -21,8 +21,8 @@ from mock import Mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.www import ws
 

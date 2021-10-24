@@ -33,8 +33,8 @@ from buildbot.process.properties import Interpolate
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttp
 from buildbot.test.fake import kube as fakekube
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import config
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import kubeclientservice
 
 

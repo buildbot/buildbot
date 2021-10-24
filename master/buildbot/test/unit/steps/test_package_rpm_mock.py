@@ -21,8 +21,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.package.rpm import mock
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):

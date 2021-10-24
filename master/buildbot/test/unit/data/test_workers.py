@@ -23,9 +23,9 @@ from buildbot.data import resultspec
 from buildbot.data import workers
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 testData = [
     fakedb.Builder(id=40, name='b1'),

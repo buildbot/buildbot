@@ -25,8 +25,8 @@ from buildbot.reporters.github import GitHubStatusPush
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 

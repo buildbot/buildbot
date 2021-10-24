@@ -21,7 +21,7 @@ from twisted.trial import unittest
 
 from buildbot.process import metrics
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class TestMetricBase(TestReactorMixin, unittest.TestCase):

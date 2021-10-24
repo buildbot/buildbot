@@ -22,7 +22,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process import debug
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import service
 
 

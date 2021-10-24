@@ -20,8 +20,8 @@ from twisted.internet import defer
 
 from buildbot.db import model
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class FakeDBConnector:

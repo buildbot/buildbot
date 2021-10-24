@@ -38,7 +38,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class FakeChange:

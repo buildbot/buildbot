@@ -22,9 +22,9 @@ from twisted.trial import unittest
 from buildbot.data import schedulers
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 

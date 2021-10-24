@@ -22,7 +22,7 @@ from twisted.trial import unittest
 from buildbot.changes import base
 from buildbot.changes import manager
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 

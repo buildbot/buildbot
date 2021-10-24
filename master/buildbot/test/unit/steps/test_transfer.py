@@ -39,8 +39,8 @@ from buildbot.test.expect import ExpectRemoteRef
 from buildbot.test.expect import ExpectStat
 from buildbot.test.expect import ExpectUploadDirectory
 from buildbot.test.expect import ExpectUploadFile
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 def downloadString(memoizer, timestamp=None):

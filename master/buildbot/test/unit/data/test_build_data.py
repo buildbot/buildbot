@@ -21,9 +21,9 @@ from twisted.trial import unittest
 from buildbot.data import build_data
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):

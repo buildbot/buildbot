@@ -28,8 +28,8 @@ from buildbot.changes import gerritchangesource
 from buildbot.test import fakedb
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.change import Change
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 

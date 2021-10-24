@@ -36,8 +36,8 @@ from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectRmfile
 from buildbot.test.expect import ExpectStat
 from buildbot.test.expect import ExpectUploadFile
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 def uploadString(string):

@@ -22,8 +22,8 @@ from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.logging import LoggingMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.runprocess import RunProcess
 
 # windows returns rc 1, because exit status cannot indicate "signalled";

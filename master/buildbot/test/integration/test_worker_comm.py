@@ -32,7 +32,7 @@ from buildbot.process import botmaster
 from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.eventual import eventually
 from buildbot.worker import manager as workermanager
 from buildbot.worker.protocols.manager.pb import PBManager

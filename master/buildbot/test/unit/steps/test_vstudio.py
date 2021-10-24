@@ -26,8 +26,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import vstudio
 from buildbot.test.expect import ExpectShell
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 real_log = r"""
 1>------ Build started: Project: lib1, Configuration: debug Win32 ------

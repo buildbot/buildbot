@@ -34,9 +34,9 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakemq
 from buildbot.test.fake.botmaster import FakeBotMaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
-from buildbot.test.util.misc import TestReactorMixin
 
 
 @implementer(IConfigLoader)

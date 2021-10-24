@@ -20,7 +20,7 @@ from buildbot.process.properties import Property
 from buildbot.process.results import SUCCESS
 from buildbot.steps.cmake import CMake
 from buildbot.test.expect import ExpectShell
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.steps import BuildStepMixin
 
 

@@ -24,7 +24,7 @@ from buildbot.process.botmaster import BotMaster
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import RETRY
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class TestCleanShutdown(TestReactorMixin, unittest.TestCase):

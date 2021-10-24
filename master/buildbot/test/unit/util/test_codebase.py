@@ -17,8 +17,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import codebase
 from buildbot.util import state
 

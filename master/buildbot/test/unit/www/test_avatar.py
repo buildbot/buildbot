@@ -18,8 +18,8 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import auth
 from buildbot.www import avatar
 

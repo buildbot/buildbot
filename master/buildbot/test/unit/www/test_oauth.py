@@ -32,9 +32,9 @@ import buildbot
 from buildbot.process.properties import Secret
 from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 
 try:

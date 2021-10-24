@@ -20,7 +20,7 @@ from twisted.trial import unittest
 
 from buildbot import util
 from buildbot.asyncio import as_deferred
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class TestAsyncioTestLoop(TestReactorMixin, unittest.TestCase):

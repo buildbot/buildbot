@@ -27,9 +27,9 @@ from twisted.protocols import basic
 from twisted.trial import unittest
 
 from buildbot.schedulers import trysched
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):

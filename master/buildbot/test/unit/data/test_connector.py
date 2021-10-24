@@ -26,8 +26,8 @@ from buildbot.data import exceptions
 from buildbot.data import resultspec
 from buildbot.data import types
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class Tests(interfaces.InterfaceTests):

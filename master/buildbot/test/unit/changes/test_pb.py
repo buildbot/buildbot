@@ -21,9 +21,9 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.changes import pb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import pbmanager
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestPBChangeSource(changesource.ChangeSourceMixin,

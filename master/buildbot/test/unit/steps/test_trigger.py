@@ -30,9 +30,9 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import trigger
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
-from buildbot.test.util.misc import TestReactorMixin
 
 
 @implementer(interfaces.ITriggerableScheduler)

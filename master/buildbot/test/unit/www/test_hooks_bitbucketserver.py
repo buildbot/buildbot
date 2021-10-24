@@ -21,7 +21,7 @@ from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import unicode2bytes
 from buildbot.www import change_hook
 from buildbot.www.hooks.bitbucketserver import _HEADER_EVENT

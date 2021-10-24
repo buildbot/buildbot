@@ -20,8 +20,8 @@ from twisted.spread import pb as twisted_pb
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import protocols as util_protocols
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.protocols import base
 from buildbot.worker.protocols import pb
 

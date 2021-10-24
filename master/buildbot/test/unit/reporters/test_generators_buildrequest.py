@@ -24,8 +24,8 @@ from twisted.trial import unittest
 from buildbot.process.builder import Builder
 from buildbot.reporters.generators.buildrequest import BuildRequestGenerator
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 

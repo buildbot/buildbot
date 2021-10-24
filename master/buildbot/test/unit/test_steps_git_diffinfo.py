@@ -18,8 +18,8 @@ from twisted.trial import unittest
 from buildbot.process import results
 from buildbot.steps import gitdiffinfo
 from buildbot.test.expect import ExpectShell
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 try:
     import unidiff

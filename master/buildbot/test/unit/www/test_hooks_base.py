@@ -5,7 +5,7 @@ from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.www.change_hook import ChangeHookResource
 from buildbot.www.hooks.base import BaseHookHandler

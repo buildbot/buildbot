@@ -28,7 +28,7 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import unicode2bytes
 from buildbot.www.change_hook import ChangeHookResource
 from buildbot.www.hooks.github import _HEADER_EVENT

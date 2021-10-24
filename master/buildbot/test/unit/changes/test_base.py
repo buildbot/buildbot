@@ -20,8 +20,8 @@ from twisted.trial import unittest
 
 from buildbot.changes import base
 from buildbot.config import ConfigErrors
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 

@@ -25,8 +25,8 @@ from buildbot.process.properties import Secret
 from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
 
 gitJsonPayloadSinglePullrequest = """
 {

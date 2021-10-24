@@ -31,9 +31,9 @@ from buildbot.steps import shell
 from buildbot.test.expect import ExpectRemoteRef
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectUploadFile
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestShellCommandExecution(steps.BuildStepMixin,

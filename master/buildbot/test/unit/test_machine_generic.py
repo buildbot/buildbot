@@ -26,8 +26,8 @@ from buildbot.machine.generic import RemoteSshSuspendAction
 from buildbot.machine.generic import RemoteSshWakeAction
 from buildbot.machine.generic import RemoteSshWOLAction
 from buildbot.test.fake.private_tempdir import MockPrivateTemporaryDirectory
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import config
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 

@@ -29,9 +29,9 @@ from buildbot.statistics.storage_backends.influxdb_client import InfluxStorageSe
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import logging
 from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):

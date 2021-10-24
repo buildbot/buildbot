@@ -29,7 +29,7 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.worker import AbstractLatentWorker

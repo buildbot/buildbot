@@ -22,8 +22,8 @@ from twisted.trial import unittest
 
 from buildbot.secrets.providers.passwordstore import SecretInPass
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 

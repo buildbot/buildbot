@@ -22,9 +22,9 @@ from buildbot.data import builders
 from buildbot.data import resultspec
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):

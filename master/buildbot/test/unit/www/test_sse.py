@@ -19,9 +19,9 @@ import json
 
 from twisted.trial import unittest
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.unit.data import test_changes
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes

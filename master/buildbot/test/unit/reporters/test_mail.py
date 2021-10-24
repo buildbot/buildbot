@@ -32,8 +32,8 @@ from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.mail import MailNotifier
 from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import ssl

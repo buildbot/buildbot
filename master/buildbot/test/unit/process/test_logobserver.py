@@ -22,7 +22,7 @@ from twisted.trial import unittest
 from buildbot.process import log
 from buildbot.process import logobserver
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class MyLogObserver(logobserver.LogObserver):

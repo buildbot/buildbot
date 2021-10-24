@@ -13,22 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-import asyncio
 import os
 import sys
 from io import StringIO
 
-from twisted.internet import threads
 from twisted.python import log
-from twisted.python import threadpool
 from twisted.trial.unittest import TestCase
 
 import buildbot
-from buildbot.asyncio import AsyncIOLoopWithTwisted
 from buildbot.process.buildstep import BuildStep
-from buildbot.test.fake.reactor import NonThreadPool
-from buildbot.test.fake.reactor import TestReactor
-from buildbot.util.eventual import _setReactor
 
 
 class PatcherMixin:
@@ -67,41 +60,6 @@ class StdoutAssertionsMixin:
 
     def getStdout(self):
         return self.stdout.getvalue().strip()
-
-
-class TestReactorMixin:
-
-    """
-    Mix this in to get TestReactor as self.reactor which is correctly cleaned up
-    at the end
-    """
-    def setUpTestReactor(self, use_asyncio=False):
-
-        self.patch(threadpool, 'ThreadPool', NonThreadPool)
-        self.reactor = TestReactor()
-        _setReactor(self.reactor)
-
-        def deferToThread(f, *args, **kwargs):
-            return threads.deferToThreadPool(self.reactor, self.reactor.getThreadPool(),
-                                             f, *args, **kwargs)
-        self.patch(threads, 'deferToThread', deferToThread)
-
-        # During shutdown sequence we must first stop the reactor and only then
-        # set unset the reactor used for eventually() because any callbacks
-        # that are run during reactor.stop() may use eventually() themselves.
-        self.addCleanup(_setReactor, None)
-        self.addCleanup(self.reactor.stop)
-
-        if use_asyncio:
-            self.asyncio_loop = AsyncIOLoopWithTwisted(self.reactor)
-            asyncio.set_event_loop(self.asyncio_loop)
-            self.asyncio_loop.start()
-
-            def stop():
-                self.asyncio_loop.stop()
-                self.asyncio_loop.close()
-                asyncio.set_event_loop(None)
-            self.addCleanup(stop)
 
 
 class TimeoutableTestCase(TestCase):

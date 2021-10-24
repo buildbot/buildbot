@@ -8,8 +8,8 @@ from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class FakeBuildWithMaster(FakeBuild):

@@ -16,8 +16,8 @@
 
 from twisted.trial import unittest
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import resource
 
 

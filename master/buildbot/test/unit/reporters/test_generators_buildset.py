@@ -22,8 +22,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters import utils
 from buildbot.reporters.generators.buildset import BuildSetStatusGenerator
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 

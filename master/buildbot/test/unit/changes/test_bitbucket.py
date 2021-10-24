@@ -22,8 +22,8 @@ from twisted.web import client
 from twisted.web.error import Error
 
 from buildbot.changes.bitbucket import BitbucketPullrequestPoller
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class SourceRest():
