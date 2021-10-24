@@ -51,7 +51,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     stepClass = git.Git
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.sourceName = self.stepClass.__name__
         return self.setUpSourceStep()
 
@@ -3239,7 +3239,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
     stepClass = git.GitPush
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -3546,7 +3546,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
     stepClass = git.GitTag
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -3658,7 +3658,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
     stepClass = git.GitCommit
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.message_list = ['my commit', '42']
         self.path_list = ['file1.txt', 'file2.txt']
 

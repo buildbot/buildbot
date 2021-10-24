@@ -78,7 +78,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
         yield self.setUpDirs(self.basedir)

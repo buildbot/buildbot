@@ -269,7 +269,7 @@ class RealKubeClientServiceTest(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.createKube()
         yield self.kube.setServiceParent(self.master)

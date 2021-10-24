@@ -33,7 +33,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                       unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -279,7 +279,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -370,7 +370,7 @@ class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
                       unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -405,7 +405,7 @@ class TestUbuCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

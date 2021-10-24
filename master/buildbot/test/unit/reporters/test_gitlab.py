@@ -34,7 +34,7 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.setup_reporter_test()
         # repository must be in the form http://gitlab/<owner>/<project>

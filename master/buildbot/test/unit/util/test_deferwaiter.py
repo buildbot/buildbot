@@ -116,7 +116,7 @@ class WaiterTests(unittest.TestCase):
 class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def test_does_not_add_action_on_start(self):

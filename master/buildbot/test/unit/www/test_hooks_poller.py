@@ -48,7 +48,7 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
             self.called = True
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def setUpRequest(self, args, options=True, activate=True,

@@ -32,7 +32,7 @@ from buildbot.test.util import steps
 class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

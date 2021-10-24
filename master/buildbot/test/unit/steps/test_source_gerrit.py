@@ -29,7 +29,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                  TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpSourceStep()
 
     def tearDown(self):

@@ -26,7 +26,7 @@ from buildbot.test.util import endpoint
 class ResourceType(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     def makeResourceTypeSubclass(self, **attributes):
         attributes.setdefault('name', 'thing')

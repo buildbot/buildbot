@@ -36,7 +36,7 @@ class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
     """
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

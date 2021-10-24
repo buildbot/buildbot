@@ -27,7 +27,7 @@ class TestAsyncioTestLoop(TestReactorMixin, unittest.TestCase):
     maxDiff = None
 
     def setUp(self):
-        self.setUpTestReactor(use_asyncio=True)
+        self.setup_test_reactor(use_asyncio=True)
 
     def test_coroutine_schedule(self):
         d1 = defer.Deferred()

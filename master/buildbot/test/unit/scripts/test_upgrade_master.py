@@ -112,7 +112,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                                  unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()

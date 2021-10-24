@@ -40,7 +40,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_reporter_test()
         self.reporter_test_props = {
             'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]

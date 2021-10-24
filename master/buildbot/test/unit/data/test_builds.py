@@ -269,7 +269,7 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
                        'properties': {}}
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = builds.Build(self.master)

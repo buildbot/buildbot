@@ -37,7 +37,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     exp_bsid_brids = (123, {'b': 456})
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

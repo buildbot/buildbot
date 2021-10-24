@@ -97,7 +97,7 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin,
                  unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=False, wantDb=True,
                                              wantData=True)
         self.rtype = properties.Properties(self.master)

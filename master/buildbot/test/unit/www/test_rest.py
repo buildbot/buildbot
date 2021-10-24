@@ -38,7 +38,7 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     maxVersion = 3
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         [graphql]  # used for import side effect
 
     @defer.inlineCallbacks
@@ -72,7 +72,7 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = self.make_master(url='http://server/path/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
@@ -146,7 +146,7 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin,
                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = self.make_master(url='h:/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
@@ -247,7 +247,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = self.make_master(url='h:/')
         self.master.config.www['debug'] = True
         self.master.data._scanModule(endpoint)
@@ -698,7 +698,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin,
                               unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = self.make_master(url='h:/')
 
         def allow(*args, **kw):

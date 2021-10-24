@@ -810,7 +810,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                                             TestReactorMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.changeHook = change_hook.ChangeHookResource(
             dialects={'gitlab': True}, master=fakeMasterForHooks(self))
 
@@ -1005,7 +1005,7 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase, TestReactorMixin):
     _SECRET = 'thesecret'
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakeMasterForHooks(self)
 
         fakeStorageService = FakeSecretStorage()

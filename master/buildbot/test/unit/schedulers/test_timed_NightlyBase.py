@@ -38,7 +38,7 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin,
     SCHEDULERID = 33
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):

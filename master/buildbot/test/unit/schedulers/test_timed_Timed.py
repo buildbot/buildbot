@@ -27,7 +27,7 @@ class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     OBJECTID = 928754
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

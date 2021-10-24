@@ -46,7 +46,7 @@ class FakeManager:
 class TestActions(MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMixin,
                   unittest.TestCase):
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
 
     def tearDown(self):

@@ -32,7 +32,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         skip = 'unidiff is required for GitDiffInfo tests'
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

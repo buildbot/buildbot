@@ -136,7 +136,7 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
 class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True)
         self.mq = self.master.mq
         self.mq.verifyMessages = False
@@ -146,7 +146,7 @@ class TestSimpleMQ(TestReactorMixin, unittest.TestCase, RealTests):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.mq = simple.SimpleMQ()
         yield self.mq.setServiceParent(self.master)

@@ -111,7 +111,7 @@ class FakeLatentWorker(AbstractLatentWorker):
 class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         # a collection of rows that would otherwise clutter up every test
         self.setUpBuilderMixin()
         self.base_rows = [
@@ -480,7 +480,7 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 class TestGetBuilderId(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpBuilderMixin()
 
     @defer.inlineCallbacks
@@ -505,7 +505,7 @@ class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -558,7 +558,7 @@ class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -600,7 +600,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
     """Tests that a reconfig properly updates all attributes"""
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpBuilderMixin()
 
     @defer.inlineCallbacks

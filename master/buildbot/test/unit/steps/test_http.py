@@ -66,7 +66,7 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     timeout = 3  # those tests should not run long
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         if txrequests is None:
             raise unittest.SkipTest(
                 "Need to install txrequests to test http steps")

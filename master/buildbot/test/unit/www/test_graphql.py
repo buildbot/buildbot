@@ -38,7 +38,7 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.patch(connector.DataConnector, 'submodules', [])
-        self.setUpTestReactor(use_asyncio=True)
+        self.setup_test_reactor(use_asyncio=True)
         self.master = self.make_master(url="http://server/path/", wantGraphql=True)
         self.master.config.www["graphql"] = {"debug": True}
         self.rsrc = graphql.V3RootResource(self.master)
@@ -236,7 +236,7 @@ class DisabledV3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         skip = "graphql is required for V3RootResource tests"
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = self.make_master(url="http://server/path/")
         self.rsrc = graphql.V3RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)

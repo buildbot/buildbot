@@ -554,7 +554,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
     PRIVATE = TestTelegramContact.PRIVATE
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)

@@ -43,7 +43,7 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
 
     @defer.inlineCallbacks
     def setUpConnectorComponent(self, table_names=None, basedir='basedir', dialect_name='sqlite'):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         """Set up C{self.db}, using the given db_url and basedir."""
         if table_names is None:
@@ -70,7 +70,7 @@ class FakeConnectorComponentMixin(TestReactorMixin):
     # Just like ConnectorComponentMixin, but for working with fake database
 
     def setUpConnectorComponent(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
         self.db.checkForeignKeys = True

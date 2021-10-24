@@ -31,7 +31,7 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
     stepClass = gitlab.GitLab
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.sourceName = self.stepClass.__name__
         return self.setUpSourceStep()
 

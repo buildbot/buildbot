@@ -59,7 +59,7 @@ def downloadString(memoizer, timestamp=None):
 class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
@@ -288,7 +288,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
@@ -439,7 +439,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
@@ -832,7 +832,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
                        unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
@@ -939,7 +939,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
                          unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -1036,7 +1036,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -1124,7 +1124,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
 class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

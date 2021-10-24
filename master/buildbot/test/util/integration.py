@@ -88,7 +88,7 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
                             DebugIntegrationLogsMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setupDebugIntegrationLogs()
 
     def tearDown(self):

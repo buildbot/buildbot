@@ -33,7 +33,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin,
                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 

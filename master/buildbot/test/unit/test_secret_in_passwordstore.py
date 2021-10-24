@@ -33,7 +33,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         self.master = fakemaster.make_master(self)
         with mock.patch.object(Path, "is_file", return_value=True):

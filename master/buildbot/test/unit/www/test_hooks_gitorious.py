@@ -65,7 +65,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                                             TestReactorMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         dialects = {'gitorious': True}
         self.changeHook = change_hook.ChangeHookResource(
             dialects=dialects, master=fakeMasterForHooks(self))

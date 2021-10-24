@@ -27,7 +27,7 @@ from buildbot.www.authz import endpointmatchers
 class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = self.make_master(url='h:/a/b/')
         self.db = self.master.db
         self.matcher = self.makeMatcher()

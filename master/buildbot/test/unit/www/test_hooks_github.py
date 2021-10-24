@@ -620,7 +620,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.changeHook = _prepare_github_change_hook(
             self, strict=False, github_property_whitelist=["github.*"])
         self.master = self.changeHook.master
@@ -911,7 +911,7 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRef(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.changeHook = _prepare_github_change_hook(
             self, strict=False, github_property_whitelist=["github.*"],
             pullrequest_ref="head")
@@ -947,7 +947,7 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRefWithAuth(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         _token = '7e076f41-b73a-4045-a817'
         self.changeHook = _prepare_github_change_hook(
             self, strict=False, github_property_whitelist=["github.*"],
@@ -989,7 +989,7 @@ class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.changeHook = \
             _prepare_github_change_hook(self, strict=False, github_property_whitelist=["github.*"],
@@ -1036,7 +1036,7 @@ class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         _token = '7e076f41-b73a-4045-a817'
         self.changeHook = _prepare_github_change_hook(
             self, strict=False, skips=[r'\[ *bb *skip *\]'], token=_token)
@@ -1123,7 +1123,7 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         _token = '7e076f41-b73a-4045-a817'
         self.changeHook = _prepare_github_change_hook(
@@ -1245,7 +1245,7 @@ class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.changeHook = _prepare_github_change_hook(
             self, strict=False, github_api_endpoint='https://black.magic.io')
         self.master = self.changeHook.master
@@ -1279,7 +1279,7 @@ class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         _token = '7e076f41-b73a-4045-a817'
         self.changeHook = _prepare_github_change_hook(
@@ -1319,7 +1319,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
     _SECRET = 'somethingreallysecret'
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"secret_key": self._SECRET})
@@ -1433,7 +1433,7 @@ class TestChangeHookConfiguredWithCodebaseValue(unittest.TestCase,
                                                 TestReactorMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.changeHook = _prepare_github_change_hook(self, codebase='foobar')
 
     @defer.inlineCallbacks
@@ -1459,7 +1459,7 @@ class TestChangeHookConfiguredWithCodebaseFunction(unittest.TestCase,
                                                    TestReactorMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.changeHook = _prepare_github_change_hook(
             self, codebase=_codebase_function)
 
@@ -1482,7 +1482,7 @@ class TestChangeHookConfiguredWithCustomEventHandler(unittest.TestCase,
                                                      TestReactorMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         class CustomGitHubEventHandler(GitHubEventHandler):
             def handle_ping(self, _, __):

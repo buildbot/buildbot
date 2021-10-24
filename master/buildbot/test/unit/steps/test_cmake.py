@@ -27,7 +27,7 @@ from buildbot.test.util.steps import BuildStepMixin
 class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_build_step()
 
     def tearDown(self):

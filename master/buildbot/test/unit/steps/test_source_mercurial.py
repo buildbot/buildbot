@@ -36,7 +36,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                     unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpSourceStep()
 
     def tearDown(self):

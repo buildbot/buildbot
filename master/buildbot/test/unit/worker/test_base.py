@@ -118,7 +118,7 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
 class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.wrk = ConcreteWorker('wrk', 'pa')
 
     @defer.inlineCallbacks
@@ -137,7 +137,7 @@ class FakeWorkerItfc(TestReactorMixin, unittest.TestCase,
                      WorkerInterfaceTests):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.wrk = worker.FakeWorker(self.master)
 
@@ -150,7 +150,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpLogging()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
@@ -899,7 +899,7 @@ class TestAbstractLatentWorker(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
         yield self.master.workers.disownServiceParent()

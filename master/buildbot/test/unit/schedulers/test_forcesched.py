@@ -47,7 +47,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
     maxDiff = None
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

@@ -141,7 +141,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase,
     """
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.change_hook = change_hook.ChangeHookResource(
             dialects={'bitbucket': True}, master=fakeMasterForHooks(self))
 

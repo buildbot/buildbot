@@ -53,7 +53,7 @@ class TestGitPollerBase(MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         yield self.setUpChangeSource()
         yield self.master.startService()
@@ -1787,7 +1787,7 @@ class TestGitPollerConstructor(unittest.TestCase, TestReactorMixin, changesource
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
         yield self.master.startService()
 

@@ -66,7 +66,7 @@ class TestException(Exception):
 
 class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCase):
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         self.connections = {}
         self.patch(libvirtworker, "libvirt", libvirtfake)

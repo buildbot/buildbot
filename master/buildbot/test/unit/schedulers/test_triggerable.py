@@ -38,7 +38,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
     SCHEDULERID = 13
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         # Necessary to get an assertable submitted_at time.
         self.reactor.advance(946684799)
 

@@ -41,7 +41,7 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
     @defer.inlineCallbacks
     def setUpMigrateTest(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.basedir = os.path.abspath("basedir")
         self.setUpDirs('basedir')
 

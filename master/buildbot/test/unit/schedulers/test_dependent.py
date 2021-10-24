@@ -37,7 +37,7 @@ UPSTREAM_NAME = 'uppy'
 class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

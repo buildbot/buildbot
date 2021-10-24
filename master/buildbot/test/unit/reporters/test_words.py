@@ -43,7 +43,7 @@ class ContactMixin(TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.patch(reactor, 'seconds', self.reactor.seconds)
         self.patch(reactor, 'stop', self.reactor.stop)

@@ -256,7 +256,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Worker(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = workers.Worker(self.master)

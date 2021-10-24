@@ -31,7 +31,7 @@ class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def setUp(self, version):
         warnings.simplefilter('ignore')
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.srvcVault = HashiCorpVaultSecretProvider(vaultServer="http://vaultServer",
                                                       vaultToken="someToken",
                                                       apiVersion=version)

@@ -128,7 +128,7 @@ class TestResultSetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = test_result_sets.TestResultSet(self.master)
 

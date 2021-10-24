@@ -30,7 +30,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.maildir = os.path.abspath("maildir")
 
         yield self.setUpChangeSource()

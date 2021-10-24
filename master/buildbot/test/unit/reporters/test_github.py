@@ -35,7 +35,7 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixi
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.setup_reporter_test()
         # project must be in the form <owner>/<project>
@@ -223,7 +223,7 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.setup_reporter_test()
         # project must be in the form <owner>/<project>

@@ -168,7 +168,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = builders.Builder(self.master)

@@ -49,7 +49,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
         return sched
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

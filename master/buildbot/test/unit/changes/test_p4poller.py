@@ -116,7 +116,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         yield self.setUpChangeSource()
 

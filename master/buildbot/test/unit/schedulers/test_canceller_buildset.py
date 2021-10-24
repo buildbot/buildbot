@@ -29,7 +29,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
 

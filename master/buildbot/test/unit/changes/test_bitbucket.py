@@ -260,7 +260,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                                      unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         # create pull requests
         self.date = "2013-10-15T20:38:20.001797+00:00"

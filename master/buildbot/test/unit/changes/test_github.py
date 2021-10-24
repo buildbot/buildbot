@@ -180,7 +180,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
                                   unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
 
         fake_storage_service = FakeSecretStorage()

@@ -42,7 +42,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         return worker
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.build = Properties(
             image='busybox:latest', builder='docker_worker', distro='wheezy')

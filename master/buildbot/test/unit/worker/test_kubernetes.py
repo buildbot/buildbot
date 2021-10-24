@@ -41,7 +41,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
     worker = None
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):

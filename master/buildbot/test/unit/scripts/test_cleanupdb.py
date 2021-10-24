@@ -60,7 +60,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                     TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.origcwd = os.getcwd()
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:

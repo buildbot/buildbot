@@ -40,7 +40,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase,
                  'b': {'repository': '', 'branch': 'master'}}
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.db = self.master.db
         self.object = FakeObject(self.master, self.codebases)

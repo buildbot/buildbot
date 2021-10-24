@@ -168,7 +168,7 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = steps.Step(self.master)

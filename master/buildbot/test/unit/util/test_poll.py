@@ -33,7 +33,7 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
             raise RuntimeError('oh noes')
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = mock.Mock()
         self.master.reactor = self.reactor
 
@@ -193,7 +193,7 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
             raise RuntimeError('oh noes')
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = mock.Mock()
         self.master.reactor = self.reactor
 

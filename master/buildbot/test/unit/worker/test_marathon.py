@@ -29,7 +29,7 @@ from buildbot.worker.marathon import MarathonLatentWorker
 
 class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.build = Properties(
             image="busybox:latest", builder="docker_worker")
         self.worker = None

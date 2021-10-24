@@ -127,7 +127,7 @@ Warning: Unable to extract the base list for
 class BuildEPYDoc(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -148,7 +148,7 @@ class BuildEPYDoc(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -414,7 +414,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -502,7 +502,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

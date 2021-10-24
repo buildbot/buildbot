@@ -208,7 +208,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     """
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -334,7 +334,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -431,7 +431,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -571,7 +571,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
               unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -644,7 +644,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
                      unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -700,7 +700,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
               unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -725,7 +725,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -750,7 +750,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
                unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -774,7 +774,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
 class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -859,7 +859,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

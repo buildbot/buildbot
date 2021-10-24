@@ -35,7 +35,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
                  unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -169,7 +169,7 @@ class TestSourceDescription(steps.BuildStepMixin, TestReactorMixin,
                             unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -206,7 +206,7 @@ class TestSourceAttrGroup(sourcesteps.SourceStepMixin, TestReactorMixin,
                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

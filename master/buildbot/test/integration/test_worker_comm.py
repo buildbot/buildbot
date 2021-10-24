@@ -163,7 +163,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
                                              wantDb=True)
 

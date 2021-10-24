@@ -179,7 +179,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     }
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = changes.Change(self.master)

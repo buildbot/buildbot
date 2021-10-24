@@ -33,7 +33,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     SCHEDULERID = 3
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def makeScheduler(self, firstBuildDuration=0, firstBuildError=False, exp_branch=None, **kwargs):

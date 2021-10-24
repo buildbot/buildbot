@@ -167,7 +167,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
     @defer.inlineCallbacks
     def setUp(self):
         CommonTestCase.setUp(self)
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         master = self.make_master(
             url='http://a/b/',

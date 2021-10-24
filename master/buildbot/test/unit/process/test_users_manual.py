@@ -50,7 +50,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin,
                                             ManualUsersMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpManualUsers()
 
     def call_perspective_commandline(self, *args):
@@ -221,7 +221,7 @@ class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpManualUsers()
         self.manual_component = manual.CommandlineUserManager(username="user",
                                                               passwd="userpw",

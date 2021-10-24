@@ -65,7 +65,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor(use_asyncio=True)
+        self.setup_test_reactor(use_asyncio=True)
 
         master = fakemaster.make_master(self)
         master.db = fakedb.FakeDBConnector(self)

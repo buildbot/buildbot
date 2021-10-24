@@ -687,7 +687,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                                             TestReactorMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.change_hook = change_hook.ChangeHookResource(
             dialects={'bitbucketcloud': {
                     'bitbucket_property_whitelist': ["bitbucket.*"],

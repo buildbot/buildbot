@@ -12,7 +12,7 @@ from buildbot.test.reactor import TestReactorMixin
 class TestSecretsManager(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.master.config.secretsProviders = [FakeSecretStorage(secretdict={"foo": "bar",
                                                                              "other": "value"})]

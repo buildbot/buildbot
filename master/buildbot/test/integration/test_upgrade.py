@@ -111,7 +111,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     # save subclasses the trouble of calling our setUp and tearDown methods
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpUpgradeTest()
 
     def tearDown(self):

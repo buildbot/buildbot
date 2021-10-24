@@ -31,7 +31,7 @@ from buildbot.www import sse
 class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = master = self.make_master(url=b'h:/a/b/')
         self.sse = sse.EventResource(master)
 

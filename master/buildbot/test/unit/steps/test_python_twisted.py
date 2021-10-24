@@ -94,7 +94,7 @@ FAILED (failures=8)
 class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -357,7 +357,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -425,7 +425,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

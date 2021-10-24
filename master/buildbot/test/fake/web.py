@@ -24,7 +24,7 @@ from buildbot.test.fake import fakemaster
 
 
 def fakeMasterForHooks(testcase):
-    # testcase must derive from TestReactorMixin and setUpTestReactor()
+    # testcase must derive from TestReactorMixin and setup_test_reactor()
     # must be called before calling this function.
 
     master = fakemaster.make_master(testcase, wantData=True)

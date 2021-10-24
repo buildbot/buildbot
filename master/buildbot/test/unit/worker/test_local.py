@@ -33,7 +33,7 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
         skip = "buildbot-worker package is not installed"
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
         self.workers = self.master.workers

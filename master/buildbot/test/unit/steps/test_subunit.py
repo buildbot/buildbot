@@ -56,7 +56,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         if TestProtocolClient is None:
             raise unittest.SkipTest("Need to install python-subunit to test subunit step")
 
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):

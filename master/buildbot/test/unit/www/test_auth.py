@@ -43,7 +43,7 @@ class AuthRootResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin,
                        unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpAuthResource()
         self.rsrc = auth.AuthRootResource(self.master)
 
@@ -63,7 +63,7 @@ class AuthRootResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin,
 class AuthBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.auth = auth.AuthBase()
         self.master = self.make_master(url='h:/a/b/')
         self.auth.master = self.master
@@ -109,7 +109,7 @@ class NoAuth(unittest.TestCase):
 class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.auth = auth.RemoteUserAuth(header=b'HDR')
         self.make_master()
         self.request = self.make_request(b'/')
@@ -146,7 +146,7 @@ class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 class AuthRealm(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.auth = auth.RemoteUserAuth(header=b'HDR')
         self.auth = auth.NoAuth()
         self.make_master()
@@ -162,7 +162,7 @@ class TwistedICredAuthBase(TestReactorMixin, www.WwwTestMixin,
                            unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     # twisted.web makes it difficult to simulate the authentication process, so
     # this only tests the mechanics of the getLoginResource method.
@@ -201,7 +201,7 @@ class CustomAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             return us == 'fellow' and ps == 'correct'
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def test_callable(self):
@@ -218,7 +218,7 @@ class LoginResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin,
                     unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpAuthResource()
 
     @defer.inlineCallbacks
@@ -235,7 +235,7 @@ class PreAuthenticatedLoginResource(TestReactorMixin, www.WwwTestMixin,
                                     AuthResourceMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpAuthResource()
         self.rsrc = auth.PreAuthenticatedLoginResource(self.master, 'him')
 
@@ -262,7 +262,7 @@ class LogoutResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin,
                      unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpAuthResource()
         self.rsrc = auth.LogoutResource(self.master)
 

@@ -38,7 +38,7 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
                                             unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
@@ -75,7 +75,7 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
                                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
@@ -114,7 +114,7 @@ class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
                                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path

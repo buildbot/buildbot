@@ -36,7 +36,7 @@ class TestChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
 
     def tearDown(self):
@@ -88,7 +88,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
 
         with assertProducesWarnings(DeprecatedApiWarning,
@@ -197,7 +197,7 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         yield self.setUpChangeSource()
 

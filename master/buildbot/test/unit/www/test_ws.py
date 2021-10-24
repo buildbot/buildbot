@@ -29,7 +29,7 @@ from buildbot.www import ws
 
 class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
-        self.setUpTestReactor(use_asyncio=True)
+        self.setup_test_reactor(use_asyncio=True)
         self.master = master = self.make_master(
             url="h:/a/b/", wantMq=True, wantGraphql=True
         )

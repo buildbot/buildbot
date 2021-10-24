@@ -62,7 +62,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
 
@@ -525,7 +525,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin,
         return cls(config["CLIENTID"], config["CLIENTSECRET"])
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")

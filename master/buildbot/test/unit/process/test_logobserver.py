@@ -46,7 +46,7 @@ class MyLogObserver(logobserver.LogObserver):
 class TestLogObserver(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
 
     @defer.inlineCallbacks
@@ -95,7 +95,7 @@ class MyLogLineObserver(logobserver.LogLineObserver):
 class TestLineConsumerLogObesrver(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
 
     @defer.inlineCallbacks
@@ -160,7 +160,7 @@ class TestLineConsumerLogObesrver(TestReactorMixin, unittest.TestCase):
 class TestLogLineObserver(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
 
     @defer.inlineCallbacks
@@ -197,7 +197,7 @@ class TestLogLineObserver(TestReactorMixin, unittest.TestCase):
 class TestOutputProgressObserver(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
 
     @defer.inlineCallbacks
@@ -217,7 +217,7 @@ class TestOutputProgressObserver(TestReactorMixin, unittest.TestCase):
 class TestBufferObserver(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
 
     @defer.inlineCallbacks

@@ -40,7 +40,7 @@ def _prepare_request(payload, headers=None):
 
 class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.changeHook = _prepare_base_change_hook(self)
 
     @defer.inlineCallbacks
@@ -102,7 +102,7 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
 class TestChangeHookConfiguredWithCustomBase(unittest.TestCase,
                                              TestReactorMixin):
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         class CustomBase(BaseHookHandler):
             def getChanges(self, request):

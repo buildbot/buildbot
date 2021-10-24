@@ -40,7 +40,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
     FAKE_PID = 1234
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpLogging()
         self.process = None
         self.reactor.spawnProcess = self.fake_spawn_process

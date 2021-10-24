@@ -35,7 +35,7 @@ from buildbot.www.authz.roles import RolesFromOwner
 class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         authzcfg = authz.Authz(
             # simple matcher with '*' glob character
             stringsMatcher=authz.fnmatchStrMatcher,

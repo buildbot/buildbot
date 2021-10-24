@@ -40,7 +40,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpPBChangeSource()
         yield self.setUpChangeSource()
 
@@ -216,7 +216,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
 class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
 
     @defer.inlineCallbacks

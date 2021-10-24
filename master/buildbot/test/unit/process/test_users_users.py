@@ -25,7 +25,7 @@ from buildbot.test.reactor import TestReactorMixin
 class UsersTests(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
         self.test_sha = users.encrypt("cancer")

@@ -37,7 +37,7 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpRealDatabase(table_names=[
             'changes', 'change_properties', 'change_files', 'patches',
             'sourcestamps', 'buildset_properties', 'buildsets',

@@ -30,7 +30,7 @@ class TestReactorMixin:
     Mix this in to get TestReactor as self.reactor which is correctly cleaned up
     at the end
     """
-    def setUpTestReactor(self, use_asyncio=False):
+    def setup_test_reactor(self, use_asyncio=False):
 
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()

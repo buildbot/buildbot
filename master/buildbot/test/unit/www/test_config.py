@@ -32,7 +32,7 @@ from buildbot.www import config
 class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def test_render(self):

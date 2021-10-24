@@ -42,7 +42,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                                 unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -204,7 +204,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
 class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -252,7 +252,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -415,7 +415,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
 class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -542,7 +542,7 @@ class SetPropertyDeprecation(unittest.TestCase):
 class Configure(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -570,7 +570,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
                                   unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -912,7 +912,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
 class Compile(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setup_build_step()
 
     def tearDown(self):
@@ -935,7 +935,7 @@ class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
            unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_build_step()
 
     def tearDown(self):

@@ -39,7 +39,7 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
     def setUp(self):
         if not graphql:
             raise unittest.SkipTest('Test requires graphql-core module installed')
-        self.setUpTestReactor(use_asyncio=True)
+        self.setup_test_reactor(use_asyncio=True)
         self.master = fakemaster.make_master(self)
         # don't load by default
         self.all_submodules = connector.DataConnector.submodules
@@ -137,7 +137,7 @@ class TestGraphQlConnectorService(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         if not graphql:
             raise unittest.SkipTest('Test requires graphql-core module installed')
-        self.setUpTestReactor(use_asyncio=False)
+        self.setup_test_reactor(use_asyncio=False)
 
     @defer.inlineCallbacks
     def test_start_stop(self):

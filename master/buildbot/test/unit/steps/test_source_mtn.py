@@ -42,7 +42,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
     MTN_VER = 'monotone 1.0 (base revision: UNKNOWN_REV)'
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpSourceStep()
 
     def tearDown(self):
