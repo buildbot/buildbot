@@ -326,7 +326,7 @@ class TestBuildStepMixin:
     def expect_build_data(self, name, value, source):
         self._exp_build_data[name] = (value, source)
 
-    def expect_hidden(self, hidden):
+    def expect_hidden(self, hidden=True):
         """
         Set whether the step is expected to be hidden.
         """
