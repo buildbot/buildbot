@@ -555,8 +555,13 @@ class JSONStringDownload(StringDownload):
 
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
-        s = json.dumps(o)
-        super().__init__(s=s, workerdest=workerdest, **buildstep_kwargs)
+        super().__init__(s=o, workerdest=workerdest, **buildstep_kwargs)
+
+    @defer.inlineCallbacks
+    def run(self):
+        self.s = json.dumps(self.s)
+        res = yield super().run()
+        return res
 
 
 class JSONPropertiesDownload(StringDownload):
