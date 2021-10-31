@@ -35,9 +35,10 @@ class Debouncer:
         'stopped',
         'completeDeferreds',
         'get_reactor',
+        'until_idle',
     ]
 
-    def __init__(self, wait, function, get_reactor):
+    def __init__(self, wait, function, get_reactor, until_idle):
         # time to wait
         self.wait = wait
         # zero-argument callable to invoke
@@ -52,6 +53,8 @@ class Debouncer:
         self.completeDeferreds = []
         # for tests
         self.get_reactor = get_reactor
+        # invoke after wait s of idle
+        self.until_idle = until_idle
 
     def __call__(self):
         if self.stopped:
@@ -60,9 +63,12 @@ class Debouncer:
         if phase == PH_IDLE:
             self.timer = self.get_reactor().callLater(self.wait, self.invoke)
             self.phase = PH_WAITING
+        elif phase == PH_WAITING:
+            if self.until_idle:
+                self.timer.reset(self.wait)
         elif phase == PH_RUNNING:
             self.phase = PH_RUNNING_QUEUED
-        else:  # phase == PH_WAITING or phase == PH_RUNNING_QUEUED:
+        else:  # phase == PH_RUNNING_QUEUED:
             pass
 
     def __repr__(self):
@@ -105,11 +111,12 @@ class Debouncer:
 
 
 class _Descriptor:
-    def __init__(self, fn, wait, attrName, get_reactor):
+    def __init__(self, fn, wait, attrName, get_reactor, until_idle):
         self.fn = fn
         self.wait = wait
         self.attrName = attrName
         self.get_reactor = get_reactor
+        self.until_idle = until_idle
 
     def __get__(self, instance, cls):
         try:
@@ -119,6 +126,7 @@ class _Descriptor:
                 self.wait,
                 functools.partial(self.fn, instance),
                 functools.partial(self.get_reactor, instance),
+                self.until_idle,
             )
             setattr(instance, self.attrName, db)
         return db
@@ -128,9 +136,9 @@ def _get_reactor_from_master(o):
     return o.master.reactor
 
 
-def method(wait, get_reactor=_get_reactor_from_master):
+def method(wait, until_idle=False, get_reactor=_get_reactor_from_master):
     def wrap(fn):
         stateName = "__debounce_" + fn.__name__ + "__"
-        return _Descriptor(fn, wait, stateName, get_reactor)
+        return _Descriptor(fn, wait, stateName, get_reactor, until_idle)
 
     return wrap

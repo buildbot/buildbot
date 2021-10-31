@@ -32,6 +32,13 @@ class DebouncedClass:
 
     @debounce.method(wait=4.0, get_reactor=lambda self: self.reactor)
     def maybe(self):
+        return self._maybe()
+
+    @debounce.method(wait=4.0, until_idle=True, get_reactor=lambda self: self.reactor)
+    def maybe_until_idle(self):
+        return self._maybe()
+
+    def _maybe(self):
         assert not self.callDeferred
         self.calls += 1
         log.msg('debounced function called')
@@ -60,6 +67,8 @@ class DebounceTest(unittest.TestCase):
                 self.clock.advance(t - self.clock.seconds())
             if e == 'maybe':
                 db.maybe()
+            elif e == 'maybe_until_idle':
+                db.maybe_until_idle()
             elif e == 'called':
                 db.expCalls += 1
             elif e == 'complete':
@@ -112,6 +121,21 @@ class DebounceTest(unittest.TestCase):
             (1, 5.0, 'check'),
             (1, 6.0, 'complete'),
             (1, 7.0, 'check'),
+        ])
+
+    def test_coalesce_calls_until_idle(self):
+        """Multiple calls are coalesced during 4 seconds, but the function
+        runs 4 seconds after the last call."""
+        self.scenario([
+            (1, 0.0, 'maybe_until_idle'),
+            (1, 1.0, 'maybe_until_idle'),
+            (1, 2.0, 'maybe_until_idle'),
+            (1, 3.0, 'maybe_until_idle'),
+            (1, 4.0, 'check'),  # should not be called at that time
+            (1, 7.0, 'called'),
+            (1, 8.0, 'check'),
+            (1, 9.0, 'complete'),
+            (1, 10.0, 'check'),
         ])
 
     def test_second_call_during_first(self):
