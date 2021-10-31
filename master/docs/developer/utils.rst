@@ -464,22 +464,25 @@ It's often necessary to perform some action in response to a particular type of 
 For example, steps need to update their status after updates arrive from the worker.
 However, when many events arrive in quick succession, it's more efficient to only perform the action once, after the last event has occurred.
 
-The ``debounce.method(wait)`` decorator is the tool for the job.
+The ``debounce.method(wait, until_idle=False)`` decorator is the tool for the job.
 
-.. py:function:: method(wait, get_reactor)
+.. py:function:: method(wait, until_idle=False, get_reactor)
 
     :param wait: time to wait before invoking, in seconds
+    :param until_idle: resets the timer on every call
     :param get_reactor: A callable that takes the underlying instance and returns the reactor to use. Defaults to ``instance.master.reactor``.
 
     Returns a decorator that debounces the underlying method.
     The underlying method must take no arguments (except ``self``).
 
-    For each call to the decorated method, the underlying method will be invoked at least once within *wait* seconds (plus the time the method takes to execute).
-    Calls are "debounced" during that time, meaning that multiple calls to the decorated method will result in a single invocation.
+    Calls are "debounced", meaning that multiple calls to the decorated method will result in a single invocation.
 
-    .. note::
+    When `until_idle` is `True`, the underlying method will be called after *wait* seconds have elapsed since the last time the decorated method have been called.
+    In case of constant stream, it will never be called.
 
-        This functionality is similar to Underscore's ``debounce``, except that the Underscore method resets its timer on every call.
+    When `until_idle` is `False`, the underlying method will be called after *wait* seconds have elapsed since the first time the decorated method have been called.
+    In case of constant stream, it will called about once every *wait* seconds (plus the time the method takes to execute)
+
 
     The decorated method is an instance of :py:class:`Debouncer`, allowing it to be started and stopped.
     This is useful when the method is a part of a Buildbot service: call ``method.start()`` from ``startService`` and ``method.stop()`` from ``stopService``, handling its Deferred appropriately.
