@@ -252,12 +252,8 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     def getBuilders(self):
         return list(self.builders.values())
 
-    @defer.inlineCallbacks
     def getBuilderById(self, builderid):
-        for builder in self.getBuilders():
-            if builderid == (yield builder.getBuilderId()):
-                return builder
-        return None
+        return self._builders_byid.get(builderid)
 
     @defer.inlineCallbacks
     def startService(self):
@@ -380,6 +376,9 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                 yield builder.setServiceParent(self)
 
         self.builderNames = list(self.builders)
+        self._builders_byid = {}
+        for builder in self.builders.values():
+            self._builders_byid[(yield builder.getBuilderId())] = builder
 
         yield self.master.data.updates.updateBuilderList(
             self.master.masterid, [util.bytes2unicode(n) for n in self.builderNames]
