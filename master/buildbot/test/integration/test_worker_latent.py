@@ -821,6 +821,8 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.assertBuildResults(1, RETRY)
 
         # Now check that the build requeued and finished with success
+        # after the debounce delay
+        self.reactor.advance(1)
         yield controller.start_instance(True)
 
         yield self.assertBuildResults(2, None)
@@ -1153,6 +1155,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
 
         # Indicate that the worker can't start an instance.
         yield controller.start_instance(False)
+        self.reactor.advance(1)
 
         yield self.assertBuildResults(1, RETRY)
         self.assertEqual(
@@ -1160,6 +1163,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
         yield controller.auto_stop(True)
+        yield controller.start_instance(False)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -1475,7 +1479,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
 
         # create build request while machine is still awake. It should not
         # suspend regardless of how much time passes
-        self.reactor.advance(4.9)
+        self.reactor.advance(3.9)
         self.assertEqual(machine_controller.machine.state,
                          MachineStates.STARTED)
         yield self.create_build_request([builder_id])

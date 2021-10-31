@@ -111,6 +111,7 @@ class Tests(RunFakeMasterTestCase):
                  'project': ''},
             ],
         )
+        self.master.reactor.advance(1)
 
         # The worker fails to substantiate.
         controller.start_instance(True)
@@ -165,6 +166,7 @@ class Tests(RunFakeMasterTestCase):
                  'project': ''},
             ],
         )
+        self.master.reactor.advance(1)
 
         self.assertEqual(len(started_builds), 1)
 
