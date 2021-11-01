@@ -21,7 +21,7 @@ decorator==5.1.0
 dicttoxml==1.7.4
 docker==5.0.3
 docutils==0.18
-flake8==3.9.2
+flake8==4.0.1
 funcsigs==1.0.2
 future==0.18.2
 graphql-core==3.1.5
