@@ -23,7 +23,7 @@ from twisted.internet import defer
 from twisted.spread import pb
 from twisted.trial import unittest
 
-from buildbot import pbmanager
+from buildbot.worker.protocols.manager.pb import PBManager
 
 
 class FakeMaster:
@@ -41,7 +41,7 @@ class TestPBManager(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.pbm = pbmanager.PBManager()
+        self.pbm = PBManager()
         yield self.pbm.setServiceParent(FakeMaster())
         self.pbm.startService()
         self.connections = []
