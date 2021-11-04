@@ -18,8 +18,8 @@ from twisted.trial import unittest
 from buildbot.process import results
 from buildbot.steps import gitdiffinfo
 from buildbot.test.expect import ExpectShell
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 
 try:
     import unidiff
@@ -27,16 +27,16 @@ except ImportError:
     unidiff = None
 
 
-class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     if not unidiff:
         skip = 'unidiff is required for GitDiffInfo tests'
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_merge_base_failure(self):
         self.setup_step(gitdiffinfo.GitDiffInfo())
@@ -59,7 +59,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .log('stdio-diff', stderr='fatal: ambiguous argument')
             .exit(1),
             )
-        self.expect_logfile('stdio-merge-base', '1234123412341234')
+        self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', 'fatal: ambiguous argument')
         self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
         return self.run_step()
@@ -75,7 +75,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .log('stdio-diff', stdout='')
             .exit(0),
             )
-        self.expect_logfile('stdio-merge-base', '1234123412341234')
+        self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', '')
         self.expect_outcome(result=results.SUCCESS, state_string="GitDiffInfo")
         self.expect_build_data('diffinfo-master', b'[]', 'GitDiffInfo')
@@ -123,7 +123,7 @@ index 0000000..632e269
 ''')
             .exit(0)
             )
-        self.expect_logfile('stdio-merge-base', '1234123412341234')
+        self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_outcome(result=results.SUCCESS, state_string="GitDiffInfo")
 
         diff_info = (

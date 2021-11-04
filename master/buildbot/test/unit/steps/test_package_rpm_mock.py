@@ -21,18 +21,18 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.package.rpm import mock
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_no_root(self):
         with self.assertRaises(config.ConfigErrors):
@@ -96,15 +96,15 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
+class TestMockBuildSRPM(TestBuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_no_spec(self):
         with self.assertRaises(config.ConfigErrors):
@@ -128,15 +128,15 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
+class TestMockRebuild(TestBuildStepMixin, TestReactorMixin,
                       unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_no_srpm(self):
         with self.assertRaises(config.ConfigErrors):

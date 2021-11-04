@@ -30,9 +30,9 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import trigger
 from buildbot.test import fakedb
-from buildbot.test.util import steps
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util.interfaces import InterfaceTests
-from buildbot.test.util.misc import TestReactorMixin
 
 
 @implementer(interfaces.ITriggerableScheduler)
@@ -96,14 +96,14 @@ def BRID_TO_BUILD_NUMBER(brid):
     return brid + 4000
 
 
-class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     @defer.inlineCallbacks
     def setup_step(self, step, sourcestampsInBuild=None, gotRevisionsInBuild=None, *args, **kwargs):

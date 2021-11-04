@@ -22,8 +22,8 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.schedulers import basic
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class CommonStuffMixin:
@@ -95,7 +95,7 @@ class BaseBasicScheduler(CommonStuffMixin,
             return self.master.db.schedulers.getChangeClassifications(schedulerid)
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -356,7 +356,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         return ch
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -492,7 +492,7 @@ class AnyBranchScheduler(CommonStuffMixin,
     OBJECTID = 246
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

@@ -22,8 +22,8 @@ from twisted.web import client
 from twisted.web.error import Error
 
 from buildbot.changes.bitbucket import BitbucketPullrequestPoller
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class SourceRest():
@@ -260,7 +260,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                                      unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         # create pull requests
         self.date = "2013-10-15T20:38:20.001797+00:00"

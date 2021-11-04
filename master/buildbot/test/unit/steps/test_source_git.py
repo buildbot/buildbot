@@ -35,11 +35,11 @@ from buildbot.test.expect import ExpectRemoteRef
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.unit.steps.test_transfer import downloadString
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
 
 
@@ -51,7 +51,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     stepClass = git.Git
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.sourceName = self.stepClass.__name__
         return self.setUpSourceStep()
 
@@ -593,7 +593,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'),
-            wantDefaultWorkdir=False)
+            want_default_work_dir=False)
         workdir = '/myworkdir/workdir'
         self.build.workdir = workdir
 
@@ -3233,17 +3233,17 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='unknown')
 
 
-class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
+class TestGitPush(TestBuildStepMixin, config.ConfigErrorsMixin,
                   TestReactorMixin,
                   unittest.TestCase):
     stepClass = git.GitPush
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_push_simple(self):
         url = 'ssh://github.com/test/test.git'
@@ -3541,16 +3541,16 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             self.stepClass(workdir='wkdir', repourl="url")
 
 
-class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
+class TestGitTag(TestBuildStepMixin, config.ConfigErrorsMixin,
                  TestReactorMixin, unittest.TestCase):
     stepClass = git.GitTag
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_tag_annotated(self):
         messages = ['msg1', 'msg2']
@@ -3652,20 +3652,20 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.flushLoggedErrors(WorkerSetupError)
 
 
-class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
+class TestGitCommit(TestBuildStepMixin, config.ConfigErrorsMixin,
                     TestReactorMixin,
                     unittest.TestCase):
     stepClass = git.GitCommit
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.message_list = ['my commit', '42']
         self.path_list = ['file1.txt', 'file2.txt']
 
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_add_fail(self):
         self.setup_step(

@@ -27,8 +27,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters import utils
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import logging
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
@@ -38,7 +38,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         """)
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -445,7 +445,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 class TestURLUtils(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
 
     def test_UrlForBuild(self):

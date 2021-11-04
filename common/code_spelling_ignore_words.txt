@@ -1437,6 +1437,7 @@ teardown
 teardownbasedir
 tempfile
 terminateprocess
+testbuildstepmixin
 testcase
 testcases
 testchanges

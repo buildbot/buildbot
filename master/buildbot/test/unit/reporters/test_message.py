@@ -32,8 +32,8 @@ from buildbot.reporters import message
 from buildbot.reporters import utils
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.misc import BuildDictLookAlike
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -133,7 +133,7 @@ class TestMessageFormatting(unittest.TestCase):
 class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     def setupDb(self, results1, results2):

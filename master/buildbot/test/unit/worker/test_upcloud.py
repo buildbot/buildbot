@@ -25,7 +25,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
 from buildbot.test.fake.fakeprotocol import FakeTrivialConnection as FakeBot
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker import upcloud
 
 # Please see https://developers.upcloud.com/ for details
@@ -81,7 +81,7 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
     worker = None
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):

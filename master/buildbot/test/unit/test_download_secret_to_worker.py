@@ -28,24 +28,24 @@ from buildbot.test.expect import ExpectDownloadFile
 from buildbot.test.expect import ExpectRemoteRef
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectRmfile
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
+class TestDownloadFileSecretToWorkerCommand(TestBuildStepMixin,
                                             TestReactorMixin,
                                             unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def testBasic(self):
         self.setup_step(
@@ -70,19 +70,19 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
         return d
 
 
-class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
+class TestRemoveWorkerFileSecretCommand30(TestBuildStepMixin,
                                           TestReactorMixin,
                                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def testBasic(self):
         self.setup_step(RemoveWorkerFileSecret(
@@ -108,20 +108,20 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
         return d
 
 
-class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
+class TestRemoveFileSecretToWorkerCommand(TestBuildStepMixin,
                                           configmixin.ConfigErrorsMixin,
                                           TestReactorMixin,
                                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
-        return self.setup_build_step()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def testBasic(self):
         self.setup_step(

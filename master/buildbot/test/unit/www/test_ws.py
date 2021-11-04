@@ -21,15 +21,15 @@ from mock import Mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.www import ws
 
 
 class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
-        self.setUpTestReactor(use_asyncio=True)
+        self.setup_test_reactor(use_asyncio=True)
         self.master = master = self.make_master(
             url="h:/a/b/", wantMq=True, wantGraphql=True
         )

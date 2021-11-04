@@ -23,11 +23,11 @@ from twisted.trial import unittest
 
 from buildbot.scripts import cleanupdb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.unit.db import test_logs
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
-from buildbot.test.util.misc import TestReactorMixin
 
 try:
     import lz4
@@ -60,7 +60,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                     TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.origcwd = os.getcwd()
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:

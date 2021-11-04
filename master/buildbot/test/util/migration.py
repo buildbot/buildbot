@@ -24,10 +24,10 @@ from twisted.python import log
 
 from buildbot.db import connector
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import querylog
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import sautils
 
 # test_upgrade vs. migration tests
@@ -41,7 +41,7 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
     @defer.inlineCallbacks
     def setUpMigrateTest(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.basedir = os.path.abspath("basedir")
         self.setUpDirs('basedir')
 

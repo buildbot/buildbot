@@ -38,7 +38,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class FakeChange:
@@ -178,7 +178,7 @@ def makeControllableStepFactory():
 class TestBuild(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         r = FakeRequest()
         r.sources = [FakeSource()]
         r.sources[0].changes = [FakeChange()]
@@ -1024,7 +1024,7 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
     """
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.props = {}
         self.r = FakeRequest()
         self.r.sources = []
@@ -1070,7 +1070,7 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
     """
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.props = {}
         self.r = FakeRequest()
         self.r.sources = []

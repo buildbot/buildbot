@@ -22,9 +22,9 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import shellsequence
 from buildbot.test.expect import ExpectShell
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -35,15 +35,15 @@ class DynamicRun(shellsequence.ShellSequence):
         return self.runShellSequence(self.dynamicCommands)
 
 
-class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
+class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
                           TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_shell_arg_warn_deprecated_logfile(self):
         with assertProducesWarnings(DeprecatedApiWarning,

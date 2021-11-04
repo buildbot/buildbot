@@ -28,9 +28,9 @@ from buildbot.test.expect import ExpectRemoteRef
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
@@ -42,7 +42,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
     MTN_VER = 'monotone 1.0 (base revision: UNKNOWN_REV)'
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpSourceStep()
 
     def tearDown(self):

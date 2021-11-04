@@ -24,8 +24,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import python
 from buildbot.test.expect import ExpectShell
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 
 log_output_success = '''\
 Making output directory...
@@ -124,14 +124,14 @@ Warning: Unable to extract the base list for
 '''
 
 
-class BuildEPYDoc(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class BuildEPYDoc(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_sample(self):
         self.setup_step(python.BuildEPYDoc())
@@ -145,14 +145,14 @@ class BuildEPYDoc(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     @parameterized.expand([
         ('no_results', True),
@@ -411,14 +411,14 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_success(self):
         self.setup_step(python.PyFlakes())
@@ -499,14 +499,14 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_builddir_required(self):
         with self.assertRaises(config.ConfigErrors):
@@ -574,7 +574,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_outcome(result=WARNINGS,
                            state_string="sphinx 2 warnings (warnings)")
-        self.expect_logfile("warnings", warnings)
+        self.expect_log_file("warnings", warnings)
         yield self.run_step()
 
         self.assertEqual(self.step.statistics, {'warnings': 2})

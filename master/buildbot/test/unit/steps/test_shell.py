@@ -31,22 +31,22 @@ from buildbot.steps import shell
 from buildbot.test.expect import ExpectRemoteRef
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectUploadFile
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestShellCommandExecution(steps.BuildStepMixin,
+class TestShellCommandExecution(TestBuildStepMixin,
                                 configmixin.ConfigErrorsMixin,
                                 TestReactorMixin,
                                 unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_doStepIf_False(self):
         self.setup_step(shell.ShellCommand(command="echo hello", doStepIf=False))
@@ -201,14 +201,14 @@ class TestShellCommandExecution(steps.BuildStepMixin,
             shell.ShellCommand()
 
 
-class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TreeSize(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_run_success(self):
         self.setup_step(shell.TreeSize())
@@ -248,15 +248,15 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
+class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_constructor_conflict(self):
         with self.assertRaises(config.ConfigErrors):
@@ -274,7 +274,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expect_property("res", "abcdef")  # note: stripped
-        self.expect_logfile('property changes', r"res: " + repr('abcdef'))
+        self.expect_log_file('property changes', r"res: " + repr('abcdef'))
         return self.run_step()
 
     def test_renderable_workdir(self):
@@ -290,7 +290,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expect_property("res", "abcdef")  # note: stripped
-        self.expect_logfile('property changes', r"res: " + repr('abcdef'))
+        self.expect_log_file('property changes', r"res: " + repr('abcdef'))
         return self.run_step()
 
     def test_run_property_no_strip(self):
@@ -304,7 +304,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expect_property("res", "\n\nabcdef\n")
-        self.expect_logfile('property changes', r"res: " + repr('\n\nabcdef\n'))
+        self.expect_log_file('property changes', r"res: " + repr('\n\nabcdef\n'))
         return self.run_step()
 
     def test_run_failure(self):
@@ -339,7 +339,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         )
         self.expect_outcome(result=SUCCESS,
                            state_string="2 properties set")
-        self.expect_logfile('property changes', 'a: 1\nb: 2')
+        self.expect_log_file('property changes', 'a: 1\nb: 2')
         self.expect_property("a", 1)
         self.expect_property("b", 2)
         return self.run_step()
@@ -358,7 +358,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         # note that extract_fn *is* called anyway
         self.expect_outcome(result=FAILURE,
                            state_string="2 properties set (failure)")
-        self.expect_logfile('property changes', 'a: 1\nb: 2')
+        self.expect_log_file('property changes', 'a: 1\nb: 2')
         return self.run_step()
 
     def test_run_extract_fn_cmdfail_empty(self):
@@ -412,14 +412,14 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             shell.SetPropertyFromCommand(command=["echo", "value"])
 
 
-class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_new_version_success(self):
         self.setup_step(shell.PerlModuleTest(command="cmd"))
@@ -539,14 +539,14 @@ class SetPropertyDeprecation(unittest.TestCase):
                          )
 
 
-class Configure(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class Configure(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_class_attrs(self):
         step = shell.Configure()
@@ -564,17 +564,17 @@ class Configure(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class WarningCountingShellCommand(steps.BuildStepMixin,
+class WarningCountingShellCommand(TestBuildStepMixin,
                                   configmixin.ConfigErrorsMixin,
                                   TestReactorMixin,
                                   unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_no_warnings(self):
         self.setup_step(shell.WarningCountingShellCommand(workdir='w', command=['make']))
@@ -599,7 +599,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         )
         self.expect_outcome(result=WARNINGS)
         self.expect_property("warnings-count", 2)
-        self.expect_logfile("warnings (2)",
+        self.expect_log_file("warnings (2)",
                            "warning: blarg!\nWARNING: blarg!\n")
         return self.run_step()
 
@@ -614,7 +614,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         )
         self.expect_outcome(result=WARNINGS)
         self.expect_property("warnings-count", 2)
-        self.expect_logfile("warnings (2)", "scary: foo\nscary: bar\n")
+        self.expect_log_file("warnings (2)", "scary: foo\nscary: bar\n")
         return self.run_step()
 
     def test_maxWarnCount(self):
@@ -639,7 +639,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         )
         self.expect_outcome(result=FAILURE)
         self.expect_property("warnings-count", 1)
-        self.expect_logfile("warnings (1)", "warning: I might fail\n")
+        self.expect_log_file("warnings (1)", "warning: I might fail\n")
         return self.run_step()
 
     def test_warn_with_decoderc(self):
@@ -701,7 +701,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             if exp_warning_count != 0:
                 self.expect_outcome(result=WARNINGS,
                                    state_string="'make' (warnings)")
-                self.expect_logfile("warnings (%d)" % exp_warning_count,
+                self.expect_log_file("warnings (%d)" % exp_warning_count,
                                    exp_warning_log)
             else:
                 self.expect_outcome(result=SUCCESS,
@@ -909,14 +909,14 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             shell.WarningCountingShellCommand()
 
 
-class Compile(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class Compile(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_class_args(self):
         # since this step is just a pre-configured WarningCountingShellCommand,
@@ -930,16 +930,16 @@ class Compile(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(step.command, ["make", "all"])
 
 
-class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
+class Test(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
            TestReactorMixin,
            unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        self.setup_build_step()
+        self.setup_test_reactor()
+        self.setup_test_build_step()
 
     def tearDown(self):
-        self.tear_down_build_step()
+        self.tear_down_test_build_step()
 
     def test_setTestResults(self):
         step = self.setup_step(shell.Test())

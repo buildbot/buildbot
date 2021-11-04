@@ -20,18 +20,18 @@ from buildbot.process.properties import Property
 from buildbot.process.results import SUCCESS
 from buildbot.steps.cmake import CMake
 from buildbot.test.expect import ExpectShell
-from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.steps import BuildStepMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        self.setup_build_step()
+        self.setup_test_reactor()
+        self.setup_test_build_step()
 
     def tearDown(self):
-        self.tear_down_build_step()
+        self.tear_down_test_build_step()
 
     def expect_and_run_command(self, *params):
         command = [CMake.DEFAULT_CMAKE] + list(params)

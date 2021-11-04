@@ -22,8 +22,8 @@ from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.logging import LoggingMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.runprocess import RunProcess
 
 # windows returns rc 1, because exit status cannot indicate "signalled";
@@ -40,7 +40,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
     FAKE_PID = 1234
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpLogging()
         self.process = None
         self.reactor.spawnProcess = self.fake_spawn_process

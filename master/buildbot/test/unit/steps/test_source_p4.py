@@ -26,9 +26,9 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.source.p4 import P4
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.properties import ConstantRenderable
 
 _is_windows = (platform.system() == 'Windows')
@@ -38,7 +38,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
              unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpSourceStep()
 
     def tearDown(self):

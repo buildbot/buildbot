@@ -18,8 +18,8 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import auth
 from buildbot.www import avatar
 
@@ -34,7 +34,7 @@ class TestAvatar(avatar.AvatarBase):
 class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def test_default(self):
@@ -533,7 +533,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         master = self.make_master(
             url='http://a/b/', auth=auth.NoAuth(),
@@ -670,7 +670,7 @@ class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         avatar_method = avatar.AvatarGitHub(client_id="oauth_id",
                                             client_secret="oauth_secret")

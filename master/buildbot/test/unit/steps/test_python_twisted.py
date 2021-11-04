@@ -24,8 +24,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import python_twisted
 from buildbot.test.expect import ExpectShell
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 
 failureLog = '''\
 buildbot.test.unit.test_steps_python_twisted.Trial.testProperties ... [FAILURE]
@@ -91,14 +91,14 @@ FAILED (failures=8)
 '''  # noqa pylint: disable=line-too-long
 
 
-class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_run_env(self):
         self.setup_step(
@@ -195,8 +195,8 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_outcome(
             result=FAILURE, state_string='tests 8 failures (failure)')
-        self.expect_logfile('problems', failureLog.split('\n\n', 1)[1][:-1])
-        self.expect_logfile('warnings', textwrap.dedent('''\
+        self.expect_log_file('problems', failureLog.split('\n\n', 1)[1][:-1])
+        self.expect_log_file('warnings', textwrap.dedent('''\
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_nodupe ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_supplement ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobs ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
@@ -222,7 +222,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_build_changed_files(self):
         self.setup_step(python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
-                       buildFiles=['my/test/file.py', 'my/test/file2.py'])
+                        build_files=['my/test/file.py', 'my/test/file2.py'])
 
         self.expect_commands(
             ExpectShell(workdir='build',
@@ -354,18 +354,18 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
 
-class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_run_ok(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
-                       buildFiles=['foo.xhtml'])
+                        build_files=['foo.xhtml'])
         self.expect_commands(
             ExpectShell(workdir='build',
                         command=[
@@ -373,32 +373,32 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("dunno what hlint output looks like..\n")
             .exit(0)
         )
-        self.expect_logfile('files', 'foo.xhtml\n')
+        self.expect_log_file('files', 'foo.xhtml\n')
         self.expect_outcome(result=SUCCESS, state_string='0 hlints')
         return self.run_step()
 
     def test_custom_python(self):
         self.setup_step(python_twisted.HLint(workdir='build', python='/bin/mypython'),
-                       buildFiles=['foo.xhtml'])
+                        build_files=['foo.xhtml'])
         self.expect_commands(
             ExpectShell(workdir='build',
                         command=['/bin/mypython', 'bin/lore', '-p', '--output', 'lint',
                                  'foo.xhtml'])
             .exit(0)
         )
-        self.expect_logfile('files', 'foo.xhtml\n')
+        self.expect_log_file('files', 'foo.xhtml\n')
         self.expect_outcome(result=SUCCESS, state_string='0 hlints')
         return self.run_step()
 
     def test_command_failure(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
-                       buildFiles=['foo.xhtml'])
+                        build_files=['foo.xhtml'])
         self.expect_commands(
             ExpectShell(workdir='build',
                         command=['bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
             .exit(1)
         )
-        self.expect_logfile('files', 'foo.xhtml\n')
+        self.expect_log_file('files', 'foo.xhtml\n')
         self.expect_outcome(result=FAILURE, state_string='hlint (failure)')
         return self.run_step()
 
@@ -409,7 +409,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_run_warnings(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
-                       buildFiles=['foo.xhtml'])
+                        build_files=['foo.xhtml'])
         self.expect_commands(
             ExpectShell(workdir='build',
                         command=[
@@ -417,19 +417,19 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout("colon: meaning warning\n")
             .exit(0)
         )
-        self.expect_logfile('warnings', 'colon: meaning warning')
+        self.expect_log_file('warnings', 'colon: meaning warning')
         self.expect_outcome(result=WARNINGS, state_string='1 hlint (warnings)')
         return self.run_step()
 
 
-class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class RemovePYCs(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_run_ok(self):
         self.setup_step(python_twisted.RemovePYCs())

@@ -44,10 +44,10 @@ from buildbot.test.expect import ExpectStat
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import worker
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import eventually
 
 
@@ -63,7 +63,7 @@ class CustomActionBuildStep(buildstep.BuildStep):
         return self.action()
 
 
-class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
+class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
                     TestReactorMixin,
                     unittest.TestCase):
 
@@ -102,11 +102,11 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
             return SUCCESS
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     # support
 
@@ -784,7 +784,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
 class InterfaceTests(interfaces.InterfaceTests):
 
-    # ensure that steps.BuildStepMixin creates a convincing facsimile of the
+    # ensure that TestBuildStepMixin creates a convincing facsimile of the
     # real BuildStep
 
     def test_signature_attributes(self):
@@ -898,12 +898,12 @@ class InterfaceTests(interfaces.InterfaceTests):
 
 
 class TestFakeItfc(unittest.TestCase,
-                   steps.BuildStepMixin, TestReactorMixin,
+                   TestBuildStepMixin, TestReactorMixin,
                    InterfaceTests):
 
     def setUp(self):
-        self.setUpTestReactor()
-        self.setup_build_step()
+        self.setup_test_reactor()
+        self.setup_test_build_step()
         self.setup_step(buildstep.BuildStep())
 
 
@@ -923,18 +923,18 @@ class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
         return SUCCESS
 
 
-class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
+class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
                        unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
-        yield self.setup_build_step()
+        self.setup_test_reactor()
+        yield self.setup_test_build_step()
         self.step = CommandMixinExample()
         self.setup_step(self.step)
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     @defer.inlineCallbacks
     def test_runRmdir(self):
@@ -1065,18 +1065,18 @@ class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         return cmd.results()
 
 
-class TestShellMixin(steps.BuildStepMixin,
+class TestShellMixin(TestBuildStepMixin,
                      config.ConfigErrorsMixin,
                      TestReactorMixin,
                      unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
-        yield self.setup_build_step()
+        self.setup_test_reactor()
+        yield self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_setupShellMixin_bad_arg(self):
         mixin = SimpleShellCommand()
@@ -1116,7 +1116,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_no_default_workdir(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.expect_commands(
             ExpectShell(workdir='build', command=['cmd', 'arg'])
             .exit(0)
@@ -1126,7 +1126,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_workdir(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = '/alternate'
         self.expect_commands(
             ExpectShell(workdir='/alternate', command=['cmd', 'arg'])
@@ -1137,7 +1137,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_workdir_callable(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = lambda x: '/alternate'
         self.expect_commands(
             ExpectShell(workdir='/alternate', command=['cmd', 'arg'])
@@ -1148,14 +1148,14 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_workdir_callable_error(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = lambda x: x.nosuchattribute  # will raise AttributeError
         self.expect_exception(buildstep.CallableAttributeError)
         yield self.run_step()
 
     @defer.inlineCallbacks
     def test_build_workdir_renderable(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = properties.Property("myproperty")
         self.properties.setProperty("myproperty", "/myproperty", "test")
         self.expect_commands(

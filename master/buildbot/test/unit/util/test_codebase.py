@@ -17,8 +17,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import codebase
 from buildbot.util import state
 
@@ -40,7 +40,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase,
                  'b': {'repository': '', 'branch': 'master'}}
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.db = self.master.db
         self.object = FakeObject(self.master, self.codebases)

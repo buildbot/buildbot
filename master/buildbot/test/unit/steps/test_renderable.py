@@ -17,9 +17,9 @@ from twisted.trial import unittest
 
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.properties import Interpolate
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestBuildStep(BuildStep):
@@ -28,16 +28,16 @@ class TestBuildStep(BuildStep):
         return 0
 
 
-class TestBuildStepNameIsRenderable(steps.BuildStepMixin, unittest.TestCase,
+class TestBuildStepNameIsRenderable(TestBuildStepMixin, unittest.TestCase,
                                     TestReactorMixin,
                                     configmixin.ConfigErrorsMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_name_is_renderable(self):
         step = TestBuildStep(name=Interpolate('%(kw:foo)s', foo='bar'))

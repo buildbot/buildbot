@@ -24,8 +24,8 @@ from buildbot.test.expect import ExpectMkdir
 from buildbot.test.expect import ExpectRmdir
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import sourcesteps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class RepoURL(unittest.TestCase):
@@ -61,7 +61,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.shouldRetry = False
         self.logEnviron = True
         return self.setUpSourceStep()

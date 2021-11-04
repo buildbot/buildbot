@@ -16,8 +16,8 @@
 
 from twisted.trial import unittest
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import resource
 
 
@@ -29,7 +29,7 @@ class ResourceSubclass(resource.Resource):
 class Resource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     def test_base_url(self):
         master = self.make_master(url=b'h:/a/b/')
@@ -45,7 +45,7 @@ class Resource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 class RedirectResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     def test_redirect(self):
         master = self.make_master(url=b'h:/a/b/')

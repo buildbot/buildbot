@@ -23,10 +23,10 @@ from twisted.trial import unittest
 from buildbot.db import connector
 from buildbot.db import model
 from buildbot.scripts import create_master
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 
 
 def mkconfig(**kwargs):
@@ -88,7 +88,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                                 unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()

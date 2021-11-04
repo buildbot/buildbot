@@ -20,9 +20,9 @@ from twisted.trial import unittest
 
 from buildbot.mq import simple
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 from buildbot.test.util import tuplematching
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class Tests(interfaces.InterfaceTests):
@@ -136,7 +136,7 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
 class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True)
         self.mq = self.master.mq
         self.mq.verifyMessages = False
@@ -146,7 +146,7 @@ class TestSimpleMQ(TestReactorMixin, unittest.TestCase, RealTests):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.mq = simple.SimpleMQ()
         yield self.mq.setServiceParent(self.master)

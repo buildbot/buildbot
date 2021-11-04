@@ -25,8 +25,8 @@ from buildbot.process import properties
 from buildbot.process.properties import Interpolate
 from buildbot.schedulers import base
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
@@ -37,7 +37,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     exp_bsid_brids = (123, {'b': 456})
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

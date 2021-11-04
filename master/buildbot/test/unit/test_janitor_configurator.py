@@ -32,10 +32,10 @@ from buildbot.configurators.janitor import LogChunksJanitor
 from buildbot.process.results import SUCCESS
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.timed import Nightly
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import configurators
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
 
@@ -64,19 +64,19 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
         self.expectNoConfigError()
 
 
-class LogChunksJanitorTests(steps.BuildStepMixin,
+class LogChunksJanitorTests(TestBuildStepMixin,
                             configmixin.ConfigErrorsMixin,
                             TestReactorMixin,
                             unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
-        yield self.setup_build_step()
+        self.setup_test_reactor()
+        yield self.setup_test_build_step()
         self.patch(janitor, "now", lambda: datetime.datetime(year=2017, month=1, day=1))
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     @defer.inlineCallbacks
     def test_basic(self):
