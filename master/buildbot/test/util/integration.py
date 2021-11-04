@@ -229,7 +229,7 @@ class RunMasterBase(unittest.TestCase):
             if sandboxed_worker_path is None:
                 self.w = Worker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    False, **worker_kwargs)
+                    False, protocol='pb', **worker_kwargs)
             else:
                 self.w = SandboxedWorker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,

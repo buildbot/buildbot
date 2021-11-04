@@ -19,16 +19,19 @@ from twisted.python import log
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
+from buildbot.worker.protocols import msgpack as bbmsgpack
 from buildbot.worker.protocols import pb as bbpb
 
 
 class WorkerRegistration:
 
-    __slots__ = ['master', 'worker', 'pbReg']
+    __slots__ = ['master', 'worker', 'pbReg', 'msgpack_reg']
 
     def __init__(self, master, worker):
         self.master = master
         self.worker = worker
+        self.pbReg = None
+        self.msgpack_reg = None
 
     def __repr__(self):
         return "<{} for {}>".format(self.__class__.__name__, repr(self.worker.workername))
@@ -37,8 +40,12 @@ class WorkerRegistration:
     def unregister(self):
         bs = self.worker
         # update with portStr=None to remove any registration in place
-        yield self.master.workers.pb.updateRegistration(
-            bs.workername, bs.password, None)
+        if self.pbReg is not None:
+            yield self.master.workers.pb.updateRegistration(
+                bs.workername, bs.password, None)
+        if self.msgpack_reg is not None:
+            yield self.master.workers.msgpack.updateRegistration(
+                bs.workername, bs.password, None)
         yield self.master.workers._unregister(self)
 
     @defer.inlineCallbacks
@@ -50,8 +57,16 @@ class WorkerRegistration:
                 worker_config.workername, worker_config.password,
                 global_config.protocols['pb']['port'])
 
+        if 'msgpack_experimental_v1' in global_config.protocols:
+            self.msgpack_reg = yield self.master.workers.msgpack.updateRegistration(
+                worker_config.workername, worker_config.password,
+                global_config.protocols['msgpack_experimental_v1']['port'])
+
     def getPBPort(self):
         return self.pbReg.getPort()
+
+    def get_msgpack_port(self):
+        return self.msgpack_reg.getPort()
 
 
 class WorkerManager(MeasuredBuildbotServiceManager):
@@ -67,6 +82,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         super().__init__()
 
         self.pb = bbpb.Listener(master)
+        self.msgpack = bbmsgpack.Listener(master)
 
         # WorkerRegistration instances keyed by worker name
         self.registrations = {}

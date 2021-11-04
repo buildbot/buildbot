@@ -146,10 +146,13 @@ if sys.platform == "win32":
     )
 
 twisted_ver = ">= 17.9.0"
+autobahn_ver = ">= 0.16.0"
 
 if setuptools is not None:
     setup_args['install_requires'] = [
         'twisted ' + twisted_ver,
+        'msgpack >= 0.6.0',
+        'autobahn ' + autobahn_ver,
         'future',
     ]
 

@@ -28,6 +28,7 @@ from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import endpoint
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakemq
+from buildbot.test.fake import msgmanager
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.fake.machine import FakeMachineManager
@@ -101,6 +102,7 @@ class FakeMaster(service.MasterService):
         self.botmaster.setServiceParent(self)
         self.name = 'fake:/master'
         self.masterid = master_id
+        self.msgmanager = msgmanager.FakeMsgManager()
         self.workers = bworkermanager.FakeWorkerManager()
         self.workers.setServiceParent(self)
         self.machine_manager = FakeMachineManager()

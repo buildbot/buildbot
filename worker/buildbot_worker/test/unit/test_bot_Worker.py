@@ -106,18 +106,18 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
     def test_constructor_minimal(self):
         # only required arguments
-        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10)
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, protocol='pb')
 
     def test_constructor_083_tac(self):
         """invocation as made from default 0.8.3 tac files"""
         bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10,
-                   umask=0o123, maxdelay=10)
+                   umask=0o123, protocol='pb', maxdelay=10)
 
     def test_constructor_091_tac(self):
         # invocation as made from default 0.9.1 tac files
         bot.Worker(None, None, 'me', 'pwd', '/s', 10,
                    connection_string="tcp:host=localhost:port=9010",
-                   umask=0o123, maxdelay=10)
+                   umask=0o123, protocol='pb', maxdelay=10)
 
     def test_constructor_invalid_both_styles(self):
         """Can't instantiate with both host/port and connection string."""
@@ -143,7 +143,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         # invocation with all args
         bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10,
                    umask=0o123, maxdelay=10, keepaliveTimeout=10,
-                   unicode_encoding='utf8', allow_shutdown=True)
+                   unicode_encoding='utf8', protocol='pb', allow_shutdown=True)
 
     def test_worker_print(self):
         d = defer.Deferred()
@@ -159,7 +159,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         port = self.start_master(persp, on_attachment=call_print)
         self.worker = bot.Worker("127.0.0.1", port,
                                  "testy", "westy", self.basedir,
-                                 keepalive=0, umask=0o22)
+                                 keepalive=0, umask=0o22, protocol='pb')
         self.worker.startService()
 
         # and wait for the result of the print
@@ -170,7 +170,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
         self.worker = bot.Worker("127.0.0.1", 9999,
                                  "testy", "westy", self.basedir,
-                                 keepalive=0, umask=0o22)
+                                 keepalive=0, umask=0o22, protocol='pb')
         self.worker.recordHostname(self.basedir)
         with open(os.path.join(self.basedir, "twistd.hostname")) as f:
             twistdHostname = f.read().strip()
@@ -184,7 +184,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
         self.worker = bot.Worker("127.0.0.1", 9999,
                                  "testy", "westy", self.basedir,
-                                 keepalive=0, umask=0o22)
+                                 keepalive=0, umask=0o22, protocol='pb')
         self.worker.recordHostname(self.basedir)
         with open(os.path.join(self.basedir, "twistd.hostname")) as f:
             twistdHostname = f.read().strip()
@@ -216,7 +216,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
         self.worker = bot.Worker("127.0.0.1", port,
                                  "testy", "westy", self.basedir,
-                                 keepalive=0, umask=0o22)
+                                 keepalive=0, umask=0o22, protocol='pb')
 
         self.worker.startService()
 
@@ -232,7 +232,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
         worker = bot.Worker("127.0.0.1", 1234,
                             "testy", "westy", self.basedir,
-                            keepalive=0, umask=0o22,
+                            keepalive=0, umask=0o22, protocol='pb',
                             allow_shutdown='file')
 
         # Mock out gracefulShutdown

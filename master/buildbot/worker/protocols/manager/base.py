@@ -33,12 +33,14 @@ class BaseManager(service.AsyncMultiService):
         self.dispatchers = {}
 
     @defer.inlineCallbacks
-    def register(self, portstr, username, password, pfactory):
+    def register(self, config_portstr, username, password, pfactory):
         """
         Register a connection code to be executed after a user with its USERNAME/PASSWORD
         was authenticated and a valid high level connection can be established on a PORTSTR.
         Returns a Registration object which can be used to unregister later.
         """
+        portstr = config_portstr
+
         # do some basic normalization of portstrs
         if isinstance(portstr, type(0)) or ':' not in portstr:
             portstr = "tcp:{}".format(portstr)
@@ -46,7 +48,7 @@ class BaseManager(service.AsyncMultiService):
         reg = Registration(self, portstr, username)
 
         if portstr not in self.dispatchers:
-            disp = self.dispatchers[portstr] = self.dispatcher_class(portstr)
+            disp = self.dispatchers[portstr] = self.dispatcher_class(config_portstr, portstr)
             yield disp.setServiceParent(self)
         else:
             disp = self.dispatchers[portstr]

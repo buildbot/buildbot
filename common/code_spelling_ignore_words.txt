@@ -927,6 +927,8 @@ msc
 msdn
 msg
 msgbody
+msgmanager
+msgpack
 msys
 mtime
 mtn

@@ -200,7 +200,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         """Add a true Worker object to the services."""
         wdir = tempfile.mkdtemp()
         self.tmpdirs.add(wdir)
-        return TestingWorker(None, None, name, password, wdir, keepalive,
+        return TestingWorker(None, None, name, password, wdir, keepalive, protocol='pb',
                              connection_string=connection_string_tpl.format(port=self.port))
 
     @defer.inlineCallbacks
