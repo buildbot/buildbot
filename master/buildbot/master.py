@@ -26,7 +26,6 @@ from twisted.python import failure
 from twisted.python import log
 
 import buildbot
-import buildbot.pbmanager
 from buildbot import config
 from buildbot import monkeypatches
 from buildbot.buildbot_net_usage_data import sendBuildbotNetUsageData
@@ -49,6 +48,7 @@ from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.wamp import connector as wampconnector
 from buildbot.worker import manager as workermanager
+from buildbot.worker.protocols.manager.pb import PBManager
 from buildbot.www import service as wwwservice
 
 
@@ -141,7 +141,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.caches = cache.CacheManager()
         yield self.caches.setServiceParent(self)
 
-        self.pbmanager = buildbot.pbmanager.PBManager()
+        self.pbmanager = PBManager()
         yield self.pbmanager.setServiceParent(self)
 
         self.workers = workermanager.WorkerManager(self)

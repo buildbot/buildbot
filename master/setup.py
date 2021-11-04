@@ -160,6 +160,7 @@ setup_args = {
         "buildbot.configurators",
         "buildbot.worker",
         "buildbot.worker.protocols",
+        "buildbot.worker.protocols.manager",
         "buildbot.changes",
         "buildbot.clients",
         "buildbot.data",
