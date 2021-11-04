@@ -84,10 +84,6 @@ class Expect:
         return self
 
     def log(self, name, **streams):
-        if name == 'stdio' and 'stdout' in streams:
-            raise NotImplementedError()
-        if name == 'stdio' and 'sterr' in streams:
-            raise NotImplementedError()
         self.behaviors.append(('log', name, streams))
         return self
 
