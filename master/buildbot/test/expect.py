@@ -79,8 +79,8 @@ class Expect:
         self.behaviors.append(('callable', callable))
         return self
 
-    def error(self, callable):
-        self.behaviors.append(('err', callable))
+    def error(self, error):
+        self.behaviors.append(('err', error))
         return self
 
     def log(self, name, **streams):
