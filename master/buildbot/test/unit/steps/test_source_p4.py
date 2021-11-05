@@ -146,7 +146,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'client', '-i'],
-                        initialStdin=client_spec)
+                        initial_stdin=client_spec)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
@@ -178,7 +178,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'client', '-i'],
-                        initialStdin=client_stdin,)
+                        initial_stdin=client_stdin,)
             .exit(0),
             ExpectShell(workdir=workdir,
                         timeout=timeout,
@@ -507,7 +507,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass,
                                  '-c', p4client, 'client', '-i'],
-                        initialStdin=client_stdin)
+                        initial_stdin=client_stdin)
             .exit(0),
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
@@ -516,7 +516,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         + ['sync', '#none'])
             .exit(0),
 
-            ExpectRmdir(dir=workdir, logEnviron=True)
+            ExpectRmdir(dir=workdir, log_environ=True)
             .exit(0),
 
             ExpectShell(workdir=workdir,
@@ -1018,13 +1018,13 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-c', 'p4_client1', 'login'],
-                        initialStdin='pass\n')
+                        initial_stdin='pass\n')
             .exit(0),
 
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-c', 'p4_client1', 'client', '-i'],
-                        initialStdin=client_spec)
+                        initial_stdin=client_spec)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=(['p4', '-p', 'localhost:12000', '-u', 'user',

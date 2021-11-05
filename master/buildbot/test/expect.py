@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import functools
+import stat
 import tarfile
 from io import BytesIO
 
@@ -78,55 +79,11 @@ class Expect:
         self.behaviors.append(('callable', callable))
         return self
 
-    def error(self, callable):
-        self.behaviors.append(('err', callable))
-        return self
-
-    def upload_string(self, string, timestamp=None, out_writers=None, error=None):
-        def behavior(command):
-            writer = command.args['writer']
-            if out_writers is not None:
-                out_writers.append(writer)
-
-            writer.remote_write(string)
-            writer.remote_close()
-            if timestamp:
-                writer.remote_utime(timestamp)
-
-            if error is not None:
-                writer.cancel = Mock(wraps=writer.cancel)
-                raise error
-
-        self.behavior(behavior)
-        return self
-
-    def upload_tar_file(self, filename, members, error=None, out_writers=None):
-        def behavior(command):
-            f = BytesIO()
-            archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
-            for name, content in members.items():
-                content = unicode2bytes(content)
-                archive.addfile(tarfile.TarInfo(name), BytesIO(content))
-
-            writer = command.args['writer']
-            if out_writers is not None:
-                out_writers.append(writer)
-
-            writer.remote_write(f.getvalue())
-            writer.remote_unpack()
-
-            if error is not None:
-                writer.cancel = Mock(wraps=writer.cancel)
-                raise error
-
-        self.behavior(behavior)
+    def error(self, error):
+        self.behaviors.append(('err', error))
         return self
 
     def log(self, name, **streams):
-        if name == 'stdio' and 'stdout' in streams:
-            raise NotImplementedError()
-        if name == 'stdio' and 'sterr' in streams:
-            raise NotImplementedError()
         self.behaviors.append(('log', name, streams))
         return self
 
@@ -261,20 +218,29 @@ class ExpectShell(Expect):
     """
 
     def __init__(self, workdir, command, env=None,
-                 want_stdout=1, want_stderr=1, initialStdin=None,
-                 timeout=20 * 60, maxTime=None, logfiles=None,
-                 usePTY=None, logEnviron=True, interruptSignal=None):
+                 want_stdout=1, want_stderr=1, initial_stdin=None,
+                 timeout=20 * 60, max_time=None, logfiles=None,
+                 use_pty=None, log_environ=True, interrupt_signal=None):
         if env is None:
             env = {}
         if logfiles is None:
             logfiles = {}
-        args = dict(workdir=workdir, command=command, env=env,
-                    want_stdout=want_stdout, want_stderr=want_stderr,
-                    initial_stdin=initialStdin,
-                    timeout=timeout, maxTime=maxTime, logfiles=logfiles,
-                    usePTY=usePTY, logEnviron=logEnviron)
-        if interruptSignal is not None:
-            args['interruptSignal'] = interruptSignal
+        args = {
+            'workdir': workdir,
+            'command': command,
+            'env': env,
+            'want_stdout': want_stdout,
+            'want_stderr': want_stderr,
+            'initial_stdin': initial_stdin,
+            'timeout': timeout,
+            'maxTime': max_time,
+            'logfiles': logfiles,
+            'usePTY': use_pty,
+            'logEnviron': log_environ
+        }
+
+        if interrupt_signal is not None:
+            args['interruptSignal'] = interrupt_signal
         super().__init__("shell", args)
 
     def __repr__(self):
@@ -283,14 +249,27 @@ class ExpectShell(Expect):
 
 class ExpectStat(Expect):
 
-    def __init__(self, file, workdir=None, logEnviron=None):
+    def __init__(self, file, workdir=None, log_environ=None):
         args = {'file': file}
         if workdir is not None:
             args['workdir'] = workdir
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
 
         super().__init__('stat', args)
+
+    def stat(self, mode, inode=99, dev=99, nlink=1, uid=0, gid=0, size=99,
+             atime=0, mtime=0, ctime=0):
+        self.update('stat', [mode, inode, dev, nlink, uid, gid, size, atime, mtime, ctime])
+        return self
+
+    def stat_file(self, mode=0, size=99, atime=0, mtime=0, ctime=0):
+        self.stat(stat.S_IFREG, size=size, atime=atime, mtime=mtime, ctime=ctime)
+        return self
+
+    def stat_dir(self, mode=0, size=99, atime=0, mtime=0, ctime=0):
+        self.stat(stat.S_IFDIR, size=size, atime=atime, mtime=mtime, ctime=ctime)
+        return self
 
     def __repr__(self):
         return "ExpectStat(" + repr(self.args['file']) + ")"
@@ -310,6 +289,24 @@ class ExpectUploadFile(Expect):
             args['workersrc'] = workersrc
 
         super().__init__('uploadFile', args, interrupted=interrupted)
+
+    def upload_string(self, string, timestamp=None, out_writers=None, error=None):
+        def behavior(command):
+            writer = command.args['writer']
+            if out_writers is not None:
+                out_writers.append(writer)
+
+            writer.remote_write(string)
+            writer.remote_close()
+            if timestamp:
+                writer.remote_utime(timestamp)
+
+            if error is not None:
+                writer.cancel = Mock(wraps=writer.cancel)
+                raise error
+
+        self.behavior(behavior)
+        return self
 
     def __repr__(self):
         return "ExpectUploadFile({},{})".format(repr(self.args['workdir']),
@@ -331,6 +328,28 @@ class ExpectUploadDirectory(Expect):
 
         super().__init__('uploadDirectory', args, interrupted=interrupted)
 
+    def upload_tar_file(self, filename, members, error=None, out_writers=None):
+        def behavior(command):
+            f = BytesIO()
+            archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
+            for name, content in members.items():
+                content = unicode2bytes(content)
+                archive.addfile(tarfile.TarInfo(name), BytesIO(content))
+
+            writer = command.args['writer']
+            if out_writers is not None:
+                out_writers.append(writer)
+
+            writer.remote_write(f.getvalue())
+            writer.remote_unpack()
+
+            if error is not None:
+                writer.cancel = Mock(wraps=writer.cancel)
+                raise error
+
+        self.behavior(behavior)
+        return self
+
     def __repr__(self):
         return "ExpectUploadDirectory({}, {})".format(repr(self.args['workdir']),
                                                       repr(self.args['workersrc']))
@@ -351,6 +370,21 @@ class ExpectDownloadFile(Expect):
 
         super().__init__('downloadFile', args, interrupted=interrupted)
 
+    def download_string(self, dest_callable, size=1000, timestamp=None):
+        def behavior(command):
+            reader = command.args['reader']
+            read = reader.remote_read(size)
+
+            dest_callable(read)
+
+            reader.remote_close()
+            if timestamp:
+                reader.remote_utime(timestamp)
+            return read
+
+        self.behavior(behavior)
+        return self
+
     def __repr__(self):
         return "ExpectUploadDirectory({}, {})".format(repr(self.args['workdir']),
                                                       repr(self.args['workerdest']))
@@ -358,10 +392,10 @@ class ExpectDownloadFile(Expect):
 
 class ExpectMkdir(Expect):
 
-    def __init__(self, dir=None, logEnviron=None):
+    def __init__(self, dir=None, log_environ=None):
         args = {'dir': dir}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
 
         super().__init__('mkdir', args)
 
@@ -371,10 +405,10 @@ class ExpectMkdir(Expect):
 
 class ExpectRmdir(Expect):
 
-    def __init__(self, dir=None, logEnviron=None, timeout=None, path=None):
+    def __init__(self, dir=None, log_environ=None, timeout=None, path=None):
         args = {'dir': dir}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
         if timeout is not None:
             args['timeout'] = timeout
         if path is not None:
@@ -388,14 +422,14 @@ class ExpectRmdir(Expect):
 
 class ExpectCpdir(Expect):
 
-    def __init__(self, fromdir=None, todir=None, logEnviron=None, timeout=None, maxTime=None):
+    def __init__(self, fromdir=None, todir=None, log_environ=None, timeout=None, max_time=None):
         args = {'fromdir': fromdir, 'todir': todir}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
         if timeout is not None:
             args['timeout'] = timeout
-        if maxTime is not None:
-            args['maxTime'] = maxTime
+        if max_time is not None:
+            args['maxTime'] = max_time
 
         super().__init__('cpdir', args)
 
@@ -405,12 +439,18 @@ class ExpectCpdir(Expect):
 
 class ExpectGlob(Expect):
 
-    def __init__(self, path=None, logEnviron=None):
+    def __init__(self, path=None, log_environ=None):
         args = {'path': path}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
 
         super().__init__('glob', args)
+
+    def files(self, files=None):
+        if files is None:
+            files = []
+        self.update('files', files)
+        return self
 
     def __repr__(self):
         return "ExpectGlob({})".format(repr(self.args['path']))
@@ -423,16 +463,22 @@ class ExpectListdir(Expect):
 
         super().__init__('listdir', args)
 
+    def files(self, files=None):
+        if files is None:
+            files = []
+        self.update('files', files)
+        return self
+
     def __repr__(self):
         return "ExpectListdir({})".format(repr(self.args['dir']))
 
 
 class ExpectRmfile(Expect):
 
-    def __init__(self, path=None, logEnviron=None):
+    def __init__(self, path=None, log_environ=None):
         args = {'path': path}
-        if logEnviron is not None:
-            args['logEnviron'] = logEnviron
+        if log_environ is not None:
+            args['logEnviron'] = log_environ
 
         super().__init__('rmfile', args)
 

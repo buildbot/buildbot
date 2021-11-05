@@ -95,9 +95,9 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  '-d',
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  'login'],
-                        initialStdin="a password\n")
+                        initial_stdin="a password\n")
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -142,9 +142,9 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  '-d',
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  'login'],
-                        initialStdin="a password\n")
+                        initial_stdin="a password\n")
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              slavesrc='Root', workdir='wkdir/CVS',
@@ -182,7 +182,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
@@ -220,7 +220,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .exit(0),
-            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
+            ExpectRmdir(dir='wkdir/.buildbot-diff', log_environ=True)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -237,7 +237,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
@@ -275,7 +275,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .exit(0),
-            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
+            ExpectRmdir(dir='wkdir/.buildbot-diff', log_environ=True)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -292,7 +292,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                         timeout=1,
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -332,7 +332,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -370,7 +370,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -407,7 +407,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -444,9 +444,9 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -469,9 +469,9 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -479,7 +479,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -487,7 +487,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -509,9 +509,9 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='source/CVS',
@@ -531,7 +531,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='source',
                         command=['cvs', '-z3', 'update', '-dP'])
             .exit(0),
-            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectCpdir(fromdir='source', todir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0)
         )
 
@@ -547,16 +547,16 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='source/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .upload_string('the-end-of-the-universe\n')
             .exit(0),
-            ExpectRmdir(dir='source', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='source', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -564,7 +564,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  '-z3', 'checkout', '-d', 'source', 'mozilla/browser/'])
             .exit(0),
-            ExpectCpdir(fromdir='source', todir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectCpdir(fromdir='source', todir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0)
         )
 
@@ -580,7 +580,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -614,7 +614,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -631,7 +631,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .upload_string('/file/1.1/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD\n')
             .exit(0),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -653,7 +653,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -689,7 +689,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -725,7 +725,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -762,7 +762,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -796,7 +796,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -830,13 +830,13 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -858,13 +858,13 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -872,7 +872,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -893,14 +893,14 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .upload_string('the-end-of-the-universe\n')
             .exit(0),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -921,7 +921,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -933,7 +933,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .upload_string('the-end-of-the-universe\n')
             .exit(0),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -954,7 +954,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -979,7 +979,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -1005,7 +1005,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -1043,13 +1043,13 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=step.timeout)
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs', '-q', '-d',
@@ -1061,7 +1061,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_with_env_logEnviron(self):
+    def test_mode_incremental_with_env_log_environ(self):
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental',
@@ -1070,9 +1070,9 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'],
                         env={'abc': '123'},
-                        logEnviron=False)
+                        log_environ=False)
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=False)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=False)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
@@ -1092,7 +1092,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'],
                         env={'abc': '123'},
-                        logEnviron=False)
+                        log_environ=False)
             .exit(0)
         )
 
@@ -1121,7 +1121,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',

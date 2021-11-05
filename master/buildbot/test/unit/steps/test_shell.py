@@ -159,8 +159,7 @@ class TestShellCommandExecution(TestBuildStepMixin,
     def test_run_usePTY(self):
         self.setup_step(shell.ShellCommand(workdir='build', command="echo hello", usePTY=False))
         self.expect_commands(
-            ExpectShell(workdir='build', command='echo hello',
-                        usePTY=False)
+            ExpectShell(workdir='build', command='echo hello', use_pty=False)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -665,22 +664,14 @@ class WarningCountingShellCommand(TestBuildStepMixin,
             for key in props:
                 self.build.setProperty(key, props[key], "")
 
-        # Invoke the expected callbacks for the suppression file upload.  Note
-        # that this assumes all of the remote_* are synchronous, but can be
-        # easily adapted to suit if that changes (using inlineCallbacks)
-        def upload_behavior(command):
-            writer = command.args['writer']
-            writer.remote_write(supps_file)
-            writer.remote_close()
-            command.rc = 0
-
         if supps_file is not None:
             self.expect_commands(
                 # step will first get the remote suppressions file
                 ExpectUploadFile(blocksize=32768, maxsize=None,
                                  workersrc='supps', workdir='wkdir',
                                  writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-                .behavior(upload_behavior),
+                .upload_string(supps_file)
+                .exit(0),
                 # and then run the command
                 ExpectShell(workdir='wkdir',
                             command=["make"])

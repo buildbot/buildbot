@@ -46,7 +46,7 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(mock.Mock(root='TESTROOT'))
         self.expect_commands(
             ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
-                        logEnviron=False)
+                        log_environ=False)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT'],
@@ -63,7 +63,7 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectRmdir(dir=['build/RESULT/build.log',
                              'build/RESULT/root.log',
                              'build/RESULT/state.log'],
-                        logEnviron=False)
+                        log_environ=False)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
@@ -83,7 +83,7 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectRmdir(dir=['build/RESULT/build.log',
                              'build/RESULT/root.log',
                              'build/RESULT/state.log'],
-                        logEnviron=False)
+                        log_environ=False)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
@@ -114,7 +114,7 @@ class TestMockBuildSRPM(TestBuildStepMixin, TestReactorMixin,
         self.setup_step(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
         self.expect_commands(
             ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
-                        logEnviron=False)
+                        log_environ=False)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
@@ -146,7 +146,7 @@ class TestMockRebuild(TestBuildStepMixin, TestReactorMixin,
         self.setup_step(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))
         self.expect_commands(
             ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
-                        logEnviron=False)
+                        log_environ=False)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',

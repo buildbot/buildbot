@@ -77,8 +77,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
     def ExpectShell(self, **kw):
         if 'workdir' not in kw:
             kw['workdir'] = 'wkdir'
-        if 'logEnviron' not in kw:
-            kw['logEnviron'] = self.shouldLogEnviron()
+        if 'log_environ' not in kw:
+            kw['log_environ'] = self.shouldLogEnviron()
         return ExpectShell(**kw)
 
     def mySetupStep(self, **kwargs):
@@ -99,18 +99,18 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
     def expectClobber(self):
         # stat return 1 so we clobber
         self.expect_commands(
-            ExpectStat(file='wkdir/.repo', logEnviron=self.logEnviron)
+            ExpectStat(file='wkdir/.repo', log_environ=self.logEnviron)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=self.logEnviron)
+            ExpectRmdir(dir='wkdir', log_environ=self.logEnviron)
             .exit(0),
-            ExpectMkdir(dir='wkdir', logEnviron=self.logEnviron)
+            ExpectMkdir(dir='wkdir', log_environ=self.logEnviron)
             .exit(0)
         )
 
     def expectnoClobber(self):
         # stat return 0, so nothing
         self.expect_commands(
-            ExpectStat(file='wkdir/.repo', logEnviron=self.logEnviron)
+            ExpectStat(file='wkdir/.repo', log_environ=self.logEnviron)
             .exit(0)
         )
 
@@ -189,12 +189,12 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                          syncAllBranches=True)
         self.expectClobber()
         override_commands = [
-            ExpectStat(file='wkdir/http://u.rl/test.manifest', logEnviron=False),
-            self.ExpectShell(logEnviron=False, command=['wget',
+            ExpectStat(file='wkdir/http://u.rl/test.manifest', log_environ=False),
+            self.ExpectShell(log_environ=False, command=['wget',
                                                         'http://u.rl/test.manifest',
                                                         '-O', 'manifest_override.xml']),
             self.ExpectShell(
-                logEnviron=False, workdir='wkdir/.repo',
+                log_environ=False, workdir='wkdir/.repo',
                 command=['ln', '-sf', '../manifest_override.xml',
                          'manifest.xml'])
         ]
@@ -210,11 +210,11 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                          syncAllBranches=True)
         self.expectClobber()
         override_commands = [
-            ExpectStat(file='wkdir/test.manifest', logEnviron=False),
-            self.ExpectShell(logEnviron=False,
+            ExpectStat(file='wkdir/test.manifest', log_environ=False),
+            self.ExpectShell(log_environ=False,
                              command=[
                                  'cp', '-f', 'test.manifest', 'manifest_override.xml']),
-            self.ExpectShell(logEnviron=False,
+            self.ExpectShell(log_environ=False,
                              workdir='wkdir/.repo',
                              command=['ln', '-sf', '../manifest_override.xml',
                                       'manifest.xml'])
@@ -251,7 +251,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(1),
             self.ExpectShell(command=['rm', '-f', '/tarball.tgz'])
             .exit(1),
-            ExpectRmdir(dir='wkdir/.repo', logEnviron=False)
+            ExpectRmdir(dir='wkdir/.repo', log_environ=False)
             .exit(1))
         self.expectRepoSync()
         self.expect_commands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.tgz'])
@@ -318,7 +318,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             self.ExpectShell(
                 command=['rm', '-f', '/tarball.tar'])
             .exit(0),
-            ExpectRmdir(dir='wkdir/.repo', logEnviron=False)
+            ExpectRmdir(dir='wkdir/.repo', log_environ=False)
             .exit(0))
         self.expectRepoSync()
         self.expect_commands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])

@@ -67,9 +67,9 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
@@ -93,16 +93,16 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200)
             .exit(0),
-            ExpectStat(file='source/_darcs', logEnviron=True)
+            ExpectStat(file='source/_darcs', log_environ=True)
             .exit(0),
             ExpectShell(workdir='source',
                         command=['darcs', 'pull', '--all', '--verbose'])
             .exit(0),
-            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
+            ExpectCpdir(fromdir='source', todir='build', log_environ=True, timeout=1200)
             .exit(0),
             ExpectShell(workdir='build',
                         command=['darcs', 'changes', '--max-count=1'])
@@ -122,16 +122,16 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200)
             .exit(0),
-            ExpectStat(file='source/_darcs', logEnviron=True)
+            ExpectStat(file='source/_darcs', log_environ=True)
             .exit(0),
             ExpectShell(workdir='source',
                         command=['darcs', 'pull', '--all', '--verbose'])
             .exit(0),
-            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
+            ExpectCpdir(fromdir='source', todir='build', log_environ=True, timeout=1200)
             .exit(0),
             ExpectShell(workdir='build',
                         command=['darcs', 'changes', '--max-count=1'])
@@ -151,9 +151,9 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_darcs', logEnviron=True)
+            ExpectStat(file='wkdir/_darcs', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'pull', '--all', '--verbose'])
@@ -176,18 +176,18 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(0),
-            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200)
             .exit(0),
-            ExpectStat(file='source/_darcs', logEnviron=True)
+            ExpectStat(file='source/_darcs', log_environ=True)
             .exit(0),
             ExpectShell(workdir='source',
                         command=['darcs', 'pull', '--all', '--verbose'])
             .exit(0),
-            ExpectCpdir(fromdir='source', todir='build', logEnviron=True, timeout=1200)
+            ExpectCpdir(fromdir='source', todir='build', log_environ=True, timeout=1200)
             .exit(0),
-            ExpectStat(file='build/_darcs', logEnviron=True)
+            ExpectStat(file='build/_darcs', log_environ=True)
             .exit(0),
             ExpectShell(workdir='build',
                         command=['darcs', 'pull', '--all', '--verbose'])
@@ -211,9 +211,9 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_darcs', logEnviron=True)
+            ExpectStat(file='wkdir/_darcs', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'pull', '--all', '--verbose'])
@@ -230,7 +230,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .exit(0),
-            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
+            ExpectRmdir(dir='wkdir/.buildbot-diff', log_environ=True)
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
@@ -250,21 +250,21 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
                                  '--repo-name', 'wkdir', 'http://localhost/darcs'])
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
                                  '--repo-name', 'wkdir', 'http://localhost/darcs'])
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
@@ -289,9 +289,9 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -322,9 +322,9 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectRmdir(dir='wkdir', logEnviron=True)
+            ExpectRmdir(dir='wkdir', log_environ=True)
             .exit(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -353,9 +353,9 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
-            ExpectStat(file='wkdir/_darcs', logEnviron=True)
+            ExpectStat(file='wkdir/_darcs', log_environ=True)
             .exit(1),
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
