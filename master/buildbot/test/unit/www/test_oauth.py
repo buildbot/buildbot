@@ -442,10 +442,10 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                 values=[
                     {'email': 'buzz@bar', 'is_primary': False},
                     {'email': 'bar@foo', 'is_primary': True}]),
-            dict(  # /teams?role=member
+            dict(  # /workspaces?role=member
                 values=[
-                    {'username': 'hello'},
-                    {'username': 'grp'}])
+                    {'slug': 'hello'},
+                    {'slug': 'grp'}])
         ])
         res = yield self.bitbucketAuth.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
