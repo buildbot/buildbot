@@ -57,15 +57,6 @@ class TestPBManager(unittest.TestCase):
         return defer.succeed(persp)
 
     @defer.inlineCallbacks
-    def test_repr(self):
-        reg = yield self.pbm.register(
-            'tcp:0:interface=127.0.0.1', "x", "y", self.perspectiveFactory)
-        self.assertEqual(repr(self.pbm.dispatchers['tcp:0:interface=127.0.0.1']),
-                         '<pbmanager.Dispatcher for x on tcp:0:interface=127.0.0.1>')
-        self.assertEqual(
-            repr(reg), '<pbmanager.Registration for x on tcp:0:interface=127.0.0.1>')
-
-    @defer.inlineCallbacks
     def test_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
         reg = yield self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
@@ -113,30 +104,6 @@ class TestPBManager(unittest.TestCase):
         self.assertNotIn('boris', self.connections)
 
         yield reg.unregister()
-
-    @defer.inlineCallbacks
-    def test_double_register_unregister(self):
-        portstr = "tcp:0:interface=127.0.0.1"
-        reg1 = yield self.pbm.register(portstr, "boris", "pass", None)
-        reg2 = yield self.pbm.register(portstr, "ivona", "pass", None)
-
-        # make sure things look right
-        self.assertEqual(len(self.pbm.dispatchers), 1)
-        self.assertIn(portstr, self.pbm.dispatchers)
-        disp = self.pbm.dispatchers[portstr]
-        self.assertIn('boris', disp.users)
-        self.assertIn('ivona', disp.users)
-
-        yield reg1.unregister()
-
-        self.assertEqual(len(self.pbm.dispatchers), 1)
-        self.assertIn(portstr, self.pbm.dispatchers)
-        disp = self.pbm.dispatchers[portstr]
-        self.assertNotIn('boris', disp.users)
-        self.assertIn('ivona', disp.users)
-        yield reg2.unregister()
-
-        self.assertEqual(len(self.pbm.dispatchers), 0)
 
     @defer.inlineCallbacks
     def test_requestAvatarId_noinitLock(self):
