@@ -232,8 +232,9 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     This value is passed to the docker image via environment variable ``BUILDMASTER``
 
 ``hostconfig``
-    (optional)
-    Extra host configuration parameters passed as a dictionary used to create HostConfig object. See `docker-py's HostConfig documentation <https://docker-py.readthedocs.io/en/stable/api.html#docker.api.container.ContainerApiMixin.create_host_config>`_ for all the supported options.
+    (renderable dictionary, optional)
+    Extra host configuration parameters passed as a dictionary used to create HostConfig object.
+    See `docker-py's HostConfig documentation <https://docker-py.readthedocs.io/en/stable/api.html#docker.api.container.ContainerApiMixin.create_host_config>`_ for all the supported options.
 
 ``autopull``
     (optional, defaults to false)
