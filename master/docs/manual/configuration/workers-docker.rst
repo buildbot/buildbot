@@ -183,7 +183,7 @@ The following example will add a Docker latent worker for docker running at the 
 In addition to the arguments available for any :ref:`Latent-Workers`, :class:`DockerLatentWorker` will accept the following extra ones:
 
 ``docker_host``
-    (mandatory)
+    (renderable string, mandatory)
     This is the address the master will use to connect with a running Docker instance.
 
 ``image``

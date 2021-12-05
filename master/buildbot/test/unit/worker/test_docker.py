@@ -82,7 +82,8 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
-        self.assertEqual(bs.client_args, {'base_url': 'tcp://1234:2375'})
+        self.assertEqual(bs.docker_host, 'tcp://1234:2375')
+        self.assertEqual(bs.client_args, {})
         self.assertEqual(bs.image, 'worker')
         self.assertEqual(bs.command, [])
 
@@ -130,13 +131,13 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
                                     custom_context=False, buildargs=None,
                                     encoding='gzip')
         self.assertEqual(bs.workername, 'bot')
+        self.assertEqual(bs.docker_host, 'unix:///var/run/docker.sock')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.image, 'worker_img')
         self.assertEqual(bs.command, ['/bin/sh'])
         self.assertEqual(bs.dockerfile, "FROM ubuntu")
         self.assertEqual(bs.volumes, [])
-        self.assertEqual(bs.client_args, {
-                         'base_url': 'unix:///var/run/docker.sock', 'version': '1.9', 'tls': True})
+        self.assertEqual(bs.client_args, {'version': '1.9', 'tls': True})
         self.assertEqual(
             bs.hostconfig, {'network_mode': 'fake', 'dns': ['1.1.1.1', '1.2.3.4']})
         self.assertFalse(bs.custom_context)
@@ -186,6 +187,15 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
              'binds': ['/tmp:/tmp:ro'],
              }
         ])
+
+    @defer.inlineCallbacks
+    def test_start_instance_docker_host_renderable(self):
+        bs = yield self.setupWorker('bot', 'pass',
+                                    docker_host=Interpolate('tcp://value-%(prop:builder)s'),
+                                    image='worker')
+        id, name = yield bs.start_instance(self.build)
+        client = docker.Client.latest
+        self.assertEqual(client.base_url, 'tcp://value-docker_worker')
 
     @defer.inlineCallbacks
     def test_start_instance_volume_renderable(self):
