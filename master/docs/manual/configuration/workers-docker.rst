@@ -153,7 +153,7 @@ To do this, enter the following lines in a Python prompt where docker-py is inst
 
     >>> import docker
     >>> docker_socket = 'tcp://localhost:2375'
-    >>> client = docker.client.Client(base_url=docker_socket)
+    >>> client = docker.client.APIClient(base_url=docker_socket)
     >>> worker_image = 'my_project_worker'
     >>> container = client.create_container(worker_image)
     >>> client.start(container['Id'])
