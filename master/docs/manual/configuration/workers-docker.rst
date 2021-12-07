@@ -183,11 +183,11 @@ The following example will add a Docker latent worker for docker running at the 
 In addition to the arguments available for any :ref:`Latent-Workers`, :class:`DockerLatentWorker` will accept the following extra ones:
 
 ``docker_host``
-    (mandatory)
+    (renderable string, mandatory)
     This is the address the master will use to connect with a running Docker instance.
 
 ``image``
-
+    (renderable string, mandatory)
     This is the name of the image that will be started by the build master. It should start a worker.
     This option can be a renderable, like :ref:`Interpolate`, so that it generates from the build request properties.
 
@@ -196,11 +196,17 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     This will override the command setup during image creation.
 
 ``volumes``
-    (optional)
-    See `Setting up Volumes`_
+    (a renderable list of strings, optional)
+    Allows to share directory between containers, or between a container and the host system.
+    Refer to Docker documentation for more information about Volumes.
+
+    Each string within the ``volumes`` array specify a volume in the following format: :samp:`{volumename}:{bindname}`.
+    The volume name has to be appended with ``:ro`` if the volume should be mounted *read-only*.
+
+    .. note:: This is the same format as when specifying volumes on the command line for docker's own ``-v`` option.
 
 ``dockerfile``
-    (optional if ``image`` is given)
+    (renderable string, optional if ``image`` is given)
     This is the content of the Dockerfile that will be used to build the specified image if the image is not found by Docker.
     It should be a multiline string.
 
@@ -226,8 +232,9 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     This value is passed to the docker image via environment variable ``BUILDMASTER``
 
 ``hostconfig``
-    (optional)
-    Extra host configuration parameters passed as a dictionary used to create HostConfig object. See `docker-py's HostConfig documentation <https://docker-py.readthedocs.io/en/stable/api.html#docker.api.container.ContainerApiMixin.create_host_config>`_ for all the supported options.
+    (renderable dictionary, optional)
+    Extra host configuration parameters passed as a dictionary used to create HostConfig object.
+    See `docker-py's HostConfig documentation <https://docker-py.readthedocs.io/en/stable/api.html#docker.api.container.ContainerApiMixin.create_host_config>`_ for all the supported options.
 
 ``autopull``
     (optional, defaults to false)
@@ -238,32 +245,20 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     Always pulls image if autopull is set to true.
 
 ``custom_context``
-	(optional)
+    (renderable boolean, optional)
 	Boolean indicating that the user wants to use custom build arguments for the docker environment. Defaults to False.
 
 ``encoding``
-	(optional)
+    (renderable string, optional)
 	String indicating the compression format for the build context. defaults to 'gzip', but 'bzip' can be used as well.
 
 ``buildargs``
-	(optional if ``custom_context`` is True)
+    (renderable dictionary, optional if ``custom_context`` is True)
 	Dictionary, passes information for the docker to build its environment. Eg. {'DISTRO':'ubuntu', 'RELEASE':'11.11'}. Defaults to None.
 
 ``hostname``
-        (optional)
-        This will set container's hostname.
-
-Setting up Volumes
-..................
-
-The ``volume`` parameter allows to share directory between containers, or between a container and the host system.
-Refer to Docker documentation for more information about Volumes.
-
-The format of that variable has to be an array of string.
-Each string specify a volume in the following format: :samp:`{volumename}:{bindname}`.
-The volume name has to be appended with ``:ro`` if the volume should be mounted *read-only*.
-
-.. note:: This is the same format as when specifying volumes on the command line for docker's own ``-v`` option.
+    (renderable string, optional)
+    This will set container's hostname.
 
 Marathon latent worker
 ======================

@@ -170,6 +170,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                         hostname=None, **kwargs):
 
         yield super().reconfigService(name, password, image, masterFQDN, **kwargs)
+        self.docker_host = docker_host
         self.volumes = volumes or []
         self.followStartupLogs = followStartupLogs
 
@@ -181,8 +182,9 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         self.custom_context = custom_context
         self.encoding = encoding
         self.buildargs = buildargs
-        # Prepare the parameters for the Docker Client object.
-        self.client_args = {'base_url': docker_host}
+        # Prepare the parameters for the Docker Client object (except docker_host which is
+        # renderable and will be available only when starting containers).
+        self.client_args = {}
         if version is not None:
             self.client_args['version'] = version
         if tls is not None:
@@ -205,27 +207,27 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             volume_list.append(volume)
         return volume_list, volumes
 
-    def _getDockerClient(self):
+    def _getDockerClient(self, client_args):
         if docker.version[0] == '1':
-            docker_client = client.Client(**self.client_args)
+            docker_client = client.Client(**client_args)
         else:
-            docker_client = client.APIClient(**self.client_args)
+            docker_client = client.APIClient(**client_args)
         return docker_client
 
     def renderWorkerProps(self, build):
-        return build.render((self.image, self.dockerfile,
-                             self.volumes, self.custom_context,
+        return build.render((self.docker_host, self.image, self.dockerfile,
+                             self.volumes, self.hostconfig, self.custom_context,
                              self.encoding, self.buildargs, self.hostname))
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        image, dockerfile, volumes, custom_context, encoding, buildargs, hostname = \
-            yield self.renderWorkerPropsOnStart(build)
+        docker_host, image, dockerfile, volumes, hostconfig, custom_context, encoding, buildargs, \
+            hostname = yield self.renderWorkerPropsOnStart(build)
 
-        res = yield threads.deferToThread(self._thd_start_instance, image,
-                                          dockerfile, volumes, custom_context,
+        res = yield threads.deferToThread(self._thd_start_instance, docker_host, image,
+                                          dockerfile, volumes, hostconfig, custom_context,
                                           encoding, buildargs, hostname)
         return res
 
@@ -239,9 +241,12 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                     return True
         return False
 
-    def _thd_start_instance(self, image, dockerfile, volumes,
+    def _thd_start_instance(self, docker_host, image, dockerfile, volumes, host_config,
                             custom_context, encoding, buildargs, hostname):
-        docker_client = self._getDockerClient()
+        curr_client_args = self.client_args.copy()
+        curr_client_args['base_url'] = docker_host
+
+        docker_client = self._getDockerClient(curr_client_args)
         container_name = self.getContainerName()
         # cleanup the old instances
         instances = docker_client.containers(
@@ -291,11 +296,10 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             raise LatentWorkerCannotSubstantiate(msg)
 
         volumes, binds = self._thd_parse_volumes(volumes)
-        host_conf = self.hostconfig.copy()
-        host_conf['binds'] = binds
-        if docker_py_version >= 2.2 and 'init' not in host_conf:
-            host_conf['init'] = True
-        host_conf = docker_client.create_host_config(**host_conf)
+        host_config['binds'] = binds
+        if docker_py_version >= 2.2 and 'init' not in host_config:
+            host_config['init'] = True
+        host_config = docker_client.create_host_config(**host_config)
 
         instance = docker_client.create_container(
             image,
@@ -303,7 +307,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             name=self.getContainerName(),
             volumes=volumes,
             environment=self.createEnvironment(),
-            host_config=host_conf,
+            host_config=host_config,
             hostname=hostname
         )
 
@@ -316,6 +320,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         log.msg('Container created, Id: {}...'.format(shortid))
         instance['image'] = image
         self.instance = instance
+        self._curr_client_args = curr_client_args
         docker_client.start(instance)
         log.msg('Container started')
         if self.followStartupLogs:
@@ -336,11 +341,14 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             return defer.succeed(None)
         instance = self.instance
         self.instance = None
-        self.resetWorkerPropsOnStop()
-        return threads.deferToThread(self._thd_stop_instance, instance, fast)
+        curr_client_args = self._curr_client_args
+        self._curr_client_args = None
 
-    def _thd_stop_instance(self, instance, fast):
-        docker_client = self._getDockerClient()
+        self.resetWorkerPropsOnStop()
+        return threads.deferToThread(self._thd_stop_instance, instance, curr_client_args, fast)
+
+    def _thd_stop_instance(self, instance, curr_client_args, fast):
+        docker_client = self._getDockerClient(curr_client_args)
         log.msg('Stopping container {}...'.format(instance['Id'][:6]))
         docker_client.stop(instance['Id'])
         if not fast:
