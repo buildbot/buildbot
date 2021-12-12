@@ -273,10 +273,12 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                     lines = docker_client.build(fileobj=fin,
                                                 custom_context=custom_context,
                                                 encoding=encoding, tag=image,
+                                                pull=self.alwaysPull,
                                                 buildargs=buildargs)
             else:
                 lines = docker_client.build(
                     fileobj=BytesIO(dockerfile.encode('utf-8')),
+                    pull=self.alwaysPull,
                     tag=image,
                 )
 

@@ -242,7 +242,8 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
 
 ``alwaysPull``
     (optional, defaults to false)
-    Always pulls image if autopull is set to true.
+    Always pulls (update) image if autopull is set to true.
+    Also affects the base image specified by `FROM ....` if using a dockerfile, autopull is not needed then.
 
 ``custom_context``
     (renderable boolean, optional)
