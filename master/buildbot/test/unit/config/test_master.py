@@ -13,11 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-# We cannot use the builtins module here from Python-Future.
-# We need to use the native __builtin__ module on Python 2,
-# and builtins module on Python 3, because we need to override
-# the actual native open method.
-
+import builtins
 import os
 import re
 import textwrap
@@ -50,13 +46,6 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
 from buildbot.warnings import ConfigWarning
 from buildbot.warnings import DeprecatedApiWarning
-
-try:
-    # Python 2
-    import __builtin__ as builtins
-except ImportError:
-    # Python 3
-    import builtins
 
 global_defaults = dict(
     title='Buildbot',
