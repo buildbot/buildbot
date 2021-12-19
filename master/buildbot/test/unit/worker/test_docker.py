@@ -50,6 +50,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
             image='busybox:latest', builder='docker_worker2', distro='wheezy')
         self.patch(dockerworker, 'client', docker)
         docker.Client.containerCreated = False
+        docker.Client.start_exception = None
 
     @defer.inlineCallbacks
     def test_constructor_nodocker(self):
@@ -413,6 +414,16 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
             'existing', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash'])
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox:latest')
+
+    @defer.inlineCallbacks
+    def test_start_instance_docker_client_start_exception(self):
+        msg = 'The container operating system does not match the host operating system'
+        docker.Client.start_exception = docker.errors.APIError(msg)
+
+        bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'busybox:latest',
+                                    ['bin/bash'])
+        with self.assertRaises(interfaces.LatentWorkerCannotSubstantiate):
+            yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
     def test_constructor_hostname(self):
