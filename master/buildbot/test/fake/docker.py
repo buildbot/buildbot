@@ -20,6 +20,7 @@ version = "1.10.6"
 class Client:
     latest = None
     containerCreated = False
+    start_exception = None
 
     def __init__(self, base_url):
         Client.latest = self
@@ -40,7 +41,8 @@ class Client:
         return self._images
 
     def start(self, container):
-        pass
+        if self.start_exception is not None:
+            raise self.start_exception  # pylint: disable=raising-bad-type
 
     def stop(self, id):
         pass
@@ -114,3 +116,8 @@ class Client:
 
 class APIClient(Client):
     pass
+
+
+class errors:
+    class APIError(Exception):
+        pass

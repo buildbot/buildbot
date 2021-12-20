@@ -604,7 +604,11 @@ Overriding these members ensures that builds aren't ran on incompatible workers 
 
         This method is responsible for starting instance that will try to connect with this master.
         A deferred should be returned.
-        Any problems should use an errback.
+
+        Any problems should use an errback or exception.
+        When the error is likely related to infrastructure problem and the worker should be paused in case it produces too many errors, then ``LatentWorkerFailedToSubstantiate`` should be thrown.
+        When the error is related to the properties of the build request, such as renderable Docker image, then ``LatentWorkerCannotSubstantiate`` should be thrown.
+
         The callback value can be ``None``, or can be an iterable of short strings to include in the "substantiate success" status message, such as identifying the instance that started.
         Buildbot will ensure that a single worker will never have its ``start_instance`` called before any previous calls to ``start_instance`` or ``stop_instance`` finish.
         Additionally, for each ``start_instance`` call, exactly one corresponding call to ``stop_instance`` will be done eventually.

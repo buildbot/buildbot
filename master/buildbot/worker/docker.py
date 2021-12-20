@@ -323,7 +323,16 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         instance['image'] = image
         self.instance = instance
         self._curr_client_args = curr_client_args
-        docker_client.start(instance)
+
+        try:
+            docker_client.start(instance)
+        except docker.errors.APIError as e:
+            # The following was noticed in certain usage of Docker on Windows
+            if 'The container operating system does not match the host operating system' in str(e):
+                msg = 'Image used for build is wrong: {}'.format(str(e))
+                raise LatentWorkerCannotSubstantiate(msg) from e
+            raise
+
         log.msg('Container started')
         if self.followStartupLogs:
             logs = docker_client.attach(
