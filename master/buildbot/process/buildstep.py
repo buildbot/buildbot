@@ -614,9 +614,24 @@ class BuildStep(results.ResultComputingConfigMixin,
         return True
 
     @defer.inlineCallbacks
+    def _maybe_interrupt_cmd(self, reason):
+        if not self.cmd:
+            return
+
+        try:
+            yield self.cmd.interrupt(reason)
+        except Exception as e:
+            log.err(e, 'while cancelling command')
+
+    @defer.inlineCallbacks
     def interrupt(self, reason):
         if self.stopped:
+            # If we are in the process of interruption and connection is lost then we must tell
+            # the command not to wait for the interruption to complete.
+            if isinstance(reason, Failure) and reason.check(error.ConnectionLost):
+                yield self._maybe_interrupt_cmd(reason)
             return
+
         self.stopped = True
         if self._acquiringLocks:
             for (lock, access, d) in self._acquiringLocks:
@@ -629,10 +644,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         else:
             yield self.addCompleteLog('cancelled', str(reason))
 
-        if self.cmd:
-            d = self.cmd.interrupt(reason)
-            d.addErrback(log.err, 'while cancelling command')
-            yield d
+        yield self._maybe_interrupt_cmd(reason)
 
     def releaseLocks(self):
         log.msg("releaseLocks({}): {}".format(self, self.locks))

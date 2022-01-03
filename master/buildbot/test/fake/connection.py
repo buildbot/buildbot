@@ -27,7 +27,9 @@ class FakeConnection:
         self.name = name
         self.step = step
         self._commands_numbers_to_interrupt = commands_numbers_to_interrupt
+        self._block_on_interrupt = False
         self._next_command_number = 0
+        self._blocked_deferreds = []
 
     @defer.inlineCallbacks
     def remoteStartCommand(self, remote_command, builder_name, command_id, command_name, args):
@@ -48,13 +50,26 @@ class FakeConnection:
         if self._waiting_for_interrupt:
             raise RuntimeError("Interrupted step, but command was not interrupted")
 
-    @defer.inlineCallbacks
     def remoteInterruptCommand(self, builder_name, command_id, why):
         if not self._waiting_for_interrupt:
             raise RuntimeError("Got interrupt, but FakeConnection was not expecting it")
         self._waiting_for_interrupt = False
 
+        if self._block_on_interrupt:
+            d = defer.Deferred()
+            self._blocked_deferreds.append(d)
+            return d
+        else:
+            return defer.succeed(None)
+
     def set_expect_interrupt(self):
         if self._waiting_for_interrupt:
             raise RuntimeError("Already expecting interrupt but got additional request")
         self._waiting_for_interrupt = True
+
+    def set_block_on_interrupt(self):
+        self._block_on_interrupt = True
+
+    def unblock_waiters(self):
+        for d in self._blocked_deferreds:
+            d.callback(None)

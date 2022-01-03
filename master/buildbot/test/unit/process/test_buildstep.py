@@ -16,8 +16,10 @@
 import mock
 
 from twisted.internet import defer
+from twisted.internet import error
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
+from twisted.python import failure
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -392,6 +394,39 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
         step.action = interrupt_and_run_command
 
         self.expect_outcome(result=CANCELLED)
+        yield self.run_step()
+
+    @defer.inlineCallbacks
+    def test_lost_remote_during_interrupt(self):
+        step = self.setup_step(CustomActionBuildStep())
+
+        cmd = remotecommand.RemoteShellCommand("build", ["echo", "hello"])
+
+        @defer.inlineCallbacks
+        def on_command(cmd):
+            cmd.conn.set_expect_interrupt()
+            cmd.conn.set_block_on_interrupt()
+            d1 = step.interrupt('interrupt reason')
+            d2 = step.interrupt(failure.Failure(error.ConnectionLost()))
+
+            cmd.conn.unblock_waiters()
+            yield d1
+            yield d2
+
+        self.expect_commands(
+            ExpectShell(workdir='build', command=['echo', 'hello'])
+            .behavior(on_command)
+            .break_connection()
+        )
+
+        @defer.inlineCallbacks
+        def run_command():
+            res = yield step.runCommand(cmd)
+            return res.results()
+
+        step.action = run_command
+
+        self.expect_outcome(result=RETRY)
         yield self.run_step()
 
     @defer.inlineCallbacks

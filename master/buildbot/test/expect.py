@@ -71,6 +71,7 @@ class Expect:
         self.args = args
         self.result = None
         self.interrupted = interrupted
+        self.connection_broken = False
         self.behaviors = []
 
     def behavior(self, callable):
@@ -99,6 +100,10 @@ class Expect:
 
     def exit(self, code):
         self.behaviors.append(('rc', code))
+        return self
+
+    def break_connection(self):
+        self.connection_broken = True
         return self
 
     @defer.inlineCallbacks

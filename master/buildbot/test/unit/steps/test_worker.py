@@ -40,14 +40,6 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import TestBuildStepMixin
 
 
-def uploadString(string):
-    def behavior(command):
-        writer = command.args['writer']
-        writer.remote_write(string)
-        writer.remote_close()
-    return behavior
-
-
 class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin,
                                unittest.TestCase):
 

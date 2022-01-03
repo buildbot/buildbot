@@ -1,0 +1,1 @@
+Fixed error that caused builds to become stuck in building state until next master restart if builds that were in the process of being interrupted lost connection to the worker.

@@ -428,7 +428,8 @@ class TestBuildStepMixin:
                 self.expected_remote_commands.pop(0)
                 self._expected_remote_commands_popped += 1
 
-        command.remote_complete()
+        if not exp.connection_broken:
+            command.remote_complete()
 
     def change_worker_system(self, system):
         self.worker.worker_system = system
