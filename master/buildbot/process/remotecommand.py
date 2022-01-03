@@ -63,6 +63,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.ignore_updates = ignore_updates
         self.decodeRC = decodeRC
         self.conn = None
+        self._is_conn_test_fake = False
         self.worker = None
         self.step = None
         self.builder_name = None
@@ -82,6 +83,9 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.step = step
         self.conn = conn
         self.builder_name = builder_name
+
+        # This probably could be solved in a cleaner way.
+        self._is_conn_test_fake = hasattr(self.conn, 'is_fake_test_connection')
 
         # generate a new command id
         cmd_id = RemoteCommand._commandCounter
@@ -137,10 +141,11 @@ class RemoteCommand(base.RemoteCommandImpl):
         # the rc is send asynchronously and there is a chance it is still in the callback queue
         # when finished is received, we have to workaround in the master because worker might be
         # older
-        timeout = 10
-        while self.rc is None and timeout > 0:
-            yield util.asyncSleep(.1)
-            timeout -= 1
+        if not self._is_conn_test_fake:
+            timeout = 10
+            while self.rc is None and timeout > 0:
+                yield util.asyncSleep(.1)
+                timeout -= 1
 
         try:
             yield self.remoteComplete(failure)
@@ -304,7 +309,6 @@ class RemoteCommand(base.RemoteCommandImpl):
         for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:
-                    loog = yield self._unwrap(loog)
                     yield loog.addHeader("\nremoteFailed: {}".format(maybeFailure))
                 else:
                     log.msg("closing log {}".format(loog))

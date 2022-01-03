@@ -195,7 +195,8 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_outcome(
             result=FAILURE, state_string='tests 8 failures (failure)')
-        self.expect_log_file('problems', failureLog.split('\n\n', 1)[1][:-1])
+        self.expect_log_file('problems', failureLog.split('\n\n', 1)[1][:-1] +
+                             '\nprogram finished with exit code 1')
         self.expect_log_file('warnings', textwrap.dedent('''\
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_nodupe ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_supplement ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`

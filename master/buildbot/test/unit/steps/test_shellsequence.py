@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import WithProperties
@@ -156,6 +157,7 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expect_outcome(result=FAILURE, state_string="'make p1' (failure)")
         return self.run_step()
 
+    @defer.inlineCallbacks
     def testShellArgsAreRenderedAnewAtEachBuild(self):
         """Unit test to ensure that ShellArg instances are properly re-rendered.
 
@@ -171,7 +173,7 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
         self.expect_outcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-1'")
-        self.run_step()
+        yield self.run_step()
 
         # Second "build"
         self.setup_step(step)
@@ -180,4 +182,4 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-2'")
 
-        return self.run_step()
+        yield self.run_step()

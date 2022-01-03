@@ -1,0 +1,1 @@
+Fixed an error when handling command management errors on the worker side (regression since v3.0.0).
