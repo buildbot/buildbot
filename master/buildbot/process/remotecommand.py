@@ -137,7 +137,12 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @defer.inlineCallbacks
     def _finished(self, failure=None):
+        # Finished may be called concurrently by a message from worker and interruption due to
+        # lost connection.
+        if not self.active:
+            return
         self.active = False
+
         # the rc is send asynchronously and there is a chance it is still in the callback queue
         # when finished is received, we have to workaround in the master because worker might be
         # older
