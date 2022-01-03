@@ -304,7 +304,6 @@ class RemoteCommand(base.RemoteCommandImpl):
         for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:
-                    loog = yield self._unwrap(loog)
                     yield loog.addHeader("\nremoteFailed: {}".format(maybeFailure))
                 else:
                     log.msg("closing log {}".format(loog))
