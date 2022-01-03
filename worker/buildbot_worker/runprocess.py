@@ -923,14 +923,24 @@ class RunProcess(object):
         return hit
 
     def _taskkill(self, pid, force):
-        if force:
-            cmd = "TASKKILL /F /PID {0} /T".format(pid)
-        else:
-            cmd = "TASKKILL /PID {0} /T".format(pid)
+        try:
+            if force:
+                cmd = "TASKKILL /F /PID {0} /T".format(pid)
+            else:
+                cmd = "TASKKILL /PID {0} /T".format(pid)
 
-        log.msg("using {0} to kill pid {1}".format(cmd, pid))
-        subprocess.check_call(cmd)
-        log.msg("taskkill'd pid {0}".format(pid))
+            log.msg("using {0} to kill pid {1}".format(cmd, pid))
+            subprocess.check_call(cmd)
+            log.msg("taskkill'd pid {0}".format(pid))
+
+        except subprocess.CalledProcessError as e:
+            # taskkill may return 128 as exit code when the child has already exited. We can't
+            # handle this race condition in any other way than just interpreting the kill action
+            # as successful
+            if e.returncode == 128:
+                log.msg("taskkill didn't find pid {0} to kill".format(pid))
+            else:
+                log.msg("taskkill failed to kill process {0}: {1}".format(pid, e))
 
     def kill(self, msg):
         # This may be called by the timeout, or when the user has decided to
