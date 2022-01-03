@@ -109,16 +109,7 @@ class Expect:
         """
         if behavior == 'rc':
             command.rc = args[0]
-            d = defer.succeed(None)
-            for log in command.logs.values():
-                if hasattr(log, 'unwrap'):
-                    # We're handling an old style log that was
-                    # used in an old style step. We handle the necessary
-                    # stuff to make the make sync/async log hack work.
-                    d.addCallback(
-                        functools.partial(lambda log, _: log.unwrap(), log))
-                    d.addCallback(lambda l: l.flushFakeLogfile())
-            return d
+            return defer.succeed(None)
         elif behavior == 'err':
             return defer.fail(args[0])
         elif behavior == 'update':
