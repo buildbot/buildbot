@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import functools
 import stat
 import tarfile
 from io import BytesIO
@@ -21,7 +20,6 @@ from io import BytesIO
 from mock import Mock
 
 from twisted.internet import defer
-from twisted.python import failure
 
 from buildbot.util import unicode2bytes
 
@@ -103,17 +101,17 @@ class Expect:
         self.behaviors.append(('rc', code))
         return self
 
+    @defer.inlineCallbacks
     def runBehavior(self, behavior, args, command):
         """
         Implement the given behavior.  Returns a Deferred.
         """
         if behavior == 'rc':
-            command.rc = args[0]
-            return defer.succeed(None)
+            yield command.remoteUpdate({'rc': args[0]})
         elif behavior == 'err':
-            return defer.fail(args[0])
+            raise args[0]
         elif behavior == 'update':
-            command.updates.setdefault(args[0], []).append(args[1])
+            yield command.remoteUpdate({args[0]: args[1]})
         elif behavior == 'log':
             name, streams = args
             for stream in streams:
@@ -130,13 +128,15 @@ class Expect:
             else:
                 if 'header' in streams or 'stderr' in streams:
                     raise Exception('Non stdio streams only support stdout')
-                return command.addToLog(name, streams['stdout'])
+                yield command.addToLog(name, streams['stdout'])
+                if name not in command.logs:
+                    raise Exception("{}.addToLog: no such log {}".format(command, name))
+
         elif behavior == 'callable':
-            return defer.maybeDeferred(lambda: args[0](command))
+            yield args[0](command)
         else:
-            return defer.fail(failure.Failure(AssertionError('invalid behavior {}'.format(
-                    behavior))))
-        return defer.succeed(None)
+            raise AssertionError('invalid behavior {}'.format(behavior))
+        return None
 
     @defer.inlineCallbacks
     def runBehaviors(self, command):
@@ -208,11 +208,14 @@ class ExpectShell(Expect):
     non-default arguments must be specified explicitly (e.g., usePTY).
     """
 
-    def __init__(self, workdir, command, env=None,
+    class NotSet:
+        pass
+
+    def __init__(self, workdir, command, env=NotSet,
                  want_stdout=1, want_stderr=1, initial_stdin=None,
-                 timeout=20 * 60, max_time=None, logfiles=None,
-                 use_pty=None, log_environ=True, interrupt_signal=None):
-        if env is None:
+                 timeout=20 * 60, max_time=None, sigterm_time=None, logfiles=None,
+                 use_pty=False, log_environ=True, interrupt_signal='KILL'):
+        if env is self.NotSet:
             env = {}
         if logfiles is None:
             logfiles = {}
@@ -230,6 +233,8 @@ class ExpectShell(Expect):
             'logEnviron': log_environ
         }
 
+        if sigterm_time is not self.NotSet:
+            args['sigtermTime'] = sigterm_time
         if interrupt_signal is not None:
             args['interruptSignal'] = interrupt_signal
         super().__init__("shell", args)

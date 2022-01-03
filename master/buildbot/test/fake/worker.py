@@ -58,6 +58,9 @@ class FakeWorker:
     def detached(self):
         pass
 
+    def messageReceivedFromWorker(self):
+        pass
+
     def addWorkerForBuilder(self, wfb):
         pass
 

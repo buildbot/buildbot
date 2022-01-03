@@ -20,12 +20,11 @@ from twisted.python import log
 from twisted.python.reflect import namedModule
 
 from buildbot.process import buildstep
-from buildbot.process import remotecommand as real_remotecommand
 from buildbot.process.results import EXCEPTION
+from buildbot.test.fake import connection
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
-from buildbot.test.fake import remotecommand
 from buildbot.test.fake import worker
 from buildbot.util import bytes2unicode
 
@@ -99,27 +98,8 @@ class TestBuildStepMixin:
         if not hasattr(self, 'reactor'):
             raise Exception('Reactor has not yet been setup for step')
 
-        self._next_remote_command_number = 0
         self._interrupt_remote_command_numbers = []
 
-        def create_fake_remote_command(*args, **kwargs):
-            cmd = remotecommand.FakeRemoteCommand(*args, **kwargs)
-            cmd.testcase = self
-            if self._next_remote_command_number in self._interrupt_remote_command_numbers:
-                cmd.set_run_interrupt()
-            self._next_remote_command_number += 1
-            return cmd
-
-        def create_fake_remote_shell_command(*args, **kwargs):
-            cmd = remotecommand.FakeRemoteShellCommand(*args, **kwargs)
-            cmd.testcase = self
-            if self._next_remote_command_number in self._interrupt_remote_command_numbers:
-                cmd.set_run_interrupt()
-            self._next_remote_command_number += 1
-            return cmd
-
-        self.patch(real_remotecommand, 'RemoteCommand', create_fake_remote_command)
-        self.patch(real_remotecommand, 'RemoteShellCommand', create_fake_remote_shell_command)
         self.expected_remote_commands = []
         self._expected_remote_commands_popped = 0
 
@@ -301,7 +281,8 @@ class TestBuildStepMixin:
 
         @returns: Deferred
         """
-        self.conn = mock.Mock(name="WorkerForBuilder(connection)")
+        self.conn = connection.FakeConnection(self, "WorkerForBuilder(connection)", self.step,
+                                              self._interrupt_remote_command_numbers)
         self.step.setupProgress()
         result = yield self.step.startStep(self.conn)
 
@@ -423,8 +404,7 @@ class TestBuildStepMixin:
             yield exp.runBehaviors(command)
 
     @defer.inlineCallbacks
-    def _remotecommand_run(self, command, step, conn, builder_name):
-        self.assertEqual(step, self.step)
+    def _connection_remote_start_command(self, command, conn, builder_name):
         self.assertEqual(conn, self.conn)
         got = (command.remote_command, command.args)
 
@@ -447,7 +427,8 @@ class TestBuildStepMixin:
             if not exp.shouldKeepMatchingAfter(command):
                 self.expected_remote_commands.pop(0)
                 self._expected_remote_commands_popped += 1
-        return command
+
+        command.remote_complete()
 
     def change_worker_system(self, system):
         self.worker.worker_system = system

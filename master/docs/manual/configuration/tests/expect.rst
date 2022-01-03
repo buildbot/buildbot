@@ -71,7 +71,7 @@ ExpectShell
         .stdout(b'my sample output')
         .exit(0)
 
-    .. py:method:: __init__(workdir, command, env=None, want_stdout=1, want_stderr=1, initial_stdin=None, timeout=20 * 60, max_time=None, logfiles=None, use_pty=None, log_environ=True, interrupt_signal=None)
+    .. py:method:: __init__(workdir, command, env=None, want_stdout=1, want_stderr=1, initial_stdin=None, timeout=20 * 60, max_time=None, sigterm_time=None, logfiles=None, use_pty=None, log_environ=True, interrupt_signal=None)
 
         Initializes the expectation.
 

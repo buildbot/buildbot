@@ -1014,7 +1014,8 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
         yield self.run_step()
         self.assertFalse(self.step.method_return_value)
         self.assertEqual(self.step.getLog('stdio').header,
-                         'NOTE: never mind\n')
+                         'NOTE: never mind\n'
+                         'program finished with exit code 1\n')
 
     def test_glob(self):
         @defer.inlineCallbacks
@@ -1298,7 +1299,8 @@ class TestShellMixin(TestBuildStepMixin,
         yield self.run_step()
         self.assertEqual(self.step.getLog('stdio').header,
                          'NOTE: worker does not allow master to override usePTY\n'
-                         'NOTE: worker does not allow master to specify interruptSignal\n')
+                         'NOTE: worker does not allow master to specify interruptSignal\n'
+                         'program finished with exit code 0\n')
 
     @defer.inlineCallbacks
     def test_new_worker_args(self):
@@ -1312,7 +1314,8 @@ class TestShellMixin(TestBuildStepMixin,
         )
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertEqual(self.step.getLog('stdio').header, '')
+        self.assertEqual(self.step.getLog('stdio').header,
+                         'program finished with exit code 0\n')
 
     @defer.inlineCallbacks
     def test_description(self):
