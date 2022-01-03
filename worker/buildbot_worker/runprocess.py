@@ -898,18 +898,10 @@ class RunProcess(object):
                 log.msg("interruptSignal==None, only pretending to kill child")
             elif self.process.pid is not None:
                 if interruptSignal == "TERM":
-                    log.msg("using TASKKILL PID /T to kill pid {0}".format(
-                            self.process.pid))
-                    subprocess.check_call(
-                        "TASKKILL /PID {0} /T".format(self.process.pid))
-                    log.msg("taskkill'd pid {0}".format(self.process.pid))
+                    self._taskkill(self.process.pid, force=False)
                     hit = 1
                 elif interruptSignal == "KILL":
-                    log.msg("using TASKKILL PID /F /T to kill pid {0}".format(
-                            self.process.pid))
-                    subprocess.check_call(
-                        "TASKKILL /F /PID {0} /T".format(self.process.pid))
-                    log.msg("taskkill'd pid {0}".format(self.process.pid))
+                    self._taskkill(self.process.pid, force=True)
                     hit = 1
 
         # try signalling the process itself (works on Windows too, sorta)
@@ -929,6 +921,16 @@ class RunProcess(object):
                 # been called already or will be called shortly
 
         return hit
+
+    def _taskkill(self, pid, force):
+        if force:
+            cmd = "TASKKILL /F /PID {0} /T".format(pid)
+        else:
+            cmd = "TASKKILL /PID {0} /T".format(pid)
+
+        log.msg("using {0} to kill pid {1}".format(cmd, pid))
+        subprocess.check_call(cmd)
+        log.msg("taskkill'd pid {0}".format(pid))
 
     def kill(self, msg):
         # This may be called by the timeout, or when the user has decided to
