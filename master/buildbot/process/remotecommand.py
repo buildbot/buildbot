@@ -157,16 +157,19 @@ class RemoteCommand(base.RemoteCommandImpl):
     @defer.inlineCallbacks
     def interrupt(self, why):
         log.msg("RemoteCommand.interrupt", self, why)
+
+        if self.conn and isinstance(why, Failure) and why.check(error.ConnectionLost):
+            # Note that we may be in the process of interruption and waiting for the worker to
+            # return the final results when the connection is disconnected.
+            log.msg("RemoteCommand.interrupt: lost worker")
+            self.conn = None
+            self._finished(why)
+            return
         if not self.active or self.interrupted:
             log.msg(" but this RemoteCommand is already inactive")
             return
         if not self.conn:
             log.msg(" but our .conn went away")
-            return
-        if isinstance(why, Failure) and why.check(error.ConnectionLost):
-            log.msg("RemoteCommand.disconnect: lost worker")
-            self.conn = None
-            self._finished(why)
             return
 
         self.interrupted = True
