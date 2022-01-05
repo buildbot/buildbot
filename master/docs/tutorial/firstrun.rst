@@ -66,17 +66,14 @@ Creating a master
 -----------------
 
 The first necessary step is to create a virtualenv for our master.
-We will also use a separate directory to demonstrate the distinction between a master and worker:
-
-On Python 2:
+We first create a separate directory to demonstrate the distinction between a master and worker:
 
 .. code-block:: bash
 
   mkdir -p ~/buildbot-test/master
   cd ~/buildbot-test/master
 
-
-On Python 3:
+Then we create the virtual environment. On Python 3:
 
 .. code-block:: bash
 
@@ -156,21 +153,15 @@ As a consequence of this, your worker will need access to the git_ command in or
 Be sure that it is installed, or the builds will fail.
 
 Same as we did for our master, we will create a virtualenv for our worker next to the other one.
-It would however be completely ok to do this on another computer - as long as the *worker* computer is able to connect to the *master* one:
+It would however be completely ok to do this on another computer - as long as the *worker* computer is able to connect to the *master* one.
+We first create a new directory for the worker:
 
 .. code-block:: bash
 
   mkdir -p ~/buildbot-test/worker
   cd ~/buildbot-test/worker
 
-On Python 2:
-
-.. code-block:: bash
-
-  virtualenv sandbox
-  source sandbox/bin/activate
-
-On Python 3:
+Again, we create a virtual environment. On Python 3:
 
 .. code-block:: bash
 
