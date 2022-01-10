@@ -245,6 +245,10 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     Always pulls (update) image if autopull is set to true.
     Also affects the base image specified by `FROM ....` if using a dockerfile, autopull is not needed then.
 
+``target``
+    (renderable string, optional)
+    Sets target build stage for multi-stage builds when using a dockerfile.
+
 ``custom_context``
     (renderable boolean, optional)
 	Boolean indicating that the user wants to use custom build arguments for the docker environment. Defaults to False.
