@@ -19,6 +19,7 @@ This section gives some general information about Buildbot development.
     auth
     authz
     master-worker
+    master-worker-msgpack
     br-claiming
     encodings
     metrics
