@@ -74,7 +74,7 @@ service-identity==21.1.0
 setuptools-trial==0.6.0
 singledispatch==3.7.0
 six==1.16.0
-snowballstemmer==2.1.0
+snowballstemmer==2.2.0
 SQLAlchemy==1.4.22
 sqlparse==0.4.2
 termcolor==1.1.0
