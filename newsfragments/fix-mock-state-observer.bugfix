@@ -1,0 +1,1 @@
+Fix updating build step summary with mock state changes for MockBuildSRPM and MockRebuild.
