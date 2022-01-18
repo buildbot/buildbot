@@ -105,7 +105,7 @@ class _NSNode:
     # pylint: disable=W0212
 
     def __init__(self):
-        self._children = dict()
+        self._children = {}
 
     def load(self):
         for child in self._children.values():
@@ -288,7 +288,7 @@ class _PluginDB:
     """
 
     def __init__(self):
-        self._namespaces = dict()
+        self._namespaces = {}
 
     def add_namespace(self, namespace, interface=None, check_extras=True,
                       load_now=False):
@@ -319,7 +319,7 @@ class _PluginDB:
         """
         get information about all plugins in registered namespaces
         """
-        result = dict()
+        result = {}
         for name, namespace in self._namespaces.items():
             result[name] = namespace.info_all()
         return result

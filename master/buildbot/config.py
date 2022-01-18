@@ -216,7 +216,7 @@ class MasterConfig(util.ComparableMixin):
         self.revlink = default_revlink_matcher
         self.www = dict(
             port=None,
-            plugins=dict(),
+            plugins={},
             auth=auth.NoAuth(),
             authz=authz.Authz(),
             avatar_methods=avatar.AvatarGravatar(),

@@ -363,7 +363,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin,
     def test_run_extract_fn_cmdfail_empty(self):
         def extract_fn(rc, stdout, stderr):
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
-            return dict()
+            return {}
         self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expect_commands(

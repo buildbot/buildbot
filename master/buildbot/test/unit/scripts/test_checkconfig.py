@@ -160,7 +160,7 @@ class TestCheckconfig(unittest.TestCase):
         self.patch(checkconfig, '_loadConfig', self.loadConfig)
 
     def test_checkconfig_default(self):
-        self.assertEqual(checkconfig.checkconfig(dict()), 3)
+        self.assertEqual(checkconfig.checkconfig({}), 3)
         self.loadConfig.assert_called_with(basedir=os.getcwd(),
                                            configFile='master.cfg', quiet=None)
 

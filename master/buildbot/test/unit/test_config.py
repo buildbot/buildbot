@@ -486,7 +486,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 ConfigWarning,
                 message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):
             self.do_test_load_global(
-                dict())
+                {})
 
     def test_load_global_logCompressionLimit(self):
         self.do_test_load_global(dict(logCompressionLimit=10),
@@ -708,7 +708,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_schedulers_not_list(self):
         self.cfg.load_schedulers(self.filename,
-                                 dict(schedulers=dict()))
+                                 dict(schedulers={}))
         self.assertConfigError(self.errors, "must be a list of")
 
     def test_load_schedulers_not_instance(self):
@@ -736,7 +736,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_builders_not_list(self):
         self.cfg.load_builders(self.filename,
-                               dict(builders=dict()))
+                               dict(builders={}))
         self.assertConfigError(self.errors, "must be a list")
 
     def test_load_builders_not_instance(self):
@@ -774,7 +774,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_workers_not_list(self):
         self.cfg.load_workers(self.filename,
-                              dict(workers=dict()))
+                              dict(workers={}))
         self.assertConfigError(self.errors, "must be a list")
 
     def test_load_workers_not_instance(self):

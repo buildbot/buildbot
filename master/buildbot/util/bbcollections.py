@@ -23,7 +23,7 @@ assert defaultdict
 class KeyedSets:
 
     def __init__(self):
-        self.d = dict()
+        self.d = {}
 
     def add(self, key, value):
         if key not in self.d:

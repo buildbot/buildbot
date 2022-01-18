@@ -46,7 +46,7 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     @defer.inlineCallbacks
     def partial_build_dict(self, master, buildrequest):
         brdict = yield master.db.buildrequests.getBuildRequest(buildrequest['buildrequestid'])
-        bdict = dict()
+        bdict = {}
 
         props = Properties()
         buildrequest = yield BuildRequest.fromBrdict(master, brdict)

@@ -118,7 +118,7 @@ class TestBuildStepMixin:
             }
 
         if worker_env is None:
-            worker_env = dict()
+            worker_env = {}
 
         if build_files is None:
             build_files = list()

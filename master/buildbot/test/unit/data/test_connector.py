@@ -156,10 +156,10 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         self.assertIsInstance(match[0], TestEndpoint)
         match = self.data.matcher[('tests',)]
         self.assertIsInstance(match[0], TestsEndpoint)
-        self.assertEqual(match[1], dict())
+        self.assertEqual(match[1], {})
         match = self.data.matcher[('test', 'foo')]
         self.assertIsInstance(match[0], TestsEndpointSubclass)
-        self.assertEqual(match[1], dict())
+        self.assertEqual(match[1], {})
 
         # and that it found the update method
         self.assertEqual(self.data.updates.testUpdate(), "testUpdate return")

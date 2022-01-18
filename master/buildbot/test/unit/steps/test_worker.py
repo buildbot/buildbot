@@ -140,7 +140,7 @@ class TestFileExists(TestBuildStepMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_old_version(self):
         self.setup_step(worker.FileExists(file="x"),
-                       worker_version=dict())
+                       worker_version={})
         self.expect_outcome(result=EXCEPTION,
                            state_string="finished (exception)")
         yield self.run_step()
