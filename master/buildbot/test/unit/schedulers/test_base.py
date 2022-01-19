@@ -56,7 +56,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             codebases = {'': {}}
 
         if isinstance(builderNames, list):
-            dbBuilder = list()
+            dbBuilder = []
             builderid = 0
             for builderName in builderNames:
                 builderid += 1

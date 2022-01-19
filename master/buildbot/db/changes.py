@@ -173,7 +173,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         assert buildid > 0
 
         gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
-        changes = list()
+        changes = []
         currentBuild = yield self.master.db.builds.getBuild(buildid)
         fromChanges, toChanges = {}, {}
         ssBuild = yield gssfb(buildid)

@@ -414,7 +414,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         # but that would merely only optimize the single builder case, while
         # probably the multiple builder case will be severely impacted by the
         # several db requests needed.
-        builderids = list()
+        builderids = []
         for bldr in (yield self.master.data.get(('builders', ))):
             if bldr['name'] in builderNames:
                 builderids.append(bldr['builderid'])
