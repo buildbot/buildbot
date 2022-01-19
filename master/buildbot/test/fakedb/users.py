@@ -82,8 +82,7 @@ class FakeUsersComponent(FakeDBComponent):
     # component methods
 
     def findUserByAttr(self, identifier, attr_type, attr_data):
-        for uid in self.users_info:
-            attrs = self.users_info[uid]
+        for uid, attrs in self.users_info.items():
             for attr in attrs:
                 if (attr_type == attr['attr_type'] and
                         attr_data == attr['attr_data']):
@@ -104,8 +103,7 @@ class FakeUsersComponent(FakeDBComponent):
 
     def getUserByUsername(self, username):
         usdict = None
-        for uid in self.users:
-            user = self.users[uid]
+        for uid, user in self.users.items():
             if user['bb_username'] == username:
                 usdict = self._user2dict(uid)
         return defer.succeed(usdict)
@@ -149,7 +147,7 @@ class FakeUsersComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def identifierToUid(self, identifier):
-        for uid in self.users:
-            if identifier == self.users[uid]['identifier']:
+        for uid, user in self.users.items():
+            if identifier == user['identifier']:
                 return defer.succeed(uid)
         return defer.succeed(None)

@@ -345,11 +345,11 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                     else:
                         branch_files[branch] = [file]
 
-            for branch in branch_files:
+            for branch, files in branch_files.items():
                 yield self.master.data.updates.addChange(
                     author=who,
                     committer=None,
-                    files=branch_files[branch],
+                    files=files,
                     comments=comments,
                     revision=str(num),
                     when_timestamp=when,
