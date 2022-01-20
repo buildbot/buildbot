@@ -104,13 +104,13 @@ class FakeBuilder:
 
     def __init__(self, master):
         self.config = Mock()
-        self.config.workerbuilddir = 'wbd'
-        self.name = 'fred'
-        self.master = master
-        self.botmaster = master.botmaster
-        self.builderid = 83
-        self._builders = {}
-        self.config_version = 0
+        self.config.workerbuilddir , 
+        self.name , 
+        self.master , 
+        self.botmaster , 
+        self.builderid , 
+        self._builders , 
+        self.config_version  = 'wbd', 'fred', master, master.botmaster, 83, {}, 0
 
     def getBuilderId(self):
         return defer.succeed(self.builderid)
