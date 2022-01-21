@@ -271,7 +271,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         # mock out the _masterDeactivated methods this will call
         for rtype in 'builder', 'scheduler', 'changesource':
             rtype_obj = getattr(self.master.data.rtypes, rtype)
-            m = mock.Mock(name='{}._masterDeactivated'.format(rtype),
+            m = mock.Mock(name=f'{rtype}._masterDeactivated',
                           spec=rtype_obj._masterDeactivated)
             m.side_effect = lambda masterid: defer.succeed(None)
             rtype_obj._masterDeactivated = m

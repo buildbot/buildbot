@@ -196,7 +196,7 @@ class PullRequestListRest():
         self.src_by_url = {}
         for pr in prs:
             self.pr_by_id[pr.nr] = pr
-            self.src_by_url["{}/{}".format(pr.source.owner, pr.source.slug)] = pr.source
+            self.src_by_url[f"{pr.source.owner}/{pr.source.slug}"] = pr.source
 
     def request(self):
 
@@ -216,24 +216,21 @@ class PullRequestListRest():
                 "updated_on": pr.updated_on,
                 "id": pr.nr,
             }
-        return FakeResponse("""\
-{
+        return FakeResponse(f"""\
+{{
 
     "pagelen": 10,
-    "values": [%s
-    ],
+    "values": [{s}],
     "page": 1
 
-}
-""" % s)
+}}
+""")
 
     def getPage(self, url, timeout=None, headers=None):
         list_url_re = re.compile(
-            r"https://api.bitbucket.org/2.0/repositories/{}/{}/pullrequests".format(self.owner,
-                                                                                    self.slug))
+            f"https://api.bitbucket.org/2.0/repositories/{self.owner}/{self.slug}/pullrequests")
         pr_url_re = re.compile(
-            r"https://api.bitbucket.org/2.0/repositories/{}/{}/pullrequests/(?P<id>\d+)".format(
-                    self.owner, self.slug))
+            fr"https://api.bitbucket.org/2.0/repositories/{self.owner}/{self.slug}/pullrequests/(?P<id>\d+)")  # noqa pylint: disable=line-too-long
         source_commit_url_re = re.compile(
             r"https://api.bitbucket.org/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)/commit/(?P<hash>\d+)")  # noqa pylint: disable=line-too-long
         source_url_re = re.compile(
@@ -248,13 +245,11 @@ class PullRequestListRest():
 
         m = source_commit_url_re.match(url)
         if m:
-            return self.src_by_url["{}/{}".format(m.group("src_owner"),
-                                                  m.group("src_slug"))].request()
+            return self.src_by_url[f'{m.group("src_owner")}/{m.group("src_slug")}'].request()
 
         m = source_url_re.match(url)
         if m:
-            return self.src_by_url["{}/{}".format(m.group("src_owner"),
-                                                  m.group("src_slug"))].repo_request()
+            return self.src_by_url[f'{m.group("src_owner")}/{m.group("src_slug")}'].repo_request()
 
         print('ZZZ:', url)
         raise Error(code=404)

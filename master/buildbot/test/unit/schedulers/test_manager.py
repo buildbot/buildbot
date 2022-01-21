@@ -80,7 +80,7 @@ class SchedulerManager(unittest.TestCase):
             assert self.objectid is not None
 
         def __repr__(self):
-            return "{}(attr={})".format(self.__class__.__name__, self.attr)
+            return f"{self.__class__.__name__}(attr={self.attr})"
 
     class ReconfigSched(Sched):
 

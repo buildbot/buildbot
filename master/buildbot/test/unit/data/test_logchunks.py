@@ -31,7 +31,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
     endpointname = "contents"
     log60Lines = ['line zero', 'line 1', 'line TWO', 'line 3', 'line 2**2',
                   'another line', 'yet another line']
-    log61Lines = ['%08d' % i for i in range(100)]
+    log61Lines = [f'{i:08d}' for i in range(100)]
 
     def setUp(self):
         self.setUpEndpoint()
@@ -63,7 +63,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                        type='t', num_lines=100),
         ] + [
             fakedb.LogChunk(logid=61, first_line=i, last_line=i, compressed=0,
-                            content="%08d" % i)
+                            content=f"{i:08d}")
             for i in range(100)
         ] + [
             fakedb.Log(id=62, stepid=50, name='notes', slug='notes', type='t',

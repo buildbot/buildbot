@@ -125,7 +125,7 @@ class TestActions(MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMi
 
         self.expect_commands(
             ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', '-i', ssh_key_path,
-                          '-o', 'UserKnownHostsFile={0}'.format(ssh_known_hosts_path),
+                          '-o', f'UserKnownHostsFile={ssh_known_hosts_path}',
                           'remote_host', 'remotebin', 'arg1'])
             .exit(0),
         )

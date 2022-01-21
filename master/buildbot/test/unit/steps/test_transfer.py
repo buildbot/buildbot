@@ -111,7 +111,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_outcome(
             result=SUCCESS,
-            state_string="uploading {}".format(os.path.basename(__file__))
+            state_string=f"uploading {os.path.basename(__file__)}"
             )
 
         yield self.run_step()
@@ -162,7 +162,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_outcome(
             result=SUCCESS,
-            state_string="uploading {}".format(os.path.basename(__file__))
+            state_string=f"uploading {os.path.basename(__file__)}"
             )
 
         yield self.run_step()
@@ -187,7 +187,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_outcome(
             result=SUCCESS,
-            state_string="uploading {}".format(os.path.basename(__file__))
+            state_string=f"uploading {os.path.basename(__file__)}"
             )
 
         yield self.run_step()
@@ -865,8 +865,7 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin,
 
         self.expect_outcome(
             result=SUCCESS,
-            state_string="downloading to {0}".format(
-                os.path.basename(self.destfile)))
+            state_string=f"downloading to {os.path.basename(self.destfile)}")
         yield self.run_step()
 
         with open(master_file, "rb") as f:
@@ -894,8 +893,7 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin,
 
         self.expect_outcome(
             result=SUCCESS,
-            state_string="downloading to {0}".format(
-                os.path.basename(self.destfile)))
+            state_string=f"downloading to {os.path.basename(self.destfile)}")
         yield self.run_step()
 
         def checkCalls(res):
@@ -912,8 +910,8 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin,
         self.expect_commands()
 
         self.expect_outcome(result=FAILURE,
-                           state_string="downloading to {0} (failure)".format(
-                               os.path.basename(self.destfile)))
+                           state_string=f"downloading to {os.path.basename(self.destfile)} "
+                           "(failure)")
         self.expect_log_file('stderr',
                            "File 'not existing file' not available at master")
         yield self.run_step()

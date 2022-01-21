@@ -180,9 +180,9 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
     def makeBuildInfo(self, buildResults, resultText, builds):
         info = []
         for i, buildResult in enumerate(buildResults):
-            info.append({'name': "Builder%d" % i, 'result': buildResults[i],
+            info.append({'name': f"Builder{i}", 'result': buildResults[i],
                          'resultText': resultText[i], 'text': 'buildText',
-                         'url': "http://localhost:8080/#builders/%d/builds/%d" % (79 + i, i),
+                         'url': f"http://localhost:8080/#builders/{79 + i}/builds/{i}",
                          'build': builds[i]})
         return info
 

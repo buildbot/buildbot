@@ -592,7 +592,7 @@ def _prepare_request(event, payload, _secret=None, headers=None):
     }
 
     assert isinstance(payload, (bytes, list)), \
-        "payload can only be bytes or list, not {}".format(type(payload))
+        f"payload can only be bytes or list, not {type(payload)}"
 
     if isinstance(payload, bytes):
         request.content = BytesIO(payload)
@@ -602,8 +602,7 @@ def _prepare_request(event, payload, _secret=None, headers=None):
             signature = hmac.new(unicode2bytes(_secret),
                                  msg=unicode2bytes(payload),
                                  digestmod=sha1)
-            request.received_headers[_HEADER_SIGNATURE] = \
-                'sha1={}'.format(signature.hexdigest())
+            request.received_headers[_HEADER_SIGNATURE] = f'sha1={signature.hexdigest()}'
     else:
         request.args[b'payload'] = payload
         request.received_headers[_HEADER_CT] = _CT_ENCODED

@@ -74,12 +74,11 @@ class TestResults(unittest.TestCase):
                             self.warnOnFailure = wof
                             nr, term = results.computeResultAndTermination(
                                 self, result, previousResult)
-                            log.msg("res=%r prevRes=%r hof=%r fow=%r fof=%r "
-                                    "wow=%r wof=%r => %r %r" %
-                                    (results.Results[result],
-                                     results.Results[previousResult],
-                                     hof, fow, fof, wow, wof,
-                                     results.Results[nr], term))
+                            log.msg(f"res={repr(results.Results[result])} "
+                                    f"prevRes={repr(results.Results[previousResult])} "
+                                    f"hof={repr(hof)} fow={repr(fow)} fof={repr(fof)} "
+                                    f"wow={repr(wow)} wof={repr(wof)} => "
+                                    f"{repr(results.Results[nr])} {repr(term)}")
                             self.assertEqual((nr, term),
                                              (newResult, terminate),
                                              "see test.log for details")

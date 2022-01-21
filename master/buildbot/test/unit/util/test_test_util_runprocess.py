@@ -49,9 +49,9 @@ class TestRunprocessMixin(unittest.TestCase):
         if not result.wasSuccessful():
             output = 'expected success'
             if result.failures:
-                output += ('\ntest failed: {}'.format(result.failures[0][1].getErrorMessage()))
+                output += (f'\ntest failed: {result.failures[0][1].getErrorMessage()}')
             if result.errors:
-                output += ('\nerrors: {}'.format([error[1].value for error in result.errors]))
+                output += (f'\nerrors: {[error[1].value for error in result.errors]}')
             raise self.failureException(output)
 
         self.assertTrue(result.wasSuccessful())

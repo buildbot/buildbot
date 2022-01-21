@@ -27,7 +27,7 @@ from buildbot.util import bytes2unicode
 class createJobfile(unittest.TestCase):
 
     def makeNetstring(self, *strings):
-        return ''.join(['{}:{},'.format(len(s), s) for s in strings])
+        return ''.join([f'{len(s)}:{s},' for s in strings])
 
     # versions 1-4 are deprecated and not produced by the try client
 

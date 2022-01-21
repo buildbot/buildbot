@@ -123,8 +123,7 @@ class Change(unittest.TestCase, TestReactorMixin):
         if not ok:
             def printable(c):
                 return pprint.pformat(c.__dict__)
-            self.fail("changes do not match; expected\n{}\ngot\n{}".format(printable(exp),
-                                                                           printable(got)))
+            self.fail(f"changes do not match; expected\n{printable(exp)}\ngot\n{printable(got)}")
 
     def test_str(self):
         string = str(self.change23)

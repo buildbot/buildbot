@@ -325,6 +325,6 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         self.assertEqual(domain.metadata, {
             'buildbot': (libvirtfake.VIR_DOMAIN_METADATA_ELEMENT,
                          'http://buildbot.net/',
-                         '<auth username="bot" password="p" master="{}"/>'.format(expect_fqdn),
+                         f'<auth username="bot" password="p" master="{expect_fqdn}"/>',
                          libvirtfake.VIR_DOMAIN_AFFECT_CONFIG)
         })

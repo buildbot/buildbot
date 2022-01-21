@@ -320,9 +320,9 @@ class RealTests(Tests):
         self.reactor.advance(TIME1)
         yield self.insertTestData(self.backgroundData + [
             fakedb.Step(id=73, number=0, name='a' * 50, buildid=30),
-        ] + [fakedb.Step(id=73 + i, number=i, name='a' * 48 + ('_%d' % i), buildid=30)
+        ] + [fakedb.Step(id=73 + i, number=i, name='a' * 48 + (f'_{i}'), buildid=30)
              for i in range(1, 10)
-             ] + [fakedb.Step(id=73 + i, number=i, name='a' * 47 + ('_%d' % i), buildid=30)
+             ] + [fakedb.Step(id=73 + i, number=i, name='a' * 47 + (f'_{i}'), buildid=30)
                   for i in range(10, 100)
                   ])
         stepid, number, name = yield self.db.steps.addStep(

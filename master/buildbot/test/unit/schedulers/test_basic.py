@@ -50,8 +50,7 @@ class CommonStuffMixin:
                 builderNames=None, properties=None, **kw):
             self.assertEqual(external_idstring, None)
             self.assertEqual(reason, sched.reason)
-            self.events.append('B{}@{}'.format(repr(changeids).replace(' ', ''),
-                                               int(self.clock.seconds())))
+            self.events.append(f"B{repr(changeids).replace(' ', '')}@{int(self.clock.seconds())}")
             return defer.succeed(None)
         sched.addBuildsetForChanges = addBuildsetForChanges
 

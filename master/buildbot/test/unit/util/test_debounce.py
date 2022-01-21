@@ -57,7 +57,7 @@ class DebounceTest(unittest.TestCase):
         while events:
             n, t, e = events.pop(0)
             db = dbs[n]
-            log.msg('time=%f, event=%s' % (t, e))
+            log.msg(f'time={t}, event={e}')
             if t > self.clock.seconds():
                 self.clock.advance(t - self.clock.seconds())
             if e == 'maybe':
@@ -84,7 +84,7 @@ class DebounceTest(unittest.TestCase):
                 self.assertTrue(db.stopDeferreds[-1].called)
                 db.stopDeferreds.pop()
             else:
-                self.fail("unknown scenario event {}".format(e))
+                self.fail(f"unknown scenario event {e}")
             for db in dbs.values():
                 self.assertEqual(db.calls, db.expCalls)
 

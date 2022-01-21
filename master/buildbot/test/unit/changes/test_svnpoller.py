@@ -248,7 +248,7 @@ def split_file(path):
         return dict(branch="branch", path="/".join(pieces[1:]))
     if pieces[0] == "trunk":
         return dict(path="/".join(pieces[1:]))
-    raise RuntimeError("there shouldn't be any files like %r" % path)
+    raise RuntimeError(f"there shouldn't be any files like {repr(path)}")
 
 
 class TestSVNPoller(MasterRunProcessMixin,

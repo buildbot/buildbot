@@ -516,7 +516,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         build["complete"] = True
         self.setUpLogging()
         yield self.cp._got_event(('builds', 20, 'finished'), build)
-        self.assertLogged('Comment sent to {}'.format(PR_URL))
+        self.assertLogged(f'Comment sent to {PR_URL}')
 
     @defer.inlineCallbacks
     def test_reporter_basic_without_logging(self):
@@ -531,7 +531,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         self.setUpLogging()
         yield self.cp._got_event(('builds', 20, 'finished'), build)
 
-        self.assertNotLogged('Comment sent to {}'.format(PR_URL))
+        self.assertNotLogged(f'Comment sent to {PR_URL}')
 
     @defer.inlineCallbacks
     def test_reporter_without_pullrequest(self):
@@ -572,8 +572,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         build['complete'] = True
         yield self.cp._got_event(('builds', 20, 'finished'), build)
 
-        self.assertLogged(
-            "^{}: Unable to send a comment: ".format(http_error_code))
+        self.assertLogged(f"^{http_error_code}: Unable to send a comment: ")
         self.assertLogged("A dataXXXbase error has occurred")
 
     @defer.inlineCallbacks
@@ -589,8 +588,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         self.setUpLogging()
         build['complete'] = True
         yield self.cp._got_event(('builds', 20, 'finished'), build)
-        self.assertLogged("^{}: Unable to send a comment: ".format(
-            http_error_code))
+        self.assertLogged(f"^{http_error_code}: Unable to send a comment: ")
 
     @defer.inlineCallbacks
     def test_reporter_does_not_log_return_code_on_valid_return_code(
@@ -606,4 +604,4 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         self.setUpLogging()
         build['complete'] = True
         yield self.cp._got_event(('builds', 20, 'finished'), build)
-        self.assertNotLogged("^{}:".format(http_code))
+        self.assertNotLogged(f"^{http_code}:")

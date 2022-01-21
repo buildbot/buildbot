@@ -89,15 +89,15 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             yield self.tear_down_test_build_step()
 
     def get_connection_string(self):
-        return "http://127.0.0.1:{}".format(self.port)
+        return f"http://127.0.0.1:{self.port}"
 
     def getURL(self, path=""):
-        return '{}/{}'.format(self.get_connection_string(), path)
+        return f'{self.get_connection_string()}/{path}'
 
     def test_get(self):
         url = self.getURL()
         self.setup_step(http.GET(url))
-        self.expect_log_file('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK".format(url))
+        self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nOK")
         self.expect_log_file('content', "OK")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
@@ -116,10 +116,10 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         url = self.getURL("redirect")
         self.setup_step(http.GET(url))
 
-        expected_log = '''
+        expected_log = f'''
 Redirected 1 times:
 
-URL: {0}/redirect
+URL: {self.get_connection_string()}/redirect
  ------ Content ------
 
 <html>
@@ -131,10 +131,10 @@ URL: {0}/redirect
     </body>
 </html>
 ============================================================
-URL: {0}/redirected-path
+URL: {self.get_connection_string()}/redirected-path
 Status: 200
  ------ Content ------
-OK'''.format(self.get_connection_string())
+OK'''
 
         self.expect_log_file('log', expected_log)
         self.expect_log_file('content', "OK")
@@ -144,7 +144,7 @@ OK'''.format(self.get_connection_string())
     def test_404(self):
         url = self.getURL("404")
         self.setup_step(http.GET(url))
-        self.expect_log_file('log', "URL: {}\n ------ Content ------\n404".format(url))
+        self.expect_log_file('log', f"URL: {url}\n ------ Content ------\n404")
         self.expect_log_file('content', "404")
         self.expect_outcome(result=FAILURE, state_string="Status code: 404 (failure)")
         return self.run_step()
@@ -159,7 +159,7 @@ OK'''.format(self.get_connection_string())
         url = self.getURL("path")
         self.setup_step(http.POST(url))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
-        self.expect_log_file('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK:".format(url))
+        self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nOK:")
         self.expect_log_file('content', "OK:")
         return self.run_step()
 
@@ -168,7 +168,7 @@ OK'''.format(self.get_connection_string())
         self.setup_step(http.POST(url, data='mydata'))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         self.expect_log_file('log',
-                           "URL: {}\nStatus: 200\n ------ Content ------\nOK:mydata".format(url))
+                           f"URL: {url}\nStatus: 200\n ------ Content ------\nOK:mydata")
         self.expect_log_file('content', "OK:mydata")
         return self.run_step()
 
@@ -177,11 +177,11 @@ OK'''.format(self.get_connection_string())
 
         self.setup_step(http.POST(url, data={'key1': 'value1'}))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
-        self.expect_log_file('log', '''\
-URL: {}
+        self.expect_log_file('log', f'''\
+URL: {url}
 Status: 200
  ------ Content ------
-OK:key1=value1'''.format(url))
+OK:key1=value1''')
         self.expect_log_file('content', "OK:key1=value1")
         return self.run_step()
 
@@ -189,7 +189,7 @@ OK:key1=value1'''.format(url))
         url = self.getURL("header")
         self.setup_step(http.GET(url, headers={"X-Test": "True"}))
         self.expect_log_file('log',
-                             "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
+                             f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
 
@@ -200,7 +200,7 @@ OK:key1=value1'''.format(url))
                                 hide_request_headers=["X-Test"],
                                 hide_response_headers=["Content-Length"]))
         self.expect_log_file('log',
-                             "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
+                             f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         yield self.run_step()
         self.assertIn("X-Test: <HIDDEN>", self.step.logs['log'].header)
@@ -212,8 +212,7 @@ OK:key1=value1'''.format(url))
         self.properties.setProperty(
             'x', {'param_1': 'param_1', 'param_2': 2}, 'here')
         self.expect_log_file('log',
-            ("URL: {}?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK"
-             ).format(url))
+            f"URL: {url}?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK")
         self.expect_log_file('content', "OK")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
