@@ -236,7 +236,6 @@ class AbstractLatentWorker(AbstractWorker):
             return defer.succeed(False)
 
         if self.state == States.SUBSTANTIATED and self.conn is not None:
-            self._setBuildWaitTimer()
             return defer.succeed(True)
 
         if self.state in [States.SUBSTANTIATING,
