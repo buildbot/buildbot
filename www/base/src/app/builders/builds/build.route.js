@@ -1,5 +1,5 @@
 class BuildState {
-    constructor($stateProvider, bbSettingsServiceProvider) {
+    constructor($stateProvider, bbSettingsServiceProvider, config) {
 
         // Name of the state
         const name = 'build';
@@ -11,7 +11,7 @@ class BuildState {
             name,
             url: '/builders/:builder/builds/:build',
             data: {
-                pageTitle: _.template("Buildbot: builder <%= builder %> build <%= build %>")
+                pageTitle: _.template(`${config.title}: builder <%= builder %> build <%= build %>`)
             }
         };
 
@@ -59,4 +59,4 @@ class BuildState {
 
 
 angular.module('app')
-.config(['$stateProvider', 'bbSettingsServiceProvider', BuildState]);
+.config(['$stateProvider', 'bbSettingsServiceProvider', 'config', BuildState]);

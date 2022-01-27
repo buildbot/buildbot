@@ -1,5 +1,5 @@
 class StepState {
-    constructor($stateProvider) {
+    constructor($stateProvider, config) {
 
         // Name of the state
         const name = 'step';
@@ -7,7 +7,7 @@ class StepState {
         // Configuration
         const cfg = {
             tabid: 'builders',
-            pageTitle: _.template("Buildbot: build <%= build %> step: <%= step %>")
+            pageTitle: _.template(`${config.title}: build <%= build %> step: <%= step %>`)
         };
 
         // Register new state
@@ -23,4 +23,4 @@ class StepState {
 
 
 angular.module('app')
-.config(['$stateProvider', StepState]);
+.config(['$stateProvider','config', StepState]);

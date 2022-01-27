@@ -18,9 +18,9 @@ class WindowTitle {
                             $window.document.title = toState.data.pageTitle;
                         }
                     } else if (toState.data && toState.data.caption) {
-                        $window.document.title = `Buildbot: ${toState.data.caption}`;
+                        $window.document.title = `${config.title}: ${toState.data.caption}`;
                     } else {
-                        $window.document.title = 'Buildbot';
+                        $window.document.title = config.title;
                     }
                 })
             ;

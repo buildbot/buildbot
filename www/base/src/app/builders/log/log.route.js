@@ -1,5 +1,5 @@
 class LogState {
-    constructor($stateProvider) {
+    constructor($stateProvider, config) {
 
         // Name of the state
         const name = 'log';
@@ -7,7 +7,7 @@ class LogState {
         // Configuration
         const cfg = {
             tabid: 'builders',
-            pageTitle: _.template("Buildbot: log: <%= log %>")
+            pageTitle: _.template(`${config.title}: log: <%= log %>`)
         };
 
         // Register new state
@@ -25,4 +25,4 @@ class LogState {
 
 
 angular.module('app')
-.config(['$stateProvider', LogState]);
+.config(['$stateProvider', 'config', LogState]);
