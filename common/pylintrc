@@ -157,7 +157,6 @@ disable=
   consider-using-generator,
   use-a-generator,
   raising-bad-type,
-  redundant-u-string-prefix,
   unnecessary-dict-index-lookup,
   consider-using-max-builtin,
   consider-using-in,

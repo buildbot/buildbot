@@ -261,7 +261,7 @@ class RunMasterBase(unittest.TestCase):
         def dump():
             if not self._passed:
                 dump = StringIO()
-                print(u"FAILED! dumping build db for debug", file=dump)
+                print("FAILED! dumping build db for debug", file=dump)
                 builds = yield self.master.data.get(("builds",))
                 for build in builds:
                     yield self.printBuild(build, dump, withLogs=True)
@@ -399,7 +399,7 @@ class RunMasterBase(unittest.TestCase):
                 if linetype == 'e':
                     # red
                     line = "\x1b[31m" + line + "\x1b[0m"
-                print(u" " * 8 + line)
+                print(" " * 8 + line)
         else:
-            print(u"" + log['contents']['content'], file=out)
-        print(u" " * 8 + "********************************", file=out)
+            print("" + log['contents']['content'], file=out)
+        print(" " * 8 + "********************************", file=out)
