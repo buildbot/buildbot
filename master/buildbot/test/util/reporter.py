@@ -152,7 +152,7 @@ class ReporterTestMixin:
                 fakedb.BuildProperty(
                     buildid=20 + i, name="buildername", value="Builder0"),
                 fakedb.BuildProperty(
-                    buildid=20 + i, name="buildnumber", value="{}".format(i)),
+                    buildid=20 + i, name="buildnumber", value=f"{i}"),
                 fakedb.BuildProperty(buildid=20 + i, name="scheduler", value="checkin"),
             ])
             for k, v in self.reporter_test_props.items():

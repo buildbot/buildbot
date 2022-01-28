@@ -91,7 +91,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
                     'addBuildsetForChanges',
                     'addBuildsetForSourceStamps'):
                 actual = getattr(scheduler, method)
-                fake = getattr(self, 'fake_{}'.format(method))
+                fake = getattr(self, f'fake_{method}')
 
                 self.assertArgSpecMatches(actual, fake)
                 setattr(scheduler, method, fake)
@@ -126,7 +126,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
                 rv = yield oldMethod()
 
                 self.assertTrue(self._parentMethodCalled,
-                                "'{}' did not call its parent".format(meth))
+                                f"'{meth}' did not call its parent")
                 return rv
 
             setattr(scheduler, meth, newMethod)

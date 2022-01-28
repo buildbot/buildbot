@@ -68,8 +68,8 @@ class InterfaceTests:
 
         def assert_same_argspec(expected, actual):
             if expected != actual:
-                msg = "Expected: {}; got: {}".format(inspect.formatargspec(*expected),
-                                                     inspect.formatargspec(*actual))
+                msg = (f"Expected: {inspect.formatargspec(*expected)}; got: "
+                       f"{inspect.formatargspec(*actual)}")
                 self.fail(msg)
 
         actual_argspec = filter_argspec(actualMethod)
@@ -98,8 +98,8 @@ class InterfaceTests:
         for interface in zope.interface.implementedBy(cls):
             for attr, template_argspec in interface.namesAndDescriptions():
                 if not hasattr(cls, attr):
-                    msg = ("Expected: {}; to implement: {} as specified in {}"
-                           ).format(repr(cls), attr, repr(interface))
+                    msg = (f"Expected: {repr(cls)}; to implement: {attr} as specified in "
+                           f"{repr(interface)}")
                     self.fail(msg)
                 actual_argspec = getattr(cls, attr)
                 if isinstance(template_argspec, Attribute):
@@ -111,7 +111,6 @@ class InterfaceTests:
                     actual_argspec)
 
                 if actual_argspec.getSignatureInfo() != template_argspec.getSignatureInfo():
-                    msg = ("{}: expected: {}; got: {}"
-                           ).format(attr, template_argspec.getSignatureString(),
-                                    actual_argspec.getSignatureString())
+                    msg = (f"{attr}: expected: {template_argspec.getSignatureString()}; got: "
+                           f"{actual_argspec.getSignatureString()}")
                     self.fail(msg)

@@ -347,15 +347,15 @@ class RunMasterBase(unittest.TestCase):
     def printBuild(self, build, out=sys.stdout, withLogs=False):
         # helper for debugging: print a build
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
-        print(u"*** BUILD {} *** ==> {} ({})".format(build['buildid'], build['state_string'],
-                statusToString(build['results'])), file=out)
+        print(f"*** BUILD {build['buildid']} *** ==> {build['state_string']} "
+              f"({statusToString(build['results'])})", file=out)
         for step in build['steps']:
-            print(u"    *** STEP {} *** ==> {} ({})".format(step['name'], step['state_string'],
-                    statusToString(step['results'])), file=out)
+            print(f"    *** STEP {step['name']} *** ==> {step['state_string']} "
+                  f"({statusToString(step['results'])})", file=out)
             for url in step['urls']:
-                print(u"       url:{} ({})".format(url['name'], url['url']), file=out)
+                print(f"       url:{url['name']} ({url['url']})", file=out)
             for log in step['logs']:
-                print(u"        log:{} ({})".format(log['name'], log['num_lines']), file=out)
+                print(f"        log:{log['name']} ({log['num_lines']})", file=out)
                 if step['results'] != SUCCESS or withLogs:
                     self.printLog(log, out)
 
@@ -388,7 +388,7 @@ class RunMasterBase(unittest.TestCase):
         return len(expectedLog) == 0
 
     def printLog(self, log, out):
-        print(u" " * 8 + "*********** LOG: {} *********".format(log['name']), file=out)
+        print(" " * 8 + f"*********** LOG: {log['name']} *********", file=out)
         if log['type'] == 's':
             for line in log['contents']['content'].splitlines():
                 linetype = line[0]

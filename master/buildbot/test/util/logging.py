@@ -39,12 +39,12 @@ class LoggingMixin:
     def assertLogged(self, regexp):
         if not self.logContainsMessage(regexp):
             lines = [log.textFromEventDict(e) for e in self._logEvents]
-            self.fail("{} not matched in log output.\n{} ".format(repr(regexp), lines))
+            self.fail(f"{repr(regexp)} not matched in log output.\n{lines} ")
 
     def assertNotLogged(self, regexp):
         if self.logContainsMessage(regexp):
             lines = [log.textFromEventDict(e) for e in self._logEvents]
-            self.fail("{} matched in log output.\n{} ".format(repr(regexp), lines))
+            self.fail(f"{repr(regexp)} matched in log output.\n{lines} ")
 
     def assertWasQuiet(self):
         self.assertEqual([
