@@ -192,7 +192,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     def _generate_random_password(self):
         self._random_password_id += 1
-        return 'password_{}'.format(self._random_password_id)
+        return f'password_{self._random_password_id}'
 
     @defer.inlineCallbacks
     def isCompatibleWithBuild(self, build_props):
