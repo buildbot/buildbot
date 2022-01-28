@@ -75,16 +75,17 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
                          "(pip install hvac)")
 
         if not isinstance(vault_server, str):
-            config.error("vault_server must be a string while it is {}".format(type(vault_server)))
+            config.error(f"vault_server must be a string while it is {type(vault_server)}")
         if not isinstance(path_delimiter, str) or len(path_delimiter) > 1:
             config.error("path_delimiter must be a single character")
         if not isinstance(path_escape, str) or len(path_escape) > 1:
             config.error("path_escape must be a single character")
         if not isinstance(authenticator, VaultAuthenticator):
-            config.error("authenticator must be instance of VaultAuthenticator while it is {}"
-                         .format(type(authenticator)))
+            config.error("authenticator must be instance of VaultAuthenticator while it is "
+                         f"{type(authenticator)}")
+
         if api_version not in [1, 2]:
-            config.error("api_version {} is not supported".format(api_version))
+            config.error(f"api_version {api_version} is not supported")
 
     def reconfigService(self, vault_server=None, authenticator=None, secrets_mount=None,
                         api_version=2, path_delimiter='|', path_escape='\\'):
@@ -168,11 +169,12 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         parts = self.escaped_split(entry)
         if len(parts) == 1:
             raise KeyError("Vault secret specification must contain attribute name separated from "
-                           "path by '{}'".format(self.path_delimiter))
+                           f"path by '{self.path_delimiter}'")
         if len(parts) > 2:
-            raise KeyError("Multiple separators ('{0}') found in vault path '{1}'. All occurences "
-                           "of '{0}' in path or attribute name must be escaped using '{2}'"
-                           .format(self.path_delimiter, entry, self.path_escape))
+            raise KeyError(f"Multiple separators ('{self.path_delimiter}') found in vault "
+                           f"path '{entry}'. All occurences of '{self.path_delimiter}' in path or "
+                           f"attribute name must be escaped using '{self.path_escape}'")
+
         name = parts[0]
         key = parts[1]
 
@@ -186,4 +188,4 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
             return response['data'][key]
         except KeyError as e:
             raise KeyError(
-                "The secret {} does not exist in Vault provider: {}".format(entry, e)) from e
+                f"The secret {entry} does not exist in Vault provider: {e}") from e
