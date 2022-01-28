@@ -57,30 +57,30 @@ def timed_do_fn(f):
         # invent a unique ID for the description
         id, _debug_id = _debug_id, _debug_id + 1
 
-        descr = "%s-%08x" % (name, id)
+        descr = f"{name}-{id:08x}"
 
         start_time = time.time()
-        log.msg("{} - before ('{}' line {})".format(descr, file, line))
+        log.msg(f"{descr} - before ('{file}' line {line})")
         for name in locals:
             if name in ('self', 'thd'):
                 continue
-            log.msg("{} - {} = {}".format(descr, name, repr(locals[name])))
+            log.msg(f"{descr} - {name} = {repr(locals[name])}")
 
         # wrap the callable to log the begin and end of the actual thread
         # function
         def callable_wrap(*args, **kargs):
-            log.msg("{} - thd start".format(descr))
+            log.msg(f"{descr} - thd start")
             try:
                 return callable(*args, **kwargs)
             finally:
-                log.msg("{} - thd end".format(descr))
+                log.msg(f"{descr} - thd end")
         d = f(callable_wrap, *args, **kwargs)
 
         @d.addBoth
         def after(x):
             end_time = time.time()
             elapsed = (end_time - start_time) * 1000
-            log.msg("%s - after (%0.2f ms elapsed)" % (descr, elapsed))
+            log.msg(f"{descr} - after ({elapsed:0.2f} ms elapsed)")
             return x
         return d
     wrap.__name__ = f.__name__
@@ -120,7 +120,7 @@ class DBThreadPool:
         if engine.dialect.name == 'sqlite':
             vers = self.get_sqlite_version()
             if vers < (3, 7):
-                log_msg("Using SQLite Version {}".format(vers))
+                log_msg(f"Using SQLite Version {vers}")
                 log_msg("NOTE: this old version of SQLite does not support "
                         "WAL journal mode; a busy master may encounter "
                         "'Database is locked' errors.  Consider upgrading.")
@@ -213,8 +213,8 @@ class DBThreadPool:
                         raise
                     elapsed = time.time() - start
                     if elapsed > self.MAX_OPERATIONALERROR_TIME:
-                        log.err(e, ('Raising due to {0} seconds delay on DB '
-                                    'query retries'.format(self.MAX_OPERATIONALERROR_TIME)))
+                        log.err(e, f'Raising due to {self.MAX_OPERATIONALERROR_TIME} '
+                                'seconds delay on DB query retries')
                         raise
 
                     metrics.MetricCountEvent.log(
@@ -223,7 +223,7 @@ class DBThreadPool:
                     time.sleep(backoff)
                     backoff *= self.BACKOFF_MULT
                     # and re-try
-                    log.err(e, 'retrying {} after sql error {}'.format(callable, e))
+                    log.err(e, f'retrying {callable} after sql error {e}')
                     continue
                 except Exception as e:
                     # AlreadyClaimedError are normal especially in a multimaster
