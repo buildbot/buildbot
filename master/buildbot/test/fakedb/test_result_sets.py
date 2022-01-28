@@ -95,12 +95,12 @@ class FakeTestResultSetsComponent(FakeDBComponent):
     # returns a Deferred
     def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
         if test_result_setid not in self.result_sets:
-            raise TestResultSetAlreadyCompleted(('Test result set {} is already completed '
-                                                 'or does not exist').format(test_result_setid))
+            raise TestResultSetAlreadyCompleted(
+                f'Test result set {test_result_setid} is already completed or does not exist')
         row = self.result_sets[test_result_setid]
         if row['complete'] != 0:
-            raise TestResultSetAlreadyCompleted(('Test result set {} is already completed '
-                                                 'or does not exist').format(test_result_setid))
+            raise TestResultSetAlreadyCompleted(
+                f'Test result set {test_result_setid} is already completed or does not exist')
         row['complete'] = 1
         if tests_passed is not None:
             row['tests_passed'] = tests_passed

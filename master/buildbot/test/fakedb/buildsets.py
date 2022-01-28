@@ -101,7 +101,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
                     parent_buildid=None, parent_relationship=None):
         # We've gotten this wrong a couple times.
         assert isinstance(
-            waited_for, bool), 'waited_for should be boolean: %r' % waited_for
+            waited_for, bool), f'waited_for should be boolean: {repr(waited_for)}'
 
         # calculate submitted at
         if submitted_at is not None:

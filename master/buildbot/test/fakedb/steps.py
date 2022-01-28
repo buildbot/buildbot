@@ -112,9 +112,9 @@ class FakeStepsComponent(FakeDBComponent):
             names = {r['name'] for r in build_steps}
             if name in names:
                 i = 1
-                while '{}_{}'.format(name, i) in names:
+                while f'{name}_{i}' in names:
                     i += 1
-                name = '{}_{}'.format(name, i)
+                name = f'{name}_{i}'
         else:
             number = 0
 

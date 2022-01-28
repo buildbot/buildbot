@@ -112,11 +112,11 @@ class FakeStateComponent(FakeDBComponent):
             missing_keys = []
         state = self.states[objectid]
         for k in missing_keys:
-            self.t.assertFalse(k in state, "{} in {}".format(k, state))
+            self.t.assertFalse(k in state, f"{k} in {state}")
         for k, v in kwargs.items():
             self.t.assertIn(k, state)
             self.t.assertEqual(json.loads(state[k]), v,
-                               "state is %r" % (state,))
+                               f"state is {repr(state)}")
 
     def assertStateByClass(self, name, class_name, **kwargs):
         objectid = self.objects[(name, class_name)]
@@ -124,4 +124,4 @@ class FakeStateComponent(FakeDBComponent):
         for k, v in kwargs.items():
             self.t.assertIn(k, state)
             self.t.assertEqual(json.loads(state[k]), v,
-                               "state is %r" % (state,))
+                               f"state is {repr(state)}")
