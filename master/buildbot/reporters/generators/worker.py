@@ -52,9 +52,9 @@ class WorkerMissingGenerator(util.ComparableMixin):
         body = msg['body'].encode(ENCODING)
         subject = msg['subject']
         if subject is None:
-            subject = "Buildbot worker {name} missing".format(**worker)
+            subject = f"Buildbot worker {worker['name']} missing"
         assert msg['type'] in ('plain', 'html'), \
-            "'{}' message type must be 'plain' or 'html'.".format(msg['type'])
+            f"'{msg['type']}' message type must be 'plain' or 'html'."
 
         return {
             'body': body,

@@ -177,11 +177,10 @@ class GerritVerifyStatusPush(ReporterBase):
         hours, remainder = divmod(duration.seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         if days:
-            return '{} day{} {}h {}m {}s'.format(days, "s" if days > 1 else "",
-                                                 hours, minutes, seconds)
+            return f'{days} day{"s" if days > 1 else ""} {hours}h {minutes}m {seconds}s'
         elif hours:
-            return '{}h {}m {}s'.format(hours, minutes, seconds)
-        return '{}m {}s'.format(minutes, seconds)
+            return f'{hours}h {minutes}m {seconds}s'
+        return f'{minutes}m {seconds}s'
 
     @staticmethod
     def getGerritChanges(props):

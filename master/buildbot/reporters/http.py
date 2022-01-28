@@ -64,4 +64,4 @@ class HttpStatusPush(ReporterBase):
     def sendMessage(self, reports):
         response = yield self._http.post("", json=reports[0]['body'])
         if not self.is_status_2xx(response.code):
-            log.msg("{}: unable to upload status: {}".format(response.code, response.content))
+            log.msg(f"{response.code}: unable to upload status: {response.content}")

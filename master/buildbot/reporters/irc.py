@@ -110,11 +110,11 @@ class IRCContact(Contact):
         words = action.split()
         verb = words[-2]
         if verb == "kicks":
-            response = "{} back".format(verb)
+            response = f"{verb} back"
         elif verb == "threatens":
-            response = "hosts a red wedding for {}".format(self.user_id)
+            response = f"hosts a red wedding for {self.user_id}"
         else:
-            response = "{} {} too".format(verb, self.user_id)
+            response = f"{verb} {self.user_id} too"
         self.act(response)
 
     @defer.inlineCallbacks
@@ -146,7 +146,7 @@ class IRCContact(Contact):
     def command_MUTE(self, args, **kwargs):
         if (yield self.op_required('mute')):
             yield self.send("Only channel operators or explicitly allowed users "
-                            "can mute me here, {}... Blah, blah, blah...".format(self.user_id))
+                            f"can mute me here, {self.user_id}... Blah, blah, blah...")
             return
         # The order of these is important! ;)
         yield self.send("Shutting up for now.")
@@ -173,8 +173,8 @@ class IRCContact(Contact):
             argv = self.splitArgs(args)
             if argv and argv[0] in ('on', 'off') and \
                     (yield self.op_required('notify')):
-                yield self.send(("Only channel operators can change notified events for this "
-                                 "channel. And you, {}, are neither!").format(self.user_id))
+                yield self.send("Only channel operators can change notified events for this "
+                                f"channel. And you, {self.user_id}, are neither!")
                 return
         super().command_NOTIFY(args, **kwargs)
 
@@ -190,7 +190,7 @@ class IRCContact(Contact):
         if self.bot.nickname not in args:
             self.act("readies phasers")
         else:
-            self.send("Better destroy yourself, {}!".format(self.user_id))
+            self.send(f"Better destroy yourself, {self.user_id}!")
 
     def command_HUSTLE(self, args):
         self.act("does the hustle")
@@ -231,9 +231,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         if self.username is None:
             self.username = nickname
         self.sendLine(
-            "USER {} {} {} :{}".format(
-                self.username, hostname, servername, self.realname
-            )
+            f"USER {self.username} {hostname} {servername} :{self.realname}"
         )
         if self.password is not None:
             self.sendLine("AUTHENTICATE PLAIN")
@@ -284,9 +282,8 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         # else it's a broadcast message, maybe for us, maybe not. 'channel'
         # is '#twisted' or the like.
         contact = self.getContact(user=user, channel=channel)
-        if message.startswith("{}:".format(self.nickname)) or \
-                message.startswith("{},".format(self.nickname)):
-            message = message[len("{}:".format(self.nickname)):]
+        if message.startswith(f"{self.nickname}:") or message.startswith(f"{self.nickname},"):
+            message = message[len(f"{self.nickname}:"):]
             d = contact.handleMessage(message)
             return d
         return None
@@ -319,7 +316,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         d = defer.Deferred()
         callbacks = self._channel_names.setdefault(channel, ([], []))[0]
         callbacks.append(d)
-        self.sendLine("NAMES {}".format(channel))
+        self.sendLine(f"NAMES {channel}")
         return d
 
     def irc_RPL_NAMREPLY(self, prefix, params):
@@ -345,16 +342,16 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         return [n[1:] for n in names if n[0] in '@&~%']
 
     def joined(self, channel):
-        self.log("Joined {}".format(channel))
+        self.log(f"Joined {channel}")
         # trigger contact constructor, which in turn subscribes to notify events
         channel = self.getChannel(channel=channel)
         channel.add_notification_events(self.notify_events)
 
     def left(self, channel):
-        self.log("Left {}".format(channel))
+        self.log(f"Left {channel}")
 
     def kickedFrom(self, channel, kicker, message):
-        self.log("I have been kicked from {} by {}: {}".format(channel, kicker, message))
+        self.log(f"I have been kicked from {channel} by {kicker}: {message}")
 
     def userLeft(self, user, channel):
         if user:
@@ -401,9 +398,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         else:
             text = self.results_descriptions[br]
         if self.useColors:
-            return "\x03{:d}{}\x0f".format(
-                _irc_colors.index(self.results_colors[br]),
-                text)
+            return f"\x03{_irc_colors.index(self.results_colors[br])}{text}\x0f"
         else:
             return text
 
@@ -498,27 +493,25 @@ class IRC(service.BuildbotService):
                     ):
         deprecated_params = list(kwargs)
         if deprecated_params:
-            config.error("{} are deprecated".format(",".join(deprecated_params)))
+            config.error(f'{",".join(deprecated_params)} are deprecated')
 
         # deprecated
         if allowForce is not None:
             if authz is not None:
                 config.error("If you specify authz, you must not use allowForce anymore")
             if allowForce not in (True, False):
-                config.error("allowForce must be boolean, not %r" % (allowForce,))
+                config.error(f"allowForce must be boolean, not {repr(allowForce)}")
             log.msg('IRC: allowForce is deprecated: use authz instead')
         if allowShutdown is not None:
             if authz is not None:
                 config.error("If you specify authz, you must not use allowShutdown anymore")
             if allowShutdown not in (True, False):
-                config.error("allowShutdown must be boolean, not %r" %
-                             (allowShutdown,))
+                config.error(f"allowShutdown must be boolean, not {repr(allowShutdown)}")
             log.msg('IRC: allowShutdown is deprecated: use authz instead')
         # ###
 
         if noticeOnChannel not in (True, False):
-            config.error("noticeOnChannel must be boolean, not %r" %
-                         (noticeOnChannel,))
+            config.error(f"noticeOnChannel must be boolean, not {repr(noticeOnChannel)}")
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
             ssl.ensureHasSSL(self.__class__.__name__)

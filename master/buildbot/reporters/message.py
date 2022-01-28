@@ -51,7 +51,7 @@ def get_detected_status_text(mode, results, previous_results):
     elif results == EXCEPTION:
         text = "build exception"
     else:
-        text = "{} build".format(statusToString(results))
+        text = f"{statusToString(results)} build"
 
     return text
 
@@ -66,11 +66,11 @@ def get_message_summary_text(build, results):
     if results == SUCCESS:
         text = "Build succeeded!"
     elif results == WARNINGS:
-        text = "Build Had Warnings{}".format(t)
+        text = f"Build Had Warnings{t}"
     elif results == CANCELLED:
         text = "Build was cancelled"
     else:
-        text = "BUILD FAILED{}".format(t)
+        text = f"BUILD FAILED{t}"
 
     return text
 
@@ -82,7 +82,7 @@ def get_message_source_stamp_text(source_stamps):
         source = ""
 
         if ss['branch']:
-            source += "[branch {}] ".format(ss['branch'])
+            source += f"[branch {ss['branch']}] "
 
         if ss['revision']:
             source += str(ss['revision'])
@@ -94,9 +94,9 @@ def get_message_source_stamp_text(source_stamps):
 
         discriminator = ""
         if ss['codebase']:
-            discriminator = " '{}'".format(ss['codebase'])
+            discriminator = f" '{ss['codebase']}'"
 
-        text += "Build Source Stamp{}: {}\n".format(discriminator, source)
+        text += f"Build Source Stamp{discriminator}: {source}\n"
 
     return text
 

@@ -209,9 +209,8 @@ def getResponsibleUsersForBuild(master, buildid):
         else:
             blamelist.update(owner)
             log.msg(
-                "Warning: owner property is a list for buildid {}. ".format(buildid))
-            log.msg("Please report a bug: changes: {}. properties: {}".format(
-                changes, properties))
+                f"Warning: owner property is a list for buildid {buildid}. ")
+            log.msg(f"Please report a bug: changes: {changes}. properties: {properties}")
 
     # add owner from properties
     if 'owners' in properties:
@@ -224,14 +223,12 @@ def getResponsibleUsersForBuild(master, buildid):
 
 def getURLForBuild(master, builderid, build_number):
     prefix = master.config.buildbotURL
-    return prefix + "#builders/%d/builds/%d" % (
-        builderid,
-        build_number)
+    return prefix + f"#builders/{builderid}/builds/{build_number}"
 
 
 def getURLForBuildrequest(master, buildrequestid):
     prefix = master.config.buildbotURL
-    return "{}#buildrequests/{}".format(prefix, buildrequestid)
+    return f"{prefix}#buildrequests/{buildrequestid}"
 
 
 def get_url_for_log(master, builderid, build_number, step_number, log_slug):
