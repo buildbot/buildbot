@@ -158,7 +158,7 @@ class _BaseManhole(service.AsyncMultiService):
 
         super().__init__()
         if isinstance(port, int):
-            port = "tcp:%d" % port
+            port = f"tcp:{port}"
         self.port = port  # for comparison later
         self.checker = checker  # to maybe compare later
 
@@ -203,7 +203,7 @@ class _BaseManhole(service.AsyncMultiService):
             via = "via SSH"
         else:
             via = "via telnet"
-        log.msg("Manhole listening {} on port {}".format(via, self.port))
+        log.msg(f"Manhole listening {via} on port {self.port}")
         return super().startService()
 
 
@@ -282,7 +282,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
 
 def show(x):
     """Display the data attributes of an object in a readable format"""
-    print("data attributes of %r" % (x,))
+    print(f"data attributes of {repr(x)}")
     names = dir(x)
     maxlen = max([0] + [len(n) for n in names])
     for k in names:
@@ -297,8 +297,8 @@ def show(x):
         elif isinstance(v, (int, type(None))):
             v = str(v)
         elif isinstance(v, (list, tuple, dict)):
-            v = "{} ({} elements)".format(v, len(v))
+            v = f"{v} ({len(v)} elements)"
         else:
             v = str(type(v))
-        print("{} : {}".format(k.ljust(maxlen), v))
+        print(f"{k.ljust(maxlen)} : {v}")
     return x

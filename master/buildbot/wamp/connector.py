@@ -47,7 +47,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         for handler in [self] + self.services:
             yield self.register(handler)
             yield self.subscribe(handler)
-        yield self.publish("org.buildbot.{}.connected".format(self.master.masterid))
+        yield self.publish(f"org.buildbot.{self.master.masterid}.connected")
         self.parent.service = self
         self.parent.serviceDeferred.callback(self)
 
