@@ -116,16 +116,15 @@ class BaseParameter:
         """
 
         if name in ["owner", "builderNames", "builderid"]:
-            config.error("{} cannot be used as a parameter name, because it is reserved".format(
-                    name))
+            config.error(f"{name} cannot be used as a parameter name, because it is reserved")
         self.name = name
         self.label = name if label is None else label
         self.tablabel = self.label if tablabel is None else tablabel
         if regex:
             self.regex = re.compile(regex)
         if 'value' in kw:
-            config.error(("Use default='{}' instead of value=... to give a "
-                          "default Parameter value").format(kw['value']))
+            config.error(f"Use default='{kw['value']}' instead of value=... to give a "
+                         "default Parameter value")
         # all other properties are generically passed via **kw
         self.__dict__.update(kw)
 
@@ -146,7 +145,7 @@ class BaseParameter:
 
         if not args:
             if self.required:
-                raise ValidationError("'{}' needs to be specified".format(self.label))
+                raise ValidationError(f"'{self.label}' needs to be specified")
             if self.multiple:
                 args = self.default
             else:
@@ -155,13 +154,12 @@ class BaseParameter:
         if self.regex:
             for arg in args:
                 if not self.regex.match(arg):
-                    raise ValidationError("{}:'{}' does not match pattern '{}'".format(self.label,
-                            arg, self.regex.pattern))
+                    raise ValidationError(f"{self.label}:'{arg}' does not match pattern "
+                                          f"'{self.regex.pattern}'")
         if self.maxsize is not None:
             for arg in args:
                 if len(arg) > self.maxsize:
-                    raise ValidationError("{}: is too large {} > {}".format(self.label, len(arg),
-                                                                            self.maxsize))
+                    raise ValidationError(f"{self.label}: is too large {len(arg)} > {self.maxsize}")
 
         try:
             arg = self.parse_from_args(args)
@@ -172,7 +170,7 @@ class BaseParameter:
                 traceback.print_exc()
             raise e
         if arg is None:
-            raise ValidationError("need {}: no default provided by config".format(self.fullName))
+            raise ValidationError(f"need {self.fullName}: no default provided by config")
         return arg
 
     def updateFromKwargs(self, properties, kwargs, collector, **unused):
@@ -267,8 +265,8 @@ class UserNameParameter(StringParameter):
         if self.need_email:
             res = VALID_EMAIL_ADDR.search(s)
             if res is None:
-                raise ValidationError(("{}: please fill in email address in the "
-                                      "form 'User <email@email.com>'").format(self.name))
+                raise ValidationError(f"{self.name}: please fill in email address in the "
+                                      "form 'User <email@email.com>'")
         return s
 
 
@@ -284,8 +282,8 @@ class ChoiceStringParameter(BaseParameter):
 
     def parse_from_arg(self, s):
         if self.strict and s not in self.choices:
-            raise ValidationError("'{}' does not belong to list of available choices '{}'".format(s,
-                    self.choices))
+            raise ValidationError(f"'{s}' does not belong to list of available choices "
+                                  f"'{self.choices}'")
         return s
 
     def getChoices(self, master, scheduler, buildername):
@@ -310,17 +308,17 @@ class InheritBuildParameter(ChoiceStringParameter):
         arg = kwargs.get(self.fullName, [""])[0]
         split_arg = arg.split(" ")[0].split("/")
         if len(split_arg) != 2:
-            raise ValidationError("bad build: {}".format(arg))
+            raise ValidationError(f"bad build: {arg}")
         builder_name, build_num = split_arg
 
         builder_dict = master.data.get(('builders', builder_name))
         if builder_dict is None:
-            raise ValidationError("unknown builder: {} in {}".format(builder_name, arg))
+            raise ValidationError(f"unknown builder: {builder_name} in {arg}")
 
         build_dict = master.data.get(('builders', builder_name, 'builds', build_num),
                                      fields=['properties'])
         if build_dict is None:
-            raise ValidationError("unknown build: {} in {}".format(builder_name, arg))
+            raise ValidationError(f"unknown build: {builder_name} in {arg}")
 
         props = {self.name: (arg.split(" ")[0])}
         for name, (value, source) in build_dict['properties']:
@@ -504,7 +502,7 @@ class AnyPropertyParameter(NestedParameter):
 
         if not pname_validate.match(pname) \
                 or not pval_validate.match(pvalue):
-            raise ValidationError("bad property name='{}', value='{}'".format(pname, pvalue))
+            raise ValidationError(f"bad property name='{pname}', value='{pvalue}'")
         properties[pname] = pvalue
 
 
@@ -674,38 +672,35 @@ class ForceScheduler(base.BaseScheduler):
         """
 
         if not self.checkIfType(name, str):
-            config.error("ForceScheduler name must be a unicode string: %r" %
-                         name)
+            config.error(f"ForceScheduler name must be a unicode string: {repr(name)}")
 
         if not name:
-            config.error("ForceScheduler name must not be empty: %r" %
-                         name)
+            config.error(f"ForceScheduler name must not be empty: {repr(name)}")
 
         if not identifiers.ident_re.match(name):
-            config.error("ForceScheduler name must be an identifier: %r" %
-                         name)
+            config.error(f"ForceScheduler name must be an identifier: {repr(name)}")
 
         if not self.checkIfListOfType(builderNames, (str,)):
-            config.error("ForceScheduler '{}': builderNames must be a list of strings: {}".format(
-                    name, repr(builderNames)))
+            config.error(f"ForceScheduler '{name}': builderNames must be a list of strings: "
+                         f"{repr(builderNames)}")
 
         if self.checkIfType(reason, BaseParameter):
             self.reason = reason
         else:
-            config.error("ForceScheduler '{}': reason must be a StringParameter: {}".format(
-                    name, repr(reason)))
+            config.error(f"ForceScheduler '{name}': reason must be a StringParameter: "
+                         f"{repr(reason)}")
 
         if properties is None:
             properties = []
         if not self.checkIfListOfType(properties, BaseParameter):
-            config.error(("ForceScheduler '{}': properties must be "
-                          "a list of BaseParameters: {}").format(name, repr(properties)))
+            config.error(f"ForceScheduler '{name}': properties must be "
+                         f"a list of BaseParameters: {repr(properties)}")
 
         if self.checkIfType(username, BaseParameter):
             self.username = username
         else:
-            config.error("ForceScheduler '{}': username must be a StringParameter: {}".format(name,
-                    repr(username)))
+            config.error(f"ForceScheduler '{name}': username must be a StringParameter: "
+                         f"{repr(username)}")
 
         self.forcedProperties = []
         self.label = name if label is None else label
@@ -714,20 +709,20 @@ class ForceScheduler(base.BaseScheduler):
         if codebases is None:
             codebases = [CodebaseParameter(codebase='')]
         elif not codebases:
-            config.error(("ForceScheduler '{}': 'codebases' cannot be empty;"
-                          " use [CodebaseParameter(codebase='', hide=True)] if needed: {} ").format(
-                                name, repr(codebases)))
+            config.error(f"ForceScheduler '{name}': 'codebases' cannot be empty;"
+                         f" use [CodebaseParameter(codebase='', hide=True)] if needed: "
+                         f"{repr(codebases)} ")
         elif not isinstance(codebases, list):
-            config.error(("ForceScheduler '{}': 'codebases' should be a list of strings "
-                          "or CodebaseParameter, not {}").format(name, type(codebases)))
+            config.error(f"ForceScheduler '{name}': 'codebases' should be a list of strings "
+                         f"or CodebaseParameter, not {type(codebases)}")
 
         codebase_dict = {}
         for codebase in codebases:
             if isinstance(codebase, str):
                 codebase = CodebaseParameter(codebase=codebase)
             elif not isinstance(codebase, CodebaseParameter):
-                config.error(("ForceScheduler '{}': 'codebases' must be a list of strings "
-                              "or CodebaseParameter objects: {}").format(name, repr(codebases)))
+                config.error(f"ForceScheduler '{name}': 'codebases' must be a list of strings "
+                             f"or CodebaseParameter objects: {repr(codebases)}")
 
             self.forcedProperties.append(codebase)
             codebase_dict[codebase.codebase] = dict(
