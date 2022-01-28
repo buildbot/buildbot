@@ -35,8 +35,8 @@ except ImportError as e:
 
 def ensureHasSSL(module):
     if not has_ssl:
-        error(("TLS dependencies required for {} are not installed : "
-               "{}\n pip install 'buildbot[tls]'").format(module, ssl_import_error))
+        error(f"TLS dependencies required for {module} are not installed : "
+              f"{ssl_import_error}\n pip install 'buildbot[tls]'")
 
 
 def skipUnless(f):

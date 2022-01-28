@@ -58,7 +58,7 @@ class Poller:
         try:
             yield self.fn(self.instance)
         except Exception as e:
-            log.err(e, 'while executing {}'.format(self.fn))
+            log.err(e, f'while executing {self.fn}')
         finally:
             self._currently_executing = False
 

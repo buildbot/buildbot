@@ -26,40 +26,39 @@ def is_re_pattern(obj):
 
 def extract_filter_values(values, filter_name):
     if not isinstance(values, (list, str)):
-        raise ValueError("Values of filter {} must be list of strings or a string".format(
-            filter_name))
+        raise ValueError(f"Values of filter {filter_name} must be list of strings or a string")
     if isinstance(values, str):
         values = [values]
     else:
         for value in values:
             if not isinstance(value, str):
-                raise ValueError("Value of filter {} must be string".format(filter_name))
+                raise ValueError(f"Value of filter {filter_name} must be string")
     return values
 
 
 def extract_filter_values_branch(values, filter_name):
     if not isinstance(values, (list, str, type(None))):
-        raise ValueError("Values of filter {} must be list of strings, a string or None".format(
-            filter_name))
+        raise ValueError(f"Values of filter {filter_name} must be list of strings, "
+                         "a string or None")
     if isinstance(values, (str, type(None))):
         values = [values]
     else:
         for value in values:
             if not isinstance(value, (str, type(None))):
-                raise ValueError("Value of filter {} must be string or None".format(filter_name))
+                raise ValueError(f"Value of filter {filter_name} must be string or None")
     return values
 
 
 def extract_filter_values_regex(values, filter_name):
     if not isinstance(values, (list, str)) and not is_re_pattern(values):
-        raise ValueError("Values of filter {} must be list of strings, a string or regex".format(
-            filter_name))
+        raise ValueError(f"Values of filter {filter_name} must be list of strings, "
+                         "a string or regex")
     if isinstance(values, str) or is_re_pattern(values):
         values = [values]
     else:
         for value in values:
             if not isinstance(value, str) and not is_re_pattern(value):
-                raise ValueError("Value of filter {} must be string or regex".format(filter_name))
+                raise ValueError(f"Value of filter {filter_name} must be string or regex")
     return values
 
 
@@ -71,7 +70,7 @@ class _FilterExactMatch:
         return value in self.values
 
     def describe(self, prop):
-        return '{} in {}'.format(prop, self.values)
+        return f'{prop} in {self.values}'
 
 
 class _FilterExactMatchInverse:
@@ -82,7 +81,7 @@ class _FilterExactMatchInverse:
         return value not in self.values
 
     def describe(self, prop):
-        return '{} not in {}'.format(prop, self.values)
+        return f'{prop} not in {self.values}'
 
 
 class _FilterRegex:
@@ -103,7 +102,7 @@ class _FilterRegex:
         return False
 
     def describe(self, prop):
-        return '{} matches {}'.format(prop, self.regexes)
+        return f'{prop} matches {self.regexes}'
 
 
 class _FilterRegexInverse:
@@ -124,7 +123,7 @@ class _FilterRegexInverse:
         return True
 
     def describe(self, prop):
-        return '{} does not match {}'.format(prop, self.regexes)
+        return f'{prop} does not match {self.regexes}'
 
 
 class SourceStampFilter(ComparableMixin):
@@ -231,10 +230,10 @@ class SourceStampFilter(ComparableMixin):
     def __repr__(self):
         filters = []
         if self.filter_fn is not None:
-            filters.append('{}()'.format(self.filter_fn.__name__))
+            filters.append(f'{self.filter_fn.__name__}()')
         filters += self._repr_filters(self.project_filters, 'project')
         filters += self._repr_filters(self.codebase_filters, 'codebase')
         filters += self._repr_filters(self.repository_filters, 'repository')
         filters += self._repr_filters(self.branch_filters, 'branch')
 
-        return "<{} on {}>".format(self.__class__.__name__, ' and '.join(filters))
+        return f"<{self.__class__.__name__} on {' and '.join(filters)}>"
