@@ -52,19 +52,19 @@ def checkPidFile(pidfile):
             with open(pidfile) as f:
                 pid = int(f.read())
         except ValueError as e:
-            raise ValueError('Pidfile {} contains non-numeric value'.format(pidfile)) from e
+            raise ValueError(f'Pidfile {pidfile} contains non-numeric value') from e
         try:
             os.kill(pid, 0)
         except OSError as why:
             if why.errno == errno.ESRCH:
                 # The pid doesn't exist.
-                print('Removing stale pidfile {}'.format(pidfile))
+                print(f'Removing stale pidfile {pidfile}')
                 os.remove(pidfile)
             else:
-                raise OSError("Can't check status of PID {} from pidfile {}: {}".format(
-                    pid, pidfile, why)) from why
+                raise OSError(
+                    f"Can't check status of PID {pid} from pidfile {pidfile}: {why}") from why
         else:
-            raise BusyError("'{}' exists - is this master still running?".format(pidfile))
+            raise BusyError(f"'{pidfile}' exists - is this master still running?")
 
 
 def checkBasedir(config):
@@ -105,7 +105,7 @@ def checkBasedir(config):
 
 def loadConfig(config, configFileName='master.cfg'):
     if not config['quiet']:
-        print("checking {}".format(configFileName))
+        print(f"checking {configFileName}")
 
     try:
         master_cfg = config_module.FileLoader(
@@ -126,18 +126,18 @@ def loadConfig(config, configFileName='master.cfg'):
 
 def isBuildmasterDir(dir):
     def print_error(error_message):
-        print("{}\ninvalid buildmaster directory '{}'".format(error_message, dir))
+        print(f"{error_message}\ninvalid buildmaster directory '{dir}'")
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
         with open(buildbot_tac) as f:
             contents = f.read()
     except IOError as exception:
-        print_error("error reading '{}': {}".format(buildbot_tac, exception.strerror))
+        print_error(f"error reading '{buildbot_tac}': {exception.strerror}")
         return False
 
     if "Application('buildmaster')" not in contents:
-        print_error("unexpected content in '{}'".format(buildbot_tac))
+        print_error(f"unexpected content in '{buildbot_tac}'")
         return False
 
     return True
@@ -245,7 +245,7 @@ class SubcommandOptions(usage.Options):
             if os.path.isdir(d):
                 if runtime.platformType != 'win32':
                     if os.stat(d)[stat.ST_UID] != os.getuid():
-                        print("skipping {} because you don't own it".format(d))
+                        print(f"skipping {d} because you don't own it")
                         continue  # security, skip other people's directories
                 optfile = os.path.join(d, "options")
                 if os.path.exists(optfile):
@@ -254,7 +254,7 @@ class SubcommandOptions(usage.Options):
                             options = f.read()
                         exec(options, localDict)
                     except Exception:
-                        print("error while reading {}".format(optfile))
+                        print(f"error while reading {optfile}")
                         raise
                     break
 

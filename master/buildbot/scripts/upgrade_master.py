@@ -39,20 +39,20 @@ def installFile(config, target, source, overwrite=False):
         if old_contents != new_contents:
             if overwrite:
                 if not config['quiet']:
-                    print("{} has old/modified contents".format(target))
+                    print(f"{target} has old/modified contents")
                     print(" overwriting it with new contents")
                 with open(target, "wt") as f:
                     f.write(new_contents)
             else:
                 if not config['quiet']:
-                    print("{} has old/modified contents".format(target))
-                    print(" writing new contents to {}.new".format(target))
+                    print(f"{target} has old/modified contents")
+                    print(f" writing new contents to {target}.new")
                 with open(target + ".new", "wt") as f:
                     f.write(new_contents)
         # otherwise, it's up to date
     else:
         if not config['quiet']:
-            print("creating {}".format(target))
+            print(f"creating {target}")
         with open(target, "wt") as f:
             f.write(new_contents)
 
@@ -74,7 +74,7 @@ def upgradeFiles(config):
 @defer.inlineCallbacks
 def upgradeDatabase(config, master_cfg):
     if not config['quiet']:
-        print("upgrading database ({})".format(stripUrlPassword(master_cfg.db['db_url'])))
+        print(f"upgrading database ({stripUrlPassword(master_cfg.db['db_url'])})")
         print("Warning: Stopping this process might cause data loss")
 
     def sighandler(signum, frame):
@@ -121,8 +121,7 @@ def upgradeMaster(config, _noMonkey=False):
     try:
         configFile = base.getConfigFileFromTac(config['basedir'])
     except (SyntaxError, ImportError):
-        print("Unable to load 'buildbot.tac' from '{}':".format(config['basedir']),
-              file=sys.stderr)
+        print(f"Unable to load 'buildbot.tac' from '{config['basedir']}':", file=sys.stderr)
         e = traceback.format_exc()
         print(e, file=sys.stderr)
         return defer.succeed(1)

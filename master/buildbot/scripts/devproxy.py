@@ -68,7 +68,7 @@ class DevProxy:
             limit=self.MAX_CONNECTIONS, verify_ssl=(not self.unsafe_ssl))
         self.session = aiohttp.ClientSession(connector=conn, trust_env=True, cookies=cookies)
         self.config = None
-        self.buildbotURL = "http://localhost:{}/".format(port)
+        self.buildbotURL = f"http://localhost:{port}/"
         app.on_startup.append(self.on_startup)
         app.on_cleanup.append(self.on_cleanup)
         aiohttp.web.run_app(app, host="localhost", port=port)
@@ -105,7 +105,7 @@ class DevProxy:
                     elif msg.type == aiohttp.WSMsgType.PONG:
                         await ws_to.pong()
                     else:
-                        raise ValueError('unexpected message type: {}'.format(msg))
+                        raise ValueError(f'unexpected message type: {msg}')
 
             # keep forwarding websocket data in both directions
             await asyncio.wait(
@@ -143,8 +143,8 @@ class DevProxy:
             return self.connection_error(e)
 
     def connection_error(self, error):
-        return aiohttp.web.Response(text='Unable to connect to upstream server {} ({!s})'.format(
-            self.next_url, error), status=502)
+        return aiohttp.web.Response(text=f'Unable to connect to upstream server {self.next_url} '
+                                         f'({error!s})', status=502)
 
     async def fetch_config_from_upstream(self):
         async with self.session.get(self.next_url) as request:

@@ -65,7 +65,7 @@ def makeSampleConfig(config):
     source = util.sibpath(__file__, "sample.cfg")
     target = os.path.join(config['basedir'], "master.cfg.sample")
     if not config['quiet']:
-        print("creating {}".format(target))
+        print(f"creating {target}")
     with open(source, "rt") as f:
         config_sample = f.read()
     if config['db']:
@@ -91,7 +91,7 @@ def createDB(config, _noMonkey=False):
     db = master.db
     yield db.setup(check_version=False, verbose=not config['quiet'])
     if not config['quiet']:
-        print("creating database ({})".format(master_cfg.db['db_url']))
+        print(f"creating database ({master_cfg.db['db_url']})")
     yield db.model.upgrade()
 
 
@@ -104,6 +104,6 @@ def createMaster(config):
     yield createDB(config)
 
     if not config['quiet']:
-        print("buildmaster configured in {}".format(config['basedir']))
+        print(f"buildmaster configured in {config['basedir']}")
 
     return 0

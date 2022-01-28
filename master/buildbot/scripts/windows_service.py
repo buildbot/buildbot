@@ -135,7 +135,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if os.path.isfile(msg_file):
                 servicemanager.Initialize("BuildBot", msg_file)
             else:
-                self.warning("Strange - '{}' does not exist".format(msg_file))
+                self.warning(f"Strange - '{msg_file}' does not exist")
 
     def _checkConfig(self):
         # Locate our child process runner (but only when run from source)
@@ -156,7 +156,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if me.endswith(".pyc") or me.endswith(".pyo"):
                 me = me[:-1]
 
-            self.runner_prefix = '"{}" "{}"'.format(python_exe, me)
+            self.runner_prefix = f'"{python_exe}" "{me}"'
         else:
             # Running from a py2exe built executable - our child process is
             # us (but with the funky cmdline args!)
@@ -194,7 +194,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if os.path.isfile(sentinal):
                 self.dirs.append(d)
             else:
-                msg = "Directory '{}' is not a buildbot dir - ignoring".format(d)
+                msg = f"Directory '{d}' is not a buildbot dir - ignoring"
                 self.warning(msg)
         if not self.dirs:
             self.error("No valid buildbot directories were specified.\n"
@@ -227,12 +227,11 @@ class BBService(win32serviceutil.ServiceFramework):
         child_infos = []
 
         for bbdir in self.dirs:
-            self.info("Starting BuildBot in directory '{}'".format(bbdir))
+            self.info(f"Starting BuildBot in directory '{bbdir}'")
             # hWaitStop is a Handle but the command needs the int associated
             # to that Handle
             hstop = int(self.hWaitStop)
-            cmd = '{} --spawn {} start --nodaemon {}'.format(self.runner_prefix, hstop, bbdir)
-
+            cmd = f'{self.runner_prefix} --spawn {hstop} start --nodaemon {bbdir}'
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))
 
@@ -257,8 +256,8 @@ class BBService(win32serviceutil.ServiceFramework):
                           "Please check the twistd.log file in the "
                           "indicated directory.")
 
-            self.warning(("BuildBot for directory {} terminated with "
-                          "exit code {}.\n{}").format(repr(bbdir), status, output))
+            self.warning(f"BuildBot for directory {repr(bbdir)} terminated with "
+                         f"exit code {status}.\n{output}")
 
             del child_infos[index]
 
@@ -284,8 +283,8 @@ class BBService(win32serviceutil.ServiceFramework):
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
             # If necessary, kill it
             if win32process.GetExitCodeProcess(h) == win32con.STILL_ACTIVE:
-                self.warning("BuildBot process at %r failed to terminate - "
-                             "killing it" % (bbdir, ))
+                self.warning(f"BuildBot process at {repr(bbdir)} failed to terminate - "
+                             "killing it")
                 win32api.TerminateProcess(h, 3)
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
 
@@ -314,7 +313,7 @@ class BBService(win32serviceutil.ServiceFramework):
             servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
                                   event,
                                   (self._svc_name_,
-                                   " ({})".format(self._svc_display_name_)))
+                                   f" ({self._svc_display_name_})"))
         except win32api.error as details:
             # Failed to write a log entry - most likely problem is
             # that the event log is full.  We don't want this to kill us
@@ -405,7 +404,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 # ERROR_BROKEN_PIPE means the child process closed the
                 # handle - ie, it terminated.
                 if err[0] != winerror.ERROR_BROKEN_PIPE:
-                    self.warning("Error reading output from process: {}".format(err))
+                    self.warning(f"Error reading output from process: {err}")
                 break
             captured_blocks.append(data)
             del captured_blocks[CHILDCAPTURE_MAX_BLOCKS:]
