@@ -38,8 +38,7 @@ class GenericLatentMachine(AbstractLatentMachine):
         for action, arg_name in [(start_action, 'start_action'),
                                  (stop_action, 'stop_action')]:
             if not IMachineAction.providedBy(action):
-                msg = "{} of {} does not implement required " \
-                      "interface".format(arg_name, self.name)
+                msg = f"{arg_name} of {self.name} does not implement required interface"
                 raise Exception(msg)
 
     @defer.inlineCallbacks
@@ -59,8 +58,8 @@ class GenericLatentMachine(AbstractLatentMachine):
 def runProcessLogFailures(reactor, args, expectedCode=0):
     code, stdout, stderr = yield runprocess.run_process(reactor, args)
     if code != expectedCode:
-        log.err(('Got unexpected return code when running {}: '
-                 'code: {}, stdout: {}, stderr: {}').format(args, code, stdout, stderr))
+        log.err(f'Got unexpected return code when running {args}: '
+                f'code: {code}, stdout: {stdout}, stderr: {stderr}')
         return False
     return True
 
