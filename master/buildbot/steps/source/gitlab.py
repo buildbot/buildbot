@@ -30,9 +30,9 @@ class GitLab(Git):
         if self.build.hasProperty("target_branch"):
             target_repourl = self.build.getProperty("target_git_ssh_url", None)
             if self.repourl != target_repourl:
-                log.msg(("GitLab.run_vc: note: GitLab step for merge requests"
-                         " should probably have repourl='{}' instead of '{}'?"
-                         ).format(target_repourl, self.repourl))
+                log.msg("GitLab.run_vc: note: GitLab step for merge requests"
+                        f" should probably have repourl='{target_repourl}' instead "
+                        "of '{self.repourl}'?")
             # This step is (probably) configured to fetch the target
             # branch of a merge (because it is impractical for users to
             # configure one builder for each of the infinite number of

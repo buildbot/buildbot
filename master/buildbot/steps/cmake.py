@@ -72,7 +72,7 @@ class CMake(ShellMixin, BuildStep):
 
         if self.definitions is not None:
             for item in self.definitions.items():
-                command.append('-D%s=%s' % item)
+                command.append(f'-D{item[0]}={item[1]}')
 
         if self.options is not None:
             command.extend(self.options)

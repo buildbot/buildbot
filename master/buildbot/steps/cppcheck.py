@@ -60,7 +60,7 @@ class Cppcheck(ShellMixin, BuildStep):
 
     def _log_consumer(self):
         line_re = re.compile(
-                r'(?:\[.+\]: )?\((?P<severity>{})\) .+'.format('|'.join(self.MESSAGES)))
+                fr"(?:\[.+\]: )?\((?P<severity>{'|'.join(self.MESSAGES)})\) .+")
 
         while True:
             stream, line = yield
@@ -75,7 +75,7 @@ class Cppcheck(ShellMixin, BuildStep):
         command = [self.binary]
         command.extend(self.source)
         if self.enable:
-            command.append('--enable={}'.format(','.join(self.enable)))
+            command.append(f"--enable={','.join(self.enable)}")
         if self.inconclusive:
             command.append('--inconclusive')
         command.extend(self.extra_args)
@@ -89,10 +89,10 @@ class Cppcheck(ShellMixin, BuildStep):
 
         self.descriptionDone = self.descriptionDone[:]
         for msg in self.MESSAGES:
-            self.setProperty('cppcheck-{}'.format(msg), self.counts[msg], 'Cppcheck')
+            self.setProperty(f'cppcheck-{msg}', self.counts[msg], 'Cppcheck')
             if not self.counts[msg]:
                 continue
-            self.descriptionDone.append("{}={}".format(msg, self.counts[msg]))
+            self.descriptionDone.append(f"{msg}={self.counts[msg]}")
             yield self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
         self.setProperty('cppcheck-total', sum(self.counts.values()), 'Cppcheck')
 

@@ -37,7 +37,7 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
         result = SUCCESS
         for path, secretvalue in self.secret_to_be_populated:
             if not isinstance(path, str):
-                raise ValueError("Secret path {} is not a string".format(path))
+                raise ValueError(f"Secret path {path} is not a string")
             self.secret_to_be_interpolated = secretvalue
             res = yield self.downloadFileContentToWorker(path, self.secret_to_be_interpolated,
                                                          mode=stat.S_IRUSR | stat.S_IWUSR)

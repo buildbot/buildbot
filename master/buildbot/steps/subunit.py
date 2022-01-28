@@ -114,7 +114,7 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
         problems = ""
         for test, err in self._observer.errors + self._observer.failures:
-            problems += "{}\n{}".format(test.id(), err)
+            problems += f"{test.id()}\n{err}"
         if problems:
             yield self.addCompleteLog("problems", problems)
 
@@ -148,22 +148,22 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
         if not count:
             if total:
-                summary += " {} {} passed".format(total, total == 1 and "test" or "tests")
+                summary += f' {total} {total == 1 and "test" or "tests"} passed'
             else:
                 summary += " no tests run"
         else:
-            summary += " Total {} test(s)".format(total)
+            summary += f" Total {total} test(s)"
             if failures:
-                summary += " {} {}".format(failures, failures == 1 and "failure" or "failures")
+                summary += f' {failures} {failures == 1 and "failure" or "failures"}'
             if errors:
-                summary += " {} {}".format(errors, errors == 1 and "error" or "errors")
+                summary += f' {errors} {errors == 1 and "error" or "errors"}'
 
         if skips:
-            summary += " {} {}".format(skips, skips == 1 and "skip" or "skips")
+            summary += f' {skips} {skips == 1 and "skip" or "skips"}'
 
         # TODO: expectedFailures/unexpectedSuccesses
 
         if self.results != SUCCESS:
-            summary += ' ({})'.format(Results[self.results])
+            summary += f' ({Results[self.results]})'
 
         return {'step': summary}

@@ -56,12 +56,12 @@ git_describe_flags = [
     # string parameter
     ('match', lambda v: ['--match', v] if v else None),
     # numeric parameter
-    ('abbrev', lambda v: ['--abbrev={}'.format(v)]
+    ('abbrev', lambda v: [f'--abbrev={v}']
      if isTrueOrIsExactlyZero(v) else None),
-    ('candidates', lambda v: ['--candidates={}'.format(v)] if isTrueOrIsExactlyZero(v) else None),
+    ('candidates', lambda v: [f'--candidates={v}'] if isTrueOrIsExactlyZero(v) else None),
     # optional string parameter
     ('dirty', lambda v: ['--dirty'] if (v is True or v == '') else None),
-    ('dirty', lambda v: ['--dirty={}'.format(v)] if (v and v is not True) else None),
+    ('dirty', lambda v: [f'--dirty={v}'] if (v and v is not True) else None),
 ]
 
 
@@ -106,8 +106,8 @@ class Git(Source, GitStepMixin):
 
         if isinstance(self.mode, str):
             if not self._hasAttrGroupMember('mode', self.mode):
-                bbconfig.error("Git: mode must be {}".format(
-                        ' or '.join(self._listAttrGroupMembers('mode'))))
+                bbconfig.error(
+                    f"Git: mode must be {' or '.join(self._listAttrGroupMembers('mode'))}")
             if isinstance(self.method, str):
                 if self.mode == 'full' and \
                         self.method not in ['clean', 'fresh', 'clobber', 'copy', None]:
@@ -267,7 +267,7 @@ class Git(Source, GitStepMixin):
         revision = stdout.strip()
         if len(revision) != GIT_HASH_LENGTH:
             raise buildstep.BuildStepFailed()
-        log.msg("Got Git revision {}".format(revision))
+        log.msg(f"Got Git revision {revision}")
         self.updateSourceProperty('got_revision', revision)
 
         return RC_SUCCESS
@@ -408,8 +408,7 @@ class Git(Source, GitStepMixin):
         if self.retry and not done:
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
+                log.msg(f"Checkout failed, trying {repeats} more times after {delay} seconds")
                 self.retry = (delay, repeats - 1)
 
                 df = defer.Deferred()

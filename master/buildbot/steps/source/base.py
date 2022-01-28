@@ -135,7 +135,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         The hasattr equivalent for attribute groups: returns whether the given
         member is in the attribute group.
         """
-        method_name = '{}_{}'.format(attrGroup, attr)
+        method_name = f'{attrGroup}_{attr}'
         return hasattr(self, method_name)
 
     def _getAttrGroupMember(self, attrGroup, attr):
@@ -143,7 +143,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         The getattr equivalent for attribute groups: gets and returns the
         attribute group member.
         """
-        method_name = '{}_{}'.format(attrGroup, attr)
+        method_name = f'{attrGroup}_{attr}'
         return getattr(self, method_name)
 
     def _listAttrGroupMembers(self, attrGroup):
@@ -170,13 +170,13 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
 
         if self.codebase != '':
             assert not isinstance(self.getProperty(name, None), str), \
-                "Sourcestep {} has a codebase, other sourcesteps don't".format(self.name)
+                f"Sourcestep {self.name} has a codebase, other sourcesteps don't"
             property_dict = self.getProperty(name, {})
             property_dict[self.codebase] = value
             super().setProperty(name, property_dict, source)
         else:
             assert not isinstance(self.getProperty(name, None), dict), \
-                "Sourcestep {} does not have a codebase, other sourcesteps do".format(self.name)
+                f"Sourcestep {self.name} does not have a codebase, other sourcesteps do"
             super().setProperty(name, value, source)
 
     def computeSourceRevision(self, changes):
@@ -191,7 +191,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
 
     @defer.inlineCallbacks
     def applyPatch(self, patch):
-        patch_command = ['patch', '-p{}'.format(patch[0]), '--remove-empty-files',
+        patch_command = ['patch', f'-p{patch[0]}', '--remove-empty-files',
                          '--force', '--forward', '-i', '.buildbot-diff']
         cmd = remotecommand.RemoteShellCommand(self.workdir,
                                                patch_command,
@@ -272,11 +272,11 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
                 if patch:
                     yield self.addCompleteLog("patch", bytes2unicode(patch[1], errors='ignore'))
             else:
-                log.msg("No sourcestamp found in build for codebase '{}'".format(self.codebase))
-                self.descriptionDone = "Codebase {} not in build".format(self.codebase)
+                log.msg(f"No sourcestamp found in build for codebase '{self.codebase}'")
+                self.descriptionDone = f"Codebase {self.codebase} not in build"
                 yield self.addCompleteLog("log",
-                                          "No sourcestamp found in build for codebase '{}'".format(
-                                               self.codebase))
+                                          "No sourcestamp found in build for "
+                                          f"codebase '{self.codebase}'")
                 return FAILURE
 
         else:

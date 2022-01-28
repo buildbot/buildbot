@@ -36,8 +36,8 @@ class Gerrit(Git):
             try:
                 change = self.build.getProperty("gerrit_change", '').split('/')
                 if len(change) == 2:
-                    gerrit_branch = "refs/changes/%2.2d/%d/%d" \
-                        % (int(change[0]) % 100, int(change[0]), int(change[1]))
+                    gerrit_branch = \
+                        f"refs/changes/{(int(change[0]) % 100):2}/{int(change[0])}/{int(change[1])}"
                     self.updateSourceProperty("gerrit_branch", gerrit_branch)
             except Exception:
                 pass

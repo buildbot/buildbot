@@ -121,11 +121,10 @@ class FileUpload(_TransferBuildStep):
         # properly. TODO: maybe pass the master's basedir all the way down
         # into the BuildStep so we can do this better.
         masterdest = os.path.expanduser(masterdest)
-        log.msg("FileUpload started, from worker %r to master %r"
-                % (source, masterdest))
+        log.msg(f"FileUpload started, from worker {repr(source)} to master {repr(masterdest)}")
 
         if self.description is None:
-            self.description = ['uploading {}'.format(os.path.basename(source))]
+            self.description = [f'uploading {os.path.basename(source)}']
 
         if self.descriptionDone is None:
             self.descriptionDone = self.description
@@ -143,8 +142,8 @@ class FileUpload(_TransferBuildStep):
             masterdest, self.maxsize, self.mode)
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
-            m = (("This worker ({}) does not support preserving timestamps. "
-                  "Please upgrade the worker.").format(self.build.workername))
+            m = (f"This worker ({self.build.workername}) does not support preserving timestamps. "
+                 "Please upgrade the worker.")
             raise WorkerSetupError(m)
 
         # default arguments
@@ -164,8 +163,8 @@ class FileUpload(_TransferBuildStep):
         cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         res = yield self.runTransferCommand(cmd, fileWriter)
 
-        log.msg("File '{}' upload finished with results {}".format(
-            os.path.basename(self.workersrc), str(res)))
+        log.msg(
+            f"File '{os.path.basename(self.workersrc)}' upload finished with results {str(res)}")
 
         return res
 
@@ -215,10 +214,9 @@ class DirectoryUpload(_TransferBuildStep):
         # properly. TODO: maybe pass the master's basedir all the way down
         # into the BuildStep so we can do this better.
         masterdest = os.path.expanduser(masterdest)
-        log.msg("DirectoryUpload started, from worker {} to master {}".format(repr(source),
-                                                                              repr(masterdest)))
+        log.msg(f"DirectoryUpload started, from worker {repr(source)} to master {repr(masterdest)}")
 
-        self.descriptionDone = "uploading {}".format(os.path.basename(source))
+        self.descriptionDone = f"uploading {os.path.basename(source)}"
         if self.url is not None:
             urlText = self.urlText
 
@@ -341,7 +339,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         cmd = makeStatusRemoteCommand(self, 'stat', args)
         yield self.runCommand(cmd)
         if cmd.rc != 0:
-            msg = 'File {}/{} not available at worker'.format(self.workdir, source)
+            msg = f'File {self.workdir}/{source} not available at worker'
             yield self.addCompleteLog('stderr', msg)
             return FAILURE
         s = cmd.updates['stat'][-1]
@@ -350,7 +348,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         elif stat.S_ISREG(s[stat.ST_MODE]):
             result = yield self.uploadFile(source, masterdest)
         else:
-            msg = '{} is neither a regular file, nor a directory'.format(source)
+            msg = f'{source} is neither a regular file, nor a directory'
             yield self.addCompleteLog('stderr', msg)
             return FAILURE
 
@@ -381,8 +379,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         sources = self.workersrcs if isinstance(self.workersrcs, list) else [self.workersrcs]
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
-            m = (("This worker ({}) does not support preserving timestamps. "
-                  "Please upgrade the worker.").format(self.build.workername))
+            m = (f"This worker ({self.build.workername}) does not support preserving timestamps. "
+                 "Please upgrade the worker.")
             raise WorkerSetupError(m)
 
         if not sources:
@@ -395,8 +393,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
             ])
             sources = [self.workerPathToMasterPath(p) for p in flatten(results)]
 
-        log.msg("MultipleFileUpload started, from worker {!r} to master {!r}".format(sources,
-                                                                                     masterdest))
+        log.msg(f"MultipleFileUpload started, from worker {sources!r} to master {masterdest!r}")
 
         self.descriptionDone = ['uploading', str(len(sources)),
                                 'file' if len(sources) == 1 else 'files']
@@ -449,8 +446,7 @@ class FileDownload(_TransferBuildStep):
         # paths will be interpreted relative to that
         source = os.path.expanduser(self.mastersrc)
         workerdest = self.workerdest
-        log.msg("FileDownload started, from master %r to worker %r" %
-                (source, workerdest))
+        log.msg(f"FileDownload started, from master {repr(source)} to worker {repr(workerdest)}")
 
         self.descriptionDone = ["downloading to", os.path.basename(workerdest)]
 
@@ -459,7 +455,7 @@ class FileDownload(_TransferBuildStep):
             fp = open(source, 'rb')
         except IOError:
             # if file does not exist, bail out with an error
-            yield self.addCompleteLog('stderr', 'File {!r} not available at master'.format(source))
+            yield self.addCompleteLog('stderr', f'File {source!r} not available at master')
             return FAILURE
 
         fileReader = remotetransfer.FileReader(fp)
@@ -503,8 +499,7 @@ class StringDownload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
-            config.error("StringDownload step's mode must be an integer or None, got '{}'".format(
-                    mode))
+            config.error(f"StringDownload step's mode must be an integer or None, got '{mode}'")
         self.mode = mode
 
     @defer.inlineCallbacks
@@ -516,8 +511,7 @@ class StringDownload(_TransferBuildStep):
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
         workerdest = self.workerdest
-        log.msg("StringDownload started, from master to worker %r" %
-                workerdest)
+        log.msg(f"StringDownload started, from master to worker {repr(workerdest)}")
 
         self.descriptionDone = ["downloading to", os.path.basename(workerdest)]
 
