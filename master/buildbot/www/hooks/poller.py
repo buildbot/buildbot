@@ -53,8 +53,7 @@ class PollingHandler(BaseHookHandler):
             missing = (set(req.args[b'poller']) -
                       set(unicode2bytes(s.name) for s in pollers))
             if missing:
-                raise ValueError("Could not find pollers: {}".format(
-                    bytes2unicode(b",".join(missing))))
+                raise ValueError(f'Could not find pollers: {bytes2unicode(b",".join(missing))}')
 
         for p in pollers:
             p.force()

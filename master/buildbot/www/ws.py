@@ -66,7 +66,7 @@ class WsProtocol(WebSocketServerProtocol):
         presence of _id or type attributes.
         """
         if self.debug:
-            log.msg("FRAME {}".format(frame))
+            log.msg(f"FRAME {frame}")
 
         frame = json.loads(bytes2unicode(frame))
         _id = frame.get("_id")
@@ -108,18 +108,18 @@ class WsProtocol(WebSocketServerProtocol):
         meth = getattr(self, cmdmeth, None)
         if meth is None:
             return self.send_error(
-                error="no such command type '{}'".format(cmd), code=404, _id=_id
+                error=f"no such command type '{cmd}'", code=404, _id=_id
             )
         try:
             return meth(**frame)
         except TypeError as e:
             return self.send_error(
-                error="Invalid method argument '{}'".format(str(e)), code=400, _id=_id
+                error=f"Invalid method argument '{str(e)}'", code=400, _id=_id
             )
         except Exception as e:
-            log.err(e, "while calling command {}".format(cmdmeth))
+            log.err(e, f"while calling command {cmdmeth}")
             return self.send_error(
-                error="Internal Error '{}'".format(str(e)), code=500, _id=_id
+                error=f"Internal Error '{str(e)}'", code=500, _id=_id
             )
 
     # legacy protocol methods
@@ -140,7 +140,7 @@ class WsProtocol(WebSocketServerProtocol):
     def cmd_startConsuming(self, path, _id):
         if not self.isPath(path):
             yield self.send_json_message(
-                error="invalid path format '{}'".format(str(path)), code=400, _id=_id
+                error=f"invalid path format '{str(path)}'", code=400, _id=_id
             )
             return
 
@@ -168,7 +168,7 @@ class WsProtocol(WebSocketServerProtocol):
     def cmd_stopConsuming(self, path, _id):
         if not self.isPath(path):
             yield self.send_json_message(
-                error="invalid path format '{}'".format(str(path)), code=400, _id=_id
+                error=f"invalid path format '{str(path)}'", code=400, _id=_id
             )
             return
 
@@ -179,7 +179,7 @@ class WsProtocol(WebSocketServerProtocol):
             yield self.ack(_id=_id)
             return
         yield self.send_json_message(
-            error="path was not consumed '{}'".format(str(path)), code=400, _id=_id
+            error=f"path was not consumed '{str(path)}'", code=400, _id=_id
         )
 
     def cmd_ping(self, _id):

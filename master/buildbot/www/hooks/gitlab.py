@@ -50,17 +50,17 @@ class GitLabHandler(BaseHookHandler):
         # We only care about regular heads or tags
         match = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not match:
-            log.msg("Ignoring refname `{}': Not a branch".format(refname))
+            log.msg(f"Ignoring refname `{refname}': Not a branch")
             return changes
 
         branch = match.group(2)
         if payload.get('deleted'):
-            log.msg("Branch `{}' deleted, ignoring".format(branch))
+            log.msg(f"Branch `{branch}' deleted, ignoring")
             return changes
 
         for commit in payload['commits']:
             if not commit.get('distinct', True):
-                log.msg('Commit `{}` is a non-distinct commit, ignoring...'.format(commit['id']))
+                log.msg(f"Commit `{commit['id']}` is a non-distinct commit, ignoring...")
                 continue
 
             files = []
@@ -69,10 +69,10 @@ class GitLabHandler(BaseHookHandler):
 
             when_timestamp = dateparse(commit['timestamp'])
 
-            log.msg("New revision: {}".format(commit['id'][:8]))
+            log.msg(f"New revision: {commit['id'][:8]}")
 
             change = {
-                'author': '{} <{}>'.format(commit['author']['name'], commit['author']['email']),
+                'author': f"{commit['author']['name']} <{commit['author']['email']}>",
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],
@@ -115,21 +115,19 @@ class GitLabHandler(BaseHookHandler):
         # Filter out uninteresting events
         state = attrs['state']
         if re.match('^(closed|merged|approved)$', state):
-            log.msg("GitLab MR#{}: Ignoring because state is {}".format(attrs['iid'], state))
+            log.msg(f"GitLab MR#{attrs['iid']}: Ignoring because state is {state}")
             return []
         action = attrs['action']
         if not re.match('^(open|reopen)$', action) and \
                 not (action == "update" and "oldrev" in attrs):
-            log.msg("GitLab MR#{}: Ignoring because action {} was not open or "
-                    "reopen or an update that added code".format(attrs['iid'],
-                                                                 action))
+            log.msg(f"GitLab MR#{attrs['iid']}: Ignoring because action {action} was not open or "
+                    "reopen or an update that added code")
             return []
 
         changes = [{
-            'author': '{} <{}>'.format(commit['author']['name'], commit['author']['email']),
+            'author': f"{commit['author']['name']} <{commit['author']['email']}>",
             'files': [],  # @todo use rest API
-            'comments': "MR#{}: {}\n\n{}".format(attrs['iid'], attrs['title'],
-                                                 attrs['description']),
+            'comments': f"MR#{attrs['iid']}: {attrs['title']}\n\n{attrs['description']}",
             'revision': commit['id'],
             'when_timestamp': when_timestamp,
             'branch': attrs['target_branch'],
@@ -197,8 +195,7 @@ class GitLabHandler(BaseHookHandler):
         else:
             changes = []
         if changes:
-            log.msg("Received {} changes from {} gitlab event".format(
-                len(changes), event_type))
+            log.msg(f"Received {len(changes)} changes from {event_type} gitlab event")
         return (changes, 'git')
 
 

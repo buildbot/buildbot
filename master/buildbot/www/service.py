@@ -227,7 +227,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             if self.port:
                 port = self.port
                 if isinstance(port, int):
-                    port = "tcp:%d" % port
+                    port = f"tcp:{port}"
                 self.port_service = strports.service(port, self.site)
 
                 # monkey-patch in some code to get the actual Port object
@@ -264,9 +264,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def configPlugins(self, root, new_config):
         known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
         for key, plugin in list(new_config.www.get('plugins', {}).items()):
-            log.msg("initializing www plugin %r" % (key,))
+            log.msg(f"initializing www plugin {repr(key)}")
             if key not in self.apps:
-                raise RuntimeError("could not find plugin {}; is it installed?".format(key))
+                raise RuntimeError(f"could not find plugin {key}; is it installed?")
             app = self.apps.get(key)
             app.setMaster(self.master)
             app.setConfiguration(plugin)
@@ -274,8 +274,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             if not app.ui:
                 del new_config.www['plugins'][key]
         for plugin_name in set(self.apps.names) - known_plugins:
-            log.msg("NOTE: www plugin %r is installed but not "
-                    "configured" % (plugin_name,))
+            log.msg(f"NOTE: www plugin {repr(plugin_name)} is installed but not configured")
 
     def setupSite(self, new_config):
         self.reconfigurableResources = []

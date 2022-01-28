@@ -47,7 +47,7 @@ class V3RootResource(resource.Resource):
                 msg = bytes2unicode(msg)
                 errors = [{"message": msg}]
             if self.debug:
-                log.msg("HTTP error: {}".format(errors))
+                log.msg(f"HTTP error: {errors}")
             request.setResponseCode(errcode)
             request.setHeader(b"content-type", b"application/json; charset=utf-8")
             data = json.dumps({"data": None, "errors": errors})
