@@ -42,7 +42,7 @@ def gengraphql(config):
         dirs = os.path.dirname(config['out'])
         if dirs and not os.path.exists(dirs):
             os.makedirs(dirs)
-        f = open(config['out'], "w", encoding='utf-8')
+        f = open(config['out'], "w", encoding='utf-8')  # noqa pylint: disable=consider-using-with
     else:
         f = sys.stdout
     schema = graphql.get_schema()

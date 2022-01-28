@@ -109,7 +109,7 @@ def getVersion(init_file):
         return version
 
     try:
-        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
+        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)  # noqa pylint: disable=consider-using-with
         out = p.communicate()[0]
 
         if (not p.returncode) and out:

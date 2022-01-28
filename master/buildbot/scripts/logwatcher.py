@@ -152,7 +152,8 @@ class LogWatcher(LineOnlyLongLineReceiver):
 
     def create_logfile(self, path):  # pragma: no cover
         if not os.path.exists(path):
-            open(path, 'a', encoding='utf-8').close()
+            with open(path, 'a', encoding='utf-8'):
+                pass
 
     def print_output(self, output):  # pragma: no cover
         print(output)

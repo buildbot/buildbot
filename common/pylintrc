@@ -152,7 +152,6 @@ disable=
   super-with-arguments, # TODO: remove when we no longer have Python 2 code
   arguments-renamed,
   not-context-manager,
-  consider-using-with,
   unspecified-encoding,
   consider-using-generator,
   use-a-generator,

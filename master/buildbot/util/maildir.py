@@ -145,7 +145,7 @@ class MaildirService(service.BuildbotService):
             os.rename(os.path.join(self.newdir, filename),
                       os.path.join(self.curdir, filename))
             path = os.path.join(self.curdir, filename)
-            f = open(path, "r", encoding='utf-8')
+            f = open(path, "r", encoding='utf-8')  # noqa pylint: disable=consider-using-with
 
         return f
 
