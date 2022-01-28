@@ -28,7 +28,7 @@ def deprecatedImport(fn):
         # on older Pythons, this warning appears twice, so use collapse it
         if len(warnings) == 2 and warnings[0] == warnings[1]:
             del warnings[1]
-        self.assertEqual(len(warnings), 1, "got: %r" % (warnings,))
+        self.assertEqual(len(warnings), 1, f"got: {repr(warnings)}")
         self.assertEqual(warnings[0]['category'], DeprecatedApiWarning)
     return wrapper
 
