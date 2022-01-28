@@ -213,7 +213,7 @@ class Change(base.ResourceType):
         self.produceEvent(change, 'new')
 
         # log, being careful to handle funny characters
-        msg = "added change with revision {} to database".format(revision)
+        msg = f"added change with revision {revision} to database"
         log.msg(msg.encode('utf-8', 'replace'))
 
         return changeid

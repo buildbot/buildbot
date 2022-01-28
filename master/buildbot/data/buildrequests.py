@@ -102,7 +102,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
         if action != "cancel":
-            raise ValueError("action: {} is not supported".format(action))
+            raise ValueError(f"action: {action} is not supported")
         brid = kwargs['buildrequestid']
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
