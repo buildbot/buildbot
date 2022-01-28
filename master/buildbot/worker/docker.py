@@ -92,8 +92,7 @@ class DockerBaseWorker(AbstractLatentWorker):
         return super().reconfigService(name, password, **kwargs)
 
     def getContainerName(self):
-        return ('buildbot-{worker}-{hash}'.format(worker=self.workername,
-                                                  hash=self.masterhash)).replace("_", "-")
+        return (f'buildbot-{self.workername}-{self.masterhash}').replace("_", "-")
 
     @property
     def shortid(self):
@@ -156,8 +155,8 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                 try:
                     bind, volume = volume_string.split(":", 1)
                 except ValueError:
-                    config.error(("Invalid volume definition for docker "
-                                  "{}. Skipping...").format(volume_string))
+                    config.error("Invalid volume definition for docker "
+                                 f"{volume_string}. Skipping...")
                     continue
 
     @defer.inlineCallbacks
@@ -198,8 +197,8 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             try:
                 _, volume = volume_string.split(":", 1)
             except ValueError:
-                config.error(("Invalid volume definition for docker "
-                              "{}. Skipping...").format(volume_string))
+                config.error("Invalid volume definition for docker "
+                             f"{volume_string}. Skipping...")
                 continue
 
             if volume.endswith(':ro') or volume.endswith(':rw'):
@@ -255,7 +254,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         instances = docker_client.containers(
             all=1,
             filters=dict(name=container_name))
-        container_name = "/{0}".format(container_name)
+        container_name = f"/{container_name}"
         for instance in instances:
             if container_name not in instance['Names']:
                 continue
@@ -268,9 +267,9 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         if image is not None:
             found = self._image_exists(docker_client, image)
         else:
-            image = '{}_{}_image'.format(self.workername, id(self))
+            image = f'{self.workername}_{id(self)}_image'
         if (not found) and (dockerfile is not None):
-            log.msg("Image '{}' not found, building it from scratch".format(image))
+            log.msg(f"Image '{image}' not found, building it from scratch")
             if (custom_context):
                 with open(dockerfile, 'rb') as fin:
                     lines = docker_client.build(fileobj=fin,
@@ -292,11 +291,11 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         imageExists = self._image_exists(docker_client, image)
         if ((not imageExists) or self.alwaysPull) and self.autopull:
             if (not imageExists):
-                log.msg("Image '{}' not found, pulling from registry".format(image))
+                log.msg(f"Image '{image}' not found, pulling from registry")
             docker_client.pull(image)
 
         if (not self._image_exists(docker_client, image)):
-            msg = 'Image "{}" not found on docker host.'.format(image)
+            msg = f'Image "{image}" not found on docker host.'
             log.msg(msg)
             raise LatentWorkerCannotSubstantiate(msg)
 
@@ -322,7 +321,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                 'Failed to start container'
             )
         shortid = instance['Id'][:6]
-        log.msg('Container created, Id: {}...'.format(shortid))
+        log.msg(f'Container created, Id: {shortid}...')
         instance['image'] = image
         self.instance = instance
         self._curr_client_args = curr_client_args
@@ -332,7 +331,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         except docker.errors.APIError as e:
             # The following was noticed in certain usage of Docker on Windows
             if 'The container operating system does not match the host operating system' in str(e):
-                msg = 'Image used for build is wrong: {}'.format(str(e))
+                msg = f'Image used for build is wrong: {str(e)}'
                 raise LatentWorkerCannotSubstantiate(msg) from e
             raise
 
@@ -341,7 +340,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             logs = docker_client.attach(
                 container=instance, stdout=True, stderr=True, stream=True)
             for line in logs:
-                log.msg("docker VM {}: {}".format(shortid, line.strip()))
+                log.msg(f"docker VM {shortid}: {line.strip()}")
                 if self.conn:
                     break
             del logs
@@ -363,7 +362,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
 
     def _thd_stop_instance(self, instance, curr_client_args, fast):
         docker_client = self._getDockerClient(curr_client_args)
-        log.msg('Stopping container {}...'.format(instance['Id'][:6]))
+        log.msg(f"Stopping container {instance['Id'][:6]}...")
         docker_client.stop(instance['Id'])
         if not fast:
             docker_client.wait(instance['Id'])

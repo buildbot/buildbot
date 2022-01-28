@@ -85,8 +85,7 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         return uuid
 
     def getContainerName(self):
-        return ('buildbot-{worker}-{hash}'.format(worker=self.workername,
-                                                  hash=self.masterhash)).replace("_", "-")
+        return (f'buildbot-{self.workername}-{self.masterhash}').replace("_", "-")
 
     @defer.inlineCallbacks
     def start_instance(self, build):
@@ -98,8 +97,8 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         image_uuid = yield self._resolve_image(image)
 
         if image_uuid is None:
-            log.msg("{} {}: Instance creation failed: Cannot find template {}".format(
-                self.__class__.__name__, self.workername, image))
+            log.msg(f"{self.__class__.__name__} {self.workername}: Instance creation failed: "
+                    f"Cannot find template {image}")
             raise LatentWorkerFailedToSubstantiate(self.getContainerName(), 'resolving image')
 
         # compose json
@@ -139,9 +138,8 @@ class UpcloudLatentWorker(AbstractLatentWorker):
 
         if result.code // 100 != 2:
             reason = yield result.content()
-            log.msg("{} {}: Instance creation failed: {} {}".format(
-                self.__class__.__name__, self.workername,
-                result.code, reason))
+            log.msg(f"{self.__class__.__name__} {self.workername}: Instance creation failed: "
+                    f"{result.code} {reason}")
             self.failed_to_start(req['server']['hostname'], 'starting')
 
         instance = yield result.json()
@@ -152,18 +150,17 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         while (yield self._state()) not in ["started"]:
             yield util.asyncSleep(1, reactor=self.master.reactor)
 
-        result = yield self.client.get("/server/{}".format(self.instance["uuid"]))
+        result = yield self.client.get(f'/server/{self.instance["uuid"]}')
         instance = yield result.json()
-        log.msg("{} {}: Instance {} created (root password {})".format(
-                self.__class__.__name__, self.workername,
-                self.instance["Id"], self.instance['password']))
+        log.msg(f'{self.__class__.__name__} {self.workername}: Instance {self.instance["Id"]} '
+                f'created (root password {self.instance["password"]})')
         # include root password as worker property
         self.properties.setProperty("root_password", self.instance['password'], "Worker")
         return [self.instance["Id"], image]
 
     @defer.inlineCallbacks
     def _state(self):
-        result = yield self.client.get("/server/{}".format(self.instance["uuid"]))
+        result = yield self.client.get(f'/server/{self.instance["uuid"]}')
         if result.code == 404:
             return "absent"
         else:
@@ -177,9 +174,9 @@ class UpcloudLatentWorker(AbstractLatentWorker):
             # instance never attached, and it's because, somehow, we never
             # started.
             return
-        log.msg('{} {}: Stopping instance {}...'.format(
-                self.__class__.__name__, self.workername, self.instance["Id"]))
-        result = yield self.client.post("/server/{}/stop".format(self.instance["uuid"],), json={
+        log.msg(f'{self.__class__.__name__} {self.workername}: Stopping instance '
+                f'{self.instance["Id"]}...')
+        result = yield self.client.post(f'/server/{self.instance["uuid"]}/stop', json={
             "stop_server": {
                 "stop_type": "hard",
                 "timeout": "1"
@@ -187,24 +184,18 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         )
         if result.code // 100 != 2:
             reason = yield result.content()
-            reason = '{} {} failed to stop instance {} ({}): {}'.format(self.__class__.__name__,
-                                                                        self.workername,
-                                                                        self.instance["Id"],
-                                                                        self._state(),
-                                                                        reason.decode())
+            reason = (f'{self.__class__.__name__} {self.workername} failed to stop instance '
+                      f'{self.instance["Id"]} ({self._state()}): {reason.decode()}')
             self.instance = None
             raise Exception(reason)
         while (yield self._state()) not in ["stopped", "absent"]:
             yield util.asyncSleep(1, reactor=self.master.reactor)
 
         # destroy it
-        result = yield self.client.delete("/server/{}?storages=1".format(self.instance["uuid"]))
+        result = yield self.client.delete(f'/server/{self.instance["uuid"]}?storages=1')
         if result.code // 100 != 2:
             reason = yield result.content()
-            reason = '{} {} failed to delete instance {} ({}): {}'.format(self.__class__.__name__,
-                                                                          self.workername,
-                                                                          self.instance["Id"],
-                                                                          self._state(),
-                                                                          reason.decode())
+            reason = (f'{self.__class__.__name__} {self.workername} failed to delete instance '
+                      f'{self.instance["Id"]} ({self._state()}): {reason.decode()}')
             self.instance = None
             raise Exception(reason)

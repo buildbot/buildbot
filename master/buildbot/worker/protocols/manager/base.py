@@ -43,7 +43,7 @@ class BaseManager(service.AsyncMultiService):
 
         # do some basic normalization of portstrs
         if isinstance(portstr, int) or ':' not in portstr:
-            portstr = "tcp:{}".format(portstr)
+            portstr = f"tcp:{portstr}".format(portstr)
 
         reg = Registration(self, portstr, username)
 
@@ -77,7 +77,7 @@ class Registration:
         self.manager = manager
 
     def __repr__(self):
-        return "<base.Registration for {} on {}>".format(self.username, self.portstr)
+        return f"<base.Registration for {self.username} on {self.portstr}>"
 
     def unregister(self):
         """
@@ -105,8 +105,7 @@ class BaseDispatcher(service.AsyncService):
         self.port = None
 
     def __repr__(self):
-        return "<base.BaseDispatcher for {} on {}>".format(", ".join(list(self.users)),
-                                                           self.portstr)
+        return f'<base.BaseDispatcher for {", ".join(list(self.users))} on {self.portstr}>'
 
     def start_listening_port(self):
         return strports.listen(self.portstr, self.serverFactory)
@@ -127,14 +126,12 @@ class BaseDispatcher(service.AsyncService):
 
     def register(self, username, password, pfactory):
         if self.debug:
-            log.msg("registering username '{}' on port {}: {}".format(username, self.portstr,
-                                                                      pfactory))
+            log.msg(f"registering username '{username}' on port {self.portstr}: {pfactory}")
         if username in self.users:
-            raise KeyError("username '{}' is already registered on port {}".format(username,
-                                                                                   self.portstr))
+            raise KeyError(f"username '{username}' is already registered on port {self.portstr}")
         self.users[username] = (password, pfactory)
 
     def unregister(self, username):
         if self.debug:
-            log.msg("unregistering username '{}' on port {}".format(username, self.portstr))
+            log.msg(f"unregistering username '{username}' on port {self.portstr}")
         del self.users[username]

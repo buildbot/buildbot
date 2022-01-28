@@ -34,13 +34,13 @@ class ProxyMixin():
         self._disconnect_listeners = []
 
     def callRemote(self, message, *args, **kw):
-        method = getattr(self.impl, "remote_{}".format(message), None)
+        method = getattr(self.impl, f"remote_{message}", None)
         if method is None:
-            raise AttributeError("No such method: remote_{}".format(message))
+            raise AttributeError(f"No such method: remote_{message}")
         try:
             state = method(*args, **kw)
         except TypeError:
-            log.msg("{} didn't accept {} and {}".format(method, args, kw))
+            log.msg(f"{method} didn't accept {args} and {kw}")
             raise
         # break callback recursion for large transfers by using fireEventually
         return fireEventually(state)
