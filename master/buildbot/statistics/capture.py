@@ -97,12 +97,12 @@ class CapturePropertyBase(Capture):
                 try:
                     ret_val = self._callback(properties, pn)
                 except KeyError as e:
-                    raise CaptureCallbackError(("CaptureProperty failed."
-                                                " The property {} not found for build number {} on"
-                                                " builder {}.").format(pn, msg['number'],
-                                                                       builder_info['name'])) from e
+                    raise CaptureCallbackError("CaptureProperty failed."
+                                               f" The property {pn} not found for build number "
+                                               f"{msg['number']} on"
+                                               f" builder {builder_info['name']}.") from e
                 context = self._defaultContext(msg, builder_info['name'])
-                series_name = "{}-{}".format(builder_info['name'], pn)
+                series_name = f"{builder_info['name']}-{pn}"
                 post_data = {
                     "name": pn,
                     "value": ret_val
@@ -168,23 +168,23 @@ class CaptureBuildTimes(Capture):
             except Exception as e:
                 # catching generic exceptions is okay here since we propagate
                 # it
-                raise CaptureCallbackError("{} Exception raised: {} with message: {}".format(
-                                                    self._err_msg(msg, builder_info['name']),
-                                                    type(e).__name__, str(e))) from e
+                raise CaptureCallbackError(f"{self._err_msg(msg, builder_info['name'])} "
+                                           f"Exception raised: {type(e).__name__} "
+                                           f"with message: {str(e)}") from e
 
             context = self._defaultContext(msg, builder_info['name'])
             post_data = {
                 self._time_type: ret_val
             }
-            series_name = "{}-build-times".format(builder_info['name'])
+            series_name = f"{builder_info['name']}-build-times"
             yield self._store(post_data, series_name, context)
 
         else:
             yield defer.succeed(None)
 
     def _err_msg(self, build_data, builder_name):
-        msg = "{} failed on build {} on builder {}.".format(self.__class__.__name__,
-                                                            build_data['number'], builder_name)
+        msg = (f"{self.__class__.__name__} failed on build {build_data['number']} "
+               f"on builder {builder_name}.")
         return msg
 
     @abc.abstractmethod
@@ -272,9 +272,8 @@ class CaptureBuildDuration(CaptureBuildTimes):
 
     def __init__(self, builder_name, report_in='seconds', callback=None):
         if report_in not in ['seconds', 'minutes', 'hours']:
-            config.error(("Error during initialization of class {}."
-                          " `report_in` parameter must be one of 'seconds', 'minutes' or 'hours'"
-                          ).format(self.__class__.__name__))
+            config.error(f"Error during initialization of class {self.__class__.__name__}."
+                         " `report_in` parameter must be one of 'seconds', 'minutes' or 'hours'")
 
         def default_callback(start_time, end_time):
             divisor = 1
@@ -348,12 +347,12 @@ class CaptureDataBase(Capture):
             try:
                 ret_val = self._callback(msg['post_data'])
             except Exception as e:
-                raise CaptureCallbackError(("CaptureData failed for build {} of builder {}."
-                                            " Exception generated: {} with message {}"
-                                            ).format(build_data['number'], builder_info['name'],
-                                              type(e).__name__, str(e))) from e
+                raise CaptureCallbackError(f"CaptureData failed for build {build_data['number']} "
+                                           f"of builder {builder_info['name']}. "
+                                           f"Exception generated: {type(e).__name__} "
+                                           f"with message {str(e)}") from e
             post_data = ret_val
-            series_name = '{}-{}'.format(builder_info['name'], self._data_name)
+            series_name = f"{builder_info['name']}-{self._data_name}"
             context = self._defaultContext(build_data, builder_info['name'])
             yield self._store(post_data, series_name, context)
 
