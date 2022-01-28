@@ -51,7 +51,7 @@ class SecretInAFile(SecretProviderBase):
             secretvalue = None
             for suffix in suffixes:
                 if secretfile.endswith(suffix):
-                    with open(os.path.join(dirname, secretfile)) as source:
+                    with open(os.path.join(dirname, secretfile), encoding='utf-8') as source:
                         secretvalue = source.read()
                     if suffix:
                         secretfile = secretfile[:-len(suffix)]

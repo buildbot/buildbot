@@ -622,20 +622,20 @@ class TestSVNPoller(MasterRunProcessMixin,
     @defer.inlineCallbacks
     def test_cachepath_full(self):
         cachepath = os.path.abspath('revcache')
-        with open(cachepath, "w") as f:
+        with open(cachepath, "w", encoding='utf-8') as f:
             f.write('33')
         s = yield self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, 33)
 
         s.last_change = 44
         s.finished_ok(None)
-        with open(cachepath) as f:
+        with open(cachepath, encoding='utf-8') as f:
             self.assertEqual(f.read().strip(), '44')
 
     @defer.inlineCallbacks
     def test_cachepath_bogus(self):
         cachepath = os.path.abspath('revcache')
-        with open(cachepath, "w") as f:
+        with open(cachepath, "w", encoding='utf-8') as f:
             f.write('nine')
         s = yield self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, None)

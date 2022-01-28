@@ -99,7 +99,7 @@ def getVersion(init_file):
     try:
         cwd = os.path.dirname(os.path.abspath(init_file))
         fn = os.path.join(cwd, 'VERSION')
-        with open(fn) as f:
+        with open(fn, encoding='utf-8') as f:
             return f.read().strip()
     except IOError:
         pass

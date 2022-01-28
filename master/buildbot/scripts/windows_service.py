@@ -526,7 +526,7 @@ def DetermineRunner(bbdir):
         import buildbot.scripts.runner
         return buildbot.scripts.runner.run
 
-    with open(tacfile, 'r') as f:
+    with open(tacfile, 'r', encoding='utf-8') as f:
         contents = f.read()
 
     try:

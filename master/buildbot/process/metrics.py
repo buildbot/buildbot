@@ -325,7 +325,7 @@ class AttachedWorkersWatcher:
 def _get_rss():
     if sys.platform == 'linux':
         try:
-            with open(f"/proc/{os.getpid()}/statm") as f:
+            with open(f"/proc/{os.getpid()}/statm", encoding='utf-8') as f:
                 return int(f.read().split()[1])
         except Exception:
             return 0

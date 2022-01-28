@@ -42,7 +42,7 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
             config.FileLoader(self.basedir, filename).loadConfig()
 
     def test_0_9_0b5_api_renamed_config(self):
-        with open(self.filename, "w") as f:
+        with open(self.filename, "w", encoding='utf-8') as f:
             f.write(sample_0_9_0b5_api_renamed)
         with assertNotProducesWarnings(DeprecatedApiWarning):
             config.FileLoader(self.basedir, self.filename).loadConfig()

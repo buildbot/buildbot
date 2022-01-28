@@ -49,7 +49,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         def spawnProcess(pp, executable, args, environ):
             tmpfile = os.path.join(self.jobdir, 'tmp', 'testy')
             newfile = os.path.join(self.jobdir, 'new', 'testy')
-            with open(tmpfile, "w") as f:
+            with open(tmpfile, "w", encoding='utf-8') as f:
                 f.write(pp.job)
             os.rename(tmpfile, newfile)
             log.msg(f"wrote jobfile {newfile}")

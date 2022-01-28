@@ -34,7 +34,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('basedir')
-        with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:
+        with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write("Application('buildmaster')")
         self.setUpStdoutAssertions()
 

@@ -200,7 +200,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_setupSiteWithHookAndAuth(self):
         fn = self.mktemp()
-        with open(fn, 'w') as f:
+        with open(fn, 'w', encoding='utf-8') as f:
             f.write("user:pass")
         new_config = self.makeConfig(
             port=8080,

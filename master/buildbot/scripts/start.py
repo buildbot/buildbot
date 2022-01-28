@@ -122,7 +122,7 @@ def launch(config):
         protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
 
     if platformType == "win32":
-        with open("twistd.pid", "w") as pidfile:
+        with open("twistd.pid", "w", encoding='utf-8') as pidfile:
             pidfile.write(f"{proc.pid}")
 
 

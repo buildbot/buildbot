@@ -80,10 +80,10 @@ class IndexResource(resource.Resource):
                 if ext not in allowed_ext:
                     continue
                 if ext == ".html":
-                    with open(fn) as f:
+                    with open(fn, encoding='utf-8') as f:
                         html = f.read().strip()
                 elif ext == ".jade":
-                    with open(fn) as f:
+                    with open(fn, encoding='utf-8') as f:
                         jade = f.read()
                         parser = pypugjs.parser.Parser(jade)
                         block = parser.parse()

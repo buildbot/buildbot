@@ -166,10 +166,10 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         if other_files is None:
             other_files = {}
         config_file = textwrap.dedent(config_file)
-        with open(os.path.join(self.basedir, self.filename), "w") as f:
+        with open(os.path.join(self.basedir, self.filename), "w", encoding='utf-8') as f:
             f.write(config_file)
         for file, contents in other_files.items():
-            with open(file, "w") as f:
+            with open(file, "w", encoding='utf-8') as f:
                 f.write(contents)
 
     def test_loadConfig_missing_file(self):
@@ -188,7 +188,7 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         when configure file is found, but we fail to open it.
         """
 
-        def raise_IOError(*args):
+        def raise_IOError(*args, **kwargs):
             raise IOError("error_msg")
 
         self.install_config_file('#dummy')
@@ -280,10 +280,10 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         if other_files is None:
             other_files = {}
         config_file = textwrap.dedent(config_file)
-        with open(os.path.join(self.basedir, self.filename), "w") as f:
+        with open(os.path.join(self.basedir, self.filename), "w", encoding='utf-8') as f:
             f.write(config_file)
         for file, contents in other_files.items():
-            with open(file, "w") as f:
+            with open(file, "w", encoding='utf-8') as f:
                 f.write(contents)
     # tests
 
