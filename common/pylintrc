@@ -156,7 +156,6 @@ disable=
   consider-using-generator,
   use-a-generator,
   raising-bad-type,
-  unnecessary-dict-index-lookup,
   consider-using-max-builtin,
   consider-using-in,
   use-implicit-booleaness-not-comparison,
