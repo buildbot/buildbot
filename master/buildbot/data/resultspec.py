@@ -181,7 +181,7 @@ class ReverseComparator:
     def __ne__(self, other):
         return other.value != self.value
 
-    def __gt_(self, other):
+    def __gt__(self, other):
         return other.value > self.value
 
 
