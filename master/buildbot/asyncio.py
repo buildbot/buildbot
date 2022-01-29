@@ -99,8 +99,7 @@ class AsyncIOLoopWithTwisted(base_events.BaseEventLoop):
 
         # Twisted timers are relatives, contrary to asyncio.
         delay = when - self.time()
-        if delay < 0:
-            delay = 0
+        delay = max(delay, 0)
         self._reactor.callLater(delay, handle._run)
         return handle
 

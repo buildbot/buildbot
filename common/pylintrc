@@ -155,7 +155,6 @@ disable=
   unspecified-encoding,
   consider-using-generator,
   raising-bad-type,
-  consider-using-max-builtin,
   consider-using-in,
   use-implicit-booleaness-not-comparison,
   use-maxsplit-arg,
