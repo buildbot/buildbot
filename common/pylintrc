@@ -154,7 +154,6 @@ disable=
   not-context-manager,
   unspecified-encoding,
   consider-using-generator,
-  use-a-generator,
   raising-bad-type,
   consider-using-max-builtin,
   consider-using-in,

@@ -235,7 +235,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             properties=[resultspec.Property(b'property', 'eq', 'reason')])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
         [self.validateData(build) for build in builds]
-        self.assertTrue(any([('reason' in b['properties']) for b in builds]))
+        self.assertTrue(any(('reason' in b['properties']) for b in builds))
 
     @defer.inlineCallbacks
     def test_get_filter_eq(self):
