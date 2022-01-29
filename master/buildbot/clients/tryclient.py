@@ -259,16 +259,16 @@ class PerforceExtractor(SourceStampExtractor):
         output(b"Could not find change number in output: " + res)
         sys.exit(1)
 
-    def readPatch(self, res, patchlevel):
+    def readPatch(self, diff, patchlevel):
         #
-        # extract the actual patch from "res"
+        # extract the actual patch from "diff"
         #
         if not self.branch:
             output("you must specify a branch")
             sys.exit(1)
         mpatch = ""
         found = False
-        for line in res.split("\n"):
+        for line in diff.split("\n"):
             m = re.search('==== //depot/' + self.branch
                           + r'/([\w/\.\d\-_]+)#(\d+) -', line)
             if m:
@@ -513,9 +513,9 @@ class RemoteTryPP(protocol.ProcessProtocol):
     def errReceived(self, data):
         sys.stderr.write(bytes2unicode(data))
 
-    def processEnded(self, status_object):
-        sig = status_object.value.signal
-        rc = status_object.value.exitCode
+    def processEnded(self, reason):
+        sig = reason.value.signal
+        rc = reason.value.exitCode
         if sig is not None or rc != 0:
             self.d.errback(RuntimeError(f"remote 'buildbot tryserver' failed: sig={sig}, rc={rc}"))
             return

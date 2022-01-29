@@ -55,7 +55,7 @@ class NeedsReconfigResource(resource.Resource):
     needsReconfig = True
     reconfigs = 0
 
-    def reconfigResource(self, config):
+    def reconfigResource(self, new_config):
         NeedsReconfigResource.reconfigs += 1
 
 

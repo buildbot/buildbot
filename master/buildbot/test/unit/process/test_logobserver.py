@@ -79,14 +79,14 @@ class MyLogLineObserver(logobserver.LogLineObserver):
         super().__init__()
         self.obs = []
 
-    def outLineReceived(self, data):
-        self.obs.append(('out', data))
+    def outLineReceived(self, line):
+        self.obs.append(('out', line))
 
-    def errLineReceived(self, data):
-        self.obs.append(('err', data))
+    def errLineReceived(self, line):
+        self.obs.append(('err', line))
 
-    def headerLineReceived(self, data):
-        self.obs.append(('hdr', data))
+    def headerLineReceived(self, line):
+        self.obs.append(('hdr', line))
 
     def finishReceived(self):
         self.obs.append(('fin',))

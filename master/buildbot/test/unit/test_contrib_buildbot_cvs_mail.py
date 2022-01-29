@@ -95,8 +95,8 @@ class _SubprocessProtocol(protocol.ProcessProtocol):
         self.deferred = deferred
         self.output = b''
 
-    def outReceived(self, s):
-        self.output += s
+    def outReceived(self, data):
+        self.output += data
     errReceived = outReceived
 
     def connectionMade(self):
