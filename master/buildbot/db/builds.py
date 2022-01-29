@@ -61,8 +61,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                            limit=limit)
 
             res = conn.execute(q)
-            return list([self._builddictFromRow(row)
-                         for row in res.fetchall()])
+            return list(self._builddictFromRow(row) for row in res.fetchall())
 
         return self.db.pool.do(thd)
 

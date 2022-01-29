@@ -189,7 +189,7 @@ class DataConnector(service.AsyncService):
         for arg in req_args:
             argStr = bytes2unicode(arg)
             if argStr == 'order':
-                order = tuple([bytes2unicode(o) for o in req_args[arg]])
+                order = tuple(bytes2unicode(o) for o in req_args[arg])
                 checkFields(order, True)
             elif argStr == 'field':
                 fields = req_args[arg]

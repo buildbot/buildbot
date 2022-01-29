@@ -129,7 +129,7 @@ class WsProtocol(WebSocketServerProtocol):
 
     def parsePath(self, path):
         path = path.split("/")
-        return tuple([str(p) if p != "*" else None for p in path])
+        return tuple(str(p) if p != "*" else None for p in path)
 
     def isPath(self, path):
         if not isinstance(path, str):
