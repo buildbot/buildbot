@@ -37,9 +37,10 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     compare_attrs = ClusteredBuildbotService.compare_attrs + \
         ('builderNames', 'properties', 'codebases')
 
-    def __init__(self, name, builderNames, properties=None,
-                 codebases=DEFAULT_CODEBASES):
+    def __init__(self, name, builderNames, properties=None, codebases=None):
         super().__init__(name=name)
+        if codebases is None:
+            codebases = self.DEFAULT_CODEBASES.copy()
 
         ok = True
         if interfaces.IRenderable.providedBy(builderNames):
