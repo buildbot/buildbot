@@ -125,10 +125,12 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         if self.builder is None:
             # no filtering needed: we match!
             return Match(self.master, build=build)
+
         # if filtering needed, we need to get some more info
-        ret = yield self.matchFromBuilderId(build['builderid'])
-        if ret:
-            return Match(self.master, build=build)
+        if build is not None:
+            ret = yield self.matchFromBuilderId(build['builderid'])
+            if ret:
+                return Match(self.master, build=build)
 
         return None
 
@@ -138,10 +140,13 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         if self.builder is None:
             # no filtering needed: we match!
             return Match(self.master, buildrequest=buildrequest)
+
         # if filtering needed, we need to get some more info
-        ret = yield self.matchFromBuilderId(buildrequest['builderid'])
-        if ret:
-            return Match(self.master, buildrequest=buildrequest)
+        if buildrequest is not None:
+            ret = yield self.matchFromBuilderId(buildrequest['builderid'])
+            if ret:
+                return Match(self.master, buildrequest=buildrequest)
+
         return None
 
 
@@ -185,10 +190,12 @@ class RebuildBuildEndpointMatcher(EndpointMatcherBase):
         if self.builder is None:
             # no filtering needed: we match!
             return Match(self.master, build=build)
+
         # if filtering needed, we need to get some more info
-        ret = yield self.matchFromBuilderId(build['builderid'])
-        if ret:
-            return Match(self.master, build=build)
+        if build is not None:
+            ret = yield self.matchFromBuilderId(build['builderid'])
+            if ret:
+                return Match(self.master, build=build)
 
         return None
 

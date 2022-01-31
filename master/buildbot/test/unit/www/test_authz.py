@@ -166,6 +166,8 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.setAllowRules(allow_rules)
         yield self.assertUserAllowed("builds/13", "stop", {}, "eightuser")
         yield self.assertUserAllowed("buildrequests/82", "stop", {}, "eightuser")
+        yield self.assertUserForbidden("builds/999", "stop", {}, "eightuser")
+        yield self.assertUserForbidden("buildrequests/999", "stop", {}, "eightuser")
 
         # cannot stop build/buildrequest with non-matching builder
         allow_rules = [
@@ -192,6 +194,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         ]
         self.setAllowRules(allow_rules)
         yield self.assertUserAllowed("builds/13", "rebuild", {}, "eightuser")
+        yield self.assertUserForbidden("builds/999", "rebuild", {}, "eightuser")
 
         # cannot rebuild build with non-matching builder
         allow_rules = [
