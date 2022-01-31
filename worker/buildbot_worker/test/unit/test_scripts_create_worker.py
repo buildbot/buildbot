@@ -607,7 +607,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         # Executed .tac file with mocked functions with side effect.
         # This will raise exception if .tac file is not valid Python file.
         glb = {}
-        exec(expected_tac_contents, glb, glb)
+        exec(expected_tac_contents, glb, glb)  # pylint: disable=exec-used
 
         # only one Application must be created in .tac
         application_class_mock.assert_called_once_with("buildbot-worker")

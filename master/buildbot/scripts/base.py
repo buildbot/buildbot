@@ -151,7 +151,7 @@ def getConfigFromTac(basedir, quiet=False):
         tacGlobals = {'__file__': tacFile}
         try:
             with open(tacFile, encoding='utf-8') as f:
-                exec(f.read(), tacGlobals)
+                exec(f.read(), tacGlobals)  # pylint: disable=exec-used
         except Exception:
             if not quiet:
                 traceback.print_exc()
@@ -252,7 +252,7 @@ class SubcommandOptions(usage.Options):
                     try:
                         with open(optfile, "r", encoding='utf-8') as f:
                             options = f.read()
-                        exec(options, localDict)
+                        exec(options, localDict)  # pylint: disable=exec-used
                     except Exception:
                         print(f"error while reading {optfile}")
                         raise
