@@ -74,14 +74,7 @@ class AbstractWorkerForBuilder:
 
     def buildStarted(self):
         self.state = States.BUILDING
-        # AbstractWorker doesn't always have a buildStarted method
-        # so only call it if it is available.
-        try:
-            worker_buildStarted = self.worker.buildStarted
-        except AttributeError:
-            pass
-        else:
-            worker_buildStarted(self)
+        self.worker.buildStarted(self)
 
     def buildFinished(self):
         self.state = States.AVAILABLE

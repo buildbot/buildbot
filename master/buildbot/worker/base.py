@@ -603,6 +603,9 @@ class AbstractWorker(service.BuildbotService):
         except KeyError:
             pass
 
+    def buildStarted(self, wfb):
+        pass
+
     def buildFinished(self, wfb):
         """This is called when a build on this worker is finished."""
         self.botmaster.maybeStartBuildsForWorker(self.name)
