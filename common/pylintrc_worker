@@ -98,7 +98,6 @@ disable=
   redundant-keyword-arg,
   import-error,
   import-outside-toplevel,
-  star-args,
   unreachable,
   dangerous-default-value,
   pointless-statement,
