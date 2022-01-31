@@ -154,3 +154,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(CMake(path=Property(prop)))
         self.properties.setProperty(prop, value, source='test')
         self.expect_and_run_command(value)
+
+    def test_options_path(self):
+        self.setup_step(CMake(path='some/path', options=('A', 'B')))
+        self.expect_and_run_command('A', 'B', 'some/path')
