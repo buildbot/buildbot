@@ -155,7 +155,6 @@ disable=
   unspecified-encoding,
   consider-using-in,
   use-implicit-booleaness-not-comparison,
-  use-maxsplit-arg,
   consider-using-f-string,
   consider-using-dict-items,
 
