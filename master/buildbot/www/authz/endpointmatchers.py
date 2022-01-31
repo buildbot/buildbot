@@ -115,11 +115,9 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
 
     @defer.inlineCallbacks
     def matchFromBuilderId(self, builderid):
-        if builderid is not None:
-            builder = yield self.master.data.get(('builders', builderid))
-            buildername = builder['name']
-            return self.authz.match(buildername, self.builder)
-        return False
+        builder = yield self.master.data.get(('builders', builderid))
+        buildername = builder['name']
+        return self.authz.match(buildername, self.builder)
 
     @defer.inlineCallbacks
     def match_BuildEndpoint_stop(self, epobject, epdict, options):
@@ -177,11 +175,9 @@ class RebuildBuildEndpointMatcher(EndpointMatcherBase):
 
     @defer.inlineCallbacks
     def matchFromBuilderId(self, builderid):
-        if builderid is not None:
-            builder = yield self.master.data.get(('builders', builderid))
-            buildername = builder['name']
-            return self.authz.match(buildername, self.builder)
-        return False
+        builder = yield self.master.data.get(('builders', builderid))
+        buildername = builder['name']
+        return self.authz.match(buildername, self.builder)
 
     @defer.inlineCallbacks
     def match_BuildEndpoint_rebuild(self, epobject, epdict, options):
