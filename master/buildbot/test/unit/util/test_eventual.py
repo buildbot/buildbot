@@ -68,7 +68,7 @@ class Eventually(unittest.TestCase):
 
     def test_eventually_butNotNow(self):
         eventual.eventually(self.cb, 1)
-        self.assertFalse(self.results != [])
+        self.assertFalse(self.results)
         return self.assertResults([(1,)])
 
     def test_eventually_order(self):
