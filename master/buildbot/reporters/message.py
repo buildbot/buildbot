@@ -210,7 +210,7 @@ class MessageFormatterBase(util.ComparableMixin):
 
                 - 'html': Must be a string
 
-                - 'json': Must be a non-encoded jsonnable value. The root element must be either
+                - 'json': Must be a non-encoded jsonable value. The root element must be either
                   of dictionary, list or string. This must not change during all invocations of
                   a particular instance of the formatter.
 
