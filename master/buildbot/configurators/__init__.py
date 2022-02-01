@@ -13,15 +13,15 @@
 #
 # Copyright Buildbot Team Members
 #
-from zope.interface import implementer
-
-from buildbot.interfaces import IConfigurator
-
 
 """ This module holds configurators, which helps setup schedulers, builders, steps,
     for a very specific purpose.
     Higher level interfaces to buildbot configurations components.
 """
+
+from zope.interface import implementer
+
+from buildbot.interfaces import IConfigurator
 
 
 @implementer(IConfigurator)

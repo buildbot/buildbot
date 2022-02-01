@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+"""
+module for regrouping all FileWriterImpl and FileReaderImpl away from steps
+"""
 
 import os
 import tarfile
@@ -22,11 +25,6 @@ from io import BytesIO
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.worker.protocols import base
-
-
-"""
-module for regrouping all FileWriterImpl and FileReaderImpl away from steps
-"""
 
 
 class FileWriter(base.FileWriterImpl):

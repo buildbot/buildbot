@@ -189,10 +189,10 @@ class MessageFormatterBase(util.ComparableMixin):
 
     @defer.inlineCallbacks
     def render_message_dict(self, master, context):
-        """Generate a buildbot reporter message and return a dictionary
-           containing the message body, type and subject."""
+        """ Generate a buildbot reporter message and return a dictionary
+            containing the message body, type and subject.
 
-        ''' This is an informal description of what message dictionaries are expected to be
+            This is an informal description of what message dictionaries are expected to be
             produced. It is an internal API and expected to change even within bugfix releases, if
             needed.
 
@@ -217,7 +217,7 @@ class MessageFormatterBase(util.ComparableMixin):
             In case of a report being created for multiple builds (e.g. in the case of a buildset),
             the values returned by message formatter are concatenated. If this is not possible
             (e.g. if the body is a dictionary), any subsequent messages are ignored.
-        '''
+        """
         yield self.buildAdditionalContext(master, context)
         context.update(self.context)
 

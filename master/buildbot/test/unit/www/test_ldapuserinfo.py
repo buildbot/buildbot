@@ -51,14 +51,14 @@ class FakeLdap:
 
 
 class CommonTestCase(unittest.TestCase):
-    if not ldap3:
-        skip = 'ldap3 is required for LdapUserInfo tests'
-
     """Common fixture for all ldapuserinfo tests
 
     we completely fake the ldap3 module, so no need to require
     it to run the unit tests
     """
+
+    if not ldap3:
+        skip = 'ldap3 is required for LdapUserInfo tests'
 
     def setUp(self):
         self.ldap = FakeLdap()

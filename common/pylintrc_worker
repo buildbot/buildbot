@@ -99,7 +99,6 @@ disable=
   import-error,
   import-outside-toplevel,
   pointless-statement,
-  pointless-string-statement,
   expression-not-assigned,
   useless-else-on-loop,
   bad-builtin,
