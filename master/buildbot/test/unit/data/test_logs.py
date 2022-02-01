@@ -136,8 +136,9 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_stepid(self):
         logs = yield self.callGet(('steps', 50, 'logs'))
 
-        [self.validateData(log)
-         for log in logs]
+        for log in logs:
+            self.validateData(log)
+
         self.assertEqual(sorted([b['name'] for b in logs]),
                          ['errors', 'stdio'])
 
@@ -155,16 +156,20 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_buildid_step_name(self):
         logs = yield self.callGet(
             ('builds', 13, 'steps', 'make_install', 'logs'))
-        [self.validateData(log)
-         for log in logs]
+
+        for log in logs:
+            self.validateData(log)
+
         self.assertEqual(sorted([b['name'] for b in logs]),
                          ['results_html', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_buildid_step_number(self):
         logs = yield self.callGet(('builds', 13, 'steps', 10, 'logs'))
-        [self.validateData(log)
-         for log in logs]
+
+        for log in logs:
+            self.validateData(log)
+
         self.assertEqual(sorted([b['name'] for b in logs]),
                          ['results_html', 'stdio'])
 
@@ -172,8 +177,10 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_builder_build_number_step_name(self):
         logs = yield self.callGet(
             ('builders', 77, 'builds', 3, 'steps', 'make', 'logs'))
-        [self.validateData(log)
-         for log in logs]
+
+        for log in logs:
+            self.validateData(log)
+
         self.assertEqual(sorted([b['name'] for b in logs]),
                          ['errors', 'stdio'])
 
@@ -181,8 +188,10 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_builder_build_number_step_number(self):
         logs = yield self.callGet(
             ('builders', 77, 'builds', 3, 'steps', 10, 'logs'))
-        [self.validateData(log)
-         for log in logs]
+
+        for log in logs:
+            self.validateData(log)
+
         self.assertEqual(sorted([b['name'] for b in logs]),
                          ['results_html', 'stdio'])
 

@@ -296,8 +296,10 @@ class Tests(interfaces.InterfaceTests):
     def test_getWorkers_no_config(self):
         yield self.insertTestData(self.baseRows)
         workerdicts = yield self.db.workers.getWorkers()
-        [validation.verifyDbDict(self, 'workerdict', workerdict)
-         for workerdict in workerdicts]
+
+        for workerdict in workerdicts:
+            validation.verifyDbDict(self, 'workerdict', workerdict)
+
         self.assertEqual(sorted(workerdicts, key=workerKey), sorted([
             dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=[], connected_to=[]),

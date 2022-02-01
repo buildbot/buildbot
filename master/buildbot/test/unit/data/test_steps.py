@@ -149,19 +149,28 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_buildid(self):
         steps = yield self.callGet(('builds', 30, 'steps'))
-        [self.validateData(step) for step in steps]
+
+        for step in steps:
+            self.validateData(step)
+
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
     @defer.inlineCallbacks
     def test_get_builder(self):
         steps = yield self.callGet(('builders', 77, 'builds', 7, 'steps'))
-        [self.validateData(step) for step in steps]
+
+        for step in steps:
+            self.validateData(step)
+
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
     @defer.inlineCallbacks
     def test_get_buildername(self):
         steps = yield self.callGet(('builders', 'builder77', 'builds', 7, 'steps'))
-        [self.validateData(step) for step in steps]
+
+        for step in steps:
+            self.validateData(step)
+
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
 

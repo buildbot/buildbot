@@ -189,19 +189,6 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                                   'revision': 'c'}],
                 'waited_for': False}),
         ])
-        (bsid,
-         dict(reason="user wants it because",
-              brids=brids,
-              external_idstring=None,
-              properties=[('owner', ('user', 'Force Build Form')),
-                          ('reason', ('because', 'Force Build Form')),
-                          ('scheduler', ('testsched', 'Scheduler')),
-                          ],
-              sourcestampsetid=100),
-         {'':
-          dict(branch='a', revision='c', repository='d', codebase='',
-               project='p', sourcestampsetid=100)
-          })
 
     @defer.inlineCallbacks
     def test_force_allBuilders(self):

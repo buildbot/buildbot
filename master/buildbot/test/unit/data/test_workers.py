@@ -216,8 +216,9 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_masterid(self):
         workers = yield self.callGet(('masters', '13', 'workers',))
 
-        [self.validateData(b) for b in workers]
-        [sorted(b['configured_on'], key=configuredOnKey) for b in workers]
+        for b in workers:
+            self.validateData(b)
+
         self.assertEqual(sorted(workers, key=configuredOnKey),
                          sorted([w1(masterid=13), w2(masterid=13)], key=configuredOnKey))
 
@@ -225,8 +226,9 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_builderid(self):
         workers = yield self.callGet(('builders', '41', 'workers',))
 
-        [self.validateData(b) for b in workers]
-        [sorted(b['configured_on'], key=configuredOnKey) for b in workers]
+        for b in workers:
+            self.validateData(b)
+
         self.assertEqual(sorted(workers, key=configuredOnKey),
                          sorted([w2(builderid=41)], key=configuredOnKey))
 
@@ -235,8 +237,9 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         workers = yield self.callGet(('masters', '13', 'builders', '41',
                                       'workers',))
 
-        [self.validateData(b) for b in workers]
-        [sorted(b['configured_on'], key=configuredOnKey) for b in workers]
+        for b in workers:
+            self.validateData(b)
+
         self.assertEqual(sorted(workers, key=configuredOnKey),
                          sorted([w2(masterid=13, builderid=41)], key=configuredOnKey))
 

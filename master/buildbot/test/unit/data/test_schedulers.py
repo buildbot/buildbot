@@ -61,7 +61,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         scheduler = yield self.callGet(('schedulers', 13))
 
         self.validateData(scheduler)
-        self.assertEqual(scheduler['master'], None),
+        self.assertEqual(scheduler['master'], None)
 
     @defer.inlineCallbacks
     def test_get_masterid_existing(self):
@@ -121,7 +121,9 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get(self):
         schedulers = yield self.callGet(('schedulers',))
 
-        [self.validateData(m) for m in schedulers]
+        for m in schedulers:
+            self.validateData(m)
+
         self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
                          [13, 14, 15, 16])
 
@@ -129,7 +131,9 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_masterid(self):
         schedulers = yield self.callGet(('masters', 33, 'schedulers'))
 
-        [self.validateData(m) for m in schedulers]
+        for m in schedulers:
+            self.validateData(m)
+
         self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
                          [15, 16])
 
