@@ -151,6 +151,66 @@ class GitLabHandler(BaseHookHandler):
             changes[0]['codebase'] = codebase
         return changes
 
+    def _process_note_addition_to_merge_request(self, payload, event, codebase=None):
+        """
+        Consumes a note event JSON as a python object and turn it into a buildbot change.
+
+        :arguments:
+            payload
+                Python Object that represents the JSON sent by GitLab Service
+                Hook.
+
+        Comments in merge_requests are send as note events by the API
+        """
+        attrs = payload['object_attributes']
+
+        # handle only note events coming from merge_requests
+        # this can be direct comments or comments added to a changeset of the MR
+        #
+        # editing a comment does NOT lead to an event at all
+        if 'merge_request' not in payload:
+            log.msg(f"Found note event (id {attrs['id']}) without corresponding MR - ignore")
+            return []
+
+        # change handling is very similar to the method above, but
+        commit = payload['merge_request']['last_commit']
+        when_timestamp = dateparse(commit['timestamp'])
+        # @todo provide and document a way to choose between http and ssh url
+        repo_url = payload['merge_request']['target']['git_http_url']
+        # project name from http headers is empty for me, so get it from
+        # object_attributes/target/name
+        mr = payload['merge_request']
+        project = mr['target']['name']
+
+        log.msg(f"Found notes on MR#{mr['iid']}: {attrs['note']}")
+        changes = [{
+            'author': f"{commit['author']['name']} <{commit['author']['email']}>",
+            'files': [],  # not provided by rest API
+            'comments': f"MR#{mr['iid']}: {mr['title']}\n\n{mr['description']}",
+            'revision': commit['id'],
+            'when_timestamp': when_timestamp,
+            'branch': mr['target_branch'],
+            'repository': repo_url,
+            'project': project,
+            'category': event,
+            'revlink': mr['url'],
+            'properties': {
+                'source_branch': mr['source_branch'],
+                'source_project_id': mr['source_project_id'],
+                'source_repository': mr['source']['git_http_url'],
+                'source_git_ssh_url': mr['source']['git_ssh_url'],
+                'target_branch': mr['target_branch'],
+                'target_project_id': mr['target_project_id'],
+                'target_repository': mr['target']['git_http_url'],
+                'target_git_ssh_url': mr['target']['git_ssh_url'],
+                'event': event,
+                'comments': attrs['note'],
+            },
+        }]
+        if codebase is not None:
+            changes[0]['codebase'] = codebase
+        return changes
+
     @inlineCallbacks
     def getChanges(self, request):
         """
@@ -191,6 +251,9 @@ class GitLabHandler(BaseHookHandler):
                 payload, user, repo, repo_url, event_type, codebase=codebase)
         elif event_type == 'merge_request':
             changes = self._process_merge_request_change(
+                payload, event_type, codebase=codebase)
+        elif event_type == 'note':
+            changes = self._process_note_addition_to_merge_request(
                 payload, event_type, codebase=codebase)
         else:
             changes = []
