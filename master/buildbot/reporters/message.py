@@ -25,6 +25,7 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.process.results import Results
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 from buildbot.warnings import warn_deprecated
@@ -122,6 +123,7 @@ def create_context_for_build(mode, build, master, blamelist):
 
     return {
         'results': build['results'],
+        'result_names': Results,
         'mode': mode,
         'buildername': build['builder']['name'],
         'workername': build['properties'].get('workername', ["<unknown>"])[0],

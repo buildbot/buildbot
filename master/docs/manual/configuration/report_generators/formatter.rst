@@ -68,8 +68,14 @@ Context
 The context that is given to the template consists of the following data:
 
 ``results``
-    The results of the build.
+    The results of the build as an integer.
     Equivalent to ``build['results']``.
+
+``result_names``
+    A collection that allows accessing a textual identifier of build result.
+    The intended usage is ``result_names[results]``.
+
+    The following are possible values: ``success``, ``warnings``, ``failure``, ``skipped``, ``exception``, ``retry``, ``cancelled``.
 
 ``buildername``
     The name of the builder.
