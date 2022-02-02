@@ -80,8 +80,8 @@ class BitbucketStatusPush(ReporterBase):
     def _create_default_generators(self):
         return [
             BuildStartEndStatusGenerator(
-                start_formatter=MessageFormatter(subject=""),
-                end_formatter=MessageFormatter(subject="")
+                start_formatter=MessageFormatter(subject="", template=''),
+                end_formatter=MessageFormatter(subject="", template='')
             )
         ]
 

@@ -18,13 +18,17 @@ import jinja2
 
 from twisted.internet import defer
 
+from buildbot import config
 from buildbot import util
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.process.results import Results
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 from buildbot.warnings import warn_deprecated
@@ -110,7 +114,7 @@ def get_projects_text(source_stamps, master):
     return ', '.join(list(projects))
 
 
-def create_context_for_build(mode, build, master, blamelist):
+def create_context_for_build(mode, build, is_buildset, master, blamelist):
     buildset = build['buildset']
     ss_list = buildset['sourcestamps']
     results = build['results']
@@ -122,15 +126,18 @@ def create_context_for_build(mode, build, master, blamelist):
 
     return {
         'results': build['results'],
+        'result_names': Results,
         'mode': mode,
         'buildername': build['builder']['name'],
         'workername': build['properties'].get('workername', ["<unknown>"])[0],
         'buildset': buildset,
         'build': build,
+        'is_buildset': is_buildset,
         'projects': get_projects_text(ss_list, master),
         'previous_results': previous_results,
         'status_detected': get_detected_status_text(mode, results, previous_results),
         'build_url': utils.getURLForBuild(master, build['builder']['builderid'], build['number']),
+        'buildbot_title': master.config.title,
         'buildbot_url': master.config.buildbotURL,
         'blamelist': blamelist,
         'summary': get_message_summary_text(build, results),
@@ -227,7 +234,7 @@ class MessageFormatterBase(util.ComparableMixin):
         return None
 
     def format_message_for_build(self, master, build, **kwargs):
-        # Known kwargs keys: mode, users
+        # Known kwargs keys: mode, users, is_buildset
         raise NotImplementedError
 
 
@@ -290,85 +297,164 @@ class MessageFormatterRenderable(MessageFormatterBase):
         return body
 
 
-default_body_template = '''\
-The Buildbot has detected a {{ status_detected }} on builder {{ buildername }} while building {{ projects }}.
+default_body_template_plain = '''\
+A {{ status_detected }} has been detected on builder {{ buildername }} while building {{ projects }}.
+
 Full details are available at:
     {{ build_url }}
 
-Buildbot URL: {{ buildbot_url }}
-
-Worker for this Build: {{ workername }}
-
-Build Reason: {{ build['properties'].get('reason', ["<unknown>"])[0] }}
+Build state: {{ build['state_string'] }}
+Revision: {{ build['properties'].get('got_revision', ['(unknown)'])[0] }}
+Worker: {{ workername }}
+Build Reason: {{ build['properties'].get('reason', ["(unknown)"])[0] }}
 Blamelist: {{ ", ".join(blamelist) }}
 
-{{ summary }}
-
-Sincerely,
- -The Buildbot
+Steps:
+{% if build['steps'] %}{% for step in build['steps'] %}
+- {{ step['number'] }}: {{ step['name'] }} ( {{ result_names[step['results']] }} )
+{% if step['logs'] %}    Logs:{% for log in step['logs'] %}
+        - {{ log.name }}: {{ log.url }}{% endfor %}
+{% endif %}{% endfor %}
+{% else %}
+- (no steps)
+{% endif %}
 '''  # noqa pylint: disable=line-too-long
+
+
+default_body_template_html = '''\
+<p>A {{ status_detected }} has been detected on builder
+<a href="{{ build_url }}">{{ buildername }}</a>
+while building {{ projects }}.</p>
+<p>Information:</p>
+<ul>
+    <li>Build state: {{ build['state_string'] }}</li>
+    <li>Revision: {{ build['properties'].get('got_revision', ['(unknown)'])[0] }}</li>
+    <li>Worker: {{ workername }}</li>
+    <li>Build Reason: {{ build['properties'].get('reason', ["(unknown)"])[0] }}</li>
+    <li>Blamelist: {{ ", ".join(blamelist) }}</li>
+</ul>
+<p>Steps:</p>
+<ul>
+{% if build['steps'] %}{% for step in build['steps'] %}
+    <li style="{{ results_style[step['results']] }}">
+    {{ step['number'] }}: {{ step['name'] }} ( {{ result_names[step['results']] }} )
+    {% if step['logs'] %}({% for log in step['logs'] %}
+        <a href="{{ log.url }}">&lt;{{ log.name }}&gt;</a>{% endfor %}
+    )
+    {% endif %}</li>
+{% endfor %}{% else %}
+    <li>No steps</li>
+{% endif %}
+</ul>
+'''  # noqa pylint: disable=line-too-long
+
+default_subject_template = '''\
+{{ '☠' if result_names[results] == 'failure' else '☺' if result_names[results] == 'success' else '☝' }} \
+Buildbot ({{ buildbot_title }}): {{ build['properties'].get('project', ['whole buildset'])[0] if is_buildset else buildername }} \
+- \
+{{ build['state_string'] }} \
+{{ '(%s)' % (build['properties']['branch'][0] if (build['properties']['branch'] and build['properties']['branch'][0]) else build['properties'].get('got_revision', ['(unknown revision)'])[0]) }}'''  # # noqa pylint: disable=line-too-long
 
 
 class MessageFormatterBaseJinja(MessageFormatterBase):
     compare_attrs = ['body_template', 'subject_template', 'template_type']
     subject_template = None
     template_type = 'plain'
+    uses_default_body_template = False
 
     def __init__(self, template=None, subject=None, template_type=None, **kwargs):
-        if template is None:
-            template = default_body_template
-
-        self.body_template = jinja2.Template(template)
-
-        if subject is not None:
-            self.subject_template = jinja2.Template(subject)
-
         if template_type is not None:
             self.template_type = template_type
+
+        if template is None:
+            self.uses_default_body_template = True
+            if self.template_type == 'plain':
+                template = default_body_template_plain
+            elif self.template_type == 'html':
+                template = default_body_template_html
+            else:
+                config.error(f'{self.__class__.__name__}: template type {self.template_type} '
+                             'is not known to pick default template')
+
+            kwargs['want_steps'] = True
+            kwargs['want_logs'] = True
+
+        if subject is None:
+            subject = default_subject_template
+
+        self.body_template = jinja2.Template(template)
+        self.subject_template = jinja2.Template(subject)
 
         super().__init__(**kwargs)
 
     def buildAdditionalContext(self, master, ctx):
-        pass
+        if self.uses_default_body_template:
+            ctx['results_style'] = {
+                SUCCESS: '',
+                EXCEPTION: 'color: #f0f; font-weight: bold;',
+                FAILURE: 'color: #f00; font-weight: bold;',
+                RETRY: 'color: #4af;',
+                SKIPPED: 'color: #4af;',
+                WARNINGS: 'color: #f80;',
+                CANCELLED: 'color: #4af;',
+            }
 
     def render_message_body(self, context):
         return self.body_template.render(context)
 
     def render_message_subject(self, context):
-        if self.subject_template is None:
-            return None
         return self.subject_template.render(context)
 
 
 class MessageFormatter(MessageFormatterBaseJinja):
     @defer.inlineCallbacks
-    def format_message_for_build(self, master, build, users=None, mode=None):
-        ctx = create_context_for_build(mode, build, master, users)
+    def format_message_for_build(self, master, build, is_buildset=False, users=None, mode=None):
+        ctx = create_context_for_build(mode, build, is_buildset, master, users)
         msgdict = yield self.render_message_dict(master, ctx)
         return msgdict
 
 
-default_missing_template = '''\
-The Buildbot working for '{{buildbot_title}}' has noticed that the worker named {{worker.name}} went away.
+default_missing_template_plain = '''\
+The Buildbot worker named {{worker.name}} went away.
 
 It last disconnected at {{worker.last_connection}}.
 
 {% if 'admin' in worker['workerinfo'] %}
 The admin on record (as reported by WORKER:info/admin) was {{worker.workerinfo.admin}}.
 {% endif %}
+'''  # noqa pylint: disable=line-too-long
 
-Sincerely,
- -The Buildbot
+default_missing_template_html = '''\
+<p>The Buildbot worker named {{worker.name}} went away.</p>
+<p>It last disconnected at {{worker.last_connection}}.</p>
+
+{% if 'admin' in worker['workerinfo'] %}
+<p>The admin on record (as reported by WORKER:info/admin) was {{worker.workerinfo.admin}}.</p>
+{% endif %}
 '''  # noqa pylint: disable=line-too-long
 
 
-class MessageFormatterMissingWorker(MessageFormatterBaseJinja):
-    template_filename = 'missing_mail.txt'
+default_missing_worker_subject_template = \
+    'Buildbot {{ buildbot_title }} worker {{ worker.name }} missing'
 
-    def __init__(self, template=None, **kwargs):
+
+class MessageFormatterMissingWorker(MessageFormatterBaseJinja):
+    def __init__(self, template=None, subject=None, template_type=None, **kwargs):
+        if template_type is None:
+            template_type = 'plain'
+
         if template is None:
-            template = default_missing_template
-        super().__init__(template=template, **kwargs)
+            if template_type == 'plain':
+                template = default_missing_template_plain
+            elif template_type == 'html':
+                template = default_missing_template_html
+            else:
+                config.error(f'{self.__class__.__name__}: template type {self.template_type} '
+                             'is not known to pick default template')
+
+        if subject is None:
+            subject = default_missing_worker_subject_template
+        super().__init__(template=template, subject=subject, template_type=template_type, **kwargs)
 
     @defer.inlineCallbacks
     def formatMessageForMissingWorker(self, master, worker):

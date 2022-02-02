@@ -25,6 +25,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMixin,
@@ -90,7 +92,8 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         report = yield self.buildset_message(g, [build])
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
-                                                                mode=('change',), users=[])
+                                                                is_buildset=True, mode=('change',),
+                                                                users=[])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -109,6 +112,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         report = yield self.buildset_message(g, [build], results=None)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=True,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {
@@ -123,24 +127,28 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         })
 
     @defer.inlineCallbacks
-    def test_buildset_message_no_result_default_subject(self):
-        subject = 'result: %(result)s builder: %(builder)s title: %(title)s'
+    def test_buildset_subject_deprecated(self):
+        with assertProducesWarning(DeprecatedApiWarning, "subject parameter"):
+            yield self.setup_generator(subject='subject')
+
+    @defer.inlineCallbacks
+    def test_buildset_message_no_result_formatter_no_subject(self):
         message = {
             "body": "body",
             "type": "text",
-            "subject": None,
+            "subject": None,  # deprecated unspecified subject
         }
 
-        g, build, _ = yield self.setup_generator(results=None, subject=subject,
-                                                 message=message, mode=("change",))
+        g, build, _ = yield self.setup_generator(results=None, message=message, mode=("change",))
         report = yield self.buildset_message(g, [build], results=None)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=True,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {
             'body': 'body',
-            'subject': 'result: not finished builder: whole buildset title: Buildbot',
+            'subject': 'Buildbot not finished in Buildbot on whole buildset',
             'type': 'text',
             'results': None,
             'builds': [build],

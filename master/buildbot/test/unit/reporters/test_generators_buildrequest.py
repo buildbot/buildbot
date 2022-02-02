@@ -83,6 +83,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield g.buildrequest_message(self.master, build)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=True,
                                                                 mode=self.all_messages,
                                                                 users=[])
 

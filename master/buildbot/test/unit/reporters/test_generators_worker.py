@@ -52,7 +52,7 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin,
                                   self._get_worker_dict('myworker'))
 
         self.assertEqual(report['users'], ['workeradmin@example.org'])
-        self.assertIn(b"has noticed that the worker named myworker went away", report['body'])
+        self.assertIn(b"worker named myworker went away", report['body'])
 
     @defer.inlineCallbacks
     def test_report_not_matched_worker(self):

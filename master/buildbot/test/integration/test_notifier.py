@@ -64,19 +64,22 @@ class NotifierMaster(RunMasterBase):
                       committer="me@foo.com",
                       comments="good stuff",
                       revision="HEAD",
-                      project="none"
+                      project="projectname"
                       )
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         mail, recipients = yield self.mailDeferred
         self.assertEqual(recipients, ["author@foo.com"])
         self.assertIn("From: bot@foo.com", mail)
-        self.assertIn("Subject: Buildbot success in Buildbot", mail)
-        self.assertEncodedIn("The Buildbot has detected a passing build", mail)
+        self.assertIn(f"Subject: =?utf-8?q?=E2=98=BA_Buildbot_=28Buildbot=29=3A_{what}_-_build_successful_=28master=29?=\n",  # noqa pylint: disable=line-too-long
+                      mail)
+        self.assertEncodedIn("A passing build has been detected on builder testy while", mail)
         params = yield self.notification
         self.assertEqual(build['buildid'], 1)
-        self.assertEqual(params, {'title': "Buildbot success in Buildbot on {}".format(what),
-                                  'message': "This is a message."})
+        self.assertEqual(params, {
+            'title': f"☺ Buildbot (Buildbot): {what} - build successful (master)",
+            'message': "This is a message."
+        })
 
     def assertEncodedIn(self, text, mail):
         # python 2.6 default transfer in base64 for utf-8
@@ -95,7 +98,7 @@ class NotifierMaster(RunMasterBase):
     @defer.inlineCallbacks
     def test_notifiy_for_buildset(self):
         yield self.create_master_config(build_set_summary=True)
-        yield self.doTest('whole buildset')
+        yield self.doTest('projectname')
 
     @defer.inlineCallbacks
     def test_missing_worker(self):
@@ -109,11 +112,11 @@ class NotifierMaster(RunMasterBase):
         mail, recipients = yield self.mailDeferred
         self.assertIn("From: bot@foo.com", mail)
         self.assertEqual(recipients, ['admin@worker.org'])
-        self.assertIn("Subject: Buildbot worker local1 missing", mail)
+        self.assertIn("Subject: Buildbot Buildbot worker local1 missing", mail)
         self.assertIn("disconnected at long time ago", mail)
         self.assertEncodedIn("worker named local1 went away", mail)
         params = yield self.notification
-        self.assertEqual(params, {'title': "Buildbot worker local1 missing",
+        self.assertEqual(params, {'title': "Buildbot Buildbot worker local1 missing",
                                   'message': b"No worker."})
 
 
