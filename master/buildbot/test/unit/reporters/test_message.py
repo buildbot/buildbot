@@ -210,7 +210,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
 
             Sincerely,
              -The Buildbot'''))
-        self.assertIsNone(res['subject'])
+        self.assertIsNotNone(res['subject'], 'Buildbot 0 in  on Builder1')
 
     @defer.inlineCallbacks
     def test_inline_template(self):

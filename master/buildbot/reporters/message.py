@@ -313,6 +313,9 @@ Sincerely,
 '''  # noqa pylint: disable=line-too-long
 
 
+default_subject_template = "Buildbot {{ result_names[results] }} in {{ buildbot_title }} on {{ 'whole buildset' if is_buildset else buildername }}"  # noqa pylint: disable=line-too-long
+
+
 class MessageFormatterBaseJinja(MessageFormatterBase):
     compare_attrs = ['body_template', 'subject_template', 'template_type']
     subject_template = None
@@ -321,11 +324,11 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
     def __init__(self, template=None, subject=None, template_type=None, **kwargs):
         if template is None:
             template = default_body_template
+        if subject is None:
+            subject = default_subject_template
 
         self.body_template = jinja2.Template(template)
-
-        if subject is not None:
-            self.subject_template = jinja2.Template(subject)
+        self.subject_template = jinja2.Template(subject)
 
         if template_type is not None:
             self.template_type = template_type
@@ -339,8 +342,6 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
         return self.body_template.render(context)
 
     def render_message_subject(self, context):
-        if self.subject_template is None:
-            return None
         return self.subject_template.render(context)
 
 
@@ -366,11 +367,16 @@ Sincerely,
 '''  # noqa pylint: disable=line-too-long
 
 
+default_missing_worker_subject_template = 'Buildbot worker {{ worker.name }} missing'
+
+
 class MessageFormatterMissingWorker(MessageFormatterBaseJinja):
-    def __init__(self, template=None, **kwargs):
+    def __init__(self, template=None, subject=None, **kwargs):
         if template is None:
             template = default_missing_template
-        super().__init__(template=template, **kwargs)
+        if subject is None:
+            subject = default_missing_worker_subject_template
+        super().__init__(template=template, subject=subject, **kwargs)
 
     @defer.inlineCallbacks
     def formatMessageForMissingWorker(self, master, worker):
