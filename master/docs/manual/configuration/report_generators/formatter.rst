@@ -7,7 +7,7 @@ MessageFormatter
 
 This formatter is used to format messages in :ref:`Reportgen-BuildStatusGenerator` and :ref:`Reportgen-BuildSetStatusGenerator`.
 
-It formats a message using the Jinja2_ templating language and picks the template either from a string or from a file.
+It formats a message using the Jinja2_ templating language and picks the template either from a string.
 
 The constructor of the class takes the following arguments:
 
