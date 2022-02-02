@@ -79,15 +79,15 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # Tracks config version for locks
         self.config_version = None
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        # find this builder in the config
+    def _find_builder_config_by_name(self, new_config):
         for builder_config in new_config.builders:
             if builder_config.name == self.name:
-                found_config = True
-                break
-        assert found_config, f"no config found for builder '{self.name}'"
+                return builder_config
+        raise AssertionError(f"no config found for builder '{self.name}'")
 
+    @defer.inlineCallbacks
+    def reconfigServiceWithBuildbotConfig(self, new_config):
+        builder_config = self._find_builder_config_by_name(new_config)
         old_config = self.config
         self.config = builder_config
         self.config_version = self.master.config_version
