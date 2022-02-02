@@ -44,7 +44,7 @@ The default ``ctx`` for the missing worker email is made of:
     The Buildbot title as per ``c['title']`` from the ``master.cfg``
 
 ``buildbot_url``
-    The Buildbot title as per ``c['title']`` from the ``master.cfg``
+    The URL of the Buildbot instance as per ``c['buildbotURL']`` from the ``master.cfg``
 
 ``worker``
     The worker object as defined in the REST api plus two attributes:
