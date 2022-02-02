@@ -20,6 +20,7 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
@@ -136,7 +137,9 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-    def setupDb(self, results1, results2):
+    def setup_db(self, results1, results2, with_steps=False, extra_build_properties=None):
+        if extra_build_properties is None:
+            extra_build_properties = {}
 
         self.db = self.master.db
         self.db.insertTestData([
@@ -152,19 +155,43 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
             fakedb.Build(id=21, number=1, builderid=80, buildrequestid=12, workerid=13,
                          masterid=92, results=results2),
         ])
-        for _id in (20, 21):
+        for build_id in (20, 21):
             self.db.insertTestData([
-                fakedb.BuildProperty(
-                    buildid=_id, name="workername", value="wrkr"),
-                fakedb.BuildProperty(
-                    buildid=_id, name="reason", value="because"),
+                fakedb.BuildProperty(buildid=build_id, name="workername", value="wrkr"),
+                fakedb.BuildProperty(buildid=build_id, name="reason", value="because"),
+            ])
+
+            for name, value in extra_build_properties.items():
+                self.db.insertTestData([
+                    fakedb.BuildProperty(buildid=build_id, name=name, value=value),
+                ])
+
+        if with_steps:
+            self.db.insertTestData([
+                fakedb.Step(id=151, buildid=21, number=1, results=SUCCESS, name='first step'),
+                fakedb.Step(id=152, buildid=21, number=2, results=results2, name='second step'),
+                fakedb.Step(id=153, buildid=21, number=3, results=SUCCESS, name='third step'),
+                fakedb.Log(id=251, stepid=152, name='stdio', slug='stdio', type='s',
+                           num_lines=7),
+                fakedb.Log(id=252, stepid=152, name='stderr', slug='stderr', type='s',
+                           num_lines=7),
+                fakedb.Log(id=253, stepid=153, name='stdio', slug='stdio', type='s',
+                           num_lines=7),
             ])
 
     @defer.inlineCallbacks
-    def do_one_test(self, formatter, lastresults, results, mode="all"):
-        self.setupDb(lastresults, results)
-        res = yield utils.getDetailsForBuildset(self.master, 99, want_properties=True,
-                                                want_previous_build=True)
+    def do_one_test(self, formatter, lastresults, results, mode="all",
+                    with_steps=False, extra_build_properties=None):
+        self.setup_db(lastresults, results, with_steps=with_steps,
+                      extra_build_properties=extra_build_properties)
+
+        res = yield utils.getDetailsForBuildset(self.master, 99,
+                                                want_properties=formatter.want_properties,
+                                                want_steps=formatter.want_steps,
+                                                want_previous_build=True,
+                                                want_logs=formatter.want_logs,
+                                                want_logs_content=formatter.want_logs_content)
+
         build = res['builds'][0]
         res = yield formatter.format_message_for_build(self.master, build, mode=mode,
                                                        users=["him@bar", "me@foo"])
@@ -189,28 +216,142 @@ class TestMessageFormatter(MessageFormatterTestBase):
         self.assertEqual(formatter.want_logs, True)
         self.assertEqual(formatter.want_logs_content, True)
 
+    def test_unknown_template_type_for_default_message(self):
+        with self.assertRaises(config.ConfigErrors):
+            message.MessageFormatter(template_type='unknown')
+
     @defer.inlineCallbacks
-    def test_message_success(self):
+    def test_message_success_plain_no_steps(self):
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
-        self.assertEqual(res['type'], "plain")
-        self.assertEqual(res['body'], textwrap.dedent('''\
-            The Buildbot has detected a passing build on builder Builder1 while building Buildbot.
-            Full details are available at:
-                http://localhost:8080/#builders/80/builds/1
+        self.assertEqual(res, {
+            'type': 'plain',
+            'subject': '☺ Buildbot (Buildbot): Builder1 - test ((unknown revision))',
+            'body': textwrap.dedent('''\
+                A passing build has been detected on builder Builder1 while building Buildbot.
 
-            Buildbot URL: http://localhost:8080/
+                Full details are available at:
+                    http://localhost:8080/#builders/80/builds/1
 
-            Worker for this Build: wrkr
+                Build state: test
+                Revision: (unknown)
+                Worker: wrkr
+                Build Reason: because
+                Blamelist: him@bar, me@foo
 
-            Build Reason: because
-            Blamelist: him@bar, me@foo
+                Steps:
 
-            Build succeeded!
+                - (no steps)
+                ''')
+        })
 
-            Sincerely,
-             -The Buildbot'''))
-        self.assertIsNotNone(res['subject'], 'Buildbot 0 in  on Builder1')
+    @defer.inlineCallbacks
+    def test_message_success_plain_with_steps(self):
+        formatter = message.MessageFormatter()
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS, with_steps=True,
+                                     extra_build_properties={'got_revision': 'abcd1234'})
+        self.assertEqual(res, {
+            'type': 'plain',
+            'subject': '☺ Buildbot (Buildbot): Builder1 - test (abcd1234)',
+            'body': textwrap.dedent('''\
+                A passing build has been detected on builder Builder1 while building Buildbot.
+
+                Full details are available at:
+                    http://localhost:8080/#builders/80/builds/1
+
+                Build state: test
+                Revision: abcd1234
+                Worker: wrkr
+                Build Reason: because
+                Blamelist: him@bar, me@foo
+
+                Steps:
+
+                - 1: first step ( success )
+
+                - 2: second step ( success )
+                    Logs:
+                        - stdio: http://localhost:8080/#builders/80/builds/1/steps/2/logs/stdio
+                        - stderr: http://localhost:8080/#builders/80/builds/1/steps/2/logs/stderr
+
+                - 3: third step ( success )
+                    Logs:
+                        - stdio: http://localhost:8080/#builders/80/builds/1/steps/3/logs/stdio
+
+                ''')
+        })
+
+    @defer.inlineCallbacks
+    def test_message_success_html(self):
+        formatter = message.MessageFormatter(template_type='html')
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        self.assertEqual(res, {
+            'type': 'html',
+            'subject': '☺ Buildbot (Buildbot): Builder1 - test ((unknown revision))',
+            'body': textwrap.dedent('''\
+                <p>A passing build has been detected on builder
+                <a href="http://localhost:8080/#builders/80/builds/1">Builder1</a>
+                while building Buildbot.</p>
+                <p>Information:</p>
+                <ul>
+                    <li>Build state: test</li>
+                    <li>Revision: (unknown)</li>
+                    <li>Worker: wrkr</li>
+                    <li>Build Reason: because</li>
+                    <li>Blamelist: him@bar, me@foo</li>
+                </ul>
+                <p>Steps:</p>
+                <ul>
+
+                    <li>No steps</li>
+
+                </ul>''')
+        })
+
+    @defer.inlineCallbacks
+    def test_message_success_html_with_steps(self):
+        formatter = message.MessageFormatter(template_type='html')
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS, with_steps=True,
+                                     extra_build_properties={'got_revision': 'abcd1234'})
+        self.assertEqual(res, {
+            'type': 'html',
+            'subject': '☺ Buildbot (Buildbot): Builder1 - test (abcd1234)',
+            'body': textwrap.dedent('''\
+                <p>A passing build has been detected on builder
+                <a href="http://localhost:8080/#builders/80/builds/1">Builder1</a>
+                while building Buildbot.</p>
+                <p>Information:</p>
+                <ul>
+                    <li>Build state: test</li>
+                    <li>Revision: abcd1234</li>
+                    <li>Worker: wrkr</li>
+                    <li>Build Reason: because</li>
+                    <li>Blamelist: him@bar, me@foo</li>
+                </ul>
+                <p>Steps:</p>
+                <ul>
+
+                    <li style="">
+                    1: first step ( success )
+                    </li>
+
+                    <li style="">
+                    2: second step ( success )
+                    (
+                        <a href="http://localhost:8080/#builders/80/builds/1/steps/2/logs/stdio">&lt;stdio&gt;</a>
+                        <a href="http://localhost:8080/#builders/80/builds/1/steps/2/logs/stderr">&lt;stderr&gt;</a>
+                    )
+                    </li>
+
+                    <li style="">
+                    3: third step ( success )
+                    (
+                        <a href="http://localhost:8080/#builders/80/builds/1/steps/3/logs/stdio">&lt;stdio&gt;</a>
+                    )
+                    </li>
+
+                </ul>''')  # noqa pylint: disable=line-too-long
+        })
 
     @defer.inlineCallbacks
     def test_inline_template(self):
@@ -230,36 +371,36 @@ class TestMessageFormatter(MessageFormatterTestBase):
     def test_message_failure(self):
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, FAILURE)
-        self.assertIn(
-            "The Buildbot has detected a failed build on builder", res['body'])
+        self.assertIn("A failed build has been detected on builder Builder1 while building",
+                      res['body'])
 
     @defer.inlineCallbacks
     def test_message_failure_change(self):
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, FAILURE, "change")
-        self.assertIn(
-            "The Buildbot has detected a new failure on builder", res['body'])
+        self.assertIn("A new failure has been detected on builder Builder1 while building",
+                      res['body'])
 
     @defer.inlineCallbacks
     def test_message_success_change(self):
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, FAILURE, SUCCESS, "change")
-        self.assertIn(
-            "The Buildbot has detected a restored build on builder", res['body'])
+        self.assertIn("A restored build has been detected on builder Builder1 while building",
+                      res['body'])
 
     @defer.inlineCallbacks
     def test_message_success_nochange(self):
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS, "change")
-        self.assertIn(
-            "The Buildbot has detected a passing build on builder", res['body'])
+        self.assertIn("A passing build has been detected on builder Builder1 while building",
+                      res['body'])
 
     @defer.inlineCallbacks
     def test_message_failure_nochange(self):
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, FAILURE, FAILURE, "change")
-        self.assertIn(
-            "The Buildbot has detected a failed build on builder", res['body'])
+        self.assertIn("A failed build has been detected on builder Builder1 while building",
+                      res['body'])
 
 
 class TestMessageFormatterRenderable(MessageFormatterTestBase):
@@ -321,11 +462,15 @@ class TestMessageFormatterMissingWorker(MessageFormatterTestBase):
     @defer.inlineCallbacks
     def test_basic(self):
         formatter = message.MessageFormatterMissingWorker()
-        self.setupDb(SUCCESS, SUCCESS)
+        self.setup_db(SUCCESS, SUCCESS)
         workers = yield self.master.data.get(('workers',))
         worker = workers[0]
         worker['notify'] = ['e@mail']
         worker['last_connection'] = ['yesterday']
         res = yield formatter.formatMessageForMissingWorker(self.master, worker)
         text = res['body']
-        self.assertIn("has noticed that the worker named wrkr went away", text)
+        self.assertIn("worker named wrkr went away", text)
+
+    def test_unknown_template_type_for_default_message(self):
+        with self.assertRaises(config.ConfigErrors):
+            message.MessageFormatterMissingWorker(template_type='unknown')

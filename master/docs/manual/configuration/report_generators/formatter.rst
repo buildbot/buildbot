@@ -11,15 +11,19 @@ It formats a message using the Jinja2_ templating language and picks the templat
 
 The constructor of the class takes the following arguments:
 
-``template``
-    If set, this parameter indicates the content of the template used to generate the body of the mail as string.
-
 ``template_type``
     This indicates the type of the generated template.
     Use either 'plain' (the default) or 'html'.
 
+``template``
+    If set, specifies the template used to generate the message body.
+    If not set, a default template will be used.
+    The default template is selected according to ``template_type`` so it may make sense to specify appropriate ``template_type`` even if the default template is used.
+
 ``subject``
-    The content of the subject of the mail as string.
+    If set, specifies the template used to generate the message subject.
+    In case of messages generated for multiple builds within a buildset (e.g. from within ``BuildSetStatusGenerator``), the subject of the first message will be used.
+    The ``is_buildset`` key of the context can be used to detect such case and adjust the message appropriately.
 
 ``ctx``
     This is an extension of the standard context that will be given to the templates.
