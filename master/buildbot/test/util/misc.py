@@ -163,9 +163,9 @@ class BuildDictLookAlike:
 
     def __eq__(self, b):
         if sorted(b.keys()) != self.keys:
-            print(set(b.keys()) - set(self.keys))
-            print(set(self.keys) - set(b.keys()))
-            return False
+            raise AssertionError('BuildDictLookAlike is not equal to build: '
+                                 f'Extra keys: {set(b.keys()) - set(self.keys)} '
+                                 f'Missing keys: {set(self.keys) - set(b.keys())}')
         for k, v in self.assertions.items():
             if b[k] != v:
                 return False
