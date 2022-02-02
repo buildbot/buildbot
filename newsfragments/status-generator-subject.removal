@@ -1,0 +1,2 @@
+Deprecated ``subject`` argument of ``BuildStatusGenerator`` and ``BuildSetStatusGenerator`` status generators.
+Use ``subject`` argument of corresponding message formatters.

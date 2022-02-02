@@ -19,6 +19,12 @@ The recommended upgrade procedure is as follows:
   - (Optional) Upgrade to newest Buildbot 4.x.
     The newest point release will contain bug fixes and functionality improvements.
 
+Build status generators
+-----------------------
+
+The ``subject`` argument of ``BuildStatusGenerator`` and ``BuildSetStatusGenerator`` has been removed.
+The equivalent is setting the ``subject`` argument of the message formatter.
+
 Message formatters
 ------------------
 
