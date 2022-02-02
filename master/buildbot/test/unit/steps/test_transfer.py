@@ -786,15 +786,14 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin,
 
         yield self.run_step()
 
-        def checkCalls(res):
-            self.assertEqual(step.uploadDone.call_count, 2)
-            self.assertEqual(step.uploadDone.call_args_list[0],
-                             ((SUCCESS, 'srcfile', os.path.join(self.destdir, 'srcfile')), {}))
-            self.assertEqual(step.uploadDone.call_args_list[1],
-                             ((SUCCESS, 'srcdir', os.path.join(self.destdir, 'srcdir')), {}))
-            self.assertEqual(step.allUploadsDone.call_count, 1)
-            self.assertEqual(step.allUploadsDone.call_args_list[0],
-                             ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
+        self.assertEqual(step.uploadDone.call_count, 2)
+        self.assertEqual(step.uploadDone.call_args_list[0],
+                         ((SUCCESS, 'srcfile', os.path.join(self.destdir, 'srcfile')), {}))
+        self.assertEqual(step.uploadDone.call_args_list[1],
+                         ((SUCCESS, 'srcdir', os.path.join(self.destdir, 'srcdir')), {}))
+        self.assertEqual(step.allUploadsDone.call_count, 1)
+        self.assertEqual(step.allUploadsDone.call_args_list[0],
+                         ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
 
     def test_init_workersrcs_keyword(self):
         step = transfer.MultipleFileUpload(
@@ -896,11 +895,10 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin,
             state_string=f"downloading to {os.path.basename(self.destfile)}")
         yield self.run_step()
 
-        def checkCalls(res):
-            with open(master_file, "rb") as f:
-                contents = f.read()
-            contents = contents[:1000]
-            self.assertEqual(b''.join(read), contents)
+        with open(master_file, "rb") as f:
+            contents = f.read()
+        contents = contents[:1000]
+        self.assertEqual(b''.join(read), contents)
 
     @defer.inlineCallbacks
     def test_no_file(self):
@@ -956,8 +954,7 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin,
             result=SUCCESS, state_string="downloading to hello.txt")
         yield self.run_step()
 
-        def checkCalls(res):
-            self.assertEqual(b''.join(read), b"Hello World")
+        self.assertEqual(b''.join(read), b"Hello World")
 
     @defer.inlineCallbacks
     def testBasicWorker2_16(self):
