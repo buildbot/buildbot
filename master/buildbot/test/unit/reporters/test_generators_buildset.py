@@ -90,7 +90,8 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         report = yield self.buildset_message(g, [build])
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
-                                                                mode=('change',), users=[])
+                                                                is_buildset=True, mode=('change',),
+                                                                users=[])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -109,6 +110,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         report = yield self.buildset_message(g, [build], results=None)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=True,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {
@@ -136,6 +138,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         report = yield self.buildset_message(g, [build], results=None)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=True,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {

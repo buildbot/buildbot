@@ -111,7 +111,7 @@ def get_projects_text(source_stamps, master):
     return ', '.join(list(projects))
 
 
-def create_context_for_build(mode, build, master, blamelist):
+def create_context_for_build(mode, build, is_buildset, master, blamelist):
     buildset = build['buildset']
     ss_list = buildset['sourcestamps']
     results = build['results']
@@ -129,6 +129,7 @@ def create_context_for_build(mode, build, master, blamelist):
         'workername': build['properties'].get('workername', ["<unknown>"])[0],
         'buildset': buildset,
         'build': build,
+        'is_buildset': is_buildset,
         'projects': get_projects_text(ss_list, master),
         'previous_results': previous_results,
         'status_detected': get_detected_status_text(mode, results, previous_results),
@@ -230,7 +231,7 @@ class MessageFormatterBase(util.ComparableMixin):
         return None
 
     def format_message_for_build(self, master, build, **kwargs):
-        # Known kwargs keys: mode, users
+        # Known kwargs keys: mode, users, is_buildset
         raise NotImplementedError
 
 
@@ -345,8 +346,8 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
 class MessageFormatter(MessageFormatterBaseJinja):
     @defer.inlineCallbacks
-    def format_message_for_build(self, master, build, users=None, mode=None):
-        ctx = create_context_for_build(mode, build, master, users)
+    def format_message_for_build(self, master, build, is_buildset=False, users=None, mode=None):
+        ctx = create_context_for_build(mode, build, is_buildset, master, users)
         msgdict = yield self.render_message_dict(master, ctx)
         return msgdict
 

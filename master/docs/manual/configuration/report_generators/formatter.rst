@@ -128,6 +128,10 @@ The context that is given to the template consists of the following data:
 
         Additionally, if ``want_logs_content`` is set to ``True`` then the log dictionaries will contain ``contents`` key with full contents of the log.
 
+``is_buildset``
+    A boolean identifying whether the current message will form a larger message that describes multiple builds in a buildset.
+    This mostly concerns generation of the subject as the message bodies will be merged.
+
 ``projects``
     A string identifying the projects that the build was built for.
 

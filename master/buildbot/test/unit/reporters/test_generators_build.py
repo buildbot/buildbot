@@ -88,6 +88,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, build)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=False,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {
@@ -107,6 +108,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, build, results=None)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=False,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {
@@ -134,6 +136,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, build, results=None)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=False,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {
@@ -305,6 +308,7 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, build)
 
         g.start_formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                      is_buildset=False,
                                                                       mode=self.all_messages,
                                                                       users=[])
 
@@ -326,6 +330,7 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, build, results=None)
 
         g.start_formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                      is_buildset=False,
                                                                       mode=self.all_messages,
                                                                       users=[])
 
