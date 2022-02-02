@@ -22,8 +22,8 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.trial import unittest
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.www import auth
 from buildbot.www import config
@@ -32,7 +32,7 @@ from buildbot.www import config
 class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def test_render(self):

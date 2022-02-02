@@ -16,8 +16,10 @@
 import mock
 
 from twisted.internet import defer
+from twisted.internet import error
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
+from twisted.python import failure
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -44,10 +46,10 @@ from buildbot.test.expect import ExpectStat
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import worker
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import eventually
 
 
@@ -63,7 +65,7 @@ class CustomActionBuildStep(buildstep.BuildStep):
         return self.action()
 
 
-class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
+class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
                     TestReactorMixin,
                     unittest.TestCase):
 
@@ -102,11 +104,11 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
             return SUCCESS
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     # support
 
@@ -392,6 +394,39 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.action = interrupt_and_run_command
 
         self.expect_outcome(result=CANCELLED)
+        yield self.run_step()
+
+    @defer.inlineCallbacks
+    def test_lost_remote_during_interrupt(self):
+        step = self.setup_step(CustomActionBuildStep())
+
+        cmd = remotecommand.RemoteShellCommand("build", ["echo", "hello"])
+
+        @defer.inlineCallbacks
+        def on_command(cmd):
+            cmd.conn.set_expect_interrupt()
+            cmd.conn.set_block_on_interrupt()
+            d1 = step.interrupt('interrupt reason')
+            d2 = step.interrupt(failure.Failure(error.ConnectionLost()))
+
+            cmd.conn.unblock_waiters()
+            yield d1
+            yield d2
+
+        self.expect_commands(
+            ExpectShell(workdir='build', command=['echo', 'hello'])
+            .behavior(on_command)
+            .break_connection()
+        )
+
+        @defer.inlineCallbacks
+        def run_command():
+            res = yield step.runCommand(cmd)
+            return res.results()
+
+        step.action = run_command
+
+        self.expect_outcome(result=RETRY)
         yield self.run_step()
 
     @defer.inlineCallbacks
@@ -784,7 +819,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
 class InterfaceTests(interfaces.InterfaceTests):
 
-    # ensure that steps.BuildStepMixin creates a convincing facsimile of the
+    # ensure that TestBuildStepMixin creates a convincing facsimile of the
     # real BuildStep
 
     def test_signature_attributes(self):
@@ -898,12 +933,12 @@ class InterfaceTests(interfaces.InterfaceTests):
 
 
 class TestFakeItfc(unittest.TestCase,
-                   steps.BuildStepMixin, TestReactorMixin,
+                   TestBuildStepMixin, TestReactorMixin,
                    InterfaceTests):
 
     def setUp(self):
-        self.setUpTestReactor()
-        self.setup_build_step()
+        self.setup_test_reactor()
+        self.setup_test_build_step()
         self.setup_step(buildstep.BuildStep())
 
 
@@ -923,24 +958,24 @@ class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
         return SUCCESS
 
 
-class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
+class TestCommandMixin(TestBuildStepMixin, TestReactorMixin,
                        unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
-        yield self.setup_build_step()
+        self.setup_test_reactor()
+        yield self.setup_test_build_step()
         self.step = CommandMixinExample()
         self.setup_step(self.step)
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     @defer.inlineCallbacks
     def test_runRmdir(self):
         self.step.testMethod = lambda: self.step.runRmdir('/some/path')
         self.expect_commands(
-            ExpectRmdir(dir='/some/path', logEnviron=False)
+            ExpectRmdir(dir='/some/path', log_environ=False)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -951,7 +986,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_runMkdir(self):
         self.step.testMethod = lambda: self.step.runMkdir('/some/path')
         self.expect_commands(
-            ExpectMkdir(dir='/some/path', logEnviron=False)
+            ExpectMkdir(dir='/some/path', log_environ=False)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -962,7 +997,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_runMkdir_fails(self):
         self.step.testMethod = lambda: self.step.runMkdir('/some/path')
         self.expect_commands(
-            ExpectMkdir(dir='/some/path', logEnviron=False)
+            ExpectMkdir(dir='/some/path', log_environ=False)
             .exit(1)
         )
         self.expect_outcome(result=FAILURE)
@@ -973,7 +1008,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.runMkdir(
             '/some/path', abandonOnFailure=False)
         self.expect_commands(
-            ExpectMkdir(dir='/some/path', logEnviron=False)
+            ExpectMkdir(dir='/some/path', log_environ=False)
             .exit(1)
         )
         self.expect_outcome(result=SUCCESS)
@@ -984,7 +1019,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_pathExists(self):
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expect_commands(
-            ExpectStat(file='/some/path', logEnviron=False)
+            ExpectStat(file='/some/path', log_environ=False)
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -995,7 +1030,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_pathExists_doesnt(self):
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expect_commands(
-            ExpectStat(file='/some/path', logEnviron=False)
+            ExpectStat(file='/some/path', log_environ=False)
             .exit(1)
         )
         self.expect_outcome(result=SUCCESS)
@@ -1006,7 +1041,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_pathExists_logging(self):
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expect_commands(
-            ExpectStat(file='/some/path', logEnviron=False)
+            ExpectStat(file='/some/path', log_environ=False)
             .log('stdio', header='NOTE: never mind\n')
             .exit(1)
         )
@@ -1014,7 +1049,8 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         yield self.run_step()
         self.assertFalse(self.step.method_return_value)
         self.assertEqual(self.step.getLog('stdio').header,
-                         'NOTE: never mind\n')
+                         'NOTE: never mind\n'
+                         'program finished with exit code 1\n')
 
     def test_glob(self):
         @defer.inlineCallbacks
@@ -1023,8 +1059,8 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             self.assertEqual(res, ["one.pyc", "two.pyc"])
         self.step.testMethod = testFunc
         self.expect_commands(
-            ExpectGlob(path='*.pyc', logEnviron=False)
-            .update('files', ["one.pyc", "two.pyc"])
+            ExpectGlob(path='*.pyc', log_environ=False)
+            .files(["one.pyc", "two.pyc"])
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -1033,8 +1069,8 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_glob_empty(self):
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expect_commands(
-            ExpectGlob(path='*.pyc', logEnviron=False)
-            .update('files', [])
+            ExpectGlob(path='*.pyc', log_environ=False)
+            .files()
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -1043,7 +1079,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_glob_fail(self):
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expect_commands(
-            ExpectGlob(path='*.pyc', logEnviron=False)
+            ExpectGlob(path='*.pyc', log_environ=False)
             .exit(1)
         )
         self.expect_outcome(result=FAILURE)
@@ -1065,18 +1101,18 @@ class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         return cmd.results()
 
 
-class TestShellMixin(steps.BuildStepMixin,
+class TestShellMixin(TestBuildStepMixin,
                      config.ConfigErrorsMixin,
                      TestReactorMixin,
                      unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
-        yield self.setup_build_step()
+        self.setup_test_reactor()
+        yield self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_setupShellMixin_bad_arg(self):
         mixin = SimpleShellCommand()
@@ -1116,7 +1152,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_no_default_workdir(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.expect_commands(
             ExpectShell(workdir='build', command=['cmd', 'arg'])
             .exit(0)
@@ -1126,7 +1162,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_workdir(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = '/alternate'
         self.expect_commands(
             ExpectShell(workdir='/alternate', command=['cmd', 'arg'])
@@ -1137,7 +1173,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_workdir_callable(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = lambda x: '/alternate'
         self.expect_commands(
             ExpectShell(workdir='/alternate', command=['cmd', 'arg'])
@@ -1148,14 +1184,14 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_workdir_callable_error(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = lambda x: x.nosuchattribute  # will raise AttributeError
         self.expect_exception(buildstep.CallableAttributeError)
         yield self.run_step()
 
     @defer.inlineCallbacks
     def test_build_workdir_renderable(self):
-        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = properties.Property("myproperty")
         self.properties.setProperty("myproperty", "/myproperty", "test")
         self.expect_commands(
@@ -1298,7 +1334,8 @@ class TestShellMixin(steps.BuildStepMixin,
         yield self.run_step()
         self.assertEqual(self.step.getLog('stdio').header,
                          'NOTE: worker does not allow master to override usePTY\n'
-                         'NOTE: worker does not allow master to specify interruptSignal\n')
+                         'NOTE: worker does not allow master to specify interruptSignal\n'
+                         'program finished with exit code 0\n')
 
     @defer.inlineCallbacks
     def test_new_worker_args(self):
@@ -1306,13 +1343,14 @@ class TestShellMixin(steps.BuildStepMixin,
                                           interruptSignal='DIE'),
                        worker_version={'*': "3.0"})
         self.expect_commands(
-            ExpectShell(workdir='wkdir', usePTY=False, interruptSignal='DIE',
+            ExpectShell(workdir='wkdir', use_pty=False, interrupt_signal='DIE',
                         command=['cmd', 'arg'])
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertEqual(self.step.getLog('stdio').header, '')
+        self.assertEqual(self.step.getLog('stdio').header,
+                         'program finished with exit code 0\n')
 
     @defer.inlineCallbacks
     def test_description(self):

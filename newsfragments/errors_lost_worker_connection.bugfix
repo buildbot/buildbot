@@ -1,0 +1,1 @@
+Fixed rare `AlreadyCalledError` exceptions in the logs when worker worker connection is lost at the same time it is delivering final outcome of a command.

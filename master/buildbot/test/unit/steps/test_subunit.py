@@ -23,8 +23,8 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
 from buildbot.test.expect import ExpectShell
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 
 try:
     from subunit import TestProtocolClient
@@ -50,17 +50,17 @@ def create_error(name):
         return (exctype, value, None)
 
 
-class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestSubUnit(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         if TestProtocolClient is None:
             raise unittest.SkipTest("Need to install python-subunit to test subunit step")
 
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_empty(self):
         self.setup_step(subunit.SubunitShellCommand(command='test'))
@@ -118,7 +118,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
 
         self.expect_outcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
-        self.expect_logfile('problems', re.compile(r'''test1
+        self.expect_log_file('problems', re.compile(r'''test1
 testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error1'
 .*''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
         return self.run_step()
@@ -143,7 +143,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         )
 
         self.expect_outcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
-        self.expect_logfile('problems', re.compile(r'''test1
+        self.expect_log_file('problems', re.compile(r'''test1
 testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error1'
 
 test2
@@ -171,7 +171,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         self.expect_outcome(result=SUCCESS,  # N.B. not WARNINGS
                            state_string="shell 1 test passed")
         # note that the warnings list is ignored..
-        self.expect_logfile('warnings', re.compile(r'''error: test2 \[.*
+        self.expect_log_file('warnings', re.compile(r'''error: test2 \[.*
 ValueError: invalid literal for int\(\) with base 10: '_error2'
 \]
 ''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long

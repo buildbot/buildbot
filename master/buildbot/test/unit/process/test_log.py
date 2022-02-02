@@ -22,14 +22,14 @@ from twisted.trial import unittest
 from buildbot.process import log
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile as fakelogfile
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class Tests(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
 
     @defer.inlineCallbacks

@@ -23,9 +23,9 @@ from buildbot.data import masters
 from buildbot.process.results import RETRY
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 SOMETIME = 1349016870
@@ -132,7 +132,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = masters.Master(self.master)

@@ -5,7 +5,7 @@ from buildbot.process.properties import Secret
 from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.secrets import FakeSecretStorage
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.service import BuildbotService
 
 
@@ -27,7 +27,7 @@ class TestRenderSecrets(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage(secretdict={"foo": "bar",
                                                        "other": "value"})

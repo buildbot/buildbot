@@ -21,8 +21,8 @@ from twisted.trial import unittest
 from buildbot.secrets.providers.vault import HashiCorpVaultSecretProvider
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin,
@@ -31,7 +31,7 @@ class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def setUp(self, version):
         warnings.simplefilter('ignore')
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.srvcVault = HashiCorpVaultSecretProvider(vaultServer="http://vaultServer",
                                                       vaultToken="someToken",
                                                       apiVersion=version)

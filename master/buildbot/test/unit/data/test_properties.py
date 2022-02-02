@@ -23,9 +23,9 @@ from buildbot.data import properties
 from buildbot.process.properties import Properties as processProperties
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -97,7 +97,7 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin,
                  unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=False, wantDb=True,
                                              wantData=True)
         self.rtype = properties.Properties(self.master)

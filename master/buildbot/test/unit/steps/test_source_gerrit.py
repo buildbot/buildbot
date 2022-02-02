@@ -20,16 +20,16 @@ from buildbot.steps.source import gerrit
 from buildbot.test.expect import ExpectListdir
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                  TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpSourceStep()
 
     def tearDown(self):
@@ -48,10 +48,10 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .update('files', ['.git'])
+            .files(['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -90,10 +90,10 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .update('files', ['.git'])
+            .files(['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -132,10 +132,10 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .update('files', ['.git'])
+            .files(['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -174,10 +174,10 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
             .exit(0),
-            ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .update('files', ['.git'])
+            .files(['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])

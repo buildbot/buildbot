@@ -24,11 +24,11 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.steps import mswin
 from buildbot.test.expect import ExpectShell
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
+class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin,
                          unittest.TestCase):
 
     """
@@ -36,11 +36,11 @@ class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
     """
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def _run_simple_test(self, source, destination, expected_args=None, expected_code=0,
                          expected_res=SUCCESS, **kwargs):

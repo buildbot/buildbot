@@ -27,15 +27,15 @@ from twisted.trial import unittest
 
 import buildbot
 from buildbot import config
-from buildbot import pbmanager
 from buildbot import worker
 from buildbot.process import botmaster
 from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.eventual import eventually
 from buildbot.worker import manager as workermanager
+from buildbot.worker.protocols.manager.pb import PBManager
 
 PKI_DIR = util.sibpath(__file__, 'pki')
 
@@ -163,13 +163,13 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
                                              wantDb=True)
 
         # set the worker port to a loopback address with unspecified
         # port
-        self.pbmanager = self.master.pbmanager = pbmanager.PBManager()
+        self.pbmanager = self.master.pbmanager = PBManager()
         yield self.pbmanager.setServiceParent(self.master)
 
         # remove the fakeServiceParent from fake service hierarchy, and replace

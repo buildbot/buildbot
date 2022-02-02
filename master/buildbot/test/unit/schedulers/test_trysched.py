@@ -27,9 +27,9 @@ from twisted.protocols import basic
 from twisted.trial import unittest
 
 from buildbot.schedulers import trysched
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
@@ -37,7 +37,7 @@ class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     SCHEDULERID = 6
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -131,7 +131,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     SCHEDULERID = 3
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
         self.jobdir = None
 
@@ -684,7 +684,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin,
     SCHEDULERID = 6
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -823,7 +823,7 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin,
     SCHEDULERID = 5
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

@@ -31,8 +31,8 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.web import FakeRequest
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.unit.reporters.test_words import ContactMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 
@@ -554,7 +554,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
     PRIVATE = TestTelegramContact.PRIVATE
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)

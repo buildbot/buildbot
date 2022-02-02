@@ -23,6 +23,8 @@ import signal
 import sys
 import time
 
+import psutil
+
 from mock import Mock
 
 from twisted.internet import defer
@@ -766,6 +768,192 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             self.assertAlive(self.child_pid)
         else:
             self.assertDead(self.child_pid)
+
+
+class TestWindowsKilling(BasedirMixin, unittest.TestCase):
+
+    if runtime.platformType != "win32":
+        skip = "not a Windows platform"
+
+    def setUp(self):
+        self.pidfiles = []
+        self.setUpBasedir()
+
+    def tearDown(self):
+        # make sure all of the subprocesses are dead
+        for pidfile in self.pidfiles:
+            if not os.path.exists(pidfile):
+                continue
+            with open(pidfile) as f:
+                pid = f.read()
+            if not pid:
+                return
+            pid = int(pid)
+            try:
+                psutil.Process(pid).kill()
+            except psutil.NoSuchProcess:
+                pass
+            while psutil.pid_exists(pid):
+                time.sleep(0.01)
+
+        # and clean up leftover pidfiles
+        for pidfile in self.pidfiles:
+            if os.path.exists(pidfile):
+                os.unlink(pidfile)
+
+        self.tearDownBasedir()
+
+    def new_pid_file(self):
+        pidfile = os.path.abspath("test-{0}.pid".format(len(self.pidfiles)))
+        if os.path.exists(pidfile):
+            os.unlink(pidfile)
+        self.pidfiles.append(pidfile)
+        return pidfile
+
+    def wait_for_pidfile(self, pidfile):
+        # wait for a pidfile, and return the pid via a Deferred
+        until = time.time() + 10
+        d = defer.Deferred()
+
+        def poll():
+            if reactor.seconds() > until:
+                d.errback(RuntimeError(
+                    "pidfile {0} never appeared".format(pidfile)))
+                return
+            if os.path.exists(pidfile):
+                try:
+                    with open(pidfile) as f:
+                        pid = int(f.read())
+                except (IOError, TypeError, ValueError):
+                    pid = None
+
+                if pid is not None:
+                    d.callback(pid)
+                    return
+            reactor.callLater(0.01, poll)
+        poll()  # poll right away
+        return d
+
+    def assert_alive(self, pid):
+        if not psutil.pid_exists(pid):
+            self.fail("pid {0} dead, but expected it to be alive".format(pid))
+
+    def assert_dead(self, pid, timeout=5):
+        log.msg("checking pid {0!r}".format(pid))
+
+        # check immediately
+        if not psutil.pid_exists(pid):
+            return
+
+        # poll every 100'th of a second; this allows us to test for
+        # processes that have been killed, but where the signal hasn't
+        # been delivered yet
+        until = time.time() + timeout
+        while time.time() < until:
+            time.sleep(0.01)
+            if not psutil.pid_exists(pid):
+                return
+        self.fail("pid {0} still alive after {1}s".format(pid, timeout))
+
+    # tests
+
+    @defer.inlineCallbacks
+    def test_simple(self, interrupt_signal=None):
+
+        # test a simple process that just sleeps waiting to die
+        pidfile = self.new_pid_file()
+
+        b = FakeWorkerForBuilder(self.basedir)
+        s = runprocess.RunProcess(b, scriptCommand('write_pidfile_and_sleep', pidfile),
+                                  self.basedir)
+        if interrupt_signal is not None:
+            s.interruptSignal = interrupt_signal
+        runproc_d = s.start()
+
+        pid = yield self.wait_for_pidfile(pidfile)
+
+        self.assert_alive(pid)
+
+        # test that the process is still alive and tell the RunProcess object to kill it
+        s.kill("diaf")
+
+        yield runproc_d
+        self.assert_dead(pid)
+
+    @defer.inlineCallbacks
+    def test_sigterm(self):
+        # Tests that the process will receive SIGTERM if sigtermTimeout is not None
+        pidfile = self.new_pid_file()
+
+        b = FakeWorkerForBuilder(self.basedir)
+        s = runprocess.RunProcess(b, scriptCommand('write_pidfile_and_sleep', pidfile),
+                                  self.basedir, sigtermTime=1)
+
+        taskkill_calls = []
+        orig_taskkill = s._taskkill
+
+        def mock_taskkill(pid, force):
+            taskkill_calls.append(force)
+            orig_taskkill(pid, force)
+        s._taskkill = mock_taskkill
+
+        runproc_d = s.start()
+        pid = yield self.wait_for_pidfile(pidfile)
+        # test that the process is still alive
+        self.assert_alive(pid)
+        # and tell the RunProcess object to kill it
+        s.kill("diaf")
+
+        yield runproc_d
+        self.assertEqual(taskkill_calls, [False, True])
+        self.assert_dead(pid)
+
+    @defer.inlineCallbacks
+    def test_with_child(self):
+        # test that a process group gets killed
+        parent_pidfile = self.new_pid_file()
+        child_pidfile = self.new_pid_file()
+
+        b = FakeWorkerForBuilder(self.basedir)
+        s = runprocess.RunProcess(b, scriptCommand('spawn_child', parent_pidfile, child_pidfile),
+                                  self.basedir)
+        runproc_d = s.start()
+
+        # wait for both processes to start up, then call s.kill
+        parent_pid = yield self.wait_for_pidfile(parent_pidfile)
+        child_pid = yield self.wait_for_pidfile(child_pidfile)
+
+        s.kill("diaf")
+
+        yield runproc_d
+
+        self.assert_dead(parent_pid)
+        self.assert_dead(child_pid)
+
+    @defer.inlineCallbacks
+    def test_with_child_parent_dies(self):
+        # when a spawned process spawns another process, and then dies itself
+        # (either intentionally or accidentally), we can't kill the child process.
+        # In the future we should be able to fix this as Windows has CREATE_NEW_PROCESS_GROUP.
+        parent_pidfile = self.new_pid_file()
+        child_pidfile = self.new_pid_file()
+
+        b = FakeWorkerForBuilder(self.basedir)
+        s = runprocess.RunProcess(b, scriptCommand('double_fork', parent_pidfile, child_pidfile),
+                                  self.basedir)
+        runproc_d = s.start()
+
+        # wait for both processes to start up, then call s.kill
+        parent_pid = yield self.wait_for_pidfile(parent_pidfile)
+        child_pid = yield self.wait_for_pidfile(child_pidfile)
+
+        s.kill("diaf")
+
+        # check that both processes are dead after RunProcess is done
+        yield runproc_d
+
+        self.assert_dead(parent_pid)
+        self.assert_alive(child_pid)
 
 
 class TestLogging(BasedirMixin, unittest.TestCase):

@@ -32,9 +32,9 @@ import buildbot
 from buildbot.process.properties import Secret
 from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 
 try:
@@ -62,7 +62,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
 
@@ -442,10 +442,10 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                 values=[
                     {'email': 'buzz@bar', 'is_primary': False},
                     {'email': 'bar@foo', 'is_primary': True}]),
-            dict(  # /teams?role=member
+            dict(  # /workspaces?role=member
                 values=[
-                    {'username': 'hello'},
-                    {'username': 'grp'}])
+                    {'slug': 'hello'},
+                    {'slug': 'grp'}])
         ])
         res = yield self.bitbucketAuth.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
@@ -525,7 +525,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin,
         return cls(config["CLIENTID"], config["CLIENTSECRET"])
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")

@@ -17,9 +17,10 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import authz
+from buildbot.www.authz.endpointmatchers import AnyControlEndpointMatcher
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
 from buildbot.www.authz.endpointmatchers import BranchEndpointMatcher
 from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
@@ -35,7 +36,7 @@ from buildbot.www.authz.roles import RolesFromOwner
 class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         authzcfg = authz.Authz(
             # simple matcher with '*' glob character
             stringsMatcher=authz.fnmatchStrMatcher,
@@ -71,6 +72,8 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 # *-releasers groups can start "release" builds
                 ForceBuildEndpointMatcher(
                     builder="release", role="*-releasers"),
+                # finally deny any control endpoint for non-admin users
+                AnyControlEndpointMatcher(role="admins")
             ],
             roleMatchers=[
                 RolesFromGroups(groupPrefix="buildbot-"),
@@ -123,12 +126,26 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                                                self.users[user])
         except authz.Forbidden as err:
             self.assertIn('need to have role', repr(err))
+        else:
+            self.fail('authz.Forbidden with error "need to have role" was expected!')
 
     @defer.inlineCallbacks
     def test_anyEndpoint(self):
+        # admin users can do anything
         yield self.assertUserAllowed("foo/bar", "get", {}, "homer")
-        yield self.assertUserAllowed("foo/bar", "get", {}, "moneypenny")
+        yield self.assertUserAllowed("foo/bar", "stop", {}, "moneypenny")
+        # non-admin user can only do "get" action
+        yield self.assertUserAllowed("foo/bar", "get", {}, "bond")
+        # non-admin user cannot do control actions
+        yield self.assertUserForbidden("foo/bar", "stop", {}, "bond")
+
+        # non-admin user cannot do any actions
+        allow_rules = [
+            AnyEndpointMatcher(role="admins"),
+        ]
+        self.setAllowRules(allow_rules)
         yield self.assertUserForbidden("foo/bar", "get", {}, "bond")
+        yield self.assertUserForbidden("foo/bar", "stop", {}, "bond")
 
     @defer.inlineCallbacks
     def test_stopBuild(self):
@@ -141,16 +158,51 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         yield self.assertUserForbidden("builds/13", "stop", {}, "eightuser")
         yield self.assertUserForbidden("buildrequests/82", "stop", {}, "eightuser")
 
+        # can stop build/buildrequest with matching builder
+        allow_rules = [
+            StopBuildEndpointMatcher(role="eight-*", builder="mybuilder"),
+            AnyEndpointMatcher(role="admins"),
+        ]
+        self.setAllowRules(allow_rules)
+        yield self.assertUserAllowed("builds/13", "stop", {}, "eightuser")
+        yield self.assertUserAllowed("buildrequests/82", "stop", {}, "eightuser")
+        yield self.assertUserForbidden("builds/999", "stop", {}, "eightuser")
+        yield self.assertUserForbidden("buildrequests/999", "stop", {}, "eightuser")
+
+        # cannot stop build/buildrequest with non-matching builder
+        allow_rules = [
+            StopBuildEndpointMatcher(role="eight-*", builder="foo"),
+            AnyEndpointMatcher(role="admins"),
+        ]
+        self.setAllowRules(allow_rules)
+        yield self.assertUserForbidden("builds/13", "stop", {}, "eightuser")
+        yield self.assertUserForbidden("buildrequests/82", "stop", {}, "eightuser")
+
     @defer.inlineCallbacks
     def test_rebuildBuild(self):
         # admin can rebuild
         yield self.assertUserAllowed("builds/13", "rebuild", {}, "homer")
         # owner can always rebuild
         yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
-        yield self.assertUserAllowed("buildrequests/82", "rebuild", {}, "nineuser")
         # not owner cannot rebuild
         yield self.assertUserForbidden("builds/13", "rebuild", {}, "eightuser")
-        yield self.assertUserForbidden("buildrequests/82", "rebuild", {}, "eightuser")
+
+        # can rebuild build with matching builder
+        allow_rules = [
+            RebuildBuildEndpointMatcher(role="eight-*", builder="mybuilder"),
+            AnyEndpointMatcher(role="admins"),
+        ]
+        self.setAllowRules(allow_rules)
+        yield self.assertUserAllowed("builds/13", "rebuild", {}, "eightuser")
+        yield self.assertUserForbidden("builds/999", "rebuild", {}, "eightuser")
+
+        # cannot rebuild build with non-matching builder
+        allow_rules = [
+            RebuildBuildEndpointMatcher(role="eight-*", builder="foo"),
+            AnyEndpointMatcher(role="admins"),
+        ]
+        self.setAllowRules(allow_rules)
+        yield self.assertUserForbidden("builds/13", "rebuild", {}, "eightuser")
 
     @defer.inlineCallbacks
     def test_fnmatchPatternRoleCheck(self):

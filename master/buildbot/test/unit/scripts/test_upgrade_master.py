@@ -28,10 +28,10 @@ from buildbot.db import masters
 from buildbot.db import model
 from buildbot.scripts import base
 from buildbot.scripts import upgrade_master
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 
 
 def mkconfig(**kwargs):
@@ -112,7 +112,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                                  unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()

@@ -395,8 +395,8 @@ class BitbucketAuth(OAuth2Auth):
             if email.get('is_primary', False):
                 user['email'] = email['email']
                 break
-        orgs = self.get(c, '/teams?role=member')
+        orgs = self.get(c, '/workspaces?role=member')
         return dict(full_name=user['display_name'],
                     email=user['email'],
                     username=user['username'],
-                    groups=[org['username'] for org in orgs["values"]])
+                    groups=[org['slug'] for org in orgs["values"]])

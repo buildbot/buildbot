@@ -22,7 +22,7 @@ from zope.interface import implementer
 from buildbot import interfaces
 from buildbot.process import botmaster
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import service
 from buildbot.worker import manager as workermanager
 
@@ -49,7 +49,7 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.workers = workermanager.WorkerManager(self.master)

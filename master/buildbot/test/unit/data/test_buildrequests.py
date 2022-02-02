@@ -25,9 +25,9 @@ from buildbot.data import buildrequests
 from buildbot.data import resultspec
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import UTC
 from buildbot.util import epoch2datetime
 
@@ -257,7 +257,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         pass
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = buildrequests.BuildRequest(self.master)

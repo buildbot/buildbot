@@ -22,8 +22,8 @@ from twisted.trial import unittest
 
 from buildbot.secrets.providers.passwordstore import SecretInPass
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 
@@ -33,7 +33,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         self.master = fakemaster.make_master(self)
         with mock.patch.object(Path, "is_file", return_value=True):

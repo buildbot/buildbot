@@ -34,8 +34,8 @@ from buildbot.plugins import worker
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.misc import DebugIntegrationLogsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.sandboxed_worker import SandboxedWorker
 from buildbot.worker.local import LocalWorker
 
@@ -88,7 +88,7 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
                             DebugIntegrationLogsMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setupDebugIntegrationLogs()
 
     def tearDown(self):

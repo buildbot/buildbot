@@ -179,8 +179,8 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         users = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
 
-        buildmsg = yield formatter.format_message_for_build(master, build, mode=self.mode,
-                                                            users=users)
+        buildmsg = yield formatter.format_message_for_build(master, build, is_buildset=False,
+                                                            mode=self.mode, users=users)
 
         results = build['results']
 

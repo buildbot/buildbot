@@ -28,8 +28,8 @@ from buildbot.changes import gerritchangesource
 from buildbot.test import fakedb
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.change import Change
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 
@@ -93,7 +93,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
                              unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         return self.setUpChangeSource()
 
@@ -590,7 +590,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
         yield self.master.startService()
 

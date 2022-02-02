@@ -160,6 +160,7 @@ setup_args = {
         "buildbot.configurators",
         "buildbot.worker",
         "buildbot.worker.protocols",
+        "buildbot.worker.protocols.manager",
         "buildbot.changes",
         "buildbot.clients",
         "buildbot.data",
@@ -190,11 +191,11 @@ setup_args = {
         "buildbot.www",
         "buildbot.www.hooks",
         "buildbot.www.authz",
-    ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 50% of the archive)
         "buildbot.test",
         "buildbot.test.util",
         "buildbot.test.fake",
         "buildbot.test.fakedb",
+    ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 50% of the archive)
         "buildbot.test.fuzz",
         "buildbot.test.integration",
         "buildbot.test.integration.interop",

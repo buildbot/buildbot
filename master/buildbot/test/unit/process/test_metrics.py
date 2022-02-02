@@ -21,13 +21,13 @@ from twisted.trial import unittest
 
 from buildbot.process import metrics
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class TestMetricBase(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.observer = metrics.MetricLogObserver()
         self.observer.parent = self.master = fakemaster.make_master(self)
         self.master.config.metrics = dict(log_interval=0, periodic_interval=0)

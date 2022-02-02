@@ -21,9 +21,9 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.changes import pb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import pbmanager
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestPBChangeSource(changesource.ChangeSourceMixin,
@@ -40,7 +40,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpPBChangeSource()
         yield self.setUpChangeSource()
 
@@ -216,7 +216,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
 class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
 
     @defer.inlineCallbacks

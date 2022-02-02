@@ -27,7 +27,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import toJson
 
 try:
@@ -65,7 +65,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor(use_asyncio=True)
+        self.setup_test_reactor(use_asyncio=True)
 
         master = fakemaster.make_master(self)
         master.db = fakedb.FakeDBConnector(self)

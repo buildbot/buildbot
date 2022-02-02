@@ -26,9 +26,9 @@ from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
@@ -37,7 +37,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.setup_reporter_test()
         self.reporter_test_repo = 'https://example.org/user/repo'
@@ -219,7 +219,7 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.setup_reporter_test()
         self.reporter_test_repo = 'https://example.org/user/repo'
@@ -296,7 +296,7 @@ class TestBitbucketStatusPushRepoParsing(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 

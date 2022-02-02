@@ -23,7 +23,7 @@ from twisted.trial import unittest
 from buildbot.changes import changes
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class Change(unittest.TestCase, TestReactorMixin):
@@ -45,7 +45,7 @@ class Change(unittest.TestCase, TestReactorMixin):
     ]
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True)
         self.change23 = changes.Change(**dict(  # using **dict(..) forces kwargs
             category='devel',

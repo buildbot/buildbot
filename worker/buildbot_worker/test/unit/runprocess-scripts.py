@@ -24,10 +24,23 @@ from __future__ import print_function
 import os
 import select
 import signal
+import subprocess
 import sys
 import time
 
+import psutil
+
 # utils
+
+
+def invoke_script(function, *args):
+    cmd = [sys.executable, __file__, function] + list(args)
+    if os.name == 'nt':
+        DETACHED_PROCESS = 0x00000008
+        subprocess.Popen(cmd, shell=False, stdin=None, stdout=None, stderr=None, close_fds=True,
+                         creationflags=DETACHED_PROCESS)
+    else:
+        subprocess.Popen(cmd, shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
 
 
 def write_pidfile(pidfile):
@@ -42,19 +55,6 @@ def sleep_forever():
     signal.alarm(110)  # die after 110 seconds
     while True:
         time.sleep(10)
-
-
-def wait_for_parent_death(orig_parent_pid):
-    while True:
-        ppid = os.getppid()
-        if ppid != orig_parent_pid:
-            return
-        # on some systems, getppid will keep returning
-        # a dead pid, so check it for liveness
-        try:
-            os.kill(ppid, 0)
-        except OSError:  # Probably ENOSUCH
-            return
 
 
 script_fns = {}
@@ -77,28 +77,36 @@ def write_pidfile_and_sleep():
 @script
 def spawn_child():
     parent_pidfile, child_pidfile = sys.argv[2:]
-    if os.fork() == 0:
-        write_pidfile(child_pidfile)
-    else:
-        write_pidfile(parent_pidfile)
+    invoke_script('write_pidfile_and_sleep', child_pidfile)
+    write_pidfile(parent_pidfile)
+    sleep_forever()
+
+
+@script
+def wait_for_pid_death_and_write_pidfile_and_sleep():
+    wait_pid = int(sys.argv[2])
+    pidfile = sys.argv[3]
+
+    while psutil.pid_exists(wait_pid):
+        time.sleep(0.01)
+
+    write_pidfile(pidfile)
     sleep_forever()
 
 
 @script
 def double_fork():
-    # when using a PTY, the child process will get SIGHUP when the
-    # parent process exits, so ignore that.
-    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    if os.name == 'posix':
+        # when using a PTY, the child process will get SIGHUP when the
+        # parent process exits, so ignore that.
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
     parent_pidfile, child_pidfile = sys.argv[2:]
     parent_pid = os.getpid()
 
-    if os.fork() == 0:
-        wait_for_parent_death(parent_pid)
-        write_pidfile(child_pidfile)
-        sleep_forever()
-    else:
-        write_pidfile(parent_pidfile)
-        sys.exit(0)
+    invoke_script('wait_for_pid_death_and_write_pidfile_and_sleep', str(parent_pid), child_pidfile)
+    write_pidfile(parent_pidfile)
+    sys.exit(0)
 
 
 @script

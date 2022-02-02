@@ -23,8 +23,8 @@ from buildbot.schedulers.canceller import _OldBuildFilterSet
 from buildbot.schedulers.canceller import _OldBuildTracker
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.ssfilter import SourceStampFilter
 
 
@@ -311,7 +311,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
 

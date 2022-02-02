@@ -24,7 +24,7 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.test.fake import docker
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker import docker as dockerworker
 
 
@@ -42,7 +42,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         return worker
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.build = Properties(
             image='busybox:latest', builder='docker_worker', distro='wheezy')
@@ -50,6 +50,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
             image='busybox:latest', builder='docker_worker2', distro='wheezy')
         self.patch(dockerworker, 'client', docker)
         docker.Client.containerCreated = False
+        docker.Client.start_exception = None
 
     @defer.inlineCallbacks
     def test_constructor_nodocker(self):
@@ -82,7 +83,8 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
-        self.assertEqual(bs.client_args, {'base_url': 'tcp://1234:2375'})
+        self.assertEqual(bs.docker_host, 'tcp://1234:2375')
+        self.assertEqual(bs.client_args, {})
         self.assertEqual(bs.image, 'worker')
         self.assertEqual(bs.command, [])
 
@@ -130,13 +132,13 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
                                     custom_context=False, buildargs=None,
                                     encoding='gzip')
         self.assertEqual(bs.workername, 'bot')
+        self.assertEqual(bs.docker_host, 'unix:///var/run/docker.sock')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.image, 'worker_img')
         self.assertEqual(bs.command, ['/bin/sh'])
         self.assertEqual(bs.dockerfile, "FROM ubuntu")
         self.assertEqual(bs.volumes, [])
-        self.assertEqual(bs.client_args, {
-                         'base_url': 'unix:///var/run/docker.sock', 'version': '1.9', 'tls': True})
+        self.assertEqual(bs.client_args, {'version': '1.9', 'tls': True})
         self.assertEqual(
             bs.hostconfig, {'network_mode': 'fake', 'dns': ['1.1.1.1', '1.2.3.4']})
         self.assertFalse(bs.custom_context)
@@ -188,6 +190,15 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         ])
 
     @defer.inlineCallbacks
+    def test_start_instance_docker_host_renderable(self):
+        bs = yield self.setupWorker('bot', 'pass',
+                                    docker_host=Interpolate('tcp://value-%(prop:builder)s'),
+                                    image='worker')
+        id, name = yield bs.start_instance(self.build)
+        client = docker.Client.latest
+        self.assertEqual(client.base_url, 'tcp://value-docker_worker')
+
+    @defer.inlineCallbacks
     def test_start_instance_volume_renderable(self):
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
@@ -198,6 +209,20 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         self.assertEqual(len(client.call_args_create_container), 1)
         self.assertEqual(client.call_args_create_container[0]['volumes'],
                          ['/worker/docker_worker/build'])
+
+    @defer.inlineCallbacks
+    def test_start_instance_hostconfig_renderable(self):
+        bs = yield self.setupWorker('bot', 'pass', docker_host='tcp://1234:2375', image='worker',
+                                    hostconfig={'prop': Interpolate('value-%(kw:builder)s',
+                                                                    builder=Property('builder'))})
+        id, name = yield bs.start_instance(self.build)
+        client = docker.Client.latest
+        self.assertEqual(len(client.call_args_create_container), 1)
+
+        expected = {'prop': 'value-docker_worker', 'binds': []}
+        if dockerworker.docker_py_version >= 2.2:
+            expected['init'] = True
+        self.assertEqual(client.call_args_create_host_config, [expected])
 
     @defer.inlineCallbacks
     def test_interpolate_renderables_for_new_build(self):
@@ -389,6 +414,16 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
             'existing', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash'])
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox:latest')
+
+    @defer.inlineCallbacks
+    def test_start_instance_docker_client_start_exception(self):
+        msg = 'The container operating system does not match the host operating system'
+        docker.Client.start_exception = docker.errors.APIError(msg)
+
+        bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'busybox:latest',
+                                    ['bin/bash'])
+        with self.assertRaises(interfaces.LatentWorkerCannotSubstantiate):
+            yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
     def test_constructor_hostname(self):

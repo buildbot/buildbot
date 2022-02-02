@@ -18,7 +18,7 @@ from twisted.trial import unittest
 
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.test_result_submitter import TestResultSubmitter
 
 
@@ -26,7 +26,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True)
         yield self.master.startService()
 

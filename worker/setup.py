@@ -160,6 +160,7 @@ if setuptools is not None:
     # Unit test hard dependencies.
     test_deps = [
         'mock',
+        'psutil',
     ]
 
     setup_args['tests_require'] = test_deps

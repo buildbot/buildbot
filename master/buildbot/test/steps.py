@@ -20,12 +20,11 @@ from twisted.python import log
 from twisted.python.reflect import namedModule
 
 from buildbot.process import buildstep
-from buildbot.process import remotecommand as real_remotecommand
 from buildbot.process.results import EXCEPTION
+from buildbot.test.fake import connection
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
-from buildbot.test.fake import remotecommand
 from buildbot.test.fake import worker
 from buildbot.util import bytes2unicode
 
@@ -86,86 +85,33 @@ def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
     return text
 
 
-class BuildStepMixin:
+class TestBuildStepMixin:
 
     """
-    Support for testing build steps.  This class adds two capabilities:
-
-     - patch out RemoteCommand with fake versions that check expected
-       commands and produce the appropriate results
-
-     - surround a step with the mock objects that it needs to execute
-
-    The following instance variables are available after C{setup_step}:
-
-    @ivar step: the step under test
     @ivar build: the fake build containing the step
     @ivar progress: mock progress object
     @ivar worker: mock worker object
     @ivar properties: build properties (L{Properties} instance)
     """
 
-    def setup_build_step(self, wantData=True, wantDb=False, wantMq=False):
-        """
-        @param wantData(bool): Set to True to add data API connector to master.
-            Default value: True.
-
-        @param wantDb(bool): Set to True to add database connector to master.
-            Default value: False.
-
-        @param wantMq(bool): Set to True to add mq connector to master.
-            Default value: False.
-        """
-
+    def setup_test_build_step(self, want_data=True, want_db=False, want_mq=False):
         if not hasattr(self, 'reactor'):
             raise Exception('Reactor has not yet been setup for step')
 
-        self._next_remote_command_number = 0
         self._interrupt_remote_command_numbers = []
 
-        def create_fake_remote_command(*args, **kwargs):
-            cmd = remotecommand.FakeRemoteCommand(*args, **kwargs)
-            cmd.testcase = self
-            if self._next_remote_command_number in self._interrupt_remote_command_numbers:
-                cmd.set_run_interrupt()
-            self._next_remote_command_number += 1
-            return cmd
-
-        def create_fake_remote_shell_command(*args, **kwargs):
-            cmd = remotecommand.FakeRemoteShellCommand(*args, **kwargs)
-            cmd.testcase = self
-            if self._next_remote_command_number in self._interrupt_remote_command_numbers:
-                cmd.set_run_interrupt()
-            self._next_remote_command_number += 1
-            return cmd
-
-        self.patch(real_remotecommand, 'RemoteCommand', create_fake_remote_command)
-        self.patch(real_remotecommand, 'RemoteShellCommand', create_fake_remote_shell_command)
         self.expected_remote_commands = []
         self._expected_remote_commands_popped = 0
 
-        self.master = fakemaster.make_master(self, wantData=wantData, wantDb=wantDb, wantMq=wantMq)
+        self.master = fakemaster.make_master(self, wantData=want_data, wantDb=want_db,
+                                             wantMq=want_mq)
 
-    def tear_down_build_step(self):
+    def tear_down_test_build_step(self):
         pass
 
     def setup_step(self, step, worker_version=None, worker_env=None,
-                  buildFiles=None, wantDefaultWorkdir=True):
-        """
-        Set up C{step} for testing.  This begins by using C{step} as a factory
-        to create a I{new} step instance, thereby testing that the factory
-        arguments are handled correctly.  It then creates a comfortable
-        environment for the worker to run in, replete with a fake build and a
-        fake worker.
+                   build_files=None, want_default_work_dir=True):
 
-        As a convenience, it can set the step's workdir with C{'wkdir'}.
-
-        @param worker_version: worker version to present, as a dictionary mapping
-            command name to version.  A command name of '*' will apply for all
-            commands.
-
-        @param worker_env: environment from the worker at worker startup
-        """
         if worker_version is None:
             worker_version = {
                 '*': '99.99'
@@ -174,19 +120,19 @@ class BuildStepMixin:
         if worker_env is None:
             worker_env = dict()
 
-        if buildFiles is None:
-            buildFiles = list()
+        if build_files is None:
+            build_files = list()
 
         step = self.step = buildstep.create_step_from_step_or_factory(step)
 
         # set defaults
-        if wantDefaultWorkdir:
+        if want_default_work_dir:
             step.workdir = step._workdir or 'wkdir'
 
         # step.build
 
         b = self.build = fakebuild.FakeBuild(master=self.master)
-        b.allFiles = lambda: buildFiles
+        b.allFiles = lambda: build_files
         b.master = self.master
 
         def getWorkerVersion(cmd, oldversion):
@@ -286,37 +232,20 @@ class BuildStepMixin:
         return step
 
     def expect_commands(self, *exp):
-        """
-        Add to the expected remote commands, along with their results.  Each
-        argument should be an instance of L{Expect}.
-        """
         self.expected_remote_commands.extend(exp)
 
     def expect_outcome(self, result, state_string=None):
-        """
-        Expect the given result (from L{buildbot.process.results}) and status
-        text (a list).
-        """
         self.exp_result = result
         if state_string:
             self.exp_state_string = state_string
 
     def expect_property(self, property, value, source=None):
-        """
-        Expect the given property to be set when the step is complete.
-        """
         self.exp_properties[property] = (value, source)
 
     def expect_no_property(self, property):
-        """
-        Expect the given property is *not* set when the step is complete
-        """
         self.exp_missing_properties.append(property)
 
-    def expect_logfile(self, logfile, contents):
-        """
-        Expect a logfile with the given contents
-        """
+    def expect_log_file(self, logfile, contents):
         self.exp_logfiles[logfile] = contents
 
     def expect_log_file_stderr(self, logfile, contents):
@@ -325,16 +254,10 @@ class BuildStepMixin:
     def expect_build_data(self, name, value, source):
         self._exp_build_data[name] = (value, source)
 
-    def expect_hidden(self, hidden):
-        """
-        Set whether the step is expected to be hidden.
-        """
+    def expect_hidden(self, hidden=True):
         self.exp_hidden = hidden
 
     def expect_exception(self, exception_class):
-        """
-        Set whether the step is expected to raise an exception.
-        """
         self.exp_exception = exception_class
         self.expect_outcome(EXCEPTION)
 
@@ -358,7 +281,8 @@ class BuildStepMixin:
 
         @returns: Deferred
         """
-        self.conn = mock.Mock(name="WorkerForBuilder(connection)")
+        self.conn = connection.FakeConnection(self, "WorkerForBuilder(connection)", self.step,
+                                              self._interrupt_remote_command_numbers)
         self.step.setupProgress()
         result = yield self.step.startStep(self.conn)
 
@@ -433,9 +357,23 @@ class BuildStepMixin:
 
     # callbacks from the running step
 
+    def _cleanup_args(self, args):
+        # we temporarily disable checking of sigtermTime and interruptSignal due to currently
+        # ongoing changes to how step testing works. Once all tests are updated for stricter
+        # checking this will be removed.
+        args = args.copy()
+        args.pop('sigtermTime', None)
+        args.pop('interruptSignal', None)
+        args.pop('usePTY', None)
+        env = args.pop('env', None)
+        if env is None:
+            env = {}
+        args['env'] = env
+        return args
+
     @defer.inlineCallbacks
     def _validate_expectation(self, exp, command):
-        got = (command.remote_command, command.args)
+        got = (command.remote_command, self._cleanup_args(command.args))
 
         for child_exp in exp.nestedExpectations():
             try:
@@ -453,7 +391,7 @@ class BuildStepMixin:
             self.assertEqual(exp.interrupted, command.interrupted)
 
             # first check any ExpectedRemoteReference instances
-            exp_tup = (exp.remote_command, exp.args)
+            exp_tup = (exp.remote_command, self._cleanup_args(exp.args))
             if exp_tup != got:
                 msg = "Command contents different from expected (command index: {}); {}".format(
                     self._expected_remote_commands_popped,
@@ -466,8 +404,7 @@ class BuildStepMixin:
             yield exp.runBehaviors(command)
 
     @defer.inlineCallbacks
-    def _remotecommand_run(self, command, step, conn, builder_name):
-        self.assertEqual(step, self.step)
+    def _connection_remote_start_command(self, command, conn, builder_name):
         self.assertEqual(conn, self.conn)
         got = (command.remote_command, command.args)
 
@@ -490,7 +427,9 @@ class BuildStepMixin:
             if not exp.shouldKeepMatchingAfter(command):
                 self.expected_remote_commands.pop(0)
                 self._expected_remote_commands_popped += 1
-        return command
+
+        if not exp.connection_broken:
+            command.remote_complete()
 
     def change_worker_system(self, system):
         self.worker.worker_system = system

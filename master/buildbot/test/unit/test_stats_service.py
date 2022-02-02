@@ -29,9 +29,9 @@ from buildbot.statistics.storage_backends.influxdb_client import InfluxStorageSe
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import logging
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
@@ -41,7 +41,7 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
                                              wantDb=True)
 
@@ -179,7 +179,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         self.assertLogged("Service.*not initialized")
 
 
-class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
+class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
 
     """
     Test the stats service from a fake step

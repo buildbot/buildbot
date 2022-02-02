@@ -19,8 +19,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import hgpoller
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 
@@ -39,7 +39,7 @@ class TestHgPollerBase(MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         yield self.setUpChangeSource()
 

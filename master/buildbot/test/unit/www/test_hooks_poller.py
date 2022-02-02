@@ -22,7 +22,7 @@ from buildbot.changes import base
 from buildbot.changes.manager import ChangeManager
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.web import FakeRequest
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 from buildbot.www import change_hook
@@ -48,7 +48,7 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
             self.called = True
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def setUpRequest(self, args, options=True, activate=True,

@@ -34,3 +34,4 @@ The next section, :doc:`../customization`, describes this approach, with frequen
     multimaster
     multicodebase
     misc/index
+    tests/index

@@ -18,8 +18,8 @@ from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.schedulers import timed
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
@@ -27,7 +27,7 @@ class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     OBJECTID = 928754
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

@@ -34,9 +34,9 @@ from buildbot.db import connector
 from buildbot.db.model import UpgradeFromBefore0p9Error
 from buildbot.db.model import UpgradeFromBefore3p0Error
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
 from buildbot.test.util import querylog
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
@@ -111,7 +111,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     # save subclasses the trouble of calling our setUp and tearDown methods
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpUpgradeTest()
 
     def tearDown(self):

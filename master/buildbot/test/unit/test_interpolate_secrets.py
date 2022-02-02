@@ -8,8 +8,8 @@ from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class FakeBuildWithMaster(FakeBuild):
@@ -24,7 +24,7 @@ class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar",
@@ -53,7 +53,7 @@ class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase,
                                       ConfigErrorsMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.build = FakeBuildWithMaster(self.master)
 
@@ -70,7 +70,7 @@ class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage()
         password = "bar"

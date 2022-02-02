@@ -25,9 +25,9 @@ from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
@@ -39,7 +39,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
                        unittest.TestCase, ReporterTestMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_reporter_test()
         self.setUpLogging()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -90,8 +90,8 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
     def test_buildMessage_nominal(self):
         mn, build, formatter = yield self.setupBuildMessage(mode=("failing",))
 
-        formatter.format_message_for_build.assert_called_with(self.master, build, mode=('failing',),
-                                                              users=['me@foo'])
+        formatter.format_message_for_build.assert_called_with(self.master, build, is_buildset=False,
+                                                              mode=('failing',), users=['me@foo'])
 
         report = {
             'body': 'body',

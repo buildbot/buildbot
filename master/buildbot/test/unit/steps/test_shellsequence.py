@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import WithProperties
@@ -22,9 +23,9 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import shellsequence
 from buildbot.test.expect import ExpectShell
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -35,15 +36,15 @@ class DynamicRun(shellsequence.ShellSequence):
         return self.runShellSequence(self.dynamicCommands)
 
 
-class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
+class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
                           TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_shell_arg_warn_deprecated_logfile(self):
         with assertProducesWarnings(DeprecatedApiWarning,
@@ -156,6 +157,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expect_outcome(result=FAILURE, state_string="'make p1' (failure)")
         return self.run_step()
 
+    @defer.inlineCallbacks
     def testShellArgsAreRenderedAnewAtEachBuild(self):
         """Unit test to ensure that ShellArg instances are properly re-rendered.
 
@@ -171,7 +173,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
         self.expect_outcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-1'")
-        self.run_step()
+        yield self.run_step()
 
         # Second "build"
         self.setup_step(step)
@@ -180,4 +182,4 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expect_outcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-2'")
 
-        return self.run_step()
+        yield self.run_step()

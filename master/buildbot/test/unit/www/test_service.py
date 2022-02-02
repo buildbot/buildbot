@@ -27,9 +27,9 @@ from twisted.trial import unittest
 from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
 from twisted.web.server import Request
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.unit.www import test_hooks_base
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import auth
 from buildbot.www import change_hook
 from buildbot.www import resource
@@ -63,7 +63,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = self.make_master(url='h:/a/b/')
         self.svc = self.master.www = service.WWWService()
         yield self.svc.setServiceParent(self.master)

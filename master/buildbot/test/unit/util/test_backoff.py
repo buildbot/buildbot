@@ -18,7 +18,7 @@ import time
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import backoff
 
 
@@ -28,7 +28,7 @@ class TestException(Exception):
 
 class ExponentialBackoffEngineAsyncTests(unittest.TestCase, TestReactorMixin):
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     def test_construct_asserts(self):
         with self.assertRaises(ValueError):

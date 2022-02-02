@@ -21,18 +21,18 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import cppcheck
 from buildbot.test.expect import ExpectShell
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class Cppcheck(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_success(self):
         self.setup_step(cppcheck.Cppcheck(enable=['all'], inconclusive=True))

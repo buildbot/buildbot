@@ -18,8 +18,8 @@ import mock
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakeprotocol
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import protocols
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.protocols import base
 
 
@@ -27,7 +27,7 @@ class TestFakeConnection(protocols.ConnectionInterfaceTest,
                          TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.worker = mock.Mock()
         self.conn = fakeprotocol.FakeConnection(self.worker)
 
@@ -36,7 +36,7 @@ class TestConnection(protocols.ConnectionInterfaceTest,
                      TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.worker = mock.Mock()
         self.conn = base.Connection(self.worker.workername)
 

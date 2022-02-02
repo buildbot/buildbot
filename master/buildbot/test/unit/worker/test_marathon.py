@@ -23,13 +23,13 @@ from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.fakeprotocol import FakeTrivialConnection as FakeBot
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker.marathon import MarathonLatentWorker
 
 
 class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.build = Properties(
             image="busybox:latest", builder="docker_worker")
         self.worker = None

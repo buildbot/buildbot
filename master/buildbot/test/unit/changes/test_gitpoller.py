@@ -23,10 +23,10 @@ from twisted.trial import unittest
 
 from buildbot.changes import gitpoller
 from buildbot.test.fake.private_tempdir import MockPrivateTemporaryDirectory
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import logging
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.runprocess import ExpectMasterShell
 from buildbot.test.util.runprocess import MasterRunProcessMixin
 from buildbot.util import bytes2unicode
@@ -53,7 +53,7 @@ class TestGitPollerBase(MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         yield self.setUpChangeSource()
         yield self.master.startService()
@@ -1787,7 +1787,7 @@ class TestGitPollerConstructor(unittest.TestCase, TestReactorMixin, changesource
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
         yield self.master.startService()
 

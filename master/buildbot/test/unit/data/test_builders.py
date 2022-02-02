@@ -22,9 +22,9 @@ from buildbot.data import builders
 from buildbot.data import resultspec
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -168,7 +168,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = builders.Builder(self.master)

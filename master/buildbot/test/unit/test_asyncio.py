@@ -20,14 +20,14 @@ from twisted.trial import unittest
 
 from buildbot import util
 from buildbot.asyncio import as_deferred
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class TestAsyncioTestLoop(TestReactorMixin, unittest.TestCase):
     maxDiff = None
 
     def setUp(self):
-        self.setUpTestReactor(use_asyncio=True)
+        self.setup_test_reactor(use_asyncio=True)
 
     def test_coroutine_schedule(self):
         d1 = defer.Deferred()

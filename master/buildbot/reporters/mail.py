@@ -37,6 +37,8 @@ from buildbot.reporters.base import ENCODING
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.worker import WorkerMissingGenerator
+from buildbot.reporters.message import MessageFormatter
+from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import ssl
 from buildbot.util import unicode2bytes
 
@@ -154,8 +156,12 @@ class MailNotifier(ReporterBase):
 
     def _create_default_generators(self):
         return [
-            BuildStatusGenerator(add_patch=True),
-            WorkerMissingGenerator(workers='all'),
+            BuildStatusGenerator(
+                add_patch=True,
+                message_formatter=MessageFormatter(template_type='html')),
+            WorkerMissingGenerator(
+                workers='all',
+                message_formatter=MessageFormatterMissingWorker(template_type='html')),
         ]
 
     def patch_to_attachment(self, patch, index):

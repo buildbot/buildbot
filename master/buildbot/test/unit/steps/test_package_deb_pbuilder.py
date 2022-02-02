@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import stat
 import time
 
 from twisted.trial import unittest
@@ -25,19 +24,19 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import pbuilder
 from buildbot.test.expect import ExpectShell
 from buildbot.test.expect import ExpectStat
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
+class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin,
                       unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_new(self):
         self.setup_step(pbuilder.DebPbuilder())
@@ -62,7 +61,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(pbuilder.DebPbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
-            .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
+            .stat_file()
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['sudo', '/usr/sbin/pbuilder', '--update',
@@ -80,7 +79,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(pbuilder.DebPbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
-            .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
+            .stat_file(mtime=int(time.time()))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['pdebuild', '--buildresult', '.',
@@ -275,15 +274,15 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
+class TestDebCowbuilder(TestBuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_new(self):
         self.setup_step(pbuilder.DebCowbuilder())
@@ -308,7 +307,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(pbuilder.DebCowbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/')
-            .update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, 0, 0])
+            .stat_dir()
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['sudo', '/usr/sbin/cowbuilder', '--update',
@@ -326,7 +325,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(pbuilder.DebCowbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/')
-            .update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
+            .stat_dir(mtime=int(time.time()))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['pdebuild', '--buildresult', '.',
@@ -341,7 +340,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
             basetgz='/var/cache/pbuilder/stable-local-buildbot.cow'))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow')
-            .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
+            .stat_file()
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['sudo', '/usr/sbin/cowbuilder', '--update',
@@ -355,7 +354,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
             basetgz='/var/cache/pbuilder/stable-local-buildbot.cow'))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow')
-            .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
+            .stat_file(mtime=int(time.time()))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['pdebuild', '--buildresult', '.',
@@ -366,15 +365,15 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
+class TestUbuPbuilder(TestBuildStepMixin, TestReactorMixin,
                       unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_no_distribution(self):
         with self.assertRaises(config.ConfigErrors):
@@ -401,15 +400,15 @@ class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
         return self.run_step()
 
 
-class TestUbuCowbuilder(steps.BuildStepMixin, TestReactorMixin,
+class TestUbuCowbuilder(TestBuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setup_build_step()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tear_down_build_step()
+        return self.tear_down_test_build_step()
 
     def test_no_distribution(self):
         with self.assertRaises(config.ConfigErrors):

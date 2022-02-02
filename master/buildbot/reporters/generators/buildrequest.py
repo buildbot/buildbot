@@ -73,8 +73,8 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     def buildrequest_message(self, master, build):
         patches = self._get_patches_for_build(build)
         users = []
-        buildmsg = yield self.formatter.format_message_for_build(master, build, mode=self.mode,
-                                                                 users=users)
+        buildmsg = yield self.formatter.format_message_for_build(master, build, is_buildset=True,
+                                                                 mode=self.mode, users=users)
 
         return {
             'body': buildmsg['body'],

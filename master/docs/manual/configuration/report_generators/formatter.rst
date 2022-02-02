@@ -7,19 +7,23 @@ MessageFormatter
 
 This formatter is used to format messages in :ref:`Reportgen-BuildStatusGenerator` and :ref:`Reportgen-BuildSetStatusGenerator`.
 
-It formats a message using the Jinja2_ templating language and picks the template either from a string or from a file.
+It formats a message using the Jinja2_ templating language and picks the template either from a string.
 
 The constructor of the class takes the following arguments:
-
-``template``
-    If set, this parameter indicates the content of the template used to generate the body of the mail as string.
 
 ``template_type``
     This indicates the type of the generated template.
     Use either 'plain' (the default) or 'html'.
 
+``template``
+    If set, specifies the template used to generate the message body.
+    If not set, a default template will be used.
+    The default template is selected according to ``template_type`` so it may make sense to specify appropriate ``template_type`` even if the default template is used.
+
 ``subject``
-    The content of the subject of the mail as string.
+    If set, specifies the template used to generate the message subject.
+    In case of messages generated for multiple builds within a buildset (e.g. from within ``BuildSetStatusGenerator``), the subject of the first message will be used.
+    The ``is_buildset`` key of the context can be used to detect such case and adjust the message appropriately.
 
 ``ctx``
     This is an extension of the standard context that will be given to the templates.
@@ -68,8 +72,14 @@ Context
 The context that is given to the template consists of the following data:
 
 ``results``
-    The results of the build.
+    The results of the build as an integer.
     Equivalent to ``build['results']``.
+
+``result_names``
+    A collection that allows accessing a textual identifier of build result.
+    The intended usage is ``result_names[results]``.
+
+    The following are possible values: ``success``, ``warnings``, ``failure``, ``skipped``, ``exception``, ``retry``, ``cancelled``.
 
 ``buildername``
     The name of the builder.
@@ -122,6 +132,10 @@ The context that is given to the template consists of the following data:
 
         Additionally, if ``want_logs_content`` is set to ``True`` then the log dictionaries will contain ``contents`` key with full contents of the log.
 
+``is_buildset``
+    A boolean identifying whether the current message will form a larger message that describes multiple builds in a buildset.
+    This mostly concerns generation of the subject as the message bodies will be merged.
+
 ``projects``
     A string identifying the projects that the build was built for.
 
@@ -134,8 +148,11 @@ The context that is given to the template consists of the following data:
 ``build_url``
     URL to the build in the Buildbot UI.
 
+``buildbot_title``
+    The title of the Buildbot instance as per ``c['title']`` from the ``master.cfg``
+
 ``buildbot_url``
-    URL to the Buildbot instance.
+    The URL of the Buildbot instance as per ``c['buildbotURL']`` from the ``master.cfg``
 
 ``blamelist``
     The list of users responsible for the build.
