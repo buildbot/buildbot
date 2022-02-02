@@ -363,8 +363,6 @@ Sincerely,
 
 
 class MessageFormatterMissingWorker(MessageFormatterBaseJinja):
-    template_filename = 'missing_mail.txt'
-
     def __init__(self, template=None, **kwargs):
         if template is None:
             template = default_missing_template
