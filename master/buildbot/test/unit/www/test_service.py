@@ -270,7 +270,7 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         request.sitepath = [b"bb"]
         session.updateSession(request)
         self.assertEqual(len(request.cookies), 1)
-        name, value = request.cookies[0].split(b";")[0].split(b"=")
+        _, value = request.cookies[0].split(b";")[0].split(b"=")
         decoded = jwt.decode(value, self.SECRET,
                              algorithms=[service.SESSION_SECRET_ALGORITHM])
         self.assertEqual(decoded['user_info'], {'anonymous': True})

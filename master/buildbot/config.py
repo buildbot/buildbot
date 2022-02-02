@@ -744,7 +744,7 @@ class MasterConfig(util.ComparableMixin):
             if not isinstance(versions, list):
                 error('Invalid www configuration value of versions')
             else:
-                for i, v in enumerate(versions):
+                for v in versions:
                     if not isinstance(v, tuple) or len(v) < 2:
                         error('Invalid www configuration value of versions')
                         break

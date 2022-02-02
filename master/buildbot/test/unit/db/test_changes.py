@@ -683,7 +683,7 @@ class RealTests(Tests):
             buildRows = [fakedb.Buildset(id=lastID["buildsetid"],
                                          reason='foo',
                                          submitted_at=1300305012, results=-1)]
-            for cb, ss in codebase_ss.items():
+            for ss in codebase_ss.values():
                 lastID["buildsetSourceStampid"] += 1
                 buildRows.append(
                     fakedb.BuildsetSourceStamp(id=lastID["buildsetSourceStampid"],

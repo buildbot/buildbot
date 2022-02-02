@@ -289,7 +289,7 @@ class croniter:
         return small[0]
 
     def _get_next_nearest_diff(self, x, to_check, range_val):
-        for i, d in enumerate(to_check):
+        for d in to_check:
             if d >= x:
                 return d - x
         return to_check[0] - x + range_val

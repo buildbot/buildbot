@@ -271,7 +271,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # The child processes should have also seen our stop signal
         # so wait for them to terminate.
         for bbdir, h, t, output in child_infos:
-            for i in range(10):  # 30 seconds to shutdown...
+            for _ in range(10):  # 30 seconds to shutdown...
                 self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
                 rc = win32event.WaitForSingleObject(h, 3000)
                 if rc == win32event.WAIT_OBJECT_0:
@@ -292,7 +292,7 @@ class BBService(win32serviceutil.ServiceFramework):
             # process terminated.
             # As we are shutting down, we do the join with a little more care,
             # reporting progress as we wait (even though we never will <wink>)
-            for i in range(5):
+            for _ in range(5):
                 t.join(1)
                 self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
                 if not t.is_alive():
@@ -399,7 +399,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # self.info("Redirect thread starting")
         while True:
             try:
-                ec, data = win32file.ReadFile(handle, CHILDCAPTURE_BLOCK_SIZE)
+                _, data = win32file.ReadFile(handle, CHILDCAPTURE_BLOCK_SIZE)
             except pywintypes.error as err:
                 # ERROR_BROKEN_PIPE means the child process closed the
                 # handle - ie, it terminated.

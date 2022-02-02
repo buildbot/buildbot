@@ -88,9 +88,9 @@ class CommonTestCase(unittest.TestCase):
         got = self.userInfoProvider.search.call_args_list
         self.assertEqual(len(exp), len(got))
         for i, val in enumerate(exp):
-            self.assertEqual(exp[i][0][0], got[i][0][1])
-            self.assertEqual(exp[i][0][1], got[i][0][2])
-            self.assertEqual(exp[i][0][2], got[i][1]['attributes'])
+            self.assertEqual(val[0][0], got[i][0][1])
+            self.assertEqual(val[0][1], got[i][0][2])
+            self.assertEqual(val[0][2], got[i][1]['attributes'])
 
 
 class LdapUserInfo(CommonTestCase):
@@ -192,7 +192,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
 
     @defer.inlineCallbacks
     def _getUserAvatar(self, mimeTypeAndData):
-        (mimeType, data) = mimeTypeAndData
+        _, data = mimeTypeAndData
         self.makeRawSearchSideEffect([
             [("cn", {"picture": [data]})]])
         res = yield self.render_resource(self.rsrc, b'/?email=me')

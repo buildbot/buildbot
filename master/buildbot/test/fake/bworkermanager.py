@@ -54,9 +54,6 @@ class FakeWorkerManager(service.AsyncMultiService):
         assert workerName not in self.connections
         self.connections[workerName] = conn
         conn.info = {}
-
-        def remove():
-            del self.connections[workerName]
         return defer.succeed(True)
 
 

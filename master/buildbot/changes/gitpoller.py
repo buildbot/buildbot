@@ -191,7 +191,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 if '\t' not in row:
                     # Not a useful line
                     continue
-                sha, ref = row.split("\t")
+                _, ref = row.split("\t")
                 branches.append(ref)
             return branches
         return d

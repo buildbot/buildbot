@@ -101,7 +101,7 @@ class FakeBuildsComponent(FakeDBComponent):
     def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None,
                   resultSpec=None):
         ret = []
-        for (id, row) in self.builds.items():
+        for row in self.builds.values():
             if builderid is not None and row['builderid'] != builderid:
                 continue
             if buildrequestid is not None and row['buildrequestid'] != buildrequestid:

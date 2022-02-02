@@ -128,7 +128,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_constructor_minimal(self):
-        c, r = self.botoSetup('latent_buildbot_slave')
+        _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
@@ -144,7 +144,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_constructor_tags(self):
-        c, r = self.botoSetup('latent_buildbot_slave')
+        _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         tags = {'foo': 'bar'}
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
@@ -159,7 +159,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_constructor_region(self):
-        c, r = self.botoSetup()
+        _, r = self.botoSetup()
         amis = list(r.images.all())
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
@@ -173,7 +173,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_fail_mixing_classic_and_vpc_ec2_settings(self):
-        c, r = self.botoSetup()
+        _, r = self.botoSetup()
         amis = list(r.images.all())
 
         def create_worker():
@@ -191,7 +191,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_start_vpc_instance(self):
-        c, r = self.botoSetup()
+        _, r = self.botoSetup()
 
         vpc = r.create_vpc(CidrBlock="192.168.0.0/24")
         subnet = r.create_subnet(VpcId=vpc.id, CidrBlock="192.168.0.0/24")
@@ -221,7 +221,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_start_instance(self):
-        c, r = self.botoSetup()
+        _, r = self.botoSetup()
         amis = list(r.images.all())
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
@@ -245,7 +245,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_start_instance_volumes(self):
-        c, r = self.botoSetup()
+        _, r = self.botoSetup()
         block_device_map_arg = [
                 {
                     'DeviceName': "/dev/xvdb",
@@ -300,7 +300,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_start_instance_attach_volume(self):
-        c, r = self.botoSetup()
+        _, r = self.botoSetup()
         vol = r.create_volume(Size=10, AvailabilityZone='us-east-1a')
         amis = list(r.images.all())
         ami = amis[0]
@@ -313,7 +313,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  volumes=[(vol.id, "/dev/sdz")]
                                  )
         bs._poll_resolution = 0
-        id, _, _ = bs._start_instance()
+        bs._start_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
         instances = list(instances)
@@ -323,7 +323,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_start_instance_tags(self):
-        c, r = self.botoSetup('latent_buildbot_slave')
+        _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         tags = {'foo': 'bar'}
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
@@ -358,7 +358,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  ami=amis[0].id
                                  )
         bs._poll_resolution = 0
-        id, _, _ = bs._start_instance()
+        bs._start_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
         instances = list(instances)
@@ -434,7 +434,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_get_image_ami(self):
-        c, r = self.botoSetup('latent_buildbot_slave')
+        _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         ami = amis[0]
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
@@ -450,7 +450,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_get_image_owners(self):
-        c, r = self.botoSetup('latent_buildbot_slave')
+        _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         ami = amis[0]
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
@@ -466,7 +466,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_get_image_location(self):
-        c, r = self.botoSetup('latent_buildbot_slave')
+        self.botoSetup('latent_buildbot_slave')
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
@@ -497,7 +497,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         '''
         price_multiplier and max_spot_price may not be None at the same time.
         '''
-        c, r = self.botoSetup()
+        _, r = self.botoSetup()
         amis = list(r.images.all())
 
         def create_worker():
@@ -542,7 +542,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
 
     @mock_ec2
     def test_no_default_security_warning_when_security_group_ids(self):
-        c, r = self.botoSetup()
+        _, r = self.botoSetup()
         amis = list(r.images.all())
 
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
@@ -556,7 +556,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
 
     @mock_ec2
     def test_use_non_default_keypair_security(self):
-        c, r = self.botoSetup()
+        _, r = self.botoSetup()
         amis = list(r.images.all())
         with assertNotProducesWarnings(DeprecatedApiWarning):
             bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',

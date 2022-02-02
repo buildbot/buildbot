@@ -194,9 +194,9 @@ class SubcommandOptions(usage.Options):
                 # pylint: disable=not-an-iterable
                 for optfile_name, option_name in self.buildbotOptions:
                     for i, val in enumerate(op):
-                        if (op[i][0] == option_name and
+                        if (val[0] == option_name and
                                 optfile_name in optfile):
-                            op[i] = list(op[i])
+                            op[i] = list(val)
                             op[i][2] = optfile[optfile_name]
         super().__init__(*args)
         if hasattr(cls, 'optParameters'):

@@ -70,7 +70,7 @@ class TestMetricCountEvent(TestMetricBase):
         def foo():
             return "foo!"
 
-        for i in range(10):
+        for _ in range(10):
             foo()
         report = self.observer.asDict()
         self.assertEqual(report['counters']['foo_called'], 10)

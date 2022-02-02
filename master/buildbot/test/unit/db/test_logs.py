@@ -347,7 +347,7 @@ class RealTests(Tests):
         # the first 65536 bytes of that line are not valid utf-8
         with self.assertRaises(UnicodeDecodeError):
             unaligned[:65536].decode('utf-8')
-        chunk, remainder = self.db.logs._splitBigChunk(unaligned, 1)
+        chunk, _ = self.db.logs._splitBigChunk(unaligned, 1)
         # see that it was truncated by two bytes, and now properly decodes
         self.assertEqual(len(chunk), 65534)
         chunk.decode('utf-8')

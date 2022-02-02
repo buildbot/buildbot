@@ -171,7 +171,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             "codebase": '',
         }
 
-        stampid, found_existing = yield(
+        _, found_existing = yield(
              self.master.db.sourcestamps.findOrCreateId(**stampdict))
 
         if found_existing and event_type in ("patchset-created", "ref-updated"):

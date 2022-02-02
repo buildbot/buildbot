@@ -263,7 +263,7 @@ class OldBuildCanceller(BuildbotService):
                               'contains builders as the first item and SourceStampFilter as ' +
                               'the second').format(cls.__name__))
 
-            builders, ss_filter = filter
+            builders, _ = filter
 
             try:
                 extract_filter_values(builders, 'builders')

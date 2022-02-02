@@ -480,13 +480,13 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin,
 
     def asDict(self):
         retval = {}
-        for interface, handler in self.handlers.items():
+        for _, handler in self.handlers.items():
             retval.update(handler.asDict())
         return retval
 
     def report(self):
         try:
-            for interface, handler in self.handlers.items():
+            for handler in self.handlers.values():
                 report = handler.report()
                 if not report:
                     continue

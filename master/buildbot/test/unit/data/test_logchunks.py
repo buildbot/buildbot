@@ -89,7 +89,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                                           resultSpec=resultspec.ResultSpec(offset=i, limit=1))
             self.validateData(logchunk)
             self.assertEqual(logchunk,
-                             {'logid': logid, 'firstline': i, 'content': expLines[i] + '\n'})
+                             {'logid': logid, 'firstline': i, 'content': expLine + '\n'})
 
         # half and half
         mid = int(len(expLines) / 2)

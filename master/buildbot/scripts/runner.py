@@ -49,7 +49,7 @@ def validateMasterOption(master):
     @raise usage.UsageError: on invalid master option
     """
     try:
-        hostname, port = master.split(":")
+        _, port = master.split(":")
         port = int(port)
     except (TypeError, ValueError) as e:
         raise usage.UsageError("master must have the form 'hostname:port'") from e

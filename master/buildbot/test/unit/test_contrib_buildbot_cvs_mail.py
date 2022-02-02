@@ -179,7 +179,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = utils.getProcessOutputAndValue(executable, args)
 
         def check(result):
-            (stdout, stderr, code) = result
+            _, __, code = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d
@@ -195,7 +195,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = utils.getProcessOutputAndValue(executable, args)
 
         def check(result):
-            (stdout, stderr, code) = result
+            _, __, code = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d
@@ -211,7 +211,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = utils.getProcessOutputAndValue(executable, args)
 
         def check(result):
-            (stdout, stderr, code) = result
+            _, __, code = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d
@@ -226,7 +226,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = utils.getProcessOutputAndValue(executable, args)
 
         def check(result):
-            (stdout, stderr, code) = result
+            _, __, code = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d

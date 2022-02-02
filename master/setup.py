@@ -46,7 +46,7 @@ def include(d, e):
 
 def include_statics(d):
     r = []
-    for root, ds, fs in os.walk(d):
+    for root, _, fs in os.walk(d):
         r.append((root, [os.path.join(root, f) for f in fs]))
     return r
 

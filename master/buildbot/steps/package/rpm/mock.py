@@ -144,7 +144,7 @@ class MockBuildSRPM(Mock):
     def logConsumer(self):
         r = re.compile(r"Wrote: .*/([^/]*.src.rpm)")
         while True:
-            stream, line = yield
+            _, line = yield
             m = r.search(line)
             if m:
                 self.setProperty("srpm", m.group(1), 'MockBuildSRPM')

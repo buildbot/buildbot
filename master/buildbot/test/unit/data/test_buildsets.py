@@ -15,9 +15,7 @@
 
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implementer
 
-from buildbot import interfaces
 from buildbot.data import buildsets
 from buildbot.data import resultspec
 from buildbot.process.results import FAILURE
@@ -238,10 +236,6 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
                  sourcestamps=[ssmap[ssid] for ssid in sourcestampids]))
 
     def test_addBuildset_two_builderNames(self):
-        @implementer(interfaces.IScheduler)
-        class FakeSched:
-            name = 'fakesched'
-
         kwargs = dict(scheduler='fakesched', reason='because',
                       sourcestamps=[234], external_idstring='extid',
                       builderids=[42, 43], waited_for=True)
@@ -262,10 +256,6 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
                                         expectedReturn, expectedMessages, expectedBuildset)
 
     def test_addBuildset_no_builderNames(self):
-        @implementer(interfaces.IScheduler)
-        class FakeSched:
-            name = 'fakesched'
-
         kwargs = dict(scheduler='fakesched', reason='because',
                       sourcestamps=[234], external_idstring='extid', waited_for=False)
         expectedReturn = (200, {})

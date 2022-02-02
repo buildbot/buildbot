@@ -109,7 +109,6 @@ disable=
   no-init,
   non-parent-init-called,
   global-statement,
-  unused-variable,
   redefined-outer-name,
   redefined-builtin,
   unidiomatic-typecheck,

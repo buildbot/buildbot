@@ -115,7 +115,7 @@ def assert_stdin_closed():
     # although it may not appear immediately, and select may return early
     bail_at = time.time() + 10
     while True:
-        r, w, x = select.select([0], [], [], 0.01)
+        r, _, __ = select.select([0], [], [], 0.01)
         if r == [0]:
             return  # success!
         if time.time() > bail_at:

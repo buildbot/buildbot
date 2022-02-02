@@ -188,7 +188,7 @@ class DebPbuilder(WarningCountingShellCommand):
     def logConsumer(self):
         r = re.compile(r"dpkg-genchanges  >\.\./(.+\.changes)")
         while True:
-            stream, line = yield
+            _, line = yield
             mo = r.search(line)
             if mo:
                 self.setProperty("deb-changes", mo.group(1), "DebPbuilder")

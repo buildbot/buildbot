@@ -63,7 +63,7 @@ class Cppcheck(ShellMixin, BuildStep):
                 fr"(?:\[.+\]: )?\((?P<severity>{'|'.join(self.MESSAGES)})\) .+")
 
         while True:
-            stream, line = yield
+            _, line = yield
             m = line_re.match(line)
             if m is not None:
                 msgsev = m.group('severity')

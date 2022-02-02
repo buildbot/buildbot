@@ -46,7 +46,7 @@ class ContentTypeParser:
         self.typeheader = contenttype
 
     def gettype(self):
-        mimetype, options = cgi.parse_header(
+        mimetype, _ = cgi.parse_header(
             bytes2unicode(self.typeheader))
         return mimetype
 

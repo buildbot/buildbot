@@ -81,7 +81,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addBuildset_getBuildset(self):
-        bsid, brids = yield self.db.buildsets.addBuildset(
+        bsid, _ = yield self.db.buildsets.addBuildset(
                 sourcestamps=[234], reason='because', properties={},
                 builderids=[1], external_idstring='extid', waited_for=False)
 

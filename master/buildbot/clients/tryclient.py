@@ -78,7 +78,7 @@ class SourceStampExtractor:
         return d
 
     def _didvc(self, res, cmd):
-        (stdout, stderr, code) = res
+        stdout, _, __ = res
         # 'bzr diff' sets rc=1 if there were any differences.
         # cvs does something similar, so don't bother requiring rc=0.
         return stdout
@@ -186,7 +186,7 @@ class BzrExtractor(SourceStampExtractor):
         return d
 
     def get_revision_number(self, out):
-        revno, revid = out.split()
+        _, revid = out.split()
         self.baserev = 'revid:' + revid
         return
 
