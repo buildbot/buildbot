@@ -4,11 +4,12 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 class WindowTitle {
-    constructor($rootScope, $timeout, $stateParams, $window, faviconService) { return {
+    constructor($transitions, $timeout, $stateParams, $window, faviconService, config) { return {
         restrict: 'A',
         link() {
-            const listener = (event, toState) =>
+            const listener = (transition) =>
                 $timeout(function() {
+                    const toState = transition.to();
                     faviconService.setFavIcon();
                     if (toState.data && toState.data.pageTitle) {
                         if (typeof(toState.data.pageTitle) === "function") {
@@ -17,18 +18,18 @@ class WindowTitle {
                             $window.document.title = toState.data.pageTitle;
                         }
                     } else if (toState.data && toState.data.caption) {
-                        $window.document.title = `Buildbot: ${toState.data.caption}`;
+                        $window.document.title = `${config.title}: ${toState.data.caption}`;
                     } else {
-                        $window.document.title = 'Buildbot';
+                        $window.document.title = config.title;
                     }
                 })
             ;
 
-            $rootScope.$on('$stateChangeSuccess', listener);
+            $transitions.onSuccess({}, listener);
         }
         }; }
 }
 
 
 angular.module('common')
-.directive('windowTitle', ['$rootScope', '$timeout', '$stateParams', '$window', 'faviconService', WindowTitle]);
+.directive('windowTitle', ['$transitions', '$timeout', '$stateParams', '$window', 'faviconService', 'config', WindowTitle]);

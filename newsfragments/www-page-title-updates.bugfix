@@ -1,0 +1,3 @@
+Fixed updates to page title in the web UI.
+
+Web UI now shows the configured buildbot title within the page title.
