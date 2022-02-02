@@ -354,7 +354,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             'committer': None,
             'revision': '56785678',
             'when_timestamp': None,
-            'branch': 'refs/heads/master',
+            'branch': 'master',
             'category': 'ref-updated',
             'revlink': '',
             'properties': {

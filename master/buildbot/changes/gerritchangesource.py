@@ -204,6 +204,11 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             return event["patchSet"]["ref"]
         return event["change"]["branch"]
 
+    def strip_refs_heads_from_branch(self, branch):
+        if branch.startswith('refs/heads/'):
+            branch = branch[len('refs/heads/'):]
+        return branch
+
     @defer.inlineCallbacks
     def addChangeFromEvent(self, properties, event):
         if "change" not in event:
@@ -259,7 +264,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             author=author,
             project=ref["project"],
             repository="{}/{}".format(self.gitBaseURL, ref["project"]),
-            branch=ref["refName"],
+            branch=self.strip_refs_heads_from_branch(ref["refName"]),
             revision=ref["newRev"],
             comments="Gerrit: commit(s) pushed.",
             files=["unknown"],
