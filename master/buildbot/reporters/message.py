@@ -131,6 +131,7 @@ def create_context_for_build(mode, build, master, blamelist):
         'previous_results': previous_results,
         'status_detected': get_detected_status_text(mode, results, previous_results),
         'build_url': utils.getURLForBuild(master, build['builder']['builderid'], build['number']),
+        'buildbot_title': master.config.title,
         'buildbot_url': master.config.buildbotURL,
         'blamelist': blamelist,
         'summary': get_message_summary_text(build, results),

@@ -134,8 +134,11 @@ The context that is given to the template consists of the following data:
 ``build_url``
     URL to the build in the Buildbot UI.
 
+``buildbot_title``
+    The title of the Buildbot instance as per ``c['title']`` from the ``master.cfg``
+
 ``buildbot_url``
-    URL to the Buildbot instance.
+    The URL of the Buildbot instance as per ``c['buildbotURL']`` from the ``master.cfg``
 
 ``blamelist``
     The list of users responsible for the build.
