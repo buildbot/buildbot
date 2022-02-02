@@ -99,7 +99,6 @@ disable=
   import-error,
   import-outside-toplevel,
   pointless-statement,
-  useless-else-on-loop,
   bad-builtin,
   attribute-defined-outside-init,
   protected-access,

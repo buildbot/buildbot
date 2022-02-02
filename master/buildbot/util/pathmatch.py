@@ -68,8 +68,7 @@ class Matcher:
             else:
                 # complete match
                 return patterns[pattern], kwargs
-        else:
-            raise KeyError(f'No match for {repr(path)}')
+        raise KeyError(f'No match for {repr(path)}')
 
     def iterPatterns(self):
         return list(self._patterns.items())
