@@ -108,7 +108,6 @@ disable=
   super-init-not-called,
   no-init,
   non-parent-init-called,
-  bad-indentation,
   global-statement,
   unused-variable,
   redefined-outer-name,
