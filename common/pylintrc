@@ -124,7 +124,6 @@ disable=
   no-else-return,
   assignment-from-none,
   comparison-with-callable,
-  assignment-from-no-return,
   stop-iteration-return,
   old-style-class,
   redefined-variable-type,
