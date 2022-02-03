@@ -128,7 +128,6 @@ disable=
   assignment-from-none,
   comparison-with-callable,
   stop-iteration-return,
-  old-style-class,
   redefined-variable-type,
   deprecated-lambda,
   bad-string-format-type, # https://github.com/PyCQA/pylint/issues/2631
