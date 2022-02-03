@@ -368,8 +368,8 @@ class Dispatcher(BaseDispatcher):
         super().__init__(portstr)
         try:
             port = int(config_portstr)
-        except ValueError:
-            raise ValueError('portstr unsupported: {}'.format(config_portstr))
+        except ValueError as e:
+            raise ValueError('portstr unsupported: {}'.format(config_portstr)) from e
 
         # Autobahn does not support zero port meaning to pick whatever port number is free, so
         # we work around this by setting the port to nonzero value and resetting the value once

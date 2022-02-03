@@ -175,13 +175,13 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
 
         try:
             diff = yield self.db.pool.do_with_engine(comp)
-        except TypeError:
+        except TypeError as e:
             # older sqlites cause failures in reflection, which manifest as a
             # TypeError.  Reflection is only used for tests, so we can just skip
             # this test on such platforms.  We still get the advantage of trying
             # the upgrade, at any rate.
             raise unittest.SkipTest("model comparison skipped: bugs in schema "
-                                    "reflection on this sqlite version")
+                                    "reflection on this sqlite version") from e
 
         if diff:
             self.fail("\n" + pprint.pformat(diff))

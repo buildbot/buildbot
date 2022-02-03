@@ -57,8 +57,8 @@ class SecretsConfig(RunMasterBase):
                                    '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
                                    'vault_for_buildbot',
                                    'vault', 'kv', 'put', 'secret/key1/key2', 'id=val'])
-        except (FileNotFoundError, subprocess.CalledProcessError):
-            raise SkipTest("Vault integration needs docker environment to be setup")
+        except (FileNotFoundError, subprocess.CalledProcessError) as e:
+            raise SkipTest("Vault integration needs docker environment to be setup") from e
 
     def remove_container(self):
         subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'])
