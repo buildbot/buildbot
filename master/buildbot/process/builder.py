@@ -238,12 +238,16 @@ class Builder(util_service.ReconfigurableServiceMixin,
             log.err(e, 'worker failed to attach')
             return None
 
-    def detached(self, worker):
-        """This is called when the connection to the bot is lost."""
+    def _find_wfb_by_worker(self, worker):
         for wfb in self.attaching_workers + self.workers:
             if wfb.worker == worker:
-                break
-        else:
+                return wfb
+        return None
+
+    def detached(self, worker):
+        """This is called when the connection to the bot is lost."""
+        wfb = self._find_wfb_by_worker(worker)
+        if wfb is None:
             log.msg(f"WEIRD: Builder.detached({worker}) ({worker.workername})"
                     f" not in attaching_workers({self.attaching_workers})"
                     f" or workers({self.workers})")
