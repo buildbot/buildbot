@@ -108,7 +108,7 @@ class FieldBase:
         return True
 
     def __ne__(self, b):
-        return not (self == b)
+        return not self == b
 
 
 class Property(FieldBase):
@@ -211,7 +211,7 @@ class ResultSpec:
         return True
 
     def __ne__(self, b):
-        return not (self == b)
+        return not self == b
 
     def popProperties(self):
         values = []

@@ -37,12 +37,12 @@ class ExpectMasterShell:
         self._command = command
 
     def stdout(self, stdout):
-        assert(isinstance(stdout, bytes))
+        assert isinstance(stdout, bytes)
         self._stdout = stdout
         return self
 
     def stderr(self, stderr):
-        assert(isinstance(stderr, bytes))
+        assert isinstance(stderr, bytes)
         self._stderr = stderr
         return self
 

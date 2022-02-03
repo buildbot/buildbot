@@ -146,7 +146,7 @@ class HTTPStep(BuildStep):
         yield log.finish()
 
         self.descriptionDone = [f"Status code: {r.status_code}"]
-        if (r.status_code < 400):
+        if r.status_code < 400:
             return SUCCESS
         else:
             return FAILURE
