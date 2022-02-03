@@ -966,11 +966,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                "unknown www configuration parameter(s) foo")
 
     def test_load_services_nominal(self):
+        testcase = self
 
         class MyService(service.BuildbotService):
 
-            def reconfigService(foo=None):
-                self.foo = foo
+            def reconfigService(self, foo=None):
+                testcase.foo = foo
+
         myService = MyService(foo="bar", name="foo")
 
         self.cfg.load_services(self.filename, dict(

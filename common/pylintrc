@@ -115,7 +115,6 @@ disable=
   unbalanced-tuple-unpacking,
   broad-except,
   bad-open-mode,
-  no-self-argument,
   no-value-for-parameter,
   interface-not-implemented,
   bad-continuation,

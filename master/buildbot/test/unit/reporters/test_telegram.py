@@ -70,13 +70,13 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         def send_message(self, chat, message, **kwargs):
             return {'message_id': 123}
 
-        def edit_message(bot, chat, msgid, message, **kwargs):
+        def edit_message(self, chat, msgid, message, **kwargs):
             return {'message_id': 123}
 
-        def delete_message(bot, chat, msgid):
+        def delete_message(self, chat, msgid):
             pass
 
-        def send_sticker(bot, chat, sticker, **kwargs):
+        def send_sticker(self, chat, sticker, **kwargs):
             pass
 
         def edit_keyboard(self, chat, msg, keyboard=None):

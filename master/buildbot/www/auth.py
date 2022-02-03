@@ -199,7 +199,7 @@ class CustomAuth(TwistedICredAuthBase):
         return defer.fail(UnauthorizedLogin())
 
     @abstractmethod
-    def check_credentials(username, password):
+    def check_credentials(username, password):  # noqa pylint: disable=no-self-argument
         return False
 
 
