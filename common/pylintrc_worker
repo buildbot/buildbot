@@ -112,7 +112,6 @@ disable=
   redefined-outer-name,
   redefined-builtin,
   unidiomatic-typecheck,
-  undefined-loop-variable,
   unbalanced-tuple-unpacking,
   broad-except,
   bad-open-mode,

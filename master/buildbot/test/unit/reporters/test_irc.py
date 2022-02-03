@@ -448,6 +448,7 @@ class TestIrcStatusBot(unittest.TestCase):
             status = b.format_build_status({'results': result})
             self.assertTrue(status.startswith('\x03'))
             self.assertTrue(status.endswith('\x0f'))
+            i = 0
             for i, c in enumerate(status[1:-1], start=2):
                 if c.isnumeric():
                     continue
