@@ -127,7 +127,6 @@ disable=
   no-else-return,
   assignment-from-none,
   comparison-with-callable,
-  comparison-with-itself,
   assignment-from-no-return,
   stop-iteration-return,
   old-style-class,
