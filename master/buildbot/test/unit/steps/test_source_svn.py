@@ -14,6 +14,8 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python.reflect import namedModule
@@ -1871,72 +1873,37 @@ class TestGetUnversionedFiles(unittest.TestCase):
 
 
 class TestSvnUriCanonicalize(unittest.TestCase):
-    # svn.SVN.svnUriCanonicalize() test method factory
-    #
-    # given input string and expected result create a test method that
-    # will call svn.SVN.svnUriCanonicalize() with the input and check
-    # that expected result is returned
-    #
-    # @param input: test input
-    # @param exp: expected result
-
-    def _makeSUCTest(input, exp):
-        return lambda self: self.assertEqual(
-            svn.SVN.svnUriCanonicalize(input), exp)
-
-    test_empty = _makeSUCTest(
-        "", "")
-    test_canonical = _makeSUCTest(
-        "http://foo.com/bar", "http://foo.com/bar")
-    test_lc_scheme = _makeSUCTest(
-        "hTtP://foo.com/bar", "http://foo.com/bar")
-    test_trailing_dot = _makeSUCTest(
-        "http://foo.com./bar", "http://foo.com/bar")
-    test_lc_hostname = _makeSUCTest(
-        "http://foO.COm/bar", "http://foo.com/bar")
-    test_lc_hostname_with_user = _makeSUCTest(
-        "http://Jimmy@fOO.Com/bar", "http://Jimmy@foo.com/bar")
-    test_lc_hostname_with_user_pass = _makeSUCTest(
-        "http://Jimmy:Sekrit@fOO.Com/bar", "http://Jimmy:Sekrit@foo.com/bar")
-    test_trailing_slash = _makeSUCTest(
-        "http://foo.com/bar/", "http://foo.com/bar")
-    test_trailing_slash_scheme = _makeSUCTest(
-        "http://", "http://")
-    test_trailing_slash_hostname = _makeSUCTest(
-        "http://foo.com/", "http://foo.com")
-    test_trailing_double_slash = _makeSUCTest(
-        "http://foo.com/x//", "http://foo.com/x")
-    test_double_slash = _makeSUCTest(
-        "http://foo.com/x//y", "http://foo.com/x/y")
-    test_slash = _makeSUCTest(
-        "/", "/")
-    test_dot = _makeSUCTest(
-        "http://foo.com/x/./y", "http://foo.com/x/y")
-    test_dot_dot = _makeSUCTest(
-        "http://foo.com/x/../y", "http://foo.com/y")
-    test_double_dot_dot = _makeSUCTest(
-        "http://foo.com/x/y/../../z", "http://foo.com/z")
-    test_dot_dot_root = _makeSUCTest(
-        "http://foo.com/../x/y", "http://foo.com/x/y")
-    test_quote_spaces = _makeSUCTest(
-        "svn+ssh://user@host:123/My Stuff/file.doc",
-        "svn+ssh://user@host:123/My%20Stuff/file.doc")
-    test_remove_port_80 = _makeSUCTest(
-        "http://foo.com:80/bar", "http://foo.com/bar")
-    test_dont_remove_port_80 = _makeSUCTest(
-        "https://foo.com:80/bar", "https://foo.com:80/bar")  # not http
-    test_remove_port_443 = _makeSUCTest(
-        "https://foo.com:443/bar", "https://foo.com/bar")
-    test_dont_remove_port_443 = _makeSUCTest(
-        "svn://foo.com:443/bar", "svn://foo.com:443/bar")  # not https
-    test_remove_port_3690 = _makeSUCTest(
-        "svn://foo.com:3690/bar", "svn://foo.com/bar")
-    test_dont_remove_port_3690 = _makeSUCTest(
-        "http://foo.com:3690/bar", "http://foo.com:3690/bar")  # not svn
-    test_dont_remove_port_other = _makeSUCTest(
-        "https://foo.com:2093/bar", "https://foo.com:2093/bar")
-    test_quote_funny_chars = _makeSUCTest(
-        "http://foo.com/\x10\xe6%", "http://foo.com/%10%E6%25")
-    test_overquoted = _makeSUCTest(
-        "http://foo.com/%68%65%6c%6c%6f%20%77%6f%72%6c%64",
-        "http://foo.com/hello%20world")
+    @parameterized.expand([
+        ("empty", "", ""),
+        ("canonical", "http://foo.com/bar", "http://foo.com/bar"),
+        ("lc_scheme", "hTtP://foo.com/bar", "http://foo.com/bar"),
+        ("trailing_dot", "http://foo.com./bar", "http://foo.com/bar"),
+        ("lc_hostname", "http://foO.COm/bar", "http://foo.com/bar"),
+        ("lc_hostname_with_user", "http://Jimmy@fOO.Com/bar", "http://Jimmy@foo.com/bar"),
+        ("lc_hostname_with_user_pass", "http://Jimmy:Sekrit@fOO.Com/bar",
+         "http://Jimmy:Sekrit@foo.com/bar"),
+        ("trailing_slash", "http://foo.com/bar/", "http://foo.com/bar"),
+        ("trailing_slash_scheme", "http://", "http://"),
+        ("trailing_slash_hostname", "http://foo.com/", "http://foo.com"),
+        ("trailing_double_slash", "http://foo.com/x//", "http://foo.com/x"),
+        ("double_slash", "http://foo.com/x//y", "http://foo.com/x/y"),
+        ("slash", "/", "/"),
+        ("dot", "http://foo.com/x/./y", "http://foo.com/x/y"),
+        ("dot_dot", "http://foo.com/x/../y", "http://foo.com/y"),
+        ("double_dot_dot", "http://foo.com/x/y/../../z", "http://foo.com/z"),
+        ("dot_dot_root", "http://foo.com/../x/y", "http://foo.com/x/y"),
+        ("quote_spaces", "svn+ssh://user@host:123/My Stuff/file.doc",
+         "svn+ssh://user@host:123/My%20Stuff/file.doc"),
+        ("remove_port_80", "http://foo.com:80/bar", "http://foo.com/bar"),
+        ("dont_remove_port_80", "https://foo.com:80/bar", "https://foo.com:80/bar"),  # not http
+        ("remove_port_443", "https://foo.com:443/bar", "https://foo.com/bar"),
+        ("dont_remove_port_443", "svn://foo.com:443/bar", "svn://foo.com:443/bar"),  # not https
+        ("remove_port_3690", "svn://foo.com:3690/bar", "svn://foo.com/bar"),
+        ("dont_remove_port_3690", "http://foo.com:3690/bar", "http://foo.com:3690/bar"),  # not svn
+        ("dont_remove_port_other", "https://foo.com:2093/bar", "https://foo.com:2093/bar"),
+        ("quote_funny_chars", "http://foo.com/\x10\xe6%", "http://foo.com/%10%E6%25"),
+        ("overquoted", "http://foo.com/%68%65%6c%6c%6f%20%77%6f%72%6c%64",
+         "http://foo.com/hello%20world"),
+    ])
+    def test_svn_uri(self, name, input, exp):
+        self.assertEqual(svn.SVN.svnUriCanonicalize(input), exp)
