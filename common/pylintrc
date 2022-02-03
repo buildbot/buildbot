@@ -119,7 +119,6 @@ disable=
   interface-not-implemented,
   bad-continuation,
   keyword-arg-before-vararg,
-  unsubscriptable-object,
   useless-object-inheritance,
   deprecated-method,
   useless-return,
