@@ -224,6 +224,10 @@ class PullRequestListRest():
 """ % s
 
     def getPage(self, url, timeout=None, headers=None):
+
+        assert isinstance(url, bytes), "url must be bytes, not unicode"
+        url = url.decode('utf-8')
+
         list_url_re = re.compile(
             r"https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
                                                                                     self.slug))

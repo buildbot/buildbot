@@ -100,13 +100,18 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         page = yield self._getChanges()
         yield self._processChanges(page)
 
+    def getPage(self, url, **kwargs):
+        if isinstance(url, str):
+            url = url.encode('utf-8')
+        return client.getPage(url, **kwargs)
+
     def _getChanges(self):
         self.lastPoll = time.time()
         log.msg("BitbucketPullrequestPoller: polling "
                 "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch))
-        url = "https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
+        url = "https://api.bitbucket.org/2.0/repositories/{}/{}/pullrequests".format(self.owner,
                                                                                      self.slug)
-        return client.getPage(url, timeout=self.pollInterval, headers=self.headers)
+        return self.getPage(url, timeout=self.pollInterval, headers=self.headers)
 
     @defer.inlineCallbacks
     def _processChanges(self, page):
@@ -126,7 +131,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                 # compare _short_ hashes to check if the PR has been updated
                 if not current or current[0:12] != revision[0:12]:
                     # parse pull request api page (required for the filter)
-                    page = yield client.getPage(str(pr['links']['self']['href']),
+                    page = yield self.getPage(str(pr['links']['self']['href']),
                                                 headers=self.headers)
                     pr_json = json.loads(page)
 
@@ -148,7 +153,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                         updated = epoch2datetime(self.master.reactor.seconds())
                     title = pr['title']
                     # parse commit api page
-                    page = yield client.getPage(
+                    page = yield self.getPage(
                         str(pr['source']['commit']['links']['self']['href']),
                         headers=self.headers,
                     )
@@ -157,7 +162,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                     revision = commit_json['hash']
                     revlink = commit_json['links']['html']['href']
                     # parse repo api page
-                    page = yield client.getPage(
+                    page = yield self.getPage(
                         str(pr['source']['repository']['links']['self']['href']),
                         headers=self.headers,
                     )
