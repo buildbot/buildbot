@@ -150,6 +150,14 @@ disable=
   wrong-import-order, # we use isort for import orders
   raise-missing-from, # TODO: remove when we no longer have Python 2 code
   super-with-arguments, # TODO: remove when we no longer have Python 2 code
+  consider-using-f-string,
+  unspecified-encoding,
+  redundant-u-string-prefix,
+  consider-using-with,
+  consider-using-dict-items,
+  arguments-renamed,
+  not-context-manager,
+  use-a-generator,
 
 [REPORTS]
 
