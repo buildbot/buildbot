@@ -270,15 +270,6 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 True,
                 change_kwargs={'category': 'ref-updated', 'branch': 'master'})
 
-    def test_change_consumption_change_filter_gerrit_filters_branch_re_deprecated_no_match(self):
-        with assertProducesWarning(DeprecatedApiWarning,
-                                   "Change filters must not expect ref-updated events"):
-            cf = filter.ChangeFilter(branch_re='(refs/heads/other|master)')
-            return self.do_test_change_consumption(
-                {'change_filter': cf},
-                None,
-                change_kwargs={'category': 'ref-updated', 'branch': 'master'})
-
     def test_change_consumption_change_filter_gerrit_filters_branch_new(self):
         cf = filter.ChangeFilter(branch='master')
         return self.do_test_change_consumption(
