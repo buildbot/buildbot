@@ -160,8 +160,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def addMasterSideWorker(self,
-                            connection_string=r"tcp:{port}:interface=127.0.0.1".format(
-                                port=DEFAULT_PORT),
+                            connection_string=f"tcp:{DEFAULT_PORT}:interface=127.0.0.1",
                             name="testworker", password="pw",
                             update_port=True,
                             **kwargs):
@@ -264,7 +263,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         yield self.addMasterSideWorker(
             password='pw2',
             update_port=False,  # don't know why, but it'd fail
-            connection_string=r"tcp:{port}:interface=127.0.0.1".format(port=self.port))
+            connection_string=f"tcp:{self.port}:interface=127.0.0.1")
         timeout = reactor.callLater(10, could_not_connect)
         yield worker.tests_connected
 

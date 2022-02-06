@@ -84,7 +84,7 @@ class FakeWorkerWorker(pb.Referenceable):
         persp.broker.notifyOnDisconnect(fire_deferreds)
 
     def remote_print(self, message):
-        log.msg("WORKER-SIDE: remote_print(%r)" % (message,))
+        log.msg(f"WORKER-SIDE: remote_print({repr(message)})")
 
     def remote_getWorkerInfo(self):
         return {

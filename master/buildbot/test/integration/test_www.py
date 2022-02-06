@@ -102,7 +102,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         # now that we have a port, construct the real URL and insert it into
         # the config.  The second reconfig isn't really required, but doesn't
         # hurt.
-        self.url = 'http://127.0.0.1:%d/' % master.www.getPortnum()
+        self.url = f'http://127.0.0.1:{master.www.getPortnum()}/'
         self.url = unicode2bytes(self.url)
         master.config.buildbotURL = self.url
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
@@ -139,7 +139,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         # check this *after* reading the body, otherwise Trial will
         # complain that the response is half-read
         if expect200 and pg.code != 200:
-            self.fail("did not get 200 response for '{}'".format(url))
+            self.fail(f"did not get 200 response for '{url}'")
 
         return json.loads(bytes2unicode(body))
 
