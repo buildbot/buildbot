@@ -446,6 +446,8 @@ setup_args = {
     ]), {
         'console_scripts': [
             'buildbot=buildbot.scripts.runner:run',
+            # this will also be shipped on non windows :-(
+            'buildbot_windows_service=buildbot.scripts.windows_service:HandleCommandLine',
         ]}
     )
 }
@@ -455,9 +457,6 @@ setup_args = {
 # see http://buildbot.net/trac/ticket/907
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
-    setup_args['entry_points']['console_scripts'].append(
-        'buildbot_windows_service=buildbot.scripts.windows_service:HandleCommandLine'
-    )
 
 py_36 = sys.version_info[0] > 3 or (
     sys.version_info[0] == 3 and sys.version_info[1] >= 6)
