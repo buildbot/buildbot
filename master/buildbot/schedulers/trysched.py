@@ -275,7 +275,7 @@ class RemoteBuildSetStatus(pb.Referenceable):
 
     @defer.inlineCallbacks
     def remote_getBuildRequests(self):
-        brids = dict()
+        brids = {}
         for builderid, brid in self.brids.items():
             builderDict = yield self.master.data.get(('builders', builderid))
             brids[builderDict['name']] = brid

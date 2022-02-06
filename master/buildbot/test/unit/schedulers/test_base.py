@@ -56,7 +56,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             codebases = {'': {}}
 
         if isinstance(builderNames, list):
-            dbBuilder = list()
+            dbBuilder = []
             builderid = 0
             for builderName in builderNames:
                 builderid += 1
@@ -201,7 +201,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     def test_change_consumption_defaults(self):
         # all changes are important by default
         return self.do_test_change_consumption(
-            dict(),
+            {},
             True)
 
     def test_change_consumption_fileIsImportant_True(self):

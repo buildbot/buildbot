@@ -118,10 +118,10 @@ class TestBuildStepMixin:
             }
 
         if worker_env is None:
-            worker_env = dict()
+            worker_env = {}
 
         if build_files is None:
-            build_files = list()
+            build_files = []
 
         step = self.step = buildstep.create_step_from_step_or_factory(step)
 

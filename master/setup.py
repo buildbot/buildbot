@@ -104,7 +104,7 @@ def define_plugin_entry(name, module_name):
 
 
 def concat_dicts(*dicts):
-    result = dict()
+    result = {}
     for d in dicts:
         result.update(d)
     return result
@@ -114,7 +114,7 @@ def define_plugin_entries(groups):
     """
     helper to all groups for plugins
     """
-    result = dict()
+    result = {}
 
     for group, modules in groups:
         tempo = []

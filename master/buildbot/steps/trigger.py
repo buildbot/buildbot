@@ -182,9 +182,9 @@ class Trigger(BuildStep):
         # overrule revision in sourcestamps with got revision
         if self.updateSourceStamp:
             got = self.getAllGotRevisions()
-            for codebase in ss_for_trigger:
+            for codebase, ss in ss_for_trigger.items():
                 if codebase in got:
-                    ss_for_trigger[codebase]['revision'] = got[codebase]
+                    ss['revision'] = got[codebase]
 
         trigger_values = [ss_for_trigger[k] for k in sorted(ss_for_trigger.keys())]
         return trigger_values

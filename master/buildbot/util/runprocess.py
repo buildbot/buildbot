@@ -94,9 +94,9 @@ class RunProcess:
             return os_env.copy()
 
         new_env = {}
-        for key in os_env:
+        for key, value in os_env.items():
             if key not in env or env[key] is not None:
-                new_env[key] = os_env[key]
+                new_env[key] = value
         for key, value in env.items():
             if value is not None:
                 new_env[key] = value

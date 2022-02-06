@@ -742,9 +742,7 @@ class Contact:
                 pdict[splitproperty[0]] = splitproperty[1]
 
             # set properties
-            for prop in pdict:
-                pname = prop
-                pvalue = pdict[prop]
+            for pname, pvalue in pdict.items():
                 if not pname_validate.match(pname) \
                         or not pval_validate.match(pvalue):
                     self.bot.log("Force: bad property name='{}', value='{}'"
