@@ -241,10 +241,9 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 if failures:
                     for failure in failures:
                         log.error("while processing changes for "
-                                  "Pullrequest {} revision {}".format(
-                                      prnumber, revision))
-                        # Fail on the first error!
-                        failures[0].raiseException()
+                                  f"Pullrequest {prnumber} revision {revision}: {failure}")
+                    # Fail on the first error!
+                    failures[0].raiseException()
                 [authors, committers, files] = [r[1] for r in results]
 
                 author = authors[0][0] + " <" + authors[0][1] + ">"

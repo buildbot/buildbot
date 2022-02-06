@@ -152,14 +152,14 @@ class NoneComparator:
     def __ne__(self, other):
         return self.value != other.value
 
-    def __gt_(self, other):
+    def __gt__(self, other):
         if self.value is None and other.value is None:
             return False
         elif self.value is None:
             return False
         elif other.value is None:
             return True
-        return self.value < other.value
+        return self.value > other.value
 
 
 class ReverseComparator:
@@ -181,7 +181,7 @@ class ReverseComparator:
     def __ne__(self, other):
         return other.value != self.value
 
-    def __gt_(self, other):
+    def __gt__(self, other):
         return other.value > self.value
 
 

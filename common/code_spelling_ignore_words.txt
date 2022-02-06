@@ -160,6 +160,7 @@ bruheim
 bsd
 bsid
 bsids
+bugfix
 buid
 buidlrequestcompletions
 buidlsets
@@ -526,6 +527,7 @@ foobar
 foogit
 foreignkey
 formatargspec
+formatter
 formatinterval
 fp
 fqdn
