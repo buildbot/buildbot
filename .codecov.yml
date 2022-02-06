@@ -1,10 +1,10 @@
 codecov:
   require_ci_to_pass: yes
   notify:
-    # 1 ci/coverage build from Buildbot
-    # 3 Appveyor builds
+    # 2 ci/coverage build from Buildbot
     # 6 Github Actions DB builds
-    after_n_builds: 10
+    # Note that currently Appveyor builds fail to upload
+    after_n_builds: 8
     wait_for_ci: yes
 
 coverage:
