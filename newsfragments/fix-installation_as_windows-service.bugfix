@@ -1,0 +1,1 @@
+Fix installation of master and worker as Windows service from wheel package. (regression since 3.4.0)  (:issue:`6294`)
