@@ -329,7 +329,7 @@ class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):
         return self.comparator(v1, v2)
 
     def __repr__(self):
-        return '%r %s %r' % (self.v1, self.cstr, self.v2)
+        return f'{repr(self.v1)} {str(self.cstr)} {repr(self.v2)}'
 
 
 class _PropertyMap:
@@ -424,8 +424,7 @@ class WithProperties(util.ComparableMixin):
             self.lambda_subs = lambda_subs
             for key, val in self.lambda_subs.items():
                 if not callable(val):
-                    raise ValueError(
-                        'Value for lambda substitution "{}" must be callable.'.format(key))
+                    raise ValueError(f'Value for lambda substitution "{key}" must be callable.')
         elif lambda_subs:
             raise ValueError(
                 'WithProperties takes either positional or keyword substitutions, not both.')
@@ -476,15 +475,19 @@ class _Lookup(util.ComparableMixin):
         self.elideNoneAs = elideNoneAs
 
     def __repr__(self):
-        return '_Lookup({}, {}{}{}{}{})'.format(
-            repr(self.value),
-            repr(self.index),
-            ', default={}'.format(repr(self.default)) if self.default is not None else '',
-            ', defaultWhenFalse=False' if not self.defaultWhenFalse else '',
-            ', hasKey={}'.format(repr(self.hasKey)) if self.hasKey != _notHasKey else '',
-            ', elideNoneAs={}'.format(repr(self.elideNoneAs))
-            if self.elideNoneAs is not None else ''
-            )
+        parts = [repr(self.index)]
+        if self.default is not None:
+            parts.append(f', default={repr(self.default)}')
+        if not self.defaultWhenFalse:
+            parts.append(', defaultWhenFalse=False')
+        if self.hasKey != _notHasKey:
+            parts.append(f', hasKey={repr(self.hasKey)}')
+        if self.elideNoneAs is not None:
+            parts.append(f', elideNoneAs={repr(self.elideNoneAs)}')
+
+        parts_str = ''.join(parts)
+
+        return f'_Lookup({repr(self.value)}, {parts_str})'
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
@@ -553,7 +556,7 @@ class _SecretRenderer:
         credsservice = properties.master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secret_name)
         if secret_detail is None:
-            raise KeyError("secret key {} is not found in any provider".format(self.secret_name))
+            raise KeyError(f"secret key {self.secret_name} is not found in any provider")
         properties.useSecret(secret_detail.value, self.secret_name)
         return secret_detail.value
 
@@ -561,7 +564,7 @@ class _SecretRenderer:
 class Secret(_SecretRenderer):
 
     def __repr__(self):
-        return "Secret({0})".format(self.secret_name)
+        return f"Secret({self.secret_name})"
 
 
 class _SecretIndexer:
@@ -600,7 +603,7 @@ class _Lazy(util.ComparableMixin):
         return self.value
 
     def __repr__(self):
-        return '_Lazy(%r)' % self.value
+        return f'_Lazy({repr(self.value)})'
 
 
 @implementer(IRenderable)
@@ -628,10 +631,10 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
 
     def __repr__(self):
         if self.args:
-            return 'Interpolate(%r, *%r)' % (self.fmtstring, self.args)
+            return f'Interpolate({repr(self.fmtstring)}, *{repr(self.args)})'
         elif self.kwargs:
-            return 'Interpolate(%r, **%r)' % (self.fmtstring, self.kwargs)
-        return 'Interpolate(%r)' % (self.fmtstring,)
+            return f'Interpolate({repr(self.fmtstring)}, **{repr(self.kwargs)})'
+        return f'Interpolate({repr(self.fmtstring)})'
 
     @staticmethod
     def _parse_prop(arg):
@@ -640,8 +643,7 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         except ValueError:
             prop, repl = arg, None
         if not Interpolate.identifier_re.match(prop):
-            config.error(
-                "Property name must be alphanumeric for prop Interpolation '{}'".format(arg))
+            config.error(f"Property name must be alphanumeric for prop Interpolation '{arg}'")
             prop = repl = None
 
         return _thePropertyDict, prop, repl
@@ -664,17 +666,15 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
                 codebase, attr = arg.split(":", 1)
                 repl = None
             except ValueError:
-                config.error(("Must specify both codebase and attribute for "
-                              "src Interpolation '{}'").format(arg))
+                config.error("Must specify both codebase and attribute for "
+                             f"src Interpolation '{arg}'")
                 return {}, None, None
 
         if not Interpolate.identifier_re.match(codebase):
-            config.error(
-                "Codebase must be alphanumeric for src Interpolation '{}'".format(arg))
+            config.error(f"Codebase must be alphanumeric for src Interpolation '{arg}'")
             codebase = attr = repl = None
         if not Interpolate.identifier_re.match(attr):
-            config.error(
-                "Attribute must be alphanumeric for src Interpolation '{}'".format(arg))
+            config.error(f"Attribute must be alphanumeric for src Interpolation '{arg}'")
             codebase = attr = repl = None
         return _SourceStampDict(codebase), attr, repl
 
@@ -691,8 +691,7 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         except ValueError:
             kw, repl = arg, None
         if not Interpolate.identifier_re.match(kw):
-            config.error(
-                "Keyword must be alphanumeric for kw Interpolation '{}'".format(arg))
+            config.error(f"Keyword must be alphanumeric for kw Interpolation '{arg}'")
             kw = repl = None
         return _Lazy(self.kwargs), kw, repl
 
@@ -700,13 +699,12 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         try:
             key, arg = fmt.split(":", 1)
         except ValueError:
-            config.error(
-                "invalid Interpolate substitution without selector '{}'".format(fmt))
+            config.error(f"invalid Interpolate substitution without selector '{fmt}'")
             return None
 
         fn = getattr(self, "_parse_" + key, None)
         if not fn:
-            config.error("invalid Interpolate selector '{}'".format(key))
+            config.error(f"invalid Interpolate selector '{key}'")
             return None
         return fn(arg)
 
@@ -751,8 +749,8 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         try:
             truePart, falsePart = self._splitBalancedParen(delim, repl[1:])
         except ValueError:
-            config.error("invalid Interpolate ternary expression '{}' with delimiter '{}'".format(
-                repl[1:], repl[0]))
+            config.error(f"invalid Interpolate ternary expression '{repl[1:]}' "
+                         f"with delimiter '{repl[0]}'")
             return None
         return _Lookup(d, kw,
                        hasKey=Interpolate(truePart, **self.kwargs),
@@ -782,7 +780,7 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
                         self.interpolations[key] = fn(d, kw, tail)
                         break
                 if key not in self.interpolations:
-                    config.error("invalid Interpolate default type '{}'".format(repl[0]))
+                    config.error(f"invalid Interpolate default type '{repl[0]}'")
 
     def getRenderingFor(self, build):
         props = build.getProperties()
@@ -819,7 +817,7 @@ class Property(RenderableOperatorsMixin, util.ComparableMixin):
         self.defaultWhenFalse = defaultWhenFalse
 
     def __repr__(self):
-        return "Property({0})".format(self.key)
+        return f"Property({self.key})"
 
     def getRenderingFor(self, props):
         if self.defaultWhenFalse:
@@ -897,9 +895,8 @@ class _Renderer(util.ComparableMixin):
 
     def __repr__(self):
         if self.args or self.kwargs:
-            return 'renderer(%r, args=%r, kwargs=%r)' % (self.fn, self.args,
-                                                         self.kwargs)
-        return 'renderer(%r)' % (self.fn,)
+            return f'renderer({repr(self.fn)}, args={repr(self.args)}, kwargs={repr(self.kwargs)})'
+        return f'renderer({repr(self.fn)})'
 
 
 def renderer(fn):

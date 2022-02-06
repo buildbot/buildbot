@@ -227,7 +227,7 @@ class BasicBuildChooser(BuildChooserBase):
                     nextBreq = None
             except Exception:
                 log.err(Failure(),
-                        "from _getNextUnclaimedBuildRequest for builder '{}'".format(self.bldr))
+                        f"from _getNextUnclaimedBuildRequest for builder '{self.bldr}'")
                 nextBreq = None
         else:
             # otherwise just return the first build
@@ -248,7 +248,7 @@ class BasicBuildChooser(BuildChooserBase):
                 worker = yield self.nextWorker(self.bldr, self.workerpool, buildrequest)
             except Exception:
                 log.err(Failure(),
-                        "from nextWorker for builder '{}'".format(self.bldr))
+                        f"from nextWorker for builder '{self.bldr}'")
                 worker = None
 
             if not worker or worker not in self.workerpool:
@@ -329,7 +329,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         try:
             yield self._deferwaiter.add(self._maybeStartBuildsOn(new_builders))
         except Exception as e:  # pragma: no cover
-            log.err(e, "while starting builds on {0}".format(new_builders))
+            log.err(e, f"while starting builds on {new_builders}")
 
     @defer.inlineCallbacks
     def _maybeStartBuildsOn(self, new_builders):
@@ -358,8 +358,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 if not self.active:
                     self._activity_loop_deferred = self._activityLoop()
             except Exception:  # pragma: no cover
-                log.err(Failure(),
-                        "while attempting to start builds on {}".format(self.name))
+                log.err(Failure(), f"while attempting to start builds on {self.name}")
 
         yield self.pending_builders_lock.run(
             resetPendingBuildersList, new_builders)
@@ -451,7 +450,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 if bldr:
                     yield self._maybeStartBuildsOnBuilder(bldr)
             except Exception:
-                log.err(Failure(), "from maybeStartBuild for builder '{}'".format(bldr_name))
+                log.err(Failure(), f"from maybeStartBuild for builder '{bldr_name}'")
 
             self.activity_lock.release()
 

@@ -95,7 +95,7 @@ class AbstractWorkerForBuilder:
             self.worker.addWorkerForBuilder(self)
         else:
             assert self.worker == worker
-        log.msg("Worker {} attached to {}".format(worker.workername, self.builder_name))
+        log.msg(f"Worker {worker.workername} attached to {self.builder_name}")
 
         yield self.worker.conn.remotePrint(message="attached")
 
@@ -128,7 +128,7 @@ class AbstractWorkerForBuilder:
             d.callback(res)
 
     def detached(self):
-        log.msg("Worker {} detached from {}".format(self.worker.workername, self.builder_name))
+        log.msg(f"Worker {self.worker.workername} detached from {self.builder_name}")
         if self.worker:
             self.worker.removeWorkerForBuilder(self)
         self.worker = None
@@ -200,7 +200,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         self.state = States.AVAILABLE
         self.setBuilder(builder)
         self.worker.addWorkerForBuilder(self)
-        log.msg("Latent worker {} attached to {}".format(worker.workername, self.builder_name))
+        log.msg(f"Latent worker {worker.workername} attached to {self.builder_name}")
 
     def substantiate_if_needed(self, build):
         self.state = States.DETACHED
