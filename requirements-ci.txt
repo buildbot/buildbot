@@ -39,7 +39,7 @@ ldap3==2.9.1
 lz4==3.1.10
 markdown2==2.4.2
 MarkupSafe==2.0.1
-mccabe==0.6.1
+mccabe==0.7.0
 mock==4.0.3
 moto==2.1.0
 olefile==0.46
