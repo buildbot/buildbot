@@ -362,6 +362,8 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
 class Dispatcher(BaseDispatcher):
 
+    DUMMY_PORT = 1
+
     def __init__(self, config_portstr, portstr):
         super().__init__(portstr)
         try:
@@ -369,9 +371,27 @@ class Dispatcher(BaseDispatcher):
         except ValueError:
             raise ValueError('portstr unsupported: {}'.format(config_portstr))
 
+        # Autobahn does not support zero port meaning to pick whatever port number is free, so
+        # we work around this by setting the port to nonzero value and resetting the value once
+        # the port is known. This is possible because Autobahn doesn't do anything with the port
+        # during the listening setup.
+        self._zero_port = port == 0
+        if self._zero_port:
+            port = self.DUMMY_PORT
+
         self.serverFactory = WebSocketServerFactory("ws://0.0.0.0:{}".format(port))
         self.serverFactory.buildbot_dispatcher = self
         self.serverFactory.protocol = BuildbotWebSocketServerProtocol
+
+    def start_listening_port(self):
+        port = super().start_listening_port()
+        if self._zero_port:
+            # Check that websocket port is actually stored into the port attribute, as we're
+            # relying on undocumented behavior.
+            if self.serverFactory.port != self.DUMMY_PORT:
+                raise Exception("Expected websocket port to be set to dummy port")
+            self.serverFactory.port = port.getHost().port
+        return port
 
 
 class MsgManager(BaseManager):
