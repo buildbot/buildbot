@@ -875,7 +875,7 @@ class MasterConfig(util.ComparableMixin):
                     port = -1
                 else:
                     port = options.get("port")
-                if not port:
+                if port is None:
                     continue
                 if isinstance(port, int):
                     # Conversion needed to compare listenTCP and strports ports

@@ -48,7 +48,7 @@ class UpdateRegistrationListener(Listener):
             yield currentReg.unregister()
             del self._registrations[username]
 
-        if portStr and password:
+        if portStr is not None and password:
             reg = yield self.get_manager().register(portStr, username, password,
                                                     self._create_connection)
             self._registrations[username] = (password, portStr, reg)
