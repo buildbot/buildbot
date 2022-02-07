@@ -42,7 +42,7 @@ class BaseManager(service.AsyncMultiService):
         portstr = config_portstr
 
         # do some basic normalization of portstrs
-        if isinstance(portstr, type(0)) or ':' not in portstr:
+        if isinstance(portstr, int) or ':' not in portstr:
             portstr = "tcp:{}".format(portstr)
 
         reg = Registration(self, portstr, username)
