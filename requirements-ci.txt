@@ -85,7 +85,7 @@ treq==22.1.0
 Twisted==21.7.0
 txaio==21.2.1
 txrequests==0.9.6
-unidiff==0.6.0
+unidiff==0.7.3
 webcolors==1.11.1
 Werkzeug==2.0.1
 wrapt==1.12.1
