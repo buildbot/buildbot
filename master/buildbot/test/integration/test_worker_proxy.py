@@ -188,5 +188,5 @@ class ProxyTransferStepsMasterPb(RunMasterBehindProxy, test_transfer.TransferSte
     pass
 
 
-class ProxyWorkerReconnect(RunMasterBehindProxy, test_worker_reconnect.WorkerReconnect):
+class ProxyWorkerReconnect(RunMasterBehindProxy, test_worker_reconnect.WorkerReconnectPb):
     pass

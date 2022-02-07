@@ -37,6 +37,10 @@ class InterruptCommandPb(InterruptCommand):
     proto = "pb"
 
 
+class InterruptCommandMsgPack(InterruptCommand):
+    proto = "msgpack"
+
+
 # master configuration
 
 

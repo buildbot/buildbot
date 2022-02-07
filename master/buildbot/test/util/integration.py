@@ -218,7 +218,7 @@ class RunMasterBase(unittest.TestCase):
         if not startWorker:
             return
 
-        if self.proto in ('pb', 'msgpack') :
+        if self.proto in ('pb', 'msgpack'):
             if self.proto == 'pb':
                 protocol = 'pb'
                 dispatcher = list(m.pbmanager.dispatchers.values())[0]
