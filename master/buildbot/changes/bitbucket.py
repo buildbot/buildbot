@@ -14,14 +14,14 @@
 # Copyright Buildbot Team Members
 
 
-import base64
 import json
 import time
 from datetime import datetime
 
+from txrequests import Session
+
 from twisted.internet import defer
 from twisted.python import log
-from twisted.web import client
 
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
@@ -73,16 +73,15 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         self.lastChange = time.time()
         self.lastPoll = time.time()
         self.useTimestamps = useTimestamps
-        self.category = category if callable(
-            category) else bytes2unicode(category)
+        self.category = category if callable(category) else bytes2unicode(category)
         self.project = bytes2unicode(project)
         self.external_property_whitelist = bitbucket_property_whitelist
 
         if auth is not None:
-            encoded_credentials = base64.b64encode(":".join(auth).encode())
-            self.headers = {b"Authorization": b"Basic " + encoded_credentials}
+            # Tuple(user,pass)
+            self.auth = auth
         else:
-            self.headers = None
+            self.auth = None
 
         yield super().reconfigService(self.build_name(owner, slug),
                                       pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
@@ -97,16 +96,28 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
     @deferredLocked('initLock')
     @defer.inlineCallbacks
     def poll(self):
-        page = yield self._getChanges()
-        yield self._processChanges(page)
+        response = yield self._getChanges()
+        yield self._processChanges(response.content)
+
+    def getPage(self, url, **kwargs):
+        """ Retrieve HTML page.
+
+        Use txrequests instead of twisted.web.client.getPage() which is deprecated.
+        Returns a deferred object that is a Response type.  The binary response body
+        is available via response.content.
+
+        """
+        with Session() as session:
+            response = session.get(url, auth=self.auth, **kwargs)
+        return response
 
     def _getChanges(self):
         self.lastPoll = time.time()
         log.msg("BitbucketPullrequestPoller: polling "
                 "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch))
-        url = "https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
+        url = "https://api.bitbucket.org/2.0/repositories/{}/{}/pullrequests".format(self.owner,
                                                                                      self.slug)
-        return client.getPage(url, timeout=self.pollInterval, headers=self.headers)
+        return self.getPage(url, timeout=self.pollInterval)
 
     @defer.inlineCallbacks
     def _processChanges(self, page):
@@ -126,9 +137,10 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                 # compare _short_ hashes to check if the PR has been updated
                 if not current or current[0:12] != revision[0:12]:
                     # parse pull request api page (required for the filter)
-                    page = yield client.getPage(str(pr['links']['self']['href']),
-                                                headers=self.headers)
-                    pr_json = json.loads(page)
+                    response = yield self.getPage(
+                        str(pr['links']['self']['href'])
+                    )
+                    pr_json = json.loads(response.content)
 
                     # filter pull requests by user function
                     if not self.pullrequest_filter(pr_json):
@@ -138,6 +150,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                     # access additional information
                     author = pr['author']['display_name']
                     prlink = pr['links']['html']['href']
+
                     # Get time updated time. Note that the timezone offset is
                     # ignored.
                     if self.useTimestamps:
@@ -147,25 +160,27 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                     else:
                         updated = epoch2datetime(self.master.reactor.seconds())
                     title = pr['title']
+
                     # parse commit api page
-                    page = yield client.getPage(
-                        str(pr['source']['commit']['links']['self']['href']),
-                        headers=self.headers,
+                    response = yield self.getPage(
+                        str(pr['source']['commit']['links']['self']['href'])
                     )
-                    commit_json = json.loads(page)
+                    commit_json = json.loads(response.content)
+
                     # use the full-length hash from now on
                     revision = commit_json['hash']
                     revlink = commit_json['links']['html']['href']
+
                     # parse repo api page
-                    page = yield client.getPage(
-                        str(pr['source']['repository']['links']['self']['href']),
-                        headers=self.headers,
+                    response = yield self.getPage(
+                        str(pr['source']['repository']['links']['self']['href'])
                     )
-                    repo_json = json.loads(page)
+                    repo_json = json.loads(response.content)
                     repo = repo_json['links']['html']['href']
 
                     # update database
                     yield self._setCurrentRev(nr, revision)
+
                     # emit the change
                     yield self.master.data.updates.addChange(
                         author=bytes2unicode(author),
