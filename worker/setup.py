@@ -151,10 +151,15 @@ autobahn_ver = ">= 0.16.0"
 if setuptools is not None:
     setup_args['install_requires'] = [
         'twisted ' + twisted_ver,
-        'msgpack >= 0.6.0',
-        'autobahn ' + autobahn_ver,
         'future',
     ]
+
+    if sys.version_info.major >= 3:
+        # Message pack is only supported on Python 3
+        setup_args['install_requires'] += [
+            'autobahn ' + autobahn_ver,
+            'msgpack >= 0.6.0',
+        ]
 
     # buildbot_worker_windows_service needs pywin32
     if sys.platform == "win32":

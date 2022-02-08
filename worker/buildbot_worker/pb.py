@@ -35,11 +35,13 @@ from buildbot_worker.base import BotBase
 from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.compat import unicode2bytes
-from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
-from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
-from buildbot_worker.msgpack import WorkerForBuilderMsgpack
 from buildbot_worker.pbutil import AutoLoginPBFactory
 from buildbot_worker.tunnel import HTTPTunnelEndpoint
+
+if sys.version_info.major >= 3:
+    from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
+    from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
+    from buildbot_worker.msgpack import WorkerForBuilderMsgpack
 
 
 class UnknownCommand(pb.Error):
@@ -99,8 +101,9 @@ class BotPb(BotBase, pb.Referenceable):
     WorkerForBuilder = WorkerForBuilderPb
 
 
-class BotMsgpack(BotBase):
-    WorkerForBuilder = WorkerForBuilderMsgpack
+if sys.version_info.major >= 3:
+    class BotMsgpack(BotBase):
+        WorkerForBuilder = WorkerForBuilderMsgpack
 
 
 class BotFactory(AutoLoginPBFactory):

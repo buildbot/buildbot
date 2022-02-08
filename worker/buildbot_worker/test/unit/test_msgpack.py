@@ -16,7 +16,6 @@
 import os
 import sys
 
-import msgpack
 from parameterized import parameterized
 
 import mock
@@ -29,10 +28,14 @@ from twisted.trial import unittest
 from buildbot_worker import base
 from buildbot_worker import pb
 from buildbot_worker import util
-from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
-from buildbot_worker.pb import BotMsgpack
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util import command
+
+if sys.version_info.major >= 3:
+    import msgpack
+    # pylint: disable=ungrouped-imports
+    from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
+    from buildbot_worker.pb import BotMsgpack  # pylint: disable=ungrouped-imports
 
 
 class TestException(Exception):
