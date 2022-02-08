@@ -101,6 +101,11 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
 .. program:: buildbot-worker create-worker
 
+.. option:: --protocol
+
+    This is a string representing a protocol to be used when creating master-worker connection.
+    The default option is Perspective Broker (``pb``).
+
 .. option:: --no-logrotate
 
     This disables internal worker log management mechanism.
