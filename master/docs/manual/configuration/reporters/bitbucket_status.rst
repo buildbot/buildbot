@@ -24,10 +24,11 @@ Give the new consumer a name, e.g. buildbot, and put in any URL as the callback 
 Give the consumer `Repositories:Write` access.
 After creating the consumer, you will then be able to see the OAuth key and secret.
 
-.. py:class:: BitbucketStatusPush(oauth_key, oauth_secret, base_url='https://api.bitbucket.org/2.0/repositories', oauth_url='https://bitbucket.org/site/oauth2/access_token', status_key=None, status_name=None, generators=None)
+.. py:class:: BitbucketStatusPush(oauth_key=None, oauth_secret=None, auth=None, base_url='https://api.bitbucket.org/2.0/repositories', oauth_url='https://bitbucket.org/site/oauth2/access_token', status_key=None, status_name=None, generators=None)
 
-    :param string oauth_key: The OAuth consumer key. (can be a :ref:`Secret`)
-    :param string oauth_secret: The OAuth consumer secret. (can be a :ref:`Secret`)
+    :param string oauth_key: The OAuth consumer key, when using OAuth to authenticate (can be a :ref:`Secret`)
+    :param string oauth_secret: The OAuth consumer secret, when using OAuth to authenticate (can be a :ref:`Secret`)
+    :param string auth: The ``username,password`` tuple if using App passwords to authenticate (can be a :ref:`Secret`)
     :param string base_url: Bitbucket's Build Status API URL
     :param string oauth_url: Bitbucket's OAuth API URL
     :param string status_key: Key that identifies a build status.
