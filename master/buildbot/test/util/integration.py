@@ -244,7 +244,7 @@ class RunMasterBase(unittest.TestCase):
             else:
                 self.w = SandboxedWorker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    sandboxed_worker_path, **worker_kwargs)
+                    sandboxed_worker_path, protocol=protocol, **worker_kwargs)
                 self.addCleanup(self.w.shutdownWorker)
 
         elif self.proto == 'null':

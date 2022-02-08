@@ -41,13 +41,15 @@ class WorkerProcessProtocol(protocol.ProcessProtocol):
 
 
 class SandboxedWorker(AsyncService):
-    def __init__(self, masterhost, port, name, passwd, workerdir, sandboxed_worker_path):
+    def __init__(self, masterhost, port, name, passwd, workerdir, sandboxed_worker_path,
+                 protocol='pb'):
         self.masterhost = masterhost
         self.port = port
         self.workername = name
         self.workerpasswd = passwd
         self.workerdir = workerdir
         self.sandboxed_worker_path = sandboxed_worker_path
+        self.protocol = protocol
         self.worker = None
 
     def startService(self):
@@ -55,7 +57,8 @@ class SandboxedWorker(AsyncService):
         # Note that we create the worker with sync API
         # We don't really care as we are in tests
 
-        res = subprocess.run([self.sandboxed_worker_path, "create-worker", '-q', self.workerdir,
+        res = subprocess.run([self.sandboxed_worker_path, "create-worker",
+                             f'--protocol={self.protocol}', '-q', self.workerdir,
                              self.masterhost + ":" + str(self.port), self.workername,
                              self.workerpasswd],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
