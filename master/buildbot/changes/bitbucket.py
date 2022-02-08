@@ -104,7 +104,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         self.lastPoll = time.time()
         log.msg("BitbucketPullrequestPoller: polling "
                 "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch))
-        url = "https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
+        url = "https://api.bitbucket.org/2.0/repositories/{}/{}/pullrequests".format(self.owner,
                                                                                      self.slug)
         return client.getPage(url, timeout=self.pollInterval, headers=self.headers)
 
