@@ -131,141 +131,111 @@ class BuildChooserBase:
         if breq.id in self.breqCache:
             del self.breqCache[breq.id]
 
+    @defer.inlineCallbacks
     def _getUnclaimedBuildRequests(self):
-        # Retrieve the list of BuildRequest objects for all unclaimed builds
-        return defer.gatherResults([
+        # Retrieve the list of BuildRequest objects for all unclaimed builds. This should
+        # return a fresh list each time so that `popNextBuild` is free to modify it.
+        yield self._fetchUnclaimedBrdicts()
+        breqs = yield defer.gatherResults([
             self._getBuildRequestForBrdict(brdict)
             for brdict in self.unclaimedBrdicts])
 
+        return breqs
+
 
 class BasicBuildChooser(BuildChooserBase):
-    # BasicBuildChooser generates build pairs via the configuration points:
-    #   * config.nextWorker  (or random.choice if not set)
-    #   * config.nextBuild  (or "pop top" if not set)
-    #
-    # For N workers, this will call nextWorker at most N times. If nextWorker
-    # returns a worker that cannot satisfy the build chosen by nextBuild,
-    # it will search for a worker that can satisfy the build. If one is found,
-    # the workers that cannot be used are "recycled" back into a list
-    # to be tried, in order, for the next chosen build.
-    #
-    # We check whether Builder.canStartBuild returns True for a particular
-    # worker. It evaluates any Build properties that are known before build
-    # and checks whether the worker may satisfy them. For example, the worker
-    # must have the locks available.
+    """
+    BasicBuildChooser generates build pairs via the builder's configuration points:
 
+    - config.nextWorker (or random.choice if not set)
+    - config.nextBuild (or "top" if not set)
+
+    When the distributor calls popNextBuild, we retrieve all unclaimed build requests.
+    nextBuild is used to select the first one to attempt to place on a worker. If
+    nextBuild returns None, we immediately return an empty pair and the distribution
+    cycle ends.
+
+    If a build request was chosen, we will then pass it to nextWorker. If nextWorker
+    returns None, we cannot place this request. We discard it from consideration and loop
+    around to the next request as selected by nextBuild.
+
+    If a worker can be chosen, the final step is to call Builder.canStartBuild. If this
+    returns False, we discard the chosen worker and loop back to try to find another. If
+    it returns True, we remove this build request from the collection of unclaimed
+    requests and return the (worker, request) pair. The distribution cycle can continue
+    on to calling popNextBuild again.
+
+    If either nextBuild or nextWorker return requests/workers that do not actually belong
+    to our builder, we treat it as if they had returned None.
+    """
     def __init__(self, bldr, master):
         super().__init__(bldr, master)
+        self.workerpool = self.bldr.getAvailableWorkers()
 
         self.nextWorker = self.bldr.config.nextWorker
         if not self.nextWorker:
             self.nextWorker = lambda _, workers, __: random.choice(
                 workers) if workers else None
 
-        self.workerpool = self.bldr.getAvailableWorkers()
-
-        # Pick workers one at a time from the pool, and if the Builder says
-        # they're usable (eg, locks can be satisfied), then prefer those
-        # workers.
-        self.preferredWorkers = []
-
         self.nextBuild = self.bldr.config.nextBuild
+        if not self.nextBuild:
+            self.nextBuild = lambda _, breqs: breqs[0] if breqs else None
 
     @defer.inlineCallbacks
     def popNextBuild(self):
-        nextBuild = (None, None)
-
-        while True:
-            #  1. pick a build
-            breq = yield self._getNextUnclaimedBuildRequest()
-            if not breq:
-                break
-
-            #  2. pick a worker
-            worker = yield self._popNextWorker(breq)
-            if not worker:
-                break
-
-            # either satisfy this build or we leave it for another day
-            self._removeBuildRequest(breq)
-
-            #  3. make sure worker+ is usable for the breq
-            recycledWorkers = []
-            while worker:
-                canStart = yield self.canStartBuild(worker, breq)
-                if canStart:
-                    break
-                # try a different worker
-                recycledWorkers.append(worker)
-                worker = yield self._popNextWorker(breq)
-
-            # recycle the workers that we didn't use to the head of the queue
-            # this helps ensure we run 'nextWorker' only once per worker choice
-            if recycledWorkers:
-                self._unpopWorkers(recycledWorkers)
-
-            #  4. done? otherwise we will try another build
-            if worker:
-                nextBuild = (worker, breq)
-                break
-
-        return nextBuild
-
-    @defer.inlineCallbacks
-    def _getNextUnclaimedBuildRequest(self):
-        # ensure the cache is there
-        yield self._fetchUnclaimedBrdicts()
-        if not self.unclaimedBrdicts:
-            return None
-
-        if self.nextBuild:
-            # nextBuild expects BuildRequest objects
-            breqs = yield self._getUnclaimedBuildRequests()
+        breqs = yield self._getUnclaimedBuildRequests()
+        while breqs:
+            breq = None
             try:
-                nextBreq = yield self.nextBuild(self.bldr, breqs)
-                if nextBreq not in breqs:
-                    nextBreq = None
+                breq = yield self.nextBuild(self.bldr, breqs)
+                if breq not in breqs:
+                    # Handle a misbehaving nextBuild returning a request for a different
+                    # builder.
+                    breq = None
+                else:
+                    # Only consider each build request once.
+                    breqs.remove(breq)
+
             except Exception:
-                log.err(Failure(),
-                        "from _getNextUnclaimedBuildRequest for builder '{}'".format(self.bldr))
-                nextBreq = None
-        else:
-            # otherwise just return the first build
-            brdict = self.unclaimedBrdicts[0]
-            nextBreq = yield self._getBuildRequestForBrdict(brdict)
+                log.err(Failure(), "from nextBuild for builder '{}'".format(self.bldr))
 
-        return nextBreq
+            if breq is None:
+                break
 
-    @defer.inlineCallbacks
-    def _popNextWorker(self, buildrequest):
-        # use 'preferred' workers first, if we have some ready
-        if self.preferredWorkers:
-            worker = self.preferredWorkers.pop(0)
-            return worker
-
-        while self.workerpool:
-            try:
-                worker = yield self.nextWorker(self.bldr, self.workerpool, buildrequest)
-            except Exception:
-                log.err(Failure(),
-                        "from nextWorker for builder '{}'".format(self.bldr))
+            # For each build request we need to consider the entire worker pool, so make
+            # a copy of it here that we can discard workers from if they don't work for
+            # the current request.
+            workers = copy.copy(self.workerpool)
+            while workers:
                 worker = None
+                try:
+                    worker = yield self.nextWorker(self.bldr, workers, breq)
+                    if worker not in workers:
+                        # Handle a misbehaving nextWorker returning a worker we cannot
+                        # actually use.
+                        worker = None
+                    else:
+                        # Only consider each worker once.
+                        workers.remove(worker)
 
-            if not worker or worker not in self.workerpool:
-                # bad worker or no worker returned
-                break
+                except Exception:
+                    log.err(Failure(),
+                            "from nextWorker for builder '{}'".format(self.bldr))
 
-            self.workerpool.remove(worker)
-            return worker
+                if worker is None:
+                    # If none of the workers are able to handle this request at all, move
+                    # on to the next request.
+                    break
 
-        return None
+                canStart = yield self.bldr.canStartBuild(worker, breq)
+                if canStart:
+                    self._removeBuildRequest(breq)
+                    self.workerpool.remove(worker)
+                    return (worker, breq)
 
-    def _unpopWorkers(self, workers):
-        # push the workers back to the front
-        self.preferredWorkers[:0] = workers
-
-    def canStartBuild(self, worker, breq):
-        return self.bldr.canStartBuild(worker, breq)
+        # If we never returned from within the loop, we failed to find any runnable
+        # requests.
+        return (None, None)
 
 
 class BuildRequestDistributor(service.AsyncMultiService):
