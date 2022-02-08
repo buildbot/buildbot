@@ -24,7 +24,7 @@ install:
 build: false
 
 test_script:
-  - "coverage run --rcfile=common/coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "coverage run --rcfile=common/coveragerc -m twisted.trial -j2 --reporter=text --rterrors buildbot.test buildbot_worker.test"
   - ps: |
           echo $ENV:PYTHON
           if ($env:PYTHON -imatch 'C:\\Python27') {
