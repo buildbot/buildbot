@@ -8,6 +8,19 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.4.1`` ( ``2022-02-09`` )
+=====================================
+
+Bug fixes
+---------
+
+- Updated Bitbucket API URL for ``BitbucketPullrequestPoller``.
+- Fixed a crash in ``BitbucketPullrequestPoller`` (:issue:`4153`)
+- Fixed installation of master and worker as Windows service from wheel package (regression since 3.4.0)  (:issue:`6294`)
+- Fixed occasional exceptions when using Visual Studio steps (:issue:`5698`).
+- Fixed rare "Did you maybe forget to yield the method" errors coming from the log subsystem.
+
+
 Buildbot ``3.4.0`` ( ``2021-10-15`` )
 =====================================
 
