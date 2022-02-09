@@ -1,1 +1,0 @@
-Fixed rare "Did you maybe forget to yield the method" errors coming from the log subsystem.
