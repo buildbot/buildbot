@@ -173,9 +173,10 @@ class FakeWorkersComponent(FakeDBComponent):
                             self.db.builders.builder_masters.items()
                             if mid == masterid and builderid in builderids]
         if len(buildermasterids) != len(builderids):
-            raise ValueError(("Some builders are not configured for this master: "
-                              "builders: {}, master: {} buildermaster:{}"
-                              ).format(builderids, masterid, self.db.builders.builder_masters))
+            raise ValueError(f"Some builders are not configured for this master: "
+                             f"builders: {builderids}, master: {masterid} "
+                             f"buildermaster:{self.db.builders.builder_masters}"
+                             )
 
         allbuildermasterids = [_id for _id, (builderid, mid) in
                                self.db.builders.builder_masters.items() if mid == masterid]

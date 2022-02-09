@@ -81,13 +81,12 @@ class GitHubEventHandler(PullRequestMixin):
 
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
-        log.msg("X-GitHub-Event: {}".format(
-            event_type), logLevel=logging.DEBUG)
+        log.msg(f"X-GitHub-Event: {event_type}", logLevel=logging.DEBUG)
 
-        handler = getattr(self, 'handle_{}'.format(event_type), None)
+        handler = getattr(self, f'handle_{event_type}', None)
 
         if handler is None:
-            raise ValueError('Unknown event: {}'.format(event_type))
+            raise ValueError(f'Unknown event: {event_type}')
 
         result = yield handler(payload, event_type)
         return result
@@ -107,11 +106,10 @@ class GitHubEventHandler(PullRequestMixin):
             try:
                 hash_type, hexdigest = signature.split('=')
             except ValueError as e:
-                raise ValueError(
-                    'Wrong signature format: {}'.format(signature)) from e
+                raise ValueError(f'Wrong signature format: {signature}') from e
 
             if hash_type != 'sha1':
-                raise ValueError('Unknown hash type: {}'.format(hash_type))
+                raise ValueError(f'Unknown hash type: {hash_type}')
 
             p = Properties()
             p.master = self.master
@@ -140,9 +138,9 @@ class GitHubEventHandler(PullRequestMixin):
         elif content_type == b'application/x-www-form-urlencoded':
             payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
         else:
-            raise ValueError('Unknown content type: {}'.format(content_type))
+            raise ValueError(f'Unknown content type: {content_type}')
 
-        log.msg("Payload: {}".format(payload), logLevel=logging.DEBUG)
+        log.msg(f"Payload: {payload}", logLevel=logging.DEBUG)
 
         return payload
 
@@ -164,7 +162,7 @@ class GitHubEventHandler(PullRequestMixin):
         changes = self._process_change(payload, user, repo, repo_url, project,
                                        event, properties)
 
-        log.msg("Received {} changes from github".format(len(changes)))
+        log.msg(f"Received {len(changes)} changes from github")
 
         return changes, 'git'
 
@@ -172,7 +170,7 @@ class GitHubEventHandler(PullRequestMixin):
     def handle_pull_request(self, payload, event):
         changes = []
         number = payload['number']
-        refname = 'refs/pull/{}/{}'.format(number, self.pullrequest_ref)
+        refname = f'refs/pull/{number}/{self.pullrequest_ref}'
         basename = payload['pull_request']['base']['ref']
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
@@ -181,18 +179,16 @@ class GitHubEventHandler(PullRequestMixin):
         head_sha = payload['pull_request']['head']['sha']
         revlink = payload['pull_request']['_links']['html']['href']
 
-        log.msg('Processing GitHub PR #{}'.format(number),
-                logLevel=logging.DEBUG)
+        log.msg(f'Processing GitHub PR #{number}', logLevel=logging.DEBUG)
 
         head_msg = yield self._get_commit_msg(repo_full_name, head_sha)
         if self._has_skip(head_msg):
-            log.msg("GitHub PR #{}, Ignoring: "
-                    "head commit message contains skip pattern".format(number))
+            log.msg(f"GitHub PR #{number}, Ignoring: head commit message contains skip pattern")
             return ([], 'git')
 
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
-            log.msg("GitHub PR #{} {}, ignoring".format(number, action))
+            log.msg(f"GitHub PR #{number} {action}, ignoring")
             return (changes, 'git')
 
         files = yield self._get_pr_files(repo_full_name, number)
@@ -214,8 +210,8 @@ class GitHubEventHandler(PullRequestMixin):
             'category': 'pull',
             # TODO: Get author name based on login id using txgithub module
             'author': payload['sender']['login'],
-            'comments': 'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
-                number, commits, 's' if commits != 1 else '', title, comments),
+            'comments': (f"GitHub Pull Request #{number} ({commits} "
+                        f"commit{'s' if commits != 1 else ''})\n{title}\n{comments}"),
             'properties': properties,
         }
 
@@ -226,8 +222,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         changes.append(change)
 
-        log.msg("Received {} changes from GitHub PR #{}".format(
-            len(changes), number))
+        log.msg(f"Received {len(changes)} changes from GitHub PR #{number}")
         return (changes, 'git')
 
     @defer.inlineCallbacks
@@ -246,7 +241,7 @@ class GitHubEventHandler(PullRequestMixin):
             token = yield p.render(self._token)
             headers['Authorization'] = 'token ' + token
 
-        url = '/repos/{}/commits/{}'.format(repo, sha)
+        url = f'/repos/{repo}/commits/{sha}'
         http = yield httpclientservice.HTTPClientService.getService(
             self.master, self.github_api_endpoint, headers=headers,
             debug=self.debug, verify=self.verify)
@@ -255,7 +250,7 @@ class GitHubEventHandler(PullRequestMixin):
             data = yield res.json()
             return data['commit']['message']
 
-        log.msg('Failed fetching PR commit message: response code {}'.format(res.code))
+        log.msg(f'Failed fetching PR commit message: response code {res.code}')
         return 'No message field'
 
     @defer.inlineCallbacks
@@ -273,7 +268,7 @@ class GitHubEventHandler(PullRequestMixin):
             token = yield p.render(self._token)
             headers["Authorization"] = "token " + token
 
-        url = "/repos/{}/pulls/{}/files".format(repo, number)
+        url = f"/repos/{repo}/pulls/{number}/files"
         http = yield httpclientservice.HTTPClientService.getService(
             self.master,
             self.github_api_endpoint,
@@ -286,7 +281,7 @@ class GitHubEventHandler(PullRequestMixin):
             data = yield res.json()
             return [f["filename"] for f in data]
 
-        log.msg('Failed fetching PR files: response code {}'.format(res.code))
+        log.msg(f'Failed fetching PR files: response code {res.code}')
         return []
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
@@ -305,7 +300,7 @@ class GitHubEventHandler(PullRequestMixin):
         # We only care about regular heads or tags
         match = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not match:
-            log.msg("Ignoring refname `{}': Not a branch".format(refname))
+            log.msg(f"Ignoring refname `{refname}': Not a branch")
             return changes
         category = None  # None is the legacy category for when hook only supported push
         if match.group(1) == "tags":
@@ -313,7 +308,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         branch = match.group(2)
         if payload.get('deleted'):
-            log.msg("Branch `{}' deleted, ignoring".format(branch))
+            log.msg(f"Branch `{branch}' deleted, ignoring")
             return changes
 
         # check skip pattern in commit message. e.g.: [ci skip] and [skip ci]
@@ -330,13 +325,11 @@ class GitHubEventHandler(PullRequestMixin):
 
             when_timestamp = dateparse(commit['timestamp'])
 
-            log.msg("New revision: {}".format(commit['id'][:8]))
+            log.msg(f"New revision: {commit['id'][:8]}")
 
             change = {
-                'author': '{} <{}>'.format(commit['author']['name'],
-                                           commit['author']['email']),
-                'committer': '{} <{}>'.format(commit['committer']['name'],
-                                           commit['committer']['email']),
+                'author': f"{commit['author']['name']} <{commit['author']['email']}>",
+                'committer': f"{commit['committer']['name']} <{commit['committer']['email']}>",
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],

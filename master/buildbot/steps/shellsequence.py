@@ -32,8 +32,7 @@ class ShellArg(results.ResultComputingConfigMixin):
     def __init__(self, command=None, logname=None, logfile=None, **kwargs):
         name = self.__class__.__name__
         if command is None:
-            config.error(("the 'command' parameter of {} "
-                          "must not be None").format(name))
+            config.error(f"the 'command' parameter of {name} must not be None")
         self.command = command
 
         self.logname = logname
@@ -46,25 +45,23 @@ class ShellArg(results.ResultComputingConfigMixin):
 
         for k, v in kwargs.items():
             if k not in self.resultConfig:
-                config.error(("the parameter '{}' is not "
-                              "handled by ShellArg").format(k))
+                config.error(f"the parameter '{k}' is not handled by ShellArg")
             setattr(self, k, v)
         # we don't validate anything yet as we can have renderables.
 
     def validateAttributes(self):
         # only make the check if we have a list
         if not isinstance(self.command, (str, list)):
-            config.error(("{} is an invalid command, "
-                          "it must be a string or a list").format(self.command))
+            config.error(f"{self.command} is an invalid command, it must be a string or a list")
         if isinstance(self.command, list):
             if not all([isinstance(x, str) for x in self.command]):
-                config.error("{} must only have strings in it".format(self.command))
+                config.error(f"{self.command} must only have strings in it")
         runConfParams = [(p_attr, getattr(self, p_attr))
                          for p_attr in self.resultConfig]
         not_bool = [(p_attr, p_val) for (p_attr, p_val) in runConfParams if not isinstance(p_val,
                                                                                            bool)]
         if not_bool:
-            config.error("%r must be booleans" % (not_bool,))
+            config.error(f"{repr(not_bool)} must be booleans")
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
@@ -105,7 +102,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
             try:
                 arg.validateAttributes()
             except config.ConfigErrors as e:
-                log.msg("After rendering, ShellSequence `commands` is invalid: {}".format(e))
+                log.msg(f"After rendering, ShellSequence `commands` is invalid: {e}")
                 return results.EXCEPTION
 
             # handle the command from the arg

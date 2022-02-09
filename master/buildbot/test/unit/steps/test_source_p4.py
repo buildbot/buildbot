@@ -119,7 +119,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -127,7 +127,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -135,7 +135,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',  # defaults to this, only changes if it has a copy mode.
@@ -206,7 +206,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -214,7 +214,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -222,7 +222,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4base_with_no_branch(self):
@@ -233,7 +233,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -241,7 +241,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -249,7 +249,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4base_with_p4extra_views(self):
@@ -263,7 +263,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -271,7 +271,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -282,7 +282,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t-//depot/trunk/test/... //p4_client1/test/...
         \t-//depot/trunk/doc/... //p4_client1/doc/...
         \t"-//depot/trunk/white space/..." "//p4_client1/white space/..."
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec(self):
@@ -295,7 +295,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -303,7 +303,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -313,7 +313,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/trunk/... //p4_client1/...
         \t"//depot/white space/..." "//p4_client1/white space/..."
         \t"-//depot/white space/excluded/..." "//p4_client1/white space/excluded/..."
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec_suffix(self):
@@ -329,7 +329,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -337,7 +337,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -347,7 +347,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/trunk/foo.xml //p4_client1/bar.xml
         \t"//depot/white space/..." "//p4_client1/white space/..."
         \t"-//depot/white space/excluded/..." "//p4_client1/white space/excluded/..."
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4client_spec_options(self):
@@ -359,7 +359,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -367,7 +367,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\trmdir compress
 
@@ -375,7 +375,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_parent_workdir(self):
@@ -387,7 +387,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/another_wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\another_wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -395,7 +395,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -403,7 +403,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec, workdir='../another_wkdir')
 
     def test_mode_incremental_p4extra_args(self):
@@ -415,7 +415,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -423,7 +423,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -431,7 +431,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec, extra_args=['-Zproxyload'])
 
     def test_mode_incremental_timeout(self):
@@ -443,7 +443,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -451,7 +451,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -459,7 +459,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec, timeout=60 * 60)
 
     def test_mode_incremental_stream(self):
@@ -471,7 +471,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -479,14 +479,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         Stream:\t//depot/trunk
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def _full(self, client_stdin='', p4client='p4_client1', p4user='user',
@@ -544,7 +544,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -552,14 +552,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/trunk/... //p4_client1/...\n''' % root_dir)
+        \t//depot/trunk/... //p4_client1/...\n''')
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_p4base_not_obfuscated(self):
@@ -572,7 +572,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -580,14 +580,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/trunk/... //p4_client1/...\n''' % root_dir)
+        \t//depot/trunk/... //p4_client1/...\n''')
         self._full(client_stdin=client_stdin, obfuscated_pass=False)
 
     def test_mode_full_p4base_with_no_branch(self):
@@ -598,7 +598,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -606,7 +606,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -614,7 +614,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_p4viewspec(self):
@@ -629,7 +629,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -637,7 +637,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -647,7 +647,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/main/... //p4_client1/...
         \t"//depot/main/white space/..." "//p4_client1/white space/..."
         \t"-//depot/main/white space/excluded/..." "//p4_client1/white space/excluded/..."
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_renderable_p4base(self):
@@ -661,7 +661,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client2
 
         Owner: user
@@ -669,14 +669,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/release/1.0/... //p4_client2/...\n''' % root_dir)
+        \t//depot/release/1.0/... //p4_client2/...\n''')
         self._full(client_stdin=client_stdin, p4client='p4_client2')
 
     def test_mode_full_renderable_p4client(self):
@@ -690,7 +690,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client_render
 
         Owner: user
@@ -698,14 +698,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/trunk/... //p4_client_render/...\n''' % root_dir)
+        \t//depot/trunk/... //p4_client_render/...\n''')
 
         self._full(client_stdin=client_stdin, p4client='p4_client_render')
 
@@ -720,7 +720,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -728,14 +728,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/render_branch/... //p4_client1/...\n''' % root_dir)
+        \t//depot/render_branch/... //p4_client1/...\n''')
 
         self._full(client_stdin=client_stdin)
 
@@ -750,7 +750,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: different_user
@@ -758,14 +758,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by different_user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/render_trunk/... //p4_client1/...\n''' % root_dir)
+        \t//depot/render_trunk/... //p4_client1/...\n''')
 
         self._full(client_stdin=client_stdin, p4user='different_user')
 
@@ -782,7 +782,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -790,7 +790,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -800,7 +800,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/trunk/foo.xml //p4_client1/bar.xml
         \t"//depot/trunk/white space/..." "//p4_client1/white space/..."
         \t"-//depot/trunk/white space/excluded/..." "//p4_client1/white space/excluded/..."
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_p4client_spec_options(self):
@@ -812,7 +812,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -820,7 +820,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\trmdir compress
 
@@ -828,7 +828,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_parent_workdir(self):
@@ -840,7 +840,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/another_wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\another_wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -848,7 +848,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -856,7 +856,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec, workdir='../another_wkdir')
 
     def test_mode_full_p4extra_args(self):
@@ -868,7 +868,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -876,7 +876,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -884,7 +884,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec, extra_args=['-Zproxyload'])
 
     def test_mode_full_stream(self):
@@ -896,7 +896,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -904,14 +904,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         Stream:\t//depot/trunk
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_stream_renderable_p4base(self):
@@ -923,7 +923,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -931,14 +931,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         Stream:\t//depot/trunk
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_stream_renderable_p4branch(self):
@@ -950,7 +950,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -958,14 +958,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         Stream:\t//depot/render_branch
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_worker_connection_lost(self):
@@ -991,7 +991,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -999,7 +999,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -1007,7 +1007,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
 
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['p4', '-V'])

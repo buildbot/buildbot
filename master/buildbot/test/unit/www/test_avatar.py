@@ -27,8 +27,8 @@ from buildbot.www import avatar
 class TestAvatar(avatar.AvatarBase):
 
     def getUserAvatar(self, email, username, size, defaultAvatarUrl):
-        return defer.succeed((b"image/png", '{!r} {!r} {!r}'.format(
-                                email, size, defaultAvatarUrl).encode('utf-8')))
+        user_avatar = f'{repr(email)} {repr(size)} {repr(defaultAvatarUrl)}'.encode('utf-8')
+        return defer.succeed((b"image/png", user_avatar))
 
 
 class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):

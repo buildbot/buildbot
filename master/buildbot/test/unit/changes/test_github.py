@@ -232,15 +232,14 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         yield self.newChangeSource('defunkt', 'defunkt')
         yield self.startChangeSource()
         self.assertEqual(
-            "GitHubPullrequestPoller watching the GitHub repository {}/{}".
-            format('defunkt', 'defunkt'), self.changesource.describe())
+            f"GitHubPullrequestPoller watching the GitHub repository {'defunkt'}/{'defunkt'}",
+            self.changesource.describe())
 
     @defer.inlineCallbacks
     def test_default_name(self):
         yield self.newChangeSource('defunkt', 'defunkt')
         yield self.startChangeSource()
-        self.assertEqual("GitHubPullrequestPoller:{}/{}".format(
-            'defunkt', 'defunkt'), self.changesource.name)
+        self.assertEqual(f"GitHubPullrequestPoller:{'defunkt'}/{'defunkt'}", self.changesource.name)
 
     @defer.inlineCallbacks
     def test_custom_name(self):

@@ -71,8 +71,8 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
         if self.source_tarball:
             tarball = util.sibpath(__file__, self.source_tarball)
             if not os.path.exists(tarball):
-                raise unittest.SkipTest("'{}' not found (normal when not building from Git)".format(
-                        tarball))
+                raise unittest.SkipTest(
+                    f"'{tarball}' not found (normal when not building from Git)")
 
             tf = tarfile.open(tarball)
             prefixes = set()
@@ -157,18 +157,18 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                     got_info = dict((idx['name'], idx) for idx in got)
                     exp_info = dict((idx['name'], idx) for idx in exp)
                     for name in got_names - exp_names:
-                        diff.append("got unexpected index {} on table {}: {}".format(name, tbl.name,
-                                repr(got_info[name])))
+                        diff.append(f"got unexpected index {name} on table {tbl.name}: "
+                                    f"{repr(got_info[name])}")
                     for name in exp_names - got_names:
-                        diff.append("missing index {} on table {}".format(name, tbl.name))
+                        diff.append(f"missing index {name} on table {tbl.name}")
                     for name in got_names & exp_names:
                         gi = dict(name=name,
                                   unique=got_info[name]['unique'] and 1 or 0,
                                   column_names=sorted(got_info[name]['column_names']))
                         ei = exp_info[name]
                         if gi != ei:
-                            diff.append(("index {} on table {} differs: got {}; exp {}"
-                                         ).format(name, tbl.name, gi, ei))
+                            diff.append(f"index {name} on table {tbl.name} differs: "
+                                        f"got {gi}; exp {ei}")
             if diff:
                 return "\n".join(diff)
             return None
@@ -222,7 +222,7 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.
             raise unittest.SkipTest("Cannot encode weird unicode "
-                "on this platform with {}".format(os_encoding)) from e
+                f"on this platform with {os_encoding}") from e
 
         yield self.db.model.upgrade()
         yield self.assertModelMatches()

@@ -87,7 +87,7 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
         if cmd.didFail():
             return FAILURE
 
-        self.descriptionDone = "{} hlin{}".format(self.warnings, self.warnings == 1 and 't' or 'ts')
+        self.descriptionDone = f"{self.warnings} hlin{self.warnings == 1 and 't' or 'ts'}"
 
         if self.warnings:
             return WARNINGS
@@ -265,7 +265,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             self.randomly = randomly
 
         if self.reactor:
-            self.description = "testing ({})".format(self.reactor)
+            self.description = f"testing ({self.reactor})"
 
         # this counter will feed Progress along the 'test cases' metric
         self.observer = TrialTestCaseCounter()
@@ -307,23 +307,22 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         if self.recurse:
             command.append("--recurse")
         if self.reactor:
-            command.append("--reactor={}".format(self.reactor))
+            command.append(f"--reactor={self.reactor}")
         if self.randomly:
             command.append("--random=0")
         command.extend(self.trialArgs)
 
         if self.jobs is not None:
             self.jobs = int(self.jobs)
-            command.append("--jobs=%d" % self.jobs)
+            command.append(f"--jobs={self.jobs}")
 
             # using -j/--jobs flag produces more than one test log.
             self.logfiles = {}
             for i in range(self.jobs):
-                self.logfiles['test.%d.log' %
-                              i] = '_trial_temp/%d/test.log' % i
-                self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i
-                self.logfiles['out.%d.log' % i] = '_trial_temp/%d/out.log' % i
-                self.addLogObserver('test.%d.log' % i, output_observer)
+                self.logfiles[f'test.{i}.log'] = f'_trial_temp/{i}/test.log'
+                self.logfiles[f'err.{i}.log'] = f'_trial_temp/{i}/err.log'
+                self.logfiles[f'out.{i}.log'] = f'_trial_temp/{i}/out.log'
+                self.addLogObserver(f'test.{i}.log', output_observer)
         else:
             # this one just measures bytes of output in _trial_temp/test.log
             self.addLogObserver('test.log', output_observer)
@@ -333,7 +332,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         if self.testChanges:
             for f in self.build.allFiles():
                 if f.endswith(".py"):
-                    command.append("--testmodule={}".format(f))
+                    command.append(f"--testmodule={f}")
         else:
             command.extend(self.tests)
 

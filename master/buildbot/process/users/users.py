@@ -53,7 +53,7 @@ def createUserObject(master, author, src=None):
     if src in srcs:
         usdict = dict(identifier=author, attr_type=src, attr_data=author)
     else:
-        log.msg("Unrecognized source argument: {}".format(src))
+        log.msg(f"Unrecognized source argument: {src}")
         return defer.succeed(None)
 
     return master.db.users.findUserByAttr(

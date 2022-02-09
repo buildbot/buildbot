@@ -374,7 +374,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
-            self.assertIn('{} [offline]'.format(builder), self.sent[0])
+            self.assertIn(f'{builder} [offline]', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_list_workers(self):
@@ -386,7 +386,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
-            self.assertIn('{} [offline]'.format(worker), self.sent[0])
+            self.assertIn(f'{worker} [offline]', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_list_workers_online(self):
@@ -414,8 +414,8 @@ class TestContact(ContactMixin, unittest.TestCase):
 
         yield self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
-        self.assertIn('{} [offline]'.format(self.BUILDER_NAMES[0]), self.sent[0])
-        self.assertIn('{} [offline]'.format(self.BUILDER_NAMES[1]), self.sent[0])
+        self.assertIn(f'{self.BUILDER_NAMES[0]} [offline]', self.sent[0])
+        self.assertIn(f'{self.BUILDER_NAMES[1]} [offline]', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_list_builders_connected(self):
@@ -427,8 +427,8 @@ class TestContact(ContactMixin, unittest.TestCase):
 
         yield self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
-        self.assertIn('{} [offline]'.format(self.BUILDER_NAMES[0]), self.sent[0])
-        self.assertNotIn('{} [offline]'.format(self.BUILDER_NAMES[1]), self.sent[0])
+        self.assertIn(f'{self.BUILDER_NAMES[0]} [offline]', self.sent[0])
+        self.assertNotIn(f'{self.BUILDER_NAMES[1]} [offline]', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_status(self):
@@ -456,7 +456,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_status_builder0_offline(self):
         yield self.do_test_command('status', args=self.BUILDER_NAMES[0])
-        self.assertEqual(self.sent, ['`{}`: offline'.format(self.BUILDER_NAMES[0])])
+        self.assertEqual(self.sent, [f'`{self.BUILDER_NAMES[0]}`: offline'])
 
     @defer.inlineCallbacks
     def test_command_status_builder0_running(self):
@@ -595,16 +595,14 @@ class TestContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_stop_builder0_no_builds(self):
-        yield self.do_test_command('stop', args="build {} 'i have a reason'".format(
-                self.BUILDER_NAMES[0]))
+        yield self.do_test_command('stop', args=f"build {self.BUILDER_NAMES[0]} 'i have a reason'")
         self.assertEqual(len(self.sent), 1)
         self.assertIn('no build is', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_stop_builder0_1_builds(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('stop', args="build {} 'i have a reason'".format(
-                self.BUILDER_NAMES[0]))
+        yield self.do_test_command('stop', args=f"build {self.BUILDER_NAMES[0]} 'i have a reason'")
         self.assertEqual(len(self.sent), 2)
         self.assertRegex(self.sent[0], r'Build \[#[36]\].* of `builder1` interrupted')
         self.assertRegex(self.sent[1], r'Build \[#[63]\].* of `builder1` interrupted')
@@ -629,8 +627,8 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_force(self):
         yield self.do_test_command(
             'force',
-            args='build --branch BRANCH1 --revision REV1 --props=PROP1=VALUE1 {} REASON'
-                 .format(self.BUILDER_NAMES[0]))
+            args=('build --branch BRANCH1 --revision REV1 --props=PROP1=VALUE1 '
+                  f'{self.BUILDER_NAMES[0]} REASON'))
 
     @defer.inlineCallbacks
     def test_handleMessage_short_command(self):

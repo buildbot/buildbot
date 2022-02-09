@@ -71,7 +71,7 @@ class TestVaultHvac(RunMasterBase):
         self.assertEqual(build['buildid'], 1)
 
         patterns = [
-            "echo {}".format(expected_obfuscation),
+            f"echo {expected_obfuscation}",
             base64.b64encode((expected_value + "\n").encode('utf-8')).decode('utf-8'),
         ]
 
@@ -110,7 +110,7 @@ def master_config(secret_specifier):
     ]
 
     f = BuildFactory()
-    f.addStep(ShellCommand(command=Interpolate('echo {} | base64'.format(secret_specifier))))
+    f.addStep(ShellCommand(command=Interpolate(f'echo {secret_specifier} | base64')))
 
     c['builders'] = [
         BuilderConfig(name="testy",

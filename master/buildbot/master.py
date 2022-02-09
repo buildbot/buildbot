@@ -126,7 +126,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             self.hostname = socket.getfqdn()
 
         # public attributes
-        self.name = ("{}:{}".format(self.hostname, os.path.abspath(self.basedir or '.')))
+        self.name = (f"{self.hostname}:{os.path.abspath(self.basedir or '.')}")
         if isinstance(self.name, bytes):
             self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
@@ -223,7 +223,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             yield self._services_d
             self._services_d = None
 
-        log.msg("Starting BuildMaster -- buildbot.version: {}".format(buildbot.version))
+        log.msg(f"Starting BuildMaster -- buildbot.version: {buildbot.version}")
 
         # Set umask
         if self.umask is not None:
@@ -376,8 +376,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         # notify every 10 seconds that the reconfig is still going on, the duration of reconfigs is
         # longer on larger installations and may take a while.
         self.reconfig_notifier = task.LoopingCall(
-            lambda: log.msg("reconfig is ongoing for {:.3f} s".format(self.reactor.seconds() -
-                                                                      self.reconfig_active)))
+            lambda: log.msg("reconfig is ongoing for "
+                            f"{self.reactor.seconds() - self.reconfig_active:.3f} s"))
         self.reconfig_notifier.start(10, now=False)
 
         timer = metrics.Timer("BuildMaster.reconfig")
@@ -434,7 +434,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         else:
             msg = "configuration update complete"
 
-        log.msg("{} (took {:.3f} seconds)".format(msg, self.reactor.seconds() - time_started))
+        log.msg(f"{msg} (took {(self.reactor.seconds() - time_started):.3f} seconds)")
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if self.configured_db_url is None:

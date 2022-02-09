@@ -41,7 +41,7 @@ def _importer(target):
     thing = __import__(import_path)
 
     for comp in components:
-        import_path += ".{}".format(comp)
+        import_path += f".{comp}"
         thing = _dot_lookup(thing, comp, import_path)
     return thing
 
@@ -50,8 +50,7 @@ def _get_target(target):
     try:
         target, attribute = target.rsplit('.', 1)
     except (TypeError, ValueError) as e:
-        raise TypeError("Need a valid target to patch. You supplied: %r" %
-                        (target,)) from e
+        raise TypeError(f"Need a valid target to patch. You supplied: {repr(target)}") from e
     return _importer(target), attribute
 
 
@@ -84,9 +83,9 @@ def patchForDelay(target_name):
     original = getattr(target, attribute, default)
 
     if original is default:
-        raise Exception('Could not find name {}'.format(target_name))
+        raise Exception(f'Could not find name {target_name}')
     if not callable(original):
-        raise Exception('{} is not callable'.format(target_name))
+        raise Exception(f'{target_name} is not callable')
 
     delay = DelayWrapper()
 

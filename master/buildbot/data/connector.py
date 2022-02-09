@@ -180,7 +180,7 @@ class DataConnector(service.AsyncService):
                 if k[0] == '-' and negOk:
                     k = k[1:]
                 if k not in entityType.fieldNames:
-                    raise exceptions.InvalidQueryParameter("no such field '{}'".format(k))
+                    raise exceptions.InvalidQueryParameter(f"no such field '{k}'")
 
         limit = offset = order = fields = None
         filters, properties = [], []
@@ -209,12 +209,11 @@ class DataConnector(service.AsyncService):
                     props = []
                     for v in req_args[arg]:
                         if not isinstance(v, (bytes, str)):
-                            raise TypeError(
-                                "Invalid type {} for {}".format(type(v), v))
+                            raise TypeError(f"Invalid type {type(v)} for {v}")
                         props.append(bytes2unicode(v))
                 except Exception as e:
                     raise exceptions.InvalidQueryParameter(
-                        'invalid property value for {}'.format(arg)) from e
+                        f'invalid property value for {arg}') from e
                 properties.append(resultspec.Property(arg, 'eq', props))
             elif argStr in entityType.fieldNames:
                 field = entityType.fields[argStr]
@@ -222,7 +221,7 @@ class DataConnector(service.AsyncService):
                     values = [field.valueFromString(v) for v in req_args[arg]]
                 except Exception as e:
                     raise exceptions.InvalidQueryParameter(
-                        'invalid filter value for {}'.format(argStr)) from e
+                        f'invalid filter value for {argStr}') from e
 
                 filters.append(resultspec.Filter(argStr, 'eq', values))
             elif '__' in argStr:
@@ -238,11 +237,10 @@ class DataConnector(service.AsyncService):
                                   for v in req_args[arg]]
                     except Exception as e:
                         raise exceptions.InvalidQueryParameter(
-                            'invalid filter value for {}'.format(argStr)) from e
+                            f'invalid filter value for {argStr}') from e
                     filters.append(resultspec.Filter(field, op, values))
             else:
-                raise exceptions.InvalidQueryParameter(
-                    "unrecognized query parameter '{}'".format(argStr))
+                raise exceptions.InvalidQueryParameter(f"unrecognized query parameter '{argStr}'")
 
         # if ordering or filtering is on a field that's not in fields, bail out
         if fields:

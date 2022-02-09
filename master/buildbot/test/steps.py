@@ -49,12 +49,10 @@ def _dict_diff(d1, d2):
         if isinstance(d1[k], dict) and isinstance(d2[k], dict):
             missing_in_v1, missing_in_v2, different_in_v = _dict_diff(
                 d1[k], d2[k])
-            missing_in_d1.extend(['{0}.{1}'.format(k, m)
-                                  for m in missing_in_v1])
-            missing_in_d2.extend(['{0}.{1}'.format(k, m)
-                                  for m in missing_in_v2])
+            missing_in_d1.extend([f'{k}.{m}' for m in missing_in_v1])
+            missing_in_d2.extend([f'{k}.{m}' for m in missing_in_v2])
             for child_k, left, right in different_in_v:
-                different.append(('{0}.{1}'.format(k, child_k), left, right))
+                different.append((f'{k}.{child_k}', left, right))
             continue
         if d1[k] != d2[k]:
             different.append((k, d1[k], d2[k]))
@@ -65,21 +63,20 @@ def _dict_diff(d1, d2):
 
 def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
     if exp_command != got_command:
-        return 'Expected command type {} got {}. Expected args {}'.format(exp_command, got_command,
-                                                                          repr(exp_args))
+        return (f'Expected command type {exp_command} got {got_command}. Expected args '
+                f'{exp_args!r}')
     if exp_args == got_args:
         return ""
     text = ""
     missing_in_exp, missing_in_cmd, diff = _dict_diff(exp_args, got_args)
     if missing_in_exp:
         missing_dict = {key: got_args[key] for key in missing_in_exp}
-        text += 'Keys in cmd missing from expectation: {0!r}\n'.format(missing_dict)
+        text += f'Keys in cmd missing from expectation: {missing_dict!r}\n'
     if missing_in_cmd:
         missing_dict = {key: exp_args[key] for key in missing_in_cmd}
-        text += 'Keys in expectation missing from command: {0!r}\n'.format(missing_dict)
+        text += f'Keys in expectation missing from command: {missing_dict!r}\n'
     if diff:
-        formatted_diff = [
-            '"{0}": expected {1!r}, got {2!r}'.format(*d) for d in diff]
+        formatted_diff = [f'"{d[0]}": expected {d[1]!r}, got {d[2]!r}' for d in diff]
         text += ('Key differences between expectation and command: {0}\n'.format(
             '\n'.join(formatted_diff)))
     return text
@@ -178,7 +175,7 @@ class TestBuildStepMixin:
         def addCompleteLog(name, text):
             _log = logfile.FakeLogFile(name)
             if name in self.step.logs:
-                raise Exception('Attempt to add log {} twice to the logs'.format(name))
+                raise Exception(f'Attempt to add log {name} twice to the logs')
             self.step.logs[name] = _log
             _log.addStdout(text)
             return defer.succeed(None)
@@ -270,9 +267,9 @@ class TestBuildStepMixin:
     def _dump_logs(self):
         for l in self.step.logs.values():
             if l.stdout:
-                log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
+                log.msg(f"{l.name} stdout:\n{l.stdout}")
             if l.stderr:
-                log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
+                log.msg(f"{l.name} stderr:\n{l.stderr}")
 
     @defer.inlineCallbacks
     def run_step(self):
@@ -297,10 +294,10 @@ class TestBuildStepMixin:
         # in case of unexpected result, display logs in stdout for
         # debugging failing tests
         if result != self.exp_result:
-            msg = "unexpected result from step; expected {}, got {}".format(self.exp_result, result)
-            log.msg("{}; dumping logs".format(msg))
+            msg = f"unexpected result from step; expected {self.exp_result}, got {result}"
+            log.msg(f"{msg}; dumping logs")
             self._dump_logs()
-            raise AssertionError("{}; see logs".format(msg))
+            raise AssertionError(f"{msg}; see logs")
 
         if self.exp_state_string:
             stepStateString = self.master.data.updates.stepStateString
@@ -309,20 +306,19 @@ class TestBuildStepMixin:
             self.assertEqual(
                 self.exp_state_string,
                 stepStateString[stepids[0]],
-                "expected state_string {0!r}, got {1!r}".format(
-                    self.exp_state_string,
-                    stepStateString[stepids[0]]))
+                f"expected state_string {self.exp_state_string!r}, got "
+                f"{stepStateString[stepids[0]]!r}")
         for pn, (pv, ps) in self.exp_properties.items():
-            self.assertTrue(self.properties.hasProperty(pn), "missing property '{}'".format(pn))
-            self.assertEqual(self.properties.getProperty(pn), pv, "property '{}'".format(pn))
+            self.assertTrue(self.properties.hasProperty(pn), f"missing property '{pn}'")
+            self.assertEqual(self.properties.getProperty(pn), pv, f"property '{pn}'")
             if ps is not None:
                 self.assertEqual(
                     self.properties.getPropertySource(pn), ps,
-                    "property {0!r} source has source {1!r}".format(
-                        pn, self.properties.getPropertySource(pn)))
+                    f"property {pn!r} source has source "
+                    f"{self.properties.getPropertySource(pn)!r}")
 
         for pn in self.exp_missing_properties:
-            self.assertFalse(self.properties.hasProperty(pn), "unexpected property '{}'".format(pn))
+            self.assertFalse(self.properties.hasProperty(pn), f"unexpected property '{pn}'")
 
         for l, exp in self.exp_logfiles.items():
             got = self.step.logs[l].stdout
@@ -346,14 +342,14 @@ class TestBuildStepMixin:
     def _match_log(self, exp, got, log_type):
         if hasattr(exp, 'match'):
             if exp.match(got) is None:
-                log.msg("Unexpected {} log output:\n{}".format(log_type, exp))
-                log.msg("Expected {} to match:\n{}".format(log_type, got))
-                raise AssertionError("Unexpected {} log output; see logs".format(log_type))
+                log.msg(f"Unexpected {log_type} log output:\n{exp}")
+                log.msg(f"Expected {log_type} to match:\n{got}")
+                raise AssertionError(f"Unexpected {log_type} log output; see logs")
         else:
             if got != exp:
-                log.msg("Unexpected {} log output:\n{}".format(log_type, exp))
-                log.msg("Expected {} log output:\n{}".format(log_type, got))
-                raise AssertionError("Unexpected {} log output; see logs".format(log_type))
+                log.msg(f"Unexpected {log_type} log output:\n{exp}")
+                log.msg(f"Expected {log_type} log output:\n{got}")
+                raise AssertionError(f"Unexpected {log_type} log output; see logs")
 
     # callbacks from the running step
 
@@ -393,10 +389,10 @@ class TestBuildStepMixin:
             # first check any ExpectedRemoteReference instances
             exp_tup = (exp.remote_command, self._cleanup_args(exp.args))
             if exp_tup != got:
-                msg = "Command contents different from expected (command index: {}); {}".format(
-                    self._expected_remote_commands_popped,
-                    _describe_cmd_difference(exp.remote_command, exp.args,
-                                             command.remote_command, command.args))
+                cmd_dif = _describe_cmd_difference(exp.remote_command, exp.args,
+                                                   command.remote_command, command.args)
+                msg = ("Command contents different from expected (command index: "
+                       f"{self._expected_remote_commands_popped}); {cmd_dif}")
                 raise AssertionError(msg)
 
         if exp.shouldRunBehaviors():
@@ -409,8 +405,7 @@ class TestBuildStepMixin:
         got = (command.remote_command, command.args)
 
         if not self.expected_remote_commands:
-            self.fail("got command %r when no further commands were expected"
-                      % (got,))
+            self.fail(f"got command {repr(got)} when no further commands were expected")
 
         exp = self.expected_remote_commands[0]
         try:

@@ -33,13 +33,13 @@ class SecretInAFile(SecretProviderBase):
         filepath = os.path.join(dirname, secretfile)
         obs_stat = stat.S_IMODE(os.stat(filepath).st_mode)
         if (obs_stat & 0o77) != 0 and os.name == "posix":
-            config.error(("Permissions {} on file {} are too open."
-                          " It is required that your secret files are NOT"
-                          " accessible by others!").format(oct(obs_stat), secretfile))
+            config.error(f"Permissions {oct(obs_stat)} on file {secretfile} are too open."
+                         " It is required that your secret files are NOT"
+                         " accessible by others!")
 
     def checkSecretDirectoryIsAvailableAndReadable(self, dirname, suffixes):
         if not os.access(dirname, os.F_OK):
-            config.error("directory {} does not exists".format(dirname))
+            config.error(f"directory {dirname} does not exists")
         for secretfile in os.listdir(dirname):
             for suffix in suffixes:
                 if secretfile.endswith(suffix):

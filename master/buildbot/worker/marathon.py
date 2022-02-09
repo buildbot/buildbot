@@ -101,16 +101,14 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin,
         res_json = yield res.json()
         if res.code != 201:
             raise LatentWorkerFailedToSubstantiate(
-                "Unable to create Marathon app: {} {}: {} {}".format(
-                    self.getApplicationId(), res.code, res_json['message'],
-                    res_json))
+                f"Unable to create Marathon app: {self.getApplicationId()} "
+                f"{res.code}: {res_json['message']} {res_json}")
         self.instance = res_json
         return True
 
     @defer.inlineCallbacks
     def stop_instance(self, fast=False, reportFailure=True):
-        res = yield self._http.delete("/v2/apps/{}".format(
-            self.getApplicationId()))
+        res = yield self._http.delete(f"/v2/apps/{self.getApplicationId()}")
         self.instance = None
         self.resetWorkerPropsOnStop()
 

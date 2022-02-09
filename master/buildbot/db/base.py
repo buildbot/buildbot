@@ -56,14 +56,13 @@ class DBConnectorComponent:
                 self.checkLength = lambda col, value: None
                 return
 
-        assert col.type.length, "column {} does not have a length".format(col)
+        assert col.type.length, f"column {col} does not have a length"
         if value and len(value) > col.type.length:
-            raise RuntimeError(
-                "value for column {} is greater than max of {} characters: {}".format(
-                        col, col.type.length, value))
+            raise RuntimeError(f"value for column {col} is greater than max of {col.type.length} "
+                               f"characters: {value}")
 
     def ensureLength(self, col, value):
-        assert col.type.length, "column {} does not have a length".format(col)
+        assert col.type.length, f"column {col} does not have a length"
         if value and len(value) > col.type.length:
             value = value[:col.type.length // 2] + \
                     hashlib.sha1(unicode2bytes(value)).hexdigest()[:col.type.length // 2]

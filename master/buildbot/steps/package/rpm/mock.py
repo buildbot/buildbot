@@ -34,7 +34,7 @@ class MockStateObserver(logobserver.LogLineObserver):
         m = self._line_re.search(line.strip())
         if m:
             if m.group(1) == "Start":
-                self.step.descriptionSuffix = ["[{}]".format(m.group(2))]
+                self.step.descriptionSuffix = [f"[{m.group(2)}]"]
             else:
                 self.step.descriptionSuffix = None
             self.step.updateSummary()

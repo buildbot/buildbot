@@ -63,7 +63,7 @@ def stop(config, signame="TERM", wait=None):
 
     if not wait:
         if not quiet:
-            print("sent SIG{} to process".format(signame))
+            print(f"sent SIG{signame} to process")
         return 0
 
     time.sleep(0.1)
@@ -76,7 +76,7 @@ def stop(config, signame="TERM", wait=None):
             os.kill(pid, 0)
         except OSError:
             if not quiet:
-                print("buildbot process %d is dead" % pid)
+                print(f"buildbot process {pid} is dead")
             return 0
         time.sleep(1)
         count += 1

@@ -127,8 +127,7 @@ class AbstractWorker(service.BuildbotService):
         self.notify_on_missing = notify_on_missing
         for i in notify_on_missing:
             if not isinstance(i, str):
-                config.error(
-                    'notify_on_missing arg %r is not a string' % (i,))
+                config.error(f'notify_on_missing arg {repr(i)} is not a string')
 
         self.missing_timeout = missing_timeout
         self.missing_timer = None
@@ -146,7 +145,7 @@ class AbstractWorker(service.BuildbotService):
         self._configured_builderid_list = None
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, repr(self.name))
+        return f"<{self.__class__.__name__} {repr(self.name)}>"
 
     @property
     def workername(self):
@@ -194,9 +193,9 @@ class AbstractWorker(service.BuildbotService):
         my caller should give up the build and try to get another worker
         to look at it.
         """
-        log.msg("acquireLocks(worker {}, locks {})".format(self, self.locks))
+        log.msg(f"acquireLocks(worker {self}, locks {self.locks})")
         if not self.locksAvailable():
-            log.msg("worker {} can't lock, giving up".format(self))
+            log.msg(f"worker {self} can't lock, giving up")
             return False
         # all locks are available, claim them all
         for lock, access in self.locks:
@@ -207,7 +206,7 @@ class AbstractWorker(service.BuildbotService):
         """
         I am called to release any locks after a build has finished
         """
-        log.msg("releaseLocks({}): {}".format(self, self.locks))
+        log.msg(f"releaseLocks({self}): {self.locks}")
         for lock, access in self.locks:
             lock.release(self, access)
 
@@ -318,8 +317,7 @@ class AbstractWorker(service.BuildbotService):
                 self.properties.setProperty("machine_name", self.machine_name,
                                             "Worker")
             else:
-                log.err("Unknown machine '{}' for worker '{}'".format(
-                    self.machine_name, self.name))
+                log.err(f"Unknown machine '{self.machine_name}' for worker '{self.name}'")
 
         # update our records with the worker manager
         if not self.registration:
@@ -498,7 +496,7 @@ class AbstractWorker(service.BuildbotService):
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
 
         self._old_builder_list = []
-        log.msg("Worker.detached({})".format(self.name))
+        log.msg(f"Worker.detached({self.name})")
         self.releaseLocks()
         yield self.master.data.updates.workerDisconnected(
             workerid=self.workerid,
@@ -522,7 +520,7 @@ class AbstractWorker(service.BuildbotService):
         """
         if self.conn is None:
             return defer.succeed(None)
-        log.msg("disconnecting old worker {} now".format(self.name))
+        log.msg(f"disconnecting old worker {self.name} now")
         # When this Deferred fires, we'll be ready to accept the new worker
         return self._disconnect(self.conn)
 
@@ -578,7 +576,7 @@ class AbstractWorker(service.BuildbotService):
         return builder.attached(self, self.worker_commands)
 
     def controlWorker(self, key, params):
-        log.msg("worker {} wants to {}: {}".format(self.name, key[-1], params))
+        log.msg(f"worker {self.name} wants to {key[-1]}: {params}")
         if key[-1] == "stop":
             return self.shutdownRequested()
         if key[-1] == "pause":
@@ -687,8 +685,7 @@ class AbstractWorker(service.BuildbotService):
 
         self.quarantine_timer = self.master.reactor.callLater(
             self.quarantine_timeout, self.exitQuarantine)
-        log.msg("{} has been put in quarantine for {}s".format(
-            self.name, self.quarantine_timeout))
+        log.msg(f"{self.name} has been put in quarantine for {self.quarantine_timeout}s")
         # next we will wait twice as long
         self.quarantine_timeout *= 2
         if self.quarantine_timeout > self.quarantine_max_timeout:
@@ -696,7 +693,7 @@ class AbstractWorker(service.BuildbotService):
             self.quarantine_timeout = self.quarantine_max_timeout
 
     def exitQuarantine(self):
-        log.msg("{} has left quarantine".format(self.name))
+        log.msg(f"{self.name} has left quarantine")
         self.quarantine_timer = None
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
@@ -719,7 +716,7 @@ class Worker(AbstractWorker):
         try:
             yield super().attached(bot)
         except Exception as e:
-            log.err(e, "worker {} cannot attach".format(self.name))
+            log.err(e, f"worker {self.name} cannot attach")
             return
 
     def buildFinished(self, wfb):

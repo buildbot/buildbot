@@ -136,9 +136,8 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         status = ""
         if not self.master:
             status = "[STOPPED - check log]"
-        return (("HgPoller watching the remote Mercurial repository '{}', "
-                 "branches: {}, in workdir '{}' {}").format(self.repourl, ', '.join(self.branches),
-                                                            self.workdir, status))
+        return (f"HgPoller watching the remote Mercurial repository '{self.repourl}', "
+                f"branches: {', '.join(self.branches)}, in workdir '{self.workdir}' {status}")
 
     @deferredLocked('initLock')
     @defer.inlineCallbacks
@@ -171,7 +170,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
                                                   env=os.environ, collect_stderr=False,
                                                   stderr_is_error=True)
         if rc != 0:
-            msg = '{}: got error {} when getting details for revision {}'.format(self, rc, rev)
+            msg = f'{self}: got error {rc} when getting details for revision {rev}'
             raise Exception(msg)
 
         # all file names are on one line
@@ -184,8 +183,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             try:
                 stamp = float(date.split()[0])
             except Exception:
-                log.msg('hgpoller: caught exception converting output %r '
-                        'to timestamp' % date)
+                log.msg(f'hgpoller: caught exception converting output {repr(date)} to timestamp')
                 raise
         return stamp, author.strip(), files.split(os.pathsep)[:-1], comments.strip()
 
@@ -201,7 +199,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         """
         if self._isRepositoryReady():
             return
-        log.msg('hgpoller: initializing working dir from {}'.format(self.repourl))
+        log.msg(f'hgpoller: initializing working dir from {self.repourl}')
 
         rc = yield runprocess.run_process(self.master.reactor,
                                           [self.hgbin, 'init', self._absWorkdir()],
@@ -210,16 +208,16 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
 
         if rc != 0:
             self._stopOnFailure()
-            raise EnvironmentError('{}: repository init failed with exit code {}'.format(self, rc))
+            raise EnvironmentError(f'{self}: repository init failed with exit code {rc}')
 
-        log.msg("hgpoller: finished initializing working dir {}".format(self.workdir))
+        log.msg(f"hgpoller: finished initializing working dir {self.workdir}")
 
     @defer.inlineCallbacks
     def _getChanges(self):
         self.lastPoll = time.time()
 
         yield self._initRepository()
-        log.msg("{}: polling hg repo at {}".format(self, self.repourl))
+        log.msg(f"{self}: polling hg repo at {self.repourl}")
 
         command = [self.hgbin, 'pull']
         for name in self.branches:
@@ -261,19 +259,18 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
                                                   collect_stderr=False, stderr_is_error=True)
 
         if rc != 0:
-            log.err("{}: could not find revision {} in repository {}".format(self, branch,
-                                                                             self.repourl))
+            log.err(f"{self}: could not find revision {branch} in repository {self.repourl}")
             return None
 
         if not stdout:
             return None
 
         if len(stdout.split()) > 1:
-            log.err(("{}: caught several heads in branch {} "
-                     "from repository {}. Staying at previous revision"
-                     "You should wait until the situation is normal again "
-                     "due to a merge or directly strip if remote repo "
-                     "gets stripped later.").format(self, branch, self.repourl))
+            log.err(f"{self}: caught several heads in branch {branch} "
+                    f"from repository {self.repourl}. Staying at previous revision"
+                    "You should wait until the situation is normal again "
+                    "due to a merge or directly strip if remote repo "
+                    "gets stripped later.")
             return None
 
         # in case of whole reconstruction, are we sure that we'll get the
@@ -308,7 +305,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
                                                   stderr_is_error=True)
 
         if rc != 0:
-            raise EnvironmentError('{}: could not get rev node list: {}'.format(self, rc))
+            raise EnvironmentError(f'{self}: could not get rev node list: {rc}')
 
         results = stdout.decode(self.encoding)
 
@@ -327,7 +324,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             return
 
         # two passes for hg log makes parsing simpler (comments is multi-lines)
-        revNodeList = yield self._getRevNodeList('{}::{}'.format(prev_rev, new_rev))
+        revNodeList = yield self._getRevNodeList(f'{prev_rev}::{new_rev}')
 
         # revsets are inclusive. Strip the already-known "current" changeset.
         if not revNodeList:
@@ -338,8 +335,8 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         else:
             del revNodeList[0]
 
-        log.msg('hgpoller: processing %d changes in branch %r: %r in %r'
-                % (len(revNodeList), branch, revNodeList, self._absWorkdir()))
+        log.msg(f'hgpoller: processing {len(revNodeList)} changes in branch '
+                f'{repr(branch)}: {repr(revNodeList)} in {repr(self._absWorkdir())}')
         for rev, node in revNodeList:
             timestamp, author, files, comments = yield self._getRevDetails(
                 node)

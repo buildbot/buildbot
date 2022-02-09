@@ -137,7 +137,7 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
              'password_delivery': 'none',
              'storage_devices': {'storage_device': [
                  {'action': 'clone', 'storage': '8b47d21b-b4c3-445d-b75c-5a723ff39681', 'title':
-                  'buildbot-worker-{}'.format(self.masterhash), 'size': 10, 'tier': 'maxiops'}]},
+                  f'buildbot-worker-{self.masterhash}', 'size': 10, 'tier': 'maxiops'}]},
              'plan': '1xCPU-1GB'}},
             content_json=upcloudServerCreatePayload, code=202)
         # determine it's up & running

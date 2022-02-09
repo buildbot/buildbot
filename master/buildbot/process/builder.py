@@ -86,7 +86,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             if builder_config.name == self.name:
                 found_config = True
                 break
-        assert found_config, "no config found for builder '{}'".format(self.name)
+        assert found_config, f"no config found for builder '{self.name}'"
 
         old_config = self.config
         self.config = builder_config
@@ -118,7 +118,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return False
 
     def __repr__(self):
-        return "<Builder '%r' at %d>" % (self.name, id(self))
+        return f"<Builder '{repr(self.name)}' at {id(self)}>"
 
     def getBuilderIdForName(self, name):
         # buildbot.config should ensure this is already unicode, but it doesn't
@@ -244,10 +244,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
             if wfb.worker == worker:
                 break
         else:
-            log.msg(("WEIRD: Builder.detached({}) ({})"
-                     " not in attaching_workers({})"
-                     " or workers({})").format(worker, worker.workername, self.attaching_workers,
-                                               self.workers))
+            log.msg(f"WEIRD: Builder.detached({worker}) ({worker.workername})"
+                    f" not in attaching_workers({self.attaching_workers})"
+                    f" or workers({self.workers})")
             return
 
         if wfb in self.attaching_workers:
@@ -320,7 +319,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         Build.setupPropertiesKnownBeforeBuildStarts(
             props, build.requests, build.builder, workerforbuilder)
 
-        log.msg("starting build {} using worker {}".format(build, workerforbuilder))
+        log.msg(f"starting build {build} using worker {workerforbuilder}")
 
         # set up locks
         locks = yield build.render(self.config.locks)

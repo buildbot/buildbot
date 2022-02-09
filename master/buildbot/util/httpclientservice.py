@@ -115,9 +115,8 @@ class HTTPClientService(service.SharedService):
            if neither txrequests or treq is installed
         """
         if txrequests is None and treq is None:
-            config.error(("neither txrequests nor treq is installed, but {} is "
-                          "requiring it\n\n{}").format(from_module,
-                                                       HTTPClientService.TREQ_PROS_AND_CONS))
+            config.error(f"neither txrequests nor treq is installed, but {from_module} is "
+                         f"requiring it\n\n{HTTPClientService.TREQ_PROS_AND_CONS}")
 
     def startService(self):
         # treq only supports basicauth, so we force txrequests if the auth is

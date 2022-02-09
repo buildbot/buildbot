@@ -54,9 +54,8 @@ class TelegramChannel(Channel):
     @defer.inlineCallbacks
     def list_notified_events(self):
         if self.notify_events:
-            yield self.send("The following events are being notified:\n{}"
-                            .format("\n".join(sorted(
-                                    "🔔 **{}**".format(n) for n in self.notify_events))))
+            notified_events = "\n".join(sorted(f"🔔 **{n}**" for n in self.notify_events))
+            yield self.send(f"The following events are being notified:\n{notified_events}")
         else:
             yield self.send("🔕 No events are being notified.")
 
@@ -94,14 +93,14 @@ class TelegramContact(Contact):
     def describeUser(self):
         user = self.user_full_name
         try:
-            user += ' (@{})'.format(self.user_info['username'])
+            user += f" (@{self.user_info['username']})"
         except KeyError:
             pass
 
         if not self.is_private_chat:
             chat_title = self.channel.chat_info.get('title')
             if chat_title:
-                user += " on '{}'".format(chat_title)
+                user += f" on '{chat_title}'"
 
         return user
 
@@ -147,7 +146,7 @@ class TelegramContact(Contact):
         if self.is_private_chat:
             self.send("Never mind...")
         else:
-            self.send("Never mind, {}...".format(self.user_name))
+            self.send(f"Never mind, {self.user_name}...")
     command_NAY.usage = "nay - never mind the command we are currently discussing"
 
     @classmethod
@@ -161,7 +160,7 @@ class TelegramContact(Contact):
             doc = getattr(meth, '__doc__', None)
             if not doc:
                 doc = command
-            response.append("{} - {}".format(command, doc))
+            response.append(f"{command} - {doc}")
         return response
 
     @Contact.overrideCommand
@@ -178,11 +177,10 @@ class TelegramContact(Contact):
     def command_GETID(self, args, **kwargs):
         """get user and chat ID"""
         if self.is_private_chat:
-            self.send("Your ID is {}.".format(self.user_id))
+            self.send(f"Your ID is {self.user_id}.")
         else:
-            yield self.send("{}, your ID is {}.".format(self.user_name, self.user_id))
-            self.send("This {} ID is {}.".format(self.channel.chat_info.get('type', "group"),
-                                                 self.chat_id))
+            yield self.send(f"{self.user_name}, your ID is {self.user_id}.")
+            self.send(f'This {self.channel.chat_info.get("type", "group")} ID is {self.chat_id}.')
     command_GETID.usage = "getid - get user and chat ID that can be put in the master " \
                           "configuration file"
 
@@ -225,9 +223,9 @@ class TelegramContact(Contact):
             response = ["I found the following **builders**:"]
             for bdict in bdicts:
                 if bdict['builderid'] in online_builderids:
-                    response.append("`{}`".format(bdict['name']))
+                    response.append(f"`{bdict['name']}`")
                 elif all:
-                    response.append("`{}` ❌".format(bdict['name']))
+                    response.append(f"`{bdict['name']}` ❌")
             self.send('\n'.join(response))
 
         elif args[0] == 'workers':
@@ -236,11 +234,11 @@ class TelegramContact(Contact):
             response = ["I found the following **workers**:"]
             for worker in workers:
                 if worker['configured_on']:
-                    response.append("`{}`".format(worker['name']))
+                    response.append(f"`{worker['name']}`")
                     if not worker['connected_to']:
                         response[-1] += " ⚠️"
                 elif all:
-                    response.append("`{}` ❌".format(worker['name']))
+                    response.append(f"`{worker['name']}` ❌")
             self.send('\n'.join(response))
 
         elif args[0] == 'changes':
@@ -254,11 +252,10 @@ class TelegramContact(Contact):
                 if num > 50:
                     keyboard = [
                         [self.query_button("‼ Yes, flood me with all of them!",
-                                           '/list {} changes'.format(num))],
+                                           f'/list {num} changes')],
                         [self.query_button("✅ No, just show last 50", '/list 50 changes')]
                     ]
-                    self.send("I found {} changes. Do you really want me "
-                              "to list them all?".format(num),
+                    self.send(f"I found {num} changes. Do you really want me to list them all?",
                               reply_markup={'inline_keyboard': keyboard})
                     return
 
@@ -272,12 +269,12 @@ class TelegramContact(Contact):
                 change['comment'] = change['comments'].split('\n')[0]
                 change['date'] = epoch2datetime(change['when_timestamp']).strftime('%Y-%m-%d %H:%M')
                 response.append(
-                    "[{comment}]({revlink})\n"
-                    "_Author_: {author}\n"
-                    "_Date_: {date}\n"
-                    "_Repository_: {repository}\n"
-                    "_Branch_: {branch}\n"
-                    "_Revision_: {revision}\n".format(**change))
+                    f"[{change['comment']}]({change['revlink']})\n"
+                    f"_Author_: {change['author']}\n"
+                    f"_Date_: {change['date']}\n"
+                    f"_Repository_: {change['repository']}\n"
+                    f"_Branch_: {change['branch']}\n"
+                    f"_Revision_: {change['revision']}\n")
             self.send('\n'.join(response))
 
     @defer.inlineCallbacks
@@ -297,7 +294,7 @@ class TelegramContact(Contact):
             builders = yield self.get_running_builders()
             if builders:
                 keyboard = [
-                    [self.query_button("🔎 " + b, '/watch {}'.format(b))]
+                    [self.query_button("🔎 " + b, f'/watch {b}')]
                     for b in builders
                 ]
                 self.send("Which builder do you want to watch?",
@@ -319,10 +316,9 @@ class TelegramContact(Contact):
 
         keyboard = [
             [
-                self.query_button("{} {}".format(e.capitalize(),
-                                                 '🔔' if e in self.channel.notify_events else '🔕'),
-                                  '/notify {}-quiet {}'.format(
-                                      'off' if e in self.channel.notify_events else 'on', e))
+                self.query_button(
+                    f"{e.capitalize()} {'🔔' if e in self.channel.notify_events else '🔕'}",
+                    f"/notify {'off' if e in self.channel.notify_events else 'on'}-quiet {e}")
                 for e in evs
             ]
             for evs in (('started', 'finished'), ('success', 'failure'), ('warnings', 'exception'),
@@ -342,21 +338,21 @@ class TelegramContact(Contact):
             username = self.user_info.get('username', '')
             if username:
                 if greeting:
-                    prompt = "{} @{}, now {}...".format(greeting, username, prompt)
+                    prompt = f"{greeting} @{username}, now {prompt}..."
                 else:
-                    prompt = "@{}, now {}...".format(username, prompt)
+                    prompt = "@{username}, now {prompt}..."
                 kwargs['reply_markup'] = {
                     'force_reply': True,
                     'selective': True
                 }
             else:
                 if greeting:
-                    prompt = "{}, now reply to this message and {}...".format(greeting, prompt)
+                    prompt = f"{greeting}, now reply to this message and {prompt}..."
                 else:
-                    prompt = "Reply to this message and {}...".format(prompt)
+                    prompt = f"Reply to this message and {prompt}..."
         else:
             if greeting:
-                prompt = "{}, now {}...".format(greeting, prompt)
+                prompt = f"{greeting}, now {prompt}..."
             else:
                 prompt = prompt[0].upper() + prompt[1:] + "..."
             # Telegram seems to have a bug, which causes reply request to pop sometimes again.
@@ -379,14 +375,14 @@ class TelegramContact(Contact):
             builders = yield self.get_running_builders()
             if builders:
                 keyboard = [
-                    [self.query_button("🚫 " + b, '/stop build {}'.format(b))]
+                    [self.query_button("🚫 " + b, f'/stop build {b}')]
                     for b in builders
                 ]
                 self.send("Select builder to stop...",
                           reply_markup={'inline_keyboard': keyboard})
         else:  # len(argv) == 1
             self.template = '/stop ' + args + ' {}'
-            self.ask_for_reply("give me the reason to stop build on `{}`".format(argv[0]))
+            self.ask_for_reply(f"give me the reason to stop build on `{argv[0]}`")
 
     @Contact.overrideCommand
     def command_SHUTDOWN(self, args, **kwargs):
@@ -431,7 +427,7 @@ class TelegramContact(Contact):
                 sched = next(iter(forceschedulers))
             else:
                 keyboard = [
-                    [self.query_button(s['label'], '/force {}'.format(s['name']))]
+                    [self.query_button(s['label'], f"/force {s['name']}")]
                     for s in forceschedulers.values()
                 ]
                 self.send("Which force scheduler do you want to activate?",
@@ -444,7 +440,7 @@ class TelegramContact(Contact):
                 sched = next(iter(forceschedulers))
             else:
                 raise UsageError("Try '/force' and follow the instructions"
-                                 " (no force scheduler {})".format(sched))
+                                 f" (no force scheduler {sched})")
         scheduler = forceschedulers[sched]
 
         try:
@@ -457,7 +453,7 @@ class TelegramContact(Contact):
 
         if not argv:
             keyboard = [
-                [self.query_button(b, '/force {} {} {}'.format(sched, task, b))]
+                [self.query_button(b, f'/force {sched} {task} {b}')]
                 for b in scheduler['builder_names']
             ]
             self.send("Which builder do you want to start?",
@@ -474,14 +470,13 @@ class TelegramContact(Contact):
 
         bldr = argv.pop(0)
         if bldr not in scheduler['builder_names']:
-            raise UsageError(("Try '/force' and follow the instructions "
-                              "(`{}` not configured for _{}_ scheduler)"
-                              ).format(bldr, scheduler['label']))
+            raise UsageError("Try '/force' and follow the instructions "
+                             f"(`{bldr}` not configured for _{scheduler['label']}_ scheduler)")
 
         try:
             params = dict(arg.split('=', 1) for arg in argv)
         except ValueError as e:
-            raise UsageError("Try '/force' and follow the instructions ({})".format(e)) from e
+            raise UsageError(f"Try '/force' and follow the instructions ({e})") from e
 
         all_fields = list(collect_fields(scheduler['all_fields']))
         required_params = [f['fullName'] for f in all_fields
@@ -507,7 +502,7 @@ class TelegramContact(Contact):
                         if scheduler.name == sched and isinstance(scheduler, ForceScheduler):
                             break
                     else:
-                        raise ValueError("There is no force scheduler '{}'".format(sched))
+                        raise ValueError(f"There is no force scheduler '{sched}'")
                     try:
                         yield scheduler.force(builderid=builder['builderid'],
                                               owner=self.describeUser(),
@@ -519,15 +514,14 @@ class TelegramContact(Contact):
                     return
 
             except (IndexError, ValueError) as e:
-                raise UsageError("Try '/force' and follow the instructions ({})".format(e)) from e
+                raise UsageError(f"Try '/force' and follow the instructions ({e})") from e
 
         if task == 'config':
 
-            msg = "{}, you are about to start a new build on `{}`!"\
-                .format(self.user_full_name, bldr)
+            msg = f"{self.user_full_name}, you are about to start a new build on `{bldr}`!"
 
             keyboard = []
-            args = ' '.join(shlex.quote("{}={}".format(*p)) for p in params.items())
+            args = ' '.join(shlex.quote(f"{p[0]}={p[1]}") for p in params.items())
 
             fields = [f for f in all_fields if f['type'] != 'fixed'
                       and f['fullName'] not in ('username', 'owner')]
@@ -536,11 +530,11 @@ class TelegramContact(Contact):
                 msg += "\n\nThe current build parameters are:"
                 for field in fields:
                     if field['type'] == 'nested':
-                        msg += "\n{}".format(field['label'])
+                        msg += f"\n{field['label']}"
                     else:
                         field_name = field['fullName']
                         value = params.get(field_name, field['default']).strip()
-                        msg += "\n    {} `{}`".format(field['label'], value)
+                        msg += f"\n    {field['label']} `{value}`"
                         if value:
                             key = "Change "
                         else:
@@ -550,8 +544,8 @@ class TelegramContact(Contact):
                             key = "⚠️ " + key
                             msg += " ⚠️"
                         keyboard.append(
-                            [self.query_button(key, '/force {} ask {} {} {}'
-                                               .format(sched, field_name, bldr, args))]
+                            [self.query_button(key,
+                                f'/force {sched} ask {field_name} {bldr} {args}')]
                         )
 
             msg += "\n\nWhat do you want to do?"
@@ -560,17 +554,16 @@ class TelegramContact(Contact):
 
             if not missing_params:
                 keyboard.append(
-                    [self.query_button("🚀 Start Build", '/force {} build {} {}'
-                                       .format(sched, bldr, args))],
+                    [self.query_button("🚀 Start Build", f'/force {sched} build {bldr} {args}')],
                 )
 
             self.send(msg, reply_markup={'inline_keyboard': keyboard})
 
         elif task == 'ask':
             prompt = "enter the new value for the " + what.replace('_', ' ').lower()
-            args = ' '.join(shlex.quote("{}={}".format(*p)) for p in params.items()
+            args = ' '.join(shlex.quote(f"{p[0]}={p[1]}") for p in params.items()
                             if p[0] != what)
-            self.template = '/force {} config {} {} {}={{}}'.format(sched, bldr, args, what)
+            self.template = f'/force {sched} config {bldr} {args} {what}={{}}'
             self.ask_for_reply(prompt, '')
 
         else:
@@ -745,8 +738,7 @@ class TelegramStatusBot(StatusBot):
                 # just for tests
                 raise err
             except Exception as err:
-                msg = "ERROR: problem sending Telegram request {} (will try again): {}".format(path,
-                                                                                               err)
+                msg = f"ERROR: problem sending Telegram request {path} (will try again): {err}"
                 if logme:
                     self.log(msg)
                     logme = False
@@ -754,8 +746,8 @@ class TelegramStatusBot(StatusBot):
             else:
                 ans = yield res.json()
                 if not ans.get('ok'):
-                    self.log("ERROR: cannot send Telegram request {}: "
-                             "[{}] {}".format(path, res.code, ans.get('description')))
+                    self.log(f"ERROR: cannot send Telegram request {path}: "
+                             f"[{res.code}] {ans.get('description')}")
                     return None
                 return ans.get('result', True)
 
@@ -860,17 +852,16 @@ class TelegramWebhookBot(TelegramStatusBot):
                 content_type.startswith('application/json'):
             update = json.loads(content)
         else:
-            raise ValueError('Unknown content type: {}'
-                             .format(content_type))
+            raise ValueError(f'Unknown content type: {content_type}')
         return update
 
     @defer.inlineCallbacks
     def set_webhook(self, url, certificate=None):
         if not certificate:
-            self.log("Setting up webhook to: {}".format(url))
+            self.log(f"Setting up webhook to: {url}")
             yield self.post('/setWebhook', json=dict(url=url))
         else:
-            self.log("Setting up webhook to: {} (custom certificate)".format(url))
+            self.log(f"Setting up webhook to: {url} (custom certificate)")
             certificate = io.BytesIO(unicode2bytes(certificate))
             yield self.post('/setWebhook', data=dict(url=url),
                             files=dict(certificate=certificate))
@@ -910,13 +901,12 @@ class TelegramPollingBot(TelegramStatusBot):
                                                   **kwargs)
                 ans = yield res.json()
                 if not ans.get('ok'):
-                    raise ValueError("[{}] {}".format(res.code, ans.get('description')))
+                    raise ValueError(f"[{res.code}] {ans.get('description')}")
                 updates = ans.get('result')
             except AssertionError as err:
                 raise err
             except Exception as err:
-                msg = ("ERROR: cannot send Telegram request /getUpdates (will try again): {}"
-                       ).format(err)
+                msg = f"ERROR: cannot send Telegram request /getUpdates (will try again): {err}"
                 if logme:
                     self.log(msg)
                     logme = False

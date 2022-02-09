@@ -47,11 +47,11 @@ def flaky(bugNumber=None, issueNumber=None, onPlatform=None):
             return fn
 
         if bugNumber is not None:
-            fn.skip = (("Flaky test (http://trac.buildbot.net/ticket/{}) "
-                        "- set ${} to run anyway").format(bugNumber, _FLAKY_ENV_VAR))
+            fn.skip = (f"Flaky test (http://trac.buildbot.net/ticket/{bugNumber}) "
+                       f"- set ${_FLAKY_ENV_VAR} to run anyway")
         if issueNumber is not None:
-            fn.skip = (("Flaky test (https://github.com/buildbot/buildbot/issues/{}) "
-                        "- set ${} to run anyway").format(issueNumber, _FLAKY_ENV_VAR))
+            fn.skip = (f"Flaky test (https://github.com/buildbot/buildbot/issues/{issueNumber}) "
+                       f"- set ${_FLAKY_ENV_VAR} to run anyway")
         return fn
     return wrap
 
@@ -59,7 +59,7 @@ def flaky(bugNumber=None, issueNumber=None, onPlatform=None):
 def skipUnlessPlatformIs(platform):
     def closure(test):
         if runtime.platformType != platform:
-            test.skip = "not a {} platform".format(platform)
+            test.skip = f"not a {platform} platform"
         return test
     return closure
 
@@ -69,6 +69,6 @@ def skipIfPythonVersionIsLess(min_version_info):
 
     def closure(test):
         if sys.version_info < min_version_info:
-            test.skip = "requires Python >= {0}".format(min_version_info)
+            test.skip = f"requires Python >= {min_version_info}"
         return test
     return closure

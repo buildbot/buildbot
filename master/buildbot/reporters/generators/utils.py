@@ -84,7 +84,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         if log['name'] in self.add_logs:
             return True
 
-        long_name = "{}.{}".format(log['stepname'], log['name'])
+        long_name = f"{log['stepname']}.{log['name']}"
         if long_name in self.add_logs:
             return True
 
@@ -135,8 +135,8 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         if msgtype is None:
             return new_msgtype, True
         if msgtype != new_msgtype:
-            log.msg(('{}: Incompatible message types for multiple builds ({} and {}). Ignoring'
-                     ).format(self, msgtype, new_msgtype))
+            log.msg(f'{self}: Incompatible message types for multiple builds '
+                    f'({msgtype} and {new_msgtype}). Ignoring')
             return msgtype, False
 
         return msgtype, True
@@ -158,8 +158,8 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         if isinstance(body, list) and isinstance(new_body, list):
             return body + new_body, True
 
-        log.msg(('{}: Incompatible message body types for multiple builds ({} and {}). Ignoring'
-                 ).format(self, type(body), type(new_body)))
+        log.msg(f'{self}: Incompatible message body types for multiple builds '
+                f'({type(body)} and {type(new_body)}). Ignoring')
         return body, False
 
     def _get_patches_for_build(self, build):
@@ -225,11 +225,11 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                     config.error("mode 'all' is not valid in an iterator and must be "
                                  "passed in as a separate string")
                 else:
-                    config.error("mode {} is not a valid mode".format(m))
+                    config.error(f"mode {m} is not a valid mode")
 
     def _verify_list_or_none_param(self, name, param):
         if param is not None and not isinstance(param, list):
-            config.error("{} must be a list or None".format(name))
+            config.error(f"{name} must be a list or None")
 
     def _compute_shortcut_modes(self, mode):
         if isinstance(mode, str):

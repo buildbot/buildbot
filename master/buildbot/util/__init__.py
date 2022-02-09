@@ -98,12 +98,12 @@ def now(_reactor=None):
 def formatInterval(eta):
     eta_parts = []
     if eta > 3600:
-        eta_parts.append("%d hrs" % (eta / 3600))
+        eta_parts.append(f"{eta // 3600} hrs")
         eta %= 3600
     if eta > 60:
-        eta_parts.append("%d mins" % (eta / 60))
+        eta_parts.append(f"{eta // 60} mins")
         eta %= 60
-    eta_parts.append("%d secs" % eta)
+    eta_parts.append(f"{eta} secs")
     return ", ".join(eta_parts)
 
 
@@ -114,35 +114,35 @@ def fuzzyInterval(seconds):
     if seconds <= 1:
         return "a moment"
     if seconds < 20:
-        return "{:d} seconds".format(seconds)
+        return f"{seconds} seconds".format(seconds)
     if seconds < 55:
-        return "{:d} seconds".format(round(seconds / 10.) * 10)
+        return f"{round(seconds / 10.) * 10} seconds"
     minutes = round(seconds / 60.)
     if minutes == 1:
         return "a minute"
     if minutes < 20:
-        return "{:d} minutes".format(minutes)
+        return f"{minutes} minutes"
     if minutes < 55:
-        return "{:d} minutes".format(round(minutes / 10.) * 10)
+        return f"{round(minutes / 10.) * 10} minutes"
     hours = round(minutes / 60.)
     if hours == 1:
         return "an hour"
     if hours < 24:
-        return "{:d} hours".format(hours)
+        return f"{hours} hours"
     days = (hours + 6) // 24
     if days == 1:
         return "a day"
     if days < 30:
-        return "{:d} days".format(days)
+        return f"{days} days"
     months = int((days + 10) / 30.5)
     if months == 1:
         return "a month"
     if months < 12:
-        return "{} months".format(months)
+        return f"{months} months"
     years = round(days / 365.25)
     if years == 1:
         return "a year"
-    return "{} years".format(years)
+    return f"{years} years"
 
 
 @implementer(IConfigured)
@@ -332,17 +332,17 @@ def human_readable_delta(start, end):
 
     result = []
     if delta.days > 0:
-        result.append('%d days' % (delta.days,))
+        result.append(f'{delta.days} days')
     if delta.seconds > 0:
         hours = int(delta.seconds / 3600)
         if hours > 0:
-            result.append('%d hours' % (hours,))
+            result.append(f'{hours} hours')
         minutes = int((delta.seconds - hours * 3600) / 60)
         if minutes:
-            result.append('%d minutes' % (minutes,))
+            result.append(f'{minutes} minutes')
         seconds = delta.seconds % 60
         if seconds > 0:
-            result.append('%d seconds' % (seconds,))
+            result.append(f'{seconds} seconds')
 
     if result:
         return ', '.join(result)
@@ -464,9 +464,9 @@ def command_to_string(command):
     if not words:
         return None
     if len(words) < 3:
-        rv = "'{}'".format(' '.join(words))
+        rv = f"'{' '.join(words)}'"
     else:
-        rv = "'{} ...'".format(' '.join(words[:2]))
+        rv = f"'{' '.join(words[:2])} ...'"
 
     return rv
 

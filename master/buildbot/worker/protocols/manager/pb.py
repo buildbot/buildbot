@@ -58,7 +58,7 @@ class Dispatcher(BaseDispatcher):
             persp = yield afactory(mind, username)
 
         if not persp:
-            raise ValueError("no perspective for '{}'".format(username))
+            raise ValueError(f"no perspective for '{username}'")
 
         yield persp.attached(mind)
 
@@ -78,10 +78,10 @@ class Dispatcher(BaseDispatcher):
                 password = yield p.render(password)
                 matched = creds.checkPassword(unicode2bytes(password))
                 if not matched:
-                    log.msg("invalid login from user '{}'".format(username))
+                    log.msg(f"invalid login from user '{username}'")
                     raise error.UnauthorizedLogin()
                 return creds.username
-            log.msg("invalid login from unknown user '{}'".format(username))
+            log.msg(f"invalid login from unknown user '{username}'")
             raise error.UnauthorizedLogin()
         finally:
             # brake the callback stack by returning to the reactor

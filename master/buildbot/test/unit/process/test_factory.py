@@ -124,7 +124,7 @@ class TestGNUAutoconf(TestBuildFactory):
                 cmd = step.buildStep().command
                 self.assertNotIn(cmd, [['make', 'all'], ['make', 'check'],
                                  ['make', 'distcheck']],
-                                 "Build step {} should not be present.".format(cmd))
+                                 f"Build step {cmd} should not be present.")
             except(AttributeError, KeyError):
                 pass
 

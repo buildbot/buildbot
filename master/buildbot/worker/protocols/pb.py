@@ -36,7 +36,7 @@ class Listener(base.UpdateRegistrationListener):
         return self.master.pbmanager
 
     def before_connection_setup(self, mind, workerName):
-        log.msg("worker '{}' attaching from {}".format(workerName, mind.broker.transport.getPeer()))
+        log.msg(f"worker '{workerName}' attaching from {mind.broker.transport.getPeer()}")
         try:
             mind.broker.transport.setTcpKeepAlive(1)
         except Exception:
@@ -254,7 +254,7 @@ class Connection(base.Connection, pb.Avatar):
 
             if d:
                 name = self.worker.workername
-                log.msg("Shutting down (old) worker: {}".format(name))
+                log.msg(f"Shutting down (old) worker: {name}")
                 # The remote shutdown call will not complete successfully since
                 # the buildbot process exits almost immediately after getting
                 # the shutdown request.
@@ -265,9 +265,9 @@ class Connection(base.Connection, pb.Avatar):
                 @d.addErrback
                 def _errback(why):
                     if why.check(pb.PBConnectionLost):
-                        log.msg("Lost connection to {}".format(name))
+                        log.msg(f"Lost connection to {name}")
                     else:
-                        log.err("Unexpected error when trying to shutdown {}".format(name))
+                        log.err(f"Unexpected error when trying to shutdown {name}")
                 return d
             log.err("Couldn't find remote builder to shut down worker")
             return defer.succeed(None)

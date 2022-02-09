@@ -125,7 +125,7 @@ class FakeBuildersComponent(FakeDBComponent):
 
     def addTestBuilder(self, builderid, name=None):
         if name is None:
-            name = "SomeBuilder-%d" % builderid
+            name = f"SomeBuilder-{builderid}"
         self.db.insertTestData([
             Builder(id=builderid, name=name),
         ])

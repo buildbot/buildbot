@@ -276,7 +276,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
         dictType = str(type({}))
         errMsg = ("ForceScheduler 'foo': 'codebases' should be a list "
                   "of strings or CodebaseParameter, "
-                  "not {}".format(dictType))
+                  f"not {dictType}")
         with self.assertRaisesConfigError(errMsg):
             ForceScheduler(name='foo', builderNames=['bar'],
                            codebases={'cb': {'branch': 'trunk'}})

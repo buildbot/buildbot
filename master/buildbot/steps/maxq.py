@@ -74,5 +74,5 @@ class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
 
     def getResultSummary(self):
         if self.failures:
-            return {'step': "{} maxq failures".format(self.failures)}
+            return {'step': f"{self.failures} maxq failures"}
         return {'step': 'success'}

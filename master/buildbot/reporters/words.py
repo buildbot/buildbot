@@ -121,7 +121,7 @@ class Channel(service.AsyncService):
     """
 
     def __init__(self, bot, channel):
-        self.name = "Channel({})".format(channel)
+        self.name = f"Channel({channel})"
         self.id = channel
         self.bot = bot
         self.notify_events = set()
@@ -149,8 +149,8 @@ class Channel(service.AsyncService):
     @defer.inlineCallbacks
     def list_notified_events(self):
         if self.notify_events:
-            yield self.send("The following events are being notified: {}."
-                            .format(", ".join(sorted(self.notify_events))))
+            yield self.send('The following events are being notified: '
+                            f'{", ".join(sorted(self.notify_events))}.')
         else:
             yield self.send("No events are being notified.")
 
@@ -235,7 +235,7 @@ class Channel(service.AsyncService):
         builder = yield self.bot.getBuilder(builderid=build['builderid'])
         builderName = builder['name']
         buildNumber = build['number']
-        log.msg('[Contact] Builder {} started'.format(builder['name'], ))
+        log.msg(f"[Contact] Builder {builder['name']} started")
 
         # only notify about builders we are interested in
         if (self.bot.tags is not None and
@@ -248,8 +248,7 @@ class Channel(service.AsyncService):
 
         if self.useRevisions:
             revisions = yield self.getRevisionsForBuild(build)
-            r = "Build containing revision(s) {} on {} started" \
-                .format(','.join(revisions), builderName)
+            r = f"Build containing revision(s) {','.join(revisions)} on {builderName} started"
         else:
             # Abbreviate long lists of changes to simply two
             # revisions, and the number of additional changes.
@@ -258,9 +257,9 @@ class Channel(service.AsyncService):
             changes_str = ""
 
             url = utils.getURLForBuild(self.master, builder['builderid'], build['number'])
-            r = "Build [#{:d}]({}) of `{}` started".format(buildNumber, url, builderName)
+            r = f"Build [#{buildNumber}]({url}) of `{builderName}` started"
             if changes_str:
-                r += " ({})".format(changes_str)
+                r += f" ({changes_str})"
 
         self.send(r + ".")
 
@@ -286,12 +285,11 @@ class Channel(service.AsyncService):
 
         if self.useRevisions:
             revisions = yield self.getRevisionsForBuild(build)
-            r = "Build on `{}` containing revision(s) {} {}" \
-                .format(builderName, ','.join(revisions), self.bot.format_build_status(build))
+            r = (f"Build on `{builderName}` containing revision(s) {','.join(revisions)} "
+                 f"{self.bot.format_build_status(build)}")
         else:
-            r = "Build [#{:d}]({}) of `{}` {}" \
-                .format(buildNumber, url, builderName, self.bot.format_build_status(build))
-
+            r = (f"Build [#{buildNumber}]({url}) of `{builderName}` "
+                 f"{self.bot.format_build_status(build)}")
         s = build.get('status_string')
         if build['results'] != SUCCESS and s is not None:
             r += ": " + s
@@ -355,8 +353,8 @@ class Channel(service.AsyncService):
     def workerMissing(self, worker):
         self.missing_workers.add(worker['workerid'])
         if self.notify_for('worker'):
-            self.send(("Worker `{name}` is missing. It was seen last on "
-                       "{last_connection}.").format(**worker))
+            self.send(f"Worker `{worker['name']}` is missing. It was seen last on "
+                      f"{worker['last_connection']}.")
         yield self.bot.saveMissingWorkers()
 
     @defer.inlineCallbacks
@@ -365,7 +363,7 @@ class Channel(service.AsyncService):
         if workerid in self.missing_workers:
             self.missing_workers.remove(workerid)
             if self.notify_for('worker'):
-                self.send("Worker `{name}` is back online.".format(**worker))
+                self.send(f"Worker `{worker['name']}` is back online.")
             yield self.bot.saveMissingWorkers()
 
 
@@ -421,7 +419,7 @@ class Contact:
         return self.channel.send(message, **kwargs)
 
     def access_denied(self, *args, **kwargs):
-        return self.send("Thou shall not pass, {}!!!".format(self.user_id))
+        return self.send(f"Thou shall not pass, {self.user_id}!!!")
 
     # Main dispatchers for incoming messages
 
@@ -459,7 +457,7 @@ class Contact:
         if cmd_suffix and cmd.endswith(cmd_suffix):
             cmd = cmd[:-len(cmd_suffix)]
 
-        self.bot.log("Received command `{}` from {}".format(cmd, self.describeUser()))
+        self.bot.log(f"Received command `{cmd}` from {self.describeUser()}")
 
         if cmd.startswith(self.bot.commandPrefix):
             meth = self.getCommandMethod(cmd[len(self.bot.commandPrefix):])
@@ -471,7 +469,7 @@ class Contact:
                 self.send("What you say!")
                 return None
             elif cmd.startswith(self.bot.commandPrefix):
-                self.send("I don't get this '{}'...".format(cmd))
+                self.send(f"I don't get this '{cmd}'...")
                 meth = self.command_COMMANDS
             else:
                 if self.is_private_chat:
@@ -503,7 +501,7 @@ class Contact:
 
     def command_VERSION(self, args, **kwargs):
         """show buildbot version"""
-        self.send("This is buildbot-{} at your service".format(version))
+        self.send(f"This is buildbot-{version} at your service")
 
     @defer.inlineCallbacks
     def command_LIST(self, args, **kwargs):
@@ -523,8 +521,8 @@ class Contact:
             pass
 
         if not args:
-            raise UsageError(("Try '{}list [all|N] builders|workers|changes'."
-                              ).format(self.bot.commandPrefix))
+            raise UsageError("Try "
+                             f"'{self.bot.commandPrefix}list [all|N] builders|workers|changes'.")
 
         if args[0] == 'builders':
             bdicts = yield self.bot.getAllBuilders()
@@ -567,12 +565,12 @@ class Contact:
                 change['comment'] = change['comments'].split('\n')[0]
                 change['date'] = epoch2datetime(change['when_timestamp']).strftime('%Y-%m-%d %H:%M')
                 response.append(
-                    "{comment})\n"
-                    "Author: {author}\n"
-                    "Date: {date}\n"
-                    "Repository: {repository}\n"
-                    "Branch: {branch}\n"
-                    "Revision: {revision}\n".format(**change))
+                    f"{change['comment']})\n"
+                    f"Author: {change['author']}\n"
+                    f"Date: {change['date']}\n"
+                    f"Repository: {change['repository']}\n"
+                    f"Branch: {change['branch']}\n"
+                    f"Revision: {change['revision']}\n")
             self.send('\n\n'.join(response))
 
     command_LIST.usage = "list [all|N] builders|workers|changes - " \
@@ -679,11 +677,10 @@ class Contact:
 
             if self.bot.useRevisions:
                 revisions = yield self.bot.getRevisionsForBuild(build)
-                r = "Watching build on `{}` containing revision(s) {} until it finishes..." \
-                    .format(which, ','.join(revisions))
+                r = (f"Watching build on `{which}` containing revision(s) "
+                     f"{','.join(revisions)} until it finishes...")
             else:
-                r = "Watching build [#{:d}]({}) of `{}` until it finishes..." \
-                    .format(build['number'], url, which)
+                r = f"Watching build [#{build['number']}]({url}) of `{which}` until it finishes..."
 
             self.send(r)
     command_WATCH.usage = "watch _which_ - announce the completion of an active build"
@@ -694,7 +691,7 @@ class Contact:
         """force a build"""
 
         # FIXME: NEED TO THINK ABOUT!
-        errReply = "Try '{}{}'".format(self.bot.commandPrefix, self.command_FORCE.usage)
+        errReply = f"Try '{self.bot.commandPrefix}{self.command_FORCE.usage}'"
         args = self.splitArgs(args)
         if not args:
             raise UsageError(errReply)
@@ -722,12 +719,12 @@ class Contact:
         pname_validate = self.master.config.validation['property_name']
         pval_validate = self.master.config.validation['property_value']
         if branch and not branch_validate.match(branch):
-            self.bot.log("Force: bad branch '{}'".format(branch))
-            self.send("Sorry, bad branch '{}'".format(branch))
+            self.bot.log(f"Force: bad branch '{branch}'")
+            self.send(f"Sorry, bad branch '{branch}'")
             return
         if revision and not revision_validate.match(revision):
-            self.bot.log("Force: bad revision '{}'".format(revision))
-            self.send("Sorry, bad revision '{}'".format(revision))
+            self.bot.log(f"Force: bad revision '{revision}'")
+            self.send(f"Sorry, bad revision '{revision}'")
             return
 
         properties = Properties()
@@ -745,17 +742,15 @@ class Contact:
             for pname, pvalue in pdict.items():
                 if not pname_validate.match(pname) \
                         or not pval_validate.match(pvalue):
-                    self.bot.log("Force: bad property name='{}', value='{}'"
-                                 .format(pname, pvalue))
-                    self.send("Sorry, bad property name='{}', value='{}'"
-                              .format(pname, pvalue))
+                    self.bot.log(f"Force: bad property name='{pname}', value='{pvalue}'")
+                    self.send(f"Sorry, bad property name='{pname}', value='{pvalue}'")
                     return
                 properties.setProperty(pname, pvalue, "Force Build Chat")
 
         properties.setProperty("reason", reason, "Force Build Chat")
         properties.setProperty("owner", self.describeUser(), "Force Build Chat")
 
-        reason = "forced: by {}: {}".format(self.describeUser(), reason)
+        reason = f"forced: by {self.describeUser()}: {reason}"
         try:
             yield self.master.data.updates.addBuildset(builderids=[builder['builderid']],
                                                        # For now, we just use
@@ -787,7 +782,7 @@ class Contact:
         which = args[1]
         reason = ' '.join(args[2:])
 
-        r = "stopped: by {}: {}".format(self.describeUser(), reason)
+        r = f"stopped: by {self.describeUser()}: {reason}"
 
         # find an in-progress build
         builder = yield self.bot.getBuilder(buildername=which)
@@ -805,11 +800,10 @@ class Contact:
                                            ('builders', builderid, 'builds', num))
             if self.bot.useRevisions:
                 revisions = yield self.bot.getRevisionsForBuild(bdict)
-                response = "Build containing revision(s) {} interrupted".format(','.join(
-                    revisions))
+                response = f"Build containing revision(s) {','.join(revisions)} interrupted"
             else:
                 url = utils.getURLForBuild(self.master, builderid, num)
-                response = "Build [#{:d}]({}) of `{}` interrupted.".format(num, url, which)
+                response = f"Build [#{num}]({url}) of `{which}` interrupted."
             self.send(response)
 
     command_STOP.usage = "stop build _which_ _reason_ - Stop a running build"
@@ -851,10 +845,10 @@ class Contact:
                 else:
                     ago = "??"
                 status = self.bot.format_build_status(lastBuild)
-                status = 'last build {} ({} ago)'.format(status, ago)
+                status = f'last build {status} ({ago} ago)'
                 if lastBuild['results'] != SUCCESS:
-                    status += ': {}'.format(lastBuild['state_string'])
-            messages.append("`{}`: {}".format(builder['name'], status))
+                    status += f": {lastBuild['state_string']}"
+            messages.append(f"`{builder['name']}`: {status}")
         if messages:
             self.send('\n'.join(messages))
 
@@ -872,7 +866,7 @@ class Contact:
     def describeUser(self):
         if self.is_private_chat:
             return self.user_id
-        return "{} on {}".format(self.user_id, self.channel.id)
+        return f"{self.user_id} on {self.channel.id}"
 
     # commands
 
@@ -886,7 +880,7 @@ class Contact:
                 meth = getattr(self, 'command_' + command.upper())
                 doc = getattr(meth, '__doc__', None)
                 if doc:
-                    response.append("{} - {}".format(command, doc))
+                    response.append(f"{command} - {doc}")
             if response:
                 self.send('\n'.join(response))
             return
@@ -895,7 +889,7 @@ class Contact:
             command = command[len(self.bot.commandPrefix):]
         meth = getattr(self, 'command_' + command.upper(), None)
         if not meth:
-            raise UsageError("There is no such command '{}'.".format(args[0]))
+            raise UsageError(f"There is no such command '{args[0]}'.")
         doc = getattr(meth, 'usage', None)
         if isinstance(doc, dict):
             if len(args) == 1:
@@ -911,10 +905,10 @@ class Contact:
             except (TypeError, ValueError):
                 doc = None
         if doc:
-            self.send("Usage: {}{}".format(self.bot.commandPrefix, doc))
+            self.send(f"Usage: {self.bot.commandPrefix}{doc}")
         else:
             self.send(
-                "No usage info for " + ' '.join(["'{}'".format(arg) for arg in args]))
+                "No usage info for " + ' '.join([f"'{arg}'" for arg in args]))
     command_HELP.usage = ("help [_command_ _arg_ [_subarg_ ...]] - "
                           "Give help for _command_ or one of it's arguments")
 
@@ -1040,7 +1034,7 @@ class StatusBot(service.AsyncMultiService):
 
     def _get_object_id(self):
         return self.master.db.state.getObjectId(
-            self.nickname, '{0.__module__}.{0.__name__}'.format(self.__class__))
+            self.nickname, f'{self.__class__.__module__}.{self.__class__.__name__}')
 
     @defer.inlineCallbacks
     def _save_channels_state(self, attr, json_type=None):
@@ -1052,7 +1046,7 @@ class StatusBot(service.AsyncMultiService):
             objectid = yield self._get_object_id()
             yield self.master.db.state.setState(objectid, attr, data)
         except Exception as err:
-            self.log_err(err, "saveState '{}'".format(attr))
+            self.log_err(err, f"saveState '{attr}'")
 
     @defer.inlineCallbacks
     def _load_channels_state(self, attr, setter):
@@ -1060,14 +1054,14 @@ class StatusBot(service.AsyncMultiService):
             objectid = yield self._get_object_id()
             data = yield self.master.db.state.getState(objectid, attr, ())
         except Exception as err:
-            self.log_err(err, "loadState ({})".format(attr))
+            self.log_err(err, f"loadState ({attr})")
         else:
             if data is not None:
                 for c, d in data:
                     try:
                         setter(self.getChannel(c), d)
                     except Exception as err:
-                        self.log_err(err, "loadState '{}' ({})".format(attr, c))
+                        self.log_err(err, f"loadState '{attr}' ({c})")
 
     @defer.inlineCallbacks
     def loadState(self):
@@ -1092,7 +1086,7 @@ class StatusBot(service.AsyncMultiService):
             parent = self.parent.name
         except AttributeError:
             parent = '-'
-        name = "{},{}".format(parent, source)
+        name = f"{parent},{source}"
         return name
 
     def log(self, msg, source=None):
@@ -1135,7 +1129,7 @@ class StatusBot(service.AsyncMultiService):
 
     @defer.inlineCallbacks
     def getBuildStatus(self, which, short=False):
-        response = '`{}`: '.format(which)
+        response = f'`{which}`: '
 
         builder = yield self.getBuilder(buildername=which)
         builderid = builder['builderid']
@@ -1162,7 +1156,7 @@ class StatusBot(service.AsyncMultiService):
                             status_string = lastBuild.get('status_string')
                             if status_string:
                                 status += ": " + status_string
-                    response += '  last build {} ago{}'.format(ago, status)
+                    response += f'  last build {ago} ago{status}'
             else:
                 response += self.offline_string
         else:
@@ -1171,12 +1165,12 @@ class StatusBot(service.AsyncMultiService):
             for build in runningBuilds:
                 step = yield self.getCurrentBuildstep(build)
                 if step:
-                    s = "({})".format(step[-1]['state_string'])
+                    s = f"({step[-1]['state_string']})"
                 else:
                     s = "(no current step)"
                 bnum = build['number']
                 url = utils.getURLForBuild(self.master, builderid, bnum)
-                buildInfo.append("build [#{:d}]({}) {}".format(bnum, url, s))
+                buildInfo.append(f"build [#{bnum}]({url}) {s}")
 
             response += ' ' + ', '.join(buildInfo)
 
@@ -1202,8 +1196,8 @@ class StatusBot(service.AsyncMultiService):
             if buildername:
                 which = buildername
             else:
-                which = 'number {}'.format(builderid)
-            raise UsageError("no such builder '{}'".format(which))
+                which = f'number {builderid}'
+            raise UsageError(f"no such builder '{which}'")
         return bdict
 
     def getAllBuilders(self):

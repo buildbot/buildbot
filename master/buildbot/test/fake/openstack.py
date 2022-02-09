@@ -187,7 +187,7 @@ def get_plugin_loader(plugin_type):
         return PasswordLoader()
     if plugin_type == 'token':
         return TokenLoader()
-    raise ValueError("plugin_type '{}' is not supported".format(plugin_type))
+    raise ValueError(f"plugin_type '{plugin_type}' is not supported")
 
 
 class PasswordLoader():

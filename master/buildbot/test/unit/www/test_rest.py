@@ -53,7 +53,7 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def test_versions(self):
         master = self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
-        versions = [unicode2bytes('v{}'.format(v))
+        versions = [unicode2bytes(f'v{v}')
                     for v in range(2, self.maxVersion + 1)]
         versions = [unicode2bytes(v) for v in versions]
         versions.append(b'latest')
@@ -63,7 +63,7 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         master = self.make_master(url='h:/a/b/')
         master.config.www['rest_minimum_version'] = 2
         rsrc = rest.RestRootResource(master)
-        versions = [unicode2bytes('v{}'.format(v))
+        versions = [unicode2bytes(f'v{v}')
                     for v in range(2, self.maxVersion + 1)]
         versions.append(b'latest')
         self.assertEqual(sorted(rsrc.listNames()), sorted(versions))
@@ -102,15 +102,13 @@ class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         for good in goods:
             self.assertTrue(
                 regexp.match(good),
-                "{} should match default origin({}), but its not".format(
-                    good, regexp.pattern
-                ))
+                f"{good} should match default origin({regexp.pattern}), but its not"
+                )
         for bad in bads:
             self.assertFalse(
                 regexp.match(bad),
-                "{} should not match default origin({}), but it is".format(
-                    bad, regexp.pattern
-                ))
+                f"{bad} should not match default origin({regexp.pattern}), but it is"
+                )
 
     def test_default_origin(self):
         self.master.config.buildbotURL = 'http://server/path/'
@@ -675,8 +673,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
         content = json.loads(bytes2unicode(self.request.written))
 
         if 'error' not in content:
-            self.fail("response does not have proper error form: %r"
-                      % (content,))
+            self.fail(f"response does not have proper error form: {repr(content)}")
         got['error'] = content['error']
 
         exp = {}
@@ -689,8 +686,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
             if message.match(got['error']):
                 exp['error'] = got['error']
             else:
-                exp['error'] = "MATCHING: {}".format(message.pattern)
-
+                exp['error'] = f"MATCHING: {message.pattern}"
         self.assertEqual(got, exp)
 
 
@@ -716,8 +712,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin,
         content = json.loads(bytes2unicode(self.request.written))
         if ('error' not in content
                 or sorted(content['error'].keys()) != ['code', 'message']):
-            self.fail("response does not have proper error form: %r"
-                      % (content,))
+            self.fail(f"response does not have proper error form: {repr(content)}")
         got['error'] = content['error']
 
         exp = {}
@@ -730,7 +725,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin,
             if message.match(got['error']['message']):
                 exp['error']['message'] = got['error']['message']
             else:
-                exp['error']['message'] = "MATCHING: {}".format(message.pattern)
+                exp['error']['message'] = f"MATCHING: {message.pattern}"
 
         self.assertEqual(got, exp)
 

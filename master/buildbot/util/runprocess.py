@@ -83,7 +83,7 @@ class RunProcess:
         self.kill_timer = None
 
     def __repr__(self):
-        return "<{0} '{1}'>".format(self.__class__.__name__, self.command)
+        return f"<{self.__class__.__name__} '{self.command}'>"
 
     def get_os_env(self):
         return os.environ
@@ -175,7 +175,7 @@ class RunProcess:
         if d:
             d.callback(self._build_result(rc))
         else:
-            log.err("{}: command finished twice".format(self))
+            log.err(f"{self}: command finished twice")
 
     def failed(self, why):
         self._cancel_timers()
@@ -184,16 +184,16 @@ class RunProcess:
         if d:
             d.errback(why)
         else:
-            log.err("{}: command finished twice".format(self))
+            log.err(f"{self}: command finished twice")
 
     def io_timed_out(self):
         self.io_timer = None
-        msg = "{}: command timed out: {} seconds without output".format(self, self.io_timeout)
+        msg = f"{self}: command timed out: {self.io_timeout} seconds without output"
         self.kill(msg)
 
     def runtime_timed_out(self):
         self.runtime_timer = None
-        msg = "{}: command timed out: {} seconds elapsed".format(self, self.runtime_timeout)
+        msg = f"{self}: command timed out: {self.runtime_timeout} seconds elapsed"
         self.kill(msg)
 
     def is_dead(self):
@@ -211,7 +211,7 @@ class RunProcess:
         self.sigterm_timer = None
         if not self.is_dead():
             if not self.send_signal(self.interrupt_signal):
-                log.msg("{}: failed to kill process again".format(self))
+                log.msg(f"{self}: failed to kill process again")
 
         self.cleanup_killed_process()
 
@@ -230,17 +230,17 @@ class RunProcess:
     def send_signal(self, interrupt_signal):
         success = False
 
-        log.msg('{}: killing process using {}'.format(self, interrupt_signal))
+        log.msg(f'{self}: killing process using {interrupt_signal}')
 
         if runtime.platformType == "win32":
             if interrupt_signal is not None and self.process.pid is not None:
                 if interrupt_signal == "TERM":
                     # TODO: blocks
-                    subprocess.check_call("TASKKILL /PID {0} /T".format(self.process.pid))
+                    subprocess.check_call(f"TASKKILL /PID {self.process.pid} /T")
                     success = True
                 elif interrupt_signal == "KILL":
                     # TODO: blocks
-                    subprocess.check_call("TASKKILL /F /PID {0} /T".format(self.process.pid))
+                    subprocess.check_call(f"TASKKILL /F /PID {self.process.pid} /T")
                     success = True
 
         # try signalling the process itself (works on Windows too, sorta)
@@ -249,10 +249,10 @@ class RunProcess:
                 self.process.signalProcess(interrupt_signal)
                 success = True
             except OSError as e:
-                log.err("{}: from process.signalProcess: {}".format(self, e))
+                log.err(f"{self}: from process.signalProcess: {e}")
                 # could be no-such-process, because they finished very recently
             except error.ProcessExitedAlready:
-                log.msg("{}: process exited already - can't kill".format(self))
+                log.msg(f"{self}: process exited already - can't kill")
 
                 # the process has already exited, and likely finished() has
                 # been called already or will be called shortly
@@ -260,7 +260,7 @@ class RunProcess:
         return success
 
     def kill(self, msg):
-        log.msg('{}: killing process because {}'.format(self, msg))
+        log.msg(f'{self}: killing process because {msg}')
         self._cancel_timers()
 
         self.killed = True
@@ -271,15 +271,15 @@ class RunProcess:
                                                          self.check_process_was_killed)
         else:
             if not self.send_signal(self.interrupt_signal):
-                log.msg("{}: failed to kill process".format(self))
+                log.msg(f"{self}: failed to kill process")
 
             self.cleanup_killed_process()
 
     def kill_timed_out(self):
         self.kill_timer = None
-        log.msg("{}: attempted to kill process, but it wouldn't die".format(self))
+        log.msg(f"{self}: attempted to kill process, but it wouldn't die")
 
-        self.failed(RuntimeError("SIG{} failed to kill process".format(self.interrupt_signal)))
+        self.failed(RuntimeError(f"SIG{self.interrupt_signal} failed to kill process"))
 
     def _cancel_timers(self):
         for name in ('io_timer', 'kill_timer', 'runtime_timer', 'sigterm_timer'):

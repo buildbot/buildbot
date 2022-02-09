@@ -76,7 +76,7 @@ class Connection:
     proxies = {}
 
     def __init__(self, name):
-        self._disconnectSubs = subscription.SubscriptionPoint("disconnections from {}".format(name))
+        self._disconnectSubs = subscription.SubscriptionPoint(f"disconnections from {name}")
 
     # This method replace all Impl args by their Proxy protocol implementation
     def createArgsProxies(self, args):

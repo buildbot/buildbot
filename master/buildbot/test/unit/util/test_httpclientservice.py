@@ -308,7 +308,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     def httpFactory(self, parent):
         return httpclientservice.HTTPClientService.getService(
-            parent, 'http://127.0.0.1:{}'.format(self.port))
+            parent, f'http://127.0.0.1:{self.port}')
 
     def expect(self, *arg, **kwargs):
         pass
@@ -439,7 +439,7 @@ class HTTPClientServiceTestFakeE2E(HTTPClientServiceTestTxRequestE2E):
     @defer.inlineCallbacks
     def httpFactory(self, parent):
         service = yield fakehttpclientservice.HTTPClientService.getService(
-            parent, self, 'http://127.0.0.1:{}'.format(self.port))
+            parent, self, f'http://127.0.0.1:{self.port}')
         return service
 
     def expect(self, *arg, **kwargs):

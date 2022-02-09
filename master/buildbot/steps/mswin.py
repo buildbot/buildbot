@@ -107,5 +107,5 @@ class Robocopy(ShellMixin, BuildStep):
                 if (cmd.rc & flag) == flag:
                     return result
 
-        log.msg("Unknown return code for Robocopy: {}".format(cmd.rc))
+        log.msg(f"Unknown return code for Robocopy: {cmd.rc}")
         return EXCEPTION

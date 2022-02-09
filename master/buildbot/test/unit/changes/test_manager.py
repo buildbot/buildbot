@@ -43,7 +43,7 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
 
     def make_sources(self, n, klass=base.ChangeSource, **kwargs):
         for i in range(n):
-            src = klass(name='ChangeSource %d' % i, **kwargs)
+            src = klass(name=f'ChangeSource {i}', **kwargs)
             yield src
 
     @defer.inlineCallbacks

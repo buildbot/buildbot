@@ -80,13 +80,11 @@ class Mercurial(Source):
 
         errors = []
         if not self._hasAttrGroupMember('mode', self.mode):
-            errors.append("mode {} is not one of {}".format(self.mode,
-                                                            self._listAttrGroupMembers('mode')))
+            errors.append(f"mode {self.mode} is not one of {self._listAttrGroupMembers('mode')}")
         if self.method not in self.possible_methods:
-            errors.append("method {} is not one of {}".format(self.method, self.possible_methods))
+            errors.append(f"method {self.method} is not one of {self.possible_methods}")
         if self.branchType not in self.possible_branchTypes:
-            errors.append("branchType {} is not one of {}".format(self.branchType,
-                                                                  self.possible_branchTypes))
+            errors.append(f"branchType {self.branchType} is not one of {self.possible_branchTypes}")
 
         if repourl is None:
             errors.append("you must provide a repourl")
@@ -186,14 +184,14 @@ class Mercurial(Source):
         revision = stdout.strip()
         if len(revision) != 40:
             raise ValueError("Incorrect revision id")
-        log.msg("Got Mercurial revision {}".format(revision))
+        log.msg(f"Got Mercurial revision {revision}")
         self.updateSourceProperty('got_revision', revision)
 
     @defer.inlineCallbacks
     def _checkBranchChange(self):
         current_branch = yield self._getCurrentBranch()
-        msg = "Working dir is on in-repo branch '{}' and build needs '{}'.".format(current_branch,
-                self.update_branch)
+        msg = (f"Working dir is on in-repo branch '{current_branch}' and build needs "
+               f"'{self.update_branch}'.")
         if current_branch != self.update_branch and self.clobberOnBranchChange:
             msg += ' Clobbering.'
             log.msg(msg)
@@ -236,7 +234,7 @@ class Mercurial(Source):
         yield self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
-            log.msg("Source step failed while running command {}".format(cmd))
+            log.msg(f"Source step failed while running command {cmd}")
             raise buildstep.BuildStepFailed()
         if collectStdout:
             return cmd.stdout
@@ -251,8 +249,8 @@ class Mercurial(Source):
         # more details.
         if len(changes) > 1:
             log.msg("Mercurial.computeSourceRevision: warning: "
-                    "there are %d changes here, assuming the last one is "
-                    "the most recent" % len(changes))
+                    f"there are {len(changes)} changes here, assuming the last one is "
+                    "the most recent")
         return changes[-1].revision
 
     @defer.inlineCallbacks
@@ -328,8 +326,7 @@ class Mercurial(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
+                log.msg(f"Checkout failed, trying {repeats} more times after {delay} seconds")
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._clobber())

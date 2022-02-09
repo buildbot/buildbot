@@ -129,7 +129,7 @@ class Instance(Type):
 
     def validate(self, name, object):
         if not isinstance(object, self.types):
-            yield "{} ({}) is not a {}".format(name, repr(object), self.name or repr(self.types))
+            yield f"{name} ({repr(object)}) is not a {self.name or repr(self.types)}"
 
     def toRaml(self):
         return self.ramlType
@@ -169,7 +169,7 @@ class DateTime(Instance):
                 pass
             else:
                 return
-        yield "{} ({}) is not a valid timestamp".format(name, object)
+        yield f"{name} ({object}) is not a valid timestamp"
 
 
 class String(Instance):
@@ -225,13 +225,13 @@ class Identifier(Type):
 
     def validate(self, name, object):
         if not isinstance(object, str):
-            yield "{} - {} - is not a unicode string".format(name, repr(object))
+            yield f"{name} - {repr(object)} - is not a unicode string"
         elif not self.identRe.match(object):
-            yield "{} - {} - is not an identifier".format(name, repr(object))
+            yield f"{name} - {repr(object)} - is not an identifier"
         elif not object:
-            yield "{} - identifiers cannot be an empty string".format(name)
+            yield f"{name} - identifiers cannot be an empty string"
         elif len(object) > self.len:
-            yield "{} - {} - is longer than {} characters".format(name, repr(object), self.len)
+            yield f"{name} - {repr(object)} - is longer than {self.len} characters"
 
     def toRaml(self):
         return {'type': self.ramlType,
@@ -253,11 +253,11 @@ class List(Type):
 
     def validate(self, name, object):
         if not isinstance(object, list):  # we want a list, and NOT a subclass
-            yield "{} ({}) is not a {}".format(name, repr(object), self.name)
+            yield f"{name} ({repr(object)}) is not a {self.name}"
             return
 
         for idx, elt in enumerate(object):
-            for msg in self.of.validate("{}[{}]".format(name, idx), elt):
+            for msg in self.of.validate(f"{name}[{idx}]", elt):
                 yield msg
 
     def valueFromString(self, arg):
@@ -299,21 +299,21 @@ class SourcedProperties(Type):
 
     def validate(self, name, object):
         if not isinstance(object, dict):  # we want a dict, and NOT a subclass
-            yield "{} is not sourced properties (not a dict)".format(name)
+            yield f"{name} is not sourced properties (not a dict)"
             return
         for k, v in object.items():
             if not isinstance(k, str):
-                yield "{} property name {} is not unicode".format(name, repr(k))
+                yield f"{name} property name {repr(k)} is not unicode"
             if not isinstance(v, tuple) or len(v) != 2:
-                yield "{} property value for '{}' is not a 2-tuple".format(name, k)
+                yield f"{name} property value for '{k}' is not a 2-tuple"
                 return
             propval, propsrc = v
             if not isinstance(propsrc, str):
-                yield "{}[{}] source {} is not unicode".format(name, k, repr(propsrc))
+                yield f"{name}[{k}] source {repr(propsrc)} is not unicode"
             try:
                 json.loads(bytes2unicode(propval))
             except ValueError:
-                yield "{}[{}] value is not JSON-able".format(name, repr(k))
+                yield f"{name}[{repr(k)}] value is not JSON-able"
 
     def toRaml(self):
         return {'type': "object",
@@ -342,15 +342,14 @@ class JsonObject(Type):
 
     def validate(self, name, object):
         if not isinstance(object, dict):
-            yield "{} ({}) is not a dictionary (got type {})".format(name, repr(object),
-                                                                     type(object))
+            yield f"{name} ({repr(object)}) is not a dictionary (got type {type(object)})"
             return
 
         # make sure JSON can represent it
         try:
             json.dumps(object)
         except Exception as e:
-            yield "{} is not JSON-able: {}".format(name, e)
+            yield f"{name} is not JSON-able: {e}"
             return
 
     def toRaml(self):
@@ -382,23 +381,22 @@ class Entity(Type):
     def validate(self, name, object):
         # this uses isinstance, allowing dict subclasses as used by the DB API
         if not isinstance(object, dict):
-            yield "{} ({}) is not a dictionary (got type {})".format(name, repr(object),
-                                                                     type(object))
+            yield f"{name} ({repr(object)}) is not a dictionary (got type {type(object)})"
             return
 
         gotNames = set(object.keys())
 
         unexpected = gotNames - self.fieldNames
         if unexpected:
-            yield "{} has unexpected keys {}".format(name, ", ".join([repr(n) for n in unexpected]))
+            yield f'{name} has unexpected keys {", ".join([repr(n) for n in unexpected])}'
 
         missing = self.fieldNames - gotNames
         if missing:
-            yield "{} is missing keys {}".format(name, ", ".join([repr(n) for n in missing]))
+            yield f'{name} is missing keys {", ".join([repr(n) for n in missing])}'
 
         for k in gotNames & self.fieldNames:
             f = self.fields[k]
-            for msg in f.validate("{}[{}]".format(name, repr(k)), object[k]):
+            for msg in f.validate(f"{name}[{repr(k)}]", object[k]):
                 yield msg
 
     def getSpec(self):

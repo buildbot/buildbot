@@ -56,8 +56,7 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     def startConsuming(self, callback, _filter, persistent_name=None):
         if persistent_name is not None:
-            log.err('wampmq: persistent queues are not persisted: {} {}'.format(persistent_name,
-                                                                                _filter))
+            log.err(f'wampmq: persistent queues are not persisted: {persistent_name} {_filter}')
 
         qr = QueueRef(self, callback)
 

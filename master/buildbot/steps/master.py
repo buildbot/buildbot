@@ -72,11 +72,11 @@ class MasterShellCommand(BuildStep):
 
         def processEnded(self, status_object):
             if status_object.value.exitCode is not None:
-                msg = "exit status {}\n".format(status_object.value.exitCode)
+                msg = f"exit status {status_object.value.exitCode}\n"
                 self.step._deferwaiter.add(self.step.stdio_log.addHeader(msg))
 
             if status_object.value.signal is not None:
-                msg = "signal {}\n".format(status_object.value.signal)
+                msg = f"signal {status_object.value.signal}\n"
                 self.step._deferwaiter.add(self.step.stdio_log.addHeader(msg))
 
             self.step._status_object = status_object
@@ -115,8 +115,8 @@ class MasterShellCommand(BuildStep):
         else:
             yield self.stdio_log.addHeader(" ".join(command) + "\n\n")
         yield self.stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
-        yield self.stdio_log.addHeader(" in dir {}\n".format(os.getcwd()))
-        yield self.stdio_log.addHeader(" argv: {}\n".format(argv))
+        yield self.stdio_log.addHeader(f" in dir {os.getcwd()}\n")
+        yield self.stdio_log.addHeader(f" argv: {argv}\n")
 
         if self.env is None:
             env = os.environ
@@ -141,13 +141,13 @@ class MasterShellCommand(BuildStep):
             for key, v in env.items():
                 if v is not None:
                     if not isinstance(v, (str, bytes)):
-                        raise RuntimeError(("'env' values must be strings or "
-                                            "lists; key '{}' is incorrect").format(key))
+                        raise RuntimeError("'env' values must be strings or "
+                                           f"lists; key '{key}' is incorrect")
                     newenv[key] = p.sub(subst, env[key])
             env = newenv
 
         if self.logEnviron:
-            yield self.stdio_log.addHeader(" env: %r\n" % (env,))
+            yield self.stdio_log.addHeader(f" env: {repr(env)}\n")
 
         # TODO add a timeout?
         self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
@@ -159,10 +159,10 @@ class MasterShellCommand(BuildStep):
 
         status_value = self._status_object.value
         if status_value.signal is not None:
-            self.descriptionDone = ["killed ({})".format(status_value.signal)]
+            self.descriptionDone = [f"killed ({status_value.signal})"]
             return FAILURE
         elif status_value.exitCode != 0:
-            self.descriptionDone = ["failed ({})".format(status_value.exitCode)]
+            self.descriptionDone = [f"failed ({status_value.exitCode})"]
             return FAILURE
         else:
             return SUCCESS
@@ -222,7 +222,7 @@ class Assert(BuildStep):
     def __init__(self, check, **kwargs):
         super().__init__(**kwargs)
         self.check = check
-        self.descriptionDone = ["checked {}".format(repr(self.check))]
+        self.descriptionDone = [f"checked {repr(self.check)}"]
 
     def run(self):
         if self.check:

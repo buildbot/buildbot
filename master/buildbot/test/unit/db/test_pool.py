@@ -45,7 +45,7 @@ class Basic(unittest.TestCase):
     @defer.inlineCallbacks
     def test_do(self):
         def add(conn, addend1, addend2):
-            rp = conn.execute("SELECT %d + %d" % (addend1, addend2))
+            rp = conn.execute(f"SELECT {addend1} + {addend2}")
             return rp.scalar()
         res = yield self.pool.do(add, 10, 11)
 
@@ -80,7 +80,7 @@ class Basic(unittest.TestCase):
     @defer.inlineCallbacks
     def test_do_with_engine(self):
         def add(engine, addend1, addend2):
-            rp = engine.execute("SELECT %d + %d" % (addend1, addend2))
+            rp = engine.execute(f"SELECT {addend1} + {addend2}")
             return rp.scalar()
         res = yield self.pool.do_with_engine(add, 10, 11)
 

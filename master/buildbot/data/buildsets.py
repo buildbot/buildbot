@@ -181,7 +181,7 @@ class Buildset(base.ResourceType):
         # TODO: properties=properties)
         self.produceEvent(msg, "new")
 
-        log.msg("added buildset %d to database" % bsid)
+        log.msg(f"added buildset {bsid} to database")
 
         # if there are no builders, then this is done already, so send the
         # appropriate messages for that

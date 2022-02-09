@@ -157,8 +157,8 @@ class Build(properties.PropertiesMixin):
         return files
 
     def __repr__(self):
-        return "<Build {} number:{} results:{}>".format(self.builder.name, repr(self.number),
-                                                        statusToString(self.results))
+        return (f"<Build {self.builder.name} number:{repr(self.number)} "
+                f"results:{statusToString(self.results)}>")
 
     def blamelist(self):
         # Note that this algorithm is also implemented in
@@ -300,7 +300,7 @@ class Build(properties.PropertiesMixin):
         self.workername = worker.workername
         self.worker_info = worker.info
 
-        log.msg("{}.startBuild".format(self))
+        log.msg(f"{self}.startBuild")
 
         # TODO: this will go away when build collapsing is implemented; until
         # then we just assign the build to the first buildrequest
@@ -383,7 +383,7 @@ class Build(properties.PropertiesMixin):
         # us in a build.
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            'pinging worker')
-        log.msg("starting build {}.. pinging the worker {}".format(self, workerforbuilder))
+        log.msg(f"starting build {self}.. pinging the worker {workerforbuilder}")
         try:
             ping_success_or_failure = yield workerforbuilder.ping()
         except Exception:
@@ -416,7 +416,7 @@ class Build(properties.PropertiesMixin):
                                                            'acquiring locks')
         yield self.acquireLocks()
 
-        readymsg = "worker {} ready".format(self.getWorkerName())
+        readymsg = f"worker {self.getWorkerName()} ready"
         yield self.master.data.updates.setStepStateString(self.preparation_step.stepid, readymsg)
         yield self.master.data.updates.finishStep(self.preparation_step.stepid, SUCCESS, False)
 
@@ -459,10 +459,10 @@ class Build(properties.PropertiesMixin):
             return defer.succeed(None)
         if self.stopped:
             return defer.succeed(None)
-        log.msg("acquireLocks(build {}, locks {})".format(self, self.locks))
+        log.msg(f"acquireLocks(build {self}, locks {self.locks})")
         for lock, access in self.locks:
             if not lock.isAvailable(self, access):
-                log.msg("Build {} waiting for lock {}".format(self, lock))
+                log.msg(f"Build {self} waiting for lock {lock}")
                 d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
                 self._acquiringLock = (lock, access, d)
@@ -480,7 +480,7 @@ class Build(properties.PropertiesMixin):
             count = self.stepnames[name]
             count += 1
             self.stepnames[name] = count
-            name = "{}_{}".format(step.name, count)
+            name = f"{step.name}_{count}"
         else:
             self.stepnames[name] = 0
         step.name = name
@@ -568,7 +568,7 @@ class Build(properties.PropertiesMixin):
             yield self.startNextStep()
 
         except Exception as e:
-            log.msg("{} build got exception when running step {}".format(self, step))
+            log.msg(f"{self} build got exception when running step {step}")
             log.err(e)
 
             yield self.master.data.updates.setBuildProperties(self.buildid, self)
@@ -586,11 +586,11 @@ class Build(properties.PropertiesMixin):
         text = None
         if isinstance(results, tuple):
             results, text = results
-        assert isinstance(results, type(SUCCESS)), "got %r" % (results,)
+        assert isinstance(results, type(SUCCESS)), f"got {repr(results)}"
         summary = yield step.getBuildResultSummary()
         if 'build' in summary:
             text = [summary['build']]
-        log.msg(" step '{}' complete: {} ({})".format(step.name, statusToString(results), text))
+        log.msg(f" step '{step.name}' complete: {statusToString(results)} ({text})")
         if text:
             self.text.extend(text)
             self.master.data.updates.setBuildStateString(self.buildid,
@@ -607,7 +607,7 @@ class Build(properties.PropertiesMixin):
         # the worker went away. There are several possible reasons for this,
         # and they aren't necessarily fatal. For now, kill the build, but
         # TODO: see if we can resume the build when it reconnects.
-        log.msg("{}.lostRemote".format(self))
+        log.msg(f"{self}.lostRemote")
         self.conn = None
         self.text = ["lost", "connection"]
         self.results = RETRY
@@ -633,7 +633,7 @@ class Build(properties.PropertiesMixin):
         # build as failed quickly rather than waiting for the worker's
         # timeout to kill it on its own.
 
-        log.msg(" {}: stopping build: {} {}".format(self, reason, results))
+        log.msg(f" {self}: stopping build: {reason} {results}")
         if self.finished:
             return
         # TODO: include 'reason' in this point event
@@ -688,7 +688,7 @@ class Build(properties.PropertiesMixin):
                 self.subs.unsubscribe()
                 self.subs = None
                 self.conn = None
-            log.msg(" {}: build finished".format(self))
+            log.msg(f" {self}: build finished")
             self.results = worst_status(self.results, results)
             eventually(self.releaseLocks)
             metrics.MetricCountEvent.log('active_builds', -1)
@@ -719,7 +719,7 @@ class Build(properties.PropertiesMixin):
 
     def releaseLocks(self):
         if self.locks:
-            log.msg("releaseLocks({}): {}".format(self, self.locks))
+            log.msg(f"releaseLocks({self}): {self.locks}")
 
         for lock, access in self.locks:
             if lock.isOwner(self, access):

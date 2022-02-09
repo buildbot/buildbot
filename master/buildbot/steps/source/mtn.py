@@ -45,15 +45,14 @@ class Monotone(Source):
         self.method = method
         self.mode = mode
         self.branch = branch
-        self.sourcedata = "{}?{}".format(self.repourl, self.branch)
+        self.sourcedata = f"{self.repourl}?{self.branch}"
         self.database = 'db.mtn'
         self.progress = progress
         super().__init__(**kwargs)
         errors = []
 
         if not self._hasAttrGroupMember('mode', self.mode):
-            errors.append("mode {} is not one of {}".format(self.mode,
-                                                            self._listAttrGroupMembers('mode')))
+            errors.append(f"mode {self.mode} is not one of {self._listAttrGroupMembers('mode')}")
         if self.mode == 'incremental' and self.method:
             errors.append("Incremental mode does not require method")
 
@@ -61,7 +60,7 @@ class Monotone(Source):
             if self.method is None:
                 self.method = 'copy'
             elif self.method not in self.possible_methods:
-                errors.append("Invalid method for mode == {}".format(self.mode))
+                errors.append(f"Invalid method for mode == {self.mode}")
 
         if repourl is None:
             errors.append("you must provide repourl")
@@ -246,8 +245,7 @@ class Monotone(Source):
             if self.stopped or res == 0 or repeats <= 0:
                 return res
             else:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
+                log.msg(f"Checkout failed, trying {repeats} more times after {delay} seconds")
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._retryPull())
@@ -263,7 +261,7 @@ class Monotone(Source):
         revision = stdout.strip()
         if len(revision) != 40:
             raise buildstep.BuildStepFailed()
-        log.msg("Got Monotone revision {}".format(revision))
+        log.msg(f"Got Monotone revision {revision}")
         self.updateSourceProperty('got_revision', revision)
         return 0
 
@@ -287,7 +285,7 @@ class Monotone(Source):
         yield self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
-            log.msg("Source step failed while running command {}".format(cmd))
+            log.msg(f"Source step failed while running command {cmd}")
             raise buildstep.BuildStepFailed()
         if collectStdout:
             return cmd.stdout

@@ -176,7 +176,6 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 ssdict['patch_comment'] = row.patch_comment
                 ssdict['patch_body'] = base64.b64decode(row.patch_base64)
             else:
-                log.msg('patchid %d, referenced from ssid %d, not found'
-                        % (patchid, ssid))
+                log.msg(f'patchid {patchid}, referenced from ssid {ssid}, not found')
             res.close()
         return ssdict

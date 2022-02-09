@@ -31,12 +31,12 @@ class Matcher:
         self._dirty = True
 
     def __setitem__(self, path, value):
-        assert path not in self._patterns, "duplicate path {}".format(path)
+        assert path not in self._patterns, f"duplicate path {path}"
         self._patterns[path] = value
         self._dirty = True
 
     def __repr__(self):
-        return '<Matcher %r>' % (self._patterns,)
+        return f'<Matcher {repr(self._patterns)}>'
 
     path_elt_re = re.compile('^(.?):([a-z0-9_.]+)$')
     type_fns = dict(n=int, i=ident)
@@ -56,8 +56,7 @@ class Matcher:
                         try:
                             type_fn = self.type_fns[type_flag]
                         except Exception:
-                            assert type_flag in self.type_fns, \
-                                    "no such type flag {}".format(type_flag)
+                            assert type_flag in self.type_fns, f"no such type flag {type_flag}"
                         try:
                             path_elt = type_fn(path_elt)
                         except Exception:
@@ -70,7 +69,7 @@ class Matcher:
                 # complete match
                 return patterns[pattern], kwargs
         else:
-            raise KeyError('No match for %r' % (path,))
+            raise KeyError(f'No match for {repr(path)}')
 
     def iterPatterns(self):
         return list(self._patterns.items())

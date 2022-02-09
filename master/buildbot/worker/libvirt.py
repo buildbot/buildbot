@@ -56,13 +56,13 @@ class ThreadWithQueue(ConnectableThreadQueue):
 
     def create_connection(self):
         try:
-            log.msg("Connecting to {}".format(self.uri))
+            log.msg(f"Connecting to {self.uri}")
             conn = self.libvirt_open()
             conn.registerCloseCallback(handle_connect_close, self)
-            log.msg("Connected to {}".format(self.uri))
+            log.msg(f"Connected to {self.uri}")
             return conn
         except Exception as e:
-            log.err("Error connecting to {}: {}, will retry later".format(self.uri, e))
+            log.err(f"Error connecting to {self.uri}: {e}, will retry later")
             return None
 
 
@@ -81,7 +81,7 @@ class ServerThreadPool:
             try:
                 return func(conn, *args, **kwargs)
             except Exception as e:
-                log.err("libvirt: Exception on {}: {}".format(uri, str(e)))
+                log.err(f"libvirt: Exception on {uri}: {e}")
                 raise
 
         return self.threads[uri].execute_in_thread(logging_func, *args, **kwargs)
@@ -106,7 +106,7 @@ class ServerThreadPool:
         if uri in self.threads:
             self.threads[uri].close_connection()
         else:
-            log.err('libvirt.ServerThreadPool: Unknown connection {}'.format(uri))
+            log.err(f'libvirt.ServerThreadPool: Unknown connection {uri}')
 
 
 # A module is effectively a singleton class, so this is OK
@@ -159,11 +159,11 @@ class LibVirtWorker(AbstractLatentWorker):
             domain = yield self._pool_do(lambda conn: conn.lookupByName(self.workername))
             return domain
         except libvirt.libvirtError as e:
-            log.err('LibVirtWorker: got error when accessing domain: {}'.format(e))
+            log.err(f'LibVirtWorker: got error when accessing domain: {e}')
             try:
                 self.pool.reset_connection(self.uri)
             except Exception as e1:
-                log.err('LibVirtWorker: got error when resetting connection: {}'.format(e1))
+                log.err(f'LibVirtWorker: got error when resetting connection: {e1}')
             raise e
 
     @defer.inlineCallbacks
@@ -188,15 +188,15 @@ class LibVirtWorker(AbstractLatentWorker):
         else:
             clone_cmd = ['cp', self.base_image, self.image]
 
-        log.msg("Cloning base image: {}'".format(clone_cmd))
+        log.msg(f"Cloning base image: {clone_cmd}'")
 
         try:
             rc = yield runprocess.run_process(self.master.reactor, clone_cmd, collect_stdout=False,
                                               collect_stderr=False)
             if rc != 0:
-                raise LatentWorkerFailedToSubstantiate('Failed to clone image (rc={})'.format(rc))
+                raise LatentWorkerFailedToSubstantiate(f'Failed to clone image (rc={rc})')
         except Exception as e:
-            log.err("Cloning failed: {}".format(e))
+            log.err(f"Cloning failed: {e}")
             raise
 
     @defer.inlineCallbacks
@@ -215,10 +215,10 @@ class LibVirtWorker(AbstractLatentWorker):
             domain_id = yield self._get_domain_id()
             if domain_id != -1:
                 raise LatentWorkerFailedToSubstantiate(
-                    "{}: Cannot start_instance as it's already active".format(self))
+                    f"{self}: Cannot start_instance as it's already active")
         except Exception as e:
             raise LatentWorkerFailedToSubstantiate(
-                '{}: Got error while retrieving domain ID: {}'.format(self, e))
+                f'{self}: Got error while retrieving domain ID: {e}')
 
         yield self._prepare_base_image()
 
@@ -238,7 +238,7 @@ class LibVirtWorker(AbstractLatentWorker):
 
         except Exception as e:
             raise LatentWorkerFailedToSubstantiate(
-                '{}: Got error while starting VM: {}'.format(self, e))
+                f'{self}: Got error while starting VM: {e}')
 
         return True
 
@@ -253,18 +253,17 @@ class LibVirtWorker(AbstractLatentWorker):
 
         domain_id = yield self._get_domain_id()
         if domain_id == -1:
-            log.msg("{}: Domain is unexpectedly not running".format(self))
+            log.msg(f"{self}: Domain is unexpectedly not running")
             return
 
         domain = yield self._get_domain()
 
         if self.graceful_shutdown and not fast:
-            log.msg("Graceful shutdown chosen for {}".format(self.workername))
+            log.msg(f"Graceful shutdown chosen for {self.workername}")
             try:
                 yield self._pool_do(lambda conn: domain.shutdown())
             except Exception as e:
-                log.msg('{}: Graceful shutdown failed ({}). Force destroying domain'.format(
-                    self, e))
+                log.msg(f'{self}: Graceful shutdown failed ({e}). Force destroying domain')
                 # Don't re-throw to stop propagating shutdown error if destroy was successful.
                 yield self._pool_do(lambda conn: domain.destroy())
 
@@ -272,5 +271,5 @@ class LibVirtWorker(AbstractLatentWorker):
             yield self._pool_do(lambda conn: domain.destroy())
 
         if self.base_image:
-            log.msg('{}: Removing image {}'.format(self, self.image))
+            log.msg(f'{self}: Removing image {self.image}')
             os.remove(self.image)

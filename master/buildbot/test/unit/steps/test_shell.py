@@ -692,7 +692,7 @@ class WarningCountingShellCommand(TestBuildStepMixin,
             if exp_warning_count != 0:
                 self.expect_outcome(result=WARNINGS,
                                    state_string="'make' (warnings)")
-                self.expect_log_file("warnings (%d)" % exp_warning_count,
+                self.expect_log_file(f"warnings ({exp_warning_count})",
                                    exp_warning_log)
             else:
                 self.expect_outcome(result=SUCCESS,

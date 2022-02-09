@@ -225,8 +225,8 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
             self.actuateAt = max(actuateAt, now)
             untilNext = self.actuateAt - now
             if untilNext == 0:
-                log.msg(("{} scheduler <{}>: missed scheduled build time"
-                         " - building immediately").format(self.__class__.__name__, self.name))
+                log.msg(f"{self.__class__.__name__} scheduler <{self.name}>: "
+                        "missed scheduled build time - building immediately")
             self.actuateAtTimer = self._reactor.callLater(untilNext,
                                                           self._actuate)
 
@@ -321,11 +321,9 @@ class NightlyBase(Timed):
 
     def getNextBuildTime(self, lastActuated):
         dateTime = lastActuated or self.now()
-        sched = '{} {} {} {} {}'.format(self._timeToCron(self.minute),
-                                        self._timeToCron(self.hour),
-                                        self._timeToCron(self.dayOfMonth),
-                                        self._timeToCron(self.month),
-                                        self._timeToCron(self.dayOfWeek, True))
+        sched = (f'{self._timeToCron(self.minute)} {self._timeToCron(self.hour)} '
+                 f'{self._timeToCron(self.dayOfMonth)} {self._timeToCron(self.month)} '
+                 f'{self._timeToCron(self.dayOfWeek, True)}')
         cron = croniter.croniter(sched, dateTime)
         nextdate = cron.get_next(float)
         return defer.succeed(nextdate)

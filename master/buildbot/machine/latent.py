@@ -55,8 +55,7 @@ class AbstractLatentMachine(Machine):
 
         for worker in self.workers:
             if not interfaces.ILatentWorker.providedBy(worker):
-                raise Exception('Worker is not latent {}'.format(
-                    worker.name))
+                raise Exception(f'Worker is not latent {worker.name}')
 
         self.state = States.STOPPED
         self._start_notifier = Notifier()
@@ -108,7 +107,7 @@ class AbstractLatentMachine(Machine):
         try:
             ret = yield self.start_machine()
         except Exception as e:
-            log.err(e, 'while starting latent machine {0}'.format(self.name))
+            log.err(e, f'while starting latent machine {self.name}')
             ret = False
 
         if not ret:
@@ -142,8 +141,7 @@ class AbstractLatentMachine(Machine):
         try:
             yield self.stop_machine()
         except Exception as e:
-            log.err(e, 'while stopping latent machine {0}'.format(
-                self.name))
+            log.err(e, f'while stopping latent machine {self.name}')
 
         self.state = States.STOPPED
         self._stop_notifier.notify(None)
@@ -181,4 +179,4 @@ class AbstractLatentMachine(Machine):
             self.build_wait_timeout, self._stop)
 
     def __repr__(self):
-        return "<AbstractLatentMachine '{}' at {}>".format(self.name, id(self))
+        return f"<AbstractLatentMachine '{self.name}' at {id(self)}>"

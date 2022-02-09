@@ -86,16 +86,13 @@ class FakeRequest(Mock):
     def test_render(self, resource):
         for arg in self.args:
             if not isinstance(arg, bytes):
-                raise ValueError("self.args: {!r},  contains "
-                    "values which are not bytes".format(self.args))
+                raise ValueError(f"self.args: {self.args!r},  contains values which are not bytes")
 
         if self.uri and not isinstance(self.uri, bytes):
-            raise ValueError("self.uri: {!r} is {}, not bytes".format(
-                self.uri, type(self.uri)))
+            raise ValueError(f"self.uri: {self.uri!r} is {type(self.uri)}, not bytes")
 
         if self.method and not isinstance(self.method, bytes):
-            raise ValueError("self.method: {!r} is {}, not bytes".format(
-                self.method, type(self.method)))
+            raise ValueError(f"self.method: {self.method!r} is {type(self.method)}, not bytes")
 
         result = resource.render(self)
         if isinstance(result, bytes):
@@ -103,9 +100,9 @@ class FakeRequest(Mock):
             self.finish()
             return self.deferred
         elif isinstance(result, str):
-            raise ValueError("{!r} should return bytes, not {}: {!r}".format(
-                resource.render, type(result), result))
+            raise ValueError(f"{resource.render!r} should return bytes, not {type(result)}: "
+                             f"{result!r}")
         elif result is server.NOT_DONE_YET:
             return self.deferred
         else:
-            raise ValueError("Unexpected return value: {!r}".format(result))
+            raise ValueError(f"Unexpected return value: {result!r}")

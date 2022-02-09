@@ -52,20 +52,20 @@ class MSLogLineObserver(LogLineObserver):
     def outLineReceived(self, line):
         if self._re_delimiter.search(line):
             self.nbProjects += 1
-            self.logwarnings.addStdout("{}\n".format(line))
-            self.logerrors.addStdout("{}\n".format(line))
+            self.logwarnings.addStdout(f"{line}\n")
+            self.logerrors.addStdout(f"{line}\n")
             self.step.setProgress('projects', self.nbProjects)
         elif self._re_file.search(line):
             self.nbFiles += 1
             self.step.setProgress('files', self.nbFiles)
         elif self._re_warning.search(line):
             self.nbWarnings += 1
-            self.logwarnings.addStdout("{}\n".format(line))
+            self.logwarnings.addStdout(f"{line}\n")
             self.step.setProgress('warnings', self.nbWarnings)
-        elif self._re_error.search("{}\n".format(line)):
+        elif self._re_error.search(f"{line}\n"):
             # error has no progress indication
             self.nbErrors += 1
-            self.logerrors.addStderr("{}\n".format(line))
+            self.logerrors.addStderr(f"{line}\n")
 
 
 class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
@@ -192,16 +192,16 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
         return self.results
 
     def getResultSummary(self):
-        description = 'compile {} projects {} files'.format(self.logobserver.nbProjects,
-                                                            self.logobserver.nbFiles)
+        description = (f'compile {self.logobserver.nbProjects} projects {self.logobserver.nbFiles} '
+                       'files')
 
         if self.logobserver.nbWarnings > 0:
-            description += ' {} warnings'.format(self.logobserver.nbWarnings)
+            description += f' {self.logobserver.nbWarnings} warnings'
         if self.logobserver.nbErrors > 0:
-            description += ' {} errors'.format(self.logobserver.nbErrors)
+            description += f' {self.logobserver.nbErrors} errors'
 
         if self.results != results.SUCCESS:
-            description += ' ({})'.format(results.Results[self.results])
+            description += f' ({results.Results[self.results]})'
 
         return {'step': description}
 
@@ -441,7 +441,7 @@ VS2017 = VC141
 def _msbuild_format_defines_parameter(defines):
     if defines is None or len(defines) == 0:
         return ""
-    return ' /p:DefineConstants="{}"'.format(";".join(defines))
+    return f' /p:DefineConstants="{";".join(defines)}"'
 
 
 def _msbuild_format_target_parameter(mode, project):
@@ -456,11 +456,11 @@ def _msbuild_format_target_parameter(mode, project):
     parameter = ""
     if project is not None:
         if modestring == "Rebuild" or modestring is None:
-            parameter = ' /t:"%s"' % (project)
+            parameter = f' /t:"{project}"'
         else:
-            parameter = ' /t:"%s:%s"' % (project, modestring)
+            parameter = f' /t:"{project}:{modestring}"'
     elif modestring is not None:
-        parameter = ' /t:%s' % (modestring)
+        parameter = f' /t:{modestring}'
 
     return parameter
 
@@ -485,7 +485,7 @@ class MsBuild4(VisualStudio):
         project = self.project
         if project is None:
             project = 'solution'
-        return '{} for {}|{}'.format(project, self.config, self.platform)
+        return f'{project} for {self.config}|{self.platform}'
 
     def getCurrentSummary(self):
         return {'step': 'building ' + self.describe_project()}
@@ -500,8 +500,8 @@ class MsBuild4(VisualStudio):
 
         yield self.updateSummary()
 
-        command = (('"%VCENV_BAT%" x86 && msbuild "{}" /p:Configuration="{}" /p:Platform="{}" '
-                    '/maxcpucount').format(self.projectfile, self.config, self.platform))
+        command = (f'"%VCENV_BAT%" x86 && msbuild "{self.projectfile}" '
+                   f'/p:Configuration="{self.config}" /p:Platform="{self.platform}" /maxcpucount')
 
         command += _msbuild_format_target_parameter(self.mode, self.project)
         command += _msbuild_format_defines_parameter(self.defines)
@@ -545,7 +545,7 @@ class MsBuild141(VisualStudio):
         project = self.project
         if project is None:
             project = 'solution'
-        return '{} for {}|{}'.format(project, self.config, self.platform)
+        return f'{project} for {self.config}|{self.platform}'
 
     @defer.inlineCallbacks
     def run(self):
@@ -557,10 +557,9 @@ class MsBuild141(VisualStudio):
         self.descriptionDone = 'built ' + self.describe_project()
         yield self.updateSummary()
 
-        command = (('FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\') '
-                    ' do "%%I\\%VCENV_BAT%" x86 && msbuild "{}" /p:Configuration="{}" '
-                    '/p:Platform="{}" /maxcpucount').format(self.projectfile, self.config,
-                                                            self.platform))
+        command = ('FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\') '
+                   f' do "%%I\\%VCENV_BAT%" x86 && msbuild "{self.projectfile}" '
+                   f'/p:Configuration="{self.config}" /p:Platform="{self.platform}" /maxcpucount')
 
         command += _msbuild_format_target_parameter(self.mode, self.project)
         command += _msbuild_format_defines_parameter(self.defines)

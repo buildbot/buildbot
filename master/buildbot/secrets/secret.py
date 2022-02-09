@@ -49,7 +49,7 @@ class SecretDetails:
         return self._key
 
     def __str__(self):
-        return '{} {}: {!r}'.format(self._source, self._key, self.value)
+        return f'{self._source} {self._key}: {self.value!r}'
 
     def __eq__(self, other):
         return (self._source == other._source and

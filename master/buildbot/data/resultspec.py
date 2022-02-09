@@ -99,8 +99,7 @@ class FieldBase:
         return (d for d in data if f(d[fld], v))
 
     def __repr__(self):
-        return "resultspec.{}('{}','{}',{})".format(self.__class__.__name__, self.field, self.op,
-                                                    self.values)
+        return f"resultspec.{self.__class__.__name__}('{self.field}','{self.op}',{self.values})"
 
     def __eq__(self, b):
         for i in self.__slots__:
@@ -201,10 +200,9 @@ class ResultSpec:
         self.fieldMapping = {}
 
     def __repr__(self):
-        return ("ResultSpec(**{{'filters': {}, 'fields': {}, 'properties': {}, "
-                "'order': {}, 'limit': {}, 'offset': {}").format(
-                    self.filters, self.fields, self.properties, self.order,
-                    self.limit, self.offset) + "})"
+        return (f"ResultSpec(**{{'filters': {self.filters}, 'fields': {self.fields}, "
+                f"'properties': {self.properties}, 'order': {self.order}, 'limit': {self.limit}, "
+                f"'offset': {self.offset}" + "})")
 
     def __eq__(self, b):
         for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:
@@ -256,8 +254,8 @@ class ResultSpec:
             try:
                 return int(eqVals[0])
             except ValueError as e:
-                raise ValueError("Filter value for {} should be integer, but got: {}".format(
-                    field, eqVals[0])) from e
+                raise ValueError(
+                    f"Filter value for {field} should be integer, but got: {eqVals[0]}") from e
         return None
 
     def removePagination(self):
@@ -280,7 +278,7 @@ class ResultSpec:
         for col in query.inner_columns:
             if str(col) == mapped:
                 return col
-        raise KeyError("unable to find field {} in query".format(field))
+        raise KeyError(f"unable to find field {field} in query")
 
     def applyFilterToSQLQuery(self, query, f):
         field = f.field

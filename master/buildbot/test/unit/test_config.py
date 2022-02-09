@@ -1002,7 +1002,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             services=[MyService(x='a'), MyService(x='b')]))
 
         self.assertConfigError(
-            self.errors, 'Duplicate service name %r' % MyService.name)
+            self.errors, f'Duplicate service name {repr(MyService.name)}')
 
     def test_load_configurators_norminal(self):
 

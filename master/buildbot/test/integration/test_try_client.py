@@ -52,7 +52,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             with open(tmpfile, "w") as f:
                 f.write(pp.job)
             os.rename(tmpfile, newfile)
-            log.msg("wrote jobfile {}".format(newfile))
+            log.msg(f"wrote jobfile {newfile}")
             # get the scheduler to poll this directory now
             d = self.sch.watcher.poll()
             d.addErrback(log.err, 'while polling')
@@ -80,7 +80,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
         def output(*msg):
             msg = ' '.join(map(str, msg))
-            log.msg("output: {}".format(msg))
+            log.msg(f"output: {msg}")
             self.output.append(msg)
         self.patch(tryclient, 'output', output)
 
@@ -110,7 +110,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
                 if not self.sch.registrations:
                     return None
                 self.serverPort = self.sch.registrations[0].getPort()
-                log.msg("Scheduler registered at port %d" % self.serverPort)
+                log.msg(f"Scheduler registered at port {self.serverPort}")
                 return True
             yield waitFor(getSchedulerPort)
 
@@ -124,7 +124,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
-            'master': '127.0.0.1:{}'.format(self.serverPort),
+            'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
             'passwd': b'p',
         })
@@ -144,7 +144,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
-            'master': '127.0.0.1:{}'.format(self.serverPort),
+            'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
             'passwd': b'p',
             'wait': True,
@@ -168,7 +168,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
-            'master': '127.0.0.1:{}'.format(self.serverPort),
+            'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
             'passwd': b'p',
             'wait': True,
@@ -190,7 +190,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
-            'master': '127.0.0.1:{}'.format(self.serverPort),
+            'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
             'passwd': b'p',
             'wait': True,
@@ -219,7 +219,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         yield self.runClient({
             'connect': 'pb',
             'get-builder-names': True,
-            'master': '127.0.0.1:{}'.format(self.serverPort),
+            'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
             'passwd': b'p',
         })

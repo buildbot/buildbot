@@ -121,7 +121,7 @@ class Expect:
             name, streams = args
             for stream in streams:
                 if stream not in ['header', 'stdout', 'stderr']:
-                    raise Exception('Log stream {} is not recognized'.format(stream))
+                    raise Exception(f'Log stream {stream} is not recognized')
 
             if name == command.stdioLogName:
                 if 'header' in streams:
@@ -135,12 +135,12 @@ class Expect:
                     raise Exception('Non stdio streams only support stdout')
                 yield command.addToLog(name, streams['stdout'])
                 if name not in command.logs:
-                    raise Exception("{}.addToLog: no such log {}".format(command, name))
+                    raise Exception(f"{command}.addToLog: no such log {name}")
 
         elif behavior == 'callable':
             yield args[0](command)
         else:
-            raise AssertionError('invalid behavior {}'.format(behavior))
+            raise AssertionError(f'invalid behavior {behavior}')
         return None
 
     @defer.inlineCallbacks
@@ -310,8 +310,7 @@ class ExpectUploadFile(Expect):
         return self
 
     def __repr__(self):
-        return "ExpectUploadFile({},{})".format(repr(self.args['workdir']),
-                                                repr(self.args['workersrc']))
+        return f"ExpectUploadFile({repr(self.args['workdir'])},{repr(self.args['workersrc'])})"
 
 
 class ExpectUploadDirectory(Expect):
@@ -352,8 +351,8 @@ class ExpectUploadDirectory(Expect):
         return self
 
     def __repr__(self):
-        return "ExpectUploadDirectory({}, {})".format(repr(self.args['workdir']),
-                                                      repr(self.args['workersrc']))
+        return (f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
+                f"{repr(self.args['workersrc'])})")
 
 
 class ExpectDownloadFile(Expect):
@@ -387,8 +386,8 @@ class ExpectDownloadFile(Expect):
         return self
 
     def __repr__(self):
-        return "ExpectUploadDirectory({}, {})".format(repr(self.args['workdir']),
-                                                      repr(self.args['workerdest']))
+        return (f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
+                f"{repr(self.args['workerdest'])})")
 
 
 class ExpectMkdir(Expect):
@@ -401,7 +400,7 @@ class ExpectMkdir(Expect):
         super().__init__('mkdir', args)
 
     def __repr__(self):
-        return "ExpectMkdir({})".format(repr(self.args['dir']))
+        return f"ExpectMkdir({repr(self.args['dir'])})"
 
 
 class ExpectRmdir(Expect):
@@ -418,7 +417,7 @@ class ExpectRmdir(Expect):
         super().__init__('rmdir', args)
 
     def __repr__(self):
-        return "ExpectRmdir({})".format(repr(self.args['dir']))
+        return f"ExpectRmdir({repr(self.args['dir'])})"
 
 
 class ExpectCpdir(Expect):
@@ -435,7 +434,7 @@ class ExpectCpdir(Expect):
         super().__init__('cpdir', args)
 
     def __repr__(self):
-        return "ExpectCpdir({}, {})".format(repr(self.args['fromdir']), repr(self.args['todir']))
+        return f"ExpectCpdir({repr(self.args['fromdir'])}, {repr(self.args['todir'])})"
 
 
 class ExpectGlob(Expect):
@@ -454,7 +453,7 @@ class ExpectGlob(Expect):
         return self
 
     def __repr__(self):
-        return "ExpectGlob({})".format(repr(self.args['path']))
+        return f"ExpectGlob({repr(self.args['path'])})"
 
 
 class ExpectListdir(Expect):
@@ -471,7 +470,7 @@ class ExpectListdir(Expect):
         return self
 
     def __repr__(self):
-        return "ExpectListdir({})".format(repr(self.args['dir']))
+        return f"ExpectListdir({repr(self.args['dir'])})"
 
 
 class ExpectRmfile(Expect):
@@ -484,4 +483,4 @@ class ExpectRmfile(Expect):
         super().__init__('rmfile', args)
 
     def __repr__(self):
-        return "ExpectRmfile({})".format(repr(self.args['path']))
+        return f"ExpectRmfile({repr(self.args['path'])})"

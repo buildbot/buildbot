@@ -54,8 +54,8 @@ class EndpointMatcherBase:
         args = []
         for k, v in self.__dict__.items():
             if isinstance(v, str):
-                args.append("{}='{}'".format(k, v))
-        return "{}({})".format(self.__class__.__name__, ", ".join(args))
+                args.append(f"{k}='{v}'")
+        return f'{self.__class__.__name__}({", ".join(args)})'
 
 
 class Match:

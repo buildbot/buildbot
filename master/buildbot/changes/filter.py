@@ -97,15 +97,15 @@ class ChangeFilter(ComparableMixin):
         checks = []
         for chg_attr, (filt_list, filt_re, filt_fn) in sorted(self.checks.items()):
             if filt_list is not None and len(filt_list) == 1:
-                checks.append('{} == {}'.format(chg_attr, filt_list[0]))
+                checks.append(f'{chg_attr} == {filt_list[0]}')
             elif filt_list is not None:
-                checks.append('{} in {}'.format(chg_attr, repr(filt_list)))
+                checks.append(f'{chg_attr} in {repr(filt_list)}')
             if filt_re is not None:
-                checks.append('{} ~/{}/'.format(chg_attr, filt_re))
+                checks.append(f'{chg_attr} ~/{filt_re}/')
             if filt_fn is not None:
-                checks.append('{}({})'.format(filt_fn.__name__, chg_attr))
+                checks.append(f'{filt_fn.__name__}({chg_attr})')
 
-        return "<{} on {}>".format(self.__class__.__name__, ' and '.join(checks))
+        return f"<{self.__class__.__name__} on {' and '.join(checks)}>"
 
     @staticmethod
     def fromSchedulerConstructorArgs(change_filter=None,

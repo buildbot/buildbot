@@ -136,7 +136,7 @@ class ConnectableThreadQueue(threading.Thread):
 
                 except Exception as e:
                     self.connecting = False
-                    if self._handle_backoff('Exception received: {}'.format(e)):
+                    if self._handle_backoff(f'Exception received: {e}'):
                         break
                 continue
             try:

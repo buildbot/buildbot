@@ -112,7 +112,7 @@ class MySQLStrategy(Strategy):
                     # sqlalchemy will re-create the connection
                     log.msg('connection will be removed')
                     raise sa.exc.DisconnectionError()
-                log.msg('exception happened {}'.format(ex))
+                log.msg(f'exception happened {ex}')
                 raise
 
         # older versions of sqlalchemy require the listener to be specified
@@ -194,7 +194,7 @@ def special_case_mysql(u, kwargs):
     storage_engine = query.pop('storage_engine', 'MyISAM')
 
     kwargs['connect_args'] = {
-        'init_command': 'SET default_storage_engine={}'.format(storage_engine)
+        'init_command': f'SET default_storage_engine={storage_engine}'
     }
 
     if 'use_unicode' in query:

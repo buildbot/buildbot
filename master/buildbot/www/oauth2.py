@@ -119,7 +119,7 @@ class OAuth2Auth(auth.AuthBase):
             oauth_params['state'] = urlencode(dict(redirect=redirect_url))
         oauth_params.update(self.authUriAdditionalParams)
         sorted_oauth_params = sorted(oauth_params.items(), key=lambda val: val[0])
-        return "{}?{}".format(self.authUri, urlencode(sorted_oauth_params))
+        return f"{self.authUri}?{urlencode(sorted_oauth_params)}"
 
     def createSessionFromToken(self, token):
         s = requests.Session()
@@ -235,14 +235,12 @@ class GitHubAuth(OAuth2Auth):
             # v4 is accessible endpoint for enterprise
             self.apiResourceEndpoint = serverURL + '/api/graphql'
 
-            self.authUri = '{0}/login/oauth/authorize'.format(serverURL)
-            self.tokenUri = '{0}/login/oauth/access_token'.format(serverURL)
+            self.authUri = f'{serverURL}/login/oauth/authorize'
+            self.tokenUri = f'{serverURL}/login/oauth/access_token'
         self.serverURL = serverURL or self.resourceEndpoint
 
         if apiVersion not in (3, 4):
-            config.error(
-                'GitHubAuth apiVersion must be 3 or 4 not {}'.format(
-                    apiVersion))
+            config.error(f'GitHubAuth apiVersion must be 3 or 4 not {apiVersion}')
         self.apiVersion = apiVersion
         if apiVersion == 3:
             if getTeamsMembership is True:
@@ -292,7 +290,7 @@ class GitHubAuth(OAuth2Auth):
         s = requests.Session()
         s.headers = {
             'Authorization': 'token ' + token['access_token'],
-            'User-Agent': 'buildbot/{}'.format(buildbot.version),
+            'User-Agent': f'buildbot/{buildbot.version}',
         }
         s.verify = self.sslVerify
         return s
@@ -350,8 +348,8 @@ class GitHubAuth(OAuth2Auth):
                         # identical with the inclusion of the organization
                         # since different organizations might share a common
                         # team name
-                        teams.add('{}/{}'.format(orgs_name_slug_mapping[org], node['node']['name']))
-                        teams.add('{}/{}'.format(orgs_name_slug_mapping[org], node['node']['slug']))
+                        teams.add(f"{orgs_name_slug_mapping[org]}/{node['node']['name']}")
+                        teams.add(f"{orgs_name_slug_mapping[org]}/{node['node']['slug']}")
                 user_info['groups'].extend(sorted(teams))
         if self.debug:
             log.info('{klass} User Details: {user_info}',
@@ -366,9 +364,9 @@ class GitLabAuth(OAuth2Auth):
 
     def __init__(self, instanceUri, clientId, clientSecret, **kwargs):
         uri = instanceUri.rstrip("/")
-        self.authUri = "{}/oauth/authorize".format(uri)
-        self.tokenUri = "{}/oauth/token".format(uri)
-        self.resourceEndpoint = "{}/api/v4".format(uri)
+        self.authUri = f"{uri}/oauth/authorize"
+        self.tokenUri = f"{uri}/oauth/token"
+        self.resourceEndpoint = f"{uri}/api/v4"
         super().__init__(clientId, clientSecret, **kwargs)
 
     def getUserInfoFromOAuthClient(self, c):

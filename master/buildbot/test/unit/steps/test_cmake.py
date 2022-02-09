@@ -82,7 +82,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             'a': 'b'
         }
         self.setup_step(CMake(definitions=definition))
-        self.expect_and_run_command('-D%s=%s' % list(definition.items())[0])
+        self.expect_and_run_command('-Da=b')
 
     def test_environment(self):
         command = [CMake.DEFAULT_CMAKE]
@@ -95,23 +95,19 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     def test_definitions_interpolation(self):
-        b_value = 'real_b'
-
         definitions = {
             'a': Property('b')
         }
 
         self.setup_step(CMake(definitions=definitions))
-        self.properties.setProperty('b', b_value, source='test')
-        self.expect_and_run_command('-D%s=%s' % ('a', b_value))
+        self.properties.setProperty('b', 'real_b', source='test')
+        self.expect_and_run_command('-Da=real_b')
 
     def test_definitions_renderable(self):
-        b_value = 'real_b'
-
         definitions = Property('b')
         self.setup_step(CMake(definitions=definitions))
-        self.properties.setProperty('b', {'a': b_value}, source='test')
-        self.expect_and_run_command('-D%s=%s' % ('a', b_value))
+        self.properties.setProperty('b', {'a': 'real_b'}, source='test')
+        self.expect_and_run_command('-Da=real_b')
 
     def test_generator(self):
         generator = 'Ninja'

@@ -118,8 +118,8 @@ class _OldBuildTracker:
         for ss_tuple in tracked_canc.ss_tuples:
             canc_dict = self.tracked_by_ss.get(ss_tuple, None)
             if canc_dict is None:
-                raise KeyError('{}: Could not find finished builds by tuple {}'.format(
-                        self.__class__.__name__, ss_tuple))
+                raise KeyError(f'{self.__class__.__name__}: Could not find finished builds '
+                               f'by tuple {ss_tuple}')
 
             del canc_dict[tracked_canc.id_tuple]
             if not canc_dict:
@@ -146,8 +146,8 @@ class _OldBuildTracker:
 
                 other_canc_dict = self.tracked_by_ss.get(i_ss_tuple, None)
                 if other_canc_dict is None:
-                    raise KeyError('{}: Could not find running builds by tuple {}'.format(
-                            self.__class__.__name__, i_ss_tuple))
+                    raise KeyError(f'{self.__class__.__name__}: Could not find running builds '
+                                   f'by tuple {i_ss_tuple}')
 
                 del other_canc_dict[tracked_canc.id_tuple]
                 if not other_canc_dict:
@@ -253,8 +253,7 @@ class OldBuildCanceller(BuildbotService):
     @classmethod
     def check_filters(cls, filters):
         if not isinstance(filters, list):
-            config.error('{}: The filters argument must be a list of tuples'.format(
-                cls.__name__))
+            config.error(f'{cls.__name__}: The filters argument must be a list of tuples')
 
         for filter in filters:
             if not isinstance(filter, tuple) or \
@@ -269,8 +268,7 @@ class OldBuildCanceller(BuildbotService):
             try:
                 extract_filter_values(builders, 'builders')
             except Exception as e:
-                config.error('{}: When processing filter builders: {}'.format(
-                    cls.__name__, str(e)))
+                config.error(f'{cls.__name__}: When processing filter builders: {str(e)}')
 
     @classmethod
     def filter_tuples_to_filter_set_object(cls, filters):

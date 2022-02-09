@@ -1538,10 +1538,10 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .stdout(b'git version 2.10.0\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
             ExpectMasterShell(['git',
-                          '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
+                          '-c', f'core.sshCommand=ssh -o "BatchMode=yes" -i "{key_path}"',
                           'ls-remote', '--refs', self.REPOURL]),
             ExpectMasterShell(['git',
-                          '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
+                          '-c', f'core.sshCommand=ssh -o "BatchMode=yes" -i "{key_path}"',
                           'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
@@ -1588,7 +1588,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             ExpectMasterShell(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR)
-            .env({'GIT_SSH_COMMAND': 'ssh -o "BatchMode=yes" -i "{0}"'.format(key_path)}),
+            .env({'GIT_SSH_COMMAND': f'ssh -o "BatchMode=yes" -i "{key_path}"'}),
             ExpectMasterShell(['git', 'rev-parse',
                           'refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR)
@@ -1629,10 +1629,10 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .stdout(b'git version 2.10.0\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
             ExpectMasterShell(['git',
-                          '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
+                          '-c', f'core.sshCommand=ssh -o "BatchMode=yes" -i "{key_path}"',
                           'ls-remote', '--refs', self.REPOURL]),
             ExpectMasterShell(['git',
-                          '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
+                          '-c', f'core.sshCommand=ssh -o "BatchMode=yes" -i "{key_path}"',
                           'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR)
@@ -1673,12 +1673,12 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
             .stdout(b'git version 2.10.0\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
             ExpectMasterShell(['git',
-                          '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
-                          '-o "UserKnownHostsFile={1}"'.format(key_path, known_hosts_path),
+                          '-c', f'core.sshCommand=ssh -o "BatchMode=yes" -i "{key_path}" '
+                          f'-o "UserKnownHostsFile={known_hosts_path}"',
                           'ls-remote', '--refs', self.REPOURL]),
             ExpectMasterShell(['git',
-                          '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
-                          '-o "UserKnownHostsFile={1}"'.format(key_path, known_hosts_path),
+                          '-c', f'core.sshCommand=ssh -o "BatchMode=yes" -i "{key_path}" '
+                          f'-o "UserKnownHostsFile={known_hosts_path}"',
                           'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
@@ -1738,12 +1738,12 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
             .stdout(b'git version 2.10.0\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
             ExpectMasterShell(['git',
-                          '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
-                          '-o "UserKnownHostsFile={1}"'.format(key_path, known_hosts_path),
+                          '-c', f'core.sshCommand=ssh -o "BatchMode=yes" -i "{key_path}" '
+                          f'-o "UserKnownHostsFile={known_hosts_path}"',
                           'ls-remote', '--refs', self.REPOURL]),
             ExpectMasterShell(['git',
-                          '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
-                          '-o "UserKnownHostsFile={1}"'.format(key_path, known_hosts_path),
+                          '-c', f'core.sshCommand=ssh -o "BatchMode=yes" -i "{key_path}" '
+                          f'-o "UserKnownHostsFile={known_hosts_path}"',
                           'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),

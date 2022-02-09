@@ -63,8 +63,7 @@ class BaseLock:
         self._claimed_counting = 0
 
         # subscriptions to this lock being released
-        self.release_subs = subscription.SubscriptionPoint("%r releases"
-                                                           % (self,))
+        self.release_subs = subscription.SubscriptionPoint(f"{repr(self)} releases")
 
     def __repr__(self):
         return self.description
@@ -84,8 +83,7 @@ class BaseLock:
 
     def isAvailable(self, requester, access):
         """ Return a boolean whether the lock is available for claiming """
-        debuglog("{} isAvailable({}, {}): self.owners={}".format(self, requester, access,
-                                                                 repr(self.owners)))
+        debuglog(f"{self} isAvailable({requester}, {access}): self.owners={repr(self.owners)}")
         num_excl, num_counting = self._claimed_excl, self._claimed_counting
 
         if not access.count:
@@ -131,7 +129,7 @@ class BaseLock:
 
     def claim(self, owner, access):
         """ Claim the lock (lock must be available) """
-        debuglog("{} claim({}, {})".format(self, owner, access.mode))
+        debuglog(f"{self} claim({owner}, {access.mode})")
         assert owner is not None
         assert self.isAvailable(owner, access), "ask for isAvailable() first"
 
@@ -148,8 +146,7 @@ class BaseLock:
         self.waiting = [w for w in self.waiting if w[0] is not owner]
         self._addOwner(owner, access)
 
-        debuglog(" {} is claimed '{}', {} units".format(self, access.mode,
-                  access.count))
+        debuglog(f" {self} is claimed '{access.mode}', {access.count} units")
 
     def subscribeToReleases(self, callback):
         """Schedule C{callback} to be invoked every time this lock is
@@ -163,10 +160,9 @@ class BaseLock:
         if not access.count:
             return
 
-        debuglog("{} release({}, {}, {})".format(self, owner, access.mode,
-                  access.count))
+        debuglog(f"{self} release({owner}, {access.mode}, {access.count})")
         if not self._removeOwner(owner, access):
-            debuglog("{} already released".format(self))
+            debuglog(f"{self} already released")
             return
 
         self._tryWakeUp()
@@ -209,7 +205,7 @@ class BaseLock:
         longer interesting by calling stopWaitingUntilAvailable(). The caller does not need to
         do this immediately after deferred is fired, an eventual execution is sufficient.
         """
-        debuglog("{} waitUntilAvailable({})".format(self, owner))
+        debuglog(f"{self} waitUntilAvailable({owner})")
         assert isinstance(access, LockAccess)
         if self.isAvailable(owner, access):
             return defer.succeed(self)
@@ -231,7 +227,7 @@ class BaseLock:
             to `waitUntilMaybeAvailable()`. If `d` has not been woken up already by calling its
             callback, it will be done as part of this function
         """
-        debuglog("{} stopWaitingUntilAvailable({})".format(self, owner))
+        debuglog(f"{self} stopWaitingUntilAvailable({owner})")
         assert isinstance(access, LockAccess)
 
         w_index = self._find_waiting(owner)
@@ -261,8 +257,7 @@ class RealMasterLock(BaseLock, service.SharedService):
         self._updateDescription()
 
     def _updateDescription(self):
-        self.description = "<MasterLock({}, {})>".format(self.lockName,
-                                                         self.maxCount)
+        self.description = f"<MasterLock({self.lockName}, {self.maxCount})>"
 
     def getLockForWorker(self, workername):
         return self
@@ -303,13 +298,11 @@ class RealWorkerLock(service.SharedService):
 
     def _updateDescription(self):
         self.description = \
-            "<WorkerLock({}, {}, {})>".format(self.lockName, self.maxCount,
-                                              self.maxCountForWorker)
+            f"<WorkerLock({self.lockName}, {self.maxCount}, {self.maxCountForWorker})>"
 
     def _updateDescriptionForLock(self, lock, workername):
         lock.description = \
-            "<WorkerLock({}, {})[{}] {}>".format(lock.lockName, lock.maxCount,
-                                                 workername, id(lock))
+            f"<WorkerLock({lock.lockName}, {lock.maxCount})[{workername}] {id(lock)}>"
 
     def updateFromLockId(self, lockid, config_version):
         assert self.lockName == lockid.name

@@ -59,9 +59,9 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin,
             )
         .exit(expected_code)
         )
-        state_string = "'robocopy {} ...'".format(source)
+        state_string = f"'robocopy {source} ...'"
         if expected_res != SUCCESS:
-            state_string += ' ({})'.format(Results[expected_res])
+            state_string += f' ({Results[expected_res]})'
         self.expect_outcome(result=expected_res, state_string=state_string)
         return self.run_step()
 

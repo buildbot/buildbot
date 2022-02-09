@@ -54,8 +54,7 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin,
                 for t in (lastActuated, expected)]
             got_ep = yield sched.getNextBuildTime(lastActuated_ep)
             self.assertEqual(got_ep, expected_ep,
-                             "{} -> {} != {}".format(lastActuated, time.localtime(got_ep),
-                             expected))
+                             f"{lastActuated} -> {time.localtime(got_ep)} != {expected}")
 
     def test_getNextBuildTime_hourly(self):
         sched = self.makeScheduler(name='test', builderNames=['test'])

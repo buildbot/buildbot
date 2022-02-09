@@ -23,7 +23,7 @@ def _check_env_is_expected(test, expected_env, env):
     env = env or {}
     for var, value in expected_env.items():
         test.assertEqual(env.get(var), value,
-                         'Expected environment to have {} = {}'.format(var, repr(value)))
+                         f'Expected environment to have {var} = {repr(value)}')
 
 
 class ExpectMasterShell:
@@ -67,7 +67,7 @@ class ExpectMasterShell:
         return (self._exit, self._stdout, self._stderr)
 
     def __repr__(self):
-        return "<ExpectMasterShell(command={})>".format(self._command)
+        return f"<ExpectMasterShell(command={self._command})>"
 
 
 class MasterRunProcessMixin:
@@ -90,7 +90,7 @@ class MasterRunProcessMixin:
         _check_env_is_expected(self, self._master_run_process_expect_env, env)
 
         if not self._expected_master_commands:
-            self.fail("got command {} when no further commands were expected".format(command))
+            self.fail(f"got command {command} when no further commands were expected")
 
         expect = self._expected_master_commands.pop(0)
 

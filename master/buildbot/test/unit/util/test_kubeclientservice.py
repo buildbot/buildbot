@@ -188,7 +188,7 @@ class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
         service = kubeclientservice.KubeClientService(config)
         url, kwargs = yield service._prepareRequest("/test", {})
 
-        expected = "Basic {0}".format(base64.b64encode("name:10".encode('utf-8')))
+        expected = f'Basic {base64.b64encode("name:10".encode("utf-8"))}'
         self.assertEqual(expected, kwargs['headers']['Authorization'])
 
 

@@ -66,7 +66,7 @@ class MaildirService(service.BuildbotService):
     @defer.inlineCallbacks
     def startService(self):
         if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
-            raise NoSuchMaildir("invalid maildir '{}'".format(self.basedir))
+            raise NoSuchMaildir(f"invalid maildir '{self.basedir}'")
         try:
             if dnotify:
                 # we must hold an fd open on the directory, so we can get
@@ -126,9 +126,9 @@ class MaildirService(service.BuildbotService):
                 try:
                     yield self.messageReceived(n)
                 except Exception:
-                    log.err(None, "while reading '{}' from maildir '{}':".format(n, self.basedir))
+                    log.err(None, f"while reading '{n}' from maildir '{self.basedir}':")
         except Exception:
-            log.err(None, "while polling maildir '{}':".format(self.basedir))
+            log.err(None, f"while polling maildir '{self.basedir}':")
 
     def moveToCurDir(self, filename):
         if runtime.platformType == "posix":

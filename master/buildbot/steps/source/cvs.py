@@ -55,8 +55,7 @@ class CVS(Source):
         self.srcdir = 'source'
 
         if not self._hasAttrGroupMember('mode', self.mode):
-            raise ValueError("mode {} is not one of {}".format(self.mode,
-                                                               self._listAttrGroupMembers('mode')))
+            raise ValueError(f"mode {self.mode} is not one of {self._listAttrGroupMembers('mode')}")
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks
@@ -202,8 +201,7 @@ class CVS(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
+                log.msg(f"Checkout failed, trying {repeats} more times after {delay} seconds")
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._clobber())
@@ -249,7 +247,7 @@ class CVS(Source):
         yield self.runCommand(cmd)
 
         if cmd.rc != 0 and abandonOnFailure:
-            log.msg("Source step failed while running command {}".format(cmd))
+            log.msg(f"Source step failed while running command {cmd}")
             raise buildstep.BuildStepFailed()
         return cmd.rc
 

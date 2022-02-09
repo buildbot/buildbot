@@ -138,7 +138,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
         if not os.path.isabs(self.workdir):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
-            log.msg("gitpoller: using workdir '{}'".format(self.workdir))
+            log.msg(f"gitpoller: using workdir '{self.workdir}'")
 
         yield super().reconfigService(name=name,
                                       pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
@@ -209,7 +209,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
     def _trackerBranch(self, branch):
         # manually quote tilde for Python 3.7
         url = urlquote(self.repourl, '').replace('~', '%7E')
-        return "refs/buildbot/{}/{}".format(url, self._removeHeads(branch))
+        return f"refs/buildbot/{url}/{self._removeHeads(branch)}"
 
     def poll_should_exit(self):
         # A single gitpoller loop may take a while on a loaded master, which would block
@@ -242,7 +242,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             branches = sorted(list(set(branches) & set(remote_branches)))
 
         refspecs = [
-            '+{}:{}'.format(self._removeHeads(branch), self._trackerBranch(branch))
+            f'+{self._removeHeads(branch)}:{self._trackerBranch(branch)}'
             for branch in branches
         ]
 
@@ -254,7 +254,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             return
 
         revs = {}
-        log.msg('gitpoller: processing changes from "{}"'.format(self.repourl))
+        log.msg(f'gitpoller: processing changes from "{self.repourl}"')
         for branch in branches:
             try:
                 if self.poll_should_exit():  # pragma: no cover
@@ -267,8 +267,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 revs[branch] = bytes2unicode(rev, self.encoding)
                 yield self._process_changes(revs[branch], branch)
             except Exception:
-                log.err(_why="trying to poll branch {} of {}".format(
-                        branch, self.repourl))
+                log.err(_why=f"trying to poll branch {branch} of {self.repourl}")
 
         self.lastRev = revs
         yield self.setState('lastRev', self.lastRev)
@@ -289,8 +288,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 try:
                     stamp = int(git_output)
                 except Exception as e:
-                    log.msg(('gitpoller: caught exception converting output \'{}\' to timestamp'
-                             ).format(git_output))
+                    log.msg(f'gitpoller: caught exception converting output \'{git_output}\' to '
+                            'timestamp')
                     raise e
                 return stamp
             return None
@@ -351,7 +350,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
         # get the change list
         revListArgs = (['--ignore-missing'] +
-                       ['--format=%H', '{}'.format(newRev)] +
+                       ['--format=%H', f'{newRev}'] +
                        ['^' + rev
                         for rev in sorted(self.lastRev.values())] +
                        ['--'])
@@ -368,20 +367,18 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 revList = [newRev]
                 if existingRev is None:
                     # This branch was completely unknown, rebuild
-                    log.msg('gitpoller: rebuilding {} for new branch "{}"'.format(
-                        newRev, branch))
+                    log.msg(f'gitpoller: rebuilding {newRev} for new branch "{branch}"')
                 else:
                     # This branch is known, but it now points to a different
                     # commit than last time we saw it, rebuild.
-                    log.msg('gitpoller: rebuilding {} for updated branch "{}"'.format(
-                        newRev, branch))
+                    log.msg(f'gitpoller: rebuilding {newRev} for updated branch "{branch}"')
 
         self.changeCount = len(revList)
         self.lastRev[branch] = newRev
 
         if self.changeCount:
-            log.msg('gitpoller: processing {} changes: {} from "{}" branch "{}"'.format(
-                    self.changeCount, revList, self.repourl, branch))
+            log.msg(f'gitpoller: processing {self.changeCount} changes: {revList} from '
+                    f'"{self.repourl}" branch "{branch}"')
 
         for rev in revList:
             dl = defer.DeferredList([
@@ -398,8 +395,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             failures = [r[1] for r in results if not r[0]]
             if failures:
                 for failure in failures:
-                    log.err(
-                        failure, "while processing changes for {} {}".format(newRev, branch))
+                    log.err(failure, f"while processing changes for {newRev} {branch}")
                 # just fail on the first error; they're probably all related!
                 failures[0].raiseException()
 
@@ -480,8 +476,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         stderr = bytes2unicode(stderr, self.encoding)
         if code != 0:
             if code == 128:
-                raise GitError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
-                               full_args, path, self.repourl, code, stderr))
-            raise EnvironmentError(('command {} in {} on repourl {} failed with exit code {}: {}'
-                                    ).format(full_args, path, self.repourl, code, stderr))
+                raise GitError(f'command {full_args} in {path} on repourl {self.repourl} failed '
+                               f'with exit code {code}: {stderr}')
+            raise EnvironmentError(f'command {full_args} in {path} on repourl {self.repourl} '
+                                   f'failed with exit code {code}: {stderr}')
         return stdout.strip()

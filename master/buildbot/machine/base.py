@@ -42,4 +42,4 @@ class Machine(service.BuildbotService):
         self.workers.remove(worker)
 
     def __repr__(self):
-        return "<Machine '{}' at {}>".format(self.name, id(self))
+        return f"<Machine '{self.name}' at {id(self)}>"

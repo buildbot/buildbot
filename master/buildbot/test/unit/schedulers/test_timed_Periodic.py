@@ -52,7 +52,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             isFirst = (self.events == [])
             if self.reactor.seconds() == 0 and firstBuildError:
                 raise TestException()
-            self.events.append('B@%d' % self.reactor.seconds())
+            self.events.append(f'B@{int(self.reactor.seconds())}')
             if isFirst and firstBuildDuration:
                 d = defer.Deferred()
                 self.reactor.callLater(firstBuildDuration, d.callback, None)
@@ -163,7 +163,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         d = sched.deactivate()  # begin stopping the service
         d.addCallback(
-            lambda _: self.events.append('STOP@%d' % self.reactor.seconds()))
+            lambda _: self.events.append(f'STOP@{int(self.reactor.seconds())}'))
 
         # run the clock out
         while self.reactor.seconds() < 40:

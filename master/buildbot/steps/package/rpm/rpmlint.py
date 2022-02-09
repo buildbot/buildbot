@@ -75,6 +75,6 @@ class RpmLint(Test):
         warnings = self.obs.warnings
         errors = []
         if warnings:
-            yield self.addCompleteLog('%d Warnings' % len(warnings), "\n".join(warnings))
+            yield self.addCompleteLog(f'{len(warnings)} Warnings', "\n".join(warnings))
         if errors:
-            yield self.addCompleteLog('%d Errors' % len(errors), "\n".join(errors))
+            yield self.addCompleteLog(f'{len(errors)} Errors', "\n".join(errors))

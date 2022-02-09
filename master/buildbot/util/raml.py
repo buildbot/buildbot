@@ -91,13 +91,13 @@ class RamlSpec:
 
                 for _is in v['is']:
                     if not isinstance(_is, dict):
-                        raise Exception('Unexpected "is" target {}: {}'.format(type(_is), _is))
+                        raise Exception(f'Unexpected "is" target {type(_is)}: {_is}')
 
                     if 'bbget' in _is:
                         try:
                             v['eptype'] = _is['bbget']['bbtype']
                         except TypeError as e:
-                            raise Exception('Unexpected "is" target {}'.format(_is['bbget'])) from e
+                            raise Exception(f"Unexpected 'is' target {_is['bbget']}") from e
 
                         self.endpoints_by_type.setdefault(v['eptype'], {})
                         self.endpoints_by_type[v['eptype']][base] = api

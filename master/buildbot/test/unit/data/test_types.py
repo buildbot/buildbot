@@ -38,24 +38,23 @@ class TypeMixin:
     def test_valueFromString(self):
         for string, expValue in self.stringValues:
             self.assertEqual(self.ty.valueFromString(string), expValue,
-                             "value of string %r" % (string,))
+                             f"value of string {repr(string)}")
         for string in self.badStringValues:
             with self.assertRaises(Exception):
-                self.ty.valueFromString(string,
-                              "expected error for %r" % (string,))
+                self.ty.valueFromString(string, f"expected error for {repr(string)}")
 
     def test_cmp(self):
         for val, string, expResult in self.cmpResults:
             self.assertEqual(self.ty.cmp(val, string), expResult,
-                             "compare of %r and %r" % (val, string))
+                             f"compare of {repr(val)} and {repr(string)}")
 
     def test_validate(self):
         for o in self.good:
             errors = list(self.ty.validate(repr(o), o))
-            self.assertEqual(errors, [], "{} -> {}".format(repr(o), errors))
+            self.assertEqual(errors, [], f"{repr(o)} -> {errors}")
         for o in self.bad:
             errors = list(self.ty.validate(repr(o), o))
-            self.assertNotEqual(errors, [], "no error for {}".format(repr(o)))
+            self.assertNotEqual(errors, [], f"no error for {repr(o)}")
 
 
 class NoneOk(TypeMixin, unittest.TestCase):

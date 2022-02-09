@@ -27,13 +27,13 @@ class VerifyDict(unittest.TestCase):
 
     def doValidationTest(self, validator, good, bad):
         for g in good:
-            log.msg('expect %r to be good' % (g,))
+            log.msg(f'expect {repr(g)} to be good')
             msgs = list(validator.validate('g', g))
-            self.assertEqual(msgs, [], 'messages for %r' % (g,))
+            self.assertEqual(msgs, [], f'messages for {repr(g)}')
         for b in bad:
-            log.msg('expect %r to be bad' % (b,))
+            log.msg(f'expect {repr(b)} to be bad')
             msgs = list(validator.validate('b', b))
-            self.assertNotEqual(msgs, [], 'no messages for %r' % (b,))
+            self.assertNotEqual(msgs, [], f'no messages for {repr(b)}')
             log.msg('..got messages:')
             for msg in msgs:
                 log.msg("  " + msg)
@@ -89,7 +89,7 @@ class VerifyDict(unittest.TestCase):
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.
             raise(unittest.SkipTest("Cannot encode weird unicode "
-                "on this platform with {}".format(os_encoding))) from e
+                f"on this platform with {os_encoding}")) from e
 
         self.doValidationTest(validation.IdentifierValidator(50),
                               good=[

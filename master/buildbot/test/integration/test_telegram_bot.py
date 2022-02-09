@@ -118,7 +118,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         # now that we have a port, construct the real URL and insert it into
         # the config.  The second reconfig isn't really required, but doesn't
         # hurt.
-        self.url = 'http://127.0.0.1:%d/' % master.www.getPortnum()
+        self.url = f'http://127.0.0.1:{master.www.getPortnum()}/'
         self.url = unicode2bytes(self.url)
         master.config.buildbotURL = self.url
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
@@ -175,7 +175,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
                                       Headers({'Content-Type': ['application/json']}),
                                       BytesProducer(payload))
         self.assertEqual(pg.code, 202,
-                         "did not get 202 response for '{}'".format(bytes2unicode(self.bot_url)))
+                         f"did not get 202 response for '{bytes2unicode(self.bot_url)}'")
         self.assertIn('123456789', self.sent_messages[0][1])
         self.assertIn('-12345678', self.sent_messages[1][1])
 

@@ -76,7 +76,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.loglock = defer.DeferredLock()
 
     def __repr__(self):
-        return "<RemoteCommand '{}' at {}>".format(self.remote_command, id(self))
+        return f"<RemoteCommand '{self.remote_command}' at {id(self)}>"
 
     def run(self, step, conn, builder_name):
         self.active = True
@@ -90,9 +90,9 @@ class RemoteCommand(base.RemoteCommandImpl):
         # generate a new command id
         cmd_id = RemoteCommand._commandCounter
         RemoteCommand._commandCounter += 1
-        self.commandID = "%d" % cmd_id
+        self.commandID = f"{cmd_id}"
 
-        log.msg("{}: RemoteCommand.run [{}]".format(self, self.commandID))
+        log.msg(f"{self}: RemoteCommand.run [{self.commandID}]")
         self.deferred = defer.Deferred()
 
         d = defer.maybeDeferred(self._start)
@@ -267,7 +267,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         if logname in self.logs:
             yield self.logs[logname].addStdout(data)
         else:
-            log.msg("{}.addToLog: no such log {}".format(self, logname))
+            log.msg(f"{self}.addToLog: no such log {logname}")
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     @defer.inlineCallbacks
@@ -279,7 +279,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
         if self.debug:
             for k, v in update.items():
-                log.msg("Update[{}]: {}".format(k, v))
+                log.msg(f"Update[{k}]: {v}")
         if "stdout" in update:
             # 'stdout': data
             yield self.addStdout(cleanup(update['stdout']))
@@ -295,8 +295,8 @@ class RemoteCommand(base.RemoteCommandImpl):
             yield self.addToLog(logname, cleanup(data))
         if "rc" in update:
             rc = self.rc = update['rc']
-            log.msg("{} rc={}".format(self, rc))
-            yield self.addHeader("program finished with exit code %d\n" % rc)
+            log.msg(f"{self} rc={rc}")
+            yield self.addHeader(f"program finished with exit code {rc}\n")
         if "elapsed" in update:
             self._remoteElapsed = update['elapsed']
 
@@ -317,9 +317,9 @@ class RemoteCommand(base.RemoteCommandImpl):
         for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:
-                    yield loog.addHeader("\nremoteFailed: {}".format(maybeFailure))
+                    yield loog.addHeader(f"\nremoteFailed: {maybeFailure}")
                 else:
-                    log.msg("closing log {}".format(loog))
+                    log.msg(f"closing log {loog}")
                 yield loog.finish()
         if maybeFailure:
             # Message Pack protocol can not send an exception object back to the master, so
@@ -330,9 +330,8 @@ class RemoteCommand(base.RemoteCommandImpl):
             # workaround http://twistedmatrix.com/trac/ticket/5507
             # CopiedFailure cannot be raised back, this make debug difficult
             if isinstance(maybeFailure, pb.CopiedFailure):
-                maybeFailure.value = RemoteException("{}: {}\n{}".format(maybeFailure.type,
-                                                                         maybeFailure.value,
-                                                                         maybeFailure.traceback))
+                maybeFailure.value = RemoteException(f"{maybeFailure.type}: {maybeFailure.value}"
+                                                     f"\n{maybeFailure.traceback}")
                 maybeFailure.type = RemoteException
             maybeFailure.raiseException()
 
@@ -419,9 +418,9 @@ class RemoteShellCommand(RemoteCommand):
                 self.args['dir'] = self.args['workdir']
             if self.step.workerVersionIsOlderThan("shell", "2.16"):
                 self.args.pop('sigtermTime', None)
-        what = "command '{}' in dir '{}'".format(self.fake_command, self.args['workdir'])
+        what = f"command '{self.fake_command}' in dir '{self.args['workdir']}'"
         log.msg(what)
         return super()._start()
 
     def __repr__(self):
-        return "<RemoteShellCommand '{}'>".format(repr(self.fake_command))
+        return f"<RemoteShellCommand '{repr(self.fake_command)}'>"

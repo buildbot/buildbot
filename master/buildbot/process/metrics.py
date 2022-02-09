@@ -230,7 +230,7 @@ class MetricCountHandler(MetricHandler):
     def report(self):
         retval = []
         for counter in sorted(self.keys()):
-            retval.append("Counter %s: %i" % (counter, self.get(counter)))
+            retval.append(f"Counter {counter}: {self.get(counter)}")
         return "\n".join(retval)
 
     def asDict(self):
@@ -258,7 +258,7 @@ class MetricTimeHandler(MetricHandler):
     def report(self):
         retval = []
         for timer in sorted(self.keys()):
-            retval.append("Timer %s: %.3g" % (timer, self.get(timer)))
+            retval.append(f"Timer {timer}: {self.get(timer):.3g}")
         return "\n".join(retval)
 
     def asDict(self):
@@ -281,9 +281,9 @@ class MetricAlarmHandler(MetricHandler):
         retval = []
         for alarm, (level, msg) in sorted(self._alarms.items()):
             if msg:
-                retval.append("{} {}: {}".format(ALARM_TEXT[level], alarm, msg))
+                retval.append(f"{ALARM_TEXT[level]} {alarm}: {msg}")
             else:
-                retval.append("{} {}".format(ALARM_TEXT[level], alarm))
+                retval.append(f"{ALARM_TEXT[level]} {alarm}")
         return "\n".join(retval)
 
     def asDict(self):
@@ -318,14 +318,14 @@ class AttachedWorkersWatcher:
         else:
             level = ALARM_OK
 
-        MetricAlarmEvent.log('attached_workers', msg='{} {}'.format(botmaster_count, worker_count),
+        MetricAlarmEvent.log('attached_workers', msg=f'{botmaster_count} {worker_count}',
                              level=level)
 
 
 def _get_rss():
     if sys.platform == 'linux':
         try:
-            with open("/proc/%i/statm" % os.getpid()) as f:
+            with open(f"/proc/{os.getpid()}/statm") as f:
                 return int(f.read().split()[1])
         except Exception:
             return 0
@@ -355,7 +355,7 @@ def periodicCheck(_reactor=reactor):
                 v = r[i]
                 if a == 'ru_maxrss' and v == 0:
                     v = _get_rss() * resource.getpagesize() / 1024
-                MetricCountEvent.log('resource.{}'.format(a), v, absolute=True)
+                MetricCountEvent.log(f'resource.{a}', v, absolute=True)
             MetricCountEvent.log(
                 'resource.pagesize', resource.getpagesize(), absolute=True)
         # Measure the reactor delay

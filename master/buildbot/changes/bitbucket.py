@@ -91,7 +91,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
 
     def describe(self):
         return "BitbucketPullrequestPoller watching the "\
-            "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch)
+            f"Bitbucket repository {self.owner}/{self.slug}, branch: {self.branch}"
 
     @deferredLocked('initLock')
     @defer.inlineCallbacks
@@ -114,9 +114,8 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
     def _getChanges(self):
         self.lastPoll = time.time()
         log.msg("BitbucketPullrequestPoller: polling "
-                "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch))
-        url = "https://api.bitbucket.org/2.0/repositories/{}/{}/pullrequests".format(self.owner,
-                                                                                     self.slug)
+                f"Bitbucket repository {self.owner}/{self.slug}, branch: {self.branch}")
+        url = f"https://api.bitbucket.org/2.0/repositories/{self.owner}/{self.slug}/pullrequests"
         return self.getPage(url, timeout=self.pollInterval)
 
     @defer.inlineCallbacks
@@ -187,7 +186,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                         committer=None,
                         revision=bytes2unicode(revision),
                         revlink=bytes2unicode(revlink),
-                        comments='pull-request #{}: {}\n{}'.format(nr, title, prlink),
+                        comments=f'pull-request #{nr}: {title}\n{prlink}',
                         when_timestamp=datetime2epoch(updated),
                         branch=bytes2unicode(branch),
                         category=self.category,
@@ -206,8 +205,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
 
         @d.addCallback
         def oid_callback(oid):
-            current = self.master.db.state.getState(
-                oid, 'pull_request%d' % pr_id, None)
+            current = self.master.db.state.getState(oid, f'pull_request{pr_id}', None)
 
             @current.addCallback
             def result_callback(result):
@@ -221,11 +219,11 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
 
         @d.addCallback
         def oid_callback(oid):
-            return self.master.db.state.setState(oid, 'pull_request%d' % pr_id, rev)
+            return self.master.db.state.setState(oid, f'pull_request{pr_id}', rev)
 
         return d
 
     def _getStateObjectId(self):
         # Return a deferred for object id in state db.
         return self.master.db.state.getObjectId(
-            '{}/{}#{}'.format(self.owner, self.slug, self.branch), self.db_class_name)
+            f'{self.owner}/{self.slug}#{self.branch}', self.db_class_name)

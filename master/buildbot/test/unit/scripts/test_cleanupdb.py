@@ -86,15 +86,14 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
     def createMasterCfg(self, extraconfig=""):
         os.chdir(self.origcwd)
         with open(os.path.join('basedir', 'master.cfg'), 'wt') as f:
-            f.write(textwrap.dedent("""
+            f.write(textwrap.dedent(f"""
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
-                c['db_url'] = {dburl}
+                c['db_url'] = {repr(os.environ["BUILDBOT_TEST_DB_URL"])}
                 c['buildbotNetUsageData'] = None
                 c['multiMaster'] = True  # don't complain for no builders
                 {extraconfig}
-            """.format(dburl=repr(os.environ["BUILDBOT_TEST_DB_URL"]),
-                       extraconfig=extraconfig)))
+            """))
 
     @defer.inlineCallbacks
     def test_cleanup_not_basedir(self):
@@ -165,7 +164,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 lengths["lz4"] = 40
                 continue
             # create a master.cfg with different compression method
-            self.createMasterCfg("c['logCompressionMethod'] = '{}'".format(mode))
+            self.createMasterCfg(f"c['logCompressionMethod'] = '{mode}'")
             res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
             self.assertEqual(res, 0)
 

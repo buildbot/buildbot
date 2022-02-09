@@ -116,7 +116,7 @@ class Endpoint:
         # we convert the action into a mixedCase method name
         action_method = getattr(self, "action" + action.capitalize(), None)
         if action_method is None:
-            raise exceptions.InvalidControlException("action: {} is not supported".format(action))
+            raise exceptions.InvalidControlException(f"action: {action} is not supported")
         return action_method(args, kwargs)
 
     def get_kwargs_from_graphql_parent(self, parent, parent_type):
@@ -219,8 +219,8 @@ class ListResult(UserList):
         self.limit = limit
 
     def __repr__(self):
-        return "ListResult(%r, offset=%r, total=%r, limit=%r)" % \
-            (self.data, self.offset, self.total, self.limit)
+        return (f"ListResult({repr(self.data)}, offset={repr(self.offset)}, "
+                f"total={repr(self.total)}, limit={repr(self.limit)})")
 
     def __eq__(self, other):
         if isinstance(other, ListResult):
