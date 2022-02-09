@@ -308,7 +308,7 @@ class RemoteCommand(base.RemoteCommandImpl):
                     yield loog.addHeader("\nremoteFailed: {}".format(maybeFailure))
                 else:
                     log.msg("closing log {}".format(loog))
-                loog.finish()
+                yield loog.finish()
         if maybeFailure:
             # workaround http://twistedmatrix.com/trac/ticket/5507
             # CopiedFailure cannot be raised back, this make debug difficult
