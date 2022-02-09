@@ -131,6 +131,7 @@ class CreateWorkerOptions(MakerBase):
         ["allow-shutdown", "a", None,
          "Allows the worker to initiate a graceful shutdown. One of "
          "'signal' or 'file'"],
+        ["protocol", None, "pb", "Protocol to be used when creating master-worker connection"],
         ["proxy-connection-string", None, None,
          "Address of HTTP proxy to tunnel through"]
     ]

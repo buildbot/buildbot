@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import os.path
 import signal
+import sys
 
 from twisted.application.internet import ClientService
 from twisted.application.internet import backoffPolicy
@@ -36,6 +37,11 @@ from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.pbutil import AutoLoginPBFactory
 from buildbot_worker.tunnel import HTTPTunnelEndpoint
+
+if sys.version_info.major >= 3:
+    from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
+    from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
+    from buildbot_worker.msgpack import WorkerForBuilderMsgpack
 
 
 class UnknownCommand(pb.Error):
@@ -93,6 +99,11 @@ class WorkerForBuilderPb(WorkerForBuilderPbLike, pb.Referenceable):
 
 class BotPb(BotBase, pb.Referenceable):
     WorkerForBuilder = WorkerForBuilderPb
+
+
+if sys.version_info.major >= 3:
+    class BotMsgpack(BotBase):
+        WorkerForBuilder = WorkerForBuilderMsgpack
 
 
 class BotFactory(AutoLoginPBFactory):
@@ -221,7 +232,7 @@ class Worker(WorkerBase):
     """
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
-                 maxdelay=None, numcpus=None, unicode_encoding=None, useTls=None,
+                 maxdelay=None, numcpus=None, unicode_encoding=None, protocol='pb', useTls=None,
                  allow_shutdown=None, maxRetries=None, connection_string=None,
                  delete_leftover_dirs=False, proxy_connection_string=None):
 
@@ -231,7 +242,15 @@ class Worker(WorkerBase):
                     "If you want to supply a connection string, "
                     "then set host and port to None")
 
-        bot_class = BotPb
+        if protocol == 'pb':
+            bot_class = BotPb
+        elif protocol == 'msgpack_experimental_v1':
+            if sys.version_info.major < 3:
+                raise NotImplementedError('Msgpack protocol is not supported in Python2')
+            bot_class = BotMsgpack
+        else:
+            raise ValueError('Unknown protocol {}'.format(protocol))
+
         WorkerBase.__init__(
             self, name, basedir, bot_class, umask=umask, unicode_encoding=unicode_encoding,
             delete_leftover_dirs=delete_leftover_dirs)
@@ -239,7 +258,6 @@ class Worker(WorkerBase):
             keepalive = None
 
         name = unicode2bytes(name, self.bot.unicode_encoding)
-        passwd = unicode2bytes(passwd, self.bot.unicode_encoding)
 
         self.numcpus = numcpus
         self.shutdown_loop = None
@@ -252,9 +270,28 @@ class Worker(WorkerBase):
             self.shutdown_mtime = 0
 
         self.allow_shutdown = allow_shutdown
-        bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
-        bf.startLogin(
-            credentials.UsernamePassword(name, passwd), client=self.bot)
+
+        if protocol == 'pb':
+            passwd = unicode2bytes(passwd, self.bot.unicode_encoding)
+
+            bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
+            bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
+        elif protocol == 'msgpack_experimental_v1':
+            if connection_string is None:
+                ws_conn_string = "ws://{}:{}".format(buildmaster_host, port)
+            else:
+                from urllib.parse import urlparse
+
+                parsed_url = urlparse(connection_string)
+                ws_conn_string = "ws://{}:{}".format(parsed_url.hostname, parsed_url.port)
+
+            bf = self.bf = BuildbotWebSocketClientFactory(ws_conn_string)
+            bf.protocol = BuildbotWebSocketClientProtocol
+            self.bf.buildbot_bot = self.bot
+            self.bf.name = name
+            self.bf.password = passwd
+        else:
+            raise ValueError('Unknown protocol {}'.format(protocol))
 
         def get_connection_string(host, port):
             if useTls:
@@ -290,8 +327,7 @@ class Worker(WorkerBase):
             if maxRetries and attempt >= maxRetries:
                 reactor.stop()
             return backoffPolicy()(attempt)
-        pb_service = ClientService(endpoint, bf,
-                                   retryPolicy=policy)
+        pb_service = ClientService(endpoint, bf, retryPolicy=policy)
         self.addService(pb_service)
 
     def startService(self):

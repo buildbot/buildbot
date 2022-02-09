@@ -37,7 +37,7 @@ class Dispatcher(BaseDispatcher):
     credentialInterfaces = [credentials.IUsernamePassword,
                             credentials.IUsernameHashedPassword]
 
-    def __init__(self, portstr):
+    def __init__(self, config_portstr, portstr):
         super().__init__(portstr)
         # there's lots of stuff to set up for a PB connection!
         self.portal = portal.Portal(self)

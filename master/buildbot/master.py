@@ -48,6 +48,7 @@ from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.wamp import connector as wampconnector
 from buildbot.worker import manager as workermanager
+from buildbot.worker.protocols.manager.msgpack import MsgManager
 from buildbot.worker.protocols.manager.pb import PBManager
 from buildbot.www import service as wwwservice
 
@@ -143,6 +144,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.pbmanager = PBManager()
         yield self.pbmanager.setServiceParent(self)
+
+        self.msgmanager = MsgManager()
+        yield self.msgmanager.setServiceParent(self)
 
         self.workers = workermanager.WorkerManager(self)
         yield self.workers.setServiceParent(self)

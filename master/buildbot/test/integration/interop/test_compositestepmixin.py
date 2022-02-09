@@ -48,6 +48,10 @@ class CompositeStepMixinMasterPb(CompositeStepMixinMaster):
     proto = "pb"
 
 
+class CompositeStepMixinMasterMsgPack(CompositeStepMixinMaster):
+    proto = "msgpack"
+
+
 class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
 
     def __init__(self, *args, **kwargs):

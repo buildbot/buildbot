@@ -492,6 +492,7 @@ setup_args['install_requires'] = [
     'setuptools >= 8.0',
     'Twisted ' + twisted_ver,
     'Jinja2 >= 2.1',
+    'msgpack >= 0.6.0',
     # required for tests, but Twisted requires this anyway
     'zope.interface >= 4.1.1',
     'sqlalchemy >= 1.3.0, < 1.5',

@@ -48,6 +48,10 @@ class CommandMixinMasterPB(CommandMixinMaster):
     proto = "pb"
 
 
+class CommandMixinMasterMsgPack(CommandMixinMaster):
+    proto = "msgpack"
+
+
 class TestCommandMixinStep(BuildStep, CommandMixin):
 
     @defer.inlineCallbacks

@@ -27,12 +27,12 @@ class Listener:
 class UpdateRegistrationListener(Listener):
     def __init__(self):
         super().__init__()
-        # username : (password, portstr, PBManager registration)
+        # username : (password, portstr, manager registration)
         self._registrations = {}
 
     @defer.inlineCallbacks
     def updateRegistration(self, username, password, portStr):
-        # NOTE: this method is only present on the PB protocol; others do not
+        # NOTE: this method is only present on the PB and MsgPack protocols; others do not
         # use registrations
         if username in self._registrations:
             currentPassword, currentPortStr, currentReg = \
@@ -48,7 +48,7 @@ class UpdateRegistrationListener(Listener):
             yield currentReg.unregister()
             del self._registrations[username]
 
-        if portStr and password:
+        if portStr is not None and password:
             reg = yield self.get_manager().register(portStr, username, password,
                                                     self._create_connection)
             self._registrations[username] = (password, portStr, reg)

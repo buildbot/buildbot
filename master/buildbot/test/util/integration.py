@@ -17,6 +17,7 @@ import os
 import re
 import sys
 from io import StringIO
+from unittest.case import SkipTest
 
 import mock
 
@@ -200,6 +201,9 @@ class RunMasterBase(unittest.TestCase):
             if self.proto == 'pb':
                 proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
                 workerclass = worker.Worker
+            if self.proto == 'msgpack':
+                proto = {"msgpack_experimental_v1": {"port": 0}}
+                workerclass = worker.Worker
             elif self.proto == 'null':
                 proto = {"null": {}}
                 workerclass = worker.LocalWorker
@@ -215,25 +219,36 @@ class RunMasterBase(unittest.TestCase):
         if not startWorker:
             return
 
-        if self.proto == 'pb':
-            # We find out the worker port automatically
-            workerPort = list(m.pbmanager.dispatchers.values())[
-                0].port.getHost().port
+        if self.proto in ('pb', 'msgpack'):
+            sandboxed_worker_path = os.environ.get("SANDBOXED_WORKER_PATH", None)
+            worker_python_version = os.environ.get("WORKER_PYTHON", None)
+            if self.proto == 'pb':
+                protocol = 'pb'
+                dispatcher = list(m.pbmanager.dispatchers.values())[0]
+            else:
+                protocol = 'msgpack_experimental_v1'
+                dispatcher = list(m.msgmanager.dispatchers.values())[0]
+
+                if sandboxed_worker_path is not None and worker_python_version == '2.7':
+                    raise SkipTest('MessagePack protocol is not supported on python 2.7 worker')
+
+                # We currently don't handle connection closing cleanly.
+                dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)
+
+            workerPort = dispatcher.port.getHost().port
 
             # create a worker, and attach it to the master, it will be started, and stopped
             # along with the master
             worker_dir = FilePath(self.mktemp())
             worker_dir.createDirectory()
-            sandboxed_worker_path = os.environ.get(
-                "SANDBOXED_WORKER_PATH", None)
             if sandboxed_worker_path is None:
                 self.w = Worker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    False, **worker_kwargs)
+                    False, protocol=protocol, **worker_kwargs)
             else:
                 self.w = SandboxedWorker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    sandboxed_worker_path, **worker_kwargs)
+                    sandboxed_worker_path, protocol=protocol, **worker_kwargs)
                 self.addCleanup(self.w.shutdownWorker)
 
         elif self.proto == 'null':

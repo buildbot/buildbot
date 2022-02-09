@@ -50,6 +50,10 @@ class SetPropertyFromCommandPB(SetPropertyFromCommand):
     proto = "pb"
 
 
+class SetPropertyFromCommandMsgPack(SetPropertyFromCommand):
+    proto = "msgpack"
+
+
 # master configuration
 
 num_reconfig = 0

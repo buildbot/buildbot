@@ -322,6 +322,11 @@ class RemoteCommand(base.RemoteCommandImpl):
                     log.msg("closing log {}".format(loog))
                 yield loog.finish()
         if maybeFailure:
+            # Message Pack protocol can not send an exception object back to the master, so
+            # exception information is sent as a string
+            if isinstance(maybeFailure, str):
+                raise RemoteException(maybeFailure)
+
             # workaround http://twistedmatrix.com/trac/ticket/5507
             # CopiedFailure cannot be raised back, this make debug difficult
             if isinstance(maybeFailure, pb.CopiedFailure):

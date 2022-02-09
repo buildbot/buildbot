@@ -490,6 +490,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         "keepalive": 4,
         "maxdelay": 2,
         "numcpus": None,
+        "protocol": "pb",
         "maxretries": None,
         "proxy-connection-string": None,
 
@@ -621,6 +622,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
             options["keepalive"],
             umask=options["umask"],
             numcpus=options["numcpus"],
+            protocol=options["protocol"],
             maxdelay=options["maxdelay"],
             allow_shutdown=options["allow-shutdown"],
             maxRetries=options["maxretries"],

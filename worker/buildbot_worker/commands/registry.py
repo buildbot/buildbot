@@ -24,8 +24,11 @@ commandRegistry = {
     # command name : fully qualified factory (callable)
     "shell": buildbot_worker.commands.shell.WorkerShellCommand,
     "uploadFile": buildbot_worker.commands.transfer.WorkerFileUploadCommand,
+    "upload_file": buildbot_worker.commands.transfer.WorkerFileUploadCommand,
     "uploadDirectory": buildbot_worker.commands.transfer.WorkerDirectoryUploadCommand,
+    "upload_directory": buildbot_worker.commands.transfer.WorkerDirectoryUploadCommand,
     "downloadFile": buildbot_worker.commands.transfer.WorkerFileDownloadCommand,
+    "download_file": buildbot_worker.commands.transfer.WorkerFileDownloadCommand,
     "mkdir": buildbot_worker.commands.fs.MakeDirectory,
     "rmdir": buildbot_worker.commands.fs.RemoveDirectory,
     "cpdir": buildbot_worker.commands.fs.CopyDirectory,

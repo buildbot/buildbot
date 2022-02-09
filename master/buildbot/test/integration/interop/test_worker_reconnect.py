@@ -31,7 +31,7 @@ class DisconnectingStep(BuildStep):
         return SUCCESS
 
 
-class WorkerReconnect(RunMasterBase):
+class WorkerReconnectPb(RunMasterBase):
     """integration test for testing worker disconnection and reconnection"""
     proto = "pb"
 
@@ -42,6 +42,10 @@ class WorkerReconnect(RunMasterBase):
         build = yield self.doForceBuild()
         self.assertEqual(build['buildid'], 2)
         self.assertEqual(len(DisconnectingStep.disconnection_list), 2)
+
+
+class WorkerReconnectMsgPack(WorkerReconnectPb):
+    proto = "msgpack"
 
 
 # master configuration

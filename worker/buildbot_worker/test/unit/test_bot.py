@@ -287,14 +287,13 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
                                                       workdir='workdir'))
         yield st.wait_for_finish()
 
-        def check(_):
-            self.assertEqual(st.actions, [
-                ['update', [[{'hdr': 'headers'}, 0]]],
-                ['update', [[{'stdout': 'hello\n'}, 0]]],
-                ['update', [[{'rc': 0}, 0]]],
-                ['update', [[{'elapsed': 1}, 0]]],
-                ['complete', None],
-            ])
+        self.assertEqual(st.actions, [
+            ['update', [[{'hdr': 'headers'}, 0]]],
+            ['update', [[{'stdout': 'hello\n'}, 0]]],
+            ['update', [[{'rc': 0}, 0]]],
+            ['update', [[{'elapsed': 1}, 0]]],
+            ['complete', None],
+        ])
 
     @defer.inlineCallbacks
     def test_startCommand_interruptCommand(self):
