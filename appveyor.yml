@@ -24,6 +24,8 @@ install:
 build: false
 
 test_script:
+  # Note that Twisted Trial does not support multiple jobs on Windows
+  # The following error is printed: "Customizing childFDs is not supported on Windows."
   - "coverage run --rcfile=common/coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
   - ps: |
           echo $ENV:PYTHON
