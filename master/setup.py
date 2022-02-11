@@ -68,7 +68,8 @@ class install_data_twisted(install_data):
         super().run()
         # ensure there's a buildbot/VERSION file
         fn = os.path.join(self.install_dir, 'buildbot', 'VERSION')
-        open(fn, 'w').write(version)
+        with open(fn, 'w') as f:
+            f.write(version)
         self.outfiles.append(fn)
 
 
@@ -79,7 +80,8 @@ class our_sdist(sdist):
 
         # ensure there's a buildbot/VERSION file
         fn = os.path.join(base_dir, 'buildbot', 'VERSION')
-        open(fn, 'w').write(version)
+        with open(fn, 'w') as f:
+            f.write(version)
 
         # ensure that NEWS has a copy of the latest release notes, with the
         # proper version substituted

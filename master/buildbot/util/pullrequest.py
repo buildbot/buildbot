@@ -29,8 +29,7 @@ class PullRequestMixin:
                     continue
                 if isinstance(v, dict):
                     flatten(properties, name, v)
-                elif any([fnmatch(name, expr)
-                          for expr in self.external_property_whitelist]):
+                elif any(fnmatch(name, expr) for expr in self.external_property_whitelist):
                     properties[name] = v
 
         properties = {}

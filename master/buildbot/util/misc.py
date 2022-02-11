@@ -47,7 +47,7 @@ def cancelAfter(seconds, deferred, _reactor=reactor):
 
 
 def writeLocalFile(path, contents, mode=None):  # pragma: no cover
-    with open(path, 'w') as file:
+    with open(path, 'w', encoding='utf-8') as file:
         if mode is not None:
             os.chmod(path, mode)
         file.write(contents)

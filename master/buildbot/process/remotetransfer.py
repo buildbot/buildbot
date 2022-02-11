@@ -127,9 +127,8 @@ class DirectoryWriter(FileWriter):
             mode = 'r'
 
         # Unpack archive and clean up after self
-        archive = tarfile.open(name=self.tarname, mode=mode)
-        archive.extractall(path=self.destroot)
-        archive.close()
+        with tarfile.open(name=self.tarname, mode=mode) as archive:
+            archive.extractall(path=self.destroot)
         os.remove(self.tarname)
 
 

@@ -32,7 +32,7 @@ class RamlLoader(yaml.SafeLoader):
 
 def construct_include(loader, node):
     path = os.path.join(os.path.dirname(loader.stream.name), node.value)
-    with open(path) as f:
+    with open(path, encoding='utf-8') as f:
         return yaml.load(f, Loader=RamlLoader)
 
 
@@ -60,10 +60,10 @@ class RamlSpec:
     def __init__(self):
         fn = os.path.join(os.path.dirname(__file__),
                           os.pardir, 'spec', 'api.raml')
-        with open(fn) as f:
+        with open(fn, encoding='utf-8') as f:
             self.api = yaml.load(f, Loader=RamlLoader)
 
-        with open(fn) as f:
+        with open(fn, encoding='utf-8') as f:
             self.rawraml = f.read()
 
         endpoints = {}

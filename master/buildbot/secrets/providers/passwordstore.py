@@ -33,7 +33,7 @@ class SecretInPass(SecretProviderBase):
     name = "SecretInPass"
 
     def checkPassIsInPath(self):
-        if not any([(Path(p) / "pass").is_file() for p in os.environ["PATH"].split(":")]):
+        if not any((Path(p) / "pass").is_file() for p in os.environ["PATH"].split(":")):
             config.error("pass does not exist in PATH")
 
     def checkPassDirectoryIsAvailableAndReadable(self, dirname):

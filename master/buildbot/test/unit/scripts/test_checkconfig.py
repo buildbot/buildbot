@@ -45,7 +45,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         if other_files is None:
             other_files = {}
         configFile = os.path.join(self.configdir, 'master.cfg')
-        with open(configFile, "w") as f:
+        with open(configFile, "w", encoding='utf-8') as f:
             f.write(config)
         for filename, contents in other_files.items():
             if isinstance(filename, type(())):
@@ -55,7 +55,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                     os.makedirs(dn)
             else:
                 fn = os.path.join(self.configdir, filename)
-            with open(fn, "w") as f:
+            with open(fn, "w", encoding='utf-8') as f:
                 f.write(contents)
 
         old_stdout, old_stderr = sys.stdout, sys.stderr

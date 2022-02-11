@@ -45,7 +45,7 @@ def linux_distribution():
     os_release = "/etc/os-release"
     meta_data = {'ID': "unknown_linux", 'VERSION_ID': "unknown_version"}
     if os.path.exists(os_release):
-        with open("/etc/os-release") as f:
+        with open("/etc/os-release", encoding='utf-8') as f:
             for line in f:
                 try:
                     k, v = line.strip().split("=")
@@ -185,7 +185,7 @@ def _sendWithUrlib(url, data):
         'Content-Length': clen
     })
     try:
-        f = urllib_request.urlopen(req)
+        f = urllib_request.urlopen(req)  # noqa pylint: disable=consider-using-with
     except urllib_error.URLError:
         return None
     res = f.read()

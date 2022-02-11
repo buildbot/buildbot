@@ -99,7 +99,7 @@ def getVersion(init_file):
     try:
         cwd = os.path.dirname(os.path.abspath(init_file))
         fn = os.path.join(cwd, 'VERSION')
-        with open(fn) as f:
+        with open(fn, encoding='utf-8') as f:
             return f.read().strip()
     except IOError:
         pass
@@ -109,7 +109,7 @@ def getVersion(init_file):
         return version
 
     try:
-        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
+        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)  # noqa pylint: disable=consider-using-with
         out = p.communicate()[0]
 
         if (not p.returncode) and out:

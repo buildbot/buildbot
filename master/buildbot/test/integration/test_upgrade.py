@@ -74,12 +74,12 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                 raise unittest.SkipTest(
                     f"'{tarball}' not found (normal when not building from Git)")
 
-            tf = tarfile.open(tarball)
-            prefixes = set()
-            for inf in tf:
-                tf.extract(inf)
-                prefixes.add(inf.name.split('/', 1)[0])
-            tf.close()
+            with tarfile.open(tarball) as tf:
+                prefixes = set()
+                for inf in tf:
+                    tf.extract(inf)
+                    prefixes.add(inf.name.split('/', 1)[0])
+
             # (note that tf.extractall isn't available in py2.4)
 
             # get the top-level dir from the tarball

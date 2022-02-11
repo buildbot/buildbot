@@ -67,7 +67,8 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
 
         tmpfile = os.path.join(self.tmpdir, "newmsg")
         newfile = os.path.join(self.newdir, "newmsg")
-        open(tmpfile, "w").close()
+        with open(tmpfile, "w", encoding='utf-8'):
+            pass
         os.rename(tmpfile, newfile)
 
         # TODO: can we wait for a dnotify somehow, if enabled?
@@ -79,7 +80,8 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         self.svc = maildir.MaildirService(self.maildir)
         tmpfile = os.path.join(self.tmpdir, "newmsg")
         newfile = os.path.join(self.newdir, "newmsg")
-        open(tmpfile, "w").close()
+        with open(tmpfile, "w", encoding='utf-8'):
+            pass
         os.rename(tmpfile, newfile)
         f = self.svc.moveToCurDir("newmsg")
         f.close()

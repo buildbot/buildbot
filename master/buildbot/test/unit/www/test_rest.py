@@ -492,8 +492,8 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_filter_and_order(self):
         yield self.render_resource(self.rsrc, b'/test?field=info&order=info')
         self.assertRestCollection(typeName='tests',
-                                  items=sorted(list([{'info': v['info']}
-                                                     for v in endpoint.testData.values()]),
+                                  items=sorted([{'info': v['info']}
+                                                for v in endpoint.testData.values()],
                                                key=lambda v: v['info']),
                                   total=8, orderSignificant=True)
 
@@ -509,8 +509,8 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_filter_and_order_desc(self):
         yield self.render_resource(self.rsrc, b'/test?field=info&order=-info')
         self.assertRestCollection(typeName='tests',
-                                  items=sorted(list([{'info': v['info']}
-                                                     for v in endpoint.testData.values()]),
+                                  items=sorted([{'info': v['info']}
+                                                for v in endpoint.testData.values()],
                                                key=lambda v: v['info'], reverse=True),
                                   total=8, orderSignificant=True)
 

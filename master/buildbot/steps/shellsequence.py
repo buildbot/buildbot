@@ -54,7 +54,7 @@ class ShellArg(results.ResultComputingConfigMixin):
         if not isinstance(self.command, (str, list)):
             config.error(f"{self.command} is an invalid command, it must be a string or a list")
         if isinstance(self.command, list):
-            if not all([isinstance(x, str) for x in self.command]):
+            if not all(isinstance(x, str) for x in self.command):
                 config.error(f"{self.command} must only have strings in it")
         runConfParams = [(p_attr, getattr(self, p_attr))
                          for p_attr in self.resultConfig]

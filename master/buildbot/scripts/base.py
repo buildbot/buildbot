@@ -49,7 +49,7 @@ def checkPidFile(pidfile):
     """
     if os.path.exists(pidfile):
         try:
-            with open(pidfile) as f:
+            with open(pidfile, encoding='utf-8') as f:
                 pid = int(f.read())
         except ValueError as e:
             raise ValueError(f'Pidfile {pidfile} contains non-numeric value') from e
@@ -130,7 +130,7 @@ def isBuildmasterDir(dir):
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
-        with open(buildbot_tac) as f:
+        with open(buildbot_tac, encoding='utf-8') as f:
             contents = f.read()
     except IOError as exception:
         print_error(f"error reading '{buildbot_tac}': {exception.strerror}")
@@ -150,7 +150,7 @@ def getConfigFromTac(basedir, quiet=False):
         # relocatable buildmasters
         tacGlobals = {'__file__': tacFile}
         try:
-            with open(tacFile) as f:
+            with open(tacFile, encoding='utf-8') as f:
                 exec(f.read(), tacGlobals)
         except Exception:
             if not quiet:
@@ -250,7 +250,7 @@ class SubcommandOptions(usage.Options):
                 optfile = os.path.join(d, "options")
                 if os.path.exists(optfile):
                     try:
-                        with open(optfile, "r") as f:
+                        with open(optfile, "r", encoding='utf-8') as f:
                             options = f.read()
                         exec(options, localDict)
                     except Exception:

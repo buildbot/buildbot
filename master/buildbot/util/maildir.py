@@ -135,7 +135,7 @@ class MaildirService(service.BuildbotService):
             # open the file before moving it, because I'm afraid that once
             # it's in cur/, someone might delete it at any moment
             path = os.path.join(self.newdir, filename)
-            f = open(path, "r")
+            f = open(path, "r", encoding='utf-8')
             os.rename(os.path.join(self.newdir, filename),
                       os.path.join(self.curdir, filename))
         elif runtime.platformType == "win32":
@@ -145,7 +145,7 @@ class MaildirService(service.BuildbotService):
             os.rename(os.path.join(self.newdir, filename),
                       os.path.join(self.curdir, filename))
             path = os.path.join(self.curdir, filename)
-            f = open(path, "r")
+            f = open(path, "r", encoding='utf-8')  # noqa pylint: disable=consider-using-with
 
         return f
 

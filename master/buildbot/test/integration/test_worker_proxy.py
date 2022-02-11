@@ -39,7 +39,7 @@ def get_log_path():
 
 
 def write_to_log(msg, with_traceback=False):
-    with open(get_log_path(), 'a') as outfile:
+    with open(get_log_path(), 'a', encoding='utf-8') as outfile:
         outfile.write(msg)
         if with_traceback:
             import traceback
@@ -145,10 +145,10 @@ class RunMasterBehindProxy(RunMasterBase):
         self.proxy_process.join()
         if self.debug:
             print("---- stdout ----")
-            with open(get_log_path()) as file:
+            with open(get_log_path(), encoding='utf-8') as file:
                 print(file.read())
             print("---- ------ ----")
-            with open(self.queue.get()) as file:
+            with open(self.queue.get(), encoding='utf-8') as file:
                 print(file.read())
             print("---- ------ ----")
             os.unlink(get_log_path())

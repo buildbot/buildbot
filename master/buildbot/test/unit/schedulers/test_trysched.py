@@ -118,7 +118,7 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
 
         # create some new data to process
         jobdata = os.path.join(self.newdir, 'jobdata')
-        with open(jobdata, "w") as f:
+        with open(jobdata, "w", encoding='utf-8') as f:
             f.write('JOBDATA')
 
         # run it

@@ -452,7 +452,7 @@ class FileDownload(_TransferBuildStep):
 
         # setup structures for reading the file
         try:
-            fp = open(source, 'rb')
+            fp = open(source, 'rb')  # noqa pylint: disable=consider-using-with
         except IOError:
             # if file does not exist, bail out with an error
             yield self.addCompleteLog('stderr', f'File {source!r} not available at master')

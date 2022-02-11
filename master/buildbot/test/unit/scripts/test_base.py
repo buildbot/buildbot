@@ -49,14 +49,14 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def test_isBuildmasterDir_no_Application(self):
         # Loading of pre-0.9.0 buildbot.tac file should fail.
-        with open(os.path.join('test', 'buildbot.tac'), 'w') as f:
+        with open(os.path.join('test', 'buildbot.tac'), 'w', encoding='utf-8') as f:
             f.write("foo\nx = Application('buildslave')\nbar")
         self.assertFalse(base.isBuildmasterDir(os.path.abspath('test')))
         self.assertInStdout('unexpected content')
         self.assertInStdout('invalid buildmaster directory')
 
     def test_isBuildmasterDir_matches(self):
-        with open(os.path.join('test', 'buildbot.tac'), 'w') as f:
+        with open(os.path.join('test', 'buildbot.tac'), 'w', encoding='utf-8') as f:
             f.write("foo\nx = Application('buildmaster')\nbar")
         self.assertTrue(base.isBuildmasterDir(os.path.abspath('test')))
         self.assertWasQuiet()
@@ -86,7 +86,7 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         if contents is None:
             contents = '#dummy'
         tacfile = os.path.join(self.basedir, "buildbot.tac")
-        with open(tacfile, "wt") as f:
+        with open(tacfile, "wt", encoding='utf-8') as f:
             f.write(contents)
         return tacfile
 
@@ -229,7 +229,7 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     def writeOptionsFile(self, dir, content, bbdir='.buildbot'):
         os.makedirs(os.path.join(dir, bbdir))
-        with open(os.path.join(dir, bbdir, 'options'), 'w') as f:
+        with open(os.path.join(dir, bbdir, 'options'), 'w', encoding='utf-8') as f:
             f.write(content)
 
     def test_loadOptionsFile_subdirs_not_found(self):
@@ -293,7 +293,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.tearDownDirs()
 
     def activeBasedir(self, extra_lines=()):
-        with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
+        with open(os.path.join('test', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write("from twisted.application import service\n")
             f.write("service.Application('buildmaster')\n")
             f.write("\n".join(extra_lines))
@@ -322,7 +322,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         """
         self.activeBasedir()
         # write our own pid in the file
-        with open(os.path.join('test', 'twistd.pid'), 'w') as f:
+        with open(os.path.join('test', 'twistd.pid'), 'w', encoding='utf-8') as f:
             f.write(str(os.getpid()))
         rv = base.checkBasedir(mkconfig())
         self.assertFalse(rv)
@@ -334,7 +334,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         corrupted PID file is giving error.
         """
         self.activeBasedir()
-        with open(os.path.join('test', 'twistd.pid'), 'w') as f:
+        with open(os.path.join('test', 'twistd.pid'), 'w', encoding='utf-8') as f:
             f.write("xxx")
         rv = base.checkBasedir(mkconfig())
         self.assertFalse(rv)
@@ -347,7 +347,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         """
         self.activeBasedir()
         pidfile = os.path.join('test', 'twistd.pid')
-        with open(pidfile, 'w') as f:
+        with open(pidfile, 'w', encoding='utf-8') as f:
             f.write(str(os.getpid() + 1))
 
         def kill(pid, sig):
@@ -366,7 +366,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.activeBasedir()
         # write our own pid in the file
         pidfile = os.path.join('test', 'twistd.pid')
-        with open(pidfile, 'w') as f:
+        with open(pidfile, 'w', encoding='utf-8') as f:
             f.write(str(os.getpid() + 1))
 
         def kill(pid, sig):

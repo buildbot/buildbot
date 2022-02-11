@@ -46,7 +46,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
 
         fake_message = "Subject: test\n\nthis is a test"
         mailfile = os.path.join(newdir, "newmsg")
-        with open(mailfile, "w") as f:
+        with open(mailfile, "w", encoding='utf-8') as f:
             f.write(fake_message)
 
     def assertMailProcessed(self):

@@ -63,7 +63,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         self.setup_test_reactor()
         self.origcwd = os.getcwd()
         self.setUpDirs('basedir')
-        with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:
+        with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write(textwrap.dedent("""
                 from twisted.application import service
                 application = service.Application('buildmaster')
@@ -85,7 +85,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
     def createMasterCfg(self, extraconfig=""):
         os.chdir(self.origcwd)
-        with open(os.path.join('basedir', 'master.cfg'), 'wt') as f:
+        with open(os.path.join('basedir', 'master.cfg'), 'wt', encoding='utf-8') as f:
             f.write(textwrap.dedent(f"""
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
