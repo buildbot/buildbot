@@ -100,7 +100,7 @@ class Robocopy(ShellMixin, BuildStep):
 
         # If we have a "clean" return code, it's good.
         # Otherwise, look for errors first, warnings second.
-        if cmd.rc == 0 or cmd.rc == 1:
+        if cmd.rc in (0, 1):
             return SUCCESS
         for result in [FAILURE, WARNINGS]:
             for flag in self.return_flags[result]:

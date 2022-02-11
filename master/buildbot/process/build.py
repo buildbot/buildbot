@@ -71,7 +71,10 @@ class Build(properties.PropertiesMixin):
     set_runtime_properties = True
     subs = None
 
-    _sentinel = []  # used as a sentinel to indicate unspecified initial_value
+    class Sentinel:
+        pass
+
+    _sentinel = Sentinel()  # used as a sentinel to indicate unspecified initial_value
 
     def __init__(self, requests):
         self.requests = requests

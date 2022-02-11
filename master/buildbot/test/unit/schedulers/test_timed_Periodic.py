@@ -49,7 +49,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                                                    properties=None, builderNames=None, **kw):
             self.assertIn('Periodic scheduler named', reason)
             # TODO: check branch
-            isFirst = (self.events == [])
+            isFirst = not self.events
             if self.reactor.seconds() == 0 and firstBuildError:
                 raise TestException()
             self.events.append(f'B@{int(self.reactor.seconds())}')

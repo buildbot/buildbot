@@ -319,17 +319,17 @@ class AbstractLatentWorker(AbstractWorker):
         self._substantiation_notifier.notify(result)
 
     @defer.inlineCallbacks
-    def attached(self, bot):
+    def attached(self, conn):
         if self.state != States.SUBSTANTIATING_STARTING and \
                 self.build_wait_timeout >= 0:
             msg = (f'Worker {self.name} received connection while not trying to substantiate.'
                    'Disconnecting.')
             log.msg(msg)
-            self._deferwaiter.add(self._disconnect(bot))
+            self._deferwaiter.add(self._disconnect(conn))
             raise RuntimeError(msg)
 
         try:
-            yield super().attached(bot)
+            yield super().attached(conn)
         except Exception:
             self._substantiation_failed(failure.Failure())
             return

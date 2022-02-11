@@ -29,7 +29,9 @@ class Worker(Row):
     id_column = 'id'
     required_columns = ('name', )
 
-    def __init__(self, id=None, name='some:worker', info={"a": "b"}, paused=0, graceful=0):
+    def __init__(self, id=None, name='some:worker', info=None, paused=0, graceful=0):
+        if info is None:
+            info = {"a": "b"}
         super().__init__(id=id, name=name, info=info, paused=paused, graceful=graceful)
 
 

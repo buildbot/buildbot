@@ -81,7 +81,7 @@ if 'VERSION' in os.environ:
 else:
     gl = {'__file__': '../buildbot/__init__.py'}
     with open('../buildbot/__init__.py') as f:
-        exec(f.read(), gl)
+        exec(f.read(), gl)  # pylint: disable=exec-used
     version = gl['version']
 
 # The full version, including alpha/beta/rc tags.

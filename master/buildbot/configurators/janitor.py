@@ -27,9 +27,6 @@ from buildbot.schedulers.timed import Nightly
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
 
-""" Janitor is a configurator which create a Janitor Builder with all needed Janitor steps
-"""
-
 JANITOR_NAME = "__Janitor"  # If you read this code, you may want to patch this name.
 
 
@@ -71,6 +68,8 @@ class BuildDataJanitor(BuildStep):
 
 
 class JanitorConfigurator(ConfiguratorBase):
+    """ Janitor is a configurator which create a Janitor Builder with all needed Janitor steps"""
+
     def __init__(self, logHorizon=None, hour=0, build_data_horizon=None, **kwargs):
         super().__init__()
         self.logHorizon = logHorizon

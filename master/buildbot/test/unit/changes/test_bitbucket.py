@@ -264,7 +264,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         # create pull requests
         self.date = "2013-10-15T20:38:20.001797+00:00"
-        self.date_epoch = datetime.strptime(self.date.split('.')[0],
+        self.date_epoch = datetime.strptime(self.date.split('.', maxsplit=1)[0],
                                             '%Y-%m-%dT%H:%M:%S')
         src = SourceRest(
             owner="contributor",

@@ -88,10 +88,10 @@ class BaseBasicScheduler(CommonStuffMixin,
             self.timer_started = True
             return "xxx"
 
-        def getChangeClassificationsForTimer(self, schedulerid, timer_name):
+        def getChangeClassificationsForTimer(self, sched_id, timer_name):
             assert timer_name == "xxx"
-            assert schedulerid == BaseBasicScheduler.SCHEDULERID
-            return self.master.db.schedulers.getChangeClassifications(schedulerid)
+            assert sched_id == BaseBasicScheduler.SCHEDULERID
+            return self.master.db.schedulers.getChangeClassifications(sched_id)
 
     def setUp(self):
         self.setup_test_reactor()

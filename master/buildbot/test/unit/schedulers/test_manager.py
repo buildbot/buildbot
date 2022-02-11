@@ -84,10 +84,10 @@ class SchedulerManager(unittest.TestCase):
 
     class ReconfigSched(Sched):
 
-        def reconfigServiceWithSibling(self, new_config):
+        def reconfigServiceWithSibling(self, sibling):
             self.reconfig_count += 1
-            self.attr = new_config.attr
-            return super().reconfigServiceWithSibling(new_config)
+            self.attr = sibling.attr
+            return super().reconfigServiceWithSibling(sibling)
 
     class ReconfigSched2(ReconfigSched):
         pass

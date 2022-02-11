@@ -49,8 +49,8 @@ class BodyReader(protocol.Protocol):
         self.body = []
         self.finishedDeferred = finishedDeferred
 
-    def dataReceived(self, bytes):
-        self.body.append(bytes)
+    def dataReceived(self, data):
+        self.body.append(data)
 
     def connectionLost(self, reason):
         if reason.check(client.ResponseDone):

@@ -214,9 +214,9 @@ class GerritStatusPush(service.BuildbotService):
         def errReceived(self, data):
             log.msg(b"gerriterr: " + data)
 
-        def processEnded(self, status_object):
-            if status_object.value.exitCode:
-                log.msg("gerrit version status: ERROR:", status_object)
+        def processEnded(self, reason):
+            if reason.value.exitCode:
+                log.msg("gerrit version status: ERROR:", reason)
                 return
             if self.gerrit_version:
                 self.func(self.gerrit_version)
@@ -253,9 +253,9 @@ class GerritStatusPush(service.BuildbotService):
         def errReceived(self, data):
             log.msg("gerriterr:", data)
 
-        def processEnded(self, status_object):
-            if status_object.value.exitCode:
-                log.msg("gerrit status: ERROR:", status_object)
+        def processEnded(self, reason):
+            if reason.value.exitCode:
+                log.msg("gerrit status: ERROR:", reason)
             else:
                 log.msg("gerrit status: OK")
 

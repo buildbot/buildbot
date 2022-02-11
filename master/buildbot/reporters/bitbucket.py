@@ -125,7 +125,7 @@ class BitbucketStatusPush(ReporterBase):
                 log.msg(f"Bitbucket status {bitbucket_uri} {body}")
 
             response = yield self._http.post(bitbucket_uri, json=body)
-            if response.code != 200 and response.code != 201:
+            if response.code not in (200, 201):
                 content = yield response.content()
                 log.msg(f"{response.code}: unable to upload Bitbucket status {content}")
 

@@ -712,9 +712,9 @@ class Worker(AbstractWorker):
         self.startMissingTimer()
 
     @defer.inlineCallbacks
-    def attached(self, bot):
+    def attached(self, conn):
         try:
-            yield super().attached(bot)
+            yield super().attached(conn)
         except Exception as e:
             log.err(e, f"worker {self.name} cannot attach")
             return

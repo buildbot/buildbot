@@ -56,7 +56,7 @@ class LineProcessProtocol(protocol.ProcessProtocol):
         for line in self._err_buffer.add_data(data):
             self.errLineReceived(line)
 
-    def processEnded(self, status):
+    def processEnded(self, reason):
         for line in self._out_buffer.get_trailing_line():
             self.outLineReceived(line)
         for line in self._err_buffer.get_trailing_line():
