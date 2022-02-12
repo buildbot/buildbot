@@ -218,7 +218,7 @@ class LibVirtWorker(AbstractLatentWorker):
                     f"{self}: Cannot start_instance as it's already active")
         except Exception as e:
             raise LatentWorkerFailedToSubstantiate(
-                f'{self}: Got error while retrieving domain ID: {e}')
+                f'{self}: Got error while retrieving domain ID: {e}') from e
 
         yield self._prepare_base_image()
 
@@ -238,7 +238,7 @@ class LibVirtWorker(AbstractLatentWorker):
 
         except Exception as e:
             raise LatentWorkerFailedToSubstantiate(
-                f'{self}: Got error while starting VM: {e}')
+                f'{self}: Got error while starting VM: {e}') from e
 
         return True
 

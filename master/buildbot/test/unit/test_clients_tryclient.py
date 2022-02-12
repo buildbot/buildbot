@@ -106,7 +106,7 @@ class createJobfile(unittest.TestCase):
         sse.override_baserev(b"23ae367063327b79234e081f396ecbc\n")
         self.assertEqual(sse.baserev, "23ae367063327b79234e081f396ecbc")
 
-    class RemoteTryPP_TestStream(object):
+    class RemoteTryPP_TestStream():
         def __init__(self):
             self.writes = []
             self.is_open = True

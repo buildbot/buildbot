@@ -108,7 +108,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     def test_msg_missing_arg(self, name, msg):
         with mock.patch('twisted.python.log.msg') as mock_log:
             self.protocol.onMessage(msgpack.packb(msg), True)
-            mock_log.assert_any_call('Invalid message from worker: {}'.format(msg))
+            mock_log.assert_any_call(f'Invalid message from worker: {msg}')
 
         # if msg does not have 'sep_number' or 'op', response sendMessage should not be called
         self.protocol.sendMessage.assert_not_called()

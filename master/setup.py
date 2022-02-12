@@ -41,7 +41,7 @@ def include(d, e):
     'd' -- A directory
     'e' -- A glob pattern"""
 
-    return (d, [f for f in glob.glob('{}/{}'.format(d, e)) if os.path.isfile(f)])
+    return (d, [f for f in glob.glob(f'{d}/{e}') if os.path.isfile(f)])
 
 
 def include_statics(d):
@@ -102,7 +102,7 @@ def define_plugin_entry(name, module_name):
         entry, name = name
     else:
         entry = name
-    return '{} = {}:{}'.format(entry, module_name, name)
+    return f'{entry} = {module_name}:{name}'
 
 
 def concat_dicts(*dicts):
@@ -543,11 +543,11 @@ setup_args['extras_require'] = {
         'flake8~=3.9.2',
     ] + test_deps,
     'bundle': [
-        "buildbot-www=={0}".format(bundle_version),
-        "buildbot-worker=={0}".format(bundle_version),
-        "buildbot-waterfall-view=={0}".format(bundle_version),
-        "buildbot-console-view=={0}".format(bundle_version),
-        "buildbot-grid-view=={0}".format(bundle_version),
+        f"buildbot-www=={bundle_version}",
+        f"buildbot-worker=={bundle_version}",
+        f"buildbot-waterfall-view=={bundle_version}",
+        f"buildbot-console-view=={bundle_version}",
+        f"buildbot-grid-view=={bundle_version}",
     ],
     'tls': [
         'Twisted[tls] ' + twisted_ver,

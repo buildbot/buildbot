@@ -172,7 +172,7 @@ class BuildDictLookAlike:
         return True
 
     def __ne__(self, b):
-        return not (self == b)
+        return not self == b
 
     def __repr__(self):
         return "{ any build }"

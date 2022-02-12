@@ -41,7 +41,7 @@ from buildbot.www import service as wwwservice
 
 
 @implementer(IBodyProducer)
-class BytesProducer(object):
+class BytesProducer():
     def __init__(self, body):
         self.body = body
         self.length = len(body)

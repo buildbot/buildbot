@@ -344,7 +344,7 @@ class Channel(service.AsyncService):
                         (statusToString(prev_result).lower(),
                          'To',
                          result_name.capitalize()))
-                    if (self.notify_for(required_notification_control_string)):
+                    if self.notify_for(required_notification_control_string):
                         return True
 
         return False

@@ -338,7 +338,7 @@ class Repo(Source):
             if not hasattr(self.lastCommand, logname):
                 continue
             msg = getattr(self.lastCommand, logname)
-            if not (re.search(error_re, msg) is None):
+            if not re.search(error_re, msg) is None:
                 return True
         return False
 

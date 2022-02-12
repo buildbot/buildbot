@@ -70,7 +70,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     def contains_msg_key(self, msg, keys):
         for k in keys:
             if k not in msg:
-                raise KeyError('message did not contain obligatory "{}" key'.format(k))
+                raise KeyError(f'message did not contain obligatory "{k}" key')
 
     @defer.inlineCallbacks
     def call_auth(self, msg):
@@ -280,14 +280,14 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     def onMessage(self, payload, isBinary):
         if not isBinary:
             name = self.worker_name if self.worker_name is not None else '<???>'
-            log.msg('Message type from worker {} unsupported'.format(name))
+            log.msg(f'Message type from worker {name} unsupported')
             return
 
         msg = msgpack.unpackb(payload, raw=False)
         self.maybe_log_worker_to_master_msg(msg)
 
         if 'seq_number' not in msg or 'op' not in msg:
-            log.msg('Invalid message from worker: {}'.format(msg))
+            log.msg(f'Invalid message from worker: {msg}')
             return
 
         if msg['op'] != "auth" and msg['op'] != "response" and self.connection is None:
@@ -323,7 +323,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             # stop waiting for a response of this command
             del self.seq_num_to_waiters_map[seq_number]
         else:
-            self.send_response_msg(msg, "Command {} does not exist.".format(msg['op']),
+            self.send_response_msg(msg, f"Command {msg['op']} does not exist.",
                                    is_exception=True)
 
     @defer.inlineCallbacks
@@ -346,14 +346,14 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
     def onConnect(self, request):
         if self.debug:
-            log.msg("Client connecting: {}".format(request.peer))
+            log.msg(f"Client connecting: {request.peer}")
 
     def onClose(self, wasClean, code, reason):
         if self.debug:
-            log.msg("WebSocket connection closed: {}".format(reason))
+            log.msg(f"WebSocket connection closed: {reason}")
         # stop waiting for the responses of all commands
-        for seq_number in self.seq_num_to_waiters_map:
-            self.seq_num_to_waiters_map[seq_number].errback(ConnectioLostError("Connection lost"))
+        for d in self.seq_num_to_waiters_map.values():
+            d.errback(ConnectioLostError("Connection lost"))
         self.seq_num_to_waiters_map.clear()
 
         if self.connection is not None:
@@ -368,8 +368,8 @@ class Dispatcher(BaseDispatcher):
         super().__init__(portstr)
         try:
             port = int(config_portstr)
-        except ValueError:
-            raise ValueError('portstr unsupported: {}'.format(config_portstr))
+        except ValueError as e:
+            raise ValueError(f'portstr unsupported: {config_portstr}') from e
 
         # Autobahn does not support zero port meaning to pick whatever port number is free, so
         # we work around this by setting the port to nonzero value and resetting the value once
@@ -379,7 +379,7 @@ class Dispatcher(BaseDispatcher):
         if self._zero_port:
             port = self.DUMMY_PORT
 
-        self.serverFactory = WebSocketServerFactory("ws://0.0.0.0:{}".format(port))
+        self.serverFactory = WebSocketServerFactory(f"ws://0.0.0.0:{port}")
         self.serverFactory.buildbot_dispatcher = self
         self.serverFactory.protocol = BuildbotWebSocketServerProtocol
 

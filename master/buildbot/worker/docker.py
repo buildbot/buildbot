@@ -272,7 +272,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             image = f'{self.workername}_{id(self)}_image'
         if (not found) and (dockerfile is not None):
             log.msg(f"Image '{image}' not found, building it from scratch")
-            if (custom_context):
+            if custom_context:
                 with open(dockerfile, 'rb') as fin:
                     lines = docker_client.build(fileobj=fin,
                                                 custom_context=custom_context,
@@ -292,11 +292,11 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
 
         imageExists = self._image_exists(docker_client, image)
         if ((not imageExists) or self.alwaysPull) and self.autopull:
-            if (not imageExists):
+            if not imageExists:
                 log.msg(f"Image '{image}' not found, pulling from registry")
             docker_client.pull(image)
 
-        if (not self._image_exists(docker_client, image)):
+        if not self._image_exists(docker_client, image):
             msg = f'Image "{image}" not found on docker host.'
             log.msg(msg)
             raise LatentWorkerCannotSubstantiate(msg)

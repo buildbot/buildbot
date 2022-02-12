@@ -229,7 +229,7 @@ class CVSMaildirSource(MaildirSource):
             raise ValueError(f'Expected cvsmode 1.11 or 1.12. got: {cvsmode}')
 
         log.msg(f"CVSMaildirSource processing filelist: {fileList}")
-        while(fileList):
+        while fileList:
             m = singleFileRE.match(fileList)
             if m:
                 curFile = path + '/' + m.group(1)
@@ -332,7 +332,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             # source server's expected TZ setting! messy.
 
             # this stanza ends with the "Log:"
-            if (line == "Log:\n"):
+            if line == "Log:\n":
                 break
 
         # commit message is terminated by the file-listing section
@@ -501,7 +501,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         if self.branchMap and repository:
             if repository in self.branchMap:
                 branch = self.branchMap[repository]
-            elif ("lp:" + repository) in self.branchMap:
+            elif "lp:" + repository in self.branchMap:
                 branch = self.branchMap['lp:' + repository]
         if not branch:
             if self.defaultBranch:

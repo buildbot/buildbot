@@ -233,7 +233,7 @@ class ListResult(UserList):
             and (self.total is None or self.total == len(other))
 
     def __ne__(self, other):
-        return not (self == other)
+        return not self == other
 
 
 def updateMethod(func):

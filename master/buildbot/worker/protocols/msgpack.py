@@ -33,7 +33,7 @@ class Listener(base.UpdateRegistrationListener):
         return self.master.msgmanager
 
     def before_connection_setup(self, protocol, workerName):
-        log.msg("worker '{}' attaching".format(workerName))
+        log.msg(f"worker '{workerName}' attaching")
 
 
 class Connection(base.Connection):

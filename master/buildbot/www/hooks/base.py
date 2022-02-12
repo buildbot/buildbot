@@ -45,7 +45,7 @@ class BaseHookHandler:
 
             Make sure to properly decode bytes to unicode strings.
             """
-            if (isinstance(value, type([]))):
+            if isinstance(value, type([])):
                 value = value[0]
             return bytes2unicode(value)
 

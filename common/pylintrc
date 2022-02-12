@@ -112,40 +112,28 @@ disable=
   redefined-outer-name,
   redefined-builtin,
   unidiomatic-typecheck,
-  undefined-loop-variable,
   unbalanced-tuple-unpacking,
   broad-except,
   bad-open-mode,
-  superfluous-parens,
-  no-self-argument,
   no-value-for-parameter,
   interface-not-implemented,
   bad-continuation,
   keyword-arg-before-vararg,
-  unsubscriptable-object,
-  useless-object-inheritance,
   deprecated-method,
   useless-return,
   no-else-return,
   assignment-from-none,
   comparison-with-callable,
-  comparison-with-itself,
-  assignment-from-no-return,
   stop-iteration-return,
-  old-style-class,
   redefined-variable-type,
   deprecated-lambda,
   bad-string-format-type, # https://github.com/PyCQA/pylint/issues/2631
   duplicate-string-formatting-argument,
   cyclic-import,  # only happens when pylint is ran in non-parallel mode
   wrong-import-order, # we use isort for import orders
-  raise-missing-from, # TODO: remove when we no longer have Python 2 code
-  super-with-arguments, # TODO: remove when we no longer have Python 2 code
   arguments-renamed,
   not-context-manager,
   unspecified-encoding,
-  consider-using-f-string,
-  consider-using-dict-items,
 
 [REPORTS]
 

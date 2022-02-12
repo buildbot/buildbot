@@ -161,13 +161,13 @@ class ClusteredBuildbotService(unittest.TestCase):
         b2 = self.makeService(name='b', serviceid=21)  # same args as 'b1'
         b3 = self.makeService(name='b', serviceid=20)  # same id as 'a'
 
-        self.assertTrue(a == a)
+        self.assertTrue(a == a)  # pylint: disable=comparison-with-itself
         self.assertTrue(a != b1)
         self.assertTrue(a != b2)
         self.assertTrue(a != b3)
 
         self.assertTrue(b1 != a)
-        self.assertTrue(b1 == b1)
+        self.assertTrue(b1 == b1)  # pylint: disable=comparison-with-itself
         self.assertTrue(b1 == b2)
         self.assertTrue(b1 == b3)
 

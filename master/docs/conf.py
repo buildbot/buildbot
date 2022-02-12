@@ -326,17 +326,17 @@ for raml_typename, raml_type in sorted(raml_spec.types.items()):
         'type': raml_type,
     }
 
-    doc_path = 'developer/raml/{}.rst'.format(raml_typename)
+    doc_path = f'developer/raml/{raml_typename}.rst'
     if not os.path.exists(doc_path):
-        raise Exception('File {} for RAML type {} does not exist'.format(doc_path, raml_typename))
+        raise Exception(f'File {doc_path} for RAML type {raml_typename} does not exist')
 
 # Spell checker.
 try:
     import enchant  # noqa # pylint: disable=unused-import
 except ImportError as ex:
     print("enchant module import failed:\n"
-          "{0}\n"
-          "Spell checking disabled.".format(ex),
+          f"{ex}\n"
+          "Spell checking disabled.",
           file=sys.stderr)
 
 else:

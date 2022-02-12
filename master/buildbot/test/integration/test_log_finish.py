@@ -46,13 +46,14 @@ class TestLog(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_shellcommand(self):
+        testcase = self
 
         class MyStep(steps.ShellCommand):
 
-            def _newLog(obj, name, type, logid, logEncoding):
-                r = steps.ShellCommand._newLog(obj, name, type, logid, logEncoding)
-                self.curr_log = r
-                return self.curr_log
+            def _newLog(self, name, type, logid, logEncoding):
+                r = super()._newLog(name, type, logid, logEncoding)
+                testcase.curr_log = r
+                return r
 
         step = MyStep(command='echo hello')
 
@@ -72,13 +73,14 @@ class TestLog(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_mastershellcommand(self):
+        testcase = self
 
         class MyStep(steps.MasterShellCommand):
 
-            def _newLog(obj, name, type, logid, logEncoding):
-                r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
-                self.curr_log = r
-                return self.curr_log
+            def _newLog(self, name, type, logid, logEncoding):
+                r = super()._newLog(name, type, logid, logEncoding)
+                testcase.curr_log = r
+                return r
 
         step = MyStep(command='echo hello')
 
@@ -98,14 +100,15 @@ class TestLog(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_mastershellcommand_issue(self):
+        testcase = self
 
         class MyStep(steps.MasterShellCommand):
 
-            def _newLog(obj, name, type, logid, logEncoding):
-                r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
-                self.curr_log = r
-                self.patch(r, "finish", lambda: defer.fail(RuntimeError('Could not finish')))
-                return self.curr_log
+            def _newLog(self, name, type, logid, logEncoding):
+                r = super()._newLog(name, type, logid, logEncoding)
+                testcase.curr_log = r
+                testcase.patch(r, "finish", lambda: defer.fail(RuntimeError('Could not finish')))
+                return r
 
         step = MyStep(command='echo hello')
 

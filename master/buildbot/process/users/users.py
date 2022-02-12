@@ -131,4 +131,4 @@ def check_passwd(guess, passwd):
     m.update(unicode2bytes(guess) + unicode2bytes(salt))
     crypted_guess = bytes2unicode(salt) + m.hexdigest()
 
-    return (crypted_guess == bytes2unicode(passwd))
+    return crypted_guess == bytes2unicode(passwd)

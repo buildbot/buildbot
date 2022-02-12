@@ -439,7 +439,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if self.configured_db_url is None:
             self.configured_db_url = new_config.db['db_url']
-        elif (self.configured_db_url != new_config.db['db_url']):
+        elif self.configured_db_url != new_config.db['db_url']:
             config.error(
                 "Cannot change c['db']['db_url'] after the master has started",
             )

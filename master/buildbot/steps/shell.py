@@ -93,7 +93,7 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
         self.includeStdout = includeStdout
         self.includeStderr = includeStderr
 
-        if not ((property is not None) ^ (extract_fn is not None)):
+        if not (property is not None) ^ (extract_fn is not None):
             config.error(
                 "Exactly one of property and extract_fn must be set")
 
@@ -398,11 +398,11 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
                 if self.commentEmptyLineRe.match(line):
                     continue
                 match = self.suppressionLineRe.match(line)
-                if (match):
+                if match:
                     file, test, start, end = match.groups()
-                    if (end is not None):
+                    if end is not None:
                         end = int(end)
-                    if (start is not None):
+                    if start is not None:
                         start = int(start)
                         if end is None:
                             end = start
