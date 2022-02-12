@@ -110,7 +110,9 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get(self):
         masters = yield self.callGet(('masters',))
 
-        [self.validateData(m) for m in masters]
+        for m in masters:
+            self.validateData(m)
+
         self.assertEqual(sorted([m['masterid'] for m in masters]),
                          [13, 14])
 
@@ -118,7 +120,9 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_builderid(self):
         masters = yield self.callGet(('builders', 22, 'masters'))
 
-        [self.validateData(m) for m in masters]
+        for m in masters:
+            self.validateData(m)
+
         self.assertEqual(sorted([m['masterid'] for m in masters]),
                          [13])
 

@@ -337,7 +337,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
 
         log.msg(f'hgpoller: processing {len(revNodeList)} changes in branch '
                 f'{repr(branch)}: {repr(revNodeList)} in {repr(self._absWorkdir())}')
-        for rev, node in revNodeList:
+        for _, node in revNodeList:
             timestamp, author, files, comments = yield self._getRevDetails(
                 node)
             yield self.master.data.updates.addChange(

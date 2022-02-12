@@ -712,13 +712,13 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
     def _splitBalancedParen(delim, arg):
         parenCount = 0
         for i, val in enumerate(arg):
-            if arg[i] == "(":
+            if val == "(":
                 parenCount += 1
-            if arg[i] == ")":
+            if val == ")":
                 parenCount -= 1
                 if parenCount < 0:
                     raise ValueError
-            if parenCount == 0 and arg[i] == delim:
+            if parenCount == 0 and val == delim:
                 return arg[0:i], arg[i + 1:]
         return arg
 

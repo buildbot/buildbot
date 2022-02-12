@@ -37,7 +37,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
     def readMasterDirContents(self, top):
         contents = {}
-        for root, dirs, files in os.walk(top):
+        for root, _, files in os.walk(top):
             for name in files:
                 fn = os.path.join(root, name)
                 with open(fn, encoding='utf-8') as f:
@@ -161,7 +161,7 @@ def masterConfig(bigfilename):
     # create 8 MB file
     with open(bigfilename, 'w', encoding='utf-8') as o:
         buf = "xxxxxxxx" * 1024
-        for i in range(1000):
+        for _ in range(1000):
             o.write(buf)
     f.addStep(
         steps.FileDownload(

@@ -217,7 +217,7 @@ class Channel(service.AsyncService):
         """Returns True if this build should be reported for this contact
         (eliminating duplicates), and also records the report for later"""
 
-        for w, b, n in self.reported_builds:
+        for _, b, n in self.reported_builds:
             if b == builder and n == buildnum:
                 return False
         self.reported_builds.append([util.now(), builder, buildnum])

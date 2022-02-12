@@ -250,7 +250,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         yield self.addMasterSideWorker()
         worker = self.addWorker(password="pw2")
         yield worker.startService()
-        why, broker = yield worker.tests_login_failed
+        yield worker.tests_login_failed
         self.assertEqual(1, len(self.flushLoggedErrors(UnauthorizedLogin)))
 
         def could_not_connect():

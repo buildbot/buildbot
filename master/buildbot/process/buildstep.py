@@ -437,7 +437,7 @@ class BuildStep(results.ResultComputingConfigMixin,
                        la)
                       for l, la in self.locks]
 
-        for l, la in self.locks:
+        for l, _ in self.locks:
             if l in self.build.locks:
                 log.msg(f"Hey, lock {l} is claimed by both a Step ({self}) and the"
                         f" parent Build ({self.build})")
@@ -931,7 +931,7 @@ class ShellMixin:
         # set up logging
         if stdio is not None:
             cmd.useLog(stdio, False)
-        for logname, remotefilename in self.logfiles.items():
+        for logname in self.logfiles:
             if self.lazylogfiles:
                 # it's OK if this does, or does not, return a Deferred
                 def callback(cmd_arg, local_logname=logname):

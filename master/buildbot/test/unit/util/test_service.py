@@ -236,7 +236,7 @@ class ClusteredBuildbotService(unittest.TestCase):
 
         self.svc.startService()
 
-        for i in range(NUMBER_OF_POLLS):
+        for _ in range(NUMBER_OF_POLLS):
             self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC)
 
         self.assertEqual(1, self.svc._getServiceId.call_count)

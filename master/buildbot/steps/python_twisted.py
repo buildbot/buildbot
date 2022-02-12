@@ -95,7 +95,7 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
 
     def logConsumer(self):
         while True:
-            stream, line = yield
+            _, line = yield
             if ':' in line:
                 self.warnings += 1
                 self.warningLines.append(line)
@@ -131,7 +131,7 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
         if not self.finished:
             m = self._line_re.search(line.strip())
             if m:
-                testname, result = m.groups()
+                m.groups()
                 self.numTests += 1
                 self.step.setProgress('tests', self.numTests)
 
@@ -410,7 +410,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
 
     def logConsumer(self):
         while True:
-            stream, line = yield
+            _, line = yield
             if line.find(" exceptions.DeprecationWarning: ") != -1:
                 # no source
                 warning = line  # TODO: consider stripping basedir prefix here
@@ -428,7 +428,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
                 # read to EOF
                 while True:
                     self.problems.append(line)
-                    stream, line = yield
+                    _, line = yield
 
 
 class RemovePYCs(shell.ShellCommand):

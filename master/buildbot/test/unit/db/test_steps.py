@@ -166,8 +166,10 @@ class Tests(interfaces.InterfaceTests):
     def test_getSteps(self):
         yield self.insertTestData(self.backgroundData + self.stepRows)
         stepdicts = yield self.db.steps.getSteps(buildid=30)
-        [validation.verifyDbDict(self, 'stepdict', stepdict)
-         for stepdict in stepdicts]
+
+        for stepdict in stepdicts:
+            validation.verifyDbDict(self, 'stepdict', stepdict)
+
         self.assertEqual(stepdicts, self.stepDicts[:3])
 
     @defer.inlineCallbacks

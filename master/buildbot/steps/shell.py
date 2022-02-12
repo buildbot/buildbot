@@ -344,7 +344,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
         # add the line to the collection of lines with warnings
         self.loggedWarnings = []
         while True:
-            stream, line = yield
+            _, line = yield
             if directoryEnterRe:
                 match = directoryEnterRe.search(line)
                 if match:

@@ -153,7 +153,7 @@ class AuthRealm(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def test_requestAvatar(self):
         realm = auth.AuthRealm(self.master, self.auth)
-        itfc, rsrc, logout = realm.requestAvatar("me", None, IResource)
+        itfc, rsrc, _ = realm.requestAvatar("me", None, IResource)
         self.assertIdentical(itfc, IResource)
         self.assertIsInstance(rsrc, auth.PreAuthenticatedLoginResource)
 

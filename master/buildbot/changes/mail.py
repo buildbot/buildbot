@@ -91,7 +91,7 @@ class CVSMaildirSource(MaildirSource):
         # local username is enough to identify them (this assumes a one-server
         # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
         # model)
-        name, addr = parseaddr(m["from"])
+        _, addr = parseaddr(m["from"])
         if not addr:
             # no From means this message isn't from buildbot-cvs-mail
             return None
@@ -289,7 +289,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
         # local username is enough to identify them (this assumes a one-server
         # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
         # model)
-        name, addr = parseaddr(m["from"])
+        _, addr = parseaddr(m["from"])
         if not addr:
             return None  # no From means this message isn't from svn
         at = addr.find("@")

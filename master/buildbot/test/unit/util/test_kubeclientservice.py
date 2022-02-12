@@ -136,7 +136,7 @@ class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
             verify="/path/to/pem"
         )
         service = kubeclientservice.KubeClientService(config)
-        url, kwargs = yield service._prepareRequest("/test", {})
+        _, kwargs = yield service._prepareRequest("/test", {})
         self.assertEqual('/path/to/pem', kwargs['verify'])
 
     @defer.inlineCallbacks
@@ -148,7 +148,7 @@ class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
             headers={'Test': '10'}
         )
         service = kubeclientservice.KubeClientService(config)
-        url, kwargs = yield service._prepareRequest("/test", {})
+        _, kwargs = yield service._prepareRequest("/test", {})
         self.assertEqual({'Test': '10'}, kwargs['headers'])
 
     def test_the_configuration_parent_is_set_to_the_service(self):
@@ -175,7 +175,7 @@ class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
             verify="/path/to/pem",
             bearerToken=Interpolate("%(kw:test)s", test=10))
         service = kubeclientservice.KubeClientService(config)
-        url, kwargs = yield service._prepareRequest("/test", {})
+        _, kwargs = yield service._prepareRequest("/test", {})
         self.assertEqual("Bearer 10", kwargs['headers']['Authorization'])
 
     @defer.inlineCallbacks
@@ -186,7 +186,7 @@ class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
             verify="/path/to/pem",
             basicAuth={'user': 'name', 'password': Interpolate("%(kw:test)s", test=10)})
         service = kubeclientservice.KubeClientService(config)
-        url, kwargs = yield service._prepareRequest("/test", {})
+        _, kwargs = yield service._prepareRequest("/test", {})
 
         expected = f'Basic {base64.b64encode("name:10".encode("utf-8"))}'
         self.assertEqual(expected, kwargs['headers']['Authorization'])

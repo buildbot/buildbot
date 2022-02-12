@@ -180,7 +180,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
     def makeBuildInfo(self, buildResults, resultText, builds):
         info = []
         for i, buildResult in enumerate(buildResults):
-            info.append({'name': f"Builder{i}", 'result': buildResults[i],
+            info.append({'name': f"Builder{i}", 'result': buildResult,
                          'resultText': resultText[i], 'text': 'buildText',
                          'url': f"http://localhost:8080/#builders/{79 + i}/builds/{i}",
                          'build': builds[i]})
@@ -341,7 +341,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def run_fake_single_build(self, gsp, buildResult, expWarning=False):
-        buildset, builds = yield self.setupBuildResults([buildResult], buildResult)
+        _, builds = yield self.setupBuildResults([buildResult], buildResult)
 
         yield gsp._got_event(('builds', builds[0]['buildid'], 'new'), builds[0])
         yield gsp._got_event(('builds', builds[0]['buildid'], 'finished'), builds[0])

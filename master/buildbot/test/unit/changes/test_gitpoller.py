@@ -122,7 +122,8 @@ class TestGitPoller(TestGitPollerBase):
         if isinstance(r, str):
             self.assertIsInstance(r, str)
         elif isinstance(r, list):
-            [self.assertIsInstance(e, str) for e in r]
+            for e in r:
+                self.assertIsInstance(e, str)
 
         self.assert_all_commands_ran()
 

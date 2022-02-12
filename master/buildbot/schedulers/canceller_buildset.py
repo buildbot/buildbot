@@ -87,7 +87,7 @@ class FailingBuildsetCanceller(BuildbotService):
                               'as the second and SourceStampFilter as the third'
                               ).format(cls.__name__))
 
-            builders, builders_to_cancel, ss_filter = filter
+            builders, builders_to_cancel, _ = filter
 
             try:
                 extract_filter_values(builders, 'builders')

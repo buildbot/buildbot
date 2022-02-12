@@ -43,7 +43,7 @@ class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
         self.errors = 0
 
         while True:
-            stream, line = yield
+            _, line = yield
             if line.startswith("Error importing "):
                 self.import_errors += 1
             if line.find("Warning: ") != -1:
@@ -401,7 +401,7 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
         next_is_warning = False
 
         while True:
-            stream, line = yield
+            _, line = yield
             if line.startswith('build succeeded') or \
                line.startswith('no targets are out of date.'):
                 self.success = True

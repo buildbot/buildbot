@@ -278,7 +278,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             while (changes_at and
                     self.reactor.seconds() >=
                    self.localtime_offset + changes_at[0][0]):
-                when, newchange, important = changes_at.pop(0)
+                _, newchange, important = changes_at.pop(0)
                 self.db.changes.fakeAddChangeInstance(newchange)
                 yield self.sched.gotChange(newchange, important).addErrback(log.err)
             # and advance the clock by a minute

@@ -100,7 +100,7 @@ class Tests(RunFakeMasterTestCase):
             ('builds', None, 'new'))
 
         # Trigger a buildrequest
-        bsid, brids = yield self.master.data.updates.addBuildset(
+        yield self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
@@ -154,7 +154,7 @@ class Tests(RunFakeMasterTestCase):
             ('builds', None, 'new'))
 
         # Trigger a buildrequest
-        bsid, brids = yield self.master.data.updates.addBuildset(
+        yield self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[

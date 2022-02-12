@@ -144,7 +144,10 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testGetAll(self):
         buildrequests = yield self.callGet(('buildrequests',))
-        [self.validateData(br) for br in buildrequests]
+
+        for br in buildrequests:
+            self.validateData(br)
+
         self.assertEqual(sorted([br['buildrequestid'] for br in buildrequests]),
                          [44, 45, 46])
 
@@ -156,7 +159,10 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testGetBuilderid(self):
         buildrequests = yield self.callGet(('builders', 78, 'buildrequests'))
-        [self.validateData(br) for br in buildrequests]
+
+        for br in buildrequests:
+            self.validateData(br)
+
         self.assertEqual(
             sorted([br['buildrequestid'] for br in buildrequests]), [46])
 

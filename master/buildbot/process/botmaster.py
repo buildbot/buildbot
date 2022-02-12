@@ -181,7 +181,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     @metrics.countMethod('BotMaster.workerLost()')
     def workerLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_workers", -1)
-        for name, b in self.builders.items():
+        for b in self.builders.values():
             if bot.workername in b.config.workernames:
                 b.detached(bot)
 

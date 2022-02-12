@@ -66,7 +66,7 @@ class IndexResource(resource.Resource):
         except ImportError:  # pragma: no cover
             log.msg(f"pypugjs not installed. Ignoring .jade files from {template_dir}")
             pypugjs = None
-        for root, dirs, files in os.walk(template_dir):
+        for root, _, files in os.walk(template_dir):
             if root == template_dir:
                 template_name = posixpath.join("views", "%s.html")
             else:

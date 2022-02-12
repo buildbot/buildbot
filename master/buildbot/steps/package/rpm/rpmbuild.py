@@ -129,7 +129,7 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
         self.rpmerrors = []
 
         while True:
-            stream, line = yield
+            _, line = yield
             for pfx in rpm_prefixes:
                 if line.startswith(pfx):
                     self.rpmcmdlog.append(line)

@@ -134,9 +134,6 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             cfg_tbl = self.db.model.configured_workers
             bm_tbl = self.db.model.builder_masters
 
-            def selectWorker(q):
-                return q
-
             # first, get the worker itself and the configured_on info
             j = workers_tbl
             j = j.outerjoin(cfg_tbl)

@@ -76,7 +76,7 @@ class FakeTestResultSetsComponent(FakeDBComponent):
     def getTestResultSets(self, builderid, buildid=None, stepid=None, complete=None,
                           result_spec=None):
         ret = []
-        for id, row in self.result_sets.items():
+        for row in self.result_sets.values():
             if row['builderid'] != builderid:
                 continue
             if buildid is not None and row['buildid'] != buildid:

@@ -394,8 +394,6 @@ class TestRemoveFile(CommandTestMixin, unittest.TestCase):
         workdir = os.path.join(self.basedir, 'workdir')
         self.file2_path = os.path.join(workdir, 'file2')
 
-        def fail(src, dest):
-            raise RuntimeError("oh noes")
         self.make_command(fs.RemoveFile, dict(
             path=self.file2_path
         ), True)

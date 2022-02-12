@@ -309,7 +309,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs = yield self.setupWorker('bot', 'pass', meta=meta_arg,
                                     **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertEquals(bs.instance.metadata, meta_arg)
 
@@ -319,7 +319,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs = yield self.setupWorker('bot', 'pass', meta=meta_arg,
                                     **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertEquals(bs.instance.metadata, {'some_key': 'value',
                                                  'BUILDBOT:instance': self.masterhash})
@@ -331,7 +331,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs = yield self.setupWorker('bot', 'pass', nova_args=nova_args,
                                     **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertEquals(bs.instance.boot_kwargs['some-key'], 'some-value')
 
@@ -342,7 +342,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs = yield self.setupWorker('bot', 'pass', nova_args=nova_args,
                                     **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertEquals(bs.instance.boot_kwargs['some-key'], 'value')
 

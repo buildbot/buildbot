@@ -818,7 +818,7 @@ class ForceScheduler(base.BaseScheduler):
             owner = yield collector.collectValidationErrors(self.username.fullName,
                                                             self.username.getFromKwargs, kwargs)
 
-        properties, changeids, sourcestamps = yield self.gatherPropertiesAndChanges(
+        properties, _, sourcestamps = yield self.gatherPropertiesAndChanges(
             collector, **kwargs)
 
         collector.maybeRaiseCollectedErrors()

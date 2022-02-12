@@ -154,7 +154,7 @@ class FakeChangesComponent(FakeDBComponent):
 
     def getParentChangeIds(self, branch, repository, project, codebase):
         if self.changes:
-            for changeid, change in self.changes.items():
+            for change in self.changes.values():
                 if (change['branch'] == branch and
                         change['repository'] == repository and
                         change['project'] == project and

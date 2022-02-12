@@ -239,7 +239,7 @@ class TestReconfig(RunFakeMasterTestCase):
 
     def create_stepcontrollers(self, count, lock, mode):
         stepcontrollers = []
-        for i in range(count):
+        for _ in range(count):
             locks = [lock.access(mode)] if lock is not None else []
             stepcontrollers.append(BuildStepController(locks=locks))
         return stepcontrollers

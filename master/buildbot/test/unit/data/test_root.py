@@ -38,7 +38,10 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get(self):
         rootlinks = yield self.callGet(('',))
-        [self.validateData(root) for root in rootlinks]
+
+        for rootlink in rootlinks:
+            self.validateData(rootlink)
+
         self.assertEqual(rootlinks, [
             {'name': 'abc'},
         ])
@@ -63,7 +66,10 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get(self):
         specs = yield self.callGet(('application.spec',))
-        [self.validateData(s) for s in specs]
+
+        for s in specs:
+            self.validateData(s)
+
         for s in specs:
             # only test an endpoint that is reasonably stable
             if s['path'] != "master":

@@ -153,7 +153,9 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                 if not isinstance(volume_string, str):
                     continue
                 try:
-                    bind, volume = volume_string.split(":", 1)
+                    # Note that here we rely on tuple unpacking raising ValueError if the number
+                    # of elements is wrong
+                    _, __ = volume_string.split(":", 1)
                 except ValueError:
                     config.error("Invalid volume definition for docker "
                                  f"{volume_string}. Skipping...")

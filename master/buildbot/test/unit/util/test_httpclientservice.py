@@ -396,19 +396,19 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_lots(self):
-        for i in range(self.NUM_PARALLEL):
+        for _ in range(self.NUM_PARALLEL):
             self.expect('get', '/', params=dict(a='b'),
                         content_json=dict(a=['b']))
         # use for benchmarking (txrequests: 3ms per request treq: 1ms per
         # request)
-        for i in range(self.NUM_PARALLEL):
+        for _ in range(self.NUM_PARALLEL):
             res = yield self._http.get('/', params=dict(a='b'))
             content = yield res.content()
             self.assertEqual(content, b'{"a": ["b"]}')
 
     @defer.inlineCallbacks
     def test_lots_parallel(self):
-        for i in range(self.NUM_PARALLEL):
+        for _ in range(self.NUM_PARALLEL):
             self.expect('get', '/', params=dict(a='b'),
                         content_json=dict(a=['b']))
 

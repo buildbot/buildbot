@@ -357,7 +357,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         fakereactor = Mock()
         self.patch(mail, 'reactor', fakereactor)
 
-        mn, build = yield self.do_test_sendMessage()
+        yield self.do_test_sendMessage()
 
         self.assertEqual(1, len(fakereactor.method_calls))
         self.assertIn(('connectTCP', ('localhost', 25, None), {}),
@@ -373,8 +373,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         """
         fakereactor = Mock()
         self.patch(mail, 'reactor', fakereactor)
-        mn, build = yield self.do_test_sendMessage(smtpUser=Interpolate("u$er"),
-                                                   smtpPassword=Interpolate("pa$$word"))
+        mn, _ = yield self.do_test_sendMessage(smtpUser=Interpolate("u$er"),
+                                               smtpPassword=Interpolate("pa$$word"))
 
         self.assertEqual(mn.smtpUser, "u$er")
         self.assertEqual(mn.smtpPassword, "pa$$word")
@@ -388,7 +388,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         fakereactor = Mock()
         self.patch(mail, 'reactor', fakereactor)
 
-        mn, build = yield self.do_test_sendMessage(useSmtps=True)
+        yield self.do_test_sendMessage(useSmtps=True)
 
         self.assertEqual(1, len(fakereactor.method_calls))
         self.assertIn(('connectSSL', ('localhost', 25, None, fakereactor.connectSSL.call_args[

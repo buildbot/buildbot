@@ -75,7 +75,7 @@ class TestPBManager(unittest.TestCase):
         self.assertEqual(username, b'boris')
         avatar = yield disp.requestAvatar(b'boris', mock.Mock(), pb.IPerspective)
 
-        (iface, persp, detach_fn) = avatar
+        _, persp, __ = avatar
         self.assertTrue(persp.is_my_persp)
         self.assertIn('boris', self.connections)
 

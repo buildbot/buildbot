@@ -576,7 +576,7 @@ class JSONPropertiesDownload(StringDownload):
     def run(self):
         properties = self.build.getProperties()
         props = {}
-        for key, value, source in properties.asList():
+        for key, value, _ in properties.asList():
             props[key] = value
 
         self.s = json.dumps(dict(

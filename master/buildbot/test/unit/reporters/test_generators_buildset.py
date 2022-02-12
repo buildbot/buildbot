@@ -180,14 +180,14 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
 
     @defer.inlineCallbacks
     def test_generate_complete_non_matching_builder(self):
-        g, build, buildset = yield self.setup_generator(builders=['non-matched'])
+        g, _, buildset = yield self.setup_generator(builders=['non-matched'])
         report = yield self.generate(g, ('buildsets', 98, 'complete'), buildset)
 
         self.assertIsNone(report)
 
     @defer.inlineCallbacks
     def test_generate_complete_non_matching_result(self):
-        g, build, buildset = yield self.setup_generator(mode=('failing',))
+        g, _, buildset = yield self.setup_generator(mode=('failing',))
         report = yield self.generate(g, ('buildsets', 98, 'complete'), buildset)
 
         self.assertIsNone(report)

@@ -173,7 +173,7 @@ class FakeTestResultsComponent(FakeDBComponent):
     # returns a Deferred
     def getTestNames(self, builderid, name_prefix=None, result_spec=None):
         ret = []
-        for id, row in sorted(self.names.items()):
+        for _, row in sorted(self.names.items()):
             if row['builderid'] != builderid:
                 continue
             if name_prefix is not None and not row['name'].startswith(name_prefix):
@@ -188,7 +188,7 @@ class FakeTestResultsComponent(FakeDBComponent):
     # returns a Deferred
     def getTestCodePaths(self, builderid, path_prefix=None, result_spec=None):
         ret = []
-        for id, row in sorted(self.code_paths.items()):
+        for _, row in sorted(self.code_paths.items()):
             if row['builderid'] != builderid:
                 continue
             if path_prefix is not None and not row['path'].startswith(path_prefix):

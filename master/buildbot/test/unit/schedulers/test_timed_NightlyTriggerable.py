@@ -254,7 +254,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched.activate()
 
-        (idsDeferred, d) = sched.trigger(False, [
+        _, d = sched.trigger(False, [
             dict(codebase='cb', revision='myrev', branch='br', project='p',
                  repository='r'),
         ], set_props=None)
@@ -278,7 +278,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched.activate()
 
-        (idsDeferre, d) = sched.trigger(False, [
+        _, d = sched.trigger(False, [
             dict(codebase='cb', revision='myrev', branch='br', project='p',
                  repository='r'),
         ], set_props=None)

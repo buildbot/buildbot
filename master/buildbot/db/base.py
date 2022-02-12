@@ -99,7 +99,8 @@ class DBConnectorComponent:
             if not autoCreate:
                 return None, False
 
-            _race_hook and _race_hook(conn)
+            if _race_hook is not None:
+                _race_hook(conn)
 
             try:
                 r = conn.execute(tbl.insert(), [insert_values])

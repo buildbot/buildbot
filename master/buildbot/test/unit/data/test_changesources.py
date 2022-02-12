@@ -65,7 +65,7 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         changesource = yield self.callGet(('changesources', 13))
 
         self.validateData(changesource)
-        self.assertEqual(changesource['master'], None),
+        self.assertEqual(changesource['master'], None)
 
     @defer.inlineCallbacks
     def test_get_masterid_existing(self):
@@ -124,7 +124,9 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get(self):
         changesources = yield self.callGet(('changesources',))
 
-        [self.validateData(cs) for cs in changesources]
+        for cs in changesources:
+            self.validateData(cs)
+
         self.assertEqual(sorted([m['changesourceid'] for m in changesources]),
                          [13, 14, 15, 16])
 
@@ -132,7 +134,9 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_masterid(self):
         changesources = yield self.callGet(('masters', 33, 'changesources'))
 
-        [self.validateData(cs) for cs in changesources]
+        for cs in changesources:
+            self.validateData(cs)
+
         self.assertEqual(sorted([m['changesourceid'] for m in changesources]),
                          [15, 16])
 

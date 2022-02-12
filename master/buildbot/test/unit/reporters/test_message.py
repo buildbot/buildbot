@@ -439,9 +439,6 @@ class TestMessageFormatterFunction(MessageFormatterTestBase):
     def test_renderable(self):
         function = mock.Mock(side_effect=lambda x: {'key': 'value'})
 
-        def renderable_function(context):
-            return defer.succeed(function(context))
-
         formatter = message.MessageFormatterFunction(function, 'json')
 
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)

@@ -93,7 +93,7 @@ class Triggerable(base.BaseScheduler):
         # and errback any outstanding deferreds
         if self._waiters:
             msg = 'Triggerable scheduler stopped before build was complete'
-            for d, brids in self._waiters.values():
+            for d, _ in self._waiters.values():
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 
