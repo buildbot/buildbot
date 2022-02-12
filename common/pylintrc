@@ -135,7 +135,6 @@ disable=
   not-context-manager,
   unspecified-encoding,
   consider-using-f-string,
-  consider-using-dict-items,
 
 [REPORTS]
 

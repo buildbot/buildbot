@@ -352,8 +352,8 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         if self.debug:
             log.msg("WebSocket connection closed: {}".format(reason))
         # stop waiting for the responses of all commands
-        for seq_number in self.seq_num_to_waiters_map:
-            self.seq_num_to_waiters_map[seq_number].errback(ConnectioLostError("Connection lost"))
+        for d in self.seq_num_to_waiters_map.values():
+            d.errback(ConnectioLostError("Connection lost"))
         self.seq_num_to_waiters_map.clear()
 
         if self.connection is not None:
