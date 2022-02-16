@@ -1474,6 +1474,7 @@ thursday
 tid
 timedelta
 timestamp
+timestamps
 timezone
 timezones
 tld

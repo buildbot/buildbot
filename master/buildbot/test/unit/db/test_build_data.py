@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from datetime import datetime
+from datetime import timedelta
+
 from parameterized import parameterized
 
 from twisted.internet import defer
@@ -23,6 +26,7 @@ from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+from buildbot.util import datetime2epoch
 
 
 class Tests(interfaces.InterfaceTests):
@@ -206,7 +210,8 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuildData(id=96, buildid=53, name='name6', value=b'value6', source='src6'),
         ])
 
-        num_deleted = yield self.db.build_data.deleteOldBuildData(older_than_timestamp)
+        num_deleted = yield self.db.build_data.deleteOldBuildData(
+            older_than_timestamp=older_than_timestamp)
         self.assertEqual(num_deleted, exp_num_deleted)
 
         remaining_names = []
@@ -215,6 +220,64 @@ class Tests(interfaces.InterfaceTests):
             remaining_names += [d['name'] for d in data_dicts]
 
         self.assertEqual(sorted(remaining_names), sorted(exp_remaining_names))
+
+
+class RealTests(Tests):
+    @parameterized.expand([
+        (
+        {
+            "b1": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            },
+            "b2": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            }
+        }, 2),
+        (
+        {
+            "b%": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            }
+        }, 2),
+        (
+        {
+            "b1": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            },
+            "b7": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            }
+        }, 1),
+    ])
+    @defer.inlineCallbacks
+    def test_remove_old_build_data_horizonPerBuilder(self, config, exp_deleted):
+        yield self.insertTestData(self.common_data + [
+            fakedb.Build(id=50, buildrequestid=41, number=17, masterid=88,
+                         builderid=88, workerid=47, complete_at=None),
+            fakedb.Build(id=51, buildrequestid=42, number=18, masterid=88,
+                         builderid=88, workerid=47,
+                         complete_at=datetime2epoch(datetime.now() - timedelta(weeks=1))),
+            fakedb.Build(id=52, buildrequestid=42, number=19, masterid=88,
+                         builderid=88, workerid=47,
+                         complete_at=datetime2epoch(datetime.now() - timedelta(weeks=2))),
+            fakedb.Build(id=53, buildrequestid=43, number=12, masterid=88,
+                         builderid=89, workerid=47,
+                         complete_at=datetime2epoch(datetime.now() - timedelta(weeks=2))),
+            fakedb.BuildData(id=91, buildid=50, name='name1', value=b'value1', source='src1'),
+            fakedb.BuildData(id=92, buildid=50, name='name2', value=b'value2', source='src2'),
+            fakedb.BuildData(id=93, buildid=51, name='name3', value=b'value3', source='src3'),
+            fakedb.BuildData(id=94, buildid=51, name='name4', value=b'value4', source='src4'),
+            fakedb.BuildData(id=95, buildid=52, name='name5', value=b'value5', source='src5'),
+            fakedb.BuildData(id=96, buildid=53, name='name6', value=b'value6', source='src6'),
+        ])
+
+        num_deleted = yield self.db.build_data.deleteOldBuildData(horizonPerBuilder=config)
+        self.assertEqual(num_deleted, exp_deleted)
 
 
 class TestFakeDB(Tests, connector_component.FakeConnectorComponentMixin, unittest.TestCase):
@@ -226,7 +289,7 @@ class TestFakeDB(Tests, connector_component.FakeConnectorComponentMixin, unittes
 
 class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
-                 Tests):
+                 RealTests):
 
     @defer.inlineCallbacks
     def setUp(self):

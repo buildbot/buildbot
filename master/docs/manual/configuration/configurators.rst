@@ -17,7 +17,7 @@ Buildbot stores historical information in its database.
 In a large installation, these can quickly consume disk space, yet developers never consult this historical information in many cases.
 
 :bb:configurator:`JanitorConfigurator` creates a builder and :bb:sched:`Nightly` scheduler which will regularly remove old information.
-At the moment, it only supports cleaning of logs, but it will contain more features as we implement them.
+At the moment, it only supports cleaning of logs and build_data, but it will contain more features as we implement them.
 
 ::
 
@@ -37,6 +37,24 @@ Parameters for :bb:configurator:`JanitorConfigurator` are:
 
 ``logHorizon``
     A ``timedelta`` object describing the minimum time for which the log data should be maintained.
+
+``build_data_horizon``
+    A ``timedelta`` object describing the minimum time for which the build data should be maintained.
+
+``horizonPerBuilder``
+    Configuration parameters passed as a dictionary used to set the minimum time for which log data and build data should be maintained for specific builders.
+    .. code-block::
+    
+        {
+            "builder_1":{
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            },
+            "builder_2":{
+                "logHorizon": timedelta(weeks=2),
+                "buildDataHorizon": timedelta(weeks=2)
+            }
+        }
 
 ``hour``, ``dayOfWeek``, ...
     Arguments given to the :bb:sched:`Nightly` scheduler which is backing the :bb:configurator:`JanitorConfigurator`.
