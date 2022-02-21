@@ -16,10 +16,13 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import base64
+
 import msgpack
 
 from autobahn.twisted.websocket import WebSocketClientFactory
 from autobahn.twisted.websocket import WebSocketClientProtocol
+from autobahn.websocket.types import ConnectingRequest
 from twisted.internet import defer
 from twisted.python import log
 
@@ -29,6 +32,25 @@ from buildbot_worker.util import deferwaiter
 
 class RemoteWorkerError(Exception):
     pass
+
+
+def decode_http_authorization_header(value):
+    if value[:5] != 'Basic':
+        raise ValueError("Value should always start with 'Basic'")
+
+    credentials_str = base64.b64decode(value[6:]).decode()
+    if ':' not in credentials_str:
+        raise ValueError("String of credentials should always have a colon.")
+
+    username, password = credentials_str.split(':', maxsplit=1)
+    return (username, password)
+
+
+def encode_http_authorization_header(name, password):
+    if b":" in name:
+        raise ValueError("Username is not allowed to contain a colon.")
+    userpass = name + b':' + password
+    return 'Basic ' + base64.b64encode(userpass).decode()
 
 
 def remote_print(self, message):
@@ -138,6 +160,18 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         if self.debug:
             log.msg("Connecting; transport details: {}".format(transport_details))
 
+        auth_header = encode_http_authorization_header(self.factory.name, self.factory.password)
+
+        return ConnectingRequest(
+            host=self.factory.host,
+            port=self.factory.port,
+            resource=self.factory.resource,
+            headers={"Authorization": auth_header},
+            useragent=self.factory.useragent,
+            origin=self.factory.origin,
+            protocols=self.factory.protocols
+        )
+
     def maybe_log_worker_to_master_msg(self, message):
         if self.debug:
             log.msg("WORKER -> MASTER message: ", message)
@@ -155,22 +189,6 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         if self.debug:
             log.msg("WebSocket connection open.")
         self.seq_number = 0
-        self.authenticate()
-
-    @defer.inlineCallbacks
-    def authenticate(self):
-        try:
-            result = yield self.get_message_result({
-                'op': 'auth',
-                'username': self.factory.name,
-                'password': self.factory.password
-            })
-
-            if not result:
-                self.sendClose()
-        except Exception:
-            self.sendClose()
-            return
 
     def call_print(self, msg):
         is_exception = False

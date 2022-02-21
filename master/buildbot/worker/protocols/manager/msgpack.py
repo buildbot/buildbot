@@ -14,14 +14,16 @@
 # Copyright Buildbot Team Members
 
 
+import base64
+
 import msgpack
 
 from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
+from autobahn.websocket.types import ConnectionDeny
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.util import bytes2unicode
 from buildbot.util import deferwaiter
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols.manager.base import BaseDispatcher
@@ -34,6 +36,25 @@ class ConnectioLostError(Exception):
 
 class RemoteWorkerError(Exception):
     pass
+
+
+def decode_http_authorization_header(value):
+    if value[:5] != 'Basic':
+        raise ValueError("Value should always start with 'Basic'")
+
+    credentials_str = base64.b64decode(value[6:]).decode()
+    if ':' not in credentials_str:
+        raise ValueError("String of credentials should always have a colon.")
+
+    username, password = credentials_str.split(':', maxsplit=1)
+    return (username, password)
+
+
+def encode_http_authorization_header(name, password):
+    if b":" in name:
+        raise ValueError("Username is not allowed to contain a colon.")
+    userpass = name + b':' + password
+    return 'Basic ' + base64.b64encode(userpass).decode()
 
 
 class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
@@ -51,6 +72,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         # self.factory is set on the protocol instance when creating it in Twisted internals
         return self.factory.buildbot_dispatcher
 
+    @defer.inlineCallbacks
     def onOpen(self):
         if self.debug:
             log.msg("WebSocket connection open.")
@@ -58,6 +80,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.command_id_to_command_map = {}
         self.command_id_to_reader_map = {}
         self.command_id_to_writer_map = {}
+        yield self.initialize()
 
     def maybe_log_worker_to_master_msg(self, message):
         if self.debug:
@@ -73,32 +96,22 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError(f'message did not contain obligatory "{k}" key')
 
     @defer.inlineCallbacks
-    def call_auth(self, msg):
-        is_exception = False
+    def initialize(self):
         try:
-            self.contains_msg_key(msg, ('username', 'password'))
-            username = bytes2unicode(msg['username'])
-            try:
-                dispatcher = self.get_dispatcher()
-                yield dispatcher.master.initLock.acquire()
+            dispatcher = self.get_dispatcher()
+            yield dispatcher.master.initLock.acquire()
 
-                if username in dispatcher.users:
-                    password, afactory = dispatcher.users[username]
-                    if password == msg['password']:
-                        result = True
-                        self.worker_name = username
-                        self.connection = yield afactory(self, username)
-                        yield self.connection.attached(self)
-                    else:
-                        result = False
-                else:
-                    result = False
-            finally:
-                eventually(dispatcher.master.initLock.release)
+            if self.worker_name in dispatcher.users:
+                _, afactory = dispatcher.users[self.worker_name]
+                self.connection = yield afactory(self, self.worker_name)
+                yield self.connection.attached(self)
+            else:
+                self.sendClose()
         except Exception as e:
-            is_exception = True
-            result = str(e)
-        self.send_response_msg(msg, result, is_exception)
+            log.msg(f"Connection opening failed: {e}")
+            self.sendClose()
+        finally:
+            eventually(dispatcher.master.initLock.release)
 
     @defer.inlineCallbacks
     def call_update(self, msg):
@@ -290,13 +303,11 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             log.msg(f'Invalid message from worker: {msg}')
             return
 
-        if msg['op'] != "auth" and msg['op'] != "response" and self.connection is None:
+        if msg['op'] != "response" and self.connection is None:
             self.send_response_msg(msg, "Worker not authenticated.", is_exception=True)
             return
 
-        if msg['op'] == "auth":
-            self._deferwaiter.add(self.call_auth(msg))
-        elif msg['op'] == "update":
+        if msg['op'] == "update":
             self._deferwaiter.add(self.call_update(msg))
         elif msg['op'] == "update_upload_file_write":
             self._deferwaiter.add(self.call_update_upload_file_write(msg))
@@ -344,9 +355,40 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         res1 = yield d
         return res1
 
+    @defer.inlineCallbacks
     def onConnect(self, request):
         if self.debug:
             log.msg(f"Client connecting: {request.peer}")
+
+        value = request.headers.get('authorization')
+        if value is None:
+            raise ConnectionDeny(401, "Unauthorized")
+
+        try:
+            username, password = decode_http_authorization_header(value)
+        except Exception as e:
+            raise ConnectionDeny(400, "Bad request") from e
+
+        try:
+            dispatcher = self.get_dispatcher()
+            yield dispatcher.master.initLock.acquire()
+
+            if username in dispatcher.users:
+                pwd, _ = dispatcher.users[username]
+                if pwd == password:
+                    self.worker_name = username
+                    authentication = True
+                else:
+                    authentication = False
+            else:
+                authentication = False
+        except Exception as e:
+            raise Exception("Internal error") from e
+        finally:
+            eventually(dispatcher.master.initLock.release)
+
+        if not authentication:
+            raise ConnectionDeny(401, "Unauthorized")
 
     def onClose(self, wasClean, code, reason):
         if self.debug:
