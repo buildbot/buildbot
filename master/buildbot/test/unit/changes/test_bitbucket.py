@@ -251,7 +251,6 @@ class PullRequestListRest():
         if m:
             return self.src_by_url[f'{m.group("src_owner")}/{m.group("src_slug")}'].repo_request()
 
-        print('ZZZ:', url)
         raise Error(code=404)
 
 
