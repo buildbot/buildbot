@@ -1,0 +1,1 @@
+Fixed problem on MySQL when using builder tags that differ only by case.
