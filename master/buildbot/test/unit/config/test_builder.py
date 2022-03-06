@@ -146,6 +146,16 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
                               collapseRequests='cr',
                               description='buzz')
 
+    def test_too_long_property(self):
+        with self.assertRaisesConfigError("exceeds maximum length of"):
+            BuilderConfig(name="a", workernames=['a'], factory=self.factory,
+                          properties={'a' * 257: 'value'})
+
+    def test_too_long_default_property(self):
+        with self.assertRaisesConfigError("exceeds maximum length of"):
+            BuilderConfig(name="a", workernames=['a'], factory=self.factory,
+                          defaultProperties={'a' * 257: 'value'})
+
     def test_getConfigDict(self):
         ns = lambda: 'ns'
         nb = lambda: 'nb'

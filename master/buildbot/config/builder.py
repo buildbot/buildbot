@@ -14,7 +14,9 @@
 # Copyright Buildbot Team Members
 
 
+from buildbot.config.checks import check_param_length
 from buildbot.config.errors import error
+from buildbot.db.model import Model
 from buildbot.util import bytes2unicode
 from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
@@ -110,8 +112,17 @@ class BuilderConfig(util_config.ConfiguredMixin):
         self.env = env or {}
         if not isinstance(self.env, dict):
             error("builder's env must be a dictionary")
+
         self.properties = properties or {}
+        for property_name in self.properties:
+            check_param_length(property_name, f'Builder {self.name} property',
+                               Model.property_name_length)
+
         self.defaultProperties = defaultProperties or {}
+        for property_name in self.defaultProperties:
+            check_param_length(property_name, f'Builder {self.name} default property',
+                               Model.property_name_length)
+
         self.collapseRequests = collapseRequests
 
         self.description = description
