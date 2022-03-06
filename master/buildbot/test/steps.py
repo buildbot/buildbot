@@ -587,17 +587,17 @@ class TestBuildStepMixin:
         if build_files is None:
             build_files = []
 
-        step = self.step = buildstep.create_step_from_step_or_factory(step)
+        self.step = buildstep.create_step_from_step_or_factory(step)
 
         # set defaults
         if want_default_work_dir:
-            step.workdir = step._workdir or 'wkdir'
+            self.step.workdir = self.step._workdir or 'wkdir'
 
         # step.build
 
-        b = self.build = fakebuild.FakeBuild(master=self.master)
-        b.allFiles = lambda: build_files
-        b.master = self.master
+        self.build = fakebuild.FakeBuild(master=self.master)
+        self.build.allFiles = lambda: build_files
+        self.build.master = self.master
 
         def getWorkerVersion(cmd, oldversion):
             if cmd in worker_version:
@@ -605,22 +605,22 @@ class TestBuildStepMixin:
             if '*' in worker_version:
                 return worker_version['*']
             return oldversion
-        b.getWorkerCommandVersion = getWorkerVersion
-        b.workerEnvironment = worker_env.copy()
-        step.setBuild(b)
+        self.build.getWorkerCommandVersion = getWorkerVersion
+        self.build.workerEnvironment = worker_env.copy()
+        self.step.setBuild(self.build)
 
         self.build.builder.config.env = worker_env.copy()
 
         # watch for properties being set
-        self.properties = b.getProperties()
+        self.properties = self.build.getProperties()
 
         # step.progress
 
-        step.progress = mock.Mock(name="progress")
+        self.step.progress = mock.Mock(name="progress")
 
         # step.worker
 
-        self.worker = step.worker = worker.FakeWorker(self.master)
+        self.worker = self.step.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
 
         # step overrides
@@ -630,14 +630,14 @@ class TestBuildStepMixin:
             self.step.logs[name] = _log
             self.step._connectPendingLogObservers()
             return defer.succeed(_log)
-        step.addLog = addLog
+        self.step.addLog = addLog
 
         def addHTMLLog(name, html):
             _log = logfile.FakeLogFile(name)
             html = bytes2unicode(html)
             _log.addStdout(html)
             return defer.succeed(None)
-        step.addHTMLLog = addHTMLLog
+        self.step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
             _log = logfile.FakeLogFile(name)
@@ -646,7 +646,7 @@ class TestBuildStepMixin:
             self.step.logs[name] = _log
             _log.addStdout(text)
             return defer.succeed(None)
-        step.addCompleteLog = addCompleteLog
+        self.step.addCompleteLog = addCompleteLog
 
         self._got_test_result_sets = []
         self._next_test_result_set_id = 1000
@@ -658,7 +658,7 @@ class TestBuildStepMixin:
             self._next_test_result_set_id += 1
             return defer.succeed(setid)
 
-        step.addTestResultSet = add_test_result_set
+        self.step.addTestResultSet = add_test_result_set
 
         self._got_test_results = []
 
@@ -666,7 +666,7 @@ class TestBuildStepMixin:
                             duration_ns=None):
             self._got_test_results.append((setid, value, test_name, test_code_path, line,
                                            duration_ns))
-        step.addTestResult = add_test_result
+        self.step.addTestResult = add_test_result
 
         self._got_build_data = {}
 
@@ -674,7 +674,7 @@ class TestBuildStepMixin:
             self._got_build_data[name] = (value, source)
             return defer.succeed(None)
 
-        step.setBuildData = set_build_data
+        self.step.setBuildData = set_build_data
 
         # expectations
 
@@ -691,9 +691,9 @@ class TestBuildStepMixin:
         self._exp_build_data = {}
 
         # check that the step's name is not None
-        self.assertNotEqual(step.name, None)
+        self.assertNotEqual(self.step.name, None)
 
-        return step
+        return self.step
 
     def expect_commands(self, *exp):
         self.expected_remote_commands.extend(exp)
