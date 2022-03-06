@@ -191,13 +191,6 @@ class Expect:
         """
         return True
 
-    def shouldRunBehaviors(self):
-        """
-        Whether or not, once the command matches the expectation,
-        the behaviors should be run for this step.
-        """
-        return True
-
     def shouldKeepMatchingAfter(self, command):
         """
         Expectations are by default not kept matching multiple commands.
@@ -865,9 +858,7 @@ class TestBuildStepMixin:
                        f"{self._expected_remote_commands_popped}); {cmd_dif}")
                 raise AssertionError(msg)
 
-        if exp.shouldRunBehaviors():
-            # let the Expect object show any behaviors that are required
-            yield exp.runBehaviors(command)
+        yield exp.runBehaviors(command)
 
     @defer.inlineCallbacks
     def _connection_remote_start_command(self, command, conn, builder_name):
