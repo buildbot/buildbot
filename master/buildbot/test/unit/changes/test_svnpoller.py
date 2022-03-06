@@ -23,9 +23,9 @@ from twisted.trial import unittest
 from buildbot.changes import svnpoller
 from buildbot.process.properties import Interpolate
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.runprocess import ExpectMasterShell
+from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.runprocess import ExpectMasterShell
-from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"

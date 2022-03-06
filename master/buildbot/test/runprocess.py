@@ -13,61 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.test.steps import ExpectMasterShell
+from buildbot.test.steps import _check_env_is_expected
 from buildbot.util import runprocess
-
-
-def _check_env_is_expected(test, expected_env, env):
-    if expected_env is None:
-        return
-
-    env = env or {}
-    for var, value in expected_env.items():
-        test.assertEqual(env.get(var), value,
-                         f'Expected environment to have {var} = {repr(value)}')
-
-
-class ExpectMasterShell:
-    _stdout = b""
-    _stderr = b""
-    _exit = 0
-    _workdir = None
-    _env = None
-
-    def __init__(self, command):
-        self._command = command
-
-    def stdout(self, stdout):
-        assert isinstance(stdout, bytes)
-        self._stdout = stdout
-        return self
-
-    def stderr(self, stderr):
-        assert isinstance(stderr, bytes)
-        self._stderr = stderr
-        return self
-
-    def exit(self, exit):
-        self._exit = exit
-        return self
-
-    def workdir(self, workdir):
-        self._workdir = workdir
-        return self
-
-    def env(self, env):
-        self._env = env
-        return self
-
-    def check(self, test, command, workdir, env):
-        test.assertDictEqual({'command': command, 'workdir': workdir},
-                             {'command': self._command, 'workdir': self._workdir},
-                             "unexpected command run")
-
-        _check_env_is_expected(test, self._env, env)
-        return (self._exit, self._stdout, self._stderr)
-
-    def __repr__(self):
-        return f"<ExpectMasterShell(command={self._command})>"
 
 
 class MasterRunProcessMixin:
@@ -94,7 +42,7 @@ class MasterRunProcessMixin:
 
         expect = self._expected_master_commands.pop(0)
 
-        rc, stdout, stderr = expect.check(self, command, workdir, env)
+        rc, stdout, stderr = expect._check(self, command, workdir, env)
 
         if not collect_stderr and stderr_is_error and stderr:
             rc = -1

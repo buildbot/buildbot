@@ -20,9 +20,9 @@ from twisted.trial import unittest
 
 from buildbot.changes import hgpoller
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.runprocess import ExpectMasterShell
+from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.runprocess import ExpectMasterShell
-from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 LINESEP_BYTES = os.linesep.encode("ascii")

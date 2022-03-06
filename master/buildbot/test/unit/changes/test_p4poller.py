@@ -27,10 +27,10 @@ from buildbot.changes.p4poller import P4PollerError
 from buildbot.changes.p4poller import P4Source
 from buildbot.changes.p4poller import get_simple_split
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.runprocess import ExpectMasterShell
+from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import config
-from buildbot.test.util.runprocess import ExpectMasterShell
-from buildbot.test.util.runprocess import MasterRunProcessMixin
 from buildbot.util import datetime2epoch
 
 first_p4changes = \

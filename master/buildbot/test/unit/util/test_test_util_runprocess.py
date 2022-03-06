@@ -17,8 +17,8 @@ from twisted.internet import defer
 from twisted.trial import reporter
 from twisted.trial import unittest
 
-from buildbot.test.util.runprocess import ExpectMasterShell
-from buildbot.test.util.runprocess import MasterRunProcessMixin
+from buildbot.test.runprocess import ExpectMasterShell
+from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.util import runprocess
 
 

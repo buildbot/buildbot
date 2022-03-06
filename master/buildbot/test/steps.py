@@ -31,7 +31,61 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
 from buildbot.test.fake import worker
 from buildbot.util import bytes2unicode
+from buildbot.util import runprocess
 from buildbot.util import unicode2bytes
+
+
+def _dict_diff(d1, d2):
+    """
+    Given two dictionaries describe their difference
+    For nested dictionaries, key-paths are concatenated with the '.' operator
+
+    @return The list of keys missing in d1, the list of keys missing in d2, and the differences
+    in any nested keys
+    """
+    d1_keys = set(d1.keys())
+    d2_keys = set(d2.keys())
+    both = d1_keys & d2_keys
+
+    missing_in_d1 = []
+    missing_in_d2 = []
+    different = []
+
+    for k in both:
+        if isinstance(d1[k], dict) and isinstance(d2[k], dict):
+            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(
+                d1[k], d2[k])
+            missing_in_d1.extend([f'{k}.{m}' for m in missing_in_v1])
+            missing_in_d2.extend([f'{k}.{m}' for m in missing_in_v2])
+            for child_k, left, right in different_in_v:
+                different.append((f'{k}.{child_k}', left, right))
+            continue
+        if d1[k] != d2[k]:
+            different.append((k, d1[k], d2[k]))
+    missing_in_d1.extend(d2_keys - both)
+    missing_in_d2.extend(d1_keys - both)
+    return missing_in_d1, missing_in_d2, different
+
+
+def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
+    if exp_command != got_command:
+        return (f'Expected command type {exp_command} got {got_command}. Expected args '
+                f'{exp_args!r}')
+    if exp_args == got_args:
+        return ""
+    text = ""
+    missing_in_exp, missing_in_cmd, diff = _dict_diff(exp_args, got_args)
+    if missing_in_exp:
+        missing_dict = {key: got_args[key] for key in missing_in_exp}
+        text += f'Keys in cmd missing from expectation: {missing_dict!r}\n'
+    if missing_in_cmd:
+        missing_dict = {key: exp_args[key] for key in missing_in_cmd}
+        text += f'Keys in expectation missing from command: {missing_dict!r}\n'
+    if diff:
+        formatted_diff = [f'"{d[0]}": expected {d[1]!r}, got {d[2]!r}' for d in diff]
+        text += ('Key differences between expectation and command: {0}\n'.format(
+            '\n'.join(formatted_diff)))
+    return text
 
 
 class ExpectRemoteRef:
@@ -161,56 +215,32 @@ class Expect:
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
 
-    def expectationPassed(self, exp):
-        """
-        Some expectations need to be able to distinguish pass/fail of
-        nested expectations.
+    def _cleanup_args(self, args):
+        # we temporarily disable checking of sigtermTime and interruptSignal due to currently
+        # ongoing changes to how step testing works. Once all tests are updated for stricter
+        # checking this will be removed.
+        args = args.copy()
+        args.pop('sigtermTime', None)
+        args.pop('interruptSignal', None)
+        args.pop('usePTY', None)
+        env = args.pop('env', None)
+        if env is None:
+            env = {}
+        args['env'] = env
+        return args
 
-        This will get invoked once for every nested exception and once
-        for self unless anything fails.  Failures are passed to raiseExpectationFailure for
-        handling.
+    def _check(self, case, command):
+        case.assertEqual(self.interrupted, command.interrupted)
 
-        @param exp: The nested exception that passed or self.
-        """
+        if command.remote_command == self.remote_command and \
+                self._cleanup_args(command.args) == self._cleanup_args(self.args):
+            return
 
-    def raiseExpectationFailure(self, exp, failure):
-        """
-        Some expectations may wish to suppress failure.
-        The default expectation does not.
-
-        This will get invoked if the expectations fails on a command.
-
-        @param exp: the expectation that failed.  this could be self or a nested exception
-        """
-        raise failure
-
-    def shouldAssertCommandEqualExpectation(self):
-        """
-        Whether or not we should validate that the current command matches the expectation.
-        Some expectations may not have a way to match a command.
-        """
-        return True
-
-    def shouldRunBehaviors(self):
-        """
-        Whether or not, once the command matches the expectation,
-        the behaviors should be run for this step.
-        """
-        return True
-
-    def shouldKeepMatchingAfter(self, command):
-        """
-        Expectations are by default not kept matching multiple commands.
-
-        Return True if you want to re-use a command for multiple commands.
-        """
-        return False
-
-    def nestedExpectations(self):
-        """
-        Any sub-expectations that should be validated.
-        """
-        return []
+        cmd_dif = _describe_cmd_difference(self.remote_command, self.args,
+                                           command.remote_command, command.args)
+        msg = ("Command contents different from expected (command index: "
+               f"{self._expected_commands_popped}); {cmd_dif}")
+        raise AssertionError(msg)
 
     def __repr__(self):
         return "Expect(" + repr(self.remote_command) + ")"
@@ -496,57 +526,58 @@ class ExpectRmfile(Expect):
         return f"ExpectRmfile({repr(self.args['path'])})"
 
 
-def _dict_diff(d1, d2):
-    """
-    Given two dictionaries describe their difference
-    For nested dictionaries, key-paths are concatenated with the '.' operator
+def _check_env_is_expected(test, expected_env, env):
+    if expected_env is None:
+        return
 
-    @return The list of keys missing in d1, the list of keys missing in d2, and the differences
-    in any nested keys
-    """
-    d1_keys = set(d1.keys())
-    d2_keys = set(d2.keys())
-    both = d1_keys & d2_keys
-
-    missing_in_d1 = []
-    missing_in_d2 = []
-    different = []
-
-    for k in both:
-        if isinstance(d1[k], dict) and isinstance(d2[k], dict):
-            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(
-                d1[k], d2[k])
-            missing_in_d1.extend([f'{k}.{m}' for m in missing_in_v1])
-            missing_in_d2.extend([f'{k}.{m}' for m in missing_in_v2])
-            for child_k, left, right in different_in_v:
-                different.append((f'{k}.{child_k}', left, right))
-            continue
-        if d1[k] != d2[k]:
-            different.append((k, d1[k], d2[k]))
-    missing_in_d1.extend(d2_keys - both)
-    missing_in_d2.extend(d1_keys - both)
-    return missing_in_d1, missing_in_d2, different
+    env = env or {}
+    for var, value in expected_env.items():
+        test.assertEqual(env.get(var), value,
+                         f'Expected environment to have {var} = {repr(value)}')
 
 
-def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
-    if exp_command != got_command:
-        return (f'Expected command type {exp_command} got {got_command}. Expected args '
-                f'{exp_args!r}')
-    if exp_args == got_args:
-        return ""
-    text = ""
-    missing_in_exp, missing_in_cmd, diff = _dict_diff(exp_args, got_args)
-    if missing_in_exp:
-        missing_dict = {key: got_args[key] for key in missing_in_exp}
-        text += f'Keys in cmd missing from expectation: {missing_dict!r}\n'
-    if missing_in_cmd:
-        missing_dict = {key: exp_args[key] for key in missing_in_cmd}
-        text += f'Keys in expectation missing from command: {missing_dict!r}\n'
-    if diff:
-        formatted_diff = [f'"{d[0]}": expected {d[1]!r}, got {d[2]!r}' for d in diff]
-        text += ('Key differences between expectation and command: {0}\n'.format(
-            '\n'.join(formatted_diff)))
-    return text
+class ExpectMasterShell:
+    _stdout = b""
+    _stderr = b""
+    _exit = 0
+    _workdir = None
+    _env = None
+
+    def __init__(self, command):
+        self._command = command
+
+    def stdout(self, stdout):
+        assert isinstance(stdout, bytes)
+        self._stdout = stdout
+        return self
+
+    def stderr(self, stderr):
+        assert isinstance(stderr, bytes)
+        self._stderr = stderr
+        return self
+
+    def exit(self, exit):
+        self._exit = exit
+        return self
+
+    def workdir(self, workdir):
+        self._workdir = workdir
+        return self
+
+    def env(self, env):
+        self._env = env
+        return self
+
+    def _check(self, test, command, workdir, env):
+        test.assertDictEqual({'command': command, 'workdir': workdir},
+                             {'command': self._command, 'workdir': self._workdir},
+                             "unexpected command run")
+
+        _check_env_is_expected(test, self._env, env)
+        return (self._exit, self._stdout, self._stderr)
+
+    def __repr__(self):
+        return f"<ExpectMasterShell(command={self._command})>"
 
 
 class TestBuildStepMixin:
@@ -564,18 +595,19 @@ class TestBuildStepMixin:
 
         self._interrupt_remote_command_numbers = []
 
-        self.expected_remote_commands = []
-        self._expected_remote_commands_popped = 0
+        self._expected_commands = []
+        self._expected_commands_popped = 0
 
         self.master = fakemaster.make_master(self, wantData=want_data, wantDb=want_db,
                                              wantMq=want_mq)
 
+        self.patch(runprocess, "run_process", self._patched_run_process)
+        self._master_run_process_expect_env = {}
+
     def tear_down_test_build_step(self):
         pass
 
-    def setup_step(self, step, worker_version=None, worker_env=None,
-                   build_files=None, want_default_work_dir=True):
-
+    def _setup_fake_build(self, worker_version, worker_env, build_files):
         if worker_version is None:
             worker_version = {
                 '*': '99.99'
@@ -587,17 +619,9 @@ class TestBuildStepMixin:
         if build_files is None:
             build_files = []
 
-        step = self.step = buildstep.create_step_from_step_or_factory(step)
-
-        # set defaults
-        if want_default_work_dir:
-            step.workdir = step._workdir or 'wkdir'
-
-        # step.build
-
-        b = self.build = fakebuild.FakeBuild(master=self.master)
-        b.allFiles = lambda: build_files
-        b.master = self.master
+        build = fakebuild.FakeBuild(master=self.master)
+        build.allFiles = lambda: build_files
+        build.master = self.master
 
         def getWorkerVersion(cmd, oldversion):
             if cmd in worker_version:
@@ -605,22 +629,35 @@ class TestBuildStepMixin:
             if '*' in worker_version:
                 return worker_version['*']
             return oldversion
-        b.getWorkerCommandVersion = getWorkerVersion
-        b.workerEnvironment = worker_env.copy()
-        step.setBuild(b)
 
-        self.build.builder.config.env = worker_env.copy()
+        build.getWorkerCommandVersion = getWorkerVersion
+        build.workerEnvironment = worker_env.copy()
+        build.builder.config.env = worker_env.copy()
+
+        return build
+
+    def setup_step(self, step, worker_version=None, worker_env=None,
+                   build_files=None, want_default_work_dir=True):
+
+        self.step = buildstep.create_step_from_step_or_factory(step)
+
+        # set defaults
+        if want_default_work_dir:
+            self.step.workdir = self.step._workdir or 'wkdir'
+
+        self.build = self._setup_fake_build(worker_version, worker_env, build_files)
+        self.step.setBuild(self.build)
 
         # watch for properties being set
-        self.properties = b.getProperties()
+        self.properties = self.build.getProperties()
 
         # step.progress
 
-        step.progress = mock.Mock(name="progress")
+        self.step.progress = mock.Mock(name="progress")
 
         # step.worker
 
-        self.worker = step.worker = worker.FakeWorker(self.master)
+        self.worker = self.step.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
 
         # step overrides
@@ -630,14 +667,14 @@ class TestBuildStepMixin:
             self.step.logs[name] = _log
             self.step._connectPendingLogObservers()
             return defer.succeed(_log)
-        step.addLog = addLog
+        self.step.addLog = addLog
 
         def addHTMLLog(name, html):
             _log = logfile.FakeLogFile(name)
             html = bytes2unicode(html)
             _log.addStdout(html)
             return defer.succeed(None)
-        step.addHTMLLog = addHTMLLog
+        self.step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
             _log = logfile.FakeLogFile(name)
@@ -646,7 +683,7 @@ class TestBuildStepMixin:
             self.step.logs[name] = _log
             _log.addStdout(text)
             return defer.succeed(None)
-        step.addCompleteLog = addCompleteLog
+        self.step.addCompleteLog = addCompleteLog
 
         self._got_test_result_sets = []
         self._next_test_result_set_id = 1000
@@ -658,7 +695,7 @@ class TestBuildStepMixin:
             self._next_test_result_set_id += 1
             return defer.succeed(setid)
 
-        step.addTestResultSet = add_test_result_set
+        self.step.addTestResultSet = add_test_result_set
 
         self._got_test_results = []
 
@@ -666,7 +703,7 @@ class TestBuildStepMixin:
                             duration_ns=None):
             self._got_test_results.append((setid, value, test_name, test_code_path, line,
                                            duration_ns))
-        step.addTestResult = add_test_result
+        self.step.addTestResult = add_test_result
 
         self._got_build_data = {}
 
@@ -674,7 +711,7 @@ class TestBuildStepMixin:
             self._got_build_data[name] = (value, source)
             return defer.succeed(None)
 
-        step.setBuildData = set_build_data
+        self.step.setBuildData = set_build_data
 
         # expectations
 
@@ -691,12 +728,12 @@ class TestBuildStepMixin:
         self._exp_build_data = {}
 
         # check that the step's name is not None
-        self.assertNotEqual(step.name, None)
+        self.assertNotEqual(self.step.name, None)
 
-        return step
+        return self.step
 
     def expect_commands(self, *exp):
-        self.expected_remote_commands.extend(exp)
+        self._expected_commands.extend(exp)
 
     def expect_outcome(self, result, state_string=None):
         self.exp_result = result
@@ -731,6 +768,9 @@ class TestBuildStepMixin:
     def expect_test_results(self, results):
         self._exp_test_results = results
 
+    def add_run_process_expect_env(self, d):
+        self._master_run_process_expect_env.update(d)
+
     def _dump_logs(self):
         for l in self.step.logs.values():
             if l.stdout:
@@ -752,9 +792,9 @@ class TestBuildStepMixin:
 
         # finish up the debounced updateSummary before checking
         self.reactor.advance(1)
-        if self.expected_remote_commands:
+        if self._expected_commands:
             log.msg("un-executed remote commands:")
-            for rc in self.expected_remote_commands:
+            for rc in self._expected_commands:
                 log.msg(repr(rc))
             raise AssertionError("un-executed remote commands; see logs")
 
@@ -820,78 +860,73 @@ class TestBuildStepMixin:
 
     # callbacks from the running step
 
-    def _cleanup_args(self, args):
-        # we temporarily disable checking of sigtermTime and interruptSignal due to currently
-        # ongoing changes to how step testing works. Once all tests are updated for stricter
-        # checking this will be removed.
-        args = args.copy()
-        args.pop('sigtermTime', None)
-        args.pop('interruptSignal', None)
-        args.pop('usePTY', None)
-        env = args.pop('env', None)
-        if env is None:
-            env = {}
-        args['env'] = env
-        return args
-
-    @defer.inlineCallbacks
-    def _validate_expectation(self, exp, command):
-        got = (command.remote_command, self._cleanup_args(command.args))
-
-        for child_exp in exp.nestedExpectations():
-            try:
-                yield self._validate_expectation(child_exp, command)
-                exp.expectationPassed(exp)
-            except AssertionError as e:
-                # log this error, as the step may swallow the AssertionError or
-                # otherwise obscure the failure.  Trial will see the exception in
-                # the log and print an [ERROR].  This may result in
-                # double-reporting, but that's better than non-reporting!
-                log.err()
-                exp.raiseExpectationFailure(child_exp, e)
-
-        if exp.shouldAssertCommandEqualExpectation():
-            self.assertEqual(exp.interrupted, command.interrupted)
-
-            # first check any ExpectedRemoteReference instances
-            exp_tup = (exp.remote_command, self._cleanup_args(exp.args))
-            if exp_tup != got:
-                cmd_dif = _describe_cmd_difference(exp.remote_command, exp.args,
-                                                   command.remote_command, command.args)
-                msg = ("Command contents different from expected (command index: "
-                       f"{self._expected_remote_commands_popped}); {cmd_dif}")
-                raise AssertionError(msg)
-
-        if exp.shouldRunBehaviors():
-            # let the Expect object show any behaviors that are required
-            yield exp.runBehaviors(command)
-
     @defer.inlineCallbacks
     def _connection_remote_start_command(self, command, conn, builder_name):
         self.assertEqual(conn, self.conn)
-        got = (command.remote_command, command.args)
 
-        if not self.expected_remote_commands:
-            self.fail(f"got command {repr(got)} when no further commands were expected")
+        if self._expected_commands:
+            exp = self._expected_commands.pop(0)
+            self._expected_commands_popped += 1
+        else:
+            self.fail(f"got remote command {command.remote_command} {command.args!r} when no "
+                      "further commands were expected")
 
-        exp = self.expected_remote_commands[0]
+        if not isinstance(exp, Expect):
+            self.fail(f"got command {command.remote_command} {command.args!r} but the "
+                      f"expectation is not instance of Expect: {exp!r}")
+
         try:
-            yield self._validate_expectation(exp, command)
-            exp.expectationPassed(exp)
+            exp._check(self, command)
+            yield exp.runBehaviors(command)
         except AssertionError as e:
             # log this error, as the step may swallow the AssertionError or
             # otherwise obscure the failure.  Trial will see the exception in
             # the log and print an [ERROR].  This may result in
             # double-reporting, but that's better than non-reporting!
             log.err()
-            exp.raiseExpectationFailure(exp, e)
-        finally:
-            if not exp.shouldKeepMatchingAfter(command):
-                self.expected_remote_commands.pop(0)
-                self._expected_remote_commands_popped += 1
+            raise e
 
         if not exp.connection_broken:
             command.remote_complete()
+
+    def _patched_run_process(self, reactor, command, workdir=None, env=None,
+                             collect_stdout=True, collect_stderr=True, stderr_is_error=False,
+                             io_timeout=300, runtime_timeout=3600, sigterm_timeout=5,
+                             initial_stdin=None):
+
+        _check_env_is_expected(self, self._master_run_process_expect_env, env)
+
+        if self._expected_commands:
+            exp = self._expected_commands.pop(0)
+            self._expected_commands_popped += 1
+        else:
+            self.fail(f"got master command {command!r} at {workdir} ({env!r}) when no "
+                      "further commands were expected")
+
+        if not isinstance(exp, ExpectMasterShell):
+            self.fail(f"got command {command!r} at {workdir} ({env!r}) but the "
+                      f"expectation is not instance of ExpectMasterShell: {exp!r}")
+
+        try:
+            rc, stdout, stderr = exp._check(command, workdir, env)
+        except AssertionError as e:
+            # log this error, as the step may swallow the AssertionError or
+            # otherwise obscure the failure.  Trial will see the exception in
+            # the log and print an [ERROR].  This may result in
+            # double-reporting, but that's better than non-reporting!
+            log.err()
+            raise e
+
+        if not collect_stderr and stderr_is_error and stderr:
+            rc = -1
+
+        if collect_stdout and collect_stderr:
+            return (rc, stdout, stderr)
+        if collect_stdout:
+            return (rc, stdout)
+        if collect_stderr:
+            return (rc, stderr)
+        return rc
 
     def change_worker_system(self, system):
         self.worker.worker_system = system
