@@ -1,0 +1,1 @@
+Implemented maximum-length checks of step names as early as possible to produce readable errors.
