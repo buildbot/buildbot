@@ -238,7 +238,7 @@ class Expect:
         cmd_dif = _describe_cmd_difference(self.remote_command, self.args,
                                            command.remote_command, command.args)
         msg = ("Command contents different from expected (command index: "
-               f"{self._expected_remote_commands_popped}); {cmd_dif}")
+               f"{self._expected_commands_popped}); {cmd_dif}")
         raise AssertionError(msg)
 
     def __repr__(self):
@@ -540,8 +540,8 @@ class TestBuildStepMixin:
 
         self._interrupt_remote_command_numbers = []
 
-        self.expected_remote_commands = []
-        self._expected_remote_commands_popped = 0
+        self._expected_commands = []
+        self._expected_commands_popped = 0
 
         self.master = fakemaster.make_master(self, wantData=want_data, wantDb=want_db,
                                              wantMq=want_mq)
@@ -675,7 +675,7 @@ class TestBuildStepMixin:
         return self.step
 
     def expect_commands(self, *exp):
-        self.expected_remote_commands.extend(exp)
+        self._expected_commands.extend(exp)
 
     def expect_outcome(self, result, state_string=None):
         self.exp_result = result
@@ -731,9 +731,9 @@ class TestBuildStepMixin:
 
         # finish up the debounced updateSummary before checking
         self.reactor.advance(1)
-        if self.expected_remote_commands:
+        if self._expected_commands:
             log.msg("un-executed remote commands:")
-            for rc in self.expected_remote_commands:
+            for rc in self._expected_commands:
                 log.msg(repr(rc))
             raise AssertionError("un-executed remote commands; see logs")
 
@@ -803,11 +803,11 @@ class TestBuildStepMixin:
     def _connection_remote_start_command(self, command, conn, builder_name):
         self.assertEqual(conn, self.conn)
 
-        if self.expected_remote_commands:
-            exp = self.expected_remote_commands.pop(0)
-            self._expected_remote_commands_popped += 1
+        if self._expected_commands:
+            exp = self._expected_commands.pop(0)
+            self._expected_commands_popped += 1
         else:
-            self.fail(f"got command {command.remote_command} {command.args!r} when no "
+            self.fail(f"got remote command {command.remote_command} {command.args!r} when no "
                       "further commands were expected")
 
         if not isinstance(exp, Expect):
