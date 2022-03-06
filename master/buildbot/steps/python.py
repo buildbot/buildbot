@@ -240,6 +240,11 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
         self._store_results = store_results
         self.counts = {}
         self.summaries = {}
+
+        for m in self._MESSAGES:
+            self.counts[m] = 0
+            self.summaries[m] = []
+
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
 
     # returns (message type, path, line) tuple if line has been matched, or None otherwise
@@ -267,10 +272,6 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
         return None
 
     def _log_consumer(self):
-        for m in self._MESSAGES:
-            self.counts[m] = 0
-            self.summaries[m] = []
-
         while True:
             stream, line = yield
             if stream == 'h':
