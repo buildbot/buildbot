@@ -573,9 +573,7 @@ class TestBuildStepMixin:
     def tear_down_test_build_step(self):
         pass
 
-    def setup_step(self, step, worker_version=None, worker_env=None,
-                   build_files=None, want_default_work_dir=True):
-
+    def _setup_fake_build(self, worker_version, worker_env, build_files):
         if worker_version is None:
             worker_version = {
                 '*': '99.99'
@@ -587,17 +585,9 @@ class TestBuildStepMixin:
         if build_files is None:
             build_files = []
 
-        self.step = buildstep.create_step_from_step_or_factory(step)
-
-        # set defaults
-        if want_default_work_dir:
-            self.step.workdir = self.step._workdir or 'wkdir'
-
-        # step.build
-
-        self.build = fakebuild.FakeBuild(master=self.master)
-        self.build.allFiles = lambda: build_files
-        self.build.master = self.master
+        build = fakebuild.FakeBuild(master=self.master)
+        build.allFiles = lambda: build_files
+        build.master = self.master
 
         def getWorkerVersion(cmd, oldversion):
             if cmd in worker_version:
@@ -605,11 +595,24 @@ class TestBuildStepMixin:
             if '*' in worker_version:
                 return worker_version['*']
             return oldversion
-        self.build.getWorkerCommandVersion = getWorkerVersion
-        self.build.workerEnvironment = worker_env.copy()
-        self.step.setBuild(self.build)
 
-        self.build.builder.config.env = worker_env.copy()
+        build.getWorkerCommandVersion = getWorkerVersion
+        build.workerEnvironment = worker_env.copy()
+        build.builder.config.env = worker_env.copy()
+
+        return build
+
+    def setup_step(self, step, worker_version=None, worker_env=None,
+                   build_files=None, want_default_work_dir=True):
+
+        self.step = buildstep.create_step_from_step_or_factory(step)
+
+        # set defaults
+        if want_default_work_dir:
+            self.step.workdir = self.step._workdir or 'wkdir'
+
+        self.build = self._setup_fake_build(worker_version, worker_env, build_files)
+        self.step.setBuild(self.build)
 
         # watch for properties being set
         self.properties = self.build.getProperties()
