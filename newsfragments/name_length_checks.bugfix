@@ -1,1 +1,0 @@
-Implemented detection of too long step and builder property names to produce errors at config time if possible.

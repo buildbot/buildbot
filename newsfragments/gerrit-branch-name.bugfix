@@ -1,1 +1,0 @@
-Fixed Gerrit change sources to emit changes with proper branch name instead of one containing "refs/heads/" as the prefix.
