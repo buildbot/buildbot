@@ -644,9 +644,8 @@ The arguments to this scheduler are:
 
 ``onlyIfChanged`` (optional)
 
-    If this is ``True``, then builds will not be scheduled at the designated time
-    *unless* the specified branch has seen an important change since
-    the previous build.
+    If this is ``True``, then builds will be scheduled at the designated time only if the specified branch has seen an important change since the previous build.
+    If there is no previous build or the previous build was made when this option was ``False`` then the build will be scheduled even if there are no new changes.
     By default this setting is ``False``.
 
 ``periodicBuildTimer``
