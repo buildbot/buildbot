@@ -31,6 +31,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
 from buildbot.test.fake import worker
 from buildbot.util import bytes2unicode
+from buildbot.util import runprocess
 from buildbot.util import unicode2bytes
 
 
@@ -228,8 +229,8 @@ class Expect:
         args['env'] = env
         return args
 
-    def _check(self, command):
-        self.assertEqual(self.interrupted, command.interrupted)
+    def _check(self, case, command):
+        case.assertEqual(self.interrupted, command.interrupted)
 
         if command.remote_command == self.remote_command and \
                 self._cleanup_args(command.args) == self._cleanup_args(self.args):
@@ -525,6 +526,60 @@ class ExpectRmfile(Expect):
         return f"ExpectRmfile({repr(self.args['path'])})"
 
 
+def _check_env_is_expected(test, expected_env, env):
+    if expected_env is None:
+        return
+
+    env = env or {}
+    for var, value in expected_env.items():
+        test.assertEqual(env.get(var), value,
+                         f'Expected environment to have {var} = {repr(value)}')
+
+
+class ExpectMasterShell:
+    _stdout = b""
+    _stderr = b""
+    _exit = 0
+    _workdir = None
+    _env = None
+
+    def __init__(self, command):
+        self._command = command
+
+    def stdout(self, stdout):
+        assert isinstance(stdout, bytes)
+        self._stdout = stdout
+        return self
+
+    def stderr(self, stderr):
+        assert isinstance(stderr, bytes)
+        self._stderr = stderr
+        return self
+
+    def exit(self, exit):
+        self._exit = exit
+        return self
+
+    def workdir(self, workdir):
+        self._workdir = workdir
+        return self
+
+    def env(self, env):
+        self._env = env
+        return self
+
+    def _check(self, test, command, workdir, env):
+        test.assertDictEqual({'command': command, 'workdir': workdir},
+                             {'command': self._command, 'workdir': self._workdir},
+                             "unexpected command run")
+
+        _check_env_is_expected(test, self._env, env)
+        return (self._exit, self._stdout, self._stderr)
+
+    def __repr__(self):
+        return f"<ExpectMasterShell(command={self._command})>"
+
+
 class TestBuildStepMixin:
 
     """
@@ -545,6 +600,9 @@ class TestBuildStepMixin:
 
         self.master = fakemaster.make_master(self, wantData=want_data, wantDb=want_db,
                                              wantMq=want_mq)
+
+        self.patch(runprocess, "run_process", self._patched_run_process)
+        self._master_run_process_expect_env = {}
 
     def tear_down_test_build_step(self):
         pass
@@ -710,6 +768,9 @@ class TestBuildStepMixin:
     def expect_test_results(self, results):
         self._exp_test_results = results
 
+    def add_run_process_expect_env(self, d):
+        self._master_run_process_expect_env.update(d)
+
     def _dump_logs(self):
         for l in self.step.logs.values():
             if l.stdout:
@@ -815,7 +876,7 @@ class TestBuildStepMixin:
                       f"expectation is not instance of Expect: {exp!r}")
 
         try:
-            exp._check(command)
+            exp._check(self, command)
             yield exp.runBehaviors(command)
         except AssertionError as e:
             # log this error, as the step may swallow the AssertionError or
@@ -827,6 +888,45 @@ class TestBuildStepMixin:
 
         if not exp.connection_broken:
             command.remote_complete()
+
+    def _patched_run_process(self, reactor, command, workdir=None, env=None,
+                             collect_stdout=True, collect_stderr=True, stderr_is_error=False,
+                             io_timeout=300, runtime_timeout=3600, sigterm_timeout=5,
+                             initial_stdin=None):
+
+        _check_env_is_expected(self, self._master_run_process_expect_env, env)
+
+        if self._expected_commands:
+            exp = self._expected_commands.pop(0)
+            self._expected_commands_popped += 1
+        else:
+            self.fail(f"got master command {command!r} at {workdir} ({env!r}) when no "
+                      "further commands were expected")
+
+        if not isinstance(exp, ExpectMasterShell):
+            self.fail(f"got command {command!r} at {workdir} ({env!r}) but the "
+                      f"expectation is not instance of ExpectMasterShell: {exp!r}")
+
+        try:
+            rc, stdout, stderr = exp._check(command, workdir, env)
+        except AssertionError as e:
+            # log this error, as the step may swallow the AssertionError or
+            # otherwise obscure the failure.  Trial will see the exception in
+            # the log and print an [ERROR].  This may result in
+            # double-reporting, but that's better than non-reporting!
+            log.err()
+            raise e
+
+        if not collect_stderr and stderr_is_error and stderr:
+            rc = -1
+
+        if collect_stdout and collect_stderr:
+            return (rc, stdout, stderr)
+        if collect_stdout:
+            return (rc, stdout)
+        if collect_stderr:
+            return (rc, stderr)
+        return rc
 
     def change_worker_system(self, system):
         self.worker.worker_system = system
