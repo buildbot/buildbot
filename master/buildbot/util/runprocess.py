@@ -54,7 +54,8 @@ class RunProcess:
 
     def __init__(self, reactor, command, workdir=None, env=None,
                  collect_stdout=True, collect_stderr=True, stderr_is_error=False,
-                 io_timeout=300, runtime_timeout=3600, sigterm_timeout=5, initial_stdin=None):
+                 io_timeout=300, runtime_timeout=3600, sigterm_timeout=5, initial_stdin=None,
+                 use_pty=False):
 
         self._reactor = reactor
         self.command = command
@@ -81,6 +82,7 @@ class RunProcess:
 
         self.killed = False
         self.kill_timer = None
+        self.use_pty = use_pty
 
     def __repr__(self):
         return f"<{self.__class__.__name__} '{self.command}'>"
@@ -122,7 +124,8 @@ class RunProcess:
             environ['PWD'] = os.path.abspath(self.workdir)
 
         argv = unicode2bytes(self.command)
-        self.process = self._reactor.spawnProcess(self.pp, argv[0], argv, environ, self.workdir)
+        self.process = self._reactor.spawnProcess(self.pp, argv[0], argv, environ, self.workdir,
+                                                  usePTY=self.use_pty)
 
         if self.io_timeout:
             self.io_timer = self._reactor.callLater(self.io_timeout, self.io_timed_out)
