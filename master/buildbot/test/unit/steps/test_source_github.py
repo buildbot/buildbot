@@ -15,9 +15,9 @@
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import github
-from buildbot.test.expect import ExpectListdir
-from buildbot.test.expect import ExpectShell
-from buildbot.test.expect import ExpectStat
+from buildbot.test.steps import ExpectListdir
+from buildbot.test.steps import ExpectShell
+from buildbot.test.steps import ExpectStat
 from buildbot.test.unit.steps import test_source_git
 
 

@@ -17,10 +17,10 @@ from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import gerrit
-from buildbot.test.expect import ExpectListdir
-from buildbot.test.expect import ExpectShell
-from buildbot.test.expect import ExpectStat
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectListdir
+from buildbot.test.steps import ExpectShell
+from buildbot.test.steps import ExpectStat
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 

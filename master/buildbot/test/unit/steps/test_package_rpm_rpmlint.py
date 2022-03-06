@@ -17,8 +17,8 @@ from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.rpm import rpmlint
-from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
 
 

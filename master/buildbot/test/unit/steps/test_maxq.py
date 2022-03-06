@@ -19,8 +19,8 @@ from buildbot import config
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import maxq
-from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
 
 
