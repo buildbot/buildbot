@@ -21,4 +21,3 @@ from .master import FileLoader  # noqa pylint: disable=unused-import
 from .master import MasterConfig  # noqa pylint: disable=unused-import
 from .master import get_is_in_unit_tests  # noqa pylint: disable=unused-import
 from .master import loadConfigDict  # noqa pylint: disable=unused-import
-from .master import set_is_in_unit_tests  # noqa pylint: disable=unused-import
