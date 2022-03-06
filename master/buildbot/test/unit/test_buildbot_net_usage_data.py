@@ -69,7 +69,7 @@ class Tests(unittest.TestCase):
         }
 
     def test_basic(self):
-        self.patch(config, "_in_unit_tests", False)
+        self.patch(config, "get_is_in_unit_tests", lambda: False)
         with assertProducesWarning(
                 ConfigWarning,
                 message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):

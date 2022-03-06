@@ -155,7 +155,7 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
     def setUp(self):
         self.basedir = os.path.abspath('basedir')
         self.filename = os.path.join(self.basedir, 'test.cfg')
-        self.patch(config, "_in_unit_tests", False)
+        self.patch(config, "get_is_in_unit_tests", lambda: False)
 
         return self.setUpDirs('basedir')
 
@@ -481,7 +481,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
 
     def test_load_global_buildbotNetUsageData(self):
-        self.patch(config, "_in_unit_tests", False)
+        self.patch(config, "get_is_in_unit_tests", lambda: False)
         with assertProducesWarning(
                 ConfigWarning,
                 message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):

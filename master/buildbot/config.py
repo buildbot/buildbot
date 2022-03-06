@@ -80,6 +80,15 @@ def error(error, always_raise=False):
 _in_unit_tests = False
 
 
+def set_is_in_unit_tests(in_tests):
+    global _in_unit_tests
+    _in_unit_tests = in_tests
+
+
+def get_is_in_unit_tests():
+    return _in_unit_tests
+
+
 def loadConfigDict(basedir, configFileName):
     if not os.path.isdir(basedir):
         raise ConfigErrors([f"basedir '{basedir}' does not exist"])
@@ -374,7 +383,7 @@ class MasterConfig(util.ComparableMixin):
                        can_be_callable=True)
 
         if "buildbotNetUsageData" not in config_dict:
-            if _in_unit_tests:
+            if get_is_in_unit_tests():
                 self.buildbotNetUsageData = None
             else:
                 warnings.warn(
