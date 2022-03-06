@@ -34,6 +34,59 @@ from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
 
+def _dict_diff(d1, d2):
+    """
+    Given two dictionaries describe their difference
+    For nested dictionaries, key-paths are concatenated with the '.' operator
+
+    @return The list of keys missing in d1, the list of keys missing in d2, and the differences
+    in any nested keys
+    """
+    d1_keys = set(d1.keys())
+    d2_keys = set(d2.keys())
+    both = d1_keys & d2_keys
+
+    missing_in_d1 = []
+    missing_in_d2 = []
+    different = []
+
+    for k in both:
+        if isinstance(d1[k], dict) and isinstance(d2[k], dict):
+            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(
+                d1[k], d2[k])
+            missing_in_d1.extend([f'{k}.{m}' for m in missing_in_v1])
+            missing_in_d2.extend([f'{k}.{m}' for m in missing_in_v2])
+            for child_k, left, right in different_in_v:
+                different.append((f'{k}.{child_k}', left, right))
+            continue
+        if d1[k] != d2[k]:
+            different.append((k, d1[k], d2[k]))
+    missing_in_d1.extend(d2_keys - both)
+    missing_in_d2.extend(d1_keys - both)
+    return missing_in_d1, missing_in_d2, different
+
+
+def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
+    if exp_command != got_command:
+        return (f'Expected command type {exp_command} got {got_command}. Expected args '
+                f'{exp_args!r}')
+    if exp_args == got_args:
+        return ""
+    text = ""
+    missing_in_exp, missing_in_cmd, diff = _dict_diff(exp_args, got_args)
+    if missing_in_exp:
+        missing_dict = {key: got_args[key] for key in missing_in_exp}
+        text += f'Keys in cmd missing from expectation: {missing_dict!r}\n'
+    if missing_in_cmd:
+        missing_dict = {key: exp_args[key] for key in missing_in_cmd}
+        text += f'Keys in expectation missing from command: {missing_dict!r}\n'
+    if diff:
+        formatted_diff = [f'"{d[0]}": expected {d[1]!r}, got {d[2]!r}' for d in diff]
+        text += ('Key differences between expectation and command: {0}\n'.format(
+            '\n'.join(formatted_diff)))
+    return text
+
+
 class ExpectRemoteRef:
 
     """
@@ -160,6 +213,33 @@ class Expect:
         """
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
+
+    def _cleanup_args(self, args):
+        # we temporarily disable checking of sigtermTime and interruptSignal due to currently
+        # ongoing changes to how step testing works. Once all tests are updated for stricter
+        # checking this will be removed.
+        args = args.copy()
+        args.pop('sigtermTime', None)
+        args.pop('interruptSignal', None)
+        args.pop('usePTY', None)
+        env = args.pop('env', None)
+        if env is None:
+            env = {}
+        args['env'] = env
+        return args
+
+    def _check(self, command):
+        self.assertEqual(self.interrupted, command.interrupted)
+
+        if command.remote_command == self.remote_command and \
+                self._cleanup_args(command.args) == self._cleanup_args(self.args):
+            return
+
+        cmd_dif = _describe_cmd_difference(self.remote_command, self.args,
+                                           command.remote_command, command.args)
+        msg = ("Command contents different from expected (command index: "
+               f"{self._expected_remote_commands_popped}); {cmd_dif}")
+        raise AssertionError(msg)
 
     def __repr__(self):
         return "Expect(" + repr(self.remote_command) + ")"
@@ -445,59 +525,6 @@ class ExpectRmfile(Expect):
         return f"ExpectRmfile({repr(self.args['path'])})"
 
 
-def _dict_diff(d1, d2):
-    """
-    Given two dictionaries describe their difference
-    For nested dictionaries, key-paths are concatenated with the '.' operator
-
-    @return The list of keys missing in d1, the list of keys missing in d2, and the differences
-    in any nested keys
-    """
-    d1_keys = set(d1.keys())
-    d2_keys = set(d2.keys())
-    both = d1_keys & d2_keys
-
-    missing_in_d1 = []
-    missing_in_d2 = []
-    different = []
-
-    for k in both:
-        if isinstance(d1[k], dict) and isinstance(d2[k], dict):
-            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(
-                d1[k], d2[k])
-            missing_in_d1.extend([f'{k}.{m}' for m in missing_in_v1])
-            missing_in_d2.extend([f'{k}.{m}' for m in missing_in_v2])
-            for child_k, left, right in different_in_v:
-                different.append((f'{k}.{child_k}', left, right))
-            continue
-        if d1[k] != d2[k]:
-            different.append((k, d1[k], d2[k]))
-    missing_in_d1.extend(d2_keys - both)
-    missing_in_d2.extend(d1_keys - both)
-    return missing_in_d1, missing_in_d2, different
-
-
-def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
-    if exp_command != got_command:
-        return (f'Expected command type {exp_command} got {got_command}. Expected args '
-                f'{exp_args!r}')
-    if exp_args == got_args:
-        return ""
-    text = ""
-    missing_in_exp, missing_in_cmd, diff = _dict_diff(exp_args, got_args)
-    if missing_in_exp:
-        missing_dict = {key: got_args[key] for key in missing_in_exp}
-        text += f'Keys in cmd missing from expectation: {missing_dict!r}\n'
-    if missing_in_cmd:
-        missing_dict = {key: exp_args[key] for key in missing_in_cmd}
-        text += f'Keys in expectation missing from command: {missing_dict!r}\n'
-    if diff:
-        formatted_diff = [f'"{d[0]}": expected {d[1]!r}, got {d[2]!r}' for d in diff]
-        text += ('Key differences between expectation and command: {0}\n'.format(
-            '\n'.join(formatted_diff)))
-    return text
-
-
 class TestBuildStepMixin:
 
     """
@@ -772,48 +799,24 @@ class TestBuildStepMixin:
 
     # callbacks from the running step
 
-    def _cleanup_args(self, args):
-        # we temporarily disable checking of sigtermTime and interruptSignal due to currently
-        # ongoing changes to how step testing works. Once all tests are updated for stricter
-        # checking this will be removed.
-        args = args.copy()
-        args.pop('sigtermTime', None)
-        args.pop('interruptSignal', None)
-        args.pop('usePTY', None)
-        env = args.pop('env', None)
-        if env is None:
-            env = {}
-        args['env'] = env
-        return args
-
-    @defer.inlineCallbacks
-    def _validate_expectation(self, exp, command):
-        got = (command.remote_command, self._cleanup_args(command.args))
-
-        self.assertEqual(exp.interrupted, command.interrupted)
-
-        # first check any ExpectedRemoteReference instances
-        exp_tup = (exp.remote_command, self._cleanup_args(exp.args))
-        if exp_tup != got:
-            cmd_dif = _describe_cmd_difference(exp.remote_command, exp.args,
-                                               command.remote_command, command.args)
-            msg = ("Command contents different from expected (command index: "
-                   f"{self._expected_remote_commands_popped}); {cmd_dif}")
-            raise AssertionError(msg)
-
-        yield exp.runBehaviors(command)
-
     @defer.inlineCallbacks
     def _connection_remote_start_command(self, command, conn, builder_name):
         self.assertEqual(conn, self.conn)
-        got = (command.remote_command, command.args)
 
-        if not self.expected_remote_commands:
-            self.fail(f"got command {repr(got)} when no further commands were expected")
+        if self.expected_remote_commands:
+            exp = self.expected_remote_commands.pop(0)
+            self._expected_remote_commands_popped += 1
+        else:
+            self.fail(f"got command {command.remote_command} {command.args!r} when no "
+                      "further commands were expected")
 
-        exp = self.expected_remote_commands[0]
+        if not isinstance(exp, Expect):
+            self.fail(f"got command {command.remote_command} {command.args!r} but the "
+                      f"expectation is not instance of Expect: {exp!r}")
+
         try:
-            yield self._validate_expectation(exp, command)
+            exp._check(command)
+            yield exp.runBehaviors(command)
         except AssertionError as e:
             # log this error, as the step may swallow the AssertionError or
             # otherwise obscure the failure.  Trial will see the exception in
@@ -821,9 +824,6 @@ class TestBuildStepMixin:
             # double-reporting, but that's better than non-reporting!
             log.err()
             raise e
-        finally:
-            self.expected_remote_commands.pop(0)
-            self._expected_remote_commands_popped += 1
 
         if not exp.connection_broken:
             command.remote_complete()
