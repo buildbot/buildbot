@@ -161,14 +161,6 @@ class Expect:
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
 
-    def shouldKeepMatchingAfter(self, command):
-        """
-        Expectations are by default not kept matching multiple commands.
-
-        Return True if you want to re-use a command for multiple commands.
-        """
-        return False
-
     def nestedExpectations(self):
         """
         Any sub-expectations that should be validated.
@@ -847,9 +839,8 @@ class TestBuildStepMixin:
             log.err()
             raise e
         finally:
-            if not exp.shouldKeepMatchingAfter(command):
-                self.expected_remote_commands.pop(0)
-                self._expected_remote_commands_popped += 1
+            self.expected_remote_commands.pop(0)
+            self._expected_remote_commands_popped += 1
 
         if not exp.connection_broken:
             command.remote_complete()
