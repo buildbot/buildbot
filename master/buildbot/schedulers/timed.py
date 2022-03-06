@@ -148,12 +148,18 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         scheds = self.master.db.schedulers
         classifications = yield scheds.getChangeClassifications(self.serviceid)
 
-        # if onlyIfChanged is True, then we will skip this build if no
-        # important changes have occurred since the last invocation
-        if self.onlyIfChanged and not any(classifications.values()):
+        # if onlyIfChanged is True, then we will skip this build if no important changes have
+        # occurred since the last invocation. Note that when the scheduler has just been started
+        # there may not be any important changes yet and we should start the build for the
+        # current state of the code whatever it is.
+        last_only_if_changed = yield self.getState('last_only_if_changed', False)
+        if last_only_if_changed and self.onlyIfChanged and not any(classifications.values()):
             log.msg(("{} scheduler <{}>: skipping build " +
                      "- No important changes").format(self.__class__.__name__, self.name))
             return
+
+        if last_only_if_changed != self.onlyIfChanged:
+            yield self.setState('last_only_if_changed', self.onlyIfChanged)
 
         changeids = sorted(classifications.keys())
 
