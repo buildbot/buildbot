@@ -14,14 +14,14 @@
 # Copyright Buildbot Team Members
 
 from buildbot.config.errors import error
-from buildbot.process.properties import Interpolate
 
 
 def check_param_length(value, name, max_length):
     if isinstance(value, str) and len(value) > max_length:
         error(f"{name} '{value}' exceeds maximum length of {max_length}")
 
-    if isinstance(value, Interpolate):
+    qualified_name = f"{type(value).__module__}.{type(value).__name__}"
+    if qualified_name == 'buildbot.process.properties.Interpolate':
         if value.args:
             interpolations = tuple([''] * len(value.args))
         else:
