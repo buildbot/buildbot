@@ -127,6 +127,10 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
         with self.assertRaisesConfigError("BuildStep name must be a string"):
             buildstep.BuildStep(name=5)
 
+    def test_name_too_long(self):
+        with self.assertRaisesConfigError("exceeds maximum length of"):
+            buildstep.BuildStep(name="b" * 100)
+
     def test_unexpectedKeywordArgument(self):
         """
         When BuildStep is passed an unknown keyword argument, it reports

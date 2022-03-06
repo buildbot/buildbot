@@ -31,6 +31,8 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.config.checks import check_param_length
+from buildbot.db.model import Model
 from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerSetupError
 from buildbot.process import log as plog
@@ -247,6 +249,9 @@ class BuildStep(results.ResultComputingConfigMixin,
         if not isinstance(self.name, str) and not IRenderable.providedBy(self.name):
             config.error(f"BuildStep name must be a string or a renderable object: "
                          f"{repr(self.name)}")
+
+        check_param_length(self.name, f'Step {self.__class__.__name__} name',
+                           Model.steps.c.name.type.length)
 
         if isinstance(self.description, str):
             self.description = [self.description]
