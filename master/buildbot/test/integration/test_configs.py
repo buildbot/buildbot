@@ -19,7 +19,7 @@ import os
 from twisted.python import util
 from twisted.trial import unittest
 
-from buildbot import config
+from buildbot.config.master import FileLoader
 from buildbot.scripts import runner
 from buildbot.test.util import dirs
 from buildbot.test.util.warnings import assertNotProducesWarnings
@@ -39,13 +39,13 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
     def test_sample_config(self):
         filename = util.sibpath(runner.__file__, 'sample.cfg')
         with assertNotProducesWarnings(DeprecatedApiWarning):
-            config.FileLoader(self.basedir, filename).loadConfig()
+            FileLoader(self.basedir, filename).loadConfig()
 
     def test_0_9_0b5_api_renamed_config(self):
         with open(self.filename, "w", encoding='utf-8') as f:
             f.write(sample_0_9_0b5_api_renamed)
         with assertNotProducesWarnings(DeprecatedApiWarning):
-            config.FileLoader(self.basedir, self.filename).loadConfig()
+            FileLoader(self.basedir, self.filename).loadConfig()
 
 
 # sample.cfg from various versions, with comments stripped.  Adjustments made

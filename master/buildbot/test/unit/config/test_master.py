@@ -38,6 +38,7 @@ from buildbot import revlinks
 from buildbot import worker
 from buildbot.changes import base as changes_base
 from buildbot.config.errors import capture_config_errors
+from buildbot.config.master import FileLoader
 from buildbot.process import factory
 from buildbot.process import properties
 from buildbot.schedulers import base as schedulers_base
@@ -293,7 +294,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 config.error('noes too!')""")
 
         with capture_config_errors() as errors:
-            config.FileLoader(self.basedir, self.filename).loadConfig()
+            FileLoader(self.basedir, self.filename).loadConfig()
 
         self.assertEqual(errors.errors, ['oh noes!', 'noes too!',
                                          'no workers are configured',
@@ -305,7 +306,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig = dict(foo=10)
                 """)
         with self.assertRaisesConfigError("Unknown BuildmasterConfig key foo"):
-            config.FileLoader(self.basedir, self.filename).loadConfig()
+            FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_loadConfig_unknown_keys(self):
         self.patch_load_helpers()
@@ -314,14 +315,14 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 """)
         with self.assertRaisesConfigError(
                 "Unknown BuildmasterConfig keys bar, foo"):
-            config.FileLoader(self.basedir, self.filename).loadConfig()
+            FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_loadConfig_success(self):
         self.patch_load_helpers()
         self.install_config_file("""\
                 BuildmasterConfig = dict()
                 """)
-        rv = config.FileLoader(self.basedir, self.filename).loadConfig()
+        rv = FileLoader(self.basedir, self.filename).loadConfig()
         self.assertIsInstance(rv, config.MasterConfig)
 
         # make sure all of the loaders and checkers are called

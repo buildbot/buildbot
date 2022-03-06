@@ -17,15 +17,16 @@
 import os
 import sys
 
-from buildbot import config
+from buildbot.config.errors import ConfigErrors
+from buildbot.config.master import FileLoader
 from buildbot.scripts.base import getConfigFileFromTac
 from buildbot.util import in_reactor
 
 
 def _loadConfig(basedir, configFile, quiet):
     try:
-        config.FileLoader(basedir, configFile).loadConfig()
-    except config.ConfigErrors as e:
+        FileLoader(basedir, configFile).loadConfig()
+    except ConfigErrors as e:
         if not quiet:
             print("Configuration Errors:", file=sys.stderr)
             for e in e.errors:

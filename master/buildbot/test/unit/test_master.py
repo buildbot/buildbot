@@ -28,6 +28,7 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import master
 from buildbot import monkeypatches
+from buildbot.config.master import FileLoader
 from buildbot.db import exceptions
 from buildbot.interfaces import IConfigLoader
 from buildbot.test import fakedb
@@ -70,7 +71,7 @@ class InitTests(unittest.SynchronousTestCase):
         `FileLoader` pointing at `"master.cfg"`.
         """
         m = master.BuildMaster(".", reactor=reactor)
-        self.assertEqual(m.config_loader, config.FileLoader(".", "master.cfg"))
+        self.assertEqual(m.config_loader, FileLoader(".", "master.cfg"))
 
 
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
