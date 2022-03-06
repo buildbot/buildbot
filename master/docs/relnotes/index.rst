@@ -8,6 +8,73 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.5.0`` ( ``2022-03-06`` )
+=====================================
+
+Bug fixes
+---------
+
+- Improved handling of "The container operating system does not match the host operating system" error on Docker on Windows to mark the build as erroneous so that it's not retried.
+- Fixed rare ``AlreadyCalledError`` exceptions in the logs when worker worker connection is lost at the same time it is delivering final outcome of a command.
+- Fixed errors when accessing non-existing build via REST API when an endpoint matching rule with builder filter was present.
+- Fixed an error in ``CMake`` passing options and definitions on the cmake command line.
+- Fixed an error when handling command management errors on the worker side (regression since v3.0.0).
+- Fixed updating build step summary with mock state changes for MockBuildSRPM and MockRebuild.
+- Fixed support for optional ``builder`` parameter used in RebuildBuildEndpointMatcher (:issue:`6307`).
+- Fixed error that caused builds to become stuck in building state until next master restart if builds that were in the process of being interrupted lost connection to the worker.
+- Fixed Gerrit change sources to emit changes with proper branch name instead of one containing ``refs/heads/`` as the prefix.
+- Fixed handling of ``build_wait_timeout`` on latent workers which previously could result in latent worker being shut down while a build is running in certain scenarios (:issue:`5988`).
+- Fixed problem on MySQL when using master names or builder tags that differ only by case.
+- Fixed timed schedulers not scheduling builds the first time they are enabled with ``onlyIfChanged=True`` when there are no important changes.
+  In such case the state of the code is not known, so a build must be run to establish the baseline.
+- Switched Bitbucket OAuth client from the deprecated 'teams' APIs to the new 'workspaces' APIs
+- Fixed errors when killing a process on a worker fails due to any reason (e.g. permission error or process being already exited) (:issue:`6140`).
+- Fixed updates to page title in the web UI.
+  Web UI now shows the configured buildbot title within the page title.
+
+Improved Documentation
+----------------------
+
+- Fixed brackets in section `2.4.2.4 - How to populate secrets in a build` (:issue:`6417`).
+
+Features
+--------
+
+- The use of Renderables when constructing payload For `JSONStringDownload` is now allowed.
+- Added ``alwaysPull`` support when using ``dockerfile`` parameter of ``DockerLatentWorker``.
+- Base Debian image has been upgraded to Debian Bullseye for the Buildbot master.
+- Added rendering support to ``docker_host`` and ``hostconfig`` parameters of ``DockerLatentWorker``.
+- ``MailNotifier`` reporter now sends HTML messages by default.
+- ``MessageFormatter`` will now use a default subject value if one is not specified.
+- The default templates used in message formatters have been improved to supply more information.
+  Separate default templates for html messages have been provided.
+- Added ``buildbot_title``, ``result_names`` and ``is_buildset`` keys to the data passed to ``MessageFormatter`` instances for message rendering.
+- Added ``target`` support when using ``dockerfile`` parameter of ``DockerLatentWorker``.
+- Simplified :bb:cfg:`prioritizeBuilders` default function to make an example easier to customize.
+- Buildbot now exposes its internal framework for writing tests of custom build steps.
+  Currently the API is experimental and subject to change.
+- Implemented detection of too long step and builder property names to produce errors at config time if possible.
+
+Deprecations and Removals
+-------------------------
+
+- Deprecated ``subject`` argument of ``BuildStatusGenerator`` and ``BuildSetStatusGenerator`` status generators.
+  Use ``subject`` argument of corresponding message formatters.
+
+
+Buildbot ``3.4.1`` ( ``2022-02-09`` )
+=====================================
+
+Bug fixes
+---------
+
+- Updated Bitbucket API URL for ``BitbucketPullrequestPoller``.
+- Fixed a crash in ``BitbucketPullrequestPoller`` (:issue:`4153`)
+- Fixed installation of master and worker as Windows service from wheel package (regression since 3.4.0)  (:issue:`6294`)
+- Fixed occasional exceptions when using Visual Studio steps (:issue:`5698`).
+- Fixed rare "Did you maybe forget to yield the method" errors coming from the log subsystem.
+
+
 Buildbot ``3.4.0`` ( ``2021-10-15`` )
 =====================================
 

@@ -1,1 +1,0 @@
-Fix support for optional `builder` parameter used in RebuildBuildEndpointMatcher (:issue:`6307`).

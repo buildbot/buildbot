@@ -1,1 +1,0 @@
-Fixed handling of ``build_wait_timeout`` on latent workers which previously could result in latent worker being shut down while a build is running in certain scenarios (:issue:`5988`).

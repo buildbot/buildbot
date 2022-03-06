@@ -138,7 +138,7 @@ As a shortcut, ``d.addCallback`` can work as a decorator:
     In general, the :class:`inlineCallbacks` method is preferred inside new code as it keeps the code easier to read.
     As a general rule of thumb, when you need more than 2 callbacks in the same method, it's time to switch to  :class:`inlineCallbacks`.
     This would be for example the case for the :py:func:`getRevInfo` example.
-    See this `discussion <https://github.com/buildbot/buildbot/pull/2523>`_ with Twisted experts for more information.
+    See this `discussion <:pull:`2523`>`_ with Twisted experts for more information.
 
 Be careful with local variables. For example, if ``parse_rev_parse``, above,
 merely assigned ``rev = res.strip()``, then that variable would be local to

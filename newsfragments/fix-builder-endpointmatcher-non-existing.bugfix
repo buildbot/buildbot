@@ -1,1 +1,0 @@
-Fixed errors when accessing non-existing build via REST API when an endpoint matching rule with builder filter was present.

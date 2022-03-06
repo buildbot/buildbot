@@ -1,2 +1,0 @@
-Fixed timed schedulers not scheduling builds the first time they are enabled with ``onlyIfChanged=True`` when there are no important changes.
-In such case the state of the code is not known, so a build must be run to establish the baseline.

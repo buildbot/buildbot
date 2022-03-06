@@ -1,1 +1,0 @@
-Fixed errors when killing a process on a worker fails due to any reason (e.g. permission error or process being already exited) (#6140).
