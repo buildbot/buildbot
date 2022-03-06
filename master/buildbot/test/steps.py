@@ -77,12 +77,12 @@ def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
     missing_in_exp, missing_in_cmd, diff = _dict_diff(exp_args, got_args)
     if missing_in_exp:
         missing_dict = {key: got_args[key] for key in missing_in_exp}
-        text += f'Keys in cmd missing from expectation: {missing_dict!r}\n'
+        text += f'Keys in command missing from expectation: {missing_dict!r}\n'
     if missing_in_cmd:
         missing_dict = {key: exp_args[key] for key in missing_in_cmd}
         text += f'Keys in expectation missing from command: {missing_dict!r}\n'
     if diff:
-        formatted_diff = [f'"{d[0]}": expected {d[1]!r}, got {d[2]!r}' for d in diff]
+        formatted_diff = [f'"{d[0]}":\nexpected: {d[1]!r}\ngot:      {d[2]!r}\n' for d in diff]
         text += ('Key differences between expectation and command: {0}\n'.format(
             '\n'.join(formatted_diff)))
     return text
