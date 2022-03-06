@@ -29,12 +29,13 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
     def findMasterId(self, name):
         tbl = self.db.model.masters
+        name_hash = self.hashColumns(name)
         return self.findSomethingId(
             tbl=tbl,
-            whereclause=(tbl.c.name == name),
+            whereclause=(tbl.c.name_hash == name_hash),
             insert_values=dict(
                 name=name,
-                name_hash=self.hashColumns(name),
+                name_hash=name_hash,
                 active=0,  # initially inactive
                 last_active=int(self.master.reactor.seconds())
             ))
