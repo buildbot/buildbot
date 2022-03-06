@@ -161,12 +161,6 @@ class Expect:
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
 
-    def nestedExpectations(self):
-        """
-        Any sub-expectations that should be validated.
-        """
-        return []
-
     def __repr__(self):
         return "Expect(" + repr(self.remote_command) + ")"
 
@@ -795,17 +789,6 @@ class TestBuildStepMixin:
     @defer.inlineCallbacks
     def _validate_expectation(self, exp, command):
         got = (command.remote_command, self._cleanup_args(command.args))
-
-        for child_exp in exp.nestedExpectations():
-            try:
-                yield self._validate_expectation(child_exp, command)
-            except AssertionError as e:
-                # log this error, as the step may swallow the AssertionError or
-                # otherwise obscure the failure.  Trial will see the exception in
-                # the log and print an [ERROR].  This may result in
-                # double-reporting, but that's better than non-reporting!
-                log.err()
-                raise e
 
         self.assertEqual(exp.interrupted, command.interrupted)
 
