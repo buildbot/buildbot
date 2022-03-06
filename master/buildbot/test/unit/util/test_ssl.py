@@ -14,15 +14,14 @@
 # Copyright Buildbot Team Members
 
 
-import mock
-
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.util import ssl
 
 
-class Tests(unittest.TestCase):
+class Tests(unittest.TestCase, ConfigErrorsMixin):
 
     @ssl.skipUnless
     def test_ClientContextFactory(self):
@@ -36,9 +35,9 @@ class Tests(unittest.TestCase):
         try:
             ssl.ssl_import_error = "lib xxx do not exist"
             ssl.has_ssl = False
-            self.patch(config, "_errors", mock.Mock())
-            ssl.ensureHasSSL("myplugin")
-            config._errors.addError.assert_called_with(
+            with config.capture_config_errors() as errors:
+                ssl.ensureHasSSL("myplugin")
+            self.assertConfigError(errors,
                 "TLS dependencies required for myplugin are not installed : "
                 "lib xxx do not exist\n pip install 'buildbot[tls]'")
         finally:

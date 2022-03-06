@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import contextlib
 import datetime
 import os
 import re
@@ -75,6 +76,22 @@ def error(error, always_raise=False):
         _errors.addError(error)
     else:
         raise ConfigErrors([error])
+
+
+@contextlib.contextmanager
+def capture_config_errors(raise_on_error=False):
+    global _errors
+    prev_errors = _errors
+    _errors = errors = ConfigErrors()
+    try:
+        yield errors
+    except ConfigErrors as e:
+        errors.merge(e)
+    finally:
+        _errors = prev_errors
+
+    if raise_on_error and errors:
+        raise errors
 
 
 _in_unit_tests = False
@@ -147,20 +164,9 @@ class FileLoader(ComparableMixin):
     def loadConfig(self):
         # from here on out we can batch errors together for the user's
         # convenience
-        global _errors
-        _errors = errors = ConfigErrors()
-
-        try:
-            filename, config_dict = loadConfigDict(
-                self.basedir, self.configFileName)
+        with capture_config_errors(raise_on_error=True):
+            filename, config_dict = loadConfigDict(self.basedir, self.configFileName)
             config = MasterConfig.loadFromDict(config_dict, filename)
-        except ConfigErrors as e:
-            errors.merge(e)
-        finally:
-            _errors = None
-
-        if errors:
-            raise errors
 
         return config
 
@@ -288,23 +294,21 @@ class MasterConfig(util.ComparableMixin):
     @classmethod
     def loadFromDict(cls, config_dict, filename):
         # warning, all of this is loaded from a thread
-        global _errors
-        _errors = errors = ConfigErrors()
 
-        # check for unknown keys
-        unknown_keys = set(config_dict.keys()) - cls._known_config_keys
-        if unknown_keys:
-            if len(unknown_keys) == 1:
-                error(f'Unknown BuildmasterConfig key {unknown_keys.pop()}')
-            else:
-                error(f"Unknown BuildmasterConfig keys {', '.join(sorted(unknown_keys))}")
+        with capture_config_errors(raise_on_error=True):
+            # check for unknown keys
+            unknown_keys = set(config_dict.keys()) - cls._known_config_keys
+            if unknown_keys:
+                if len(unknown_keys) == 1:
+                    error(f'Unknown BuildmasterConfig key {unknown_keys.pop()}')
+                else:
+                    error(f"Unknown BuildmasterConfig keys {', '.join(sorted(unknown_keys))}")
 
-        # instantiate a new config object, which will apply defaults
-        # automatically
-        config = cls()
+            # instantiate a new config object, which will apply defaults
+            # automatically
+            config = cls()
 
-        # and defer the rest to sub-functions, for code clarity
-        try:
+            # and defer the rest to sub-functions, for code clarity
             config.run_configurators(filename, config_dict)
             config.load_global(filename, config_dict)
             config.load_validation(filename, config_dict)
@@ -329,11 +333,6 @@ class MasterConfig(util.ComparableMixin):
             config.check_builders()
             config.check_ports()
             config.check_machines()
-        finally:
-            _errors = None
-
-        if errors:
-            raise errors
 
         return config
 
