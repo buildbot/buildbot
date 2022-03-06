@@ -184,13 +184,6 @@ class Expect:
         """
         raise failure
 
-    def shouldAssertCommandEqualExpectation(self):
-        """
-        Whether or not we should validate that the current command matches the expectation.
-        Some expectations may not have a way to match a command.
-        """
-        return True
-
     def shouldKeepMatchingAfter(self, command):
         """
         Expectations are by default not kept matching multiple commands.
@@ -846,17 +839,16 @@ class TestBuildStepMixin:
                 log.err()
                 exp.raiseExpectationFailure(child_exp, e)
 
-        if exp.shouldAssertCommandEqualExpectation():
-            self.assertEqual(exp.interrupted, command.interrupted)
+        self.assertEqual(exp.interrupted, command.interrupted)
 
-            # first check any ExpectedRemoteReference instances
-            exp_tup = (exp.remote_command, self._cleanup_args(exp.args))
-            if exp_tup != got:
-                cmd_dif = _describe_cmd_difference(exp.remote_command, exp.args,
-                                                   command.remote_command, command.args)
-                msg = ("Command contents different from expected (command index: "
-                       f"{self._expected_remote_commands_popped}); {cmd_dif}")
-                raise AssertionError(msg)
+        # first check any ExpectedRemoteReference instances
+        exp_tup = (exp.remote_command, self._cleanup_args(exp.args))
+        if exp_tup != got:
+            cmd_dif = _describe_cmd_difference(exp.remote_command, exp.args,
+                                               command.remote_command, command.args)
+            msg = ("Command contents different from expected (command index: "
+                   f"{self._expected_remote_commands_popped}); {cmd_dif}")
+            raise AssertionError(msg)
 
         yield exp.runBehaviors(command)
 
