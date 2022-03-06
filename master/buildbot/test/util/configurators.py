@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.config import MasterConfig
+from buildbot.config.master import MasterConfig
 
 
 class ConfiguratorMixin:

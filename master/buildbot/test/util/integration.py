@@ -27,7 +27,7 @@ from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 from zope.interface import implementer
 
-from buildbot.config import MasterConfig
+from buildbot.config.master import MasterConfig
 from buildbot.data import resultspec
 from buildbot.interfaces import IConfigLoader
 from buildbot.master import BuildMaster

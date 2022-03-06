@@ -19,7 +19,7 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
+from buildbot.config.master import MasterConfig
 from buildbot.process import debug
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -35,7 +35,7 @@ class TestDebugServices(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = mock.Mock(name='master')
-        self.config = config.MasterConfig()
+        self.config = MasterConfig()
 
     @defer.inlineCallbacks
     def test_reconfigService_manhole(self):

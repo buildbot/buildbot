@@ -205,7 +205,7 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         self.assertEqual(rv, {'x': 10})
 
 
-class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
+class MasterConfigTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
     maxDiff = None
 
     def setUp(self):
@@ -220,7 +220,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def patch_load_helpers(self):
         # patch out all of the "helpers" for loadConfig with null functions
-        for n in dir(config.MasterConfig):
+        for n in dir(config.master.MasterConfig):
             if n.startswith('load_'):
                 typ = 'loader'
             elif n.startswith('check_'):
@@ -228,14 +228,14 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             else:
                 continue
 
-            v = getattr(config.MasterConfig, n)
+            v = getattr(config.master.MasterConfig, n)
             if callable(v):
                 if typ == 'loader':
-                    self.patch(config.MasterConfig, n,
+                    self.patch(config.master.MasterConfig, n,
                                mock.Mock(side_effect=lambda filename,
                                          config_dict: None))
                 else:
-                    self.patch(config.MasterConfig, n,
+                    self.patch(config.master.MasterConfig, n,
                                mock.Mock(side_effect=lambda: None))
 
     def install_config_file(self, config_file, other_files=None):
@@ -250,7 +250,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
     # tests
 
     def test_defaults(self):
-        cfg = config.MasterConfig()
+        cfg = config.master.MasterConfig()
         expected = dict(
             # validation,
             db=dict(
@@ -277,7 +277,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def test_defaults_validation(self):
         # re's aren't comparable, but we can make sure the keys match
-        cfg = config.MasterConfig()
+        cfg = config.master.MasterConfig()
         self.assertEqual(sorted(cfg.validation.keys()),
                          sorted([
                              'branch', 'revision', 'property_name', 'property_value',
@@ -323,7 +323,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig = dict()
                 """)
         rv = FileLoader(self.basedir, self.filename).loadConfig()
-        self.assertIsInstance(rv, config.MasterConfig)
+        self.assertIsInstance(rv, config.master.MasterConfig)
 
         # make sure all of the loaders and checkers are called
         self.assertTrue(rv.load_global.called)
@@ -346,7 +346,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertTrue(rv.check_machines.called)
 
     def test_preChangeGenerator(self):
-        cfg = config.MasterConfig()
+        cfg = config.master.MasterConfig()
         self.assertEqual({
             'author': None,
             'files': None,
@@ -368,7 +368,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     filename = 'test.cfg'
 
     def setUp(self):
-        self.cfg = config.MasterConfig()
+        self.cfg = config.master.MasterConfig()
 
     # utils
 
@@ -1014,7 +1014,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def setUp(self):
-        self.cfg = config.MasterConfig()
+        self.cfg = config.master.MasterConfig()
 
     # utils
 
@@ -1283,7 +1283,7 @@ class MasterConfig_old_worker_api(unittest.TestCase):
     filename = "test.cfg"
 
     def setUp(self):
-        self.cfg = config.MasterConfig()
+        self.cfg = config.master.MasterConfig()
 
     def test_workers_new_api(self):
         with assertNotProducesWarnings(DeprecatedApiWarning):

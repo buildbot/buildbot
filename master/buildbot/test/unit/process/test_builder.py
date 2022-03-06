@@ -23,6 +23,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.config.master import MasterConfig
 from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.process.properties import Properties
@@ -79,7 +80,7 @@ class BuilderMixin:
 
         self.bldr.startService()
 
-        mastercfg = config.MasterConfig()
+        mastercfg = MasterConfig()
         mastercfg.builders = [self.builder_config]
         if not noReconfig:
             return self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
@@ -610,7 +611,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         new_builder_config.description = "New"
         new_builder_config.tags = ["NewTag"]
 
-        mastercfg = config.MasterConfig()
+        mastercfg = MasterConfig()
         mastercfg.builders = [new_builder_config]
         yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
 
@@ -634,7 +635,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         new_builder_config.description = new_desc
         new_builder_config.tags = new_tags
 
-        mastercfg = config.MasterConfig()
+        mastercfg = MasterConfig()
         mastercfg.builders = [new_builder_config]
 
         builder_updates = []
@@ -649,7 +650,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         yield self.makeBuilder(description="Old", tags=["OldTag"])
         new_builder_config = config.BuilderConfig(**self.config_args)
 
-        mastercfg = config.MasterConfig()
+        mastercfg = MasterConfig()
         mastercfg.builders = [new_builder_config]
 
         builder_updates = []

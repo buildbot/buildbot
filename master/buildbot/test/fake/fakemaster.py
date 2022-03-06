@@ -93,7 +93,7 @@ class FakeMaster(service.MasterService):
         self._master_id = master_id
         self.reactor = reactor
         self.objectids = {}
-        self.config = config.MasterConfig()
+        self.config = config.master.MasterConfig()
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
         self.initLock = defer.DeferredLock()
