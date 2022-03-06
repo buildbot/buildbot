@@ -161,18 +161,6 @@ class Expect:
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
 
-    def expectationPassed(self, exp):
-        """
-        Some expectations need to be able to distinguish pass/fail of
-        nested expectations.
-
-        This will get invoked once for every nested exception and once
-        for self unless anything fails.  Failures are passed to raiseExpectationFailure for
-        handling.
-
-        @param exp: The nested exception that passed or self.
-        """
-
     def raiseExpectationFailure(self, exp, failure):
         """
         Some expectations may wish to suppress failure.
@@ -830,7 +818,6 @@ class TestBuildStepMixin:
         for child_exp in exp.nestedExpectations():
             try:
                 yield self._validate_expectation(child_exp, command)
-                exp.expectationPassed(exp)
             except AssertionError as e:
                 # log this error, as the step may swallow the AssertionError or
                 # otherwise obscure the failure.  Trial will see the exception in
@@ -863,7 +850,6 @@ class TestBuildStepMixin:
         exp = self.expected_remote_commands[0]
         try:
             yield self._validate_expectation(exp, command)
-            exp.expectationPassed(exp)
         except AssertionError as e:
             # log this error, as the step may swallow the AssertionError or
             # otherwise obscure the failure.  Trial will see the exception in
