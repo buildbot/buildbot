@@ -37,6 +37,7 @@ from buildbot import locks
 from buildbot import revlinks
 from buildbot import worker
 from buildbot.changes import base as changes_base
+from buildbot.config.errors import capture_config_errors
 from buildbot.process import factory
 from buildbot.process import properties
 from buildbot.schedulers import base as schedulers_base
@@ -291,7 +292,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 config.error('oh noes!')
                 config.error('noes too!')""")
 
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             config.FileLoader(self.basedir, self.filename).loadConfig()
 
         self.assertEqual(errors.errors, ['oh noes!', 'noes too!',
@@ -387,29 +388,29 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(**global_defaults)
 
     def test_load_global_string_param_not_string(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {"title": 10})
         self.assertConfigError(errors, 'must be a string')
 
     def test_load_global_int_param_not_int(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'changeHorizon': 'yes'})
 
         self.assertConfigError(errors, 'must be an int')
 
     def test_load_global_protocols_not_dict(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'protocols': "test"})
         self.assertConfigError(errors, "c['protocols'] must be dict")
 
     def test_load_global_protocols_key_int(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'protocols': {321: {"port": 123}}})
 
         self.assertConfigError(errors, "c['protocols'] keys must be strings")
 
     def test_load_global_protocols_value_not_dict(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'protocols': {"pb": 123}})
 
         self.assertConfigError(errors, "c['protocols']['pb'] must be a dict")
@@ -457,7 +458,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                  logCompressionMethod='bz2')
 
     def test_load_global_logCompressionMethod_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'logCompressionMethod': 'foo'})
 
         self.assertConfigError(
@@ -469,7 +470,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                  codebaseGenerator=func)
 
     def test_load_global_codebaseGenerator_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'codebaseGenerator': 'dummy'})
 
         self.assertConfigError(errors,
@@ -492,7 +493,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(properties=dict(x=10)), properties=exp)
 
     def test_load_global_properties_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'properties': 'yes'})
 
         self.assertConfigError(errors, "must be a dictionary")
@@ -507,7 +508,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                  collapseRequests=callable)
 
     def test_load_global_collapseRequests_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'collapseRequests': 'yes'})
 
         self.assertConfigError(errors,
@@ -519,7 +520,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                  prioritizeBuilders=callable)
 
     def test_load_global_prioritizeBuilders_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'prioritizeBuilders': 'yes'})
 
         self.assertConfigError(errors, "must be a callable")
@@ -541,7 +542,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                  revlink=callable)
 
     def test_load_global_revlink_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'revlink': ''})
 
         self.assertConfigError(errors, "must be a callable")
@@ -554,13 +555,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                          ]))
 
     def test_load_validation_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_validation(self.filename, {'validation': 'plz'})
 
         self.assertConfigError(errors, "must be a dictionary")
 
     def test_load_validation_unk_keys(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_validation(self.filename, {'validation': {'users': '.*'}})
 
         self.assertConfigError(errors, "unrecognized validation key(s)")
@@ -587,7 +588,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_unk_keys(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_db(self.filename, {'db': {'db_url': 'abcd', 'bar': 'bar'}})
 
         self.assertConfigError(errors, "unrecognized keys in")
@@ -602,13 +603,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(mq=dict(type='simple'))
 
     def test_load_mq_unk_type(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_mq(self.filename, {'mq': {'type': 'foo'}})
 
         self.assertConfigError(errors, "mq type 'foo' is not known")
 
     def test_load_mq_unk_keys(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_mq(self.filename, {'mq': {'bar': 'bar'}})
 
         self.assertConfigError(errors, "unrecognized keys in")
@@ -618,7 +619,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(metrics=None)
 
     def test_load_metrics_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_metrics(self.filename, {'metrics': 13})
 
         self.assertConfigError(errors, "must be a dictionary")
@@ -633,7 +634,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(caches=dict(Changes=10, Builds=15))
 
     def test_load_caches_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_caches(self.filename, {'caches': 13})
 
         self.assertConfigError(errors, "must be a dictionary")
@@ -644,7 +645,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(caches=dict(Builds=13, Changes=10))
 
     def test_load_caches_buildCacheSize_and_caches(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_caches(self.filename, {'buildCacheSize': 13, 'caches': {'builds': 11}})
 
         self.assertConfigError(errors, "cannot specify")
@@ -655,7 +656,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(caches=dict(Changes=13, Builds=15))
 
     def test_load_caches_changeCacheSize_and_caches(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_caches(self.filename, {'changeCacheSize': 13, 'caches': {'changes': 11}})
 
         self.assertConfigError(errors, "cannot specify")
@@ -669,7 +670,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         """
         Test that non-integer cache sizes are not allowed.
         """
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_caches(self.filename, {'caches': {'foo': "1"}})
 
         self.assertConfigError(errors, "value for cache size 'foo' must be an integer")
@@ -678,7 +679,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         """
         Test that cache sizes less then 1 are not allowed.
         """
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_caches(self.filename, {'caches': {'Changes': -12}})
 
         self.assertConfigError(errors, "'Changes' cache size must be at least 1, got '-12'")
@@ -688,19 +689,19 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(schedulers={})
 
     def test_load_schedulers_not_list(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_schedulers(self.filename, {'schedulers': {}})
 
         self.assertConfigError(errors, "must be a list of")
 
     def test_load_schedulers_not_instance(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_schedulers(self.filename, {'schedulers': [mock.Mock()]})
 
         self.assertConfigError(errors, "must be a list of")
 
     def test_load_schedulers_dupe(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             sch1 = FakeScheduler(name='sch')
             sch2 = FakeScheduler(name='sch')
             self.cfg.load_schedulers(self.filename, {'schedulers': [sch1, sch2]})
@@ -717,13 +718,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(builders=[])
 
     def test_load_builders_not_list(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_builders(self.filename, {'builders': {}})
 
         self.assertConfigError(errors, "must be a list")
 
     def test_load_builders_not_instance(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_builders(self.filename, {'builders': [mock.Mock()]})
         self.assertConfigError(errors, "is not a builder config (in c['builders']")
 
@@ -755,12 +756,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(workers=[])
 
     def test_load_workers_not_list(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_workers(self.filename, {'workers': {}})
         self.assertConfigError(errors, "must be a list")
 
     def test_load_workers_not_instance(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_workers(self.filename, {'workers': [mock.Mock()]})
 
         self.assertConfigError(errors, "must be a list of")
@@ -769,7 +770,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         'debug', 'change', 'status'
     ])
     def test_load_workers_reserved_names(self, worker_name):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_workers(self.filename, {'workers': [worker.Worker(worker_name, 'x')]})
 
         self.assertConfigError(errors, "is reserved")
@@ -781,20 +782,20 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         ("dot", "a.b"),
     ])
     def test_load_workers_not_identifiers(self, name, worker_name):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_workers(self.filename, {'workers': [worker.Worker(worker_name, 'x')]})
 
         self.assertConfigError(errors, "is not an identifier")
 
     def test_load_workers_too_long(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             name = "a" * 51
             self.cfg.load_workers(self.filename, {'workers': [worker.Worker(name, 'x')]})
 
         self.assertConfigError(errors, "is longer than")
 
     def test_load_workers_empty(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             name = ""
             self.cfg.load_workers(self.filename, {'workers': [worker.Worker(name, 'x')]})
             errors.errors[:] = errors.errors[1:2]  # only get necessary error
@@ -812,7 +813,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(change_sources=[])
 
     def test_load_change_sources_not_instance(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_change_sources(self.filename, {'change_source': [mock.Mock()]})
 
         self.assertConfigError(errors, "must be a list of")
@@ -834,13 +835,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(machines=[])
 
     def test_load_machines_not_instance(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_machines(self.filename, {'machines': [mock.Mock()]})
 
         self.assertConfigError(errors, "must be a list of")
 
     def test_load_machines_single(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             mm = FakeMachine(name='a')
             self.cfg.load_machines(self.filename, {'machines': mm})
 
@@ -857,7 +858,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(user_managers=[])
 
     def test_load_user_managers_not_list(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_user_managers(self.filename, {'user_managers': 'foo'})
 
         self.assertConfigError(errors, "must be a list")
@@ -929,7 +930,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                     logfileName='http.log'))
 
     def test_load_www_versions_not_list(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             custom_versions = {
                 'Test Custom Component': '0.0.1',
                 'Test Custom Component 2': '0.0.2',
@@ -938,20 +939,20 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, 'Invalid www configuration value of versions')
 
     def test_load_www_versions_value_invalid(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             custom_versions = [('a', '1'), 'abc', ('b',)]
             self.cfg.load_www(self.filename, {'www': {'versions': custom_versions}})
 
         self.assertConfigError(errors, 'Invalid www configuration value of versions')
 
     def test_load_www_cookie_expiration_time_not_timedelta(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_www(self.filename, {'www': {"cookie_expiration_time": 1}})
 
         self.assertConfigError(errors, 'Invalid www["cookie_expiration_time"]')
 
     def test_load_www_unknown(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.load_www(self.filename, {"www": {"foo": "bar"}})
 
         self.assertConfigError(errors, "unknown www configuration parameter(s) foo")
@@ -975,7 +976,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         class MyService:
             pass
 
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             myService = MyService()
             self.cfg.load_services(self.filename, {'services': [myService]})
 
@@ -986,7 +987,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, errMsg)
 
     def test_load_services_duplicate(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             class MyService(service.BuildbotService):
                 name = 'myservice'
 
@@ -1073,14 +1074,14 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
     # tests
 
     def test_check_single_master_multimaster(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.multiMaster = True
             self.cfg.check_single_master()
 
         self.assertNoConfigErrors(errors)
 
     def test_check_single_master_no_builders(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_basic_attrs()
             self.cfg.builders = []
             self.cfg.check_single_master()
@@ -1088,7 +1089,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "no builders are configured")
 
     def test_check_single_master_no_workers(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_basic_attrs()
             self.cfg.workers = []
             self.cfg.check_single_master()
@@ -1096,7 +1097,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "no workers are configured")
 
     def test_check_single_master_unsch_builder(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_basic_attrs()
             b3 = mock.Mock()
             b3.name = 'b3'
@@ -1106,7 +1107,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "have no schedulers to drive them")
 
     def test_check_single_master_renderable_builderNames(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_basic_attrs()
             b3 = mock.Mock()
             b3.name = 'b3'
@@ -1119,7 +1120,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(errors)
 
     def test_check_schedulers_unknown_builder(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_basic_attrs()
             del self.cfg.builders[1]  # remove b2, leaving b1
 
@@ -1128,7 +1129,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "Unknown builder 'b2'")
 
     def test_check_schedulers_ignored_in_multiMaster(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_basic_attrs()
             del self.cfg.builders[1]  # remove b2, leaving b1
             self.cfg.multiMaster = True
@@ -1137,7 +1138,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(errors)
 
     def test_check_schedulers_renderable_builderNames(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_basic_attrs()
             sch2 = mock.Mock()
             sch2.listBuilderNames = lambda: properties.Interpolate('%(prop:foo)s')
@@ -1148,21 +1149,21 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(errors)
 
     def test_check_schedulers(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_basic_attrs()
             self.cfg.check_schedulers()
 
         self.assertNoConfigErrors(errors)
 
     def test_check_locks_dup_builder_lock(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_builder_locks(builder_lock='l', dup_builder_lock=True)
             self.cfg.check_locks()
 
         self.assertConfigError(errors, "Two locks share")
 
     def test_check_locks(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_builder_locks(builder_lock='bl')
             self.cfg.check_locks()
 
@@ -1170,7 +1171,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def test_check_locks_none(self):
         # no locks in the whole config, should be fine
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_builder_locks()
             self.cfg.check_locks()
 
@@ -1180,14 +1181,14 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         # check_locks() should be able to handle bare lock object,
         # lock objects that are not wrapped into LockAccess() object
 
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.setup_builder_locks(builder_lock='oldlock', bare_builder_lock=True)
             self.cfg.check_locks()
 
         self.assertNoConfigErrors(errors)
 
     def test_check_builders_unknown_worker(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             wrk = mock.Mock()
             wrk.workername = 'xyz'
             self.cfg.workers = [wrk]
@@ -1199,7 +1200,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "builder 'b1' uses unknown workers 'abc'")
 
     def test_check_builders_duplicate_name(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             b1 = FakeBuilder(workernames=[], name='b1', builddir='1')
             b2 = FakeBuilder(workernames=[], name='b1', builddir='2')
             self.cfg.builders = [b1, b2]
@@ -1209,7 +1210,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "duplicate builder name 'b1'")
 
     def test_check_builders_duplicate_builddir(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             b1 = FakeBuilder(workernames=[], name='b1', builddir='dir')
             b2 = FakeBuilder(workernames=[], name='b2', builddir='dir')
             self.cfg.builders = [b1, b2]
@@ -1219,7 +1220,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "duplicate builder builddir 'dir'")
 
     def test_check_builders(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             wrk = mock.Mock()
             wrk.workername = 'a'
             self.cfg.workers = [wrk]
@@ -1233,28 +1234,28 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(errors)
 
     def test_check_ports_protocols_set(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.protocols = {"pb": {"port": 10}}
             self.cfg.check_ports()
 
         self.assertNoConfigErrors(errors)
 
     def test_check_ports_protocols_not_set_workers(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.workers = [mock.Mock()]
             self.cfg.check_ports()
 
         self.assertConfigError(errors, "workers are configured, but c['protocols'] not")
 
     def test_check_ports_protocols_port_duplication(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.protocols = {"pb": {"port": 123}, "amp": {"port": 123}}
             self.cfg.check_ports()
 
         self.assertConfigError(errors, "Some of ports in c['protocols'] duplicated")
 
     def test_check_machines_unknown_name(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.workers = [
                 FakeWorker(name='wa', machine_name='unk')
             ]
@@ -1266,7 +1267,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, 'uses unknown machine')
 
     def test_check_machines_duplicate_name(self):
-        with config.capture_config_errors() as errors:
+        with capture_config_errors() as errors:
             self.cfg.machines = [
                 FakeMachine(name='a'),
                 FakeMachine(name='a')

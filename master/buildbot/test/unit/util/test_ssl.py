@@ -16,7 +16,7 @@
 
 from twisted.trial import unittest
 
-from buildbot import config
+from buildbot.config.errors import capture_config_errors
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.util import ssl
 
@@ -35,7 +35,7 @@ class Tests(unittest.TestCase, ConfigErrorsMixin):
         try:
             ssl.ssl_import_error = "lib xxx do not exist"
             ssl.has_ssl = False
-            with config.capture_config_errors() as errors:
+            with capture_config_errors() as errors:
                 ssl.ensureHasSSL("myplugin")
             self.assertConfigError(errors,
                 "TLS dependencies required for myplugin are not installed : "
