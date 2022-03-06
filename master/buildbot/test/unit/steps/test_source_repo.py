@@ -20,11 +20,11 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import repo
-from buildbot.test.expect import ExpectMkdir
-from buildbot.test.expect import ExpectRmdir
-from buildbot.test.expect import ExpectShell
-from buildbot.test.expect import ExpectStat
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectMkdir
+from buildbot.test.steps import ExpectRmdir
+from buildbot.test.steps import ExpectShell
+from buildbot.test.steps import ExpectStat
 from buildbot.test.util import sourcesteps
 
 

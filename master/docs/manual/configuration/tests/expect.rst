@@ -8,7 +8,7 @@ In all cases the arguments used to construct the expectation is what is expected
 The methods called on the command are used to build a list of effects that the step will observe.
 
 
-.. py:class:: buildbot.test.expect.Expect
+.. py:class:: buildbot.test.steps.Expect
 
     This class is the base class of all command expectation classes.
     It must not be instantiated by the user.
@@ -59,7 +59,7 @@ The methods called on the command are used to build a list of effects that the s
 ExpectShell
 ~~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectShell(Expect)
+.. py:class:: buildbot.test.steps.ExpectShell(Expect)
 
     This class represents a ``shell`` command sent to the worker.
 
@@ -81,7 +81,7 @@ ExpectShell
 ExpectStat
 ~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectStat(Expect)
+.. py:class:: buildbot.test.steps.ExpectStat(Expect)
 
     This class represents a ``stat`` command sent to the worker.
 
@@ -115,7 +115,7 @@ ExpectStat
 ExpectUploadFile
 ~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectUploadFile(Expect)
+.. py:class:: buildbot.test.steps.ExpectUploadFile(Expect)
 
     This class represents a ``uploadFile`` command sent to the worker.
 
@@ -136,7 +136,7 @@ ExpectUploadFile
 ExpectDownloadFile
 ~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectDownloadFile(Expect)
+.. py:class:: buildbot.test.steps.ExpectDownloadFile(Expect)
 
     This class represents a ``downloadFile`` command sent to the worker.
     Tests usually check what the step attempts to send to the worker by calling ``.download_string`` and checking what data the supplied callable receives.
@@ -158,7 +158,7 @@ ExpectDownloadFile
 ExpectMkdir
 ~~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectMkdir(Expect)
+.. py:class:: buildbot.test.steps.ExpectMkdir(Expect)
 
     This class represents a ``mkdir`` command sent to the worker.
 
@@ -172,7 +172,7 @@ ExpectMkdir
 ExpectRmdir
 ~~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectRmdir(Expect)
+.. py:class:: buildbot.test.steps.ExpectRmdir(Expect)
 
     This class represents a ``rmdir`` command sent to the worker.
 
@@ -186,7 +186,7 @@ ExpectRmdir
 ExpectCpdir
 ~~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectCpdir(Expect)
+.. py:class:: buildbot.test.steps.ExpectCpdir(Expect)
 
     This class represents a ``cpdir`` command sent to the worker.
 
@@ -200,7 +200,7 @@ ExpectCpdir
 ExpectRmfile
 ~~~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectRmfile(Expect)
+.. py:class:: buildbot.test.steps.ExpectRmfile(Expect)
 
     This class represents a ``rmfile`` command sent to the worker.
 
@@ -213,7 +213,7 @@ ExpectRmfile
 ExpectGlob
 ~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectGlob(Expect)
+.. py:class:: buildbot.test.steps.ExpectGlob(Expect)
 
     This class represents a ``mkdir`` command sent to the worker.
 
@@ -232,7 +232,7 @@ ExpectGlob
 ExpectListdir
 ~~~~~~~~~~~~~
 
-.. py:class:: buildbot.test.expect.ExpectListdir(Expect)
+.. py:class:: buildbot.test.steps.ExpectListdir(Expect)
 
     This class represents a ``mkdir`` command sent to the worker.
 

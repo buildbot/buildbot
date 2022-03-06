@@ -32,13 +32,13 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.steps import transfer
-from buildbot.test.expect import ExpectDownloadFile
-from buildbot.test.expect import ExpectGlob
-from buildbot.test.expect import ExpectRemoteRef
-from buildbot.test.expect import ExpectStat
-from buildbot.test.expect import ExpectUploadDirectory
-from buildbot.test.expect import ExpectUploadFile
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectDownloadFile
+from buildbot.test.steps import ExpectGlob
+from buildbot.test.steps import ExpectRemoteRef
+from buildbot.test.steps import ExpectStat
+from buildbot.test.steps import ExpectUploadDirectory
+from buildbot.test.steps import ExpectUploadFile
 from buildbot.test.steps import TestBuildStepMixin
 
 

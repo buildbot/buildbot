@@ -23,8 +23,8 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import python
-from buildbot.test.expect import ExpectShell
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
 
 log_output_success = '''\

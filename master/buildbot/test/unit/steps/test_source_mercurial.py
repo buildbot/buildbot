@@ -23,12 +23,12 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import mercurial
-from buildbot.test.expect import ExpectDownloadFile
-from buildbot.test.expect import ExpectRemoteRef
-from buildbot.test.expect import ExpectRmdir
-from buildbot.test.expect import ExpectShell
-from buildbot.test.expect import ExpectStat
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectDownloadFile
+from buildbot.test.steps import ExpectRemoteRef
+from buildbot.test.steps import ExpectRmdir
+from buildbot.test.steps import ExpectShell
+from buildbot.test.steps import ExpectStat
 from buildbot.test.util import sourcesteps
 
 

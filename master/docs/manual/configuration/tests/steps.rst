@@ -77,7 +77,7 @@ TestBuildStepMixin
 
     .. py:method:: expect_commands(*commands)
 
-        :param commands: A list of commands that are expected to be run (a subclass of :class:`buildbot.test.expect.Expect`).
+        :param commands: A list of commands that are expected to be run (a subclass of :class:`buildbot.test.steps.Expect`).
 
         Sets up an expectation of step sending the given commands to worker.
 

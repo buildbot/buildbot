@@ -22,9 +22,9 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import pbuilder
-from buildbot.test.expect import ExpectShell
-from buildbot.test.expect import ExpectStat
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectShell
+from buildbot.test.steps import ExpectStat
 from buildbot.test.steps import TestBuildStepMixin
 
 
