@@ -1,0 +1,1 @@
+Fixed problem on MySQL when using master names that differ only by case.
