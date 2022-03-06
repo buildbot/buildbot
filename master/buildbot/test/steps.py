@@ -161,17 +161,6 @@ class Expect:
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
 
-    def raiseExpectationFailure(self, exp, failure):
-        """
-        Some expectations may wish to suppress failure.
-        The default expectation does not.
-
-        This will get invoked if the expectations fails on a command.
-
-        @param exp: the expectation that failed.  this could be self or a nested exception
-        """
-        raise failure
-
     def shouldKeepMatchingAfter(self, command):
         """
         Expectations are by default not kept matching multiple commands.
@@ -824,7 +813,7 @@ class TestBuildStepMixin:
                 # the log and print an [ERROR].  This may result in
                 # double-reporting, but that's better than non-reporting!
                 log.err()
-                exp.raiseExpectationFailure(child_exp, e)
+                raise e
 
         self.assertEqual(exp.interrupted, command.interrupted)
 
@@ -856,7 +845,7 @@ class TestBuildStepMixin:
             # the log and print an [ERROR].  This may result in
             # double-reporting, but that's better than non-reporting!
             log.err()
-            exp.raiseExpectationFailure(exp, e)
+            raise e
         finally:
             if not exp.shouldKeepMatchingAfter(command):
                 self.expected_remote_commands.pop(0)
