@@ -24,11 +24,11 @@ from twisted.trial import unittest
 from buildbot.changes import gitpoller
 from buildbot.test.fake.private_tempdir import MockPrivateTemporaryDirectory
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.runprocess import ExpectMasterShell
+from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import logging
-from buildbot.test.util.runprocess import ExpectMasterShell
-from buildbot.test.util.runprocess import MasterRunProcessMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
