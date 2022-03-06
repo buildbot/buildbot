@@ -28,6 +28,8 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import master
 from buildbot import monkeypatches
+from buildbot.config.master import FileLoader
+from buildbot.config.master import MasterConfig
 from buildbot.db import exceptions
 from buildbot.interfaces import IConfigLoader
 from buildbot.test import fakedb
@@ -50,7 +52,7 @@ class FailingLoader:
 class DefaultLoader:
 
     def loadConfig(self):
-        return config.MasterConfig()
+        return MasterConfig()
 
 
 class InitTests(unittest.SynchronousTestCase):
@@ -70,7 +72,7 @@ class InitTests(unittest.SynchronousTestCase):
         `FileLoader` pointing at `"master.cfg"`.
         """
         m = master.BuildMaster(".", reactor=reactor)
-        self.assertEqual(m.config_loader, config.FileLoader(".", "master.cfg"))
+        self.assertEqual(m.config_loader, FileLoader(".", "master.cfg"))
 
 
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
@@ -211,11 +213,11 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
 
     @defer.inlineCallbacks
     def test_reconfigService_db_url_changed(self):
-        old = self.master.config = config.MasterConfig()
+        old = self.master.config = MasterConfig()
         old.db['db_url'] = 'aaaa'
         yield self.master.reconfigServiceWithBuildbotConfig(old)
 
-        new = config.MasterConfig()
+        new = MasterConfig()
         new.db['db_url'] = 'bbbb'
 
         with self.assertRaises(config.ConfigErrors):

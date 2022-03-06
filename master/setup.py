@@ -165,6 +165,7 @@ setup_args = {
         "buildbot.worker.protocols.manager",
         "buildbot.changes",
         "buildbot.clients",
+        "buildbot.config",
         "buildbot.data",
         "buildbot.db",
         "buildbot.db.migrations.versions",
@@ -371,7 +372,7 @@ setup_args = {
                 ('svn.split_file_branches', 'split_file_branches'),
                 ('svn.split_file_alwaystrunk', 'split_file_alwaystrunk')]),
             ('buildbot.configurators.janitor', ['JanitorConfigurator']),
-            ('buildbot.config', ['BuilderConfig']),
+            ('buildbot.config.builder', ['BuilderConfig']),
             ('buildbot.locks', [
                 'MasterLock',
                 'WorkerLock',

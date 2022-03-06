@@ -20,7 +20,7 @@ from twisted.python.failure import Failure
 from twisted.spread import pb
 
 from buildbot.config import BuilderConfig
-from buildbot.config import MasterConfig
+from buildbot.config.master import MasterConfig
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled

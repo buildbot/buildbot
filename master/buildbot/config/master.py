@@ -28,56 +28,32 @@ from zope.interface import implementer
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import util
+from buildbot.config.builder import BuilderConfig
+from buildbot.config.errors import ConfigErrors
+from buildbot.config.errors import capture_config_errors
+from buildbot.config.errors import error
 from buildbot.interfaces import IRenderable
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import ComparableMixin
-from buildbot.util import bytes2unicode
-from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
-from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
 from buildbot.warnings import ConfigWarning
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
 
-
-class ConfigErrors(Exception):
-
-    def __init__(self, errors=None):
-        if errors is None:
-            errors = []
-        self.errors = errors[:]
-
-    def __str__(self):
-        return "\n".join(self.errors)
-
-    def addError(self, msg):
-        self.errors.append(msg)
-
-    def merge(self, errors):
-        self.errors.extend(errors.errors)
-
-    def __bool__(self):
-        return bool(len(self.errors))
-
-
-_errors = None
-
-
 DEFAULT_DB_URL = 'sqlite:///state.sqlite'
 
-RESERVED_UNDERSCORE_NAMES = ["__Janitor"]
-
-
-def error(error, always_raise=False):
-    if _errors is not None and not always_raise:
-        _errors.addError(error)
-    else:
-        raise ConfigErrors([error])
-
-
 _in_unit_tests = False
+
+
+def set_is_in_unit_tests(in_tests):
+    global _in_unit_tests
+    _in_unit_tests = in_tests
+
+
+def get_is_in_unit_tests():
+    return _in_unit_tests
 
 
 def loadConfigDict(basedir, configFileName):
@@ -138,20 +114,9 @@ class FileLoader(ComparableMixin):
     def loadConfig(self):
         # from here on out we can batch errors together for the user's
         # convenience
-        global _errors
-        _errors = errors = ConfigErrors()
-
-        try:
-            filename, config_dict = loadConfigDict(
-                self.basedir, self.configFileName)
+        with capture_config_errors(raise_on_error=True):
+            filename, config_dict = loadConfigDict(self.basedir, self.configFileName)
             config = MasterConfig.loadFromDict(config_dict, filename)
-        except ConfigErrors as e:
-            errors.merge(e)
-        finally:
-            _errors = None
-
-        if errors:
-            raise errors
 
         return config
 
@@ -279,23 +244,21 @@ class MasterConfig(util.ComparableMixin):
     @classmethod
     def loadFromDict(cls, config_dict, filename):
         # warning, all of this is loaded from a thread
-        global _errors
-        _errors = errors = ConfigErrors()
 
-        # check for unknown keys
-        unknown_keys = set(config_dict.keys()) - cls._known_config_keys
-        if unknown_keys:
-            if len(unknown_keys) == 1:
-                error(f'Unknown BuildmasterConfig key {unknown_keys.pop()}')
-            else:
-                error(f"Unknown BuildmasterConfig keys {', '.join(sorted(unknown_keys))}")
+        with capture_config_errors(raise_on_error=True):
+            # check for unknown keys
+            unknown_keys = set(config_dict.keys()) - cls._known_config_keys
+            if unknown_keys:
+                if len(unknown_keys) == 1:
+                    error(f'Unknown BuildmasterConfig key {unknown_keys.pop()}')
+                else:
+                    error(f"Unknown BuildmasterConfig keys {', '.join(sorted(unknown_keys))}")
 
-        # instantiate a new config object, which will apply defaults
-        # automatically
-        config = cls()
+            # instantiate a new config object, which will apply defaults
+            # automatically
+            config = cls()
 
-        # and defer the rest to sub-functions, for code clarity
-        try:
+            # and defer the rest to sub-functions, for code clarity
             config.run_configurators(filename, config_dict)
             config.load_global(filename, config_dict)
             config.load_validation(filename, config_dict)
@@ -320,11 +283,6 @@ class MasterConfig(util.ComparableMixin):
             config.check_builders()
             config.check_ports()
             config.check_machines()
-        finally:
-            _errors = None
-
-        if errors:
-            raise errors
 
         return config
 
@@ -374,7 +332,7 @@ class MasterConfig(util.ComparableMixin):
                        can_be_callable=True)
 
         if "buildbotNetUsageData" not in config_dict:
-            if _in_unit_tests:
+            if get_is_in_unit_tests():
                 self.buildbotNetUsageData = None
             else:
                 warnings.warn(
@@ -894,128 +852,3 @@ class MasterConfig(util.ComparableMixin):
         for w in self.workers:
             if w.machine_name is not None and w.machine_name not in seen_names:
                 error(f"worker '{w.name}' uses unknown machine '{w.machine_name}'")
-
-
-class BuilderConfig(util_config.ConfiguredMixin):
-
-    def __init__(self, name=None, workername=None, workernames=None,
-                 builddir=None, workerbuilddir=None, factory=None,
-                 tags=None,
-                 nextWorker=None, nextBuild=None, locks=None, env=None,
-                 properties=None, collapseRequests=None, description=None,
-                 canStartBuild=None, defaultProperties=None
-                 ):
-        # name is required, and can't start with '_'
-        if not name or type(name) not in (bytes, str):
-            error("builder's name is required")
-            name = '<unknown>'
-        elif name[0] == '_' and name not in RESERVED_UNDERSCORE_NAMES:
-            error(f"builder names must not start with an underscore: '{name}'")
-        try:
-            self.name = util.bytes2unicode(name, encoding="ascii")
-        except UnicodeDecodeError:
-            error("builder names must be unicode or ASCII")
-
-        # factory is required
-        if factory is None:
-            error(f"builder '{name}' has no factory")
-        from buildbot.process.factory import BuildFactory
-        if factory is not None and not isinstance(factory, BuildFactory):
-            error(f"builder '{name}'s factory is not a BuildFactory instance")
-        self.factory = factory
-
-        # workernames can be a single worker name or a list, and should also
-        # include workername, if given
-        if isinstance(workernames, str):
-            workernames = [workernames]
-        if workernames:
-            if not isinstance(workernames, list):
-                error(f"builder '{name}': workernames must be a list or a string")
-        else:
-            workernames = []
-
-        if workername:
-            if not isinstance(workername, str):
-                error(f"builder '{name}': workername must be a string but it is {repr(workername)}")
-            workernames = workernames + [workername]
-        if not workernames:
-            error(f"builder '{name}': at least one workername is required")
-
-        self.workernames = workernames
-
-        # builddir defaults to name
-        if builddir is None:
-            builddir = safeTranslate(name)
-            builddir = bytes2unicode(builddir)
-        self.builddir = builddir
-
-        # workerbuilddir defaults to builddir
-        if workerbuilddir is None:
-            workerbuilddir = builddir
-        self.workerbuilddir = workerbuilddir
-
-        # remainder are optional
-        if tags:
-            if not isinstance(tags, list):
-                error(f"builder '{name}': tags must be a list")
-            bad_tags = any((tag for tag in tags if not isinstance(tag, str)))
-            if bad_tags:
-                error(f"builder '{name}': tags list contains something that is not a string")
-
-            if len(tags) != len(set(tags)):
-                dupes = " ".join({x for x in tags if tags.count(x) > 1})
-                error(f"builder '{name}': tags list contains duplicate tags: {dupes}")
-        else:
-            tags = []
-
-        self.tags = tags
-
-        self.nextWorker = nextWorker
-        if nextWorker and not callable(nextWorker):
-            error('nextWorker must be a callable')
-        self.nextBuild = nextBuild
-        if nextBuild and not callable(nextBuild):
-            error('nextBuild must be a callable')
-        self.canStartBuild = canStartBuild
-        if canStartBuild and not callable(canStartBuild):
-            error('canStartBuild must be a callable')
-
-        self.locks = locks or []
-        self.env = env or {}
-        if not isinstance(self.env, dict):
-            error("builder's env must be a dictionary")
-        self.properties = properties or {}
-        self.defaultProperties = defaultProperties or {}
-        self.collapseRequests = collapseRequests
-
-        self.description = description
-
-    def getConfigDict(self):
-        # note: this method will disappear eventually - put your smarts in the
-        # constructor!
-        rv = {
-            'name': self.name,
-            'workernames': self.workernames,
-            'factory': self.factory,
-            'builddir': self.builddir,
-            'workerbuilddir': self.workerbuilddir,
-        }
-        if self.tags:
-            rv['tags'] = self.tags
-        if self.nextWorker:
-            rv['nextWorker'] = self.nextWorker
-        if self.nextBuild:
-            rv['nextBuild'] = self.nextBuild
-        if self.locks:
-            rv['locks'] = self.locks
-        if self.env:
-            rv['env'] = self.env
-        if self.properties:
-            rv['properties'] = self.properties
-        if self.defaultProperties:
-            rv['defaultProperties'] = self.defaultProperties
-        if self.collapseRequests is not None:
-            rv['collapseRequests'] = self.collapseRequests
-        if self.description:
-            rv['description'] = self.description
-        return rv

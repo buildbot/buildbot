@@ -20,8 +20,8 @@ import jinja2
 from twisted.internet import defer
 from twisted.python import util
 
-from buildbot import config as config_module
 from buildbot import monkeypatches
+from buildbot.config import master as config_master
 from buildbot.master import BuildMaster
 from buildbot.util import in_reactor
 
@@ -84,7 +84,7 @@ def createDB(config, _noMonkey=False):
 
     # create a master with the default configuration, but with db_url
     # overridden
-    master_cfg = config_module.MasterConfig()
+    master_cfg = config_master.MasterConfig()
     master_cfg.db['db_url'] = config['db']
     master = BuildMaster(config['basedir'])
     master.config = master_cfg

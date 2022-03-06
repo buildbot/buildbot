@@ -18,7 +18,7 @@ import json
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
+from buildbot.config.master import MasterConfig
 from buildbot.schedulers.forcesched import AnyPropertyParameter
 from buildbot.schedulers.forcesched import BaseParameter
 from buildbot.schedulers.forcesched import BooleanParameter
@@ -62,7 +62,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
             self.OBJECTID, self.SCHEDULERID,
             overrideBuildsetMethods=True,
             createBuilderDB=True)
-        sched.master.config = config.MasterConfig()
+        sched.master.config = MasterConfig()
 
         self.assertEqual(sched.name, name)
 

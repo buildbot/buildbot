@@ -18,7 +18,7 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
+from buildbot.config.master import MasterConfig
 from buildbot.process.users import manager
 from buildbot.util import service
 
@@ -34,7 +34,7 @@ class TestUserManager(unittest.TestCase):
         self.umm = manager.UserManagerManager(self.master)
         self.umm.startService()
 
-        self.config = config.MasterConfig()
+        self.config = MasterConfig()
 
     def tearDown(self):
         self.umm.stopService()

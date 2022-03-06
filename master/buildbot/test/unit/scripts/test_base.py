@@ -23,7 +23,7 @@ from twisted.python import runtime
 from twisted.python import usage
 from twisted.trial import unittest
 
-from buildbot import config as config_module
+from buildbot.config import master as config_master
 from buildbot.scripts import base
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
@@ -394,17 +394,17 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_loadConfig(self):
         @classmethod
         def loadConfig(cls):
-            return config_module.MasterConfig()
-        self.patch(config_module.FileLoader, 'loadConfig', loadConfig)
+            return config_master.MasterConfig()
+        self.patch(config_master.FileLoader, 'loadConfig', loadConfig)
         cfg = base.loadConfig(mkconfig())
-        self.assertIsInstance(cfg, config_module.MasterConfig)
+        self.assertIsInstance(cfg, config_master.MasterConfig)
         self.assertInStdout('checking')
 
     def test_loadConfig_ConfigErrors(self):
         @classmethod
         def loadConfig(cls):
-            raise config_module.ConfigErrors(['oh noes'])
-        self.patch(config_module.FileLoader, 'loadConfig', loadConfig)
+            raise config_master.ConfigErrors(['oh noes'])
+        self.patch(config_master.FileLoader, 'loadConfig', loadConfig)
         cfg = base.loadConfig(mkconfig())
         self.assertIdentical(cfg, None)
         self.assertInStdout('oh noes')
@@ -413,7 +413,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         @classmethod
         def loadConfig(cls):
             raise RuntimeError()
-        self.patch(config_module.FileLoader, 'loadConfig', loadConfig)
+        self.patch(config_master.FileLoader, 'loadConfig', loadConfig)
         cfg = base.loadConfig(mkconfig())
         self.assertIdentical(cfg, None)
         self.assertInStdout('RuntimeError')

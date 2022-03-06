@@ -30,6 +30,8 @@ from buildbot import config
 from buildbot import monkeypatches
 from buildbot.buildbot_net_usage_data import sendBuildbotNetUsageData
 from buildbot.changes.manager import ChangeManager
+from buildbot.config.master import FileLoader
+from buildbot.config.master import MasterConfig
 from buildbot.data import connector as dataconnector
 from buildbot.data import graphql
 from buildbot.db import connector as dbconnector
@@ -88,7 +90,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         if config_loader is None:
             if configFileName is None:
                 configFileName = 'master.cfg'
-            config_loader = config.FileLoader(self.basedir, configFileName)
+            config_loader = FileLoader(self.basedir, configFileName)
         self.config_loader = config_loader
         self.configFileName = configFileName
 
@@ -103,7 +105,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.configured_db_url = None
 
         # configuration / reconfiguration handling
-        self.config = config.MasterConfig()
+        self.config = MasterConfig()
         self.config_version = 0  # increased by one on each reconfig
         self.reconfig_active = False
         self.reconfig_requested = False

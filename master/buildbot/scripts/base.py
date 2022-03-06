@@ -24,7 +24,8 @@ from contextlib import contextmanager
 from twisted.python import runtime
 from twisted.python import usage
 
-from buildbot import config as config_module
+from buildbot.config.errors import ConfigErrors
+from buildbot.config.master import FileLoader
 
 
 @contextmanager
@@ -108,9 +109,8 @@ def loadConfig(config, configFileName='master.cfg'):
         print(f"checking {configFileName}")
 
     try:
-        master_cfg = config_module.FileLoader(
-            config['basedir'], configFileName).loadConfig()
-    except config_module.ConfigErrors as e:
+        master_cfg = FileLoader(config['basedir'], configFileName).loadConfig()
+    except ConfigErrors as e:
         print("Errors loading configuration:")
 
         for msg in e.errors:

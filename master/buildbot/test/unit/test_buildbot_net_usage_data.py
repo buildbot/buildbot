@@ -69,7 +69,7 @@ class Tests(unittest.TestCase):
         }
 
     def test_basic(self):
-        self.patch(config, "_in_unit_tests", False)
+        self.patch(config.master, "get_is_in_unit_tests", lambda: False)
         with assertProducesWarning(
                 ConfigWarning,
                 message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):
@@ -81,7 +81,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(data['plugins']['buildbot/worker/base/Worker'], 3)
         self.assertEqual(sorted(data['plugins'].keys()), sorted(
             ['buildbot/schedulers/forcesched/ForceScheduler', 'buildbot/worker/base/Worker',
-             'buildbot/steps/shell/ShellCommand', 'buildbot/config/BuilderConfig']))
+             'buildbot/steps/shell/ShellCommand', 'buildbot/config/builder/BuilderConfig']))
 
     def test_full(self):
         c = self.getBaseConfig()
