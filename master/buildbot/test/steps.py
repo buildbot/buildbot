@@ -239,7 +239,7 @@ class Expect:
         cmd_dif = _describe_cmd_difference(self.remote_command, self.args,
                                            command.remote_command, command.args)
         msg = ("Command contents different from expected (command index: "
-               f"{self._expected_commands_popped}); {cmd_dif}")
+               f"{case._expected_commands_popped}):\n{cmd_dif}")
         raise AssertionError(msg)
 
     def __repr__(self):
