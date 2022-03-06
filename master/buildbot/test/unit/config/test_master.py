@@ -110,54 +110,12 @@ class FakeMachine:
         self.__dict__.update(kwargs)
 
 
-class ConfigErrors(unittest.TestCase):
-
-    def test_constr(self):
-        ex = config.ConfigErrors(['a', 'b'])
-        self.assertEqual(ex.errors, ['a', 'b'])
-
-    def test_addError(self):
-        ex = config.ConfigErrors(['a'])
-        ex.addError('c')
-        self.assertEqual(ex.errors, ['a', 'c'])
-
-    def test_nonempty(self):
-        empty = config.ConfigErrors()
-        full = config.ConfigErrors(['a'])
-        self.assertTrue(not empty)
-        self.assertFalse(not full)
-
-    def test_error_raises(self):
-        with self.assertRaises(config.ConfigErrors) as e:
-            config.error("message")
-        self.assertEqual(e.exception.errors, ["message"])
-
-    def test_error_no_raise(self):
-        with config.capture_config_errors() as errors:
-            config.error("message")
-        self.assertEqual(errors.errors, ["message"])
-
-    def test_str(self):
-        ex = config.ConfigErrors()
-        self.assertEqual(str(ex), "")
-
-        ex = config.ConfigErrors(["a"])
-        self.assertEqual(str(ex), "a")
-
-        ex = config.ConfigErrors(["a", "b"])
-        self.assertEqual(str(ex), "a\nb")
-
-        ex = config.ConfigErrors(["a"])
-        ex.addError('c')
-        self.assertEqual(str(ex), "a\nc")
-
-
 class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousTestCase):
 
     def setUp(self):
         self.basedir = os.path.abspath('basedir')
         self.filename = os.path.join(self.basedir, 'test.cfg')
-        self.patch(config, "get_is_in_unit_tests", lambda: False)
+        self.patch(config.master, "get_is_in_unit_tests", lambda: False)
 
         return self.setUpDirs('basedir')
 
@@ -483,7 +441,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
 
     def test_load_global_buildbotNetUsageData(self):
-        self.patch(config, "get_is_in_unit_tests", lambda: False)
+        self.patch(config.master, "get_is_in_unit_tests", lambda: False)
         with assertProducesWarning(
                 ConfigWarning,
                 message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):
@@ -1021,7 +979,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             myService = MyService()
             self.cfg.load_services(self.filename, {'services': [myService]})
 
-        errMsg = ("<class 'buildbot.test.unit.test_config."
+        errMsg = ("<class 'buildbot.test.unit.config.test_master."
                   "MasterConfig_loaders.test_load_services_badservice."
                   "<locals>.MyService'> ")
         errMsg += "object should be an instance of buildbot.util.service.BuildbotService"
@@ -1328,232 +1286,6 @@ class MasterConfig_old_worker_api(unittest.TestCase):
     def test_workers_new_api(self):
         with assertNotProducesWarnings(DeprecatedApiWarning):
             self.assertEqual(self.cfg.workers, [])
-
-
-class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
-
-    factory = factory.BuildFactory()
-
-    # utils
-
-    def assertAttributes(self, cfg, **expected):
-        got = {
-            attr: getattr(cfg, attr)
-            for attr, exp in expected.items()}
-        self.assertEqual(got, expected)
-
-    # tests
-
-    def test_no_name(self):
-        with self.assertRaisesConfigError("builder's name is required"):
-            config.BuilderConfig(factory=self.factory, workernames=['a'])
-
-    def test_reserved_name(self):
-        with self.assertRaisesConfigError(
-                "builder names must not start with an underscore: '_a'"):
-            config.BuilderConfig(name='_a', factory=self.factory,
-                                 workernames=['a'])
-
-    def test_utf8_name(self):
-        with self.assertRaisesConfigError(
-                "builder names must be unicode or ASCII"):
-            config.BuilderConfig(name="\N{SNOWMAN}".encode('utf-8'),
-                                 factory=self.factory, workernames=['a'])
-
-    def test_no_factory(self):
-        with self.assertRaisesConfigError("builder 'a' has no factory"):
-            config.BuilderConfig(name='a', workernames=['a'])
-
-    def test_wrong_type_factory(self):
-        with self.assertRaisesConfigError("builder 'a's factory is not"):
-            config.BuilderConfig(factory=[], name='a', workernames=['a'])
-
-    def test_no_workernames(self):
-        with self.assertRaisesConfigError(
-                "builder 'a': at least one workername is required"):
-            config.BuilderConfig(name='a', factory=self.factory)
-
-    def test_bogus_workernames(self):
-        with self.assertRaisesConfigError(
-                "workernames must be a list or a string"):
-            config.BuilderConfig(name='a', workernames={1: 2},
-                                 factory=self.factory)
-
-    def test_bogus_workername(self):
-        with self.assertRaisesConfigError("workername must be a string"):
-            config.BuilderConfig(name='a', workername=1, factory=self.factory)
-
-    def test_tags_must_be_list(self):
-        with self.assertRaisesConfigError("tags must be a list"):
-            config.BuilderConfig(tags='abc',
-                                 name='a', workernames=['a'],
-                                 factory=self.factory)
-
-    def test_tags_must_be_list_of_str(self):
-        with self.assertRaisesConfigError(
-                "tags list contains something that is not a string"):
-            config.BuilderConfig(tags=['abc', 13],
-                                 name='a', workernames=['a'],
-                                 factory=self.factory)
-
-    def test_tags_no_tag_dupes(self):
-        with self.assertRaisesConfigError(
-                "builder 'a': tags list contains duplicate tags: abc"):
-            config.BuilderConfig(tags=['abc', 'bca', 'abc'],
-                                 name='a', workernames=['a'],
-                                 factory=self.factory)
-
-    def test_inv_nextWorker(self):
-        with self.assertRaisesConfigError("nextWorker must be a callable"):
-            config.BuilderConfig(nextWorker="foo",
-                                 name="a", workernames=['a'],
-                                 factory=self.factory)
-
-    def test_inv_nextBuild(self):
-        with self.assertRaisesConfigError("nextBuild must be a callable"):
-            config.BuilderConfig(nextBuild="foo",
-                                 name="a", workernames=['a'],
-                                 factory=self.factory)
-
-    def test_inv_canStartBuild(self):
-        with self.assertRaisesConfigError("canStartBuild must be a callable"):
-            config.BuilderConfig(canStartBuild="foo",
-                                 name="a", workernames=['a'],
-                                 factory=self.factory)
-
-    def test_inv_env(self):
-        with self.assertRaisesConfigError("builder's env must be a dictionary"):
-            config.BuilderConfig(env="foo",
-                                 name="a", workernames=['a'],
-                                 factory=self.factory)
-
-    def test_defaults(self):
-        cfg = config.BuilderConfig(
-            name='a b c', workername='a', factory=self.factory)
-        self.assertIdentical(cfg.factory, self.factory)
-        self.assertAttributes(cfg,
-                              name='a b c',
-                              workernames=['a'],
-                              builddir='a_b_c',
-                              workerbuilddir='a_b_c',
-                              tags=[],
-                              nextWorker=None,
-                              locks=[],
-                              env={},
-                              properties={},
-                              collapseRequests=None,
-                              description=None)
-
-    def test_unicode_name(self):
-        cfg = config.BuilderConfig(
-            name='a \N{SNOWMAN} c', workername='a', factory=self.factory)
-        self.assertIdentical(cfg.factory, self.factory)
-        self.assertAttributes(cfg,
-                              name='a \N{SNOWMAN} c')
-
-    def test_args(self):
-        cfg = config.BuilderConfig(
-            name='b', workername='s1', workernames='s2', builddir='bd',
-            workerbuilddir='wbd', factory=self.factory, tags=['c'],
-            nextWorker=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
-            env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
-            description='buzz')
-        self.assertIdentical(cfg.factory, self.factory)
-        self.assertAttributes(cfg,
-                              name='b',
-                              workernames=['s2', 's1'],
-                              builddir='bd',
-                              workerbuilddir='wbd',
-                              tags=['c'],
-                              locks=['l'],
-                              env={'x': 10},
-                              properties={'y': 20},
-                              collapseRequests='cr',
-                              description='buzz')
-
-    def test_getConfigDict(self):
-        ns = lambda: 'ns'
-        nb = lambda: 'nb'
-        cfg = config.BuilderConfig(
-            name='b', workername='s1', workernames='s2', builddir='bd',
-            workerbuilddir='wbd', factory=self.factory, tags=['c'],
-            nextWorker=ns, nextBuild=nb, locks=['l'],
-            env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
-            description='buzz')
-        self.assertEqual(cfg.getConfigDict(), {'builddir': 'bd',
-                                               'tags': ['c'],
-                                               'description': 'buzz',
-                                               'env': {'x': 10},
-                                               'factory': self.factory,
-                                               'locks': ['l'],
-                                               'collapseRequests': 'cr',
-                                               'name': 'b',
-                                               'nextBuild': nb,
-                                               'nextWorker': ns,
-                                               'properties': {'y': 20},
-                                               'workerbuilddir': 'wbd',
-                                               'workernames': ['s2', 's1'],
-                                               })
-
-    def test_getConfigDict_collapseRequests(self):
-        for cr in (False, lambda a, b, c: False):
-            cfg = config.BuilderConfig(name='b', collapseRequests=cr,
-                                       factory=self.factory, workername='s1')
-            self.assertEqual(cfg.getConfigDict(), {'builddir': 'b',
-                                                   'collapseRequests': cr,
-                                                   'name': 'b',
-                                                   'workerbuilddir': 'b',
-                                                   'factory': self.factory,
-                                                   'workernames': ['s1'],
-                                                   })
-
-    def test_init_workername_keyword(self):
-        cfg = config.BuilderConfig(name='a b c', workername='a',
-                                   factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
-    def test_init_workername_positional(self):
-        with assertNotProducesWarnings(DeprecatedApiWarning):
-            cfg = config.BuilderConfig(
-                'a b c', 'a', factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
-    def test_init_workernames_keyword(self):
-        cfg = config.BuilderConfig(name='a b c', workernames=['a'],
-                                   factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
-    def test_init_workernames_positional(self):
-        with assertNotProducesWarnings(DeprecatedApiWarning):
-            cfg = config.BuilderConfig(
-                'a b c', None, ['a'], factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
-    def test_init_workerbuilddir_keyword(self):
-        cfg = config.BuilderConfig(
-            name='a b c', workername='a', factory=self.factory,
-            workerbuilddir="dir")
-
-        self.assertEqual(cfg.workerbuilddir, 'dir')
-
-    def test_init_workerbuilddir_positional(self):
-        with assertNotProducesWarnings(DeprecatedApiWarning):
-            cfg = config.BuilderConfig(
-                'a b c', 'a', None, None, 'dir', factory=self.factory)
-
-        self.assertEqual(cfg.workerbuilddir, 'dir')
-
-    def test_init_next_worker_keyword(self):
-        f = lambda: None
-        cfg = config.BuilderConfig(
-            name='a b c', workername='a', factory=self.factory,
-            nextWorker=f)
-
-        self.assertEqual(cfg.nextWorker, f)
 
 
 class FakeService(service.ReconfigurableServiceMixin,
