@@ -15,14 +15,14 @@ Bug fixes
 ---------
 
 - Improved handling of "The container operating system does not match the host operating system" error on Docker on Windows to mark the build as erroneous so that it's not retried.
-- Fixed rare `AlreadyCalledError` exceptions in the logs when worker worker connection is lost at the same time it is delivering final outcome of a command.
+- Fixed rare ``AlreadyCalledError`` exceptions in the logs when worker worker connection is lost at the same time it is delivering final outcome of a command.
 - Fixed errors when accessing non-existing build via REST API when an endpoint matching rule with builder filter was present.
-- Fixed an error in `CMake` passing options and definitions on the cmake command line.
+- Fixed an error in ``CMake`` passing options and definitions on the cmake command line.
 - Fixed an error when handling command management errors on the worker side (regression since v3.0.0).
 - Fixed updating build step summary with mock state changes for MockBuildSRPM and MockRebuild.
-- Fixed support for optional `builder` parameter used in RebuildBuildEndpointMatcher (:issue:`6307`).
+- Fixed support for optional ``builder`` parameter used in RebuildBuildEndpointMatcher (:issue:`6307`).
 - Fixed error that caused builds to become stuck in building state until next master restart if builds that were in the process of being interrupted lost connection to the worker.
-- Fixed Gerrit change sources to emit changes with proper branch name instead of one containing `refs/heads/` as the prefix.
+- Fixed Gerrit change sources to emit changes with proper branch name instead of one containing ``refs/heads/`` as the prefix.
 - Fixed handling of ``build_wait_timeout`` on latent workers which previously could result in latent worker being shut down while a build is running in certain scenarios (:issue:`5988`).
 - Fixed problem on MySQL when using master names or builder tags that differ only by case.
 - Fixed timed schedulers not scheduling builds the first time they are enabled with ``onlyIfChanged=True`` when there are no important changes.
