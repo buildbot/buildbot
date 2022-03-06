@@ -67,8 +67,24 @@ class RunProcess:
 
         self.initial_stdin = initial_stdin
 
-        self.output_stdout = io.BytesIO() if collect_stdout else None
-        self.output_stderr = io.BytesIO() if collect_stderr else None
+        self.output_stdout = None
+        self.consumer_stdout = None
+
+        if collect_stdout is True:
+            self.output_stdout = io.BytesIO()
+            self.consumer_stdout = self.output_stdout.write
+        elif callable(collect_stdout):
+            self.consumer_stdout = collect_stdout
+
+        self.output_stderr = None
+        self.consumer_stderr = None
+
+        if collect_stderr is True:
+            self.output_stderr = io.BytesIO()
+            self.consumer_stderr = self.output_stderr.write
+        elif callable(collect_stderr):
+            self.consumer_stderr = collect_stderr
+
         self.stderr_is_error = stderr_is_error
 
         self.io_timeout = io_timeout
@@ -83,6 +99,9 @@ class RunProcess:
         self.killed = False
         self.kill_timer = None
         self.use_pty = use_pty
+
+        self.result_signal = None
+        self.result_rc = None
 
     def __repr__(self):
         return f"<{self.__class__.__name__} '{self.command}'>"
@@ -135,16 +154,17 @@ class RunProcess:
                                                          self.runtime_timed_out)
 
     def add_stdout(self, data):
-        if self.output_stdout is not None:
-            self.output_stdout.write(data)
+        if self.consumer_stdout is not None:
+            self.consumer_stdout(data)
 
         if self.io_timer:
             self.io_timer.reset(self.io_timeout)
 
     def add_stderr(self, data):
-        if self.output_stderr is not None:
-            self.output_stderr.write(data)
-        elif self.stderr_is_error:
+        if self.consumer_stderr is not None:
+            self.consumer_stderr(data)
+
+        if self.stderr_is_error:
             self.kill('command produced stderr which is interpreted as error')
 
         if self.io_timer:
@@ -160,6 +180,9 @@ class RunProcess:
         return rc
 
     def process_ended(self, sig, rc):
+        self.result_signal = sig
+        self.result_rc = rc
+
         if self.killed and rc == 0:
             log.msg("process was killed, but exited with status 0; faking a failure")
 
@@ -292,6 +315,10 @@ class RunProcess:
                 setattr(self, name, None)
 
 
+def create_process(*args, **kwargs):
+    return RunProcess(*args, **kwargs)
+
+
 def run_process(*args, **kwargs):
-    process = RunProcess(*args, **kwargs)
+    process = create_process(*args, **kwargs)
     return process.start()

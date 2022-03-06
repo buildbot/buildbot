@@ -17,21 +17,18 @@ import os
 import pprint
 import sys
 
-from twisted.internet import error
-from twisted.internet import reactor
-from twisted.python import failure
+from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Property
-from buildbot.process.properties import WithProperties
 from buildbot.process.properties import renderer
-from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import master
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectMasterShell
 from buildbot.test.steps import TestBuildStepMixin
 
 _COMSPEC_ENV = 'COMSPEC'
@@ -55,58 +52,6 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
                 del os.environ[_COMSPEC_ENV]
         return self.tear_down_test_build_step()
 
-    def patchSpawnProcess(self, exp_cmd, exp_argv, exp_path, exp_usePTY,
-                          exp_env, outputs):
-        def spawnProcess(pp, cmd, argv, path, usePTY, env):
-            self.assertEqual([cmd, argv, path, usePTY, env],
-                             [exp_cmd, exp_argv, exp_path, exp_usePTY, exp_env])
-            for output in outputs:
-                if output[0] == 'out':
-                    pp.outReceived(output[1])
-                elif output[0] == 'err':
-                    pp.errReceived(output[1])
-                elif output[0] == 'rc':
-                    if output[1] != 0:
-                        so = error.ProcessTerminated(exitCode=output[1])
-                    else:
-                        so = error.ProcessDone(None)
-                    pp.processEnded(failure.Failure(so))
-        self.patch(reactor, 'spawnProcess', spawnProcess)
-
-    def test_real_cmd(self):
-        cmd = [sys.executable, '-c', 'print("hello")']
-        self.setup_step(master.MasterShellCommand(command=cmd))
-        if runtime.platformType == 'win32':
-            self.expect_log_file('stdio', "hello\r\n")
-        else:
-            self.expect_log_file('stdio', "hello\n")
-        self.expect_outcome(result=SUCCESS, state_string="Ran")
-        return self.run_step()
-
-    def test_real_cmd_interrupted(self):
-        cmd = [sys.executable, '-c', 'while True: pass']
-        self.setup_step(master.MasterShellCommand(command=cmd))
-        self.expect_log_file('stdio', "")
-        if runtime.platformType == 'win32':
-            # windows doesn't have signals, so we don't get 'killed',
-            # but the "exception" part still works.
-            self.expect_outcome(result=EXCEPTION,
-                               state_string="failed (1) (exception)")
-        else:
-            self.expect_outcome(result=EXCEPTION,
-                               state_string="killed (9) (exception)")
-        d = self.run_step()
-        self.step.interrupt("KILL")
-        return d
-
-    def test_real_cmd_fails(self):
-        cmd = [sys.executable, '-c', 'import sys; sys.exit(1)']
-        self.setup_step(
-            master.MasterShellCommand(command=cmd))
-        self.expect_log_file('stdio', "")
-        self.expect_outcome(result=FAILURE, state_string="failed (1) (failure)")
-        return self.run_step()
-
     def test_constr_args(self):
         self.setup_step(
             master.MasterShellCommand(description='x', descriptionDone='y',
@@ -117,68 +62,84 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
         else:
             exp_argv = ['/bin/sh', '-c', 'true']
-        self.patchSpawnProcess(
-            exp_cmd=exp_argv[0], exp_argv=exp_argv,
-            exp_path='build', exp_usePTY=True, exp_env={'a': 'b'},
-            outputs=[
-                ('out', 'hello!\n'),
-                ('err', 'world\n'),
-                ('rc', 0),
-            ])
+
+        self.expect_commands(
+            ExpectMasterShell(exp_argv)
+            .workdir('build')
+            .env({'a': 'b'})
+            .stdout(b'hello!\n')
+            .stderr(b'world\n')
+            .exit(0))
+
+        self.expect_log_file('stdio', "hello!\n")
         self.expect_outcome(result=SUCCESS, state_string='y')
         return self.run_step()
 
+    @defer.inlineCallbacks
     def test_env_subst(self):
-        cmd = [sys.executable, '-c', 'import os; print(os.environ["HELLO"])']
         os.environ['WORLD'] = 'hello'
         self.setup_step(
-            master.MasterShellCommand(command=cmd, env={'HELLO': '${WORLD}'}))
+            master.MasterShellCommand(command='true', env={'HELLO': '${WORLD}'}))
+
         if runtime.platformType == 'win32':
-            self.expect_log_file('stdio', "hello\r\n")
+            exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
         else:
-            self.expect_log_file('stdio', "hello\n")
+            exp_argv = ['/bin/sh', '-c', 'true']
+
+        self.expect_commands(
+            ExpectMasterShell(exp_argv)
+            .env({'HELLO': 'hello'})
+            .exit(0))
+
         self.expect_outcome(result=SUCCESS)
 
-        d = self.run_step()
-
-        @d.addBoth
-        def _restore_env(res):
+        try:
+            yield self.run_step()
+        finally:
             del os.environ['WORLD']
-            return res
-        return d
 
+    @defer.inlineCallbacks
     def test_env_list_subst(self):
-        cmd = [sys.executable, '-c', 'import os; print(os.environ["HELLO"])']
         os.environ['WORLD'] = 'hello'
         os.environ['LIST'] = 'world'
-        self.setup_step(master.MasterShellCommand(command=cmd,
-                                                 env={'HELLO': ['${WORLD}', '${LIST}']}))
-        if runtime.platformType == 'win32':
-            self.expect_log_file('stdio', "hello;world\r\n")
+        self.setup_step(master.MasterShellCommand(command='true',
+                                                  env={'HELLO': ['${WORLD}', '${LIST}']}))
+
+        if sys.platform == 'win32':
+            exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
+            exp_env = 'hello;world'
         else:
-            self.expect_log_file('stdio', "hello:world\n")
+            exp_argv = ['/bin/sh', '-c', 'true']
+            exp_env = 'hello:world'
+
+        self.expect_commands(
+            ExpectMasterShell(exp_argv)
+            .env({'HELLO': exp_env})
+            .exit(0))
+
         self.expect_outcome(result=SUCCESS)
 
-        d = self.run_step()
-
-        @d.addBoth
-        def _restore_env(res):
+        try:
+            yield self.run_step()
+        finally:
             del os.environ['WORLD']
             del os.environ['LIST']
-            return res
-        return d
 
     def test_prop_rendering(self):
-        cmd = [sys.executable, '-c', WithProperties(
-            'import os; print("%s"); print(os.environ[\"BUILD\"])',
-            'project')]
-        self.setup_step(master.MasterShellCommand(command=cmd,
-                                                 env={'BUILD': WithProperties('%s', "project")}))
+        self.setup_step(master.MasterShellCommand(command=Interpolate('%(prop:project)s-BUILD'),
+                                                  workdir='build'))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
+
         if runtime.platformType == 'win32':
-            self.expect_log_file('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
+            exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'BUILDBOT-TEST-BUILD']
         else:
-            self.expect_log_file('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
+            exp_argv = ['/bin/sh', '-c', 'BUILDBOT-TEST-BUILD']
+
+        self.expect_commands(
+            ExpectMasterShell(exp_argv)
+            .workdir('build')
+            .exit(0))
+
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
@@ -192,14 +153,13 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
         else:
             exp_argv = ['/bin/sh', '-c', 'true']
-        self.patchSpawnProcess(
-            exp_cmd=exp_argv[0], exp_argv=exp_argv,
-            exp_path='build', exp_usePTY=True, exp_env={'a': 'b'},
-            outputs=[
-                ('out', 'hello!\n'),
-                ('err', 'world\n'),
-                ('rc', 0),
-            ])
+
+        self.expect_commands(
+            ExpectMasterShell(exp_argv)
+            .workdir('build')
+            .env({'a': 'b'})
+            .exit(0))
+
         self.expect_outcome(result=SUCCESS, state_string='y z')
         return self.run_step()
 
