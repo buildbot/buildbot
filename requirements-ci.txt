@@ -80,7 +80,7 @@ SQLAlchemy==1.4.32
 sqlparse==0.4.2
 termcolor==1.1.0
 toml==0.10.2
-towncrier==21.3.0
+towncrier==21.9.0
 treq==22.1.0
 Twisted==21.2.0
 txaio==21.2.1
