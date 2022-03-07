@@ -105,8 +105,12 @@ class RemoveDirectory(base.Command):
     @defer.inlineCallbacks
     def _clobber(self, dummy, chmodDone=False):
         command = ["rm", "-rf", self.dir]
-        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                                  sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
+
+        def send_update(status):
+            self.builder.sendUpdate(status)
+
+        c = runprocess.RunProcess(command, self.builder.basedir, self.builder.unicode_encoding,
+                                  send_update, sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
                                   logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
@@ -137,8 +141,12 @@ class RemoveDirectory(base.Command):
             # permission) by running 'find' instead
             command = ["find", os.path.join(self.builder.basedir, self.dir),
                        '-exec', 'chmod', 'u+rwx', '{}', ';']
-        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                                  sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
+
+        def send_update(status):
+            self.builder.sendUpdate(status)
+
+        c = runprocess.RunProcess(command, self.builder.basedir, self.builder.unicode_encoding,
+                                  send_update, sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
                                   logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
@@ -190,10 +198,14 @@ class CopyDirectory(base.Command):
                 log.msg(("cp target '{0}' already exists -- cp will not do what you think!"
                          ).format(todir))
 
+            def send_update(status):
+                self.builder.sendUpdate(status)
+
             command = ['cp', '-R', '-P', '-p', '-v', fromdir, todir]
-            c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                                      sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
-                                      logEnviron=self.logEnviron, usePTY=False)
+            c = runprocess.RunProcess(command, self.builder.basedir, self.builder.unicode_encoding,
+                                      send_update, sendRC=False, timeout=self.timeout,
+                                      maxTime=self.maxTime, logEnviron=self.logEnviron,
+                                      usePTY=False)
             self.command = c
             d = c.start()
             d.addCallback(self._abandonOnFailure)

@@ -158,6 +158,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
         worker_for_builder = self.protocol.factory.buildbot_bot.WorkerForBuilder('test_builder')
         worker_for_builder.basedir = 'basedir'
+        worker_for_builder.unicode_encoding = 'utf-8'
 
         self.protocol.factory.buildbot_bot.builders = {'test_builder': worker_for_builder}
         worker_for_builder.setServiceParent(self.protocol.factory.buildbot_bot)

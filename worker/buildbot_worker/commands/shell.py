@@ -30,10 +30,14 @@ class WorkerShellCommand(base.Command):
         args = self.args
         workdir = os.path.join(self.builder.basedir, args['workdir'])
 
+        def send_update(status):
+            self.builder.sendUpdate(status)
+
         c = runprocess.RunProcess(
-            self.builder,
             args['command'],
             workdir,
+            self.builder.unicode_encoding,
+            send_update,
             environ=args.get('env'),
             timeout=args.get('timeout', None),
             maxTime=args.get('maxTime', None),
