@@ -27,7 +27,9 @@ from twisted.trial import unittest
 
 from buildbot_worker.commands import fs
 from buildbot_worker.commands import utils
+from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util.command import CommandTestMixin
+from buildbot_worker.test.util.compat import skipUnlessPlatformIs
 
 # python-2.4 doesn't have os.errno
 if hasattr(os, 'errno'):
@@ -45,7 +47,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         self.tearDownCommand()
 
     @defer.inlineCallbacks
-    def test_simple(self):
+    def test_simple_real(self):
         self.make_command(fs.RemoveDirectory, dict(
             dir='workdir',
         ), True)
@@ -57,8 +59,27 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
                       self.get_updates(),
                       self.builder.show())
 
+    @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
-    def test_simple_exception(self):
+    def test_simple_posix(self):
+        self.make_command(fs.RemoveDirectory, dict(
+            dir='remove',
+        ), True)
+
+        self.patch_runprocess(
+            Expect(["rm", "-rf", os.path.join(self.basedir, 'remove')], self.basedir, sendRC=0,
+                   timeout=120)
+            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
+            + 0,
+        )
+
+        yield self.run_command()
+
+        self.assertEqual(self.get_updates()[-2], {'rc': 0})
+        self.assertIn('elapsed', self.get_updates()[-1])
+
+    @defer.inlineCallbacks
+    def test_simple_exception_real(self):
         if runtime.platformType == "posix":
             return  # we only use rmdirRecursive on windows
 
@@ -74,7 +95,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
                       self.builder.show())
 
     @defer.inlineCallbacks
-    def test_multiple_dirs(self):
+    def test_multiple_dirs_real(self):
         self.make_command(fs.RemoveDirectory, dict(
             dir=['workdir', 'sourcedir'],
         ), True)
@@ -86,6 +107,83 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         self.assertIn({'rc': 0},
                       self.get_updates(),
                       self.builder.show())
+
+    @skipUnlessPlatformIs('posix')
+    @defer.inlineCallbacks
+    def test_multiple_dirs_posix(self):
+        self.make_command(fs.RemoveDirectory, dict(
+            dir=['remove_1', 'remove_2'],
+        ), True)
+
+        self.patch_runprocess(
+            Expect(["rm", "-rf", os.path.join(self.basedir, 'remove_1')], self.basedir, sendRC=0,
+                   timeout=120)
+            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
+            + 0,
+            Expect(["rm", "-rf", os.path.join(self.basedir, 'remove_2')], self.basedir, sendRC=0,
+                   timeout=120)
+            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
+            + 0,
+        )
+
+        yield self.run_command()
+
+        self.assertEqual(self.get_updates()[-2], {'rc': 0})
+        self.assertIn('elapsed', self.get_updates()[-1])
+
+    @skipUnlessPlatformIs('posix')
+    @defer.inlineCallbacks
+    def test_rm_after_chmod(self):
+        self.make_command(fs.RemoveDirectory, dict(
+            dir=['remove'],
+        ), True)
+
+        self.patch_runprocess(
+            Expect(["rm", "-rf", os.path.join(self.basedir, 'remove')], self.basedir, sendRC=0,
+                   timeout=120)
+            + {'hdr': 'headers'} + {'stderr': 'permission denied'} + {'rc': 1}
+            + 1,
+            Expect(['chmod', '-Rf', 'u+rwx', os.path.join(self.basedir, 'remove')], self.basedir,
+                   sendRC=0, timeout=120)
+            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
+            + 0,
+            Expect(["rm", "-rf", os.path.join(self.basedir, 'remove')], self.basedir, sendRC=0,
+                   timeout=120)
+            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
+            + 0,
+        )
+
+        yield self.run_command()
+
+        self.assertEqual(self.get_updates()[-2], {'rc': 0})
+        self.assertIn('elapsed', self.get_updates()[-1])
+
+    @skipUnlessPlatformIs('posix')
+    @defer.inlineCallbacks
+    def test_rm_after_failed(self):
+        self.make_command(fs.RemoveDirectory, dict(
+            dir=['remove'],
+        ), True)
+
+        self.patch_runprocess(
+            Expect(["rm", "-rf", os.path.join(self.basedir, 'remove')], self.basedir, sendRC=0,
+                   timeout=120)
+            + {'hdr': 'headers'} + {'stderr': 'permission denied'} + {'rc': 1}
+            + 1,
+            Expect(['chmod', '-Rf', 'u+rwx', os.path.join(self.basedir, 'remove')], self.basedir,
+                   sendRC=0, timeout=120)
+            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
+            + 0,
+            Expect(["rm", "-rf", os.path.join(self.basedir, 'remove')], self.basedir, sendRC=0,
+                   timeout=120)
+            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 1}
+            + 1,
+        )
+
+        yield self.run_command()
+
+        self.assertEqual(self.get_updates()[-2], {'rc': 1})
+        self.assertIn('elapsed', self.get_updates()[-1])
 
 
 class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
