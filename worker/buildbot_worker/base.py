@@ -64,9 +64,10 @@ class WorkerForBuilderBase(service.Service):
 
     bf = None
 
-    def __init__(self, name):
+    def __init__(self, name, unicode_encoding):
         # service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
+        self.unicode_encoding = unicode_encoding
 
     def __repr__(self):
         return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
@@ -283,8 +284,7 @@ class BotBase(service.MultiService):
                             name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
-                b = self.WorkerForBuilder(name)
-                b.unicode_encoding = self.unicode_encoding
+                b = self.WorkerForBuilder(name, self.unicode_encoding)
                 b.setServiceParent(self)
                 b.setBuilddir(builddir)
                 self.builders[name] = b

@@ -156,9 +156,9 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.protocol.factory.buildbot_bot = BotMsgpack('test/dir')
         service.MultiService.startService(self.protocol.factory.buildbot_bot)
 
-        worker_for_builder = self.protocol.factory.buildbot_bot.WorkerForBuilder('test_builder')
+        worker_for_builder = self.protocol.factory.buildbot_bot.WorkerForBuilder('test_builder',
+                                                                                 'utf-8')
         worker_for_builder.basedir = 'basedir'
-        worker_for_builder.unicode_encoding = 'utf-8'
 
         self.protocol.factory.buildbot_bot.builders = {'test_builder': worker_for_builder}
         worker_for_builder.setServiceParent(self.protocol.factory.buildbot_bot)
