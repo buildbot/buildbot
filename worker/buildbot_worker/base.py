@@ -70,6 +70,9 @@ class ProtocolCommand:
     def protocol_update_read_file(self, reader, length):
         return self.builder.protocol_update_read_file(reader, length)
 
+    def ack_update(self, acknum):
+        self.builder.activity()  # update the "last activity" timer
+
     def ack_complete(self, dummy):
         self.builder.activity()  # update the "last activity" timer
 
@@ -263,11 +266,8 @@ class WorkerForBuilderBase(service.Service):
             update = [data, 0]
             updates = [update]
             d = self.protocol_update(updates)
-            d.addCallback(self.ackUpdate)
+            d.addCallback(self.protocol_command.ack_update)
             d.addErrback(self.protocol_command._ack_failed, "WorkerForBuilder.sendUpdate")
-
-    def ackUpdate(self, acknum):
-        self.activity()  # update the "last activity" timer
 
 
 class BotBase(service.MultiService):
