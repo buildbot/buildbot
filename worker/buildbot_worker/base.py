@@ -70,6 +70,28 @@ class ProtocolCommand:
     def protocol_update_read_file(self, reader, length):
         return self.builder.protocol_update_read_file(reader, length)
 
+    # this is fired by the Deferred attached to each Command
+    def command_complete(self, failure):
+        if failure:
+            log.msg("ProtocolCommand.command_complete (failure)", self.builder.command)
+            log.err(failure)
+            # failure, if present, is a failure.Failure. To send it across
+            # the wire, we must turn it into a pb.CopyableFailure.
+            failure = pb.CopyableFailure(failure)
+            failure.unsafeTracebacks = True
+        else:
+            # failure is None
+            log.msg("ProtocolCommand.command_complete (success)", self.builder.command)
+        self.builder.command = None
+        if not self.builder.running:
+            log.msg(" but we weren't running, quitting silently")
+            return
+        if self.builder.command_ref:
+            d = self.builder.protocol_complete(failure)
+            d.addCallback(self.builder.ackComplete)
+            d.addErrback(self.builder._ackFailed, "ProtocolCommand.command_complete")
+            self.builder.command_ref = None
+
 
 class WorkerForBuilderBase(service.Service):
 
@@ -181,14 +203,15 @@ class WorkerForBuilderBase(service.Service):
             raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
 
         self.protocol_args_setup(command, args)
-        self.command = factory(ProtocolCommand(self), stepId, args)
+        protocol_command = ProtocolCommand(self)
+        self.command = factory(protocol_command, stepId, args)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.command_ref = command_ref
         self.protocol_notify_on_disconnect()
         d = self.command.doStart()
         d.addCallback(lambda res: None)
-        d.addBoth(self.commandComplete)
+        d.addBoth(protocol_command.command_complete)
         return None
 
     def remote_interruptCommand(self, stepId, why):
@@ -245,28 +268,6 @@ class WorkerForBuilderBase(service.Service):
     def _ackFailed(self, why, where):
         log.msg("WorkerForBuilder._ackFailed:", where)
         log.err(why)  # we don't really care
-
-    # this is fired by the Deferred attached to each Command
-    def commandComplete(self, failure):
-        if failure:
-            log.msg("WorkerForBuilder.commandFailed", self.command)
-            log.err(failure)
-            # failure, if present, is a failure.Failure. To send it across
-            # the wire, we must turn it into a pb.CopyableFailure.
-            failure = pb.CopyableFailure(failure)
-            failure.unsafeTracebacks = True
-        else:
-            # failure is None
-            log.msg("WorkerForBuilder.commandComplete", self.command)
-        self.command = None
-        if not self.running:
-            log.msg(" but we weren't running, quitting silently")
-            return
-        if self.command_ref:
-            d = self.protocol_complete(failure)
-            d.addCallback(self.ackComplete)
-            d.addErrback(self._ackFailed, "sendComplete")
-            self.command_ref = None
 
 
 class BotBase(service.MultiService):
