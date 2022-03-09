@@ -70,6 +70,9 @@ class ProtocolCommand:
     def protocol_update_read_file(self, reader, length):
         return self.builder.protocol_update_read_file(reader, length)
 
+    def ack_complete(self, dummy):
+        self.builder.activity()  # update the "last activity" timer
+
     def _ack_failed(self, why, where):
         log.msg("ProtocolCommand._ack_failed:", where)
         log.err(why)  # we don't really care
@@ -92,7 +95,7 @@ class ProtocolCommand:
             return
         if self.builder.command_ref:
             d = self.builder.protocol_complete(failure)
-            d.addCallback(self.builder.ackComplete)
+            d.addCallback(self.ack_complete)
             d.addErrback(self._ack_failed, "ProtocolCommand.command_complete")
             self.builder.command_ref = None
 
@@ -264,9 +267,6 @@ class WorkerForBuilderBase(service.Service):
             d.addErrback(self.protocol_command._ack_failed, "WorkerForBuilder.sendUpdate")
 
     def ackUpdate(self, acknum):
-        self.activity()  # update the "last activity" timer
-
-    def ackComplete(self, dummy):
         self.activity()  # update the "last activity" timer
 
 
