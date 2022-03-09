@@ -40,6 +40,37 @@ class UnknownCommand(pb.Error):
     pass
 
 
+class ProtocolCommand:
+    def __init__(self, builder):
+        self.builder = builder
+        self.unicode_encoding = builder.unicode_encoding
+        self.basedir = builder.basedir
+
+    def send_update(self, status):
+        self.builder.sendUpdate(status)
+
+    def protocol_update_upload_file_close(self, writer):
+        return self.builder.protocol_update_upload_file_close(writer)
+
+    def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
+        return self.builder.protocol_update_upload_file_utime(writer, access_time, modified_time)
+
+    def protocol_update_upload_file_write(self, writer, data):
+        return self.builder.protocol_update_upload_file_write(writer, data)
+
+    def protocol_update_upload_directory(self, writer):
+        return self.builder.protocol_update_upload_directory(writer)
+
+    def protocol_update_upload_directory_write(self, writer, data):
+        return self.builder.protocol_update_upload_directory_write(writer, data)
+
+    def protocol_update_read_file_close(self, reader):
+        return self.builder.protocol_update_read_file_close(reader)
+
+    def protocol_update_read_file(self, reader, length):
+        return self.builder.protocol_update_read_file(reader, length)
+
+
 class WorkerForBuilderBase(service.Service):
 
     """This is the local representation of a single Builder: it handles a
@@ -150,7 +181,7 @@ class WorkerForBuilderBase(service.Service):
             raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
 
         self.protocol_args_setup(command, args)
-        self.command = factory(self, stepId, args)
+        self.command = factory(ProtocolCommand(self), stepId, args)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.command_ref = command_ref

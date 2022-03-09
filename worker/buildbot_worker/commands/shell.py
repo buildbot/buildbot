@@ -28,16 +28,13 @@ class WorkerShellCommand(base.Command):
 
     def start(self):
         args = self.args
-        workdir = os.path.join(self.builder.basedir, args['workdir'])
-
-        def send_update(status):
-            self.builder.sendUpdate(status)
+        workdir = os.path.join(self.protocol_command.basedir, args['workdir'])
 
         c = runprocess.RunProcess(
             args['command'],
             workdir,
-            self.builder.unicode_encoding,
-            send_update,
+            self.protocol_command.unicode_encoding,
+            self.protocol_command.send_update,
             environ=args.get('env'),
             timeout=args.get('timeout', None),
             maxTime=args.get('maxTime', None),

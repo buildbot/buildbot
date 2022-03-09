@@ -20,6 +20,7 @@ import os
 import shutil
 
 import buildbot_worker.runprocess
+from buildbot_worker.base import ProtocolCommand
 from buildbot_worker.commands import utils
 from buildbot_worker.test.fake import runprocess
 from buildbot_worker.test.fake import workerforbuilder
@@ -87,9 +88,8 @@ class CommandTestMixin(object):
                 shutil.rmtree(basedir_abs)
             os.makedirs(workdir_abs)
 
-        b = self.builder = workerforbuilder.FakeWorkerForBuilder(
-            basedir=self.basedir)
-        self.cmd = cmdclass(b, 'fake-stepid', args)
+        self.builder = workerforbuilder.FakeWorkerForBuilder(basedir=self.basedir)
+        self.cmd = cmdclass(ProtocolCommand(self.builder), 'fake-stepid', args)
 
         return self.cmd
 
