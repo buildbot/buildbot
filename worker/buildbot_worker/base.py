@@ -70,6 +70,10 @@ class ProtocolCommand:
     def protocol_update_read_file(self, reader, length):
         return self.builder.protocol_update_read_file(reader, length)
 
+    def _ack_failed(self, why, where):
+        log.msg("ProtocolCommand._ack_failed:", where)
+        log.err(why)  # we don't really care
+
     # this is fired by the Deferred attached to each Command
     def command_complete(self, failure):
         if failure:
@@ -89,7 +93,7 @@ class ProtocolCommand:
         if self.builder.command_ref:
             d = self.builder.protocol_complete(failure)
             d.addCallback(self.builder.ackComplete)
-            d.addErrback(self.builder._ackFailed, "ProtocolCommand.command_complete")
+            d.addErrback(self._ack_failed, "ProtocolCommand.command_complete")
             self.builder.command_ref = None
 
 
@@ -203,15 +207,15 @@ class WorkerForBuilderBase(service.Service):
             raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
 
         self.protocol_args_setup(command, args)
-        protocol_command = ProtocolCommand(self)
-        self.command = factory(protocol_command, stepId, args)
+        self.protocol_command = ProtocolCommand(self)
+        self.command = factory(self.protocol_command, stepId, args)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.command_ref = command_ref
         self.protocol_notify_on_disconnect()
         d = self.command.doStart()
         d.addCallback(lambda res: None)
-        d.addBoth(protocol_command.command_complete)
+        d.addBoth(self.protocol_command.command_complete)
         return None
 
     def remote_interruptCommand(self, stepId, why):
@@ -257,17 +261,13 @@ class WorkerForBuilderBase(service.Service):
             updates = [update]
             d = self.protocol_update(updates)
             d.addCallback(self.ackUpdate)
-            d.addErrback(self._ackFailed, "WorkerForBuilder.sendUpdate")
+            d.addErrback(self.protocol_command._ack_failed, "WorkerForBuilder.sendUpdate")
 
     def ackUpdate(self, acknum):
         self.activity()  # update the "last activity" timer
 
     def ackComplete(self, dummy):
         self.activity()  # update the "last activity" timer
-
-    def _ackFailed(self, why, where):
-        log.msg("WorkerForBuilder._ackFailed:", where)
-        log.err(why)  # we don't really care
 
 
 class BotBase(service.MultiService):
