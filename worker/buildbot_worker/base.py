@@ -46,9 +46,6 @@ class ProtocolCommand:
         self.unicode_encoding = builder.unicode_encoding
         self.basedir = builder.basedir
 
-    def send_update(self, status):
-        self.builder.sendUpdate(status)
-
     def protocol_update_upload_file_close(self, writer):
         return self.builder.protocol_update_upload_file_close(writer)
 
@@ -69,6 +66,29 @@ class ProtocolCommand:
 
     def protocol_update_read_file(self, reader, length):
         return self.builder.protocol_update_read_file(reader, length)
+
+    # sendUpdate is invoked by the Commands we spawn
+    def send_update(self, data):
+        """This sends the status update to the master-side
+        L{buildbot.process.step.RemoteCommand} object, giving it a sequence
+        number in the process. It adds the update to a queue, and asks the
+        master to acknowledge the update so it can be removed from that
+        queue."""
+
+        if not self.builder.running:
+            # .running comes from service.Service, and says whether the
+            # service is running or not. If we aren't running, don't send any
+            # status messages.
+            return
+        # the update[1]=0 comes from the leftover 'updateNum', which the
+        # master still expects to receive. Provide it to avoid significant
+        # interoperability issues between new workers and old masters.
+        if self.builder.command_ref:
+            update = [data, 0]
+            updates = [update]
+            d = self.builder.protocol_update(updates)
+            d.addCallback(self.ack_update)
+            d.addErrback(self._ack_failed, "ProtocolCommand.send_update")
 
     def ack_update(self, acknum):
         self.builder.activity()  # update the "last activity" timer
@@ -101,6 +121,11 @@ class ProtocolCommand:
             d.addCallback(self.ack_complete)
             d.addErrback(self._ack_failed, "ProtocolCommand.command_complete")
             self.builder.command_ref = None
+
+
+class FakeProtocolCommand(ProtocolCommand):
+    def send_update(self, status):
+        self.builder.sendUpdate(status)
 
 
 class WorkerForBuilderBase(service.Service):
@@ -245,29 +270,6 @@ class WorkerForBuilderBase(service.Service):
         log.msg("stopCommand: halting current command {0}".format(self.command))
         self.command.doInterrupt()  # shut up! and die!
         self.command = None  # forget you!
-
-    # sendUpdate is invoked by the Commands we spawn
-    def sendUpdate(self, data):
-        """This sends the status update to the master-side
-        L{buildbot.process.step.RemoteCommand} object, giving it a sequence
-        number in the process. It adds the update to a queue, and asks the
-        master to acknowledge the update so it can be removed from that
-        queue."""
-
-        if not self.running:
-            # .running comes from service.Service, and says whether the
-            # service is running or not. If we aren't running, don't send any
-            # status messages.
-            return
-        # the update[1]=0 comes from the leftover 'updateNum', which the
-        # master still expects to receive. Provide it to avoid significant
-        # interoperability issues between new workers and old masters.
-        if self.command_ref:
-            update = [data, 0]
-            updates = [update]
-            d = self.protocol_update(updates)
-            d.addCallback(self.protocol_command.ack_update)
-            d.addErrback(self.protocol_command._ack_failed, "WorkerForBuilder.sendUpdate")
 
 
 class BotBase(service.MultiService):
