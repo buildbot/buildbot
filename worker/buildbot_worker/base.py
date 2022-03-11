@@ -113,6 +113,7 @@ class ProtocolCommand:
             # failure is None
             log.msg("ProtocolCommand.command_complete (success)", self.builder.command)
         self.builder.command = None
+        self.builder.protocol_command = None
         if not self.builder.running:
             log.msg(" but we weren't running, quitting silently")
             return
@@ -156,6 +157,7 @@ class WorkerForBuilderBase(service.Service):
         # service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
         self.unicode_encoding = unicode_encoding
+        self.protocol_command = None
 
     def __repr__(self):
         return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
@@ -228,7 +230,7 @@ class WorkerForBuilderBase(service.Service):
 
         self.activity()
 
-        if self.command:
+        if self.protocol_command:
             log.msg("leftover command, dropping it")
             self.stopCommand()
 
@@ -238,8 +240,9 @@ class WorkerForBuilderBase(service.Service):
             raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
 
         self.protocol_args_setup(command, args)
-        self.protocol_command = ProtocolCommand(self)
-        self.command = factory(self.protocol_command, stepId, args)
+        protocol_command = ProtocolCommand(self)
+        self.command = factory(protocol_command, stepId, args)
+        self.protocol_command = protocol_command
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.command_ref = command_ref
@@ -253,7 +256,7 @@ class WorkerForBuilderBase(service.Service):
         """Halt the current step."""
         log.msg("asked to interrupt current command: {0}".format(why))
         self.activity()
-        if not self.command:
+        if not self.protocol_command:
             # TODO: just log it, a race could result in their interrupting a
             # command that wasn't actually running
             log.msg(" .. but none was running")
@@ -265,11 +268,12 @@ class WorkerForBuilderBase(service.Service):
         output. This is used when the worker is shutting down or the
         connection to the master has been lost. Interrupt the command,
         silence it, and then forget about it."""
-        if not self.command:
+        if not self.protocol_command:
             return
         log.msg("stopCommand: halting current command {0}".format(self.command))
         self.command.doInterrupt()  # shut up! and die!
         self.command = None  # forget you!
+        self.protocol_command = None
 
 
 class BotBase(service.MultiService):
