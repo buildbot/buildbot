@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import base64
 import os
 import sys
 
@@ -34,8 +35,53 @@ from buildbot_worker.test.util import command
 if sys.version_info.major >= 3:
     import msgpack
     # pylint: disable=ungrouped-imports
+    from buildbot_worker.msgpack import decode_http_authorization_header
+    from buildbot_worker.msgpack import encode_http_authorization_header
     from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
     from buildbot_worker.pb import BotMsgpack  # pylint: disable=ungrouped-imports
+
+
+class TestHttpAuthorization(unittest.TestCase):
+    maxDiff = None
+    if sys.version_info.major < 3:
+        skip = "Not python 3"
+
+    def test_encode(self):
+        result = encode_http_authorization_header(b'name', b'pass')
+        self.assertEqual(result, 'Basic bmFtZTpwYXNz')
+
+        result = encode_http_authorization_header(b'name2', b'pass2')
+        self.assertEqual(result, 'Basic bmFtZTI6cGFzczI=')
+
+    def test_encode_username_contains_colon(self):
+        with self.assertRaises(ValueError):
+            encode_http_authorization_header(b'na:me', b'pass')
+
+    def test_decode(self):
+        result = decode_http_authorization_header(
+            encode_http_authorization_header(b'name', b'pass'))
+        self.assertEqual(result, ('name', 'pass'))
+
+        # password can contain a colon
+        result = decode_http_authorization_header(
+            encode_http_authorization_header(b'name', b'pa:ss'))
+        self.assertEqual(result, ('name', 'pa:ss'))
+
+    def test_contains_no__basic(self):
+        with self.assertRaises(ValueError):
+            decode_http_authorization_header('Test bmFtZTpwYXNzOjI=')
+
+        with self.assertRaises(ValueError):
+            decode_http_authorization_header('TestTest bmFtZTpwYXNzOjI=')
+
+    def test_contains_forbidden_character(self):
+        with self.assertRaises(ValueError):
+            decode_http_authorization_header('Basic test%test')
+
+    def test_credentials_do_not_contain_colon(self):
+        value = 'Basic ' + base64.b64encode(b'TestTestTest').decode()
+        with self.assertRaises(ValueError):
+            decode_http_authorization_header(value)
 
 
 class TestException(Exception):
@@ -77,8 +123,8 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.protocol = BuildbotWebSocketClientProtocol()
         self.protocol.sendMessage = mock.Mock()
         self.protocol.factory = mock.Mock()
-        self.protocol.factory.password = 'test_password'
-        self.protocol.factory.name = 'test_username'
+        self.protocol.factory.password = b'test_password'
+        self.protocol.factory.name = b'test_username'
 
         self.protocol.factory.buildbot_bot.builders = {'test_builder': mock.Mock()}
         self.protocol.dict_def = {}
@@ -274,48 +320,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             'seq_number': 0
         }])
 
-    @defer.inlineCallbacks
-    def test_authenticate_success(self):
-        self.protocol.onOpen()
-        self.assert_sent_messages([{
-            'op': 'auth',
-            'seq_number': 0,
-            'password': 'test_password',
-            'username': 'test_username'
-        }])
+    def test_authorization_header(self):
+        result = self.protocol.onConnecting('test')
 
-        yield self.send_message({'op': 'response', 'seq_number': 0, 'result': True})
-        self.protocol.sendClose.assert_not_called()
-        self.assert_sent_messages([])
-
-    @defer.inlineCallbacks
-    def test_authenticate_auth_exception(self):
-        self.protocol.onOpen()
-        self.assert_sent_messages([{
-            'op': 'auth',
-            'seq_number': 0,
-            'password': 'test_password',
-            'username': 'test_username'
-        }])
-
-        yield self.send_message({'op': 'response', 'seq_number': 0, 'result': 'ValueError',
-                                 'is_exception': True})
-        self.protocol.sendClose.assert_called()
-        self.assert_sent_messages([])
-
-    @defer.inlineCallbacks
-    def test_authenticate_failed_authentication(self):
-        self.protocol.onOpen()
-        self.assert_sent_messages([{
-            'op': 'auth',
-            'seq_number': 0,
-            'password': 'test_password',
-            'username': 'test_username'
-        }])
-
-        yield self.send_message({'op': 'response', 'seq_number': 0, 'result': False})
-        self.protocol.sendClose.assert_called()
-        self.assert_sent_messages([])
+        self.assertEqual(result.headers, {
+            "Authorization": encode_http_authorization_header(b'test_username', b'test_password')
+        })
 
     @defer.inlineCallbacks
     def test_call_print_success(self):
@@ -414,22 +424,22 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'args': [[{'header': 'mkdir: test_error: {}'.format(path)}, 0]],
                 'command_id': '123',
-                'seq_number': 1
+                'seq_number': 0
             }, {
                 'op': 'update',
                 'args': [[{'rc': 1}, 0]],
                 'command_id': '123',
-                'seq_number': 2
+                'seq_number': 1
             }, {
                 'op': 'update',
                 'args': [[{'elapsed': 0}, 0]],
                 'command_id': '123',
-                'seq_number': 3
+                'seq_number': 2
             }, {
                 'op': 'complete',
                 'args': None,
                 'command_id': '123',
-                'seq_number': 4
+                'seq_number': 3
             },
             # response result is always None, even if the command failed
             {'op': 'response', 'result': None, 'seq_number': 1}
@@ -442,10 +452,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'result': None
             }
 
+        yield self.send_message(create_msg(0))
         yield self.send_message(create_msg(1))
         yield self.send_message(create_msg(2))
         yield self.send_message(create_msg(3))
-        yield self.send_message(create_msg(4))
 
         # worker should not send any new messages in response to masters 'response'
         self.assertEqual(self.list_send_message_args, [])
@@ -476,27 +486,27 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'args': [[{'hdr': 'headers'}, 0]],
                 'command_id': '123',
-                'seq_number': 1
+                'seq_number': 0
             }, {
                 'op': 'update',
                 'args': [[{'stdout': 'hello\n'}, 0]],
                 'command_id': '123',
-                'seq_number': 2
+                'seq_number': 1
             }, {
                 'op': 'update',
                 'args': [[{'rc': 0}, 0]],
                 'command_id': '123',
-                'seq_number': 3
+                'seq_number': 2
             }, {
                 'op': 'update',
                 'args': [[{'elapsed': 0}, 0]],
                 'command_id': '123',
-                'seq_number': 4
+                'seq_number': 3
             }, {
                 'op': 'complete',
                 'args': None,
                 'command_id': '123',
-                'seq_number': 5
+                'seq_number': 4
             }, {
                 'op': 'response', 'seq_number': 1, 'result': None
             }
@@ -560,7 +570,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'seq_number': 1,
+                'seq_number': 0,
                 'command_id': '123',
                 'args': [[{'hdr': 'headers'}, 0]]
             }, {
@@ -581,16 +591,16 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'seq_number': 2,
+                'seq_number': 1,
                 'command_id': '123',
                 'args': [[{'hdr': 'killing'}, 0]],
             }, {
                 'op': 'update',
-                'seq_number': 3,
+                'seq_number': 2,
                 'command_id': '123',
                 'args': [[{'rc': -1}, 0]]
             }, {
-                'op': 'complete', 'seq_number': 4, 'command_id': '123', 'args': None
+                'op': 'complete', 'seq_number': 3, 'command_id': '123', 'args': None
             }, {
                 'op': 'response', 'seq_number': 1, 'result': None
             }

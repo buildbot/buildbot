@@ -244,7 +244,7 @@ class Worker(WorkerBase):
 
         if protocol == 'pb':
             bot_class = BotPb
-        elif protocol == 'msgpack_experimental_v1':
+        elif protocol == 'msgpack_experimental_v2':
             if sys.version_info.major < 3:
                 raise NotImplementedError('Msgpack protocol is not supported in Python2')
             bot_class = BotMsgpack
@@ -258,6 +258,7 @@ class Worker(WorkerBase):
             keepalive = None
 
         name = unicode2bytes(name, self.bot.unicode_encoding)
+        passwd = unicode2bytes(passwd, self.bot.unicode_encoding)
 
         self.numcpus = numcpus
         self.shutdown_loop = None
@@ -272,16 +273,13 @@ class Worker(WorkerBase):
         self.allow_shutdown = allow_shutdown
 
         if protocol == 'pb':
-            passwd = unicode2bytes(passwd, self.bot.unicode_encoding)
-
             bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
             bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
-        elif protocol == 'msgpack_experimental_v1':
+        elif protocol == 'msgpack_experimental_v2':
             if connection_string is None:
                 ws_conn_string = "ws://{}:{}".format(buildmaster_host, port)
             else:
                 from urllib.parse import urlparse
-
                 parsed_url = urlparse(connection_string)
                 ws_conn_string = "ws://{}:{}".format(parsed_url.hostname, parsed_url.port)
 

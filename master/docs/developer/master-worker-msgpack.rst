@@ -10,7 +10,11 @@ Messages between master and worker are sent using WebSocket protocol in both dir
 Data to be sent conceptually is a dictionary and is encoded using MessagePack.
 One such encoded dictionary corresponds to one WebSocket message.
 
-A message can be either a request or a response.
+Authentication happens during opening WebSocket handshake using standard HTTP Basic authentication.
+Worker credentials are sent in the value of the HTTP "Authorization" header.
+Master checks if the credentials match and if not - the connection is terminated.
+
+A WebSocket message can be either a request or a response.
 Request message is sent when one side wants another one to perform an action.
 Once the action is performed, the other side sends the response message back.
 A response message is mandatory for every request message.
@@ -397,50 +401,6 @@ Worker returns ``result``: ``None`` without waiting for completion of shutdown.
 
 Messages from worker to master
 ------------------------------
-
-auth
-~~~~
-
-Request
-+++++++
-
-The authentication message requests master to authenticate username and password given by the worker.
-This message must be the first message sent by worker.
-
-``seq_number``
-    Described in section :ref:`MsgPack_Request_Message`.
-
-``op``
-    Value is a string ``auth``.
-
-``username``
-    Value is a string.
-    It represents a username of a connecting worker.
-
-``password``
-    Value is a string.
-    It represents a password of a connecting worker.
-
-
-Response
-++++++++
-
-Master returns ``result``: ``True`` if authentication was successful and worker has logged to master.
-
-``op``
-    Value is a string ``response``.
-
-``seq_number``
-    Described in section :ref:`MsgPack_Response_Message`.
-
-``result``
-    Value is ``True`` when authentication succeeded, ``False`` if authentication failed.
-    If request itself failed due to reason not related to authentication, value contains the message of exception.
-
-``is_exception``
-    This key-value pair is optional.
-    If request succeeded this key-value pair is absent.
-    Otherwise, its value is a boolean ``True`` and the message of exception is specified in the value of ``result``.
 
 .. _MsgPack_Update_Message:
 
