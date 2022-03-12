@@ -41,10 +41,18 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommand:
-    def __init__(self, builder):
+    def __init__(self, builder, command, stepId, args):
         self.builder = builder
         self.unicode_encoding = builder.unicode_encoding
         self.basedir = builder.basedir
+
+        try:
+            factory = registry.getFactory(command)
+        except KeyError:
+            raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
+
+        # .command points to a WorkerCommand instance, and is set while the step is running.
+        self.command = factory(self, stepId, args)
 
     def protocol_update_upload_file_close(self, writer):
         return self.builder.protocol_update_upload_file_close(writer)
@@ -103,7 +111,7 @@ class ProtocolCommand:
     # this is fired by the Deferred attached to each Command
     def command_complete(self, failure):
         if failure:
-            log.msg("ProtocolCommand.command_complete (failure)", self.builder.command)
+            log.msg("ProtocolCommand.command_complete (failure)", self.command)
             log.err(failure)
             # failure, if present, is a failure.Failure. To send it across
             # the wire, we must turn it into a pb.CopyableFailure.
@@ -111,8 +119,7 @@ class ProtocolCommand:
             failure.unsafeTracebacks = True
         else:
             # failure is None
-            log.msg("ProtocolCommand.command_complete (success)", self.builder.command)
-        self.builder.command = None
+            log.msg("ProtocolCommand.command_complete (success)", self.command)
         self.builder.protocol_command = None
         if not self.builder.running:
             log.msg(" but we weren't running, quitting silently")
@@ -125,6 +132,11 @@ class ProtocolCommand:
 
 
 class FakeProtocolCommand(ProtocolCommand):
+    def __init__(self, builder):
+        self.builder = builder
+        self.unicode_encoding = builder.unicode_encoding
+        self.basedir = builder.basedir
+
     def send_update(self, status):
         self.builder.sendUpdate(status)
 
@@ -142,10 +154,6 @@ class WorkerForBuilderBase(service.Service):
     # when they attach. We use it to detect when the connection to the master
     # is severed.
     remote = None
-
-    # .command points to a WorkerCommand instance, and is set while the step
-    # is running. We use it to implement the stopBuild method.
-    command = None
 
     # .command_ref is a ref to the master-side BuildStep object, and is set
     # when the step is started
@@ -234,20 +242,13 @@ class WorkerForBuilderBase(service.Service):
             log.msg("leftover command, dropping it")
             self.stopCommand()
 
-        try:
-            factory = registry.getFactory(command)
-        except KeyError:
-            raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
-
         self.protocol_args_setup(command, args)
-        protocol_command = ProtocolCommand(self)
-        self.command = factory(protocol_command, stepId, args)
-        self.protocol_command = protocol_command
+        self.protocol_command = ProtocolCommand(self, command, stepId, args)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.command_ref = command_ref
         self.protocol_notify_on_disconnect()
-        d = self.command.doStart()
+        d = self.protocol_command.command.doStart()
         d.addCallback(lambda res: None)
         d.addBoth(self.protocol_command.command_complete)
         return None
@@ -261,7 +262,7 @@ class WorkerForBuilderBase(service.Service):
             # command that wasn't actually running
             log.msg(" .. but none was running")
             return
-        self.command.doInterrupt()
+        self.protocol_command.command.doInterrupt()
 
     def stopCommand(self):
         """Make any currently-running command die, with no further status
@@ -270,9 +271,8 @@ class WorkerForBuilderBase(service.Service):
         silence it, and then forget about it."""
         if not self.protocol_command:
             return
-        log.msg("stopCommand: halting current command {0}".format(self.command))
-        self.command.doInterrupt()  # shut up! and die!
-        self.command = None  # forget you!
+        log.msg("stopCommand: halting current command {0}".format(self.protocol_command.command))
+        self.protocol_command.command.doInterrupt()
         self.protocol_command = None
 
 
