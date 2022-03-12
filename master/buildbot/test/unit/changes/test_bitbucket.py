@@ -332,20 +332,21 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             raise Error(code=404)
         self.patch(self.changesource, "getPage", fail)
 
-    def attachDefaultChangeSource(self):
-        return self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug'))
+    @defer.inlineCallbacks
+    def _new_change_source(self, **kwargs):
+        change_source = BitbucketPullrequestPoller(**kwargs)
+        yield self.attachChangeSource(change_source)
+        return change_source
 
     # tests
     @defer.inlineCallbacks
     def test_describe(self):
-        yield self.attachDefaultChangeSource()
+        yield self._new_change_source(owner='owner', slug='slug')
         assert re.search(r'owner/slug', self.changesource.describe())
 
     @defer.inlineCallbacks
     def test_poll_unknown_repo(self):
-        yield self.attachDefaultChangeSource()
+        yield self._new_change_source(owner='owner', slug='slug')
         # Polling a non-existent repository should result in a 404
         self._fakeGetPage404()
         try:
@@ -358,7 +359,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
     @defer.inlineCallbacks
     def test_poll_unauthorized_failure(self):
         expected_headers = {b'Authorization': b'Basic dXNlcjoxMjM0'}
-        yield self.attachDefaultChangeSource()
+        yield self._new_change_source(owner='owner', slug='slug')
         # Polling without authorization should result in a 403
         self._fakeGetPage403(expected_headers)
         try:
@@ -369,7 +370,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_no_pull_requests(self):
-        yield self.attachDefaultChangeSource()
+        yield self._new_change_source(owner='owner', slug='slug')
         rest = PullRequestListRest(owner="owner", slug="slug", prs=[])
         self._fakeGetPage(rest.request())
         yield self.changesource.poll()
@@ -378,7 +379,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_new_pull_requests(self):
-        yield self.attachDefaultChangeSource()
+        yield self._new_change_source(owner='owner', slug='slug')
         self.patch(self.changesource, "getPage", self.pr_list.getPage)
 
         yield self.changesource.poll()
@@ -402,7 +403,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_no_updated_pull_request(self):
-        yield self.attachDefaultChangeSource()
+        yield self._new_change_source(owner='owner', slug='slug')
 
         # patch client.getPage()
         self.patch(self.changesource, "getPage", self.pr_list.getPage)
@@ -432,7 +433,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_updated_pull_request(self):
-        yield self.attachDefaultChangeSource()
+        yield self._new_change_source(owner='owner', slug='slug')
         # patch client.getPage()
         self.patch(self.changesource, "getPage", self.pr_list.getPage)
 
@@ -497,11 +498,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_pull_request_filter_False(self):
-        yield self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug',
-            pullrequest_filter=lambda x: False
-        ))
+        yield self._new_change_source(owner='owner', slug='slug',
+                                      pullrequest_filter=lambda x: False)
 
         # patch client.getPage()
         self.patch(self.changesource, "getPage", self.pr_list.getPage)
@@ -512,11 +510,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_pull_request_filter_True(self):
-        yield self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug',
-            pullrequest_filter=lambda x: True
-        ))
+        yield self._new_change_source(owner='owner', slug='slug', pullrequest_filter=lambda x: True)
 
         # patch client.getPage()
         self.patch(self.changesource, "getPage", self.pr_list.getPage)
@@ -542,11 +536,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_pull_request_not_useTimestamps(self):
-        yield self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug',
-            useTimestamps=False,
-        ))
+        yield self._new_change_source(owner='owner', slug='slug', useTimestamps=False)
 
         self.patch(self.changesource, "getPage", self.pr_list.getPage)
         self.reactor.advance(1396825656)
@@ -571,11 +561,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_pull_request_properties(self):
-        yield self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug',
-            bitbucket_property_whitelist=["bitbucket.*"],
-        ))
+        yield self._new_change_source(owner='owner', slug='slug', p
+                                      bitbucket_property_whitelist=["bitbucket.*"])
 
         self.patch(self.changesource, "getPage", self.pr_list.getPage)
 
