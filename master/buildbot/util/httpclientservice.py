@@ -147,8 +147,11 @@ class HTTPClientService(service.SharedService):
         yield super().stopService()
 
     def _prepareRequest(self, ep, kwargs):
-        assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
-        url = self._base_url + ep
+        if ep.startswith('http://') or ep.startswith('https://'):
+            url = ep
+        else:
+            assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
+            url = self._base_url + ep
         if self._auth is not None and 'auth' not in kwargs:
             kwargs['auth'] = self._auth
         headers = kwargs.get('headers', {})
