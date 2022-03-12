@@ -77,12 +77,12 @@ def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
     missing_in_exp, missing_in_cmd, diff = _dict_diff(exp_args, got_args)
     if missing_in_exp:
         missing_dict = {key: got_args[key] for key in missing_in_exp}
-        text += f'Keys in cmd missing from expectation: {missing_dict!r}\n'
+        text += f'Keys in command missing from expectation: {missing_dict!r}\n'
     if missing_in_cmd:
         missing_dict = {key: exp_args[key] for key in missing_in_cmd}
         text += f'Keys in expectation missing from command: {missing_dict!r}\n'
     if diff:
-        formatted_diff = [f'"{d[0]}": expected {d[1]!r}, got {d[2]!r}' for d in diff]
+        formatted_diff = [f'"{d[0]}":\nexpected: {d[1]!r}\ngot:      {d[2]!r}\n' for d in diff]
         text += ('Key differences between expectation and command: {0}\n'.format(
             '\n'.join(formatted_diff)))
     return text
@@ -239,7 +239,7 @@ class Expect:
         cmd_dif = _describe_cmd_difference(self.remote_command, self.args,
                                            command.remote_command, command.args)
         msg = ("Command contents different from expected (command index: "
-               f"{self._expected_commands_popped}); {cmd_dif}")
+               f"{case._expected_commands_popped}):\n{cmd_dif}")
         raise AssertionError(msg)
 
     def __repr__(self):
@@ -580,6 +580,19 @@ class ExpectMasterShell:
         return f"<ExpectMasterShell(command={self._command})>"
 
 
+class FakeRunProcess:
+    def __init__(self, start_retval, result_rc):
+        self.start_retval = start_retval
+        self.result_rc = result_rc
+        self.result_signal = None
+
+    def start(self):
+        return defer.succeed(self.start_retval)
+
+    def interrupt(self, signal_name):
+        pass
+
+
 class TestBuildStepMixin:
 
     """
@@ -601,7 +614,7 @@ class TestBuildStepMixin:
         self.master = fakemaster.make_master(self, wantData=want_data, wantDb=want_db,
                                              wantMq=want_mq)
 
-        self.patch(runprocess, "run_process", self._patched_run_process)
+        self.patch(runprocess, "create_process", self._patched_create_process)
         self._master_run_process_expect_env = {}
 
     def tear_down_test_build_step(self):
@@ -889,10 +902,10 @@ class TestBuildStepMixin:
         if not exp.connection_broken:
             command.remote_complete()
 
-    def _patched_run_process(self, reactor, command, workdir=None, env=None,
-                             collect_stdout=True, collect_stderr=True, stderr_is_error=False,
-                             io_timeout=300, runtime_timeout=3600, sigterm_timeout=5,
-                             initial_stdin=None):
+    def _patched_create_process(self, reactor, command, workdir=None, env=None,
+                                collect_stdout=True, collect_stderr=True, stderr_is_error=False,
+                                io_timeout=300, runtime_timeout=3600, sigterm_timeout=5,
+                                initial_stdin=None, use_pty=False):
 
         _check_env_is_expected(self, self._master_run_process_expect_env, env)
 
@@ -908,7 +921,9 @@ class TestBuildStepMixin:
                       f"expectation is not instance of ExpectMasterShell: {exp!r}")
 
         try:
-            rc, stdout, stderr = exp._check(command, workdir, env)
+            rc, stdout, stderr = exp._check(self, command, workdir, env)
+            result_rc = rc
+
         except AssertionError as e:
             # log this error, as the step may swallow the AssertionError or
             # otherwise obscure the failure.  Trial will see the exception in
@@ -917,16 +932,31 @@ class TestBuildStepMixin:
             log.err()
             raise e
 
-        if not collect_stderr and stderr_is_error and stderr:
+        if stderr_is_error and stderr:
             rc = -1
 
-        if collect_stdout and collect_stderr:
-            return (rc, stdout, stderr)
-        if collect_stdout:
-            return (rc, stdout)
-        if collect_stderr:
-            return (rc, stderr)
-        return rc
+        return_stdout = None
+        if collect_stdout is True:
+            return_stdout = stdout
+        elif callable(collect_stdout):
+            collect_stdout(stdout)
+
+        return_stderr = None
+        if collect_stderr is True:
+            return_stderr = stderr
+        elif callable(collect_stderr):
+            collect_stderr(stderr)
+
+        if return_stdout is not None and return_stderr is not None:
+            start_retval = (rc, return_stdout, return_stderr)
+        elif return_stdout is not None:
+            start_retval = (rc, return_stdout)
+        elif return_stderr is not None:
+            start_retval = (rc, return_stderr)
+        else:
+            start_retval = rc
+
+        return FakeRunProcess(start_retval, result_rc)
 
     def change_worker_system(self, system):
         self.worker.worker_system = system

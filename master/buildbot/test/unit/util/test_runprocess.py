@@ -45,7 +45,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.process = None
         self.reactor.spawnProcess = self.fake_spawn_process
 
-    def fake_spawn_process(self, pp, command, args, env, workdir):
+    def fake_spawn_process(self, pp, command, args, env, workdir, usePTY=False):
         self.assertIsNone(self.process)
         self.pp = pp
         self.pp.transport = mock.Mock()

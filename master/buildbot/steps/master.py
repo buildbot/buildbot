@@ -18,15 +18,15 @@ import pprint
 import re
 
 from twisted.internet import defer
-from twisted.internet import error
 from twisted.internet import reactor
-from twisted.internet.protocol import ProcessProtocol
 from twisted.python import runtime
 
+from buildbot.process.buildstep import CANCELLED
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
 from buildbot.util import deferwaiter
+from buildbot.util import runprocess
 
 
 class MasterShellCommand(BuildStep):
@@ -53,34 +53,9 @@ class MasterShellCommand(BuildStep):
         super().__init__(**kwargs)
 
         self.command = command
+        self.process = None
         self.masterWorkdir = self.workdir
         self._deferwaiter = deferwaiter.DeferWaiter()
-        self._status_object = None
-
-    class LocalPP(ProcessProtocol):
-
-        def __init__(self, step):
-            self.step = step
-            self._finish_d = defer.Deferred()
-            self.step._deferwaiter.add(self._finish_d)
-
-        def outReceived(self, data):
-            self.step._deferwaiter.add(self.step.stdio_log.addStdout(data))
-
-        def errReceived(self, data):
-            self.step._deferwaiter.add(self.step.stdio_log.addStderr(data))
-
-        def processEnded(self, status_object):
-            if status_object.value.exitCode is not None:
-                msg = f"exit status {status_object.value.exitCode}\n"
-                self.step._deferwaiter.add(self.step.stdio_log.addHeader(msg))
-
-            if status_object.value.signal is not None:
-                msg = f"signal {status_object.value.signal}\n"
-                self.step._deferwaiter.add(self.step.stdio_log.addHeader(msg))
-
-            self.step._status_object = status_object
-            self._finish_d.callback(None)
 
     @defer.inlineCallbacks
     def run(self):
@@ -118,8 +93,9 @@ class MasterShellCommand(BuildStep):
         yield self.stdio_log.addHeader(f" in dir {os.getcwd()}\n")
         yield self.stdio_log.addHeader(f" argv: {argv}\n")
 
+        os_env = os.environ
         if self.env is None:
-            env = os.environ
+            env = os_env
         else:
             assert isinstance(self.env, dict)
             env = self.env
@@ -144,37 +120,48 @@ class MasterShellCommand(BuildStep):
                         raise RuntimeError("'env' values must be strings or "
                                            f"lists; key '{key}' is incorrect")
                     newenv[key] = p.sub(subst, env[key])
+
+            # RunProcess will take environment values from os.environ in cases of env not having
+            # the keys that are in os.environ. Prevent this by putting None into those keys.
+            for key in os_env:
+                if key not in env:
+                    env[key] = None
+
             env = newenv
 
         if self.logEnviron:
             yield self.stdio_log.addHeader(f" env: {repr(env)}\n")
 
+        if self.stopped:
+            return CANCELLED
+
+        on_stdout = lambda data: self._deferwaiter.add(self.stdio_log.addStdout(data))
+        on_stderr = lambda data: self._deferwaiter.add(self.stdio_log.addStderr(data))
+
         # TODO add a timeout?
-        self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
-                                            path=self.masterWorkdir, usePTY=self.usePTY, env=env)
+        self.process = runprocess.create_process(reactor, argv, workdir=self.masterWorkdir,
+                                                 use_pty=self.usePTY, env=env,
+                                                 collect_stdout=on_stdout, collect_stderr=on_stderr)
 
-        # self._deferwaiter will yield only after LocalPP finishes
-
+        yield self.process.start()
         yield self._deferwaiter.wait()
 
-        status_value = self._status_object.value
-        if status_value.signal is not None:
-            self.descriptionDone = [f"killed ({status_value.signal})"]
+        if self.process.result_signal is not None:
+            yield self.stdio_log.addHeader(f"signal {self.process.result_signal}\n")
+            self.descriptionDone = [f"killed ({self.process.result_signal})"]
             return FAILURE
-        elif status_value.exitCode != 0:
-            self.descriptionDone = [f"failed ({status_value.exitCode})"]
+        elif self.process.result_rc != 0:
+            yield self.stdio_log.addHeader(f"exit status {self.process.result_signal}\n")
+            self.descriptionDone = [f"failed ({self.process.result_rc})"]
             return FAILURE
         else:
             return SUCCESS
 
+    @defer.inlineCallbacks
     def interrupt(self, reason):
-        try:
-            self.process.signalProcess(self.interruptSignal)
-        except KeyError:  # Process not started yet
-            pass
-        except error.ProcessExitedAlready:
-            pass
-        super().interrupt(reason)
+        yield super().interrupt(reason)
+        if self.process is not None:
+            self.process.send_signal(self.interruptSignal)
 
 
 class SetProperty(BuildStep):

@@ -33,7 +33,7 @@ class MasterRunProcessMixin:
     def patched_run_process(self, reactor, command, workdir=None, env=None,
                             collect_stdout=True, collect_stderr=True, stderr_is_error=False,
                             io_timeout=300, runtime_timeout=3600, sigterm_timeout=5,
-                            initial_stdin=None):
+                            initial_stdin=None, use_pty=False):
 
         _check_env_is_expected(self, self._master_run_process_expect_env, env)
 
