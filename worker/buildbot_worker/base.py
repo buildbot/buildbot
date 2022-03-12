@@ -46,6 +46,8 @@ class ProtocolCommandBase:
         self.unicode_encoding = builder.unicode_encoding
         self.basedir = builder.basedir
 
+        self.protocol_args_setup(command, args)
+
         try:
             factory = registry.getFactory(command)
         except KeyError:
@@ -53,27 +55,6 @@ class ProtocolCommandBase:
 
         # .command points to a WorkerCommand instance, and is set while the step is running.
         self.command = factory(self, stepId, args)
-
-    def protocol_update_upload_file_close(self, writer):
-        return self.builder.protocol_update_upload_file_close(writer)
-
-    def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
-        return self.builder.protocol_update_upload_file_utime(writer, access_time, modified_time)
-
-    def protocol_update_upload_file_write(self, writer, data):
-        return self.builder.protocol_update_upload_file_write(writer, data)
-
-    def protocol_update_upload_directory(self, writer):
-        return self.builder.protocol_update_upload_directory(writer)
-
-    def protocol_update_upload_directory_write(self, writer, data):
-        return self.builder.protocol_update_upload_directory_write(writer, data)
-
-    def protocol_update_read_file_close(self, reader):
-        return self.builder.protocol_update_read_file_close(reader)
-
-    def protocol_update_read_file(self, reader, length):
-        return self.builder.protocol_update_read_file(reader, length)
 
     # sendUpdate is invoked by the Commands we spawn
     def send_update(self, data):
@@ -94,7 +75,7 @@ class ProtocolCommandBase:
         if self.builder.command_ref:
             update = [data, 0]
             updates = [update]
-            d = self.builder.protocol_update(updates)
+            d = self.protocol_update(updates)
             d.addCallback(self.ack_update)
             d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
 
@@ -125,7 +106,7 @@ class ProtocolCommandBase:
             log.msg(" but we weren't running, quitting silently")
             return
         if self.builder.command_ref:
-            d = self.builder.protocol_complete(failure)
+            d = self.protocol_complete(failure)
             d.addCallback(self.ack_complete)
             d.addErrback(self._ack_failed, "ProtocolCommandBase.command_complete")
             self.builder.command_ref = None
@@ -139,6 +120,27 @@ class FakeProtocolCommand(ProtocolCommandBase):
 
     def send_update(self, status):
         self.builder.sendUpdate(status)
+
+    def protocol_update_upload_file_close(self, writer):
+        return self.builder.protocol_update_upload_file_close(writer)
+
+    def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
+        return self.builder.protocol_update_upload_file_utime(writer, access_time, modified_time)
+
+    def protocol_update_upload_file_write(self, writer, data):
+        return self.builder.protocol_update_upload_file_write(writer, data)
+
+    def protocol_update_upload_directory(self, writer):
+        return self.builder.protocol_update_upload_directory(writer)
+
+    def protocol_update_upload_directory_write(self, writer, data):
+        return self.builder.protocol_update_upload_directory_write(writer, data)
+
+    def protocol_update_read_file_close(self, reader):
+        return self.builder.protocol_update_read_file_close(reader)
+
+    def protocol_update_read_file(self, reader, length):
+        return self.builder.protocol_update_read_file(reader, length)
 
 
 class WorkerForBuilderBase(service.Service):
@@ -243,12 +245,11 @@ class WorkerForBuilderBase(service.Service):
             log.msg("leftover command, dropping it")
             self.stopCommand()
 
-        self.protocol_args_setup(command, args)
         self.protocol_command = self.ProtocolCommand(self, command, stepId, args)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.command_ref = command_ref
-        self.protocol_notify_on_disconnect()
+        self.protocol_command.protocol_notify_on_disconnect()
         d = self.protocol_command.command.doStart()
         d.addCallback(lambda res: None)
         d.addBoth(self.protocol_command.command_complete)

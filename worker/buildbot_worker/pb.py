@@ -50,26 +50,20 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandPb(ProtocolCommandBase):
-    pass
-
-
-class WorkerForBuilderPbLike(WorkerForBuilderBase):
-    ProtocolCommand = ProtocolCommandPb
-
     def protocol_args_setup(self, command, args):
         pass
 
     # Returns a Deferred
     def protocol_update(self, updates):
-        return self.command_ref.callRemote("update", updates)
+        return self.builder.command_ref.callRemote("update", updates)
 
     def protocol_notify_on_disconnect(self):
-        self.command_ref.notifyOnDisconnect(self.lostRemoteStep)
+        self.builder.command_ref.notifyOnDisconnect(self.builder.lostRemoteStep)
 
     # Returns a Deferred
     def protocol_complete(self, failure):
-        self.command_ref.dontNotifyOnDisconnect(self.lostRemoteStep)
-        return self.command_ref.callRemote("complete", failure)
+        self.builder.command_ref.dontNotifyOnDisconnect(self.builder.lostRemoteStep)
+        return self.builder.command_ref.callRemote("complete", failure)
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
@@ -98,6 +92,10 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
     # Returns a Deferred
     def protocol_update_read_file(self, reader, length):
         return reader.callRemote('read', length)
+
+
+class WorkerForBuilderPbLike(WorkerForBuilderBase):
+    ProtocolCommand = ProtocolCommandPb
 
 
 class WorkerForBuilderPb(WorkerForBuilderPbLike, pb.Referenceable):
