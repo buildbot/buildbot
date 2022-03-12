@@ -40,7 +40,7 @@ class UnknownCommand(pb.Error):
     pass
 
 
-class ProtocolCommand:
+class ProtocolCommandBase:
     def __init__(self, builder, command, stepId, args):
         self.builder = builder
         self.unicode_encoding = builder.unicode_encoding
@@ -96,7 +96,7 @@ class ProtocolCommand:
             updates = [update]
             d = self.builder.protocol_update(updates)
             d.addCallback(self.ack_update)
-            d.addErrback(self._ack_failed, "ProtocolCommand.send_update")
+            d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
 
     def ack_update(self, acknum):
         self.builder.activity()  # update the "last activity" timer
@@ -105,13 +105,13 @@ class ProtocolCommand:
         self.builder.activity()  # update the "last activity" timer
 
     def _ack_failed(self, why, where):
-        log.msg("ProtocolCommand._ack_failed:", where)
+        log.msg("ProtocolCommandBase._ack_failed:", where)
         log.err(why)  # we don't really care
 
     # this is fired by the Deferred attached to each Command
     def command_complete(self, failure):
         if failure:
-            log.msg("ProtocolCommand.command_complete (failure)", self.command)
+            log.msg("ProtocolCommandBase.command_complete (failure)", self.command)
             log.err(failure)
             # failure, if present, is a failure.Failure. To send it across
             # the wire, we must turn it into a pb.CopyableFailure.
@@ -119,7 +119,7 @@ class ProtocolCommand:
             failure.unsafeTracebacks = True
         else:
             # failure is None
-            log.msg("ProtocolCommand.command_complete (success)", self.command)
+            log.msg("ProtocolCommandBase.command_complete (success)", self.command)
         self.builder.protocol_command = None
         if not self.builder.running:
             log.msg(" but we weren't running, quitting silently")
@@ -127,11 +127,11 @@ class ProtocolCommand:
         if self.builder.command_ref:
             d = self.builder.protocol_complete(failure)
             d.addCallback(self.ack_complete)
-            d.addErrback(self._ack_failed, "ProtocolCommand.command_complete")
+            d.addErrback(self._ack_failed, "ProtocolCommandBase.command_complete")
             self.builder.command_ref = None
 
 
-class FakeProtocolCommand(ProtocolCommand):
+class FakeProtocolCommand(ProtocolCommandBase):
     def __init__(self, builder):
         self.builder = builder
         self.unicode_encoding = builder.unicode_encoding
@@ -142,6 +142,7 @@ class FakeProtocolCommand(ProtocolCommand):
 
 
 class WorkerForBuilderBase(service.Service):
+    ProtocolCommand = ProtocolCommandBase
 
     """This is the local representation of a single Builder: it handles a
     single kind of build (like an all-warnings build). It has a name and a
@@ -243,7 +244,7 @@ class WorkerForBuilderBase(service.Service):
             self.stopCommand()
 
         self.protocol_args_setup(command, args)
-        self.protocol_command = ProtocolCommand(self, command, stepId, args)
+        self.protocol_command = self.ProtocolCommand(self, command, stepId, args)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.command_ref = command_ref

@@ -32,6 +32,7 @@ from twisted.spread import pb
 
 from buildbot_worker import util
 from buildbot_worker.base import BotBase
+from buildbot_worker.base import ProtocolCommandBase
 from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.compat import unicode2bytes
@@ -48,7 +49,13 @@ class UnknownCommand(pb.Error):
     pass
 
 
+class ProtocolCommandPb(ProtocolCommandBase):
+    pass
+
+
 class WorkerForBuilderPbLike(WorkerForBuilderBase):
+    ProtocolCommand = ProtocolCommandPb
+
     def protocol_args_setup(self, command, args):
         pass
 

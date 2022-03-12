@@ -26,6 +26,7 @@ from autobahn.websocket.types import ConnectingRequest
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot_worker.base import ProtocolCommandBase
 from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.util import deferwaiter
 
@@ -58,7 +59,13 @@ def remote_print(self, message):
             self.name, message))
 
 
+class ProtocolCommandMsgpack(ProtocolCommandBase):
+    pass
+
+
 class WorkerForBuilderMsgpack(WorkerForBuilderBase):
+    ProtocolCommand = ProtocolCommandMsgpack
+
     def protocol_args_setup(self, command, args):
         if "want_stdout" in args:
             if args["want_stdout"]:
