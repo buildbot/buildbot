@@ -20,10 +20,10 @@ import os
 import shutil
 
 import buildbot_worker.runprocess
-from buildbot_worker.base import FakeProtocolCommand
 from buildbot_worker.commands import utils
 from buildbot_worker.test.fake import runprocess
 from buildbot_worker.test.fake import workerforbuilder
+from buildbot_worker.test.fake.protocolcommand import FakeProtocolCommand
 
 
 class CommandTestMixin(object):

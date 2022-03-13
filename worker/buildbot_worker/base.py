@@ -116,37 +116,6 @@ class ProtocolCommandBase:
             self.command_ref = None
 
 
-class FakeProtocolCommand(ProtocolCommandBase):
-    def __init__(self, builder):
-        self.builder = builder
-        self.unicode_encoding = builder.unicode_encoding
-        self.basedir = builder.basedir
-
-    def send_update(self, status):
-        self.builder.sendUpdate(status)
-
-    def protocol_update_upload_file_close(self, writer):
-        return self.builder.protocol_update_upload_file_close(writer)
-
-    def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
-        return self.builder.protocol_update_upload_file_utime(writer, access_time, modified_time)
-
-    def protocol_update_upload_file_write(self, writer, data):
-        return self.builder.protocol_update_upload_file_write(writer, data)
-
-    def protocol_update_upload_directory(self, writer):
-        return self.builder.protocol_update_upload_directory(writer)
-
-    def protocol_update_upload_directory_write(self, writer, data):
-        return self.builder.protocol_update_upload_directory_write(writer, data)
-
-    def protocol_update_read_file_close(self, reader):
-        return self.builder.protocol_update_read_file_close(reader)
-
-    def protocol_update_read_file(self, reader, length):
-        return self.builder.protocol_update_read_file(reader, length)
-
-
 class WorkerForBuilderBase(service.Service):
     ProtocolCommand = ProtocolCommandBase
 
