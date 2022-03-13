@@ -55,15 +55,15 @@ class ProtocolCommandPb(ProtocolCommandBase):
 
     # Returns a Deferred
     def protocol_update(self, updates):
-        return self.builder.command_ref.callRemote("update", updates)
+        return self.command_ref.callRemote("update", updates)
 
     def protocol_notify_on_disconnect(self):
-        self.builder.command_ref.notifyOnDisconnect(self.builder.lostRemoteStep)
+        self.command_ref.notifyOnDisconnect(self.builder.lostRemoteStep)
 
     # Returns a Deferred
     def protocol_complete(self, failure):
-        self.builder.command_ref.dontNotifyOnDisconnect(self.builder.lostRemoteStep)
-        return self.builder.command_ref.callRemote("complete", failure)
+        self.command_ref.dontNotifyOnDisconnect(self.builder.lostRemoteStep)
+        return self.command_ref.callRemote("complete", failure)
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):

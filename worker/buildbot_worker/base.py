@@ -41,12 +41,16 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandBase:
-    def __init__(self, builder, command, stepId, args):
+    def __init__(self, builder, command, stepId, args, command_ref):
         self.builder = builder
         self.unicode_encoding = builder.unicode_encoding
         self.basedir = builder.basedir
 
         self.protocol_args_setup(command, args)
+
+        # .command_ref is a ref to the master-side BuildStep object, and is set
+        # when the step is started
+        self.command_ref = command_ref
 
         try:
             factory = registry.getFactory(command)
@@ -72,7 +76,7 @@ class ProtocolCommandBase:
         # the update[1]=0 comes from the leftover 'updateNum', which the
         # master still expects to receive. Provide it to avoid significant
         # interoperability issues between new workers and old masters.
-        if self.builder.command_ref:
+        if self.command_ref:
             update = [data, 0]
             updates = [update]
             d = self.protocol_update(updates)
@@ -105,11 +109,11 @@ class ProtocolCommandBase:
         if not self.builder.running:
             log.msg(" but we weren't running, quitting silently")
             return
-        if self.builder.command_ref:
+        if self.command_ref:
             d = self.protocol_complete(failure)
             d.addCallback(self.ack_complete)
             d.addErrback(self._ack_failed, "ProtocolCommandBase.command_complete")
-            self.builder.command_ref = None
+            self.command_ref = None
 
 
 class FakeProtocolCommand(ProtocolCommandBase):
@@ -157,10 +161,6 @@ class WorkerForBuilderBase(service.Service):
     # when they attach. We use it to detect when the connection to the master
     # is severed.
     remote = None
-
-    # .command_ref is a ref to the master-side BuildStep object, and is set
-    # when the step is started
-    command_ref = None
 
     bf = None
 
@@ -217,7 +217,7 @@ class WorkerForBuilderBase(service.Service):
 
     def lostRemoteStep(self, remotestep):
         log.msg("lost remote step")
-        self.command_ref = None
+        self.protocol_command.command_ref = None
         if self.stopCommandOnShutdown:
             self.stopCommand()
 
@@ -245,10 +245,9 @@ class WorkerForBuilderBase(service.Service):
             log.msg("leftover command, dropping it")
             self.stopCommand()
 
-        self.protocol_command = self.ProtocolCommand(self, command, stepId, args)
+        self.protocol_command = self.ProtocolCommand(self, command, stepId, args, command_ref)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
-        self.command_ref = command_ref
         self.protocol_command.protocol_notify_on_disconnect()
         d = self.protocol_command.command.doStart()
         d.addCallback(lambda res: None)

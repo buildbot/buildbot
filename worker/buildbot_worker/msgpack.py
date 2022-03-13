@@ -81,7 +81,7 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
 
     # Returns a Deferred
     def protocol_update(self, updates):
-        protocol, commandId = self.builder.command_ref
+        protocol, commandId = self.command_ref
         return protocol.get_message_result({'op': 'update', 'args': updates,
                                             'command_id': commandId})
 
@@ -92,19 +92,19 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
     def protocol_complete(self, failure):
         if failure is not None:
             failure = str(failure)
-        protocol, commandId = self.builder.command_ref
+        protocol, commandId = self.command_ref
         return protocol.get_message_result({'op': 'complete', 'args': failure,
                                             'command_id': commandId})
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
-        protocol, commandId = self.builder.command_ref
+        protocol, commandId = self.command_ref
         return protocol.get_message_result({'op': 'update_upload_file_close',
                                             'command_id': commandId})
 
     # Returns a Deferred
     def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
-        protocol, commandId = self.builder.command_ref
+        protocol, commandId = self.command_ref
         return protocol.get_message_result({'op': 'update_upload_file_utime',
                                             'access_time': access_time,
                                             'modified_time': modified_time,
@@ -112,31 +112,31 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
 
     # Returns a Deferred
     def protocol_update_upload_file_write(self, writer, data):
-        protocol, commandId = self.builder.command_ref
+        protocol, commandId = self.command_ref
         return protocol.get_message_result({'op': 'update_upload_file_write', 'args': data,
                                             'command_id': commandId})
 
     # Returns a Deferred
     def protocol_update_upload_directory(self, writer):
-        protocol, commandId = self.builder.command_ref
+        protocol, commandId = self.command_ref
         return protocol.get_message_result({'op': 'update_upload_directory_unpack',
                                             'command_id': commandId})
 
     # Returns a Deferred
     def protocol_update_upload_directory_write(self, writer, data):
-        protocol, commandId = self.builder.command_ref
+        protocol, commandId = self.command_ref
         return protocol.get_message_result({'op': 'update_upload_directory_write', 'args': data,
                                             'command_id': commandId})
 
     # Returns a Deferred
     def protocol_update_read_file_close(self, reader):
-        protocol, commandId = self.builder.command_ref
+        protocol, commandId = self.command_ref
         return protocol.get_message_result({'op': 'update_read_file_close',
                                             'command_id': commandId})
 
     # Returns a Deferred
     def protocol_update_read_file(self, reader, length):
-        protocol, commandId = self.builder.command_ref
+        protocol, commandId = self.command_ref
         return protocol.get_message_result({'op': 'update_read_file', 'length': length,
                                             'command_id': commandId})
 
