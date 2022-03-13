@@ -16,35 +16,51 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import pprint
+
 from buildbot_worker.base import ProtocolCommandBase
 
 
 class FakeProtocolCommand(ProtocolCommandBase):
-    def __init__(self, builder):
-        self.builder = builder
-        self.unicode_encoding = builder.unicode_encoding
-        self.basedir = builder.basedir
+    debug = False
+
+    def __init__(self, basedir="/workerbuilder/basedir"):
+        self.unicode_encoding = 'utf-8'
+        self.updates = []
+        self.basedir = basedir
+
+    def show(self):
+        return pprint.pformat(self.updates)
 
     def send_update(self, status):
-        self.builder.sendUpdate(status)
+        if self.debug:
+            print("FakeWorkerForBuilder.sendUpdate", status)
+        self.updates.append(status)
 
+    # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
-        return self.builder.protocol_update_upload_file_close(writer)
+        return writer.callRemote("close")
 
+    # Returns a Deferred
     def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
-        return self.builder.protocol_update_upload_file_utime(writer, access_time, modified_time)
+        return writer.callRemote("utime", (access_time, modified_time))
 
+    # Returns a Deferred
     def protocol_update_upload_file_write(self, writer, data):
-        return self.builder.protocol_update_upload_file_write(writer, data)
+        return writer.callRemote('write', data)
 
+    # Returns a Deferred
     def protocol_update_upload_directory(self, writer):
-        return self.builder.protocol_update_upload_directory(writer)
+        return writer.callRemote("unpack")
 
+    # Returns a Deferred
     def protocol_update_upload_directory_write(self, writer, data):
-        return self.builder.protocol_update_upload_directory_write(writer, data)
+        return writer.callRemote('write', data)
 
+    # Returns a Deferred
     def protocol_update_read_file_close(self, reader):
-        return self.builder.protocol_update_read_file_close(reader)
+        return reader.callRemote('close')
 
+    # Returns a Deferred
     def protocol_update_read_file(self, reader, length):
-        return self.builder.protocol_update_read_file(reader, length)
+        return reader.callRemote('read', length)

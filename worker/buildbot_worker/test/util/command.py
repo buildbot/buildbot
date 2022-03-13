@@ -22,7 +22,6 @@ import shutil
 import buildbot_worker.runprocess
 from buildbot_worker.commands import utils
 from buildbot_worker.test.fake import runprocess
-from buildbot_worker.test.fake import workerforbuilder
 from buildbot_worker.test.fake.protocolcommand import FakeProtocolCommand
 
 
@@ -76,7 +75,6 @@ class CommandTestMixin(object):
         attributes are set:
 
             self.cmd -- the command
-            self.builder -- the (fake) WorkerForBuilder
         """
 
         # set up the workdir and basedir
@@ -88,8 +86,8 @@ class CommandTestMixin(object):
                 shutil.rmtree(basedir_abs)
             os.makedirs(workdir_abs)
 
-        self.builder = workerforbuilder.FakeWorkerForBuilder(basedir=self.basedir)
-        self.cmd = cmdclass(FakeProtocolCommand(self.builder), 'fake-stepid', args)
+        self.protocol_command = FakeProtocolCommand(basedir=self.basedir)
+        self.cmd = cmdclass(self.protocol_command, 'fake-stepid', args)
 
         return self.cmd
 
@@ -104,7 +102,7 @@ class CommandTestMixin(object):
         """
         Return the updates made so far
         """
-        return self.builder.updates
+        return self.protocol_command.updates
 
     def assertUpdates(self, updates, msg=None):
         """
@@ -121,7 +119,7 @@ class CommandTestMixin(object):
         self.assertEqual(my_updates, updates, msg)
 
     def add_update(self, upd):
-        self.builder.updates.append(upd)
+        self.protocol_command.updates.append(upd)
 
     def patch_runprocess(self, *expectations):
         """
