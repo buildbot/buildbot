@@ -151,11 +151,6 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
     home directory. The rest of its behavior is determined by the master.
     """
 
-    # remote is a ref to the Builder object on the master side, and is set
-    # when they attach. We use it to detect when the connection to the master
-    # is severed.
-    remote = None
-
     def __init__(self, name, unicode_encoding):
         # service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
@@ -175,29 +170,6 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
         if self.protocol_command:
             self.protocol_command.builder_is_running = False
         self.stopCommand()
-
-    def remote_setMaster(self, remote):
-        self.remote = remote
-        self.remote.notifyOnDisconnect(self.lostRemote)
-
-    def remote_print(self, message):
-        log.msg("WorkerForBuilder.remote_print({0}): message from master: {1}".format(
-                self.name, message))
-
-    def lostRemote(self, remote):
-        log.msg("lost remote")
-        self.remote = None
-
-    def lostRemoteStep(self, remotestep):
-        log.msg("lost remote step")
-        self.protocol_command.command_ref = None
-        self.stopCommand()
-
-    # the following are Commands that can be invoked by the master-side
-    # Builder
-    def remote_startBuild(self):
-        """This is invoked before the first step of any new build is run.  It
-        doesn't do much, but masters call it so it's still here."""
 
     def remote_startCommand(self, command_ref, stepId, command, args):
         """
@@ -220,7 +192,7 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
 
         self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.basedir,
                                                      self.running, on_command_complete,
-                                                     self.lostRemoteStep, command, stepId, args,
+                                                     None, command, stepId, args,
                                                      command_ref)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
