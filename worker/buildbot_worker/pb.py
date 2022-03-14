@@ -314,7 +314,7 @@ if sys.version_info.major >= 3:
                                 name, b.builddir, builddir))
                         self.set_builddir(b, self.basedir, builddir)
                 else:
-                    b = self.WorkerForBuilder(name, self.unicode_encoding)
+                    b = self.WorkerForBuilder(name)
                     b.setServiceParent(self)
                     self.set_builddir(b, builddir)
                     self.builders[name] = b

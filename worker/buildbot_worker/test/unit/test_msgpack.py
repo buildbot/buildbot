@@ -156,8 +156,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.protocol.factory.buildbot_bot = BotMsgpack('test/dir')
         service.MultiService.startService(self.protocol.factory.buildbot_bot)
 
-        worker_for_builder = self.protocol.factory.buildbot_bot.WorkerForBuilder('test_builder',
-                                                                                 'utf-8')
+        worker_for_builder = self.protocol.factory.buildbot_bot.WorkerForBuilder('test_builder')
         worker_for_builder.basedir = 'basedir'
 
         self.protocol.factory.buildbot_bot.builders = {'test_builder': worker_for_builder}
