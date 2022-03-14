@@ -296,7 +296,7 @@ if sys.version_info.major >= 3:
 
         @defer.inlineCallbacks
         def remote_setBuilderList(self, wanted):
-            retval = {}
+            retval = []
             wanted_names = {name for (name, builddir) in wanted}
             wanted_dirs = {builddir for (name, builddir) in wanted}
             wanted_dirs.add('info')
@@ -312,7 +312,7 @@ if sys.version_info.major >= 3:
                     b.setServiceParent(self)
                     b.setBuilddir(builddir)
                     self.builders[name] = b
-                retval[name] = b
+                retval.append(name)
 
             # disown any builders no longer desired
             to_remove = list(set(self.builders.keys()) - wanted_names)

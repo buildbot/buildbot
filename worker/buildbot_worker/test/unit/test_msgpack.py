@@ -348,11 +348,9 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_call_set_builder_list_success(self):
         self.protocol.factory.buildbot_bot.remote_setBuilderList = mock.Mock()
-        self.protocol.factory.buildbot_bot.remote_setBuilderList.return_value = {
-            'name1': 'test_worker_for_builder1',
-            'name2': 'test_worker_for_builder2',
-            'name3': 'test_worker_for_builder3'
-        }
+        self.protocol.factory.buildbot_bot.remote_setBuilderList.return_value = [
+            'name1', 'name2', 'name3'
+        ]
         builders = [['name1', 'dir1'], ['name2', 'dir2'], ['name3', 'dir3']]
 
         yield self.send_message({
@@ -370,19 +368,19 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_call_set_builder_list_exception(self):
-        self.protocol.factory.buildbot_bot.remote_setBuilderList = mock.Mock()
-        self.protocol.factory.buildbot_bot.remote_setBuilderList.return_value = 1
+        self.protocol.factory.buildbot_bot.remote_setBuilderList = \
+            mock.Mock(side_effect=Exception('Error'))
+
         yield self.send_message({
             'op': 'set_builder_list',
             'seq_number': 0,
             'builders': [['name1', 'dir1'], ['name2', 'dir2'], ['name3', 'dir3']]
         })
 
-        # remote_setBuilderList should return a dict, if type does not match - raise an exception
         self.assert_sent_messages([{
             'op': 'response',
             'seq_number': 0,
-            'result': "'int' object has no attribute 'keys'",
+            'result': "Error",
             'is_exception': True
         }])
 

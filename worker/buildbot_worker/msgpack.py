@@ -363,8 +363,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         is_exception = False
         try:
             self.contains_msg_key(msg, ('builders',))
-            full_result = yield self.factory.buildbot_bot.remote_setBuilderList(msg["builders"])
-            result = list(full_result.keys())
+            result = yield self.factory.buildbot_bot.remote_setBuilderList(msg["builders"])
         except Exception as e:
             is_exception = True
             result = str(e)
