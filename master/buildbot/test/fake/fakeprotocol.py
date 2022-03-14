@@ -82,3 +82,8 @@ class FakeConnection(base.Connection):
         self.remoteCalls.append(
             ('remoteInterruptCommand', builderName, commandId, why))
         return defer.succeed(None)
+
+    def get_peer(self):
+        if self._connected:
+            return "fake_peer"
+        return None

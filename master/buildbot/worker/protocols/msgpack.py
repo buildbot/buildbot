@@ -349,3 +349,7 @@ class Connection(base.Connection):
     def perspective_shutdown(self):
         self.worker.messageReceivedFromWorker()
         self.worker.shutdownRequested()
+
+    def get_peer(self):
+        p = self.protocol.transport.getPeer()
+        return f"{p.host}:{p.port}"

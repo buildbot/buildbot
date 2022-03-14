@@ -635,6 +635,19 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(db_worker['workerinfo']['version'], 'TheVersion')
 
     @defer.inlineCallbacks
+    def test_double_attached(self):
+        worker = yield self.createWorker()
+        yield worker.startService()
+
+        conn = fakeprotocol.FakeConnection(worker)
+        yield worker.attached(conn)
+        conn = fakeprotocol.FakeConnection(worker)
+        with self.assertRaisesRegex(
+                AssertionError,
+                "bot: fake_peer connecting, but we are already connected to: fake_peer"):
+            yield worker.attached(conn)
+
+    @defer.inlineCallbacks
     def test_worker_shutdown(self):
         worker = yield self.createWorker(attached=True)
         yield worker.startService()

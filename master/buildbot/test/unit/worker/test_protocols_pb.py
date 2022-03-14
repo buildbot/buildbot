@@ -16,6 +16,7 @@
 import mock
 
 from twisted.internet import defer
+from twisted.internet.address import IPv4Address
 from twisted.spread import pb as twisted_pb
 from twisted.trial import unittest
 
@@ -391,6 +392,11 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         conn.perspective_keepalive()
 
         conn.worker.messageReceivedFromWorker.assert_called_with()
+
+    def test_get_peer(self):
+        conn = pb.Connection(self.master, self.worker, self.mind)
+        conn.mind.broker.transport.getPeer.return_value = IPv4Address("TCP", "ip", "port",)
+        self.assertEqual(conn.get_peer(), "ip:port")
 
 
 class Test_wrapRemoteException(unittest.TestCase):

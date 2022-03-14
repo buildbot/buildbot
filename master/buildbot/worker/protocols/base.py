@@ -88,6 +88,9 @@ class Connection:
             newargs[k] = v
         return newargs
 
+    def get_peer(self):
+        raise NotImplementedError
+
     # disconnection handling
 
     def wait_shutdown_started(self):

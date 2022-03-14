@@ -110,3 +110,6 @@ class Connection(base.Connection):
     def remoteInterruptCommand(self, builderName, commandId, why):
         workerforbuilder = self.worker.bot.builders[builderName]
         return defer.maybeDeferred(workerforbuilder.remote_interruptCommand, commandId, why)
+
+    def get_peer(self):
+        return "local"
