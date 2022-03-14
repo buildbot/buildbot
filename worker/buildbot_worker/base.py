@@ -41,10 +41,14 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandBase:
-    def __init__(self, builder, command, stepId, args, command_ref):
-        self.builder = builder
-        self.unicode_encoding = builder.unicode_encoding
-        self.basedir = builder.basedir
+    def __init__(self, unicode_encoding, basedir, builder_is_running,
+                 on_command_complete, on_lost_remote_step,
+                 command, stepId, args, command_ref):
+        self.unicode_encoding = unicode_encoding
+        self.basedir = basedir
+        self.builder_is_running = builder_is_running
+        self.on_command_complete = on_command_complete
+        self.on_lost_remote_step = on_lost_remote_step
 
         self.protocol_args_setup(command, args)
 
@@ -68,7 +72,7 @@ class ProtocolCommandBase:
         master to acknowledge the update so it can be removed from that
         queue."""
 
-        if not self.builder.running:
+        if not self.builder_is_running:
             # .running comes from service.Service, and says whether the
             # service is running or not. If we aren't running, don't send any
             # status messages.
@@ -98,8 +102,9 @@ class ProtocolCommandBase:
         else:
             # failure is None
             log.msg("ProtocolCommandBase.command_complete (success)", self.command)
-        self.builder.protocol_command = None
-        if not self.builder.running:
+
+        self.on_command_complete()
+        if not self.builder_is_running:
             log.msg(" but we weren't running, quitting silently")
             return
         if self.command_ref:
@@ -149,8 +154,15 @@ class WorkerForBuilderBase(service.Service):
         if not os.path.isdir(self.basedir):
             os.makedirs(self.basedir)
 
+    def startService(self):
+        service.Service.startService(self)
+        if self.protocol_command:
+            self.protocol_command.builder_is_running = True
+
     def stopService(self):
         service.Service.stopService(self)
+        if self.protocol_command:
+            self.protocol_command.builder_is_running = False
         if self.stopCommandOnShutdown:
             self.stopCommand()
 
@@ -194,7 +206,13 @@ class WorkerForBuilderBase(service.Service):
             log.msg("leftover command, dropping it")
             self.stopCommand()
 
-        self.protocol_command = self.ProtocolCommand(self, command, stepId, args, command_ref)
+        def on_command_complete():
+            self.protocol_command = None
+
+        self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.basedir,
+                                                     self.running, on_command_complete,
+                                                     self.lostRemoteStep, command, stepId, args,
+                                                     command_ref)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.protocol_command.protocol_notify_on_disconnect()

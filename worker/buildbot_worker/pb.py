@@ -58,11 +58,11 @@ class ProtocolCommandPb(ProtocolCommandBase):
         return self.command_ref.callRemote("update", updates)
 
     def protocol_notify_on_disconnect(self):
-        self.command_ref.notifyOnDisconnect(self.builder.lostRemoteStep)
+        self.command_ref.notifyOnDisconnect(self.on_lost_remote_step)
 
     # Returns a Deferred
     def protocol_complete(self, failure):
-        self.command_ref.dontNotifyOnDisconnect(self.builder.lostRemoteStep)
+        self.command_ref.dontNotifyOnDisconnect(self.on_lost_remote_step)
         return self.command_ref.callRemote("complete", failure)
 
     # Returns a Deferred
