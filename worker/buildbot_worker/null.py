@@ -21,13 +21,14 @@ from twisted.internet import defer
 from buildbot_worker.base import BotBase
 from buildbot_worker.base import WorkerBase
 from buildbot_worker.pb import WorkerForBuilderPbLike
+from buildbot_worker.pb import BotPbLike
 
 
 class WorkerForBuilderNull(WorkerForBuilderPbLike):
     pass
 
 
-class BotNull(BotBase):
+class BotNull(BotPbLike):
     WorkerForBuilder = WorkerForBuilderNull
 
 

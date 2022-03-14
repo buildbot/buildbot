@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import os.path
+import shutil
 import signal
 import sys
 
@@ -102,13 +103,115 @@ class WorkerForBuilderPb(WorkerForBuilderPbLike, pb.Referenceable):
     pass
 
 
-class BotPb(BotBase, pb.Referenceable):
+class BotPbLike(BotBase):
+    @defer.inlineCallbacks
+    def remote_setBuilderList(self, wanted):
+        retval = {}
+        wanted_names = {name for (name, builddir) in wanted}
+        wanted_dirs = {builddir for (name, builddir) in wanted}
+        wanted_dirs.add('info')
+        for (name, builddir) in wanted:
+            b = self.builders.get(name, None)
+            if b:
+                if b.builddir != builddir:
+                    log.msg("changing builddir for builder {0} from {1} to {2}".format(
+                            name, b.builddir, builddir))
+                    b.setBuilddir(builddir)
+            else:
+                b = self.WorkerForBuilder(name, self.unicode_encoding)
+                b.setServiceParent(self)
+                b.setBuilddir(builddir)
+                self.builders[name] = b
+            retval[name] = b
+
+        # disown any builders no longer desired
+        to_remove = list(set(self.builders.keys()) - wanted_names)
+        if to_remove:
+            yield defer.gatherResults([
+                defer.maybeDeferred(self.builders[name].disownServiceParent)
+                for name in to_remove])
+
+        # and *then* remove them from the builder list
+        for name in to_remove:
+            del self.builders[name]
+
+        # finally warn about any leftover dirs
+        for dir in os.listdir(self.basedir):
+            if os.path.isdir(os.path.join(self.basedir, dir)):
+                if dir not in wanted_dirs:
+                    if self.delete_leftover_dirs:
+                        log.msg("Deleting directory '{0}' that is not being "
+                                "used by the buildmaster".format(dir))
+                        try:
+                            shutil.rmtree(dir)
+                        except OSError as e:
+                            log.msg("Cannot remove directory '{0}': "
+                                    "{1}".format(dir, e))
+                    else:
+                        log.msg("I have a leftover directory '{0}' that is not "
+                                "being used by the buildmaster: you can delete "
+                                "it now".format(dir))
+
+        defer.returnValue(retval)
+
+
+class BotPb(BotPbLike, pb.Referenceable):
     WorkerForBuilder = WorkerForBuilderPb
 
 
 if sys.version_info.major >= 3:
     class BotMsgpack(BotBase):
         WorkerForBuilder = WorkerForBuilderMsgpack
+
+        @defer.inlineCallbacks
+        def remote_setBuilderList(self, wanted):
+            retval = {}
+            wanted_names = {name for (name, builddir) in wanted}
+            wanted_dirs = {builddir for (name, builddir) in wanted}
+            wanted_dirs.add('info')
+            for (name, builddir) in wanted:
+                b = self.builders.get(name, None)
+                if b:
+                    if b.builddir != builddir:
+                        log.msg("changing builddir for builder {0} from {1} to {2}".format(
+                                name, b.builddir, builddir))
+                        b.setBuilddir(builddir)
+                else:
+                    b = self.WorkerForBuilder(name, self.unicode_encoding)
+                    b.setServiceParent(self)
+                    b.setBuilddir(builddir)
+                    self.builders[name] = b
+                retval[name] = b
+
+            # disown any builders no longer desired
+            to_remove = list(set(self.builders.keys()) - wanted_names)
+            if to_remove:
+                yield defer.gatherResults([
+                    defer.maybeDeferred(self.builders[name].disownServiceParent)
+                    for name in to_remove])
+
+            # and *then* remove them from the builder list
+            for name in to_remove:
+                del self.builders[name]
+
+            # finally warn about any leftover dirs
+            for dir in os.listdir(self.basedir):
+                if os.path.isdir(os.path.join(self.basedir, dir)):
+                    if dir not in wanted_dirs:
+                        if self.delete_leftover_dirs:
+                            log.msg("Deleting directory '{0}' that is not being "
+                                    "used by the buildmaster".format(dir))
+                            try:
+                                shutil.rmtree(dir)
+                            except OSError as e:
+                                log.msg("Cannot remove directory '{0}': "
+                                        "{1}".format(dir, e))
+                        else:
+                            log.msg("I have a leftover directory '{0}' that is not "
+                                    "being used by the buildmaster: you can delete "
+                                    "it now".format(dir))
+
+            defer.returnValue(retval)
 
 
 class BotFactory(AutoLoginPBFactory):
