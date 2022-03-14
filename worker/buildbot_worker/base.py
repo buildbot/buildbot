@@ -80,14 +80,7 @@ class ProtocolCommandBase:
             update = [data, 0]
             updates = [update]
             d = self.protocol_update(updates)
-            d.addCallback(self.ack_update)
             d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
-
-    def ack_update(self, acknum):
-        self.builder.activity()  # update the "last activity" timer
-
-    def ack_complete(self, dummy):
-        self.builder.activity()  # update the "last activity" timer
 
     def _ack_failed(self, why, where):
         log.msg("ProtocolCommandBase._ack_failed:", where)
@@ -111,7 +104,6 @@ class ProtocolCommandBase:
             return
         if self.command_ref:
             d = self.protocol_complete(failure)
-            d.addCallback(self.ack_complete)
             d.addErrback(self._ack_failed, "ProtocolCommandBase.command_complete")
             self.command_ref = None
 
@@ -130,8 +122,6 @@ class WorkerForBuilderBase(service.Service):
     # when they attach. We use it to detect when the connection to the master
     # is severed.
     remote = None
-
-    bf = None
 
     def __init__(self, name, unicode_encoding):
         # service.Service.__init__(self) # Service has no __init__ method
@@ -163,14 +153,6 @@ class WorkerForBuilderBase(service.Service):
         service.Service.stopService(self)
         if self.stopCommandOnShutdown:
             self.stopCommand()
-
-    def activity(self):
-        bot = self.parent
-        if bot:
-            bworker = bot.parent
-            if bworker and self.bf:
-                bf = bworker.bf
-                bf.activity()
 
     def remote_setMaster(self, remote):
         self.remote = remote
@@ -208,8 +190,6 @@ class WorkerForBuilderBase(service.Service):
         command = decode(command)
         args = decode(args)
 
-        self.activity()
-
         if self.protocol_command:
             log.msg("leftover command, dropping it")
             self.stopCommand()
@@ -226,7 +206,6 @@ class WorkerForBuilderBase(service.Service):
     def remote_interruptCommand(self, stepId, why):
         """Halt the current step."""
         log.msg("asked to interrupt current command: {0}".format(why))
-        self.activity()
         if not self.protocol_command:
             # TODO: just log it, a race could result in their interrupting a
             # command that wasn't actually running

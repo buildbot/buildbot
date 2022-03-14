@@ -154,7 +154,6 @@ class BotFactory(AutoLoginPBFactory):
             log.msg("unable to set SO_KEEPALIVE")
             if not self.keepaliveInterval:
                 self.keepaliveInterval = 10 * 60
-        self.activity()
         if self.keepaliveInterval:
             log.msg("sending application-level keepalives every {0} seconds".format(
                     self.keepaliveInterval))
@@ -210,10 +209,6 @@ class BotFactory(AutoLoginPBFactory):
             self.keepaliveTimer = None
 
         self._checkNotifyShutdown()
-
-    def activity(self, res=None):
-        """Subclass or monkey-patch this method to be alerted whenever there is
-        active communication between the master and worker."""
 
     def stopFactory(self):
         self.stopTimers()
