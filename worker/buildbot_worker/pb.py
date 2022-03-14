@@ -306,11 +306,11 @@ if sys.version_info.major >= 3:
                     if b.builddir != builddir:
                         log.msg("changing builddir for builder {0} from {1} to {2}".format(
                                 name, b.builddir, builddir))
-                        b.setBuilddir(builddir)
+                        b.setBuilddir(self.basedir, builddir)
                 else:
                     b = self.WorkerForBuilder(name, self.unicode_encoding)
                     b.setServiceParent(self)
-                    b.setBuilddir(builddir)
+                    b.setBuilddir(self.basedir, builddir)
                     self.builders[name] = b
                 retval.append(name)
 

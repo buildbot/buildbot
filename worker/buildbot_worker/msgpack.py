@@ -169,20 +169,10 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
     def __repr__(self):
         return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
 
-    @defer.inlineCallbacks
-    def setServiceParent(self, parent):
-        yield service.Service.setServiceParent(self, parent)
-        self.bot = self.parent
-        # note that self.parent will go away when the buildmaster's config
-        # file changes and this Builder is removed (possibly because it has
-        # been changed, so the Builder will be re-added again in a moment).
-        # This may occur during a build, while a step is running.
-
-    def setBuilddir(self, builddir):
+    def setBuilddir(self, basedir, builddir):
         assert self.parent
         self.builddir = builddir
-        self.basedir = os.path.join(bytes2unicode(self.bot.basedir),
-                                    bytes2unicode(self.builddir))
+        self.basedir = os.path.join(bytes2unicode(basedir), bytes2unicode(self.builddir))
         if not os.path.isdir(self.basedir):
             os.makedirs(self.basedir)
 
