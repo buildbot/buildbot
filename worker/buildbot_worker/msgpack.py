@@ -151,8 +151,6 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
     home directory. The rest of its behavior is determined by the master.
     """
 
-    stopCommandOnShutdown = True
-
     # remote is a ref to the Builder object on the master side, and is set
     # when they attach. We use it to detect when the connection to the master
     # is severed.
@@ -176,8 +174,7 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
         service.Service.stopService(self)
         if self.protocol_command:
             self.protocol_command.builder_is_running = False
-        if self.stopCommandOnShutdown:
-            self.stopCommand()
+        self.stopCommand()
 
     def remote_setMaster(self, remote):
         self.remote = remote
@@ -194,8 +191,7 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
     def lostRemoteStep(self, remotestep):
         log.msg("lost remote step")
         self.protocol_command.command_ref = None
-        if self.stopCommandOnShutdown:
-            self.stopCommand()
+        self.stopCommand()
 
     # the following are Commands that can be invoked by the master-side
     # Builder
