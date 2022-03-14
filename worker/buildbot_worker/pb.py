@@ -21,6 +21,7 @@ import shutil
 import signal
 import sys
 
+from twisted.application import service
 from twisted.application.internet import ClientService
 from twisted.application.internet import backoffPolicy
 from twisted.cred import credentials
@@ -36,8 +37,10 @@ from buildbot_worker.base import BotBase
 from buildbot_worker.base import ProtocolCommandBase
 from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
+from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.pbutil import AutoLoginPBFactory
+from buildbot_worker.pbutil import decode
 from buildbot_worker.tunnel import HTTPTunnelEndpoint
 
 if sys.version_info.major >= 3:
@@ -98,12 +101,140 @@ class ProtocolCommandPb(ProtocolCommandBase):
 class WorkerForBuilderPbLike(WorkerForBuilderBase):
     ProtocolCommand = ProtocolCommandPb
 
+    """This is the local representation of a single Builder: it handles a
+    single kind of build (like an all-warnings build). It has a name and a
+    home directory. The rest of its behavior is determined by the master.
+    """
+
+    stopCommandOnShutdown = True
+
+    # remote is a ref to the Builder object on the master side, and is set
+    # when they attach. We use it to detect when the connection to the master
+    # is severed.
+    remote = None
+
+    def __init__(self, name, unicode_encoding):
+        # service.Service.__init__(self) # Service has no __init__ method
+        self.setName(name)
+        self.unicode_encoding = unicode_encoding
+        self.protocol_command = None
+
+    def __repr__(self):
+        return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
+
+    @defer.inlineCallbacks
+    def setServiceParent(self, parent):
+        yield service.Service.setServiceParent(self, parent)
+        self.bot = self.parent
+        # note that self.parent will go away when the buildmaster's config
+        # file changes and this Builder is removed (possibly because it has
+        # been changed, so the Builder will be re-added again in a moment).
+        # This may occur during a build, while a step is running.
+
+    def setBuilddir(self, builddir):
+        assert self.parent
+        self.builddir = builddir
+        self.basedir = os.path.join(bytes2unicode(self.bot.basedir),
+                                    bytes2unicode(self.builddir))
+        if not os.path.isdir(self.basedir):
+            os.makedirs(self.basedir)
+
+    def startService(self):
+        service.Service.startService(self)
+        if self.protocol_command:
+            self.protocol_command.builder_is_running = True
+
+    def stopService(self):
+        service.Service.stopService(self)
+        if self.protocol_command:
+            self.protocol_command.builder_is_running = False
+        if self.stopCommandOnShutdown:
+            self.stopCommand()
+
+    def remote_setMaster(self, remote):
+        self.remote = remote
+        self.remote.notifyOnDisconnect(self.lostRemote)
+
+    def remote_print(self, message):
+        log.msg("WorkerForBuilder.remote_print({0}): message from master: {1}".format(
+                self.name, message))
+
+    def lostRemote(self, remote):
+        log.msg("lost remote")
+        self.remote = None
+
+    def lostRemoteStep(self, remotestep):
+        log.msg("lost remote step")
+        self.protocol_command.command_ref = None
+        if self.stopCommandOnShutdown:
+            self.stopCommand()
+
+    # the following are Commands that can be invoked by the master-side
+    # Builder
+    def remote_startBuild(self):
+        """This is invoked before the first step of any new build is run.  It
+        doesn't do much, but masters call it so it's still here."""
+
+    def remote_startCommand(self, command_ref, stepId, command, args):
+        """
+        This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
+        part of various master-side BuildSteps, to start various commands
+        that actually do the build. I return nothing. Eventually I will call
+        .commandComplete() to notify the master-side RemoteCommand that I'm
+        done.
+        """
+        stepId = decode(stepId)
+        command = decode(command)
+        args = decode(args)
+
+        if self.protocol_command:
+            log.msg("leftover command, dropping it")
+            self.stopCommand()
+
+        def on_command_complete():
+            self.protocol_command = None
+
+        self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.basedir,
+                                                     self.running, on_command_complete,
+                                                     self.lostRemoteStep, command, stepId, args,
+                                                     command_ref)
+
+        log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
+        self.protocol_command.protocol_notify_on_disconnect()
+        d = self.protocol_command.command.doStart()
+        d.addCallback(lambda res: None)
+        d.addBoth(self.protocol_command.command_complete)
+        return None
+
+    def remote_interruptCommand(self, stepId, why):
+        """Halt the current step."""
+        log.msg("asked to interrupt current command: {0}".format(why))
+        if not self.protocol_command:
+            # TODO: just log it, a race could result in their interrupting a
+            # command that wasn't actually running
+            log.msg(" .. but none was running")
+            return
+        self.protocol_command.command.doInterrupt()
+
+    def stopCommand(self):
+        """Make any currently-running command die, with no further status
+        output. This is used when the worker is shutting down or the
+        connection to the master has been lost. Interrupt the command,
+        silence it, and then forget about it."""
+        if not self.protocol_command:
+            return
+        log.msg("stopCommand: halting current command {0}".format(self.protocol_command.command))
+        self.protocol_command.command.doInterrupt()
+        self.protocol_command = None
+
 
 class WorkerForBuilderPb(WorkerForBuilderPbLike, pb.Referenceable):
     pass
 
 
 class BotPbLike(BotBase):
+    WorkerForBuilder = WorkerForBuilderPbLike
+
     @defer.inlineCallbacks
     def remote_setBuilderList(self, wanted):
         retval = {}
