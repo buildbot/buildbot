@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import base64
-import os
 
 import msgpack
 
@@ -30,7 +29,6 @@ from twisted.python import log
 
 from buildbot_worker.base import ProtocolCommandBase
 from buildbot_worker.base import WorkerForBuilderBase
-from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.pbutil import decode
 from buildbot_worker.util import deferwaiter
 
@@ -168,13 +166,6 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
 
     def __repr__(self):
         return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
-
-    def setBuilddir(self, basedir, builddir):
-        assert self.parent
-        self.builddir = builddir
-        self.basedir = os.path.join(bytes2unicode(basedir), bytes2unicode(self.builddir))
-        if not os.path.isdir(self.basedir):
-            os.makedirs(self.basedir)
 
     def startService(self):
         service.Service.startService(self)
