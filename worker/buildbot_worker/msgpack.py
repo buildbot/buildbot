@@ -23,12 +23,10 @@ import msgpack
 from autobahn.twisted.websocket import WebSocketClientFactory
 from autobahn.twisted.websocket import WebSocketClientProtocol
 from autobahn.websocket.types import ConnectingRequest
-from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
 
 from buildbot_worker.base import ProtocolCommandBase
-from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.pbutil import decode
 from buildbot_worker.util import deferwaiter
 
@@ -143,7 +141,7 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
                                             'command_id': commandId})
 
 
-class WorkerForBuilderMsgpack(WorkerForBuilderBase):
+class WorkerForBuilderMsgpack:
     ProtocolCommand = ProtocolCommandMsgpack
 
     """This is the local representation of a single Builder: it handles a
@@ -151,26 +149,12 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
     home directory. The rest of its behavior is determined by the master.
     """
 
-    def __init__(self, name):
+    def __init__(self):
         # service.Service.__init__(self) # Service has no __init__ method
-        self.setName(name)
         self.protocol_command = None
 
-    def __repr__(self):
-        return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
-
-    def startService(self):
-        service.Service.startService(self)
-        if self.protocol_command:
-            self.protocol_command.builder_is_running = True
-
-    def stopService(self):
-        service.Service.stopService(self)
-        if self.protocol_command:
-            self.protocol_command.builder_is_running = False
-        self.stopCommand()
-
-    def remote_startCommand(self, unicode_encoding, command_ref, stepId, command, args):
+    def remote_startCommand(self, unicode_encoding, bot_running, command_ref, stepId, command,
+                            args):
         """
         This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
         part of various master-side BuildSteps, to start various commands
@@ -190,7 +174,7 @@ class WorkerForBuilderMsgpack(WorkerForBuilderBase):
             self.protocol_command = None
 
         self.protocol_command = self.ProtocolCommand(unicode_encoding, self.basedir,
-                                                     self.running, on_command_complete,
+                                                     bot_running, on_command_complete,
                                                      None, command, stepId, args,
                                                      command_ref)
 
@@ -328,6 +312,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             # send an instance, on which get_message_result will be called
             command_ref = (self, msg['command_id'])
             yield worker_for_builder.remote_startCommand(self.factory.buildbot_bot.unicode_encoding,
+                                                         self.factory.buildbot_bot.running,
                                                          command_ref, msg['command_id'],
                                                          msg['command_name'], msg['args'])
             result = None

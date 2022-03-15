@@ -294,13 +294,27 @@ if sys.version_info.major >= 3:
     class BotMsgpack(BotBase):
         WorkerForBuilder = WorkerForBuilderMsgpack
 
+        @defer.inlineCallbacks
+        def startService(self):
+            yield BotBase.startService(self)
+            for b in self.builders.values():
+                if b.protocol_command:
+                    b.protocol_command.builder_is_running = True
+
+        @defer.inlineCallbacks
+        def stopService(self):
+            yield BotBase.stopService(self)
+            for b in self.builders.values():
+                if b.protocol_command:
+                    b.protocol_command.builder_is_running = False
+                b.stopCommand()
+
         def set_builddir(self, wfb, builddir):
             wfb.builddir = builddir
             wfb.basedir = os.path.join(bytes2unicode(self.basedir), bytes2unicode(wfb.builddir))
             if not os.path.isdir(wfb.basedir):
                 os.makedirs(wfb.basedir)
 
-        @defer.inlineCallbacks
         def remote_setBuilderList(self, wanted):
             retval = []
             wanted_names = {name for (name, builddir) in wanted}
@@ -314,18 +328,22 @@ if sys.version_info.major >= 3:
                                 name, b.builddir, builddir))
                         self.set_builddir(b, self.basedir, builddir)
                 else:
-                    b = self.WorkerForBuilder(name)
-                    b.setServiceParent(self)
+                    b = self.WorkerForBuilder()
+
+                    if b.protocol_command:
+                        b.protocol_command.builder_is_running = self.running
+
                     self.set_builddir(b, builddir)
                     self.builders[name] = b
                 retval.append(name)
 
-            # disown any builders no longer desired
             to_remove = list(set(self.builders.keys()) - wanted_names)
-            if to_remove:
-                yield defer.gatherResults([
-                    defer.maybeDeferred(self.builders[name].disownServiceParent)
-                    for name in to_remove])
+            if self.running:
+                for name in to_remove:
+                    b = self.builders[name]
+                    if b.protocol_command:
+                        b.protocol_command.builder_is_running = False
+                    b.stopCommand()
 
             # and *then* remove them from the builder list
             for name in to_remove:
@@ -348,7 +366,7 @@ if sys.version_info.major >= 3:
                                     "being used by the buildmaster: you can delete "
                                     "it now".format(dir))
 
-            defer.returnValue(retval)
+            return retval
 
 
 class BotFactory(AutoLoginPBFactory):
