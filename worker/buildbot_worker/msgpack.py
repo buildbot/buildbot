@@ -27,7 +27,6 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot_worker.base import ProtocolCommandBase
-from buildbot_worker.pbutil import decode
 from buildbot_worker.util import deferwaiter
 
 
@@ -153,59 +152,6 @@ class WorkerForBuilderMsgpack:
         # service.Service.__init__(self) # Service has no __init__ method
         self.protocol_command = None
 
-    def remote_startCommand(self, unicode_encoding, basedir, bot_running, command_ref, stepId,
-                            command, args):
-        """
-        This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
-        part of various master-side BuildSteps, to start various commands
-        that actually do the build. I return nothing. Eventually I will call
-        .commandComplete() to notify the master-side RemoteCommand that I'm
-        done.
-        """
-        stepId = decode(stepId)
-        command = decode(command)
-        args = decode(args)
-
-        if self.protocol_command:
-            log.msg("leftover command, dropping it")
-            self.stopCommand()
-
-        def on_command_complete():
-            self.protocol_command = None
-
-        self.protocol_command = self.ProtocolCommand(unicode_encoding, basedir,
-                                                     bot_running, on_command_complete,
-                                                     None, command, stepId, args,
-                                                     command_ref)
-
-        log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
-        self.protocol_command.protocol_notify_on_disconnect()
-        d = self.protocol_command.command.doStart()
-        d.addCallback(lambda res: None)
-        d.addBoth(self.protocol_command.command_complete)
-        return None
-
-    def remote_interruptCommand(self, stepId, why):
-        """Halt the current step."""
-        log.msg("asked to interrupt current command: {0}".format(why))
-        if not self.protocol_command:
-            # TODO: just log it, a race could result in their interrupting a
-            # command that wasn't actually running
-            log.msg(" .. but none was running")
-            return
-        self.protocol_command.command.doInterrupt()
-
-    def stopCommand(self):
-        """Make any currently-running command die, with no further status
-        output. This is used when the worker is shutting down or the
-        connection to the master has been lost. Interrupt the command,
-        silence it, and then forget about it."""
-        if not self.protocol_command:
-            return
-        log.msg("stopCommand: halting current command {0}".format(self.protocol_command.command))
-        self.protocol_command.command.doInterrupt()
-        self.protocol_command = None
-
 
 class ConnectionLostError(Exception):
     pass
@@ -308,15 +254,11 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         try:
             self.contains_msg_key(msg, ('builder_name', 'command_id', 'command_name', 'args'))
             builder_name = msg['builder_name']
-            worker_for_builder = self.factory.buildbot_bot.builders[builder_name]
             # send an instance, on which get_message_result will be called
             command_ref = (self, msg['command_id'])
-            builder_basedir = self.factory.buildbot_bot.builder_basedirs[builder_name]
-            yield worker_for_builder.remote_startCommand(self.factory.buildbot_bot.unicode_encoding,
-                                                         builder_basedir,
-                                                         self.factory.buildbot_bot.running,
-                                                         command_ref, msg['command_id'],
-                                                         msg['command_name'], msg['args'])
+            yield self.factory.buildbot_bot.start_command(builder_name,
+                                                          command_ref, msg['command_id'],
+                                                          msg['command_name'], msg['args'])
             result = None
         except Exception as e:
             is_exception = True
@@ -342,10 +284,9 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         try:
             self.contains_msg_key(msg, ('builder_name', 'command_id', 'why'))
             builder_name = msg['builder_name']
-            worker_for_builder = self.factory.buildbot_bot.builders[builder_name]
             # send an instance, on which get_message_result will be called
-            yield worker_for_builder.remote_interruptCommand(msg['command_id'],
-                                                             msg['why'])
+            yield self.factory.buildbot_bot.interrupt_command(builder_name,
+                                                              msg['command_id'], msg['why'])
             result = None
         except Exception as e:
             is_exception = True

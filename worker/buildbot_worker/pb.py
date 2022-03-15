@@ -312,7 +312,7 @@ if sys.version_info.major >= 3:
             for b in self.builders.values():
                 if b.protocol_command:
                     b.protocol_command.builder_is_running = False
-                b.stopCommand()
+                self.stop_command(b)
 
         def calculate_basedir(self, builddir):
             return os.path.join(bytes2unicode(self.basedir), bytes2unicode(builddir))
@@ -354,7 +354,7 @@ if sys.version_info.major >= 3:
                     b = self.builders[name]
                     if b.protocol_command:
                         b.protocol_command.builder_is_running = False
-                    b.stopCommand()
+                    self.stop_command(b)
 
             # and *then* remove them from the builder list
             for name in to_remove:
@@ -379,6 +379,63 @@ if sys.version_info.major >= 3:
                                     "it now".format(dir))
 
             return retval
+
+        def start_command(self, builder_name, command_ref, stepId, command, args):
+            """
+            This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
+            part of various master-side BuildSteps, to start various commands
+            that actually do the build. I return nothing. Eventually I will call
+            .commandComplete() to notify the master-side RemoteCommand that I'm
+            done.
+            """
+            stepId = decode(stepId)
+            command = decode(command)
+            args = decode(args)
+
+            b = self.builders[builder_name]
+
+            if b.protocol_command:
+                log.msg("leftover command, dropping it")
+                self.stop_command(b)
+
+            def on_command_complete():
+                b.protocol_command = None
+
+            b.protocol_command = b.ProtocolCommand(self.unicode_encoding,
+                                                   self.builder_basedirs[builder_name],
+                                                   self.running, on_command_complete,
+                                                   None, command, stepId, args, command_ref)
+
+            log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
+            b.protocol_command.protocol_notify_on_disconnect()
+            d = b.protocol_command.command.doStart()
+            d.addCallback(lambda res: None)
+            d.addBoth(b.protocol_command.command_complete)
+            return None
+
+        def interrupt_command(self, builder_name, stepId, why):
+            """Halt the current step."""
+            log.msg("asked to interrupt current command: {0}".format(why))
+
+            b = self.builders[builder_name]
+            if not b.protocol_command:
+                # TODO: just log it, a race could result in their interrupting a
+                # command that wasn't actually running
+                log.msg(" .. but none was running")
+                return
+            b.protocol_command.command.doInterrupt()
+
+        def stop_command(self, builder):
+            """Make any currently-running command die, with no further status
+            output. This is used when the worker is shutting down or the
+            connection to the master has been lost. Interrupt the command,
+            silence it, and then forget about it."""
+            if not builder.protocol_command:
+                return
+            log.msg("stopCommand: halting current command {0}".format(
+                    builder.protocol_command.command))
+            builder.protocol_command.command.doInterrupt()
+            builder.protocol_command = None
 
 
 class BotFactory(AutoLoginPBFactory):
