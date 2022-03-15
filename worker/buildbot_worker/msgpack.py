@@ -153,8 +153,8 @@ class WorkerForBuilderMsgpack:
         # service.Service.__init__(self) # Service has no __init__ method
         self.protocol_command = None
 
-    def remote_startCommand(self, unicode_encoding, bot_running, command_ref, stepId, command,
-                            args):
+    def remote_startCommand(self, unicode_encoding, basedir, bot_running, command_ref, stepId,
+                            command, args):
         """
         This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
         part of various master-side BuildSteps, to start various commands
@@ -173,7 +173,7 @@ class WorkerForBuilderMsgpack:
         def on_command_complete():
             self.protocol_command = None
 
-        self.protocol_command = self.ProtocolCommand(unicode_encoding, self.basedir,
+        self.protocol_command = self.ProtocolCommand(unicode_encoding, basedir,
                                                      bot_running, on_command_complete,
                                                      None, command, stepId, args,
                                                      command_ref)
@@ -311,7 +311,9 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             worker_for_builder = self.factory.buildbot_bot.builders[builder_name]
             # send an instance, on which get_message_result will be called
             command_ref = (self, msg['command_id'])
+            builder_basedir = self.factory.buildbot_bot.builder_basedirs[builder_name]
             yield worker_for_builder.remote_startCommand(self.factory.buildbot_bot.unicode_encoding,
+                                                         builder_basedir,
                                                          self.factory.buildbot_bot.running,
                                                          command_ref, msg['command_id'],
                                                          msg['command_name'], msg['args'])

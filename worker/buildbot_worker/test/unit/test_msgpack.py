@@ -157,9 +157,9 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         service.MultiService.startService(self.protocol.factory.buildbot_bot)
 
         worker_for_builder = self.protocol.factory.buildbot_bot.WorkerForBuilder()
-        worker_for_builder.basedir = 'basedir'
 
         self.protocol.factory.buildbot_bot.builders = {'test_builder': worker_for_builder}
+        self.protocol.factory.buildbot_bot.builder_basedirs = {'test_builder': 'basedir'}
 
     @defer.inlineCallbacks
     def test_call_get_worker_info_success(self):

@@ -294,6 +294,11 @@ if sys.version_info.major >= 3:
     class BotMsgpack(BotBase):
         WorkerForBuilder = WorkerForBuilderMsgpack
 
+        def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
+            BotBase.__init__(self, basedir, unicode_encoding=unicode_encoding,
+                             delete_leftover_dirs=delete_leftover_dirs)
+            self.builder_basedirs = {}
+
         @defer.inlineCallbacks
         def startService(self):
             yield BotBase.startService(self)
@@ -309,11 +314,12 @@ if sys.version_info.major >= 3:
                     b.protocol_command.builder_is_running = False
                 b.stopCommand()
 
-        def set_builddir(self, wfb, builddir):
-            wfb.builddir = builddir
-            wfb.basedir = os.path.join(bytes2unicode(self.basedir), bytes2unicode(wfb.builddir))
-            if not os.path.isdir(wfb.basedir):
-                os.makedirs(wfb.basedir)
+        def calculate_basedir(self, builddir):
+            return os.path.join(bytes2unicode(self.basedir), bytes2unicode(builddir))
+
+        def create_dirs(self, basedir):
+            if not os.path.isdir(basedir):
+                os.makedirs(basedir)
 
         def remote_setBuilderList(self, wanted):
             retval = []
@@ -322,18 +328,23 @@ if sys.version_info.major >= 3:
             wanted_dirs.add('info')
             for (name, builddir) in wanted:
                 b = self.builders.get(name, None)
+                basedir = self.calculate_basedir(builddir)
                 if b:
-                    if b.builddir != builddir:
+                    old_basedir = self.builder_basedirs[name]
+                    if old_basedir != basedir:
                         log.msg("changing builddir for builder {0} from {1} to {2}".format(
-                                name, b.builddir, builddir))
-                        self.set_builddir(b, self.basedir, builddir)
+                                name, old_basedir, basedir))
+                        self.create_dirs(basedir)
+                        self.builder_basedirs[name] = basedir
                 else:
                     b = self.WorkerForBuilder()
 
                     if b.protocol_command:
                         b.protocol_command.builder_is_running = self.running
 
-                    self.set_builddir(b, builddir)
+                    self.create_dirs(basedir)
+                    self.builder_basedirs[name] = basedir
+
                     self.builders[name] = b
                 retval.append(name)
 
@@ -348,6 +359,7 @@ if sys.version_info.major >= 3:
             # and *then* remove them from the builder list
             for name in to_remove:
                 del self.builders[name]
+                del self.builder_basedirs[name]
 
             # finally warn about any leftover dirs
             for dir in os.listdir(self.basedir):
