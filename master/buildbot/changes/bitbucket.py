@@ -14,11 +14,8 @@
 # Copyright Buildbot Team Members
 
 
-import json
 import time
 from datetime import datetime
-
-from txrequests import Session
 
 from twisted.internet import defer
 from twisted.python import log
@@ -28,6 +25,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
+from buildbot.util import httpclientservice
 from buildbot.util.pullrequest import PullRequestMixin
 
 
@@ -77,11 +75,9 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         self.project = bytes2unicode(project)
         self.external_property_whitelist = bitbucket_property_whitelist
 
-        if auth is not None:
-            # Tuple(user,pass)
-            self.auth = auth
-        else:
-            self.auth = None
+        base_url = "https://api.bitbucket.org/2.0"
+        self._http = yield httpclientservice.HTTPClientService.getService(self.master, base_url,
+                                                                          auth=auth)
 
         yield super().reconfigService(self.build_name(owner, slug),
                                       pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
@@ -97,30 +93,23 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
     @defer.inlineCallbacks
     def poll(self):
         response = yield self._getChanges()
-        yield self._processChanges(response.content)
+        if response.code != 200:
+            log.err(f"{self.__class__.__name__}: error {response.code} "
+                    f"while loading {response.url}")
+            return
 
-    def getPage(self, url, **kwargs):
-        """ Retrieve HTML page.
-
-        Use txrequests instead of twisted.web.client.getPage() which is deprecated.
-        Returns a deferred object that is a Response type.  The binary response body
-        is available via response.content.
-
-        """
-        with Session() as session:
-            response = session.get(url, auth=self.auth, **kwargs)
-        return response
+        json_result = yield response.json()
+        yield self._processChanges(json_result)
 
     def _getChanges(self):
         self.lastPoll = time.time()
         log.msg("BitbucketPullrequestPoller: polling "
                 f"Bitbucket repository {self.owner}/{self.slug}, branch: {self.branch}")
-        url = f"https://api.bitbucket.org/2.0/repositories/{self.owner}/{self.slug}/pullrequests"
-        return self.getPage(url, timeout=self.pollInterval)
+        url = f"/repositories/{self.owner}/{self.slug}/pullrequests"
+        return self._http.get(url, timeout=self.pollInterval)
 
     @defer.inlineCallbacks
-    def _processChanges(self, page):
-        result = json.loads(page)
+    def _processChanges(self, result):
         for pr in result['values']:
             branch = pr['source']['branch']['name']
             nr = int(pr['id'])
@@ -136,10 +125,10 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                 # compare _short_ hashes to check if the PR has been updated
                 if not current or current[0:12] != revision[0:12]:
                     # parse pull request api page (required for the filter)
-                    response = yield self.getPage(
+                    response = yield self._http.get(
                         str(pr['links']['self']['href'])
                     )
-                    pr_json = json.loads(response.content)
+                    pr_json = yield response.json()
 
                     # filter pull requests by user function
                     if not self.pullrequest_filter(pr_json):
@@ -161,20 +150,20 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                     title = pr['title']
 
                     # parse commit api page
-                    response = yield self.getPage(
+                    response = yield self._http.get(
                         str(pr['source']['commit']['links']['self']['href'])
                     )
-                    commit_json = json.loads(response.content)
+                    commit_json = yield response.json()
 
                     # use the full-length hash from now on
                     revision = commit_json['hash']
                     revlink = commit_json['links']['html']['href']
 
                     # parse repo api page
-                    response = yield self.getPage(
+                    response = yield self._http.get(
                         str(pr['source']['repository']['links']['self']['href'])
                     )
-                    repo_json = json.loads(response.content)
+                    repo_json = yield response.json()
                     repo = repo_json['links']['html']['href']
 
                     # update database
