@@ -72,6 +72,11 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         self._http._session.request.assert_called_once_with('get', 'http://foo/bar', headers={},
                                                             background_callback=mock.ANY)
 
+    def test_get_full_url(self):
+        self._http.get('http://other/bar')
+        self._http._session.request.assert_called_once_with('get', 'http://other/bar', headers={},
+                                                            background_callback=mock.ANY)
+
     def test_put(self):
         self._http.put('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps(dict(foo='bar'))

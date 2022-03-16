@@ -118,7 +118,11 @@ class HTTPClientService(service.SharedService):
 
     def _doRequest(self, method, ep, params=None, headers=None, data=None, json=None, files=None,
             timeout=None):
-        assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
+        if ep.startswith('http://') or ep.startswith('https://'):
+            pass
+        else:
+            assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
+
         if not self.quiet:
             log.debug("{method} {ep} {params!r} <- {data!r}",
                       method=method, ep=ep, params=params, data=data or json)

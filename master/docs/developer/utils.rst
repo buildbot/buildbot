@@ -1194,7 +1194,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: get(endpoint, params=None)
 
-        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
         :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
@@ -1202,7 +1202,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: delete(endpoint, params=None)
 
-        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
         :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
@@ -1210,7 +1210,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: post(endpoint, data=None, json=None, params=None)
 
-        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
         :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
         :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
         :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
@@ -1224,7 +1224,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: put(endpoint, data=None, json=None, params=None)
 
-        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
         :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
         :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
         :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
