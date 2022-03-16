@@ -156,9 +156,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.protocol.factory.buildbot_bot = BotMsgpack('test/dir')
         service.MultiService.startService(self.protocol.factory.buildbot_bot)
 
-        worker_for_builder = self.protocol.factory.buildbot_bot.WorkerForBuilder()
-
-        self.protocol.factory.buildbot_bot.builders = {'test_builder': worker_for_builder}
+        self.protocol.factory.buildbot_bot.builder_protocol_command = {'test_builder': None}
         self.protocol.factory.buildbot_bot.builder_basedirs = {'test_builder': 'basedir'}
 
     @defer.inlineCallbacks

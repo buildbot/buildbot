@@ -140,19 +140,6 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
                                             'command_id': commandId})
 
 
-class WorkerForBuilderMsgpack:
-    ProtocolCommand = ProtocolCommandMsgpack
-
-    """This is the local representation of a single Builder: it handles a
-    single kind of build (like an all-warnings build). It has a name and a
-    home directory. The rest of its behavior is determined by the master.
-    """
-
-    def __init__(self):
-        # service.Service.__init__(self) # Service has no __init__ method
-        self.protocol_command = None
-
-
 class ConnectionLostError(Exception):
     pass
 

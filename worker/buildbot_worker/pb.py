@@ -46,7 +46,7 @@ from buildbot_worker.tunnel import HTTPTunnelEndpoint
 if sys.version_info.major >= 3:
     from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
     from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
-    from buildbot_worker.msgpack import WorkerForBuilderMsgpack
+    from buildbot_worker.msgpack import ProtocolCommandMsgpack
 
 
 class UnknownCommand(pb.Error):
@@ -292,27 +292,28 @@ class BotPb(BotPbLike, pb.Referenceable):
 
 if sys.version_info.major >= 3:
     class BotMsgpack(BotBase):
-        WorkerForBuilder = WorkerForBuilderMsgpack
-
         def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
             BotBase.__init__(self, basedir, unicode_encoding=unicode_encoding,
                              delete_leftover_dirs=delete_leftover_dirs)
             self.builder_basedirs = {}
+            self.builder_protocol_command = {}
 
         @defer.inlineCallbacks
         def startService(self):
             yield BotBase.startService(self)
-            for b in self.builders.values():
-                if b.protocol_command:
-                    b.protocol_command.builder_is_running = True
+            for name in self.builder_protocol_command:
+                protocol_command = self.builder_protocol_command[name]
+                if protocol_command:
+                    protocol_command.builder_is_running = True
 
         @defer.inlineCallbacks
         def stopService(self):
             yield BotBase.stopService(self)
-            for b in self.builders.values():
-                if b.protocol_command:
-                    b.protocol_command.builder_is_running = False
-                self.stop_command(b)
+            for name in self.builder_protocol_command:
+                protocol_command = self.builder_protocol_command[name]
+                if protocol_command:
+                    protocol_command.builder_is_running = False
+                self.stop_command(name)
 
         def calculate_basedir(self, builddir):
             return os.path.join(bytes2unicode(self.basedir), bytes2unicode(builddir))
@@ -327,38 +328,32 @@ if sys.version_info.major >= 3:
             wanted_dirs = {builddir for (name, builddir) in wanted}
             wanted_dirs.add('info')
             for (name, builddir) in wanted:
-                b = self.builders.get(name, None)
+                old_basedir = self.builder_basedirs.get(name, None)
                 basedir = self.calculate_basedir(builddir)
-                if b:
-                    old_basedir = self.builder_basedirs[name]
+                if old_basedir:
                     if old_basedir != basedir:
                         log.msg("changing builddir for builder {0} from {1} to {2}".format(
                                 name, old_basedir, basedir))
                         self.create_dirs(basedir)
                         self.builder_basedirs[name] = basedir
                 else:
-                    b = self.WorkerForBuilder()
-
-                    if b.protocol_command:
-                        b.protocol_command.builder_is_running = self.running
+                    self.builder_protocol_command[name] = None
 
                     self.create_dirs(basedir)
                     self.builder_basedirs[name] = basedir
 
-                    self.builders[name] = b
                 retval.append(name)
 
-            to_remove = list(set(self.builders.keys()) - wanted_names)
+            to_remove = list(set(self.builder_protocol_command.keys()) - wanted_names)
             if self.running:
                 for name in to_remove:
-                    b = self.builders[name]
-                    if b.protocol_command:
-                        b.protocol_command.builder_is_running = False
-                    self.stop_command(b)
+                    if self.builder_protocol_command[name]:
+                        self.builder_protocol_command[name].builder_is_running = False
+                    self.stop_command(name)
 
             # and *then* remove them from the builder list
             for name in to_remove:
-                del self.builders[name]
+                del self.builder_protocol_command[name]
                 del self.builder_basedirs[name]
 
             # finally warn about any leftover dirs
@@ -392,50 +387,49 @@ if sys.version_info.major >= 3:
             command = decode(command)
             args = decode(args)
 
-            b = self.builders[builder_name]
-
-            if b.protocol_command:
+            if self.builder_protocol_command[builder_name]:
                 log.msg("leftover command, dropping it")
-                self.stop_command(b)
+                self.stop_command(builder_name)
 
             def on_command_complete():
-                b.protocol_command = None
+                self.builder_protocol_command[builder_name] = None
 
-            b.protocol_command = b.ProtocolCommand(self.unicode_encoding,
-                                                   self.builder_basedirs[builder_name],
-                                                   self.running, on_command_complete,
-                                                   None, command, stepId, args, command_ref)
+            protocol_command = ProtocolCommandMsgpack(self.unicode_encoding,
+                                                      self.builder_basedirs[builder_name],
+                                                      self.running, on_command_complete,
+                                                      None, command, stepId, args, command_ref)
+
+            self.builder_protocol_command[builder_name] = protocol_command
 
             log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
-            b.protocol_command.protocol_notify_on_disconnect()
-            d = b.protocol_command.command.doStart()
+            protocol_command.protocol_notify_on_disconnect()
+            d = protocol_command.command.doStart()
             d.addCallback(lambda res: None)
-            d.addBoth(b.protocol_command.command_complete)
+            d.addBoth(protocol_command.command_complete)
             return None
 
         def interrupt_command(self, builder_name, stepId, why):
             """Halt the current step."""
             log.msg("asked to interrupt current command: {0}".format(why))
 
-            b = self.builders[builder_name]
-            if not b.protocol_command:
+            if not self.builder_protocol_command[builder_name]:
                 # TODO: just log it, a race could result in their interrupting a
                 # command that wasn't actually running
                 log.msg(" .. but none was running")
                 return
-            b.protocol_command.command.doInterrupt()
+            self.builder_protocol_command[builder_name].command.doInterrupt()
 
-        def stop_command(self, builder):
+        def stop_command(self, builder_name):
             """Make any currently-running command die, with no further status
             output. This is used when the worker is shutting down or the
             connection to the master has been lost. Interrupt the command,
             silence it, and then forget about it."""
-            if not builder.protocol_command:
+            if not self.builder_protocol_command[builder_name]:
                 return
             log.msg("stopCommand: halting current command {0}".format(
-                    builder.protocol_command.command))
-            builder.protocol_command.command.doInterrupt()
-            builder.protocol_command = None
+                    self.builder_protocol_command[builder_name].command))
+            self.builder_protocol_command[builder_name].command.doInterrupt()
+            self.builder_protocol_command[builder_name] = None
 
 
 class BotFactory(AutoLoginPBFactory):
