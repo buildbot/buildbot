@@ -59,6 +59,15 @@ def remote_print(self, message):
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):
+    def __init__(self, unicode_encoding, basedir, builder_is_running,
+                 on_command_complete,
+                 protocol, command_id, command, args):
+        ProtocolCommandBase.__init__(self, unicode_encoding, basedir, builder_is_running,
+                                     on_command_complete, None,
+                                     command, command_id, args)
+        self.protocol = protocol
+        self.command_id = command_id
+
     def protocol_args_setup(self, command, args):
         if "want_stdout" in args:
             if args["want_stdout"]:
@@ -80,9 +89,8 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
 
     # Returns a Deferred
     def protocol_update(self, updates):
-        protocol, commandId = self.command_ref
-        return protocol.get_message_result({'op': 'update', 'args': updates,
-                                            'command_id': commandId})
+        return self.protocol.get_message_result({'op': 'update', 'args': updates,
+                                                 'command_id': self.command_id})
 
     def protocol_notify_on_disconnect(self):
         pass
@@ -91,53 +99,45 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
     def protocol_complete(self, failure):
         if failure is not None:
             failure = str(failure)
-        protocol, commandId = self.command_ref
-        return protocol.get_message_result({'op': 'complete', 'args': failure,
-                                            'command_id': commandId})
+        return self.protocol.get_message_result({'op': 'complete', 'args': failure,
+                                                 'command_id': self.command_id})
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
-        protocol, commandId = self.command_ref
-        return protocol.get_message_result({'op': 'update_upload_file_close',
-                                            'command_id': commandId})
+        return self.protocol.get_message_result({'op': 'update_upload_file_close',
+                                                 'command_id': self.command_id})
 
     # Returns a Deferred
     def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
-        protocol, commandId = self.command_ref
-        return protocol.get_message_result({'op': 'update_upload_file_utime',
-                                            'access_time': access_time,
-                                            'modified_time': modified_time,
-                                            'command_id': commandId})
+        return self.protocol.get_message_result({'op': 'update_upload_file_utime',
+                                                 'access_time': access_time,
+                                                 'modified_time': modified_time,
+                                                 'command_id': self.command_id})
 
     # Returns a Deferred
     def protocol_update_upload_file_write(self, writer, data):
-        protocol, commandId = self.command_ref
-        return protocol.get_message_result({'op': 'update_upload_file_write', 'args': data,
-                                            'command_id': commandId})
+        return self.protocol.get_message_result({'op': 'update_upload_file_write', 'args': data,
+                                                 'command_id': self.command_id})
 
     # Returns a Deferred
     def protocol_update_upload_directory(self, writer):
-        protocol, commandId = self.command_ref
-        return protocol.get_message_result({'op': 'update_upload_directory_unpack',
-                                            'command_id': commandId})
+        return self.protocol.get_message_result({'op': 'update_upload_directory_unpack',
+                                                 'command_id': self.command_id})
 
     # Returns a Deferred
     def protocol_update_upload_directory_write(self, writer, data):
-        protocol, commandId = self.command_ref
-        return protocol.get_message_result({'op': 'update_upload_directory_write', 'args': data,
-                                            'command_id': commandId})
+        return self.protocol.get_message_result({'op': 'update_upload_directory_write',
+                                                 'args': data, 'command_id': self.command_id})
 
     # Returns a Deferred
     def protocol_update_read_file_close(self, reader):
-        protocol, commandId = self.command_ref
-        return protocol.get_message_result({'op': 'update_read_file_close',
-                                            'command_id': commandId})
+        return self.protocol.get_message_result({'op': 'update_read_file_close',
+                                                 'command_id': self.command_id})
 
     # Returns a Deferred
     def protocol_update_read_file(self, reader, length):
-        protocol, commandId = self.command_ref
-        return protocol.get_message_result({'op': 'update_read_file', 'length': length,
-                                            'command_id': commandId})
+        return self.protocol.get_message_result({'op': 'update_read_file', 'length': length,
+                                                 'command_id': self.command_id})
 
 
 class ConnectionLostError(Exception):
@@ -242,9 +242,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             self.contains_msg_key(msg, ('builder_name', 'command_id', 'command_name', 'args'))
             builder_name = msg['builder_name']
             # send an instance, on which get_message_result will be called
-            command_ref = (self, msg['command_id'])
-            yield self.factory.buildbot_bot.start_command(builder_name,
-                                                          command_ref, msg['command_id'],
+            yield self.factory.buildbot_bot.start_command(builder_name, self, msg['command_id'],
                                                           msg['command_name'], msg['args'])
             result = None
         except Exception as e:
@@ -272,8 +270,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             self.contains_msg_key(msg, ('builder_name', 'command_id', 'why'))
             builder_name = msg['builder_name']
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.interrupt_command(builder_name,
-                                                              msg['command_id'], msg['why'])
+            yield self.factory.buildbot_bot.interrupt_command(builder_name, msg['why'])
             result = None
         except Exception as e:
             is_exception = True

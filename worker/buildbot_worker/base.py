@@ -39,7 +39,7 @@ class UnknownCommand(pb.Error):
 class ProtocolCommandBase:
     def __init__(self, unicode_encoding, basedir, builder_is_running,
                  on_command_complete, on_lost_remote_step,
-                 command, stepId, args, command_ref):
+                 command, command_id, args):
         self.unicode_encoding = unicode_encoding
         self.basedir = basedir
         self.builder_is_running = builder_is_running
@@ -48,17 +48,15 @@ class ProtocolCommandBase:
 
         self.protocol_args_setup(command, args)
 
-        # .command_ref is a ref to the master-side BuildStep object, and is set
-        # when the step is started
-        self.command_ref = command_ref
-
         try:
             factory = registry.getFactory(command)
         except KeyError:
             raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
 
         # .command points to a WorkerCommand instance, and is set while the step is running.
-        self.command = factory(self, stepId, args)
+        self.command = factory(self, command_id, args)
+
+        self.is_complete = False
 
     # sendUpdate is invoked by the Commands we spawn
     def send_update(self, data):
@@ -76,7 +74,7 @@ class ProtocolCommandBase:
         # the update[1]=0 comes from the leftover 'updateNum', which the
         # master still expects to receive. Provide it to avoid significant
         # interoperability issues between new workers and old masters.
-        if self.command_ref:
+        if not self.is_complete:
             update = [data, 0]
             updates = [update]
             d = self.protocol_update(updates)
@@ -103,10 +101,10 @@ class ProtocolCommandBase:
         if not self.builder_is_running:
             log.msg(" but we weren't running, quitting silently")
             return
-        if self.command_ref:
+        if not self.is_complete:
             d = self.protocol_complete(failure)
             d.addErrback(self._ack_failed, "ProtocolCommandBase.command_complete")
-            self.command_ref = None
+            self.is_complete = True
 
 
 class WorkerForBuilderBase(service.Service):

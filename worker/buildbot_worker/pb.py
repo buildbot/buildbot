@@ -54,6 +54,14 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandPb(ProtocolCommandBase):
+    def __init__(self, unicode_encoding, basedir, builder_is_running,
+                 on_command_complete, on_lost_remote_step,
+                 command, stepId, args, command_ref):
+        ProtocolCommandBase.__init__(self, unicode_encoding, basedir, builder_is_running,
+                                     on_command_complete, on_lost_remote_step,
+                                     command, stepId, args)
+        self.command_ref = command_ref
+
     def protocol_args_setup(self, command, args):
         pass
 
@@ -375,7 +383,7 @@ if sys.version_info.major >= 3:
 
             return retval
 
-        def start_command(self, builder_name, command_ref, stepId, command, args):
+        def start_command(self, builder_name, protocol, command_id, command, args):
             """
             This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
             part of various master-side BuildSteps, to start various commands
@@ -383,7 +391,6 @@ if sys.version_info.major >= 3:
             .commandComplete() to notify the master-side RemoteCommand that I'm
             done.
             """
-            stepId = decode(stepId)
             command = decode(command)
             args = decode(args)
 
@@ -397,18 +404,18 @@ if sys.version_info.major >= 3:
             protocol_command = ProtocolCommandMsgpack(self.unicode_encoding,
                                                       self.builder_basedirs[builder_name],
                                                       self.running, on_command_complete,
-                                                      None, command, stepId, args, command_ref)
+                                                      protocol, command_id, command, args)
 
             self.builder_protocol_command[builder_name] = protocol_command
 
-            log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
+            log.msg(u" startCommand:{0} [id {1}]".format(command, command_id))
             protocol_command.protocol_notify_on_disconnect()
             d = protocol_command.command.doStart()
             d.addCallback(lambda res: None)
             d.addBoth(protocol_command.command_complete)
             return None
 
-        def interrupt_command(self, builder_name, stepId, why):
+        def interrupt_command(self, builder_name, why):
             """Halt the current step."""
             log.msg("asked to interrupt current command: {0}".format(why))
 
