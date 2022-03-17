@@ -22,6 +22,7 @@ from buildbot import config
 from buildbot.process import results
 from buildbot.process.properties import Property
 from buildbot.process.results import FAILURE
+from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import vstudio
@@ -226,6 +227,12 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
+        return self.run_step()
+
+    def test_skipped(self):
+        self.setup_step(VCx(doStepIf=False))
+        self.expect_commands()
+        self.expect_outcome(result=SKIPPED, state_string="")
         return self.run_step()
 
     @defer.inlineCallbacks
