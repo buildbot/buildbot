@@ -1,0 +1,1 @@
+Fixed `MSBuild141` using incorrect vswhere syntax to retrieve the install location for VS2017

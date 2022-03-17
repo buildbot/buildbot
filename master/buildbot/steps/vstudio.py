@@ -557,9 +557,10 @@ class MsBuild141(VisualStudio):
         self.descriptionDone = 'built ' + self.describe_project()
         yield self.updateSummary()
 
-        command = ('FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\') '
-                   f' do "%%I\\%VCENV_BAT%" x86 && msbuild "{self.projectfile}" '
-                   f'/p:Configuration="{self.config}" /p:Platform="{self.platform}" /maxcpucount')
+        command = (('FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -property  installationPath\') '
+            ' do "%%I\\%VCENV_BAT%" x86 && msbuild "{}" /p:Configuration="{}" '
+            '/p:Platform="{}" /maxcpucount').format(self.projectfile, self.config,
+                                                            self.platform))
 
         command += _msbuild_format_target_parameter(self.mode, self.project)
         command += _msbuild_format_defines_parameter(self.defines)
