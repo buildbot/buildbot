@@ -35,11 +35,11 @@ class MakeDirectory(base.Command):
 
     header = "mkdir"
 
-    # args['dir'] is relative to Builder directory, and is required.
-    requiredArgs = ['dir']
+    # args['path'] specifies the absolute path of a directory to create
+    requiredArgs = ['path']
 
     def start(self):
-        dirname = os.path.join(self.protocol_command.basedir, self.args['dir'])
+        dirname = self.args['path']
 
         try:
             if not os.path.isdir(dirname):

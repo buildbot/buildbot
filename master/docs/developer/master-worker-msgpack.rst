@@ -993,11 +993,9 @@ Command_name: ``mkdir``
 This command will create a directory on the worker.
 It will also create any intervening directories required.
 
-``dir``
+``path``
     Value is a string.
-    Specifies the directory relative to the builder’s basedir.
-
-    Worker creates the path to directory by joining the base directory and given value.
+    It specifies an absolute path of a directory to create.
 
     If command succeeded, worker will send ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
 

@@ -67,7 +67,7 @@ class CommandTestMixin(object):
         cmdclass argument is the Command class, and args is the args dict
         to pass to its constructor.
 
-        This always creates the WorkerForBuilder with a basedir (self.basedir).
+        This always creates the FakeProtocolCommand with a basedir (self.basedir).
         If makedirs is true, it will create the basedir and a workdir directory
         inside (named 'workdir').
 

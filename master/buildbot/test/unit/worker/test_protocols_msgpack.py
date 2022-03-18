@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+
 from parameterized import parameterized
 
 import mock
@@ -173,17 +175,19 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_remote_get_worker_info(self):
-        self.protocol.get_message_result.return_value = defer.succeed('test')
+        self.protocol.get_message_result.return_value = defer.succeed({'system': 'posix'})
         result = yield self.conn.remoteGetWorkerInfo()
 
         self.protocol.get_message_result.assert_called_once_with({'op': 'get_worker_info'})
-        self.assertEqual(result, 'test')
+        self.assertEqual(result, {'system': 'posix'})
 
     @defer.inlineCallbacks
     def test_remote_set_builder_list(self):
-        builders = ['builder1', 'builder2']
+        builders = [('builder1', 'test_dir1'), ('builder2', 'test_dir2')]
         self.protocol.get_message_result.return_value = defer.succeed(builders)
 
+        self.conn.info = {'basedir': 'testdir'}
+        self.conn.path_module = os.path
         r = yield self.conn.remoteSetBuilderList(builders)
 
         self.assertEqual(r, builders)

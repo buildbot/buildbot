@@ -15,10 +15,12 @@
 
 from twisted.internet import defer
 from twisted.python import log
+from twisted.python.reflect import namedModule
 
 from buildbot.pbutil import decode
 from buildbot.util import deferwaiter
 from buildbot.worker.protocols import base
+from buildbot_worker.compat import bytes2unicode
 
 
 class Listener(base.UpdateRegistrationListener):
@@ -99,10 +101,28 @@ class Connection(base.Connection):
     @defer.inlineCallbacks
     def remoteGetWorkerInfo(self):
         info = yield self.protocol.get_message_result({'op': 'get_worker_info'})
-        return decode(info)
+        self.info = decode(info)
+
+        worker_system = self.info.get("system", None)
+        if worker_system == "nt":
+            self.path_module = namedModule("ntpath")
+        else:
+            # most everything accepts / as separator, so posix should be a reasonable fallback
+            self.path_module = namedModule("posixpath")
+
+        return self.info
 
     @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):
+
+        self.builder_basedirs = {}
+
+        basedir = self.info['basedir']
+
+        for name, builddir in builders:
+            self.builder_basedirs[name] = self.path_module.join(bytes2unicode(basedir),
+                                                                bytes2unicode(builddir))
+
         builders = yield self.protocol.get_message_result({'op': 'set_builder_list',
                                                            'builders': builders})
         self.builders = decode(builders)
@@ -110,6 +130,10 @@ class Connection(base.Connection):
 
     @defer.inlineCallbacks
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
+        if commandName == "mkdir":
+            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['dir'])
+            del args['dir']
+
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
                 args["want_stdout"] = True

@@ -392,7 +392,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'builder_name': 'test_builder',
                 'command_id': '123',
                 'command_name': 'mkdir',
-                'args': {'dir': 'test_dir', 'test1': 'value1', 'test2': 'value2'}
+                'args': {'path': 'basedir/test_dir', 'test1': 'value1', 'test2': 'value2'}
             })
             mkdir.assert_called()
 
@@ -400,6 +400,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
     def test_call_start_command_failed(self):
         self.setup_with_worker_for_builder()
 
+        path = os.path.join('basedir', 'test_dir')
         # check if directory was created
         with mock.patch('os.makedirs') as mkdir:
             mkdir.side_effect = OSError(1, 'test_error')
@@ -409,11 +410,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'builder_name': 'test_builder',
                 'command_id': '123',
                 'command_name': 'mkdir',
-                'args': {'dir': 'test_dir', 'test1': 'value1', 'test2': 'value2'}
+                'args': {'path': path, 'test1': 'value1', 'test2': 'value2'}
             })
             mkdir.assert_called()
 
-        path = os.path.join('basedir', 'test_dir')
         self.assert_sent_messages([
             {
                 'op': 'update',

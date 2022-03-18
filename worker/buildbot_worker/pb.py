@@ -63,7 +63,9 @@ class ProtocolCommandPb(ProtocolCommandBase):
         self.command_ref = command_ref
 
     def protocol_args_setup(self, command, args):
-        pass
+        if command == "mkdir":
+            args['path'] = os.path.join(self.basedir, args['dir'])
+            del args['dir']
 
     # Returns a Deferred
     def protocol_update(self, updates):
