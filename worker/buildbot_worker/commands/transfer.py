@@ -37,7 +37,7 @@ class TransferCommand(Command):
         upd = {'rc': self.rc}
         if self.stderr:
             upd['stderr'] = self.stderr
-        self.builder.sendUpdate(upd)
+        self.protocol_command.send_update(upd)
         return res
 
     def interrupt(self):
@@ -84,7 +84,7 @@ class WorkerFileUploadCommand(TransferCommand):
             log.msg('WorkerFileUploadCommand started')
 
         # Open file
-        self.path = os.path.join(self.builder.basedir,
+        self.path = os.path.join(self.protocol_command.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.filename))
         access_time = None
@@ -114,11 +114,12 @@ class WorkerFileUploadCommand(TransferCommand):
             if self.fp:
                 self.fp.close()
             self.fp = None
-            yield self.builder.protocol_update_upload_file_close(self.writer)
+            yield self.protocol_command.protocol_update_upload_file_close(self.writer)
 
             if self.keepstamp:
-                yield self.builder.protocol_update_upload_file_utime(self.writer, access_time,
-                                                                     modified_time)
+                yield self.protocol_command.protocol_update_upload_file_utime(self.writer,
+                                                                              access_time,
+                                                                              modified_time)
 
         def _close_err(f):
             self.rc = 1
@@ -126,7 +127,7 @@ class WorkerFileUploadCommand(TransferCommand):
                 self.fp.close()
             self.fp = None
             # call remote's close(), but keep the existing failure
-            d1 = self.builder.protocol_update_upload_file_close(self.writer)
+            d1 = self.protocol_command.protocol_update_upload_file_close(self.writer)
 
             def eb(f2):
                 log.msg("ignoring error from remote close():")
@@ -189,7 +190,7 @@ class WorkerFileUploadCommand(TransferCommand):
         return d
 
     def do_protocol_write(self, data):
-        return self.builder.protocol_update_upload_file_write(self.writer, data)
+        return self.protocol_command.protocol_update_upload_file_write(self.writer, data)
 
 
 class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
@@ -210,7 +211,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         if self.debug:
             log.msg('WorkerDirectoryUploadCommand started')
 
-        self.path = os.path.join(self.builder.basedir,
+        self.path = os.path.join(self.protocol_command.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.dirname))
         if self.debug:
@@ -242,7 +243,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         self._reactor.callLater(0, self._loop, d)
 
         def unpack(res):
-            d1 = self.builder.protocol_update_upload_directory(self.writer)
+            d1 = self.protocol_command.protocol_update_upload_directory(self.writer)
 
             def unpack_err(f):
                 self.rc = 1
@@ -261,7 +262,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         return TransferCommand.finished(self, res)
 
     def do_protocol_write(self, data):
-        return self.builder.protocol_update_upload_directory_write(self.writer, data)
+        return self.protocol_command.protocol_update_upload_directory_write(self.writer, data)
 
 
 class WorkerFileDownloadCommand(TransferCommand):
@@ -296,7 +297,7 @@ class WorkerFileDownloadCommand(TransferCommand):
             log.msg('WorkerFileDownloadCommand starting')
 
         # Open file
-        self.path = os.path.join(self.builder.basedir,
+        self.path = os.path.join(self.protocol_command.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.filename))
 
@@ -332,7 +333,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         def _close(res):
             # close the file, but pass through any errors from _loop
-            d1 = self.builder.protocol_update_read_file_close(self.reader)
+            d1 = self.protocol_command.protocol_update_read_file_close(self.reader)
             d1.addErrback(log.err, 'while trying to close reader')
             d1.addCallback(lambda ignored: res)
             return d1
@@ -373,7 +374,7 @@ class WorkerFileDownloadCommand(TransferCommand):
                 self.rc = 1
             return True
         else:
-            d = self.builder.protocol_update_read_file(self.reader, length)
+            d = self.protocol_command.protocol_update_read_file(self.reader, length)
             d.addCallback(self._writeData)
             return d
 

@@ -106,8 +106,7 @@ class LogFileWatcher(object):
         self.command = command
         self.name = name
         self.logfile = logfile
-        decoderFactory = getincrementaldecoder(
-            self.command.builder.unicode_encoding)
+        decoderFactory = getincrementaldecoder(self.command.unicode_encoding)
         self.logDecode = decoderFactory(errors='replace')
 
         log.msg("LogFileWatcher created to watch {0}".format(logfile))
@@ -201,8 +200,7 @@ class RunProcessPP(protocol.ProcessProtocol):
         self.pending_stdin = b""
         self.stdin_finished = False
         self.killed = False
-        decoderFactory = getincrementaldecoder(
-            self.command.builder.unicode_encoding)
+        decoderFactory = getincrementaldecoder(self.command.unicode_encoding)
         self.stdoutDecode = decoderFactory(errors='replace')
         self.stderrDecode = decoderFactory(errors='replace')
 
@@ -292,8 +290,7 @@ class RunProcess(object):
     # Then changes to the system clock during a run wouldn't effect the "elapsed
     # time" results.
 
-    def __init__(self, builder, command,
-                 workdir, environ=None,
+    def __init__(self, command, workdir, unicode_encoding, send_update, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, sigtermTime=None,
                  initialStdin=None, keepStdout=False, keepStderr=False,
@@ -315,7 +312,6 @@ class RunProcess(object):
         if logfiles is None:
             logfiles = {}
 
-        self.builder = builder
         if isinstance(command, list):
             def obfus(w):
                 if (isinstance(w, tuple) and len(w) == 3 and
@@ -338,9 +334,9 @@ class RunProcess(object):
             if isinstance(cmd, (tuple, list)):
                 for i, a in enumerate(cmd):
                     if isinstance(a, text_type):
-                        cmd[i] = a.encode(self.builder.unicode_encoding)
+                        cmd[i] = a.encode(unicode_encoding)
             elif isinstance(cmd, text_type):
-                cmd = cmd.encode(self.builder.unicode_encoding)
+                cmd = cmd.encode(unicode_encoding)
             return cmd
 
         self.command = to_bytes(util.Obfuscated.get_real(command))
@@ -351,6 +347,8 @@ class RunProcess(object):
         self.sendRC = sendRC
         self.logfiles = logfiles
         self.workdir = workdir
+        self.unicode_encoding = unicode_encoding
+        self.send_update = send_update
         self.process = None
         if not os.path.exists(workdir):
             os.makedirs(workdir)
@@ -446,7 +444,7 @@ class RunProcess(object):
         return "<{0} '{1}'>".format(self.__class__.__name__, self.fake_command)
 
     def sendStatus(self, status):
-        self.builder.sendUpdate(status)
+        self.send_update(status)
 
     def start(self):
         # return a Deferred which fires (with the exit code) when the command
@@ -476,7 +474,7 @@ class RunProcess(object):
         self.pp = RunProcessPP(self)
 
         self.using_comspec = False
-        self.command = unicode2bytes(self.command, encoding=self.builder.unicode_encoding)
+        self.command = unicode2bytes(self.command, encoding=self.unicode_encoding)
         if isinstance(self.command, bytes):
             if runtime.platformType == 'win32':
                 # allow %COMSPEC% to have args
@@ -498,7 +496,7 @@ class RunProcess(object):
             # handle path searching, etc.
             if (runtime.platformType == 'win32' and
                 not (bytes2unicode(self.command[0],
-                     self.builder.unicode_encoding).lower().endswith(".exe") and
+                     self.unicode_encoding).lower().endswith(".exe") and
                      os.path.isabs(self.command[0]))):
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
@@ -510,9 +508,9 @@ class RunProcess(object):
                 argv = self.command
             # Attempt to format this for use by a shell, although the process
             # isn't perfect
-            display = shell_quote(self.fake_command, self.builder.unicode_encoding)
+            display = shell_quote(self.fake_command, self.unicode_encoding)
 
-        display = bytes2unicode(display, self.builder.unicode_encoding)
+        display = bytes2unicode(display, self.unicode_encoding)
 
         # $PWD usually indicates the current directory; spawnProcess may not
         # update this value, though, so we set it explicitly here.  This causes
@@ -557,9 +555,9 @@ class RunProcess(object):
             env_names = sorted(self.environ.keys())
             for name in env_names:
                 msg += u"  {0}={1}\n".format(bytes2unicode(name,
-                                                           encoding=self.builder.unicode_encoding),
+                                                           encoding=self.unicode_encoding),
                                              bytes2unicode(self.environ[name],
-                                                           encoding=self.builder.unicode_encoding))
+                                                           encoding=self.unicode_encoding))
             log.msg(u" environment:\n{0}".format(pprint.pformat(self.environ)))
             self._addToBuffers(u'header', msg)
 
@@ -630,7 +628,7 @@ class RunProcess(object):
         # In PY3, it needs str which is unicode and its encoding can be specified.
         if PY3:
             tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
-                                    delete=False, encoding=self.builder.unicode_encoding)
+                                    delete=False, encoding=self.unicode_encoding)
         else:
             tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
                                     delete=False)
@@ -638,9 +636,9 @@ class RunProcess(object):
         # echo off hides this cheat from the log files.
         tf.write(u"@echo off\n")
         if isinstance(self.command, (string_types, bytes)):
-            tf.write(bytes2NativeString(self.command, self.builder.unicode_encoding))
+            tf.write(bytes2NativeString(self.command, self.unicode_encoding))
         else:
-            tf.write(win32_batch_quote(self.command, self.builder.unicode_encoding))
+            tf.write(win32_batch_quote(self.command, self.unicode_encoding))
         tf.close()
 
         argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
@@ -674,7 +672,7 @@ class RunProcess(object):
         for logname in msg:
             data = u""
             for m in msg[logname]:
-                m = bytes2unicode(m, self.builder.unicode_encoding)
+                m = bytes2unicode(m, self.unicode_encoding)
                 data += m
             if isinstance(logname, tuple) and logname[0] == 'log':
                 retval['log'] = (logname[1], data)

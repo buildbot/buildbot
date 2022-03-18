@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pprint
 import re
 import signal
 import sys
@@ -38,7 +39,6 @@ from twisted.trial import unittest
 from buildbot_worker import runprocess
 from buildbot_worker import util as bsutil
 from buildbot_worker.exceptions import AbandonChain
-from buildbot_worker.test.fake.workerforbuilder import FakeWorkerForBuilder
 from buildbot_worker.test.util import compat
 from buildbot_worker.test.util.misc import BasedirMixin
 from buildbot_worker.test.util.misc import nl
@@ -83,90 +83,86 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpBasedir()
+        self.updates = []
+
+    def send_update(self, status):
+        self.updates.append(status)
+
+    def show(self):
+        return pprint.pformat(self.updates)
 
     def tearDown(self):
         self.tearDownBasedir()
 
     def testCommandEncoding(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, u'abcd', self.basedir)
+        s = runprocess.RunProcess(u'abcd', self.basedir, 'utf-8', self.send_update)
         self.assertIsInstance(s.command, bytes)
         self.assertIsInstance(s.fake_command, bytes)
 
     def testCommandEncodingList(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, [u'abcd', b'efg'], self.basedir)
+        s = runprocess.RunProcess([u'abcd', b'efg'], self.basedir, 'utf-8', self.send_update)
         self.assertIsInstance(s.command[0], bytes)
         self.assertIsInstance(s.fake_command[0], bytes)
 
     def testCommandEncodingObfuscated(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b,
-                                  [bsutil.Obfuscated(u'abcd', u'ABCD')],
-                                  self.basedir)
+        s = runprocess.RunProcess([bsutil.Obfuscated(u'abcd', u'ABCD')], self.basedir, 'utf-8',
+                                  self.send_update)
         self.assertIsInstance(s.command[0], bytes)
         self.assertIsInstance(s.fake_command[0], bytes)
 
     @defer.inlineCallbacks
     def testStart(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('hello\n')} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stdout': nl('hello\n')} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testNoStdout(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(
-            b, stdoutCommand('hello'), self.basedir, sendStdout=False)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
+                                  sendStdout=False)
 
         yield s.start()
 
-        self.failIf({'stdout': nl('hello\n')} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.failIf({'stdout': nl('hello\n')} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testKeepStdout(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(
-            b, stdoutCommand('hello'), self.basedir, keepStdout=True)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
+                                  keepStdout=True)
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('hello\n')} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stdout': nl('hello\n')} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
         self.assertEqual(s.stdout, nl('hello\n'))
 
     @defer.inlineCallbacks
     def testStderr(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stderrCommand("hello"), self.basedir)
+        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update)
 
         yield s.start()
 
-        self.failIf({'stderr': nl('hello\n')} not in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.failIf({'stderr': nl('hello\n')} not in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testNoStderr(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(
-            b, stderrCommand("hello"), self.basedir, sendStderr=False)
+        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update,
+                                  sendStderr=False)
 
         yield s.start()
 
-        self.failIf({'stderr': nl('hello\n')} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.failIf({'stderr': nl('hello\n')} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def test_incrementalDecoder(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        b.unicode_encoding = "utf-8"
-        s = runprocess.RunProcess(
-            b, stderrCommand("hello"), self.basedir, sendStderr=True)
+        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update,
+                                  sendStderr=True)
         pp = runprocess.RunProcessPP(s)
         # u"\N{SNOWMAN} when encoded to utf-8 bytes is b"\xe2\x98\x83"
         pp.outReceived(b"\xe2")
@@ -175,89 +171,80 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         pp.errReceived(b"\x98\x83")
         yield s.start()
 
-        self.assertTrue({'stderr': u"\N{SNOWMAN}"} in b.updates)
-        self.assertTrue({'stdout': u"\N{SNOWMAN}"} in b.updates)
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stderr': u"\N{SNOWMAN}"} in self.updates)
+        self.assertTrue({'stdout': u"\N{SNOWMAN}"} in self.updates)
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testInvalidUTF8(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        b.unicode_encoding = "utf-8"
-        s = runprocess.RunProcess(
-            b, stderrCommand("hello"), self.basedir, sendStderr=True)
+        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update,
+                                  sendStderr=True)
         pp = runprocess.RunProcessPP(s)
         INVALID_UTF8 = b"\xff"
         with self.assertRaises(UnicodeDecodeError):
             INVALID_UTF8.decode('utf-8')
         pp.outReceived(INVALID_UTF8)
         yield s.start()
-        stdout = [up['stdout'] for up in b.updates if 'stdout' in up][0]
+        stdout = [up['stdout'] for up in self.updates if 'stdout' in up][0]
         # On Python < 2.7 bytes is used, on Python >= 2.7 unicode
         self.assertIn(stdout, (b'\xef\xbf\xbd', u'\ufffd'))
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testKeepStderr(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(
-            b, stderrCommand("hello"), self.basedir, keepStderr=True)
+        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update,
+                                  keepStderr=True)
 
         yield s.start()
 
-        self.assertTrue({'stderr': nl('hello\n')} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stderr': nl('hello\n')} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
         self.assertEqual(s.stderr, nl('hello\n'))
 
     @defer.inlineCallbacks
     def testStringCommand(self):
-        b = FakeWorkerForBuilder(self.basedir)
         # careful!  This command must execute the same on windows and UNIX
-        s = runprocess.RunProcess(b, 'echo hello', self.basedir)
+        s = runprocess.RunProcess('echo hello', self.basedir, 'utf-8', self.send_update)
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('hello\n')} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stdout': nl('hello\n')} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     def testObfuscatedCommand(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b,
-                                  [('obfuscated', 'abcd', 'ABCD')],
-                                  self.basedir)
+        s = runprocess.RunProcess([('obfuscated', 'abcd', 'ABCD')], self.basedir, 'utf-8',
+                                  self.send_update)
         self.assertEqual(s.command, [b'abcd'])
         self.assertEqual(s.fake_command, [b'ABCD'])
 
     @defer.inlineCallbacks
     def testMultiWordStringCommand(self):
-        b = FakeWorkerForBuilder(self.basedir)
         # careful!  This command must execute the same on windows and UNIX
-        s = runprocess.RunProcess(b, 'echo Happy Days and Jubilation',
-                                  self.basedir)
+        s = runprocess.RunProcess('echo Happy Days and Jubilation', self.basedir, 'utf-8',
+                                  self.send_update)
 
         # no quoting occurs
         exp = nl('Happy Days and Jubilation\n')
         yield s.start()
 
-        self.assertTrue({'stdout': exp} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stdout': exp} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testInitialStdinUnicode(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(
-            b, catCommand(), self.basedir, initialStdin=u'hello')
+        s = runprocess.RunProcess(catCommand(), self.basedir, 'utf-8', self.send_update,
+                                  initialStdin=u'hello')
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('hello')} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stdout': nl('hello')} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testMultiWordStringCommandQuotes(self):
-        b = FakeWorkerForBuilder(self.basedir)
         # careful!  This command must execute the same on windows and UNIX
-        s = runprocess.RunProcess(b, 'echo "Happy Days and Jubilation"',
-                                  self.basedir)
+        s = runprocess.RunProcess('echo "Happy Days and Jubilation"', self.basedir, 'utf-8',
+                                  self.send_update)
 
         if runtime.platformType == "win32":
             # echo doesn't parse out the quotes, so they come through in the
@@ -267,14 +254,12 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             exp = nl('Happy Days and Jubilation\n')
         yield s.start()
 
-        self.assertTrue({'stdout': exp} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stdout': exp} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testTrickyArguments(self):
         # make sure non-trivial arguments are passed verbatim
-        b = FakeWorkerForBuilder(self.basedir)
-
         args = [
             'Happy Days and Jubilation',  # spaces
             r'''!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~''',  # special characters
@@ -284,30 +269,30 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             # variable name.
         ]
 
-        s = runprocess.RunProcess(b, printArgsCommand() + args, self.basedir)
+        s = runprocess.RunProcess(printArgsCommand() + args, self.basedir, 'utf-8',
+                                  self.send_update)
         yield s.start()
 
-        self.assertTrue({'stdout': nl(repr(args))} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stdout': nl(repr(args))} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     @compat.skipUnlessPlatformIs("win32")
     def testPipeString(self):
-        b = FakeWorkerForBuilder(self.basedir)
         # this is highly contrived, but it proves the point.
         cmd = sys.executable + \
             ' -c "import sys; sys.stdout.write(\'b\\na\\n\')" | sort'
-        s = runprocess.RunProcess(b, cmd, self.basedir)
+        s = runprocess.RunProcess(cmd, self.basedir, 'utf-8', self.send_update)
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('a\nb\n')} in b.updates, b.show())
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'stdout': nl('a\nb\n')} in self.updates, self.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testCommandTimeout(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, sleepCommand(10), self.basedir, timeout=5)
+        s = runprocess.RunProcess(sleepCommand(10), self.basedir, 'utf-8', self.send_update,
+                                  timeout=5)
         clock = task.Clock()
         s._reactor = clock
 
@@ -316,13 +301,13 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         yield d
 
         self.assertTrue(
-            {'stdout': nl('hello\n')} not in b.updates, b.show())
-        self.assertTrue({'rc': FATAL_RC} in b.updates, b.show())
+            {'stdout': nl('hello\n')} not in self.updates, self.show())
+        self.assertTrue({'rc': FATAL_RC} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testCommandMaxTime(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, sleepCommand(10), self.basedir, maxTime=5)
+        s = runprocess.RunProcess(sleepCommand(10), self.basedir, 'utf-8', self.send_update,
+                                  maxTime=5)
         clock = task.Clock()
         s._reactor = clock
 
@@ -331,27 +316,24 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         yield d
 
         self.assertTrue(
-            {'stdout': nl('hello\n')} not in b.updates, b.show())
-        self.assertTrue({'rc': FATAL_RC} in b.updates, b.show())
+            {'stdout': nl('hello\n')} not in self.updates, self.show())
+        self.assertTrue({'rc': FATAL_RC} in self.updates, self.show())
 
     @compat.skipUnlessPlatformIs("posix")
     @defer.inlineCallbacks
     def test_stdin_closed(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b,
-                                  scriptCommand('assert_stdin_closed'),
-                                  self.basedir,
+        s = runprocess.RunProcess(scriptCommand('assert_stdin_closed'),
+                                  self.basedir, 'utf-8', self.send_update,
                                   # if usePTY=True, stdin is never closed
                                   usePTY=False,
                                   logEnviron=False)
         yield s.start()
 
-        self.assertTrue({'rc': 0} in b.updates, b.show())
+        self.assertTrue({'rc': 0} in self.updates, self.show())
 
     @defer.inlineCallbacks
     def test_startCommand_exception(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, ['whatever'], self.basedir)
+        s = runprocess.RunProcess(['whatever'], self.basedir, 'utf-8', self.send_update)
 
         # set up to cause an exception in _startCommand
         def _startCommand(*args, **kwargs):
@@ -366,7 +348,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         stderr = []
         # Here we're checking that the exception starting up the command
         # actually gets propagated back to the master in stderr.
-        for u in b.updates:
+        for u in self.updates:
             if 'stderr' in u:
                 stderr.append(u['stderr'])
         stderr = ''.join(stderr)
@@ -376,41 +358,38 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testLogEnviron(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
                                   environ={"FOO": "BAR"})
 
         yield s.start()
 
         headers = "".join([list(update.values())[0]
-                           for update in b.updates if list(update) == ["header"]])
+                           for update in self.updates if list(update) == ["header"]])
         self.assertTrue("FOO=BAR" in headers, "got:\n" + headers)
 
     @defer.inlineCallbacks
     def testNoLogEnviron(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
                                   environ={"FOO": "BAR"}, logEnviron=False)
 
         yield s.start()
 
         headers = "".join([list(update.values())[0]
-                           for update in b.updates if list(update) == ["header"]])
+                           for update in self.updates if list(update) == ["header"]])
         self.assertTrue("FOO=BAR" not in headers, "got:\n" + headers)
 
     @defer.inlineCallbacks
     def testEnvironExpandVar(self):
-        b = FakeWorkerForBuilder(self.basedir)
         environ = {"EXPND": "-${PATH}-",
                    "DOESNT_EXPAND": "-${---}-",
                    "DOESNT_FIND": "-${DOESNT_EXISTS}-"}
-        s = runprocess.RunProcess(
-            b, stdoutCommand('hello'), self.basedir, environ=environ)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
+                                  environ=environ)
 
         yield s.start()
 
         headers = "".join([list(update.values())[0]
-                           for update in b.updates if list(update) == ["header"]])
+                           for update in self.updates if list(update) == ["header"]])
         self.assertTrue("EXPND=-$" not in headers, "got:\n" + headers)
         self.assertTrue("DOESNT_FIND=--" in headers, "got:\n" + headers)
         self.assertTrue(
@@ -418,47 +397,43 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testUnsetEnvironVar(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
                                   environ={"PATH": None})
 
         yield s.start()
 
         headers = "".join([list(update.values())[0]
-                           for update in b.updates if list(update) == ["header"]])
+                           for update in self.updates if list(update) == ["header"]])
         self.assertFalse(
             re.match('\bPATH=', headers), "got:\n" + headers)
 
     @defer.inlineCallbacks
     def testEnvironPythonPath(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
                                   environ={"PYTHONPATH": 'a'})
 
         yield s.start()
 
         headers = "".join([list(update.values())[0]
-                           for update in b.updates if list(update) == ["header"]])
+                           for update in self.updates if list(update) == ["header"]])
         self.assertFalse(re.match('\bPYTHONPATH=a{0}'.format(os.pathsep), headers),
                          "got:\n" + headers)
 
     @defer.inlineCallbacks
     def testEnvironArray(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
                                   environ={"FOO": ['a', 'b']})
 
         yield s.start()
 
         headers = "".join([list(update.values())[0]
-                           for update in b.updates if list(update) == ["header"]])
+                           for update in self.updates if list(update) == ["header"]])
         self.assertFalse(re.match('\bFOO=a{0}b\b'.format(os.pathsep), headers),
                          "got:\n" + headers)
 
     def testEnvironInt(self):
-        b = FakeWorkerForBuilder(self.basedir)
         with self.assertRaises(RuntimeError):
-            runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+            runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
                                   environ={"BUILD_NUMBER": 13})
 
     def _test_spawnAsBatch(self, cmd, comspec):
@@ -473,8 +448,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         if 'COMSPEC' not in tempEnviron:
             tempEnviron['COMSPEC'] = comspec
         self.patch(os, "environ", tempEnviron)
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, cmd, self.basedir)
+        s = runprocess.RunProcess(cmd, self.basedir, 'utf-8', self.send_update)
         s.pp = runprocess.RunProcessPP(s)
         s.deferred = defer.Deferred()
         d = s._spawnAsBatch(s.pp, s.command, "args",
@@ -502,6 +476,10 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
     def setUp(self):
         self.pidfiles = []
         self.setUpBasedir()
+        self.updates = []
+
+    def send_update(self, status):
+        self.updates.append(status)
 
     def tearDown(self):
         # make sure all of the subprocesses are dead
@@ -597,11 +575,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfile = self.newPidfile()
         self.pid = None
 
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b,
-                                  scriptCommand(
-                                      'write_pidfile_and_sleep', pidfile),
-                                  self.basedir)
+        s = runprocess.RunProcess(scriptCommand('write_pidfile_and_sleep', pidfile), self.basedir,
+                                  'utf-8', self.send_update)
         if interruptSignal is not None:
             s.interruptSignal = interruptSignal
         runproc_d = s.start()
@@ -627,11 +602,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         # is not None
         pidfile = self.newPidfile()
         self.pid = None
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b,
-                                  scriptCommand(
-                                      'write_pidfile_and_sleep', pidfile),
-                                  self.basedir, sigtermTime=1)
+        s = runprocess.RunProcess(scriptCommand('write_pidfile_and_sleep', pidfile), self.basedir,
+                                  'utf-8', self.send_update, sigtermTime=1)
         runproc_d = s.start()
         pidfile_d = self.waitForPidfile(pidfile)
         self.receivedSIGTERM = False
@@ -684,12 +656,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         child_pidfile = self.newPidfile()
         self.child_pid = None
 
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b,
-                                  scriptCommand(
-                                      'spawn_child', parent_pidfile, child_pidfile),
-                                  self.basedir,
-                                  usePTY=usePTY,
+        s = runprocess.RunProcess(scriptCommand('spawn_child', parent_pidfile, child_pidfile),
+                                  self.basedir, 'utf-8', self.send_update, usePTY=usePTY,
                                   useProcGroup=useProcGroup)
         runproc_d = s.start()
 
@@ -738,12 +706,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         child_pidfile = self.newPidfile()
         self.child_pid = None
 
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b,
-                                  scriptCommand(
-                                      'double_fork', parent_pidfile, child_pidfile),
-                                  self.basedir,
-                                  usePTY=usePTY,
+        s = runprocess.RunProcess(scriptCommand('double_fork', parent_pidfile, child_pidfile),
+                                  self.basedir, 'utf-8', self.send_update, usePTY=usePTY,
                                   useProcGroup=useProcGroup)
         runproc_d = s.start()
 
@@ -778,6 +742,10 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
     def setUp(self):
         self.pidfiles = []
         self.setUpBasedir()
+        self.updates = []
+
+    def send_update(self, status):
+        self.updates.append(status)
 
     def tearDown(self):
         # make sure all of the subprocesses are dead
@@ -863,9 +831,8 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         # test a simple process that just sleeps waiting to die
         pidfile = self.new_pid_file()
 
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, scriptCommand('write_pidfile_and_sleep', pidfile),
-                                  self.basedir)
+        s = runprocess.RunProcess(scriptCommand('write_pidfile_and_sleep', pidfile), self.basedir,
+                                  'utf-8', self.send_update)
         if interrupt_signal is not None:
             s.interruptSignal = interrupt_signal
         runproc_d = s.start()
@@ -885,9 +852,8 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         # Tests that the process will receive SIGTERM if sigtermTimeout is not None
         pidfile = self.new_pid_file()
 
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, scriptCommand('write_pidfile_and_sleep', pidfile),
-                                  self.basedir, sigtermTime=1)
+        s = runprocess.RunProcess(scriptCommand('write_pidfile_and_sleep', pidfile), self.basedir,
+                                  'utf-8', self.send_update, sigtermTime=1)
 
         taskkill_calls = []
         orig_taskkill = s._taskkill
@@ -914,9 +880,8 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         parent_pidfile = self.new_pid_file()
         child_pidfile = self.new_pid_file()
 
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, scriptCommand('spawn_child', parent_pidfile, child_pidfile),
-                                  self.basedir)
+        s = runprocess.RunProcess(scriptCommand('spawn_child', parent_pidfile, child_pidfile),
+                                  self.basedir, 'utf-8', self.send_update)
         runproc_d = s.start()
 
         # wait for both processes to start up, then call s.kill
@@ -938,9 +903,8 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         parent_pidfile = self.new_pid_file()
         child_pidfile = self.new_pid_file()
 
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, scriptCommand('double_fork', parent_pidfile, child_pidfile),
-                                  self.basedir)
+        s = runprocess.RunProcess(scriptCommand('double_fork', parent_pidfile, child_pidfile),
+                                  self.basedir, 'utf-8', self.send_update)
         runproc_d = s.start()
 
         # wait for both processes to start up, then call s.kill
@@ -960,58 +924,59 @@ class TestLogging(BasedirMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpBasedir()
+        self.updates = []
+
+    def send_update(self, status):
+        self.updates.append(status)
+
+    def show(self):
+        return pprint.pformat(self.updates)
 
     def tearDown(self):
         self.tearDownBasedir()
 
     def testSendStatus(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
         s.sendStatus({'stdout': nl('hello\n')})
-        self.assertEqual(b.updates, [{'stdout': nl('hello\n')}], b.show())
+        self.assertEqual(self.updates, [{'stdout': nl('hello\n')}], self.show())
 
     def testSendBuffered(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
         s._addToBuffers('stdout', 'hello ')
         s._addToBuffers('stdout', 'world')
         s._sendBuffers()
-        self.assertEqual(b.updates, [{'stdout': 'hello world'}], b.show())
+        self.assertEqual(self.updates, [{'stdout': 'hello world'}], self.show())
 
     def testSendBufferedInterleaved(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
         s._addToBuffers('stdout', 'hello ')
         s._addToBuffers('stderr', 'DIEEEEEEE')
         s._addToBuffers('stdout', 'world')
         s._sendBuffers()
-        self.assertEqual(b.updates, [
+        self.assertEqual(self.updates, [
             {'stdout': 'hello '},
             {'stderr': 'DIEEEEEEE'},
             {'stdout': 'world'},
         ])
 
     def testSendChunked(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
         data = "x" * int(runprocess.RunProcess.CHUNK_LIMIT * 3 / 2)
         s._addToBuffers('stdout', data)
         s._sendBuffers()
-        self.assertEqual(len(b.updates), 2)
+        self.assertEqual(len(self.updates), 2)
 
     def testSendNotimeout(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
         data = "x" * (runprocess.RunProcess.BUFFER_SIZE + 1)
         s._addToBuffers('stdout', data)
-        self.assertEqual(len(b.updates), 1)
+        self.assertEqual(len(self.updates), 1)
 
     def testSendLog(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
+        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
         s._addToBuffers(('log', 'stdout'), 'hello ')
         s._sendBuffers()
-        self.assertEqual(b.updates, [
+        self.assertEqual(self.updates, [
             {'log': ('stdout', 'hello ')},
         ])
 
@@ -1020,13 +985,19 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpBasedir()
+        self.updates = []
+
+    def send_update(self, status):
+        self.updates.append(status)
+
+    def show(self):
+        return pprint.pformat(self.updates)
 
     def tearDown(self):
         self.tearDownBasedir()
 
     def makeRP(self):
-        b = FakeWorkerForBuilder(self.basedir)
-        rp = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
+        rp = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
         return rp
 
     def test_statFile_missing(self):
@@ -1069,7 +1040,7 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
             # the log file content was captured and the invalid byte replaced with \ufffd (the
             # replacement character, often a black diamond with a white question mark)
             REPLACED = u'before\ufffdafter'
-            self.assertEqual(rp.builder.updates, [{'log': ('test', REPLACED)}])
+            self.assertEqual(self.updates, [{'log': ('test', REPLACED)}])
 
         finally:
             lf.stop()

@@ -39,7 +39,7 @@ class MakeDirectory(base.Command):
     requiredArgs = ['dir']
 
     def start(self):
-        dirname = os.path.join(self.builder.basedir, self.args['dir'])
+        dirname = os.path.join(self.protocol_command.basedir, self.args['dir'])
 
         try:
             if not os.path.isdir(dirname):
@@ -85,7 +85,7 @@ class RemoveDirectory(base.Command):
         self.sendStatus({'rc': self.rc})
 
     def removeSingleDir(self, dirname):
-        self.dir = os.path.join(self.builder.basedir, dirname)
+        self.dir = os.path.join(self.protocol_command.basedir, dirname)
         if runtime.platformType != "posix":
             d = threads.deferToThread(utils.rmdirRecursive, self.dir)
 
@@ -105,7 +105,10 @@ class RemoveDirectory(base.Command):
     @defer.inlineCallbacks
     def _clobber(self, dummy, chmodDone=False):
         command = ["rm", "-rf", self.dir]
-        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
+
+        c = runprocess.RunProcess(command, self.protocol_command.basedir,
+                                  self.protocol_command.unicode_encoding,
+                                  self.protocol_command.send_update,
                                   sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
                                   logEnviron=self.logEnviron, usePTY=False)
 
@@ -130,14 +133,17 @@ class RemoveDirectory(base.Command):
         # Attempt a recursive chmod and re-try the rm -rf after.
 
         command = ["chmod", "-Rf", "u+rwx",
-                   os.path.join(self.builder.basedir, self.dir)]
+                   os.path.join(self.protocol_command.basedir, self.dir)]
         if sys.platform.startswith('freebsd'):
             # Work around a broken 'chmod -R' on FreeBSD (it tries to recurse into a
             # directory for which it doesn't have permission, before changing that
             # permission) by running 'find' instead
-            command = ["find", os.path.join(self.builder.basedir, self.dir),
+            command = ["find", os.path.join(self.protocol_command.basedir, self.dir),
                        '-exec', 'chmod', 'u+rwx', '{}', ';']
-        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
+
+        c = runprocess.RunProcess(command, self.protocol_command.basedir,
+                                  self.protocol_command.unicode_encoding,
+                                  self.protocol_command.send_update,
                                   sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
                                   logEnviron=self.logEnviron, usePTY=False)
 
@@ -161,8 +167,8 @@ class CopyDirectory(base.Command):
     def start(self):
         args = self.args
 
-        fromdir = os.path.join(self.builder.basedir, self.args['fromdir'])
-        todir = os.path.join(self.builder.basedir, self.args['todir'])
+        fromdir = os.path.join(self.protocol_command.basedir, self.args['fromdir'])
+        todir = os.path.join(self.protocol_command.basedir, self.args['todir'])
 
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
@@ -191,9 +197,12 @@ class CopyDirectory(base.Command):
                          ).format(todir))
 
             command = ['cp', '-R', '-P', '-p', '-v', fromdir, todir]
-            c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                                      sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
-                                      logEnviron=self.logEnviron, usePTY=False)
+            c = runprocess.RunProcess(command, self.protocol_command.basedir,
+                                      self.protocol_command.unicode_encoding,
+                                      self.protocol_command.send_update,
+                                      sendRC=False, timeout=self.timeout,
+                                      maxTime=self.maxTime, logEnviron=self.logEnviron,
+                                      usePTY=False)
             self.command = c
             d = c.start()
             d.addCallback(self._abandonOnFailure)
@@ -211,7 +220,7 @@ class StatFile(base.Command):
 
     def start(self):
         filename = os.path.join(
-            self.builder.basedir, self.args.get('workdir', ''), self.args['file'])
+            self.protocol_command.basedir, self.args.get('workdir', ''), self.args['file'])
 
         try:
             stat = os.stat(filename)
@@ -232,7 +241,7 @@ class GlobPath(base.Command):
     requiredArgs = ['path']
 
     def start(self):
-        pathname = os.path.join(self.builder.basedir, self.args['path'])
+        pathname = os.path.join(self.protocol_command.basedir, self.args['path'])
 
         try:
             # recursive matching is only support in python3.5+
@@ -257,7 +266,7 @@ class ListDir(base.Command):
     requireArgs = ['dir']
 
     def start(self):
-        dirname = os.path.join(self.builder.basedir, self.args['dir'])
+        dirname = os.path.join(self.protocol_command.basedir, self.args['dir'])
 
         try:
             files = os.listdir(dirname)
@@ -278,7 +287,7 @@ class RemoveFile(base.Command):
     requiredArgs = ['path']
 
     def start(self):
-        pathname = os.path.join(self.builder.basedir, self.args['path'])
+        pathname = os.path.join(self.protocol_command.basedir, self.args['path'])
 
         try:
             os.remove(pathname)

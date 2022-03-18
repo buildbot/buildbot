@@ -17,9 +17,11 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import os.path
+import shutil
 import signal
 import sys
 
+from twisted.application import service
 from twisted.application.internet import ClientService
 from twisted.application.internet import backoffPolicy
 from twisted.cred import credentials
@@ -32,23 +34,34 @@ from twisted.spread import pb
 
 from buildbot_worker import util
 from buildbot_worker.base import BotBase
+from buildbot_worker.base import ProtocolCommandBase
 from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
+from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.pbutil import AutoLoginPBFactory
+from buildbot_worker.pbutil import decode
 from buildbot_worker.tunnel import HTTPTunnelEndpoint
 
 if sys.version_info.major >= 3:
     from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
     from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
-    from buildbot_worker.msgpack import WorkerForBuilderMsgpack
+    from buildbot_worker.msgpack import ProtocolCommandMsgpack
 
 
 class UnknownCommand(pb.Error):
     pass
 
 
-class WorkerForBuilderPbLike(WorkerForBuilderBase):
+class ProtocolCommandPb(ProtocolCommandBase):
+    def __init__(self, unicode_encoding, basedir, builder_is_running,
+                 on_command_complete, on_lost_remote_step,
+                 command, stepId, args, command_ref):
+        ProtocolCommandBase.__init__(self, unicode_encoding, basedir, builder_is_running,
+                                     on_command_complete, on_lost_remote_step,
+                                     command, stepId, args)
+        self.command_ref = command_ref
+
     def protocol_args_setup(self, command, args):
         pass
 
@@ -57,11 +70,11 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         return self.command_ref.callRemote("update", updates)
 
     def protocol_notify_on_disconnect(self):
-        self.command_ref.notifyOnDisconnect(self.lostRemoteStep)
+        self.command_ref.notifyOnDisconnect(self.on_lost_remote_step)
 
     # Returns a Deferred
     def protocol_complete(self, failure):
-        self.command_ref.dontNotifyOnDisconnect(self.lostRemoteStep)
+        self.command_ref.dontNotifyOnDisconnect(self.on_lost_remote_step)
         return self.command_ref.callRemote("complete", failure)
 
     # Returns a Deferred
@@ -93,17 +106,337 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         return reader.callRemote('read', length)
 
 
+class WorkerForBuilderPbLike(WorkerForBuilderBase):
+    ProtocolCommand = ProtocolCommandPb
+
+    """This is the local representation of a single Builder: it handles a
+    single kind of build (like an all-warnings build). It has a name and a
+    home directory. The rest of its behavior is determined by the master.
+    """
+
+    stopCommandOnShutdown = True
+
+    # remote is a ref to the Builder object on the master side, and is set
+    # when they attach. We use it to detect when the connection to the master
+    # is severed.
+    remote = None
+
+    def __init__(self, name, unicode_encoding):
+        # service.Service.__init__(self) # Service has no __init__ method
+        self.setName(name)
+        self.unicode_encoding = unicode_encoding
+        self.protocol_command = None
+
+    def __repr__(self):
+        return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
+
+    @defer.inlineCallbacks
+    def setServiceParent(self, parent):
+        yield service.Service.setServiceParent(self, parent)
+        self.bot = self.parent
+        # note that self.parent will go away when the buildmaster's config
+        # file changes and this Builder is removed (possibly because it has
+        # been changed, so the Builder will be re-added again in a moment).
+        # This may occur during a build, while a step is running.
+
+    def setBuilddir(self, builddir):
+        assert self.parent
+        self.builddir = builddir
+        self.basedir = os.path.join(bytes2unicode(self.bot.basedir),
+                                    bytes2unicode(self.builddir))
+        if not os.path.isdir(self.basedir):
+            os.makedirs(self.basedir)
+
+    def startService(self):
+        service.Service.startService(self)
+        if self.protocol_command:
+            self.protocol_command.builder_is_running = True
+
+    def stopService(self):
+        service.Service.stopService(self)
+        if self.protocol_command:
+            self.protocol_command.builder_is_running = False
+        if self.stopCommandOnShutdown:
+            self.stopCommand()
+
+    def remote_setMaster(self, remote):
+        self.remote = remote
+        self.remote.notifyOnDisconnect(self.lostRemote)
+
+    def remote_print(self, message):
+        log.msg("WorkerForBuilder.remote_print({0}): message from master: {1}".format(
+                self.name, message))
+
+    def lostRemote(self, remote):
+        log.msg("lost remote")
+        self.remote = None
+
+    def lostRemoteStep(self, remotestep):
+        log.msg("lost remote step")
+        self.protocol_command.command_ref = None
+        if self.stopCommandOnShutdown:
+            self.stopCommand()
+
+    # the following are Commands that can be invoked by the master-side
+    # Builder
+    def remote_startBuild(self):
+        """This is invoked before the first step of any new build is run.  It
+        doesn't do much, but masters call it so it's still here."""
+
+    def remote_startCommand(self, command_ref, stepId, command, args):
+        """
+        This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
+        part of various master-side BuildSteps, to start various commands
+        that actually do the build. I return nothing. Eventually I will call
+        .commandComplete() to notify the master-side RemoteCommand that I'm
+        done.
+        """
+        stepId = decode(stepId)
+        command = decode(command)
+        args = decode(args)
+
+        if self.protocol_command:
+            log.msg("leftover command, dropping it")
+            self.stopCommand()
+
+        def on_command_complete():
+            self.protocol_command = None
+
+        self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.basedir,
+                                                     self.running, on_command_complete,
+                                                     self.lostRemoteStep, command, stepId, args,
+                                                     command_ref)
+
+        log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
+        self.protocol_command.protocol_notify_on_disconnect()
+        d = self.protocol_command.command.doStart()
+        d.addCallback(lambda res: None)
+        d.addBoth(self.protocol_command.command_complete)
+        return None
+
+    def remote_interruptCommand(self, stepId, why):
+        """Halt the current step."""
+        log.msg("asked to interrupt current command: {0}".format(why))
+        if not self.protocol_command:
+            # TODO: just log it, a race could result in their interrupting a
+            # command that wasn't actually running
+            log.msg(" .. but none was running")
+            return
+        self.protocol_command.command.doInterrupt()
+
+    def stopCommand(self):
+        """Make any currently-running command die, with no further status
+        output. This is used when the worker is shutting down or the
+        connection to the master has been lost. Interrupt the command,
+        silence it, and then forget about it."""
+        if not self.protocol_command:
+            return
+        log.msg("stopCommand: halting current command {0}".format(self.protocol_command.command))
+        self.protocol_command.command.doInterrupt()
+        self.protocol_command = None
+
+
 class WorkerForBuilderPb(WorkerForBuilderPbLike, pb.Referenceable):
     pass
 
 
-class BotPb(BotBase, pb.Referenceable):
+class BotPbLike(BotBase):
+    WorkerForBuilder = WorkerForBuilderPbLike
+
+    @defer.inlineCallbacks
+    def remote_setBuilderList(self, wanted):
+        retval = {}
+        wanted_names = {name for (name, builddir) in wanted}
+        wanted_dirs = {builddir for (name, builddir) in wanted}
+        wanted_dirs.add('info')
+        for (name, builddir) in wanted:
+            b = self.builders.get(name, None)
+            if b:
+                if b.builddir != builddir:
+                    log.msg("changing builddir for builder {0} from {1} to {2}".format(
+                            name, b.builddir, builddir))
+                    b.setBuilddir(builddir)
+            else:
+                b = self.WorkerForBuilder(name, self.unicode_encoding)
+                b.setServiceParent(self)
+                b.setBuilddir(builddir)
+                self.builders[name] = b
+            retval[name] = b
+
+        # disown any builders no longer desired
+        to_remove = list(set(self.builders.keys()) - wanted_names)
+        if to_remove:
+            yield defer.gatherResults([
+                defer.maybeDeferred(self.builders[name].disownServiceParent)
+                for name in to_remove])
+
+        # and *then* remove them from the builder list
+        for name in to_remove:
+            del self.builders[name]
+
+        # finally warn about any leftover dirs
+        for dir in os.listdir(self.basedir):
+            if os.path.isdir(os.path.join(self.basedir, dir)):
+                if dir not in wanted_dirs:
+                    if self.delete_leftover_dirs:
+                        log.msg("Deleting directory '{0}' that is not being "
+                                "used by the buildmaster".format(dir))
+                        try:
+                            shutil.rmtree(dir)
+                        except OSError as e:
+                            log.msg("Cannot remove directory '{0}': "
+                                    "{1}".format(dir, e))
+                    else:
+                        log.msg("I have a leftover directory '{0}' that is not "
+                                "being used by the buildmaster: you can delete "
+                                "it now".format(dir))
+
+        defer.returnValue(retval)
+
+
+class BotPb(BotPbLike, pb.Referenceable):
     WorkerForBuilder = WorkerForBuilderPb
 
 
 if sys.version_info.major >= 3:
     class BotMsgpack(BotBase):
-        WorkerForBuilder = WorkerForBuilderMsgpack
+        def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
+            BotBase.__init__(self, basedir, unicode_encoding=unicode_encoding,
+                             delete_leftover_dirs=delete_leftover_dirs)
+            self.builder_basedirs = {}
+            self.builder_protocol_command = {}
+
+        @defer.inlineCallbacks
+        def startService(self):
+            yield BotBase.startService(self)
+            for name in self.builder_protocol_command:
+                protocol_command = self.builder_protocol_command[name]
+                if protocol_command:
+                    protocol_command.builder_is_running = True
+
+        @defer.inlineCallbacks
+        def stopService(self):
+            yield BotBase.stopService(self)
+            for name in self.builder_protocol_command:
+                protocol_command = self.builder_protocol_command[name]
+                if protocol_command:
+                    protocol_command.builder_is_running = False
+                self.stop_command(name)
+
+        def calculate_basedir(self, builddir):
+            return os.path.join(bytes2unicode(self.basedir), bytes2unicode(builddir))
+
+        def create_dirs(self, basedir):
+            if not os.path.isdir(basedir):
+                os.makedirs(basedir)
+
+        def remote_setBuilderList(self, wanted):
+            retval = []
+            wanted_names = {name for (name, builddir) in wanted}
+            wanted_dirs = {builddir for (name, builddir) in wanted}
+            wanted_dirs.add('info')
+            for (name, builddir) in wanted:
+                old_basedir = self.builder_basedirs.get(name, None)
+                basedir = self.calculate_basedir(builddir)
+                if old_basedir:
+                    if old_basedir != basedir:
+                        log.msg("changing builddir for builder {0} from {1} to {2}".format(
+                                name, old_basedir, basedir))
+                        self.create_dirs(basedir)
+                        self.builder_basedirs[name] = basedir
+                else:
+                    self.builder_protocol_command[name] = None
+
+                    self.create_dirs(basedir)
+                    self.builder_basedirs[name] = basedir
+
+                retval.append(name)
+
+            to_remove = list(set(self.builder_protocol_command.keys()) - wanted_names)
+            if self.running:
+                for name in to_remove:
+                    if self.builder_protocol_command[name]:
+                        self.builder_protocol_command[name].builder_is_running = False
+                    self.stop_command(name)
+
+            # and *then* remove them from the builder list
+            for name in to_remove:
+                del self.builder_protocol_command[name]
+                del self.builder_basedirs[name]
+
+            # finally warn about any leftover dirs
+            for dir in os.listdir(self.basedir):
+                if os.path.isdir(os.path.join(self.basedir, dir)):
+                    if dir not in wanted_dirs:
+                        if self.delete_leftover_dirs:
+                            log.msg("Deleting directory '{0}' that is not being "
+                                    "used by the buildmaster".format(dir))
+                            try:
+                                shutil.rmtree(dir)
+                            except OSError as e:
+                                log.msg("Cannot remove directory '{0}': "
+                                        "{1}".format(dir, e))
+                        else:
+                            log.msg("I have a leftover directory '{0}' that is not "
+                                    "being used by the buildmaster: you can delete "
+                                    "it now".format(dir))
+
+            return retval
+
+        def start_command(self, builder_name, protocol, command_id, command, args):
+            """
+            This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
+            part of various master-side BuildSteps, to start various commands
+            that actually do the build. I return nothing. Eventually I will call
+            .commandComplete() to notify the master-side RemoteCommand that I'm
+            done.
+            """
+            command = decode(command)
+            args = decode(args)
+
+            if self.builder_protocol_command[builder_name]:
+                log.msg("leftover command, dropping it")
+                self.stop_command(builder_name)
+
+            def on_command_complete():
+                self.builder_protocol_command[builder_name] = None
+
+            protocol_command = ProtocolCommandMsgpack(self.unicode_encoding,
+                                                      self.builder_basedirs[builder_name],
+                                                      self.running, on_command_complete,
+                                                      protocol, command_id, command, args)
+
+            self.builder_protocol_command[builder_name] = protocol_command
+
+            log.msg(u" startCommand:{0} [id {1}]".format(command, command_id))
+            protocol_command.protocol_notify_on_disconnect()
+            d = protocol_command.command.doStart()
+            d.addCallback(lambda res: None)
+            d.addBoth(protocol_command.command_complete)
+            return None
+
+        def interrupt_command(self, builder_name, why):
+            """Halt the current step."""
+            log.msg("asked to interrupt current command: {0}".format(why))
+
+            if not self.builder_protocol_command[builder_name]:
+                # TODO: just log it, a race could result in their interrupting a
+                # command that wasn't actually running
+                log.msg(" .. but none was running")
+                return
+            self.builder_protocol_command[builder_name].command.doInterrupt()
+
+        def stop_command(self, builder_name):
+            """Make any currently-running command die, with no further status
+            output. This is used when the worker is shutting down or the
+            connection to the master has been lost. Interrupt the command,
+            silence it, and then forget about it."""
+            if not self.builder_protocol_command[builder_name]:
+                return
+            log.msg("stopCommand: halting current command {0}".format(
+                    self.builder_protocol_command[builder_name].command))
+            self.builder_protocol_command[builder_name].command.doInterrupt()
+            self.builder_protocol_command[builder_name] = None
 
 
 class BotFactory(AutoLoginPBFactory):
@@ -149,7 +482,6 @@ class BotFactory(AutoLoginPBFactory):
             log.msg("unable to set SO_KEEPALIVE")
             if not self.keepaliveInterval:
                 self.keepaliveInterval = 10 * 60
-        self.activity()
         if self.keepaliveInterval:
             log.msg("sending application-level keepalives every {0} seconds".format(
                     self.keepaliveInterval))
@@ -205,10 +537,6 @@ class BotFactory(AutoLoginPBFactory):
             self.keepaliveTimer = None
 
         self._checkNotifyShutdown()
-
-    def activity(self, res=None):
-        """Subclass or monkey-patch this method to be alerted whenever there is
-        active communication between the master and worker."""
 
     def stopFactory(self):
         self.stopTimers()

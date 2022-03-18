@@ -60,7 +60,7 @@ PRETTY_NAME="Test 1.0 Generic"
 VERSION_ID="1"
 """
             )
-        self.real_bot = base.BotBase(self.basedir, False)
+        self.real_bot = pb.BotPbLike(self.basedir, False)
         self.real_bot.setOsReleaseFile("{}/test-release-file".format(self.basedir))
         self.real_bot.startService()
 
@@ -219,7 +219,7 @@ class FakeStep(object):
         self.finished_d.callback(None)
 
 
-class FakeBot(base.BotBase):
+class FakeBot(pb.BotPbLike):
     WorkerForBuilder = pb.WorkerForBuilderPbLike
 
 

@@ -14,33 +14,28 @@
 # Copyright Buildbot Team Members
 
 from __future__ import absolute_import
-from __future__ import division
 from __future__ import print_function
 
 import pprint
 
+from buildbot_worker.base import ProtocolCommandBase
 
-class FakeWorkerForBuilder(object):
 
-    """
-    Simulates a WorkerForBuilder, but just records the updates from sendUpdate
-    in its updates attribute.  Call show() to get a pretty-printed string
-    showing the updates.  Set debug to True to show updates as they happen.
-    """
+class FakeProtocolCommand(ProtocolCommandBase):
     debug = False
 
     def __init__(self, basedir="/workerbuilder/basedir"):
+        self.unicode_encoding = 'utf-8'
         self.updates = []
         self.basedir = basedir
-        self.unicode_encoding = 'utf-8'
-
-    def sendUpdate(self, data):
-        if self.debug:
-            print("FakeWorkerForBuilder.sendUpdate", data)
-        self.updates.append(data)
 
     def show(self):
         return pprint.pformat(self.updates)
+
+    def send_update(self, status):
+        if self.debug:
+            print("FakeWorkerForBuilder.sendUpdate", status)
+        self.updates.append(status)
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
