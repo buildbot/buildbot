@@ -1007,11 +1007,11 @@ It will also create any intervening directories required.
 Command_name ``rmdir``
 ~~~~~~~~~~~~~~~~~~~~~~
 
-This command will remove a directory or file on the worker.
+This command will remove directories or files on the worker.
 
-``dir``
-    Value is a string or a list of strings.
-    It represents a name of a directory or directories to be removed.
+``paths``
+    Value is a list of strings.
+    It specifies absolute paths of directories or files to remove.
 
 ``logEnviron``
     Value is a bool and is optional.

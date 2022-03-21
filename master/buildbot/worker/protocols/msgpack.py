@@ -134,6 +134,15 @@ class Connection(base.Connection):
             args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['dir'])
             del args['dir']
 
+        if commandName == "rmdir":
+            if isinstance(args['dir'], list):
+                args['paths'] = [self.path_module.join(self.builder_basedirs[builderName], dir)
+                                 for dir in args['dir']]
+            else:
+                args['paths'] = [self.path_module.join(self.builder_basedirs[builderName],
+                                                       args['dir'])]
+            del args['dir']
+
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
                 args["want_stdout"] = True

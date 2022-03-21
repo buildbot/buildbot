@@ -56,8 +56,8 @@ class RemoveDirectory(base.Command):
 
     header = "rmdir"
 
-    # args['dir'] is relative to Builder directory, and is required.
-    requiredArgs = ['dir']
+    # args['paths'] specifies the absolute paths of directories or files to remove
+    requiredArgs = ['paths']
 
     def setup(self, args):
         self.logEnviron = args.get('logEnviron', True)
@@ -65,7 +65,7 @@ class RemoveDirectory(base.Command):
     @defer.inlineCallbacks
     def start(self):
         args = self.args
-        dirnames = args['dir']
+        dirnames = args['paths']
 
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
@@ -85,7 +85,7 @@ class RemoveDirectory(base.Command):
         self.sendStatus({'rc': self.rc})
 
     def removeSingleDir(self, dirname):
-        self.dir = os.path.join(self.protocol_command.basedir, dirname)
+        self.dir = dirname
         if runtime.platformType != "posix":
             d = threads.deferToThread(utils.rmdirRecursive, self.dir)
 
