@@ -143,6 +143,15 @@ class Connection(base.Connection):
                                                        args['dir'])]
             del args['dir']
 
+        if commandName == "cpdir":
+            args['from_path'] = self.path_module.join(self.builder_basedirs[builderName],
+                                                      args['fromdir'])
+            args['to_path'] = self.path_module.join(self.builder_basedirs[builderName],
+                                                    args['todir'])
+            del args['fromdir']
+            del args['todir']
+
+
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
                 args["want_stdout"] = True

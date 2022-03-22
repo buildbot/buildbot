@@ -1043,13 +1043,13 @@ Command_name: ``cpdir``
 
 This command copies a directory from one place in the worker to another.
 
-``fromdir``
+``from_path``
     Value is a string.
-    Source directory for the copy operation, relative to the builder’s basedir.
+    It specifies the absolute path to the source directory for the copy operation.
 
-``todir``
+``to_path``
     Value is a string.
-    Destination directory for the copy operation, relative to the builder’s basedir.
+    It specifies the absolute path to the destination directory for the copy operation.
 
 ``logEnviron``
     Value is a bool.

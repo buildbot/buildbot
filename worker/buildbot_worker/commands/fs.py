@@ -157,9 +157,9 @@ class CopyDirectory(base.Command):
 
     header = "cpdir"
 
-    # args['todir'] and args['fromdir'] are relative to Builder directory, and
+    # args['to_path'] and args['from_path'] are relative to Builder directory, and
     # are required.
-    requiredArgs = ['todir', 'fromdir']
+    requiredArgs = ['to_path', 'from_path']
 
     def setup(self, args):
         self.logEnviron = args.get('logEnviron', True)
@@ -167,14 +167,14 @@ class CopyDirectory(base.Command):
     def start(self):
         args = self.args
 
-        fromdir = os.path.join(self.protocol_command.basedir, self.args['fromdir'])
-        todir = os.path.join(self.protocol_command.basedir, self.args['todir'])
+        from_path = self.args['from_path']
+        to_path = self.args['to_path']
 
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
 
         if runtime.platformType != "posix":
-            d = threads.deferToThread(shutil.copytree, fromdir, todir)
+            d = threads.deferToThread(shutil.copytree, from_path, to_path)
 
             def cb(_):
                 return 0  # rc=0
@@ -189,14 +189,14 @@ class CopyDirectory(base.Command):
             def send_rc(rc):
                 self.sendStatus({'rc': rc})
         else:
-            if not os.path.exists(os.path.dirname(todir)):
-                os.makedirs(os.path.dirname(todir))
-            if os.path.exists(todir):
+            if not os.path.exists(os.path.dirname(to_path)):
+                os.makedirs(os.path.dirname(to_path))
+            if os.path.exists(to_path):
                 # I don't think this happens, but just in case..
                 log.msg(("cp target '{0}' already exists -- cp will not do what you think!"
-                         ).format(todir))
+                         ).format(to_path))
 
-            command = ['cp', '-R', '-P', '-p', '-v', fromdir, todir]
+            command = ['cp', '-R', '-P', '-p', '-v', from_path, to_path]
             c = runprocess.RunProcess(command, self.protocol_command.basedir,
                                       self.protocol_command.unicode_encoding,
                                       self.protocol_command.send_update,

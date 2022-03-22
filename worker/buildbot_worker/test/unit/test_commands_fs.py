@@ -194,14 +194,13 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_simple(self):
-        self.make_command(fs.CopyDirectory, dict(
-            fromdir='workdir',
-            todir='copy',
-        ), True)
+        from_path = os.path.join(self.basedir, 'workdir')
+        to_path = os.path.join(self.basedir, 'copy')
+        self.make_command(fs.CopyDirectory, {'from_path': from_path, 'to_path': to_path}, True)
         yield self.run_command()
 
         self.assertTrue(
-            os.path.exists(os.path.abspath(os.path.join(self.basedir, 'copy'))))
+            os.path.exists(os.path.abspath(to_path)))
         self.assertIn({'rc': 0},  # this may ignore a 'header' : '..', which is OK
                       self.get_updates(),
                       self.protocol_command.show())
@@ -214,10 +213,10 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
         def fail(src, dest):
             raise RuntimeError("oh noes")
         self.patch(shutil, 'copytree', fail)
-        self.make_command(fs.CopyDirectory, dict(
-            fromdir='workdir',
-            todir='copy',
-        ), True)
+
+        from_path = os.path.join(self.basedir, 'workdir')
+        to_path = os.path.join(self.basedir, 'copy')
+        self.make_command(fs.CopyDirectory, {'from_path': from_path, 'to_path': to_path}, True)
         yield self.run_command()
 
         self.assertIn({'rc': -1},
