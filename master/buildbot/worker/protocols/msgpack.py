@@ -156,6 +156,9 @@ class Connection(base.Connection):
                                                  args.get('workdir', ''), args['file'])
             del args['file']
 
+        if commandName == "glob":
+            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['path'])
+
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
                 args["want_stdout"] = True

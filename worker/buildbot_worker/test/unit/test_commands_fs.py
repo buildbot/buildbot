@@ -339,9 +339,7 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_non_existent(self):
-        self.make_command(fs.GlobPath, dict(
-            path='no-*-file',
-        ), True)
+        self.make_command(fs.GlobPath, {'path': os.path.join(self.basedir, 'no-*-file')}, True)
         yield self.run_command()
 
         self.assertEqual(self.get_updates()[0]['files'], [])
@@ -351,9 +349,7 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_directory(self):
-        self.make_command(fs.GlobPath, dict(
-            path='[wxyz]or?d*',
-        ), True)
+        self.make_command(fs.GlobPath, {'path': os.path.join(self.basedir, '[wxyz]or?d*')}, True)
         yield self.run_command()
 
         self.assertEqual(
@@ -364,9 +360,7 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_file(self):
-        self.make_command(fs.GlobPath, dict(
-            path='t*-file',
-        ), True)
+        self.make_command(fs.GlobPath, {'path': os.path.join(self.basedir, 't*-file')}, True)
         with open(os.path.join(self.basedir, 'test-file'), "w"):
             pass
 
@@ -380,9 +374,7 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_recursive(self):
-        self.make_command(fs.GlobPath, dict(
-            path='**/*.txt',
-        ), True)
+        self.make_command(fs.GlobPath, {'path': os.path.join(self.basedir, '**/*.txt')}, True)
         os.makedirs(os.path.join(self.basedir, 'test/testdir'))
         with open(os.path.join(self.basedir, 'test/testdir/test.txt'), 'w'):
             pass

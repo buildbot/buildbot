@@ -86,6 +86,9 @@ class ProtocolCommandPb(ProtocolCommandBase):
             args['path'] = os.path.join(self.basedir, args.get('workdir', ''), args['file'])
             del args['file']
 
+        if command == "glob":
+            args['path'] = os.path.join(self.basedir, args['path'])
+
     # Returns a Deferred
     def protocol_update(self, updates):
         return self.command_ref.callRemote("update", updates)

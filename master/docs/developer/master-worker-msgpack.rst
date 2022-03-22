@@ -1121,14 +1121,15 @@ Command_name: ``glob``
 
     Worker sends to the master a possibly-empty list of path names that match shell-style path specification.
 
-    Path of the file is constructed by joining the Builder base directory and path in ``path`` value.
-    Pathname can be absolute or relative with or without shell-style wildcards.
-
 ``path``
     Value is a string.
-    It represents a shell-style path specification of a pattern.
+    It specifies a shell-style path pattern.
+    Path pattern can contain shell-style wildcards and must represent an absolute path.
 
     If command succeeded, the result is sent to the master in an ``update`` message, where ``args`` has a key ``file`` with the value of that possibly-empty path list.
+    This path list may contain broken symlinks as in the shell.
+    It is not specified whether path list is sorted.
+
     Worker also sends ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
 
     Otherwise, worker sends ``update`` message with dictionary ``args`` key ``header`` with information about the error that occurred and another ``update`` message with dictionary ``args`` key ``rc`` with the error number.

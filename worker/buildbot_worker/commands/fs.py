@@ -236,11 +236,11 @@ class GlobPath(base.Command):
 
     header = "glob"
 
-    # args['path'] is relative to Builder directory, and is required.
+    # args['path'] shell-style path specification of a pattern
     requiredArgs = ['path']
 
     def start(self):
-        pathname = os.path.join(self.protocol_command.basedir, self.args['path'])
+        pathname = self.args['path']
 
         try:
             # recursive matching is only support in python3.5+
