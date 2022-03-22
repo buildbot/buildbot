@@ -215,12 +215,11 @@ class StatFile(base.Command):
 
     header = "stat"
 
-    # args['file'] is relative to Builder directory, and is required.
-    requireArgs = ['file']
+    # args['path'] absolute path of a file
+    requireArgs = ['path']
 
     def start(self):
-        filename = os.path.join(
-            self.protocol_command.basedir, self.args.get('workdir', ''), self.args['file'])
+        filename = self.args['path']
 
         try:
             stat = os.stat(filename)

@@ -151,6 +151,10 @@ class Connection(base.Connection):
             del args['fromdir']
             del args['todir']
 
+        if commandName == "stat":
+            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
+                                                 args.get('workdir', ''), args['file'])
+            del args['file']
 
         if "want_stdout" in args:
             if args["want_stdout"] == 1:

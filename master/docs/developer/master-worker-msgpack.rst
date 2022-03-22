@@ -1078,11 +1078,10 @@ Command_name: ``stat``
 ~~~~~~~~~~~~~~~~~~~~~~
 
 This command returns status information about workers file or directory.
-Path of that file or directory is constructed by joining the Builder base directory and path in ``file`` value.
 
-``file``
+``path``
     Value is a string.
-    It represents the filename relative to the Builder’s basedir to get the status of.
+    It specifies the path of a file or directory to get the status of.
 
 If command succeeded, status information is sent to the master in an ``update`` message, where ``args`` has a key ``stat`` with a value of a tuple of these 10 elements:
 

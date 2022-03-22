@@ -275,9 +275,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_non_existent(self):
-        self.make_command(fs.StatFile, dict(
-            file='no-such-file',
-        ), True)
+        path = os.path.join(self.basedir, 'no-such-file')
+        self.make_command(fs.StatFile, {'path': path}, True)
         yield self.run_command()
 
         self.assertIn({'rc': errno.ENOENT},
@@ -286,9 +285,9 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_directory(self):
-        self.make_command(fs.StatFile, dict(
-            file='workdir',
-        ), True)
+        path = os.path.join(self.basedir, 'workdir')
+
+        self.make_command(fs.StatFile, {'path': path}, True)
         yield self.run_command()
 
         self.assertTrue(
@@ -299,9 +298,9 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_file(self):
-        self.make_command(fs.StatFile, dict(
-            file='test-file',
-        ), True)
+        path = os.path.join(self.basedir, 'test-file')
+
+        self.make_command(fs.StatFile, {'path': path}, True)
         with open(os.path.join(self.basedir, 'test-file'), "w"):
             pass
 
@@ -315,10 +314,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_file_workdir(self):
-        self.make_command(fs.StatFile, dict(
-            file='test-file',
-            workdir='wd'
-        ), True)
+        path = os.path.join(self.basedir, 'wd', 'test-file')
+        self.make_command(fs.StatFile, {'path': path}, True)
         os.mkdir(os.path.join(self.basedir, 'wd'))
         with open(os.path.join(self.basedir, 'wd', 'test-file'), "w"):
             pass
