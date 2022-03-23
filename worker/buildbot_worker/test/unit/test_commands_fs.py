@@ -451,17 +451,14 @@ class TestRemoveFile(CommandTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_simple(self):
         workdir = os.path.join(self.basedir, 'workdir')
-        self.file1_path = os.path.join(workdir, 'file1')
-        self.make_command(fs.RemoveFile, dict(
-            path=self.file1_path,
-        ), True)
+        file1_path = os.path.join(workdir, 'file1')
+        self.make_command(fs.RemoveFile, {'path': file1_path}, True)
 
-        with open(os.path.join(workdir, 'file1'), "w"):
+        with open(file1_path, "w"):
             pass
         yield self.run_command()
 
-        self.assertFalse(
-            os.path.exists(self.file1_path))
+        self.assertFalse(os.path.exists(file1_path))
         self.assertIn({'rc': 0},  # this may ignore a 'header' : '..', which is OK
                       self.get_updates(),
                       self.protocol_command.show())
@@ -469,11 +466,9 @@ class TestRemoveFile(CommandTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_simple_exception(self):
         workdir = os.path.join(self.basedir, 'workdir')
-        self.file2_path = os.path.join(workdir, 'file2')
+        file2_path = os.path.join(workdir, 'file2')
 
-        self.make_command(fs.RemoveFile, dict(
-            path=self.file2_path
-        ), True)
+        self.make_command(fs.RemoveFile, {'path': file2_path}, True)
         yield self.run_command()
 
         self.assertIn({'rc': 2},

@@ -282,11 +282,11 @@ class RemoveFile(base.Command):
 
     header = "rmfile"
 
-    # args['path'] is relative to Builder directory, and is required.
+    # args['path'] absolute path of a file to delete
     requiredArgs = ['path']
 
     def start(self):
-        pathname = os.path.join(self.protocol_command.basedir, self.args['path'])
+        pathname = self.args['path']
 
         try:
             os.remove(pathname)

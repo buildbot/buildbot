@@ -1142,8 +1142,7 @@ This command removes the specified file.
 
 ``path``
     Value is a string.
-    It represents the file path relative to the builder’s basedir.
-    Worker removes (deletes) the file ``path``.
+    It specifies a path of a file to delete.
 
     If command succeeded, worker sends ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
 
