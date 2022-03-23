@@ -96,6 +96,9 @@ class ProtocolCommandPb(ProtocolCommandBase):
         if command == "rmfile":
             args['path'] = os.path.join(self.basedir, args['path'])
 
+        if command == "shell":
+            args['workdir'] = os.path.join(self.basedir, args['workdir'])
+
     # Returns a Deferred
     def protocol_update(self, updates):
         return self.command_ref.callRemote("update", updates)

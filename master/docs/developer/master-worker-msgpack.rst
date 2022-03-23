@@ -742,8 +742,7 @@ Runs a ``shell`` command on the worker.
 
 ``workdir``
     Value is a string.
-    This value is joined with the builder directory string (see :ref:`MsgPack_Request_set_builder_list`) to form the path string.
-    If ``workdir`` is an absolute path, it overrides the builder directory.
+    ``workdir`` is an absolute path and overrides the builder directory.
     The resulting path represents the worker directory to run the command in.
 
 ``env``

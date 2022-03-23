@@ -166,6 +166,10 @@ class Connection(base.Connection):
         if commandName == "rmfile":
             args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['path'])
 
+        if commandName == "shell":
+            args['workdir'] = self.path_module.join(self.builder_basedirs[builderName],
+                                                    args['workdir'])
+
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
                 args["want_stdout"] = True

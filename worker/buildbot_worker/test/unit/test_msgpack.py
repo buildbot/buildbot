@@ -460,8 +460,9 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.setup_with_worker_for_builder()
 
         # patch runprocess to handle the 'echo', below
+        workdir = os.path.join('basedir', 'test_basedir')
         self.patch_runprocess(
-            Expect(['echo'], os.path.join('basedir', 'test_basedir')) +
+            Expect(['echo'], workdir) +
             {'hdr': 'headers'} +
             {'stdout': 'hello\n'} +
             {'rc': 0} +
@@ -473,7 +474,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             'builder_name': 'test_builder',
             'command_id': '123',
             'command_name': 'shell',
-            'args': {'command': ['echo'], 'workdir': 'test_basedir'}
+            'args': {'command': ['echo'], 'workdir': workdir}
         })
 
         self.assert_sent_messages([
@@ -542,8 +543,9 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
         # patch runprocess to pretend to sleep (it will really just hang forever,
         # except that we interrupt it)
+        workdir = os.path.join('basedir', 'test_basedir')
         self.patch_runprocess(
-            Expect(['sleep', '10'], os.path.join('basedir', 'test_basedir')) +
+            Expect(['sleep', '10'], workdir) +
             {'hdr': 'headers'} +
             {'wait': True}
         )
@@ -554,7 +556,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             'builder_name': 'test_builder',
             'command_id': '123',
             'command_name': 'shell',
-            'args': {'command': ['sleep', '10'], 'workdir': 'test_basedir'}
+            'args': {'command': ['sleep', '10'], 'workdir': workdir}
         })
 
         # wait a jiffy..

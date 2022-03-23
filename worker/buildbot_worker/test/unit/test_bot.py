@@ -363,7 +363,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             return self.wfb.callRemote("startCommand", FakeRemote(st),
                                        "13", "shell", {})
 
-        yield self.assertFailure(do_start(), ValueError)
+        yield self.assertFailure(do_start(), KeyError)
 
     @defer.inlineCallbacks
     def test_startCommand_invalid_command(self):
