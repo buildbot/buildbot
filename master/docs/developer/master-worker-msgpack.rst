@@ -975,11 +975,9 @@ Command_name: ``listdir``
 
 This command reads the directory and returns the list with directory contents.
 
-``dir``
+``path``
     Value is a string.
-    Specifies the directory relative to the builder’s basedir.
-
-    Worker creates the path to list by joining base directory and the given value.
+    It specifies the path of a directory to list.
 
     If command succeeded, the list containing the names of the entries in the directory given by that path is sent via ``update`` message in ``args`` key ``files``.
     Worker will also send ``rc`` value 0 as an ``update`` message ``args`` key-value pair.

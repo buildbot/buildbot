@@ -159,6 +159,10 @@ class Connection(base.Connection):
         if commandName == "glob":
             args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['path'])
 
+        if commandName == "listdir":
+            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['dir'])
+            del args['dir']
+
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
                 args["want_stdout"] = True

@@ -261,11 +261,11 @@ class ListDir(base.Command):
 
     header = "listdir"
 
-    # args['dir'] is relative to Builder directory, and is required.
-    requireArgs = ['dir']
+    # args['path'] absolute path of the directory to list
+    requireArgs = ['path']
 
     def start(self):
-        dirname = os.path.join(self.protocol_command.basedir, self.args['dir'])
+        dirname = self.args['path']
 
         try:
             files = os.listdir(dirname)

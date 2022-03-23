@@ -406,9 +406,9 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_non_existent(self):
-        self.make_command(fs.ListDir,
-                          dict(dir='no-such-dir'),
-                          True)
+        path = os.path.join(self.basedir, 'no-such-dir')
+
+        self.make_command(fs.ListDir, {'path': path}, True)
         yield self.run_command()
 
         self.assertIn({'rc': errno.ENOENT},
@@ -417,10 +417,8 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_dir(self):
-        self.make_command(fs.ListDir, dict(
-            dir='workdir',
-        ), True)
         workdir = os.path.join(self.basedir, 'workdir')
+        self.make_command(fs.ListDir, {'path': workdir}, True)
         with open(os.path.join(workdir, 'file1'), "w"):
             pass
         with open(os.path.join(workdir, 'file2'), "w"):
