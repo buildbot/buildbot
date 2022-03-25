@@ -883,13 +883,9 @@ Command_name: ``upload_directory``
 Similar to ``upload_file``.
 This command will upload an entire directory to the master, in the form of a tarball.
 
-``workdir``
+``path``
     Value is a string.
-    It represents a base directory for the filename, relative to the builder's basedir.
-
-``workersource``
-    Value is a string.
-    It represents a path to the worker-side directory to read from, relative to the workdir.
+    It specifies the path of the worker directory to upload.
 
 ``maxsize``
     Value is an integer.

@@ -112,7 +112,6 @@ class Connection(base.Connection):
             # most everything accepts / as separator, so posix should be a reasonable fallback
             self.path_module = namedModule("posixpath")
             self.path_expanduser = path_expand_user.posix_expanduser
-
         return self.info
 
     @defer.inlineCallbacks
@@ -175,6 +174,13 @@ class Connection(base.Connection):
 
         if commandName == "uploadFile":
             commandName = "upload_file"
+            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
+                                                 args['workdir'],
+                                                 self.path_expanduser(args['workersrc'],
+                                                                      self.info['environ']))
+
+        if commandName == "uploadDirectory":
+            commandName = "upload_directory"
             args['path'] = self.path_module.join(self.builder_basedirs[builderName],
                                                  args['workdir'],
                                                  self.path_expanduser(args['workersrc'],

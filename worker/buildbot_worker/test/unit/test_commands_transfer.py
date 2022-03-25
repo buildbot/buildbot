@@ -300,15 +300,15 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_simple(self, compress=None):
         self.fakemaster.keep_data = True
-
-        self.make_command(transfer.WorkerDirectoryUploadCommand, dict(
-            workdir='workdir',
-            workersrc='data',
-            writer=FakeRemote(self.fakemaster),
-            maxsize=None,
-            blocksize=512,
-            compress=compress,
-        ))
+        path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
+        self.make_command(transfer.WorkerDirectoryUploadCommand, {
+            'workdir': 'workdir',
+            'path': path,
+            'writer': FakeRemote(self.fakemaster),
+            'maxsize': None,
+            'blocksize': 512,
+            'compress': compress,
+        })
 
         yield self.run_command()
 
@@ -343,15 +343,16 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
     def test_out_of_space_unpack(self):
         self.fakemaster.keep_data = True
         self.fakemaster.unpack_fail = True
+        path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
 
-        self.make_command(transfer.WorkerDirectoryUploadCommand, dict(
-            workdir='workdir',
-            workersrc='data',
-            writer=FakeRemote(self.fakemaster),
-            maxsize=None,
-            blocksize=512,
-            compress=None
-        ))
+        self.make_command(transfer.WorkerDirectoryUploadCommand, {
+            'path': path,
+            'workersrc': 'data',
+            'writer': FakeRemote(self.fakemaster),
+            'maxsize': None,
+            'blocksize': 512,
+            'compress': None
+        })
 
         yield self.assertFailure(self.run_command(), RuntimeError)
 

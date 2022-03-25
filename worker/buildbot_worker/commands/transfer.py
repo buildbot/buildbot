@@ -189,11 +189,10 @@ class WorkerFileUploadCommand(TransferCommand):
 
 class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
     debug = False
-    requiredArgs = ['workdir', 'workersrc', 'writer', 'blocksize']
+    requiredArgs = ['path', 'writer', 'blocksize']
 
     def setup(self, args):
-        self.workdir = args['workdir']
-        self.dirname = args['workersrc']
+        self.path = args['path']
         self.writer = args['writer']
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
@@ -205,9 +204,6 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         if self.debug:
             log.msg('WorkerDirectoryUploadCommand started')
 
-        self.path = os.path.join(self.protocol_command.basedir,
-                                 self.workdir,
-                                 os.path.expanduser(self.dirname))
         if self.debug:
             log.msg("path: {0!r}".format(self.path))
 
