@@ -136,14 +136,14 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
     def test_simple(self):
         self.fakemaster.count_writes = True    # get actual byte counts
 
-        self.make_command(transfer.WorkerFileUploadCommand, dict(
-            workdir='workdir',
-            workersrc='data',
-            writer=FakeRemote(self.fakemaster),
-            maxsize=1000,
-            blocksize=64,
-            keepstamp=False,
-        ))
+        path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
+        self.make_command(transfer.WorkerFileUploadCommand, {
+            'path': path,
+            'writer': FakeRemote(self.fakemaster),
+            'maxsize': 1000,
+            'blocksize': 64,
+            'keepstamp': False
+        })
 
         yield self.run_command()
 
@@ -157,14 +157,14 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
     def test_truncated(self):
         self.fakemaster.count_writes = True    # get actual byte counts
 
-        self.make_command(transfer.WorkerFileUploadCommand, dict(
-            workdir='workdir',
-            workersrc='data',
-            writer=FakeRemote(self.fakemaster),
-            maxsize=100,
-            blocksize=64,
-            keepstamp=False,
-        ))
+        path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
+        self.make_command(transfer.WorkerFileUploadCommand, {
+            'path': path,
+            'writer': FakeRemote(self.fakemaster),
+            'maxsize': 100,
+            'blocksize': 64,
+            'keepstamp': False
+        })
 
         yield self.run_command()
 
@@ -177,14 +177,14 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_missing(self):
-        self.make_command(transfer.WorkerFileUploadCommand, dict(
-            workdir='workdir',
-            workersrc='data-nosuch',
-            writer=FakeRemote(self.fakemaster),
-            maxsize=100,
-            blocksize=64,
-            keepstamp=False,
-        ))
+        path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data-nosuch'))
+        self.make_command(transfer.WorkerFileUploadCommand, {
+            'path': path,
+            'writer': FakeRemote(self.fakemaster),
+            'maxsize': 100,
+            'blocksize': 64,
+            'keepstamp': False
+        })
 
         yield self.run_command()
 
@@ -201,14 +201,14 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.write_out_of_space_at = 70
         self.fakemaster.count_writes = True    # get actual byte counts
 
-        self.make_command(transfer.WorkerFileUploadCommand, dict(
-            workdir='workdir',
-            workersrc='data',
-            writer=FakeRemote(self.fakemaster),
-            maxsize=1000,
-            blocksize=64,
-            keepstamp=False,
-        ))
+        path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
+        self.make_command(transfer.WorkerFileUploadCommand, {
+            'path': path,
+            'writer': FakeRemote(self.fakemaster),
+            'maxsize': 1000,
+            'blocksize': 64,
+            'keepstamp': False
+        })
 
         yield self.assertFailure(self.run_command(), RuntimeError)
 
@@ -222,14 +222,14 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
     def test_interrupted(self):
         self.fakemaster.delay_write = True  # write very slowly
 
-        self.make_command(transfer.WorkerFileUploadCommand, dict(
-            workdir='workdir',
-            workersrc='data',
-            writer=FakeRemote(self.fakemaster),
-            maxsize=100,
-            blocksize=2,
-            keepstamp=False,
-        ))
+        path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
+        self.make_command(transfer.WorkerFileUploadCommand, {
+            'path': path,
+            'writer': FakeRemote(self.fakemaster),
+            'maxsize': 100,
+            'blocksize': 2,
+            'keepstamp': False
+        })
 
         d = self.run_command()
 
@@ -255,14 +255,14 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         timestamp = (os.path.getatime(self.datafile),
                      os.path.getmtime(self.datafile))
 
-        self.make_command(transfer.WorkerFileUploadCommand, dict(
-            workdir='workdir',
-            workersrc='data',
-            writer=FakeRemote(self.fakemaster),
-            maxsize=1000,
-            blocksize=64,
-            keepstamp=True,
-        ))
+        path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
+        self.make_command(transfer.WorkerFileUploadCommand, {
+            'path': path,
+            'writer': FakeRemote(self.fakemaster),
+            'maxsize': 1000,
+            'blocksize': 64,
+            'keepstamp': True,
+        })
 
         yield self.run_command()
 

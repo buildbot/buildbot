@@ -19,6 +19,7 @@ from twisted.python.reflect import namedModule
 
 from buildbot.pbutil import decode
 from buildbot.util import deferwaiter
+from buildbot.util import path_expand_user
 from buildbot.worker.protocols import base
 from buildbot_worker.compat import bytes2unicode
 
@@ -106,9 +107,11 @@ class Connection(base.Connection):
         worker_system = self.info.get("system", None)
         if worker_system == "nt":
             self.path_module = namedModule("ntpath")
+            self.path_expanduser = path_expand_user.nt_expanduser
         else:
             # most everything accepts / as separator, so posix should be a reasonable fallback
             self.path_module = namedModule("posixpath")
+            self.path_expanduser = path_expand_user.posix_expanduser
 
         return self.info
 
@@ -169,6 +172,13 @@ class Connection(base.Connection):
         if commandName == "shell":
             args['workdir'] = self.path_module.join(self.builder_basedirs[builderName],
                                                     args['workdir'])
+
+        if commandName == "uploadFile":
+            commandName = "upload_file"
+            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
+                                                 args['workdir'],
+                                                 self.path_expanduser(args['workersrc'],
+                                                                      self.info['environ']))
 
         if "want_stdout" in args:
             if args["want_stdout"] == 1:

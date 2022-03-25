@@ -847,13 +847,9 @@ Command_name: ``upload_file``
 
 Worker reads the contents of its file and sends them in chunks to write into the file on masters’s side.
 
-``workdir``
+``path``
     Value is a string.
-    It represents a base directory for the filename, relative to the builder's basedir.
-
-``workersrc``
-    Value is a string.
-    It represents a path to the worker-side file to read from, relative to the workdir.
+    It specifies the path of the worker file to read from.
 
 ``maxsize``
     Value is an integer.

@@ -82,7 +82,7 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
                 args["want_stderr"] = 0
 
         # to silence the ValueError in class Command() init
-        if (command in ("uploadDirectory", "uploadFile")) and 'writer' not in args:
+        if (command in ("uploadDirectory", "upload_file")) and 'writer' not in args:
             args['writer'] = None
         if command == "downloadFile" and 'reader' not in args:
             args['reader'] = None

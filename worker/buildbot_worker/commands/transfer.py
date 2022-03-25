@@ -57,8 +57,7 @@ class WorkerFileUploadCommand(TransferCommand):
     Upload a file from worker to build master
     Arguments:
 
-        - ['workdir']:   base directory to use
-        - ['workersrc']:  name of the worker-side file to read from
+        - ['path']:      path to read from
         - ['writer']:    RemoteReference to a buildbot_worker.protocols.base.FileWriterProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
@@ -66,11 +65,10 @@ class WorkerFileUploadCommand(TransferCommand):
     """
     debug = False
 
-    requiredArgs = ['workdir', 'workersrc', 'writer', 'blocksize']
+    requiredArgs = ['path', 'writer', 'blocksize']
 
     def setup(self, args):
-        self.workdir = args['workdir']
-        self.filename = args['workersrc']
+        self.path = args['path']
         self.writer = args['writer']
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
@@ -83,10 +81,6 @@ class WorkerFileUploadCommand(TransferCommand):
         if self.debug:
             log.msg('WorkerFileUploadCommand started')
 
-        # Open file
-        self.path = os.path.join(self.protocol_command.basedir,
-                                 self.workdir,
-                                 os.path.expanduser(self.filename))
         access_time = None
         modified_time = None
         try:
