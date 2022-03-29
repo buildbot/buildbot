@@ -261,19 +261,17 @@ class WorkerFileDownloadCommand(TransferCommand):
     Download a file from master to worker
     Arguments:
 
-        - ['workdir']:   base directory to use
-        - ['workerdest']: name of the worker-side file to be created
+        - ['path']: path of the worker-side file to be created
         - ['reader']:    RemoteReference to a buildbot_worker.protocols.base.FileReaderProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
         - ['mode']:      access mode for the new file
     """
     debug = False
-    requiredArgs = ['workdir', 'workerdest', 'reader', 'blocksize']
+    requiredArgs = ['path', 'reader', 'blocksize']
 
     def setup(self, args):
-        self.workdir = args['workdir']
-        self.filename = args['workerdest']
+        self.path = args['path']
         self.reader = args['reader']
         self.bytes_remaining = args['maxsize']
         self.blocksize = args['blocksize']
@@ -285,11 +283,6 @@ class WorkerFileDownloadCommand(TransferCommand):
     def start(self):
         if self.debug:
             log.msg('WorkerFileDownloadCommand starting')
-
-        # Open file
-        self.path = os.path.join(self.protocol_command.basedir,
-                                 self.workdir,
-                                 os.path.expanduser(self.filename))
 
         dirname = os.path.dirname(self.path)
         if not os.path.exists(dirname):

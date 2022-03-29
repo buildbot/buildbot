@@ -186,6 +186,12 @@ class Connection(base.Connection):
                                                  self.path_expanduser(args['workersrc'],
                                                                       self.info['environ']))
 
+        if commandName == "downloadFile":
+            commandName = "download_file"
+            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
+                                                 args['workdir'],
+                                                 self.path_expanduser(args['workerdest'],
+                                                                      self.info['environ']))
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
                 args["want_stdout"] = True

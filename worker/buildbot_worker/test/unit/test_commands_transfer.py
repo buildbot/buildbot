@@ -387,14 +387,14 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.data = test_data = b'1234' * 13
         assert(len(self.fakemaster.data) == 52)
 
-        self.make_command(transfer.WorkerFileDownloadCommand, dict(
-            workdir='.',
-            workerdest='data',
-            reader=FakeRemote(self.fakemaster),
-            maxsize=None,
-            blocksize=32,
-            mode=0o777,
-        ))
+        path = os.path.join(self.basedir, os.path.expanduser('data'))
+        self.make_command(transfer.WorkerFileDownloadCommand, {
+            'path': path,
+            'reader': FakeRemote(self.fakemaster),
+            'maxsize': None,
+            'blocksize': 32,
+            'mode': 0o777
+        })
 
         yield self.run_command()
 
@@ -414,14 +414,15 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
     def test_mkdir(self):
         self.fakemaster.data = test_data = b'hi'
 
-        self.make_command(transfer.WorkerFileDownloadCommand, dict(
-            workdir='workdir',
-            workerdest=os.path.join('subdir', 'data'),
-            reader=FakeRemote(self.fakemaster),
-            maxsize=None,
-            blocksize=32,
-            mode=0o777,
-        ))
+        path = os.path.join(self.basedir, 'workdir',
+                            os.path.expanduser(os.path.join('subdir', 'data')))
+        self.make_command(transfer.WorkerFileDownloadCommand, {
+            'path': path,
+            'reader': FakeRemote(self.fakemaster),
+            'maxsize': None,
+            'blocksize': 32,
+            'mode': 0o777
+        })
 
         yield self.run_command()
 
@@ -440,14 +441,14 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.data = 'hi'
 
         os.makedirs(os.path.join(self.basedir, 'dir'))
-        self.make_command(transfer.WorkerFileDownloadCommand, dict(
-            workdir='.',
-            workerdest='dir',  # but that's a directory!
-            reader=FakeRemote(self.fakemaster),
-            maxsize=None,
-            blocksize=32,
-            mode=0o777,
-        ))
+        path = os.path.join(self.basedir, os.path.expanduser('dir'))
+        self.make_command(transfer.WorkerFileDownloadCommand, {
+            'path': path,
+            'reader': FakeRemote(self.fakemaster),
+            'maxsize': None,
+            'blocksize': 32,
+            'mode': 0o777
+        })
 
         yield self.run_command()
 
@@ -455,29 +456,28 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             'close',
             {'rc': 1,
              'stderr': "Cannot open file '{0}' for download".format(
-             os.path.join(self.basedir, '.', 'dir'))}
+             os.path.join(self.basedir, 'dir'))}
         ])
 
     @defer.inlineCallbacks
     def test_truncated(self):
         self.fakemaster.data = test_data = b'tenchars--' * 10
 
-        self.make_command(transfer.WorkerFileDownloadCommand, dict(
-            workdir='.',
-            workerdest='data',
-            reader=FakeRemote(self.fakemaster),
-            maxsize=50,
-            blocksize=32,
-            mode=0o777,
-        ))
-
+        path = os.path.join(self.basedir, os.path.expanduser('data'))
+        self.make_command(transfer.WorkerFileDownloadCommand, {
+            'path': path,
+            'reader': FakeRemote(self.fakemaster),
+            'maxsize': 50,
+            'blocksize': 32,
+            'mode': 0o777
+        })
         yield self.run_command()
 
         self.assertUpdates([
             'read(s)', 'close',
             {'rc': 1,
              'stderr': "Maximum filesize reached, truncating file '{0}'".format(
-             os.path.join(self.basedir, '.', 'data'))}
+             os.path.join(self.basedir, 'data'))}
         ])
         datafile = os.path.join(self.basedir, 'data')
         self.assertTrue(os.path.exists(datafile))
@@ -490,14 +490,14 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.data = b'tenchars--' * 100  # 1k
         self.fakemaster.delay_read = True  # read very slowly
 
-        self.make_command(transfer.WorkerFileDownloadCommand, dict(
-            workdir='.',
-            workerdest='data',
-            reader=FakeRemote(self.fakemaster),
-            maxsize=100,
-            blocksize=2,
-            mode=0o777,
-        ))
+        path = os.path.join(self.basedir, os.path.expanduser('data'))
+        self.make_command(transfer.WorkerFileDownloadCommand, {
+            'path': path,
+            'reader': FakeRemote(self.fakemaster),
+            'maxsize': 100,
+            'blocksize': 2,
+            'mode': 0o777
+        })
 
         d = self.run_command()
 

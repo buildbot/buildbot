@@ -913,13 +913,9 @@ Command_name: ``download_file``
 
 Downloads a file from master to worker.
 
-``workdir``
+``path``
     Value is a string.
-    It represents a base directory for the filename, relative to the builder's basedir.
-
-``workerdest``
-    Value is a string.
-    It represents a path to the worker-side file to write to, relative to the workdir.
+    It specifies the path of the worker file to create.
 
 ``maxsize``
     Value is an integer.
