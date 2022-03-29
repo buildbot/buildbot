@@ -132,14 +132,12 @@ class RemoveDirectory(base.Command):
             return  # pragma: no cover
         # Attempt a recursive chmod and re-try the rm -rf after.
 
-        command = ["chmod", "-Rf", "u+rwx",
-                   os.path.join(self.protocol_command.basedir, self.dir)]
+        command = ["chmod", "-Rf", "u+rwx", self.dir]
         if sys.platform.startswith('freebsd'):
             # Work around a broken 'chmod -R' on FreeBSD (it tries to recurse into a
             # directory for which it doesn't have permission, before changing that
             # permission) by running 'find' instead
-            command = ["find", os.path.join(self.protocol_command.basedir, self.dir),
-                       '-exec', 'chmod', 'u+rwx', '{}', ';']
+            command = ["find", self.dir, '-exec', 'chmod', 'u+rwx', '{}', ';']
 
         c = runprocess.RunProcess(command, self.protocol_command.basedir,
                                   self.protocol_command.unicode_encoding,
