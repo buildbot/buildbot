@@ -106,7 +106,7 @@ class RemoveDirectory(base.Command):
     def _clobber(self, dummy, chmodDone=False):
         command = ["rm", "-rf", self.dir]
 
-        c = runprocess.RunProcess(command, self.protocol_command.basedir,
+        c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
                                   self.protocol_command.unicode_encoding,
                                   self.protocol_command.send_update,
                                   sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
@@ -139,7 +139,7 @@ class RemoveDirectory(base.Command):
             # permission) by running 'find' instead
             command = ["find", self.dir, '-exec', 'chmod', 'u+rwx', '{}', ';']
 
-        c = runprocess.RunProcess(command, self.protocol_command.basedir,
+        c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
                                   self.protocol_command.unicode_encoding,
                                   self.protocol_command.send_update,
                                   sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
@@ -195,7 +195,7 @@ class CopyDirectory(base.Command):
                          ).format(to_path))
 
             command = ['cp', '-R', '-P', '-p', '-v', from_path, to_path]
-            c = runprocess.RunProcess(command, self.protocol_command.basedir,
+            c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
                                       self.protocol_command.unicode_encoding,
                                       self.protocol_command.send_update,
                                       sendRC=False, timeout=self.timeout,

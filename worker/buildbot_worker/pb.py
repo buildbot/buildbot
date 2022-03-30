@@ -54,13 +54,12 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandPb(ProtocolCommandBase):
-    def __init__(self, unicode_encoding, basedir, builder_is_running,
-                 on_command_complete, on_lost_remote_step,
-                 command, stepId, args, command_ref):
-        ProtocolCommandBase.__init__(self, unicode_encoding, basedir, builder_is_running,
-                                     on_command_complete, on_lost_remote_step,
-                                     command, stepId, args)
+    def __init__(self, unicode_encoding, worker_basedir, basedir, builder_is_running,
+                 on_command_complete, on_lost_remote_step, command, stepId, args, command_ref):
         self.command_ref = command_ref
+        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, basedir,
+                                     builder_is_running, on_command_complete, on_lost_remote_step,
+                                     command, stepId, args)
 
     def protocol_args_setup(self, command, args):
         if command == "mkdir":
@@ -254,8 +253,9 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         def on_command_complete():
             self.protocol_command = None
 
-        self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.basedir,
-                                                     self.running, on_command_complete,
+        self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.bot.basedir,
+                                                     self.basedir, self.running,
+                                                     on_command_complete,
                                                      self.lostRemoteStep, command, stepId, args,
                                                      command_ref)
 
@@ -453,7 +453,7 @@ if sys.version_info.major >= 3:
             def on_command_complete():
                 self.builder_protocol_command[builder_name] = None
 
-            protocol_command = ProtocolCommandMsgpack(self.unicode_encoding,
+            protocol_command = ProtocolCommandMsgpack(self.unicode_encoding, self.basedir,
                                                       self.builder_basedirs[builder_name],
                                                       self.running, on_command_complete,
                                                       protocol, command_id, command, args)
