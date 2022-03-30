@@ -59,11 +59,10 @@ def remote_print(self, message):
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):
-    def __init__(self, unicode_encoding, worker_basedir, basedir, builder_is_running,
+    def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
                  on_command_complete, protocol, command_id, command, args):
-        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, basedir,
-                                     builder_is_running, on_command_complete, None,
-                                     command, command_id, args)
+        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
+                                     on_command_complete, None, command, command_id, args)
         self.protocol = protocol
         self.command_id = command_id
 

@@ -56,9 +56,10 @@ class UnknownCommand(pb.Error):
 class ProtocolCommandPb(ProtocolCommandBase):
     def __init__(self, unicode_encoding, worker_basedir, basedir, builder_is_running,
                  on_command_complete, on_lost_remote_step, command, stepId, args, command_ref):
+        self.basedir = basedir
         self.command_ref = command_ref
-        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, basedir,
-                                     builder_is_running, on_command_complete, on_lost_remote_step,
+        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
+                                     on_command_complete, on_lost_remote_step,
                                      command, stepId, args)
 
     def protocol_args_setup(self, command, args):
@@ -454,7 +455,6 @@ if sys.version_info.major >= 3:
                 self.builder_protocol_command[builder_name] = None
 
             protocol_command = ProtocolCommandMsgpack(self.unicode_encoding, self.basedir,
-                                                      self.builder_basedirs[builder_name],
                                                       self.running, on_command_complete,
                                                       protocol, command_id, command, args)
 
