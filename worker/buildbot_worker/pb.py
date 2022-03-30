@@ -356,7 +356,6 @@ if sys.version_info.major >= 3:
         def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
             BotBase.__init__(self, basedir, unicode_encoding=unicode_encoding,
                              delete_leftover_dirs=delete_leftover_dirs)
-            self.builder_basedirs = {}
             self.builder_protocol_command = {}
 
         @defer.inlineCallbacks
@@ -389,19 +388,11 @@ if sys.version_info.major >= 3:
             wanted_dirs = {builddir for (name, builddir) in wanted}
             wanted_dirs.add('info')
             for (name, builddir) in wanted:
-                old_basedir = self.builder_basedirs.get(name, None)
                 basedir = self.calculate_basedir(builddir)
-                if old_basedir:
-                    if old_basedir != basedir:
-                        log.msg("changing builddir for builder {0} from {1} to {2}".format(
-                                name, old_basedir, basedir))
-                        self.create_dirs(basedir)
-                        self.builder_basedirs[name] = basedir
-                else:
-                    self.builder_protocol_command[name] = None
+                self.create_dirs(basedir)
 
-                    self.create_dirs(basedir)
-                    self.builder_basedirs[name] = basedir
+                if name not in self.builder_protocol_command:
+                    self.builder_protocol_command[name] = None
 
                 retval.append(name)
 
@@ -415,7 +406,6 @@ if sys.version_info.major >= 3:
             # and *then* remove them from the builder list
             for name in to_remove:
                 del self.builder_protocol_command[name]
-                del self.builder_basedirs[name]
 
             # finally warn about any leftover dirs
             for dir in os.listdir(self.basedir):
