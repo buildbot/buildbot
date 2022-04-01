@@ -266,9 +266,8 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         is_exception = False
         try:
             self.contains_msg_key(msg, ('builder_name', 'command_id', 'why'))
-            builder_name = msg['builder_name']
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.interrupt_command(builder_name, msg['why'])
+            yield self.factory.buildbot_bot.interrupt_command(msg['command_id'], msg['why'])
             result = None
         except Exception as e:
             is_exception = True

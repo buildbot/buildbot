@@ -356,24 +356,25 @@ if sys.version_info.major >= 3:
         def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
             BotBase.__init__(self, basedir, unicode_encoding=unicode_encoding,
                              delete_leftover_dirs=delete_leftover_dirs)
-            self.builder_protocol_command = {}
+            self.protocol_commands = {}
 
         @defer.inlineCallbacks
         def startService(self):
             yield BotBase.startService(self)
-            for name in self.builder_protocol_command:
-                protocol_command = self.builder_protocol_command[name]
-                if protocol_command:
-                    protocol_command.builder_is_running = True
 
         @defer.inlineCallbacks
         def stopService(self):
             yield BotBase.stopService(self)
-            for name in self.builder_protocol_command:
-                protocol_command = self.builder_protocol_command[name]
-                if protocol_command:
-                    protocol_command.builder_is_running = False
-                self.stop_command(name)
+
+            # Make any currently-running command die, with no further status
+            # output. This is used when the worker is shutting down or the
+            # connection to the master has been lost.
+            for protocol_command in self.protocol_commands:
+                protocol_command.builder_is_running = False
+                log.msg("stopCommand: halting current command {0}".format(
+                        protocol_command.command))
+                protocol_command.command.doInterrupt()
+            self.protocol_commands = {}
 
         def calculate_basedir(self, builddir):
             return os.path.join(bytes2unicode(self.basedir), bytes2unicode(builddir))
@@ -384,28 +385,13 @@ if sys.version_info.major >= 3:
 
         def remote_setBuilderList(self, wanted):
             retval = []
-            wanted_names = {name for (name, builddir) in wanted}
             wanted_dirs = {builddir for (name, builddir) in wanted}
             wanted_dirs.add('info')
             for (name, builddir) in wanted:
                 basedir = self.calculate_basedir(builddir)
                 self.create_dirs(basedir)
 
-                if name not in self.builder_protocol_command:
-                    self.builder_protocol_command[name] = None
-
                 retval.append(name)
-
-            to_remove = list(set(self.builder_protocol_command.keys()) - wanted_names)
-            if self.running:
-                for name in to_remove:
-                    if self.builder_protocol_command[name]:
-                        self.builder_protocol_command[name].builder_is_running = False
-                    self.stop_command(name)
-
-            # and *then* remove them from the builder list
-            for name in to_remove:
-                del self.builder_protocol_command[name]
 
             # finally warn about any leftover dirs
             for dir in os.listdir(self.basedir):
@@ -437,18 +423,14 @@ if sys.version_info.major >= 3:
             command = decode(command)
             args = decode(args)
 
-            if self.builder_protocol_command[builder_name]:
-                log.msg("leftover command, dropping it")
-                self.stop_command(builder_name)
-
             def on_command_complete():
-                self.builder_protocol_command[builder_name] = None
+                del self.protocol_commands[command_id]
 
             protocol_command = ProtocolCommandMsgpack(self.unicode_encoding, self.basedir,
                                                       self.running, on_command_complete,
                                                       protocol, command_id, command, args)
 
-            self.builder_protocol_command[builder_name] = protocol_command
+            self.protocol_commands[command_id] = protocol_command
 
             log.msg(u" startCommand:{0} [id {1}]".format(command, command_id))
             protocol_command.protocol_notify_on_disconnect()
@@ -457,28 +439,16 @@ if sys.version_info.major >= 3:
             d.addBoth(protocol_command.command_complete)
             return None
 
-        def interrupt_command(self, builder_name, why):
+        def interrupt_command(self, command_id, why):
             """Halt the current step."""
             log.msg("asked to interrupt current command: {0}".format(why))
 
-            if not self.builder_protocol_command[builder_name]:
+            if command_id not in self.protocol_commands:
                 # TODO: just log it, a race could result in their interrupting a
                 # command that wasn't actually running
                 log.msg(" .. but none was running")
                 return
-            self.builder_protocol_command[builder_name].command.doInterrupt()
-
-        def stop_command(self, builder_name):
-            """Make any currently-running command die, with no further status
-            output. This is used when the worker is shutting down or the
-            connection to the master has been lost. Interrupt the command,
-            silence it, and then forget about it."""
-            if not self.builder_protocol_command[builder_name]:
-                return
-            log.msg("stopCommand: halting current command {0}".format(
-                    self.builder_protocol_command[builder_name].command))
-            self.builder_protocol_command[builder_name].command.doInterrupt()
-            self.builder_protocol_command[builder_name] = None
+            self.protocol_commands[command_id].command.doInterrupt()
 
 
 class BotFactory(AutoLoginPBFactory):
