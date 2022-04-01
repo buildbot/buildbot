@@ -412,7 +412,7 @@ if sys.version_info.major >= 3:
 
             return retval
 
-        def start_command(self, builder_name, protocol, command_id, command, args):
+        def start_command(self, protocol, command_id, command, args):
             """
             This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
             part of various master-side BuildSteps, to start various commands

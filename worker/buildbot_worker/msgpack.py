@@ -237,10 +237,9 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     def call_start_command(self, msg):
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('builder_name', 'command_id', 'command_name', 'args'))
-            builder_name = msg['builder_name']
+            self.contains_msg_key(msg, ('command_id', 'command_name', 'args'))
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.start_command(builder_name, self, msg['command_id'],
+            yield self.factory.buildbot_bot.start_command(self, msg['command_id'],
                                                           msg['command_name'], msg['args'])
             result = None
         except Exception as e:
@@ -265,7 +264,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     def call_interrupt_command(self, msg):
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('builder_name', 'command_id', 'why'))
+            self.contains_msg_key(msg, ('command_id', 'why'))
             # send an instance, on which get_message_result will be called
             yield self.factory.buildbot_bot.interrupt_command(msg['command_id'], msg['why'])
             result = None

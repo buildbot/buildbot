@@ -211,7 +211,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             'start_command', {
                 'op': 'start_command',
                 'seq_number': 1,
-                'builder_name': 'test_builder',
                 'command_name': 'test_command',
                 'args': 'args'
             },
@@ -221,7 +220,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'start_command',
                 'seq_number': 1,
                 'command_id': '123',
-                'builder_name': 'test_builder',
                 'command_name': 'test_command',
             },
             'args'
@@ -230,16 +228,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'start_command',
                 'seq_number': 1,
                 'command_id': '123',
-                'command_name': 'test_command',
-                'args': 'args'
-            },
-            'builder_name'
-        ), (
-            'start_command', {
-                'op': 'start_command',
-                'seq_number': 1,
-                'command_id': '123',
-                'builder_name': 'test_builder',
                 'args': 'args'
             },
             'command_name'
@@ -247,7 +235,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             'interrupt_command', {
                 'op': 'interrupt_command',
                 'seq_number': 1,
-                'builder_name': 'test_builder',
                 'why': 'test_why'
             },
             'command_id'
@@ -267,7 +254,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             'call_interrupt_command', {
                 'op': 'interrupt_command',
                 'seq_number': 1,
-                'builder_name': 'test',
                 'command_id': '123'
             },
             'why'
@@ -275,20 +261,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             'call_interrupt_command', {
                 'op': 'interrupt_command',
                 'seq_number': 1,
-                'builder_name': 'test',
                 'why': 'test_reason'
             },
             'command_id'
-        ), (
-            'call_interrupt_command', {
-                'op': 'interrupt_command',
-                'seq_number': 1,
-                'why': 'test_reason',
-                'command_id': '123'
-            },
-            'builder_name'
-        ),
-        ])
+        )])
     @defer.inlineCallbacks
     def test_missing_parameter(self, command, msg, missing_parameter):
         self.protocol.onOpen()
@@ -389,7 +365,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             yield self.send_message({
                 'op': 'start_command',
                 'seq_number': 0,
-                'builder_name': 'test_builder',
                 'command_id': '123',
                 'command_name': 'mkdir',
                 'args': {'path': 'basedir/test_dir', 'test1': 'value1', 'test2': 'value2'}
@@ -407,7 +382,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             yield self.send_message({
                 'op': 'start_command',
                 'seq_number': 1,
-                'builder_name': 'test_builder',
                 'command_id': '123',
                 'command_name': 'mkdir',
                 'args': {'path': path, 'test1': 'value1', 'test2': 'value2'}
@@ -471,7 +445,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         yield self.send_message({
             'op': 'start_command',
             'seq_number': 1,
-            'builder_name': 'test_builder',
             'command_id': '123',
             'command_name': 'shell',
             'args': {'command': ['echo'], 'workdir': workdir}
@@ -526,7 +499,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             yield self.send_message({
                 'op': 'interrupt_command',
                 'seq_number': 1,
-                'builder_name': 'test_builder',
                 'command_id': '123',
                 'why': 'test_reason'
             })
@@ -553,7 +525,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         yield self.send_message({
             'op': 'start_command',
             'seq_number': 1,
-            'builder_name': 'test_builder',
             'command_id': '123',
             'command_name': 'shell',
             'args': {'command': ['sleep', '10'], 'workdir': workdir}
@@ -580,7 +551,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         yield self.send_message({
             'op': 'interrupt_command',
             'seq_number': 1,
-            'builder_name': 'test_builder',
             'command_id': '123',
             'why': 'test_reason'
         })

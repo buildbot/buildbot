@@ -281,10 +281,6 @@ It allows master to track which command exactly was completed.
 ``seq_number``
     Described in section :ref:`MsgPack_Request_Message` structure.
 
-``builder_name``
-    Value is a string.
-    It represents the builder, which should start a command.
-
 ``command_id``
     Value is a string value that is unique per worker connection.
 
@@ -331,10 +327,6 @@ This message requests worker to halt the specified command.
 
 ``op``
     Value is a string ``interrupt_command``.
-
-``builder_name``
-    Value is a string.
-    It represents a name of a builder which should interrupt its command.
 
 ``command_id``
     Value is a string which identifies the command to interrupt.
