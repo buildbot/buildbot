@@ -73,7 +73,7 @@ class ProtocolCommandPb(ProtocolCommandBase):
                 args['paths'] = [os.path.join(self.basedir, dir)
                                  for dir in args['dir']]
             else:
-                args['paths'] = os.path.join(self.basedir, args['dir'])
+                args['paths'] = [os.path.join(self.basedir, args['dir'])]
             del args['dir']
 
         if command == "cpdir":

@@ -49,9 +49,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_simple_real(self):
         file_path = os.path.join(self.basedir, 'workdir')
-        self.make_command(fs.RemoveDirectory, dict(
-            paths=file_path,
-        ), True)
+        self.make_command(fs.RemoveDirectory, {'paths': [file_path]}, True)
         yield self.run_command()
         self.assertFalse(os.path.exists(os.path.abspath(file_path)))
         self.assertIn({'rc': 0}, self.get_updates(), self.protocol_command.show())
@@ -60,7 +58,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_simple_posix(self):
         file_path = os.path.join(self.basedir, 'remove')
-        self.make_command(fs.RemoveDirectory, {'paths': file_path}, True)
+        self.make_command(fs.RemoveDirectory, {'paths': [file_path]}, True)
 
         self.patch_runprocess(
             Expect(["rm", "-rf", file_path], self.basedir, sendRC=0, timeout=120)
@@ -81,9 +79,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         def fail(dir):
             raise RuntimeError("oh noes")
         self.patch(utils, 'rmdirRecursive', fail)
-        self.make_command(fs.RemoveDirectory, dict(
-            paths='workdir',
-        ), True)
+        self.make_command(fs.RemoveDirectory, {'paths': ['workdir']}, True)
         yield self.run_command()
 
         self.assertIn({'rc': -1}, self.get_updates(), self.protocol_command.show())
@@ -91,9 +87,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_multiple_dirs_real(self):
         paths = [os.path.join(self.basedir, 'workdir'), os.path.join(self.basedir, 'sourcedir')]
-        self.make_command(fs.RemoveDirectory, dict(
-            paths=paths,
-        ), True)
+        self.make_command(fs.RemoveDirectory, {'paths': paths}, True)
         yield self.run_command()
 
         for path in paths:
@@ -107,9 +101,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
     def test_multiple_dirs_posix(self):
         dir_1 = os.path.join(self.basedir, 'remove_1')
         dir_2 = os.path.join(self.basedir, 'remove_2')
-        self.make_command(fs.RemoveDirectory, dict(
-            paths=[dir_1, dir_2],
-        ), True)
+        self.make_command(fs.RemoveDirectory, {'paths': [dir_1, dir_2]}, True)
 
         self.patch_runprocess(
             Expect(["rm", "-rf", dir_1], self.basedir, sendRC=0,
@@ -131,9 +123,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_rm_after_chmod(self):
         dir = os.path.join(self.basedir, 'remove')
-        self.make_command(fs.RemoveDirectory, dict(
-            paths=dir,
-        ), True)
+        self.make_command(fs.RemoveDirectory, {'paths': [dir]}, True)
 
         self.patch_runprocess(
             Expect(["rm", "-rf", dir], self.basedir, sendRC=0,
@@ -159,9 +149,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_rm_after_failed(self):
         dir = os.path.join(self.basedir, 'remove')
-        self.make_command(fs.RemoveDirectory, dict(
-            paths=dir,
-        ), True)
+        self.make_command(fs.RemoveDirectory, {'paths': [dir]}, True)
 
         self.patch_runprocess(
             Expect(["rm", "-rf", dir], self.basedir, sendRC=0,

@@ -72,17 +72,15 @@ class RemoveDirectory(base.Command):
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
         self.rc = 0
-        if isinstance(dirnames, list):
-            assert dirnames
-            for dirname in dirnames:
-                res = yield self.removeSingleDir(dirname)
-                # Even if single removal of single file/dir consider it as
-                # failure of whole command, but continue removing other files
-                # Send 'rc' to master to handle failure cases
-                if res != 0:
-                    self.rc = res
-        else:
-            self.rc = yield self.removeSingleDir(dirnames)
+
+        assert dirnames
+        for dirname in dirnames:
+            res = yield self.removeSingleDir(dirname)
+            # Even if single removal of single file/dir consider it as
+            # failure of whole command, but continue removing other files
+            # Send 'rc' to master to handle failure cases
+            if res != 0:
+                self.rc = res
 
         self.sendStatus({'rc': self.rc})
 
