@@ -133,7 +133,12 @@ class Connection(base.Connection):
     @defer.inlineCallbacks
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         if commandName == "mkdir":
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['dir'])
+            if isinstance(args['dir'], list):
+                args['paths'] = [self.path_module.join(self.builder_basedirs[builderName], dir)
+                                 for dir in args['dir']]
+            else:
+                args['paths'] = [self.path_module.join(self.builder_basedirs[builderName],
+                                                       args['dir'])]
             del args['dir']
 
         if commandName == "rmdir":

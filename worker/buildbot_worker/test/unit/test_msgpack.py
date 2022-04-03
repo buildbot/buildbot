@@ -367,7 +367,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'seq_number': 0,
                 'command_id': '123',
                 'command_name': 'mkdir',
-                'args': {'path': 'basedir/test_dir', 'test1': 'value1', 'test2': 'value2'}
+                'args': {'paths': ['basedir/test_dir'], 'test1': 'value1', 'test2': 'value2'}
             })
             mkdir.assert_called()
 
@@ -384,7 +384,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'seq_number': 1,
                 'command_id': '123',
                 'command_name': 'mkdir',
-                'args': {'path': path, 'test1': 'value1', 'test2': 'value2'}
+                'args': {'paths': [path], 'test1': 'value1', 'test2': 'value2'}
             })
             mkdir.assert_called()
 

@@ -35,21 +35,23 @@ class MakeDirectory(base.Command):
 
     header = "mkdir"
 
-    # args['path'] specifies the absolute path of a directory to create
-    requiredArgs = ['path']
+    # args['paths'] specifies the absolute paths of directories to create
+    requiredArgs = ['paths']
 
     def start(self):
-        dirname = self.args['path']
+        paths = self.args['paths']
 
-        try:
-            if not os.path.isdir(dirname):
-                os.makedirs(dirname)
-            self.sendStatus({'rc': 0})
-        except OSError as e:
-            log.msg("MakeDirectory {0} failed: {1}".format(dirname, e))
-            self.sendStatus(
-                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)})
-            self.sendStatus({'rc': e.errno})
+        for dirname in paths:
+            try:
+                if not os.path.isdir(dirname):
+                    os.makedirs(dirname)
+            except OSError as e:
+                log.msg("MakeDirectory {0} failed: {1}".format(dirname, e))
+                self.sendStatus(
+                    {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)})
+                self.sendStatus({'rc': e.errno})
+                return
+        self.sendStatus({'rc': 0})
 
 
 class RemoveDirectory(base.Command):

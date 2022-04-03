@@ -233,36 +233,50 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         self.tearDownCommand()
 
     @defer.inlineCallbacks
-    def test_simple(self):
-        file_path = os.path.join(self.basedir, 'test_dir')
-        self.make_command(fs.MakeDirectory, {'path': file_path}, True)
+    def test_empty_paths(self):
+        self.make_command(fs.MakeDirectory, {'paths': []}, True)
         yield self.run_command()
 
-        self.assertTrue(os.path.exists(os.path.abspath(file_path)))
-        self.assertUpdates(
-            [{'rc': 0}],
-        self.protocol_command.show())
+        self.assertUpdates([{'rc': 0}], self.protocol_command.show())
+
+    @defer.inlineCallbacks
+    def test_simple(self):
+        paths = [os.path.join(self.basedir, 'test_dir')]
+        self.make_command(fs.MakeDirectory, {'paths': paths}, True)
+        yield self.run_command()
+
+        self.assertTrue(os.path.exists(os.path.abspath(paths[0])))
+        self.assertUpdates([{'rc': 0}], self.protocol_command.show())
+
+    @defer.inlineCallbacks
+    def test_two_dirs(self):
+        paths = [os.path.join(self.basedir, 'test-dir'), os.path.join(self.basedir, 'test-dir2')]
+        self.make_command(fs.MakeDirectory, {'paths': paths}, True)
+        yield self.run_command()
+
+        for path in paths:
+            self.assertTrue(os.path.exists(os.path.abspath(path)))
+
+        self.assertUpdates([{'rc': 0}], self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_already_exists(self):
-        self.make_command(fs.MakeDirectory, {'path': os.path.join(self.basedir, 'workdir')}, True)
+        self.make_command(fs.MakeDirectory, {'paths': [os.path.join(self.basedir, 'workdir')]},
+                          True)
         yield self.run_command()
 
-        self.assertUpdates(
-            [{'rc': 0}],
-            self.protocol_command.show())
+        self.assertUpdates([{'rc': 0}], self.protocol_command.show())
 
     @defer.inlineCallbacks
-    def test_existing_file(self):
-        file_path = os.path.join(self.basedir, 'test-file')
-        self.make_command(fs.MakeDirectory, {'path': file_path}, True)
-        with open(file_path, "w"):
+    def test_error_existing_file(self):
+        paths = [os.path.join(self.basedir, 'test-file')]
+        self.make_command(fs.MakeDirectory, {'paths': paths}, True)
+
+        with open(paths[0], "w"):
             pass
         yield self.run_command()
 
-        self.assertIn({'rc': errno.EEXIST},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertIn({'rc': errno.EEXIST}, self.get_updates(), self.protocol_command.show())
 
 
 class TestStatFile(CommandTestMixin, unittest.TestCase):

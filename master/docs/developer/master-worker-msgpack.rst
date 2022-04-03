@@ -970,9 +970,9 @@ Command_name: ``mkdir``
 This command will create a directory on the worker.
 It will also create any intervening directories required.
 
-``path``
-    Value is a string.
-    It specifies an absolute path of a directory to create.
+``paths``
+    Value is a list of strings.
+    It specifies absolute paths of directories to create.
 
     If command succeeded, worker will send ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
 

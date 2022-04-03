@@ -64,7 +64,7 @@ class ProtocolCommandPb(ProtocolCommandBase):
 
     def protocol_args_setup(self, command, args):
         if command == "mkdir":
-            args['path'] = os.path.join(self.basedir, args['dir'])
+            args['paths'] = [os.path.join(self.basedir, args['dir'])]
             del args['dir']
 
         if command == "rmdir":
