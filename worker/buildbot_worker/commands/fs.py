@@ -74,8 +74,8 @@ class RemoveDirectory(base.Command):
         self.rc = 0
 
         assert dirnames
-        for dirname in dirnames:
-            res = yield self.removeSingleDir(dirname)
+        for path in dirnames:
+            res = yield self.removeSingleDir(path)
             # Even if single removal of single file/dir consider it as
             # failure of whole command, but continue removing other files
             # Send 'rc' to master to handle failure cases
@@ -84,10 +84,9 @@ class RemoveDirectory(base.Command):
 
         self.sendStatus({'rc': self.rc})
 
-    def removeSingleDir(self, dirname):
-        self.dir = dirname
+    def removeSingleDir(self, path):
         if runtime.platformType != "posix":
-            d = threads.deferToThread(utils.rmdirRecursive, self.dir)
+            d = threads.deferToThread(utils.rmdirRecursive, path)
 
             def cb(_):
                 return 0  # rc=0
@@ -98,13 +97,13 @@ class RemoveDirectory(base.Command):
                 return -1  # rc=-1
             d.addCallbacks(cb, eb)
         else:
-            d = self._clobber(None)
+            d = self._clobber(None, path)
 
         return d
 
     @defer.inlineCallbacks
-    def _clobber(self, dummy, chmodDone=False):
-        command = ["rm", "-rf", self.dir]
+    def _clobber(self, dummy, path, chmodDone=False):
+        command = ["rm", "-rf", path]
 
         c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
                                   self.protocol_command.unicode_encoding,
@@ -121,23 +120,23 @@ class RemoveDirectory(base.Command):
         # permissions. So if we get a failure, we attempt to chmod suitable
         # permissions and re-try the rm -rf.
         if not chmodDone:
-            rc = yield self._tryChmod(rc)
+            rc = yield self._tryChmod(rc, path)
         defer.returnValue(rc)
 
     @defer.inlineCallbacks
-    def _tryChmod(self, rc):
+    def _tryChmod(self, rc, path):
         assert isinstance(rc, int)
         if rc == 0:
             defer.returnValue(0)
             return  # pragma: no cover
         # Attempt a recursive chmod and re-try the rm -rf after.
 
-        command = ["chmod", "-Rf", "u+rwx", self.dir]
+        command = ["chmod", "-Rf", "u+rwx", path]
         if sys.platform.startswith('freebsd'):
             # Work around a broken 'chmod -R' on FreeBSD (it tries to recurse into a
             # directory for which it doesn't have permission, before changing that
             # permission) by running 'find' instead
-            command = ["find", self.dir, '-exec', 'chmod', 'u+rwx', '{}', ';']
+            command = ["find", path, '-exec', 'chmod', 'u+rwx', '{}', ';']
 
         c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
                                   self.protocol_command.unicode_encoding,
@@ -147,7 +146,7 @@ class RemoveDirectory(base.Command):
 
         self.command = c
         rc = yield c.start()
-        rc = yield self._clobber(rc, True)
+        rc = yield self._clobber(rc, path, True)
         defer.returnValue(rc)
 
 
