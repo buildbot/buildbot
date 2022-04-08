@@ -696,7 +696,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
     def __init__(self, workdir=None, paths=None, messages=None, env=None,
                  timeout=20 * 60, logEnviron=True, emptyCommits='disallow',
-                 config=None, **kwargs):
+                 config=None, noVerify=False, **kwargs):
 
         self.workdir = workdir
         self.messages = messages
@@ -706,6 +706,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self.logEnviron = logEnviron
         self.config = config
         self.emptyCommits = emptyCommits
+        self.noVerify = noVerify
         # The repourl, sshPrivateKey and sshHostKey attributes are required by
         # GitStepMixin, but aren't needed by git add and commit operations
         self.repourl = " "
@@ -780,6 +781,9 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
         if self.emptyCommits == 'create-empty-commit':
             cmd.extend(['--allow-empty'])
+
+        if self.noVerify:
+            cmd.extend(['--no-verify'])
 
         ret = yield self._dovccmd(cmd)
         return ret
