@@ -333,7 +333,12 @@ class Git(Source, GitStepMixin):
             rev = self.revision
         else:
             rev = 'FETCH_HEAD'
-        command = ['checkout', '-f', rev]
+
+        if self.mode == 'incremental':
+            command = ['checkout', rev]
+        else:
+            command = ['checkout', '-f', rev]
+
         abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
         res = yield self._dovccmd(command, abandonOnFailure)
 
