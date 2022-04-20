@@ -107,7 +107,8 @@ VERSION_ID="1"
             environ=os.environ, system=os.name, basedir=self.basedir,
             worker_commands=self.real_bot.remote_getCommands(),
             version=self.real_bot.remote_getVersion(),
-            numcpus=multiprocessing.cpu_count()))
+            numcpus=multiprocessing.cpu_count(),
+            delete_leftover_dirs=False))
 
     @defer.inlineCallbacks
     def test_getWorkerInfo_nodir(self):
@@ -116,7 +117,8 @@ VERSION_ID="1"
         info = {k: v for k, v in info.items() if not k.startswith("os_")}
 
         self.assertEqual(set(info.keys()), set(
-            ['environ', 'system', 'numcpus', 'basedir', 'worker_commands', 'version']))
+            ['environ', 'system', 'numcpus', 'basedir', 'worker_commands', 'version',
+             'delete_leftover_dirs']))
 
     @defer.inlineCallbacks
     def test_setBuilderList_empty(self):

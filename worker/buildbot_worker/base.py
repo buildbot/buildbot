@@ -195,6 +195,7 @@ class BotBase(service.MultiService):
 
         files['version'] = self.remote_getVersion()
         files['worker_commands'] = self.remote_getCommands()
+        files['delete_leftover_dirs'] = self.delete_leftover_dirs
         return files
 
     def remote_getVersion(self):
