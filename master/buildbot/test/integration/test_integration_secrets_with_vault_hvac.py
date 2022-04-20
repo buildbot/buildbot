@@ -33,14 +33,14 @@ from buildbot.test.util.integration import RunMasterBase
 class TestVaultHvac(RunMasterBase):
     def setUp(self):
         try:
-            subprocess.check_call(['docker', 'pull', 'vault'])
+            subprocess.check_call(['docker', 'pull', 'vault:1.9.4'])
 
             subprocess.check_call(['docker', 'run', '-d',
                                    '-e', 'SKIP_SETCAP=yes',
                                    '-e', 'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken',
                                    '-e', 'VAULT_TOKEN=my_vaulttoken',
                                    '--name=vault_for_buildbot',
-                                   '-p', '8200:8200', 'vault'])
+                                   '-p', '8200:8200', 'vault:1.9.4'])
             time.sleep(1)  # the container needs a little time to setup itself
             self.addCleanup(self.remove_container)
 
