@@ -30,7 +30,7 @@ test_script:
   - ps: |
           echo $ENV:PYTHON
           if ($env:PYTHON -imatch 'C:\\Python27') {
-            iex 'pyinstaller -F pyinstaller/buildbot-worker.spec'
+            iex 'pyinstaller pyinstaller/buildbot-worker.spec'
             iex 'appveyor PushArtifact dist\\buildbot-worker.exe'
           }
 
