@@ -1,10 +1,9 @@
 Master-Worker connection with MessagePack over WebSocket protocol
+=================================================================
 
 .. note::
 
     This is experimental protocol.
-
-=================================================================
 
 Messages between master and worker are sent using WebSocket protocol in both directions.
 Data to be sent conceptually is a dictionary and is encoded using MessagePack.
