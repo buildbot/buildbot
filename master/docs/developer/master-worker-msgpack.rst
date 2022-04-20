@@ -827,7 +827,7 @@ Runs a ``shell`` command on the worker.
 
 
     If command succeeded, worker sends ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
-    It can also send many ``update`` messages with key ``header``, ``stdout`` or ```stderr` to inform about command execution.
+    It can also send many other ``update`` messages with keys ``header``, ``stdout`` or ``stderr`` to inform about command execution.
     If command failed, it sends ``rc`` value with the error number.
 
     The basic structure of worker ``update`` message is explained in section :ref:`MsgPack_Keys_And_Values_Message`.
