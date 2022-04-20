@@ -13,15 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+import stat
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
 
 from buildbot.pbutil import decode
+from buildbot.process import remotecommand
 from buildbot.util import deferwaiter
 from buildbot.util import path_expand_user
 from buildbot.worker.protocols import base
-from buildbot_worker.compat import bytes2unicode
 
 
 class Listener(base.UpdateRegistrationListener):
@@ -37,6 +39,45 @@ class Listener(base.UpdateRegistrationListener):
 
     def before_connection_setup(self, protocol, workerName):
         log.msg(f"worker '{workerName}' attaching")
+
+
+class BasicRemoteCommand():
+    def __init__(self, worker_name, expected_keys, error_msg):
+        self.worker_name = worker_name
+        self.update_results = {}
+        self.expected_keys = expected_keys
+        self.error_msg = error_msg
+        self.d = defer.Deferred()
+
+    def wait_until_complete(self):
+        return self.d
+
+    def remote_update(self, args):
+        for element in args:
+            for key, value in element[0].items():
+                if key not in self.update_results:
+                    self.update_results[key] = value
+
+    def remote_complete(self, args):
+        if 'rc' not in self.update_results:
+            self.d.errback(Exception(f"Worker {self.worker_name} reconfiguration or connection to "
+                                     f"master failed. {self.error_msg}. 'rc' did not arrive."))
+            return
+
+        if self.update_results['rc'] != 0:
+            self.d.errback(Exception(f"Worker {self.worker_name} reconfiguration or connection to "
+                                     f"master failed. {self.error_msg}. Error number: "
+                                     f"{self.update_results['rc']}"))
+            return
+
+        for key in self.expected_keys:
+            if key not in self.update_results:
+                self.d.errback(Exception(f"Worker {self.worker_name} reconfiguration or connection "
+                                         f"to master failed. {self.error_msg} "
+                                         f"Key '{key}' is missing."))
+                return
+
+        self.d.callback(None)
 
 
 class Connection(base.Connection):
@@ -114,21 +155,88 @@ class Connection(base.Connection):
             self.path_expanduser = path_expand_user.posix_expanduser
         return self.info
 
+    def create_remote_command(self, worker_name, expected_keys, error_msg):
+        command_id = remotecommand.RemoteCommand.generate_new_command_id()
+        command = BasicRemoteCommand(worker_name, expected_keys, error_msg)
+        self.protocol.command_id_to_command_map[command_id] = command
+        return (command, command_id)
+
     @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):
-
-        self.builder_basedirs = {}
-
         basedir = self.info['basedir']
+        builder_names = [name for name, _ in builders]
+        self.builder_basedirs = {name: self.path_module.join(basedir, builddir)
+                                 for name, builddir in builders}
 
-        for name, builddir in builders:
-            self.builder_basedirs[name] = self.path_module.join(bytes2unicode(basedir),
-                                                                bytes2unicode(builddir))
+        wanted_dirs = {builddir for _, builddir in builders}
+        wanted_dirs.add('info')
+        dirs_to_mkdir = set(wanted_dirs)
+        command, command_id = \
+            self.create_remote_command(self.worker.workername, ['files'],
+                                       'Worker could not send a list of builder directories.')
 
-        builders = yield self.protocol.get_message_result({'op': 'set_builder_list',
-                                                           'builders': builders})
-        self.builders = decode(builders)
-        return builders
+        yield self.protocol.get_message_result({'op': 'start_command',
+                                                'command_id': command_id,
+                                                'command_name': 'listdir',
+                                                'args': {'path': basedir}})
+
+        # wait until command is over to get the update request message with args['files']
+        yield command.wait_until_complete()
+        files = command.update_results['files']
+
+        paths_to_rmdir = []
+
+        for dir in files:
+            dirs_to_mkdir.discard(dir)
+            if dir not in wanted_dirs:
+                if self.info['delete_leftover_dirs']:
+                    # send 'stat' start_command and wait for status information which comes from
+                    # worker in a response message. Status information is saved in update_results
+                    # dictionary with key 'stat'. 'stat' value is a tuple of 10 elements, where
+                    # first element is File mode. It goes to S_ISDIR(mode) to check if path is
+                    # a directory so that files are not deleted
+                    path = self.path_module.join(basedir, dir)
+                    command, command_id = \
+                        self.create_remote_command(self.worker.workername, ['stat'],
+                                                   "Worker could not send status " +
+                                                   "information about its files.")
+                    yield self.protocol.get_message_result({'op': 'start_command',
+                                                            'command_id': command_id,
+                                                            'command_name': 'stat',
+                                                            'args': {'path': path}})
+                    yield command.wait_until_complete()
+                    mode = command.update_results['stat'][0]
+                    if stat.S_ISDIR(mode):
+                        paths_to_rmdir.append(path)
+
+        if paths_to_rmdir:
+            log.msg(f"Deleting directory '{paths_to_rmdir}' that is not being "
+                    "used by the buildmaster.")
+
+            # remove leftover directories from worker
+            command, command_id = \
+                self.create_remote_command(self.worker.workername, [],
+                                           "Worker could not remove directories.")
+            yield self.protocol.get_message_result({'op': 'start_command',
+                                                    'command_id': command_id,
+                                                    'command_name': 'rmdir',
+                                                    'args': {'paths': paths_to_rmdir}})
+            yield command.wait_until_complete()
+
+        paths_to_mkdir = [self.path_module.join(basedir, dir)
+                          for dir in sorted(list(dirs_to_mkdir))]
+        if paths_to_mkdir:
+            # make wanted builder directories which do not exist in worker yet
+            command, command_id = self.create_remote_command(self.worker.workername, [],
+                                                             "Worker could not make directories.")
+            yield self.protocol.get_message_result({'op': 'start_command',
+                                                    'command_id': command_id,
+                                                    'command_name': 'mkdir',
+                                                    'args': {'paths': paths_to_mkdir}})
+            yield command.wait_until_complete()
+
+        self.builders = builder_names
+        return builder_names
 
     @defer.inlineCallbacks
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):

@@ -84,6 +84,11 @@ class RemoteCommand(base.RemoteCommandImpl):
         cls._commandCounter += 1
         return f"{cmd_id}"
 
+    @classmethod
+    def get_last_generated_command_id(cls):
+        cmd_id = cls._commandCounter - 1
+        return f"{cmd_id}"
+
     def run(self, step, conn, builder_name):
         self.active = True
         self.step = step

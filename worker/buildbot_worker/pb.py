@@ -383,35 +383,6 @@ if sys.version_info.major >= 3:
             if not os.path.isdir(basedir):
                 os.makedirs(basedir)
 
-        def remote_setBuilderList(self, wanted):
-            retval = []
-            wanted_dirs = {builddir for (name, builddir) in wanted}
-            wanted_dirs.add('info')
-            for (name, builddir) in wanted:
-                basedir = self.calculate_basedir(builddir)
-                self.create_dirs(basedir)
-
-                retval.append(name)
-
-            # finally warn about any leftover dirs
-            for dir in os.listdir(self.basedir):
-                if os.path.isdir(os.path.join(self.basedir, dir)):
-                    if dir not in wanted_dirs:
-                        if self.delete_leftover_dirs:
-                            log.msg("Deleting directory '{0}' that is not being "
-                                    "used by the buildmaster".format(dir))
-                            try:
-                                shutil.rmtree(dir)
-                            except OSError as e:
-                                log.msg("Cannot remove directory '{0}': "
-                                        "{1}".format(dir, e))
-                        else:
-                            log.msg("I have a leftover directory '{0}' that is not "
-                                    "being used by the buildmaster: you can delete "
-                                    "it now".format(dir))
-
-            return retval
-
         def start_command(self, protocol, command_id, command, args):
             """
             This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as

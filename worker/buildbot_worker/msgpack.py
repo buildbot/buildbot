@@ -222,18 +222,6 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_set_builder_list(self, msg):
-        is_exception = False
-        try:
-            self.contains_msg_key(msg, ('builders',))
-            result = yield self.factory.buildbot_bot.remote_setBuilderList(msg["builders"])
-        except Exception as e:
-            is_exception = True
-            result = str(e)
-
-        self.send_response_msg(msg, result, is_exception)
-
-    @defer.inlineCallbacks
     def call_start_command(self, msg):
         is_exception = False
         try:
@@ -303,8 +291,6 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             self._deferwaiter.add(self.call_keepalive(msg))
         elif msg['op'] == "get_worker_info":
             self._deferwaiter.add(self.call_get_worker_info(msg))
-        elif msg['op'] == "set_builder_list":
-            self._deferwaiter.add(self.call_set_builder_list(msg))
         elif msg['op'] == "start_command":
             self._deferwaiter.add(self.call_start_command(msg))
         elif msg['op'] == "shutdown":

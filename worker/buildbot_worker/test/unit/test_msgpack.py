@@ -186,8 +186,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ('keepalive_seq_number', {'op': 'keepalive'}),
         ('get_worker_info_op', {'seq_number': 1}),
         ('get_worker_info_seq_number', {'op': 'get_worker_info'}),
-        ('set_builder_list_op', {'seq_number': 1}),
-        ('set_builder_list_seq_number', {'op': 'set_builder_list'}),
         ('start_command_op', {'seq_number': 1}),
         ('start_command_seq_number', {'op': 'start_command'}),
         ('shutdown_op', {'seq_number': 1}),
@@ -238,12 +236,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'why': 'test_why'
             },
             'command_id'
-        ), (
-            'set_builder_list', {
-                'op': 'set_builder_list',
-                'seq_number': 1
-            },
-            'builders'
         ), (
             'call_print', {
                 'op': 'print',
@@ -316,45 +308,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             mock_log.assert_any_call("Connection keepalive confirmed.")
 
         self.assert_sent_messages([{'op': 'response', 'seq_number': 0, 'result': None}])
-
-    @defer.inlineCallbacks
-    def test_call_set_builder_list_success(self):
-        self.protocol.factory.buildbot_bot.remote_setBuilderList = mock.Mock()
-        self.protocol.factory.buildbot_bot.remote_setBuilderList.return_value = [
-            'name1', 'name2', 'name3'
-        ]
-        builders = [['name1', 'dir1'], ['name2', 'dir2'], ['name3', 'dir3']]
-
-        yield self.send_message({
-            'op': 'set_builder_list',
-            'seq_number': 0,
-            'builders': builders
-        })
-        self.protocol.factory.buildbot_bot.remote_setBuilderList.assert_called_with(builders)
-
-        self.assert_sent_messages([{
-            'op': 'response',
-            'seq_number': 0,
-            'result': ['name1', 'name2', 'name3']
-        }])
-
-    @defer.inlineCallbacks
-    def test_call_set_builder_list_exception(self):
-        self.protocol.factory.buildbot_bot.remote_setBuilderList = \
-            mock.Mock(side_effect=Exception('Error'))
-
-        yield self.send_message({
-            'op': 'set_builder_list',
-            'seq_number': 0,
-            'builders': [['name1', 'dir1'], ['name2', 'dir2'], ['name3', 'dir3']]
-        })
-
-        self.assert_sent_messages([{
-            'op': 'response',
-            'seq_number': 0,
-            'result': "Error",
-            'is_exception': True
-        }])
 
     @defer.inlineCallbacks
     def test_call_start_command_success(self):

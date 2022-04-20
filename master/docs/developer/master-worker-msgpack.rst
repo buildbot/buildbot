@@ -211,51 +211,6 @@ As a convention, there are files named 'admin' and 'host':
     Value is a string.
     It specifies the name of the host.
 
-.. _MsgPack_Request_set_builder_list:
-
-set_builder_list
-~~~~~~~~~~~~~~~~
-
-For each master’s (builder, builddir) pair worker creates a corresponding directory.
-Directories which exist on the worker and are no longer needed by master, maybe deleted.
-
-Request
-+++++++
-
-This message sets builders on which commands may be run.
-
-``seq_number``
-    Described in section :ref:`MsgPack_Request_Message` structure.
-
-``op``
-    Value is a string ``set_builder_list``.
-
-``builders``
-    Value is a list of two-item lists.
-    It represents wanted builders names.
-    Each tuple contains a builder name and its directory.
-    Builds will be run in a directory, whose path is a concatenation of worker base directory (which comes from Worker's configuration file) and the directory received from the master.
-    If the directory received from the master is an absolute path, it is used instead for running the builds.
-
-    This directory is called builder directory in the rest of documentation.
-
-Response
-++++++++
-
-``seq_number``
-    Described in section :ref:`MsgPack_Response_Message` structure.
-
-``op``
-    Value is a string ``response``.
-
-``result``
-    Value is a list which represents names of builders.
-    Otherwise – message of exception.
-
-``is_exception``
-    This key-value pair is optional.
-    If request succeeded this key-value pair is absent.
-    Otherwise, its value is a boolean ``True`` and the message of exception is specified in the value of ``result``.
 
 start_command
 ~~~~~~~~~~~~~
