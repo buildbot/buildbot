@@ -221,10 +221,10 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(result_command_id_to_command_map, self.protocol.command_id_to_command_map)
         self.protocol.get_message_result.assert_called_with({'op': 'start_command',
-                                                            'builder_name': 'builder',
-                                                            'command_id': 1,
-                                                            'command_name': 'command',
-                                                            'args': expected_args})
+                                                             'builder_name': 'builder',
+                                                             'command_id': 1,
+                                                             'command_name': 'command',
+                                                             'args': expected_args})
 
     @defer.inlineCallbacks
     def test_remote_shutdown(self):
