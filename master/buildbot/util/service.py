@@ -528,6 +528,6 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 yield config_sibling.setServiceParent(self)
             except Exception as e:  # pragma: no cover
                 log.err(e, f'Got exception while reconfiguring {self} child service {svc.name}:\n'
-                        'current config dict:\n{svc.getConfigDict()}\n'
-                        'new config dict:\n{config_sibling.getConfigDict()}')
+                        f'current config dict:\n{svc.getConfigDict()}\n'
+                        f'new config dict:\n{config_sibling.getConfigDict()}')
                 raise

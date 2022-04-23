@@ -340,7 +340,7 @@ class TelegramContact(Contact):
                 if greeting:
                     prompt = f"{greeting} @{username}, now {prompt}..."
                 else:
-                    prompt = "@{username}, now {prompt}..."
+                    prompt = f"@{username}, now {prompt}..."
                 kwargs['reply_markup'] = {
                     'force_reply': True,
                     'selective': True

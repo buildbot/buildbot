@@ -256,7 +256,7 @@ class KubeClientService(HTTPClientService):
         url = f'/api/v1/namespaces/{namespace}/pods/{name}/status'
         while True:
             if time.time() - t1 > timeout:
-                raise TimeoutError("Did not see pod {name} terminate after {timeout}s")
+                raise TimeoutError(f"Did not see pod {name} terminate after {timeout}s")
             res = yield self.get(url)
             res_json = yield res.json()
             if res.code == 404:

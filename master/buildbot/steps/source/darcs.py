@@ -57,7 +57,7 @@ class Darcs(Source):
             if self.method is None:
                 self.method = 'copy'
             elif self.method not in self.possible_methods:
-                errors.append("Invalid method for mode == {self.mode}")
+                errors.append(f"Invalid method for mode == {self.mode}")
 
         if repourl is None:
             errors.append("you must provide repourl")

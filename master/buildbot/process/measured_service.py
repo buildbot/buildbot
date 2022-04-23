@@ -25,7 +25,7 @@ class MeasuredBuildbotServiceManager(BuildbotServiceManager):
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        timer = metrics.Timer("f{self.name}.reconfigServiceWithBuildbotConfig")
+        timer = metrics.Timer(f"{self.name}.reconfigServiceWithBuildbotConfig")
         timer.start()
         yield super().reconfigServiceWithBuildbotConfig(new_config)
         metrics.MetricCountEvent.log(f"num_{self.managed_services_name}",

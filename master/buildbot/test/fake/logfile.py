@@ -30,7 +30,7 @@ class FakeLogFile:
         self.finished = False
         self._finish_waiters = []
         self._had_errors = False
-        self.subPoint = util.subscription.SubscriptionPoint("{repr(name)} log")
+        self.subPoint = util.subscription.SubscriptionPoint(f"{repr(name)} log")
 
     def getName(self):
         return self.name
