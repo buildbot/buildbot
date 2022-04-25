@@ -28,7 +28,7 @@ graphql-core==3.1.5
 hvac==0.10.11
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.2.0
-incremental==17.5.0
+incremental==21.3.0
 ipaddress==1.0.23
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
 Jinja2==3.0.1
@@ -82,7 +82,7 @@ termcolor==1.1.0
 toml==0.10.2
 towncrier==21.3.0
 treq==22.1.0
-Twisted==21.2.0
+Twisted==22.4.0
 txaio==21.2.1
 txrequests==0.9.6
 unidiff==0.6.0
