@@ -157,8 +157,10 @@ class GitLabStatusPush(ReporterBase):
                 RETRY: 'pending',
                 CANCELLED: 'canceled'
             }.get(build['results'], 'failed')
-        else:
+        elif build.get('started_at'):
             state = 'running'
+        else:
+            state = 'pending'
 
         context = yield props.render(self.context)
 

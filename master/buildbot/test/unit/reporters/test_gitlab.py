@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.process.builder import Builder
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import FAILURE
@@ -52,8 +55,33 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
         self.sp = GitLabStatusPush(Interpolate('XXYYZZ'))
         yield self.sp.setServiceParent(self.master)
 
+        builder = mock.Mock(spec=Builder)
+        builder.master = self.master
+        builder.name = "Builder0"
+        builder.setupProperties = lambda props: props.setProperty(
+            "buildername", "Builder0", "Builder")
+        self.master.botmaster.getBuilderById = mock.Mock(return_value=builder)
+
     def tearDown(self):
         return self.master.stopService()
+
+    @defer.inlineCallbacks
+    def test_buildrequest(self):
+        buildrequest = yield self.insert_buildrequest_new()
+        self._http.expect(
+            'get',
+            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
+                "id": 1
+            })
+        self._http.expect(
+            'post',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
+            json={'state': 'pending',
+                  'target_url': 'http://localhost:8080/#buildrequests/11',
+                  'ref': 'master',
+                  'description': 'Build pending.', 'name': 'buildbot/Builder0'})
+
+        yield self.sp._got_event(('buildrequests', 11, 'new'), buildrequest)
 
     @defer.inlineCallbacks
     def test_basic(self):
