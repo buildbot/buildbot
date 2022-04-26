@@ -133,6 +133,8 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         # references.
         yield self.master.data.updates.completeBuildRequests([brid],
                                                              results.CANCELLED)
+        brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
+        self.master.mq.produce(('buildrequests', str(brid), 'cancel'), brdict)
         return None
 
 

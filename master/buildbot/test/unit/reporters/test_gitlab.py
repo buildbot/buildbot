@@ -80,8 +80,16 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
                   'target_url': 'http://localhost:8080/#buildrequests/11',
                   'ref': 'master',
                   'description': 'Build pending.', 'name': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
+            json={'state': 'canceled',
+                  'target_url': 'http://localhost:8080/#buildrequests/11',
+                  'ref': 'master',
+                  'description': 'Build pending.', 'name': 'buildbot/Builder0'})
 
         yield self.sp._got_event(('buildrequests', 11, 'new'), buildrequest)
+        yield self.sp._got_event(('buildrequests', 11, 'cancel'), buildrequest)
 
     @defer.inlineCallbacks
     def test_basic(self):
