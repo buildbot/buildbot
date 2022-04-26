@@ -17,6 +17,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
+from buildbot.process.results import CANCELLED
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.gitlab import HOSTED_BASE_URL
@@ -84,12 +85,21 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build done.', 'name': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
+            json={'state': 'canceled',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'ref': 'master',
+                  'description': 'Build done.', 'name': 'buildbot/Builder0'})
 
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        build['results'] = CANCELLED
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
