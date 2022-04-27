@@ -22,12 +22,6 @@ from buildbot.schedulers import timed
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
 
-try:
-    from multiprocessing import Process
-    assert Process
-except ImportError:
-    Process = None
-
 
 class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin,
                   unittest.TestCase):
