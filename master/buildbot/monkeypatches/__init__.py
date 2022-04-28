@@ -15,7 +15,6 @@
 
 import os
 import unittest
-from builtins import int
 
 from twisted.python import util
 
@@ -54,26 +53,6 @@ def patch_servicechecks():
 
 
 @onlyOnce
-def patch_mysqlclient_warnings():
-    try:
-        from _mysql_exceptions import Warning
-        # MySQLdb.compat is only present in mysqlclient
-        import MySQLdb.compat  # noqa pylint: disable=unused-import,import-outside-toplevel
-    except ImportError:
-        return
-    # workaround for https://twistedmatrix.com/trac/ticket/9005
-    # mysqlclient is easier to patch than twisted
-    # we swap _mysql_exceptions.Warning arguments so that the code is in second place
-
-    def patched_init(self, *args):
-        if isinstance(args[0], int):
-            super().__init__(f"{args[0]} {args[1]}")
-        else:
-            super().__init__(*args)
-    Warning.__init__ = patched_init
-
-
-@onlyOnce
 def patch_decorators():
     from buildbot.monkeypatches import decorators
     decorators.patch()
@@ -107,6 +86,5 @@ def patch_all(for_tests=False):
         patch_servicechecks()
         patch_testcase_timeout()
         patch_decorators()
-        patch_mysqlclient_warnings()
         patch_config_for_unit_tests()
         patch_unittest_testcase()
