@@ -66,25 +66,9 @@ def patch_config_for_unit_tests():
     set_is_in_unit_tests(True)
 
 
-@onlyOnce
-def patch_unittest_testcase():
-    from twisted.trial.unittest import TestCase
-
-    # In Python 3.2,
-    # - assertRaisesRegexp() was renamed to assertRaisesRegex(),
-    #   and assertRaisesRegexp() was deprecated.
-    # - assertRegexpMatches() was renamed to assertRegex()
-    #   and assertRegexpMatches() was deprecated.
-    if not getattr(TestCase, "assertRaisesRegex", None):
-        TestCase.assertRaisesRegex = TestCase.assertRaisesRegexp
-    if not getattr(TestCase, "assertRegex", None):
-        TestCase.assertRegex = TestCase.assertRegexpMatches
-
-
 def patch_all(for_tests=False):
     if for_tests:
         patch_servicechecks()
         patch_testcase_timeout()
         patch_decorators()
         patch_config_for_unit_tests()
-        patch_unittest_testcase()
