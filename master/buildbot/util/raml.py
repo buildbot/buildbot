@@ -16,13 +16,9 @@
 import copy
 import json
 import os
+from collections import OrderedDict
 
 import yaml
-
-try:
-    from collections import OrderedDict
-except ImportError:  # pragma: no cover
-    from ordereddict import OrderedDict
 
 
 # minimalistic raml loader. Support !include tags, and mapping as OrderedDict
