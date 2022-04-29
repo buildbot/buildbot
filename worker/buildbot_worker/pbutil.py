@@ -55,7 +55,7 @@ class AutoLoginPBFactory(PBClientFactory):
     """
 
     def __init__(  # pylint: disable=wrong-spelling-in-docstring
-        self, *args, retryPolicy=None, **kwargs
+        self, retryPolicy=None, **kwargs
     ):
         """
         @param retryPolicy: A policy configuring how long L{AutoLoginPBFactory} will
@@ -64,7 +64,7 @@ class AutoLoginPBFactory(PBClientFactory):
             attempts made in a row (L{int})) and returning the number of
             seconds to wait before making another attempt.
         """
-        super().__init__(*args, **kwargs)
+        PBClientFactory.__init__(self, **kwargs)
         self._timeoutForAttempt = backoffPolicy() if retryPolicy is None else retryPolicy
         self._failedAttempts = 0
         self._login_d = None
@@ -91,7 +91,7 @@ class AutoLoginPBFactory(PBClientFactory):
     def stopFactory(self):
         if self._login_d:
             self._login_d.cancel()
-        super().stopFactory()
+        PBClientFactory.stopFactory(self)
 
     # methods to override
 
@@ -121,7 +121,7 @@ class AutoLoginPBFactory(PBClientFactory):
         else:
             log.err(why, 'While trying to connect:')
             reactor.stop()
-            return
+            defer.returnValue(None)
 
         self._failedAttempts += 1
         delay = self._timeoutForAttempt(self._failedAttempts)
