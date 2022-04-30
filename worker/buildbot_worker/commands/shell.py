@@ -16,8 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import os
-
 from buildbot_worker import runprocess
 from buildbot_worker.commands import base
 
@@ -28,7 +26,7 @@ class WorkerShellCommand(base.Command):
 
     def start(self):
         args = self.args
-        workdir = os.path.join(self.protocol_command.basedir, args['workdir'])
+        workdir = args['workdir']
 
         c = runprocess.RunProcess(
             args['command'],

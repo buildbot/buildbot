@@ -1,10 +1,9 @@
 Master-Worker connection with MessagePack over WebSocket protocol
+=================================================================
 
 .. note::
 
     This is experimental protocol.
-
-=================================================================
 
 Messages between master and worker are sent using WebSocket protocol in both directions.
 Data to be sent conceptually is a dictionary and is encoded using MessagePack.
@@ -212,51 +211,6 @@ As a convention, there are files named 'admin' and 'host':
     Value is a string.
     It specifies the name of the host.
 
-.. _MsgPack_Request_set_builder_list:
-
-set_builder_list
-~~~~~~~~~~~~~~~~
-
-For each master’s (builder, builddir) pair worker creates a corresponding directory.
-Directories which exist on the worker and are no longer needed by master, maybe deleted.
-
-Request
-+++++++
-
-This message sets builders on which commands may be run.
-
-``seq_number``
-    Described in section :ref:`MsgPack_Request_Message` structure.
-
-``op``
-    Value is a string ``set_builder_list``.
-
-``builders``
-    Value is a list of two-item lists.
-    It represents wanted builders names.
-    Each tuple contains a builder name and its directory.
-    Builds will be run in a directory, whose path is a concatenation of worker base directory (which comes from Worker's configuration file) and the directory received from the master.
-    If the directory received from the master is an absolute path, it is used instead for running the builds.
-
-    This directory is called builder directory in the rest of documentation.
-
-Response
-++++++++
-
-``seq_number``
-    Described in section :ref:`MsgPack_Response_Message` structure.
-
-``op``
-    Value is a string ``response``.
-
-``result``
-    Value is a list which represents names of builders.
-    Otherwise – message of exception.
-
-``is_exception``
-    This key-value pair is optional.
-    If request succeeded this key-value pair is absent.
-    Otherwise, its value is a boolean ``True`` and the message of exception is specified in the value of ``result``.
 
 start_command
 ~~~~~~~~~~~~~
@@ -280,10 +234,6 @@ It allows master to track which command exactly was completed.
 
 ``seq_number``
     Described in section :ref:`MsgPack_Request_Message` structure.
-
-``builder_name``
-    Value is a string.
-    It represents the builder, which should start a command.
 
 ``command_id``
     Value is a string value that is unique per worker connection.
@@ -331,10 +281,6 @@ This message requests worker to halt the specified command.
 
 ``op``
     Value is a string ``interrupt_command``.
-
-``builder_name``
-    Value is a string.
-    It represents a name of a builder which should interrupt its command.
 
 ``command_id``
     Value is a string which identifies the command to interrupt.
@@ -742,8 +688,7 @@ Runs a ``shell`` command on the worker.
 
 ``workdir``
     Value is a string.
-    This value is joined with the builder directory string (see :ref:`MsgPack_Request_set_builder_list`) to form the path string.
-    If ``workdir`` is an absolute path, it overrides the builder directory.
+    ``workdir`` is an absolute path and overrides the builder directory.
     The resulting path represents the worker directory to run the command in.
 
 ``env``
@@ -837,7 +782,7 @@ Runs a ``shell`` command on the worker.
 
 
     If command succeeded, worker sends ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
-    It can also send many ``update`` messages with key ``header``, ``stdout`` or ```stderr` to inform about command execution.
+    It can also send many other ``update`` messages with keys ``header``, ``stdout`` or ``stderr`` to inform about command execution.
     If command failed, it sends ``rc`` value with the error number.
 
     The basic structure of worker ``update`` message is explained in section :ref:`MsgPack_Keys_And_Values_Message`.
@@ -848,13 +793,9 @@ Command_name: ``upload_file``
 
 Worker reads the contents of its file and sends them in chunks to write into the file on masters’s side.
 
-``workdir``
+``path``
     Value is a string.
-    It represents a base directory for the filename, relative to the builder's basedir.
-
-``workersrc``
-    Value is a string.
-    It represents a path to the worker-side file to read from, relative to the workdir.
+    It specifies the path of the worker file to read from.
 
 ``maxsize``
     Value is an integer.
@@ -888,13 +829,9 @@ Command_name: ``upload_directory``
 Similar to ``upload_file``.
 This command will upload an entire directory to the master, in the form of a tarball.
 
-``workdir``
+``path``
     Value is a string.
-    It represents a base directory for the filename, relative to the builder's basedir.
-
-``workersource``
-    Value is a string.
-    It represents a path to the worker-side directory to read from, relative to the workdir.
+    It specifies the path of the worker directory to upload.
 
 ``maxsize``
     Value is an integer.
@@ -922,13 +859,9 @@ Command_name: ``download_file``
 
 Downloads a file from master to worker.
 
-``workdir``
+``path``
     Value is a string.
-    It represents a base directory for the filename, relative to the builder's basedir.
-
-``workerdest``
-    Value is a string.
-    It represents a path to the worker-side file to write to, relative to the workdir.
+    It specifies the path of the worker file to create.
 
 ``maxsize``
     Value is an integer.
@@ -975,11 +908,9 @@ Command_name: ``listdir``
 
 This command reads the directory and returns the list with directory contents.
 
-``dir``
+``path``
     Value is a string.
-    Specifies the directory relative to the builder’s basedir.
-
-    Worker creates the path to list by joining base directory and the given value.
+    It specifies the path of a directory to list.
 
     If command succeeded, the list containing the names of the entries in the directory given by that path is sent via ``update`` message in ``args`` key ``files``.
     Worker will also send ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
@@ -993,11 +924,9 @@ Command_name: ``mkdir``
 This command will create a directory on the worker.
 It will also create any intervening directories required.
 
-``dir``
-    Value is a string.
-    Specifies the directory relative to the builder’s basedir.
-
-    Worker creates the path to directory by joining the base directory and given value.
+``paths``
+    Value is a list of strings.
+    It specifies absolute paths of directories to create.
 
     If command succeeded, worker will send ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
 
@@ -1009,11 +938,11 @@ It will also create any intervening directories required.
 Command_name ``rmdir``
 ~~~~~~~~~~~~~~~~~~~~~~
 
-This command will remove a directory or file on the worker.
+This command will remove directories or files on the worker.
 
-``dir``
-    Value is a string or a list of strings.
-    It represents a name of a directory or directories to be removed.
+``paths``
+    Value is a list of strings.
+    It specifies absolute paths of directories or files to remove.
 
 ``logEnviron``
     Value is a bool and is optional.
@@ -1045,13 +974,13 @@ Command_name: ``cpdir``
 
 This command copies a directory from one place in the worker to another.
 
-``fromdir``
+``from_path``
     Value is a string.
-    Source directory for the copy operation, relative to the builder’s basedir.
+    It specifies the absolute path to the source directory for the copy operation.
 
-``todir``
+``to_path``
     Value is a string.
-    Destination directory for the copy operation, relative to the builder’s basedir.
+    It specifies the absolute path to the destination directory for the copy operation.
 
 ``logEnviron``
     Value is a bool.
@@ -1080,11 +1009,10 @@ Command_name: ``stat``
 ~~~~~~~~~~~~~~~~~~~~~~
 
 This command returns status information about workers file or directory.
-Path of that file or directory is constructed by joining the Builder base directory and path in ``file`` value.
 
-``file``
+``path``
     Value is a string.
-    It represents the filename relative to the Builder’s basedir to get the status of.
+    It specifies the path of a file or directory to get the status of.
 
 If command succeeded, status information is sent to the master in an ``update`` message, where ``args`` has a key ``stat`` with a value of a tuple of these 10 elements:
 
@@ -1124,14 +1052,15 @@ Command_name: ``glob``
 
     Worker sends to the master a possibly-empty list of path names that match shell-style path specification.
 
-    Path of the file is constructed by joining the Builder base directory and path in ``path`` value.
-    Pathname can be absolute or relative with or without shell-style wildcards.
-
 ``path``
     Value is a string.
-    It represents a shell-style path specification of a pattern.
+    It specifies a shell-style path pattern.
+    Path pattern can contain shell-style wildcards and must represent an absolute path.
 
     If command succeeded, the result is sent to the master in an ``update`` message, where ``args`` has a key ``file`` with the value of that possibly-empty path list.
+    This path list may contain broken symlinks as in the shell.
+    It is not specified whether path list is sorted.
+
     Worker also sends ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
 
     Otherwise, worker sends ``update`` message with dictionary ``args`` key ``header`` with information about the error that occurred and another ``update`` message with dictionary ``args`` key ``rc`` with the error number.
@@ -1146,8 +1075,7 @@ This command removes the specified file.
 
 ``path``
     Value is a string.
-    It represents the file path relative to the builder’s basedir.
-    Worker removes (deletes) the file ``path``.
+    It specifies a path of a file to delete.
 
     If command succeeded, worker sends ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
 

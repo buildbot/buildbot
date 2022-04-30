@@ -59,12 +59,10 @@ def remote_print(self, message):
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):
-    def __init__(self, unicode_encoding, basedir, builder_is_running,
-                 on_command_complete,
-                 protocol, command_id, command, args):
-        ProtocolCommandBase.__init__(self, unicode_encoding, basedir, builder_is_running,
-                                     on_command_complete, None,
-                                     command, command_id, args)
+    def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
+                 on_command_complete, protocol, command_id, command, args):
+        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
+                                     on_command_complete, None, command, command_id, args)
         self.protocol = protocol
         self.command_id = command_id
 
@@ -82,9 +80,9 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
                 args["want_stderr"] = 0
 
         # to silence the ValueError in class Command() init
-        if (command in ("uploadDirectory", "uploadFile")) and 'writer' not in args:
+        if (command in ("upload_directory", "upload_file")) and 'writer' not in args:
             args['writer'] = None
-        if command == "downloadFile" and 'reader' not in args:
+        if command == "download_file" and 'reader' not in args:
             args['reader'] = None
 
     # Returns a Deferred
@@ -224,25 +222,12 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_set_builder_list(self, msg):
-        is_exception = False
-        try:
-            self.contains_msg_key(msg, ('builders',))
-            result = yield self.factory.buildbot_bot.remote_setBuilderList(msg["builders"])
-        except Exception as e:
-            is_exception = True
-            result = str(e)
-
-        self.send_response_msg(msg, result, is_exception)
-
-    @defer.inlineCallbacks
     def call_start_command(self, msg):
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('builder_name', 'command_id', 'command_name', 'args'))
-            builder_name = msg['builder_name']
+            self.contains_msg_key(msg, ('command_id', 'command_name', 'args'))
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.start_command(builder_name, self, msg['command_id'],
+            yield self.factory.buildbot_bot.start_command(self, msg['command_id'],
                                                           msg['command_name'], msg['args'])
             result = None
         except Exception as e:
@@ -267,10 +252,9 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     def call_interrupt_command(self, msg):
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('builder_name', 'command_id', 'why'))
-            builder_name = msg['builder_name']
+            self.contains_msg_key(msg, ('command_id', 'why'))
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.interrupt_command(builder_name, msg['why'])
+            yield self.factory.buildbot_bot.interrupt_command(msg['command_id'], msg['why'])
             result = None
         except Exception as e:
             is_exception = True
@@ -307,8 +291,6 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             self._deferwaiter.add(self.call_keepalive(msg))
         elif msg['op'] == "get_worker_info":
             self._deferwaiter.add(self.call_get_worker_info(msg))
-        elif msg['op'] == "set_builder_list":
-            self._deferwaiter.add(self.call_set_builder_list(msg))
         elif msg['op'] == "start_command":
             self._deferwaiter.add(self.call_start_command(msg))
         elif msg['op'] == "shutdown":

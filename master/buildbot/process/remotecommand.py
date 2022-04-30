@@ -78,6 +78,17 @@ class RemoteCommand(base.RemoteCommandImpl):
     def __repr__(self):
         return f"<RemoteCommand '{self.remote_command}' at {id(self)}>"
 
+    @classmethod
+    def generate_new_command_id(cls):
+        cmd_id = cls._commandCounter
+        cls._commandCounter += 1
+        return f"{cmd_id}"
+
+    @classmethod
+    def get_last_generated_command_id(cls):
+        cmd_id = cls._commandCounter - 1
+        return f"{cmd_id}"
+
     def run(self, step, conn, builder_name):
         self.active = True
         self.step = step
@@ -87,10 +98,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         # This probably could be solved in a cleaner way.
         self._is_conn_test_fake = hasattr(self.conn, 'is_fake_test_connection')
 
-        # generate a new command id
-        cmd_id = RemoteCommand._commandCounter
-        RemoteCommand._commandCounter += 1
-        self.commandID = f"{cmd_id}"
+        self.commandID = RemoteCommand.generate_new_command_id()
 
         log.msg(f"{self}: RemoteCommand.run [{self.commandID}]")
         self.deferred = defer.Deferred()

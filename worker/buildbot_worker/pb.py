@@ -54,16 +54,68 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandPb(ProtocolCommandBase):
-    def __init__(self, unicode_encoding, basedir, builder_is_running,
-                 on_command_complete, on_lost_remote_step,
-                 command, stepId, args, command_ref):
-        ProtocolCommandBase.__init__(self, unicode_encoding, basedir, builder_is_running,
+    def __init__(self, unicode_encoding, worker_basedir, basedir, builder_is_running,
+                 on_command_complete, on_lost_remote_step, command, stepId, args, command_ref):
+        self.basedir = basedir
+        self.command_ref = command_ref
+        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
                                      on_command_complete, on_lost_remote_step,
                                      command, stepId, args)
-        self.command_ref = command_ref
 
     def protocol_args_setup(self, command, args):
-        pass
+        if command == "mkdir":
+            args['paths'] = [os.path.join(self.basedir, args['dir'])]
+            del args['dir']
+
+        if command == "rmdir":
+            args['paths'] = []
+            if isinstance(args['dir'], list):
+                args['paths'] = [os.path.join(self.basedir, dir)
+                                 for dir in args['dir']]
+            else:
+                args['paths'] = [os.path.join(self.basedir, args['dir'])]
+            del args['dir']
+
+        if command == "cpdir":
+            args['from_path'] = os.path.join(self.basedir, args['fromdir'])
+            args['from_path'] = os.path.join(self.basedir, args['todir'])
+            del args['fromdir']
+            del args['todir']
+
+        if command == "stat":
+            args['path'] = os.path.join(self.basedir, args.get('workdir', ''), args['file'])
+            del args['file']
+
+        if command == "glob":
+            args['path'] = os.path.join(self.basedir, args['path'])
+
+        if command == "listdir":
+            args['path'] = os.path.join(self.basedir, args['dir'])
+            del args['dir']
+
+        if command == "rmfile":
+            args['path'] = os.path.join(self.basedir, args['path'])
+
+        if command == "shell":
+            args['workdir'] = os.path.join(self.basedir, args['workdir'])
+
+        if command == "uploadFile":
+            args["path"] = os.path.join(self.basedir, args['workdir'],
+                                        os.path.expanduser(args['workersrc']))
+            del args['workdir']
+            del args['workersrc']
+
+        if command == "uploadDirectory":
+            args['path'] = os.path.join(self.basedir, args['workdir'],
+                                        os.path.expanduser(args['workersrc']))
+            del args['workdir']
+            del args['workersrc']
+
+        if command == "downloadFile":
+            args['path'] = os.path.join(self.basedir, args['workdir'],
+                                        os.path.expanduser(args['workerdest']))
+            del args['workdir']
+            del args['workerdest']
 
     # Returns a Deferred
     def protocol_update(self, updates):
@@ -202,8 +254,9 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         def on_command_complete():
             self.protocol_command = None
 
-        self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.basedir,
-                                                     self.running, on_command_complete,
+        self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.bot.basedir,
+                                                     self.basedir, self.running,
+                                                     on_command_complete,
                                                      self.lostRemoteStep, command, stepId, args,
                                                      command_ref)
 
@@ -303,25 +356,25 @@ if sys.version_info.major >= 3:
         def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
             BotBase.__init__(self, basedir, unicode_encoding=unicode_encoding,
                              delete_leftover_dirs=delete_leftover_dirs)
-            self.builder_basedirs = {}
-            self.builder_protocol_command = {}
+            self.protocol_commands = {}
 
         @defer.inlineCallbacks
         def startService(self):
             yield BotBase.startService(self)
-            for name in self.builder_protocol_command:
-                protocol_command = self.builder_protocol_command[name]
-                if protocol_command:
-                    protocol_command.builder_is_running = True
 
         @defer.inlineCallbacks
         def stopService(self):
             yield BotBase.stopService(self)
-            for name in self.builder_protocol_command:
-                protocol_command = self.builder_protocol_command[name]
-                if protocol_command:
-                    protocol_command.builder_is_running = False
-                self.stop_command(name)
+
+            # Make any currently-running command die, with no further status
+            # output. This is used when the worker is shutting down or the
+            # connection to the master has been lost.
+            for protocol_command in self.protocol_commands:
+                protocol_command.builder_is_running = False
+                log.msg("stopCommand: halting current command {0}".format(
+                        protocol_command.command))
+                protocol_command.command.doInterrupt()
+            self.protocol_commands = {}
 
         def calculate_basedir(self, builddir):
             return os.path.join(bytes2unicode(self.basedir), bytes2unicode(builddir))
@@ -330,60 +383,7 @@ if sys.version_info.major >= 3:
             if not os.path.isdir(basedir):
                 os.makedirs(basedir)
 
-        def remote_setBuilderList(self, wanted):
-            retval = []
-            wanted_names = {name for (name, builddir) in wanted}
-            wanted_dirs = {builddir for (name, builddir) in wanted}
-            wanted_dirs.add('info')
-            for (name, builddir) in wanted:
-                old_basedir = self.builder_basedirs.get(name, None)
-                basedir = self.calculate_basedir(builddir)
-                if old_basedir:
-                    if old_basedir != basedir:
-                        log.msg("changing builddir for builder {0} from {1} to {2}".format(
-                                name, old_basedir, basedir))
-                        self.create_dirs(basedir)
-                        self.builder_basedirs[name] = basedir
-                else:
-                    self.builder_protocol_command[name] = None
-
-                    self.create_dirs(basedir)
-                    self.builder_basedirs[name] = basedir
-
-                retval.append(name)
-
-            to_remove = list(set(self.builder_protocol_command.keys()) - wanted_names)
-            if self.running:
-                for name in to_remove:
-                    if self.builder_protocol_command[name]:
-                        self.builder_protocol_command[name].builder_is_running = False
-                    self.stop_command(name)
-
-            # and *then* remove them from the builder list
-            for name in to_remove:
-                del self.builder_protocol_command[name]
-                del self.builder_basedirs[name]
-
-            # finally warn about any leftover dirs
-            for dir in os.listdir(self.basedir):
-                if os.path.isdir(os.path.join(self.basedir, dir)):
-                    if dir not in wanted_dirs:
-                        if self.delete_leftover_dirs:
-                            log.msg("Deleting directory '{0}' that is not being "
-                                    "used by the buildmaster".format(dir))
-                            try:
-                                shutil.rmtree(dir)
-                            except OSError as e:
-                                log.msg("Cannot remove directory '{0}': "
-                                        "{1}".format(dir, e))
-                        else:
-                            log.msg("I have a leftover directory '{0}' that is not "
-                                    "being used by the buildmaster: you can delete "
-                                    "it now".format(dir))
-
-            return retval
-
-        def start_command(self, builder_name, protocol, command_id, command, args):
+        def start_command(self, protocol, command_id, command, args):
             """
             This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
             part of various master-side BuildSteps, to start various commands
@@ -394,19 +394,14 @@ if sys.version_info.major >= 3:
             command = decode(command)
             args = decode(args)
 
-            if self.builder_protocol_command[builder_name]:
-                log.msg("leftover command, dropping it")
-                self.stop_command(builder_name)
-
             def on_command_complete():
-                self.builder_protocol_command[builder_name] = None
+                del self.protocol_commands[command_id]
 
-            protocol_command = ProtocolCommandMsgpack(self.unicode_encoding,
-                                                      self.builder_basedirs[builder_name],
+            protocol_command = ProtocolCommandMsgpack(self.unicode_encoding, self.basedir,
                                                       self.running, on_command_complete,
                                                       protocol, command_id, command, args)
 
-            self.builder_protocol_command[builder_name] = protocol_command
+            self.protocol_commands[command_id] = protocol_command
 
             log.msg(u" startCommand:{0} [id {1}]".format(command, command_id))
             protocol_command.protocol_notify_on_disconnect()
@@ -415,28 +410,16 @@ if sys.version_info.major >= 3:
             d.addBoth(protocol_command.command_complete)
             return None
 
-        def interrupt_command(self, builder_name, why):
+        def interrupt_command(self, command_id, why):
             """Halt the current step."""
             log.msg("asked to interrupt current command: {0}".format(why))
 
-            if not self.builder_protocol_command[builder_name]:
+            if command_id not in self.protocol_commands:
                 # TODO: just log it, a race could result in their interrupting a
                 # command that wasn't actually running
                 log.msg(" .. but none was running")
                 return
-            self.builder_protocol_command[builder_name].command.doInterrupt()
-
-        def stop_command(self, builder_name):
-            """Make any currently-running command die, with no further status
-            output. This is used when the worker is shutting down or the
-            connection to the master has been lost. Interrupt the command,
-            silence it, and then forget about it."""
-            if not self.builder_protocol_command[builder_name]:
-                return
-            log.msg("stopCommand: halting current command {0}".format(
-                    self.builder_protocol_command[builder_name].command))
-            self.builder_protocol_command[builder_name].command.doInterrupt()
-            self.builder_protocol_command[builder_name] = None
+            self.protocol_commands[command_id].command.doInterrupt()
 
 
 class BotFactory(AutoLoginPBFactory):
@@ -572,7 +555,7 @@ class Worker(WorkerBase):
 
         if protocol == 'pb':
             bot_class = BotPb
-        elif protocol == 'msgpack_experimental_v2':
+        elif protocol == 'msgpack_experimental_v3':
             if sys.version_info.major < 3:
                 raise NotImplementedError('Msgpack protocol is not supported in Python2')
             bot_class = BotMsgpack
@@ -603,7 +586,7 @@ class Worker(WorkerBase):
         if protocol == 'pb':
             bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
             bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
-        elif protocol == 'msgpack_experimental_v2':
+        elif protocol == 'msgpack_experimental_v3':
             if connection_string is None:
                 ws_conn_string = "ws://{}:{}".format(buildmaster_host, port)
             else:

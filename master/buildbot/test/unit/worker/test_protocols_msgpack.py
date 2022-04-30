@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+import stat
+
 from parameterized import parameterized
 
 import mock
@@ -20,6 +23,7 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.process import remotecommand
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import protocols as util_protocols
@@ -93,6 +97,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self)
         self.protocol = mock.Mock()
         self.worker = mock.Mock()
+        self.worker.workername = 'test_worker'
         self.conn = msgpack.Connection(self.master, self.worker, self.protocol)
 
     def test_constructor(self):
@@ -173,23 +178,156 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_remote_get_worker_info(self):
-        self.protocol.get_message_result.return_value = defer.succeed('test')
+        self.protocol.get_message_result.return_value = defer.succeed({'system': 'posix'})
         result = yield self.conn.remoteGetWorkerInfo()
 
         self.protocol.get_message_result.assert_called_once_with({'op': 'get_worker_info'})
-        self.assertEqual(result, 'test')
+        self.assertEqual(result, {'system': 'posix'})
+
+    def set_up_set_builder_list(self, builders, delete_leftover_dirs=True):
+        self.protocol.command_id_to_command_map = {}
+
+        self.protocol.get_message_result.return_value = defer.succeed(None)
+        self.conn.info = {'basedir': 'testdir'}
+        self.conn.info['delete_leftover_dirs'] = delete_leftover_dirs
+        self.conn.path_module = os.path
+        d = self.conn.remoteSetBuilderList(builders)
+        return d
+
+    def check_message_send_response(self, command_name, args, update_msg):
+        command_id = remotecommand.RemoteCommand.get_last_generated_command_id()
+        self.protocol.get_message_result.assert_called_once_with({'op': 'start_command',
+                                                                  'command_id': command_id,
+                                                                  'command_name': command_name,
+                                                                  'args': args})
+        self.protocol.get_message_result.reset_mock()
+
+        remote_command = self.protocol.command_id_to_command_map[command_id]
+        remote_command.remote_update(update_msg)
+        remote_command.remote_complete(None)
 
     @defer.inlineCallbacks
-    def test_remote_set_builder_list(self):
-        builders = ['builder1', 'builder2']
-        self.protocol.get_message_result.return_value = defer.succeed(builders)
+    def test_remote_set_builder_list_no_rmdir(self):
+        d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
 
-        r = yield self.conn.remoteSetBuilderList(builders)
+        self.check_message_send_response('listdir', {'path': 'testdir'},
+                                         [[{'files': ['dir1', 'dir2', 'dir3'], 'rc': 0}, 0]])
 
-        self.assertEqual(r, builders)
-        self.assertEqual(self.conn.builders, builders)
-        self.protocol.get_message_result.assert_called_once_with({'op': 'set_builder_list',
-                                                                  'builders': builders})
+        path = os.path.join('testdir', 'dir1')
+        self.check_message_send_response('stat', {'path': path}, [[{'stat': (1,), 'rc': 0}, 0]])
+
+        path = os.path.join('testdir', 'dir2')
+        self.check_message_send_response('stat', {'path': path}, [[{'stat': (1,), 'rc': 0}, 0]])
+
+        path = os.path.join('testdir', 'dir3')
+        self.check_message_send_response('stat', {'path': path}, [[{'stat': (1,), 'rc': 0}, 0]])
+
+        paths = [os.path.join('testdir', 'info'), os.path.join('testdir', 'test_dir1'),
+                 os.path.join('testdir', 'test_dir2')]
+        self.check_message_send_response('mkdir', {'paths': paths}, [[{'rc': 0}, 0]])
+
+        r = yield d
+        self.assertEqual(r, ['builder1', 'builder2'])
+        self.protocol.get_message_result.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_remote_set_builder_list_do_rmdir(self):
+        d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
+
+        self.check_message_send_response('listdir', {'path': 'testdir'},
+                                         [[{'files': ['dir1', 'dir2', 'dir3'], 'rc': 0}, 0]])
+
+        path = os.path.join('testdir', 'dir1')
+        self.check_message_send_response('stat', {'path': path},
+                                         [[{'stat': (stat.S_IFDIR,), 'rc': 0}, 0]])
+
+        path = os.path.join('testdir', 'dir2')
+        self.check_message_send_response('stat', {'path': path},
+                                         [[{'stat': (stat.S_IFDIR,), 'rc': 0}, 0]])
+
+        path = os.path.join('testdir', 'dir3')
+        self.check_message_send_response('stat', {'path': path},
+                                         [[{'stat': (stat.S_IFDIR,), 'rc': 0}, 0]])
+
+        paths = [os.path.join('testdir', 'dir1'), os.path.join('testdir', 'dir2'),
+                 os.path.join('testdir', 'dir3')]
+        self.check_message_send_response('rmdir', {'paths': paths}, [[{'rc': 0}, 0]])
+
+        paths = [os.path.join('testdir', 'info'), os.path.join('testdir', 'test_dir1'),
+                 os.path.join('testdir', 'test_dir2')]
+        self.check_message_send_response('mkdir', {'paths': paths}, [[{'rc': 0}, 0]])
+
+        r = yield d
+        self.assertEqual(r, ['builder1', 'builder2'])
+        self.protocol.get_message_result.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_remote_set_builder_list_no_rmdir_leave_leftover_dirs(self):
+        d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')],
+                                         delete_leftover_dirs=False)
+
+        self.check_message_send_response('listdir', {'path': 'testdir'},
+                                         [[{'files': ['dir1', 'dir2', 'dir3'], 'rc': 0}, 0]])
+
+        paths = [os.path.join('testdir', 'info'), os.path.join('testdir', 'test_dir1'),
+                 os.path.join('testdir', 'test_dir2')]
+        self.check_message_send_response('mkdir', {'paths': paths}, [[{'rc': 0}, 0]])
+
+        r = yield d
+        self.assertEqual(r, ['builder1', 'builder2'])
+        self.protocol.get_message_result.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_remote_set_builder_list_no_mkdir_from_files(self):
+        d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
+
+        self.check_message_send_response('listdir', {'path': 'testdir'},
+                                         [[{'files': ['dir1', 'test_dir2'], 'rc': 0}, 0]])
+
+        path = os.path.join('testdir', 'dir1')
+        self.check_message_send_response('stat', {'path': path}, [[{'stat': (1,), 'rc': 0}, 0]])
+
+        paths = [os.path.join('testdir', 'info'), os.path.join('testdir', 'test_dir1')]
+        self.check_message_send_response('mkdir', {'paths': paths}, [[{'rc': 0}, 0]])
+
+        r = yield d
+        self.assertEqual(r, ['builder1', 'builder2'])
+        self.protocol.get_message_result.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_remote_set_builder_list_no_mkdir(self):
+        d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
+
+        self.check_message_send_response('listdir', {'path': 'testdir'},
+                                         [[{'files': ['test_dir1', 'test_dir2', 'info'], 'rc': 0},
+                                          0]])
+
+        r = yield d
+        self.assertEqual(r, ['builder1', 'builder2'])
+        self.protocol.get_message_result.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_remote_set_builder_list_key_is_missing(self):
+        d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
+
+        self.check_message_send_response('listdir', {'path': 'testdir'},
+                                         [[{'no_key': [], 'rc': 0}, 0]])
+
+        with self.assertRaisesRegex(Exception, "Key 'files' is missing."):
+            yield d
+
+        self.protocol.get_message_result.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_remote_set_builder_list_key_rc_not_zero(self):
+        d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
+
+        self.check_message_send_response('listdir', {'path': 'testdir'}, [[{'rc': 123}, 0]])
+
+        with self.assertRaisesRegex(Exception, "Error number: 123"):
+            yield d
+
+        self.protocol.get_message_result.assert_not_called()
 
     @parameterized.expand([
         ('want_stdout', 0, False),
@@ -217,10 +355,10 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(result_command_id_to_command_map, self.protocol.command_id_to_command_map)
         self.protocol.get_message_result.assert_called_with({'op': 'start_command',
-                                                            'builder_name': 'builder',
-                                                            'command_id': 1,
-                                                            'command_name': 'command',
-                                                            'args': expected_args})
+                                                             'builder_name': 'builder',
+                                                             'command_id': 1,
+                                                             'command_name': 'command',
+                                                             'args': expected_args})
 
     @defer.inlineCallbacks
     def test_remote_shutdown(self):

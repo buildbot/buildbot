@@ -37,11 +37,10 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandBase:
-    def __init__(self, unicode_encoding, basedir, builder_is_running,
-                 on_command_complete, on_lost_remote_step,
-                 command, command_id, args):
+    def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
+                 on_command_complete, on_lost_remote_step, command, command_id, args):
         self.unicode_encoding = unicode_encoding
-        self.basedir = basedir
+        self.worker_basedir = worker_basedir
         self.builder_is_running = builder_is_running
         self.on_command_complete = on_command_complete
         self.on_lost_remote_step = on_lost_remote_step
@@ -196,6 +195,7 @@ class BotBase(service.MultiService):
 
         files['version'] = self.remote_getVersion()
         files['worker_commands'] = self.remote_getCommands()
+        files['delete_leftover_dirs'] = self.delete_leftover_dirs
         return files
 
     def remote_getVersion(self):

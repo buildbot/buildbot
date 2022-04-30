@@ -24,9 +24,10 @@ from buildbot_worker.base import ProtocolCommandBase
 class FakeProtocolCommand(ProtocolCommandBase):
     debug = False
 
-    def __init__(self, basedir="/workerbuilder/basedir"):
+    def __init__(self, basedir):
         self.unicode_encoding = 'utf-8'
         self.updates = []
+        self.worker_basedir = basedir
         self.basedir = basedir
 
     def show(self):
