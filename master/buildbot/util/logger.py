@@ -14,24 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-try:
-    from twisted.logger import Logger
-except ImportError:
-    from twisted.python import log
+from twisted.logger import Logger
 
-    class Logger:
-        """A simplistic backporting of the new logger system for old versions of twisted"""
-        def _log(self, format, *args, **kwargs):
-            log.msg(format.format(args, **kwargs))
-
-        # legacy logging system do not support log level.
-        # We don't bother inventing something. If needed, user can upgrade
-        debug = _log
-        info = _log
-        warn = _log
-        error = _log
-        critical = _log
-
-        def failure(self, format, failure, *args, **kwargs):
-            log.error(failure, format.format(args, **kwargs))
 __all__ = ["Logger"]
