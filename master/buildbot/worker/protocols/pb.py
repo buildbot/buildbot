@@ -290,3 +290,7 @@ class Connection(base.Connection, pb.Avatar):
     def perspective_shutdown(self):
         self.worker.messageReceivedFromWorker()
         self.worker.shutdownRequested()
+
+    def get_peer(self):
+        p = self.mind.broker.transport.getPeer()
+        return f"{p.host}:{p.port}"

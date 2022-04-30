@@ -415,7 +415,10 @@ class AbstractWorker(service.BuildbotService):
     def attached(self, conn):
         """This is called when the worker connects."""
 
-        assert self.conn is None
+        if self.conn is not None:
+            raise AssertionError(
+                f"{self.name}: {conn.get_peer()} connecting, "
+                f"but we are already connected to: {self.conn.get_peer()}")
 
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", 1)
 

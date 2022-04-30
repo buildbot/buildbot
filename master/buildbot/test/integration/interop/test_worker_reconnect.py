@@ -26,6 +26,7 @@ class DisconnectingStep(BuildStep):
 
     def run(self):
         self.disconnection_list.append(self)
+        assert self.worker.conn.get_peer().startswith("127.0.0.1:")
         if len(self.disconnection_list) < 2:
             self.worker.disconnect()
         return SUCCESS
