@@ -22,6 +22,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.builder import Builder
+from buildbot.process.results import CANCELLED
 from buildbot.reporters.generators.buildrequest import BuildRequestGenerator
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -135,6 +136,28 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
             'subject': 'start subject',
             'type': 'plain',
             'results': None,
+            'builds': [build],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_generate_cancel(self):
+        self.maxDiff = None
+        g = yield self.setup_generator(add_patch=True)
+        buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
+        build = yield g.partial_build_dict(self.master, buildrequest)
+        report = yield g.generate(self.master, None, ('buildrequests', 11, 'cancel'), buildrequest)
+
+        build['complete'] = True
+        build['results'] = CANCELLED
+
+        self.assertEqual(report, {
+            'body': 'start body',
+            'subject': 'start subject',
+            'type': 'plain',
+            'results': CANCELLED,
             'builds': [build],
             'users': [],
             'patches': [],

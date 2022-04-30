@@ -95,7 +95,7 @@ class GitLabStatusPush(ReporterBase):
         :param branch: Branch name to create the status for.
         :param sha: Full sha to create the status for.
         :param state: one of the following 'pending', 'success', 'failed'
-                      or 'cancelled'.
+                      or 'canceled'.
         :param target_url: Target url to associate with this status.
         :param description: Short description of the status.
         :param context: Context of the result
@@ -155,10 +155,12 @@ class GitLabStatusPush(ReporterBase):
                 SKIPPED: 'success',
                 EXCEPTION: 'failed',
                 RETRY: 'pending',
-                CANCELLED: 'cancelled'
+                CANCELLED: 'canceled'
             }.get(build['results'], 'failed')
-        else:
+        elif build.get('started_at'):
             state = 'running'
+        else:
+            state = 'pending'
 
         context = yield props.render(self.context)
 

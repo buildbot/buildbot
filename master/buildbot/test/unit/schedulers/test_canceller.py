@@ -381,6 +381,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
                 expected_productions.append(
                     (('control', 'buildrequests', str(id), 'cancel'),
                      {'reason': 'Build request has been obsoleted by a newer commit'}))
+            elif kind == 'buildrequests':
+                brdict = yield self.master.db.buildrequests.getBuildRequest(id)
+                expected_productions.append((('buildrequests', str(id), 'cancel'), brdict))
             else:
                 raise Exception(f"Unknown cancellation type {kind}")
 

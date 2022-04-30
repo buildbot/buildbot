@@ -20,6 +20,7 @@ from buildbot import interfaces
 from buildbot.process.build import Build
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.process.properties import Properties
+from buildbot.process.results import CANCELLED
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatterRenderable
 
@@ -30,7 +31,8 @@ from .utils import BuildStatusGeneratorMixin
 class BuildRequestGenerator(BuildStatusGeneratorMixin):
 
     wanted_event_keys = [
-        ('buildrequests', None, 'new')
+        ('buildrequests', None, 'new'),
+        ('buildrequests', None, 'cancel')
     ]
 
     compare_attrs = ['formatter']
@@ -62,6 +64,10 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     @defer.inlineCallbacks
     def generate(self, master, reporter, key, buildrequest):
         build = yield self.partial_build_dict(master, buildrequest)
+        _, _, event = key
+        if event == 'cancel':
+            build['complete'] = True
+            build['results'] = CANCELLED
 
         if not self.is_message_needed_by_props(build):
             return None
