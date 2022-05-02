@@ -4,4 +4,4 @@ sphinx-rtd-theme==0.5.2
 sphinxcontrib-spelling==7.2.1
 sphinxcontrib-websupport==1.2.4
 Pygments==2.9.0
-towncrier==21.3.0
+towncrier==21.9.0
