@@ -47,7 +47,7 @@ parameterized==0.8.1
 pathlib2==2.3.7.post1
 pbr==5.8.1
 pep8==1.7.1
-Pillow==9.0.1
+Pillow==9.1.0
 psutil==5.9.0
 pyaml==20.4.0
 ruamel.yaml==0.17.16
