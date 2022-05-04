@@ -21,12 +21,12 @@ import time
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.error import ProcessExitedAlready
+from twisted.logger import Logger
 from twisted.python.failure import Failure
 
 from buildbot import config
 from buildbot.util import asyncSleep
 from buildbot.util.httpclientservice import HTTPClientService
-from buildbot.util.logger import Logger
 from buildbot.util.protocol import LineProcessProtocol
 from buildbot.util.service import BuildbotService
 

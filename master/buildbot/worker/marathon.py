@@ -15,12 +15,12 @@
 
 
 from twisted.internet import defer
+from twisted.logger import Logger
 
 from buildbot import util
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util.httpclientservice import HTTPClientService
 from buildbot.util.latent import CompatibleLatentWorkerMixin
-from buildbot.util.logger import Logger
 from buildbot.worker.docker import DockerBaseWorker
 
 log = Logger()

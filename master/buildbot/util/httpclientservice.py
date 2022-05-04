@@ -17,6 +17,7 @@ import json as jsonmodule
 import textwrap
 
 from twisted.internet import defer
+from twisted.logger import Logger
 from twisted.web.client import Agent
 from twisted.web.client import HTTPConnectionPool
 from zope.interface import implementer
@@ -26,7 +27,6 @@ from buildbot.interfaces import IHttpResponse
 from buildbot.util import service
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
-from buildbot.util.logger import Logger
 
 try:
     import txrequests
