@@ -305,7 +305,7 @@ class Git(Source, GitStepMixin):
         return self.workdir
 
     @defer.inlineCallbacks
-    def _fetch(self, _):
+    def _fetch(self, _, abandonOnFailure=True):
         fetch_required = True
 
         # If the revision already exists in the repo, we don't need to fetch.
@@ -327,15 +327,16 @@ class Git(Source, GitStepMixin):
                 else:
                     log.msg("Git versions < 1.7.2 don't support progress")
 
-            yield self._dovccmd(command)
+            res = yield self._dovccmd(command, abandonOnFailure=abandonOnFailure)
+            if res != RC_SUCCESS:
+                return res
 
         if self.revision:
             rev = self.revision
         else:
             rev = 'FETCH_HEAD'
         command = ['checkout', '-f', rev]
-        abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
-        res = yield self._dovccmd(command, abandonOnFailure)
+        res = yield self._dovccmd(command, abandonOnFailure=abandonOnFailure)
 
         # Rename the branch if needed.
         if res == RC_SUCCESS and self.branch != 'HEAD':
@@ -350,7 +351,10 @@ class Git(Source, GitStepMixin):
         Handles fallbacks for failure of fetch,
         wrapper for self._fetch
         """
-        res = yield self._fetch(None)
+
+        abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
+
+        res = yield self._fetch(None, abandonOnFailure=abandonOnFailure)
         if res == RC_SUCCESS:
             return res
         elif self.retryFetch:
