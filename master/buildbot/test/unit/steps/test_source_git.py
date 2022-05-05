@@ -3228,6 +3228,206 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl="http://github.com/buildbot/buildbot.git",
                            mode='full', method='unknown')
 
+    def test_mode_full_copy_recursive(self):
+        self.setup_step(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='copy', submodules='True'))
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            .stdout('git version 1.7.5')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200),
+            ExpectListdir(dir='source')
+            .files(['.git'])
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'fetch', '-f', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD', '--progress'])
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
+            .exit(0),
+
+            ExpectShell(workdir='source',
+                        command=['git', 'submodule', 'sync'])
+            .exit(0),
+
+            ExpectShell(workdir='source',
+                        command=['git', 'submodule', 'update', '--init', '--recursive'])
+            .exit(0),
+
+            ExpectCpdir(fromdir='source', todir='wkdir', log_environ=True, timeout=1200)
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.run_step()
+
+
+    def test_mode_full_copy_recursive_fetch_fail(self):
+        self.setup_step(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='copy', submodules='True'))
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            .stdout('git version 1.7.5')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200),
+            ExpectListdir(dir='source')
+            .files(['.git'])
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'fetch', '-f', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD', '--progress'])
+            .exit(1)
+        )
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
+
+    def test_mode_full_copy_recursive_fetch_fail_retry_fail(self):
+        self.setup_step(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='copy', submodules='True', retryFetch=True))
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            .stdout('git version 1.7.5')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200),
+            ExpectListdir(dir='source')
+            .files(['.git'])
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'fetch', '-f', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD', '--progress'])
+            .exit(1),
+            ExpectShell(workdir='source',
+                        command=['git', 'fetch', '-f', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD', '--progress'])
+            .exit(1)
+        )
+        self.expect_outcome(result=FAILURE)
+        return self.run_step()
+
+    def test_mode_full_copy_recursive_fetch_fail_retry_succeed(self):
+        self.setup_step(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='copy', submodules='True', retryFetch=True))
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            .stdout('git version 1.7.5')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200),
+            ExpectListdir(dir='source')
+            .files(['.git'])
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'fetch', '-f', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD', '--progress'])
+            .exit(1),
+            # retry Fetch
+            ExpectShell(workdir='source',
+                        command=['git', 'fetch', '-f', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD', '--progress'])
+            .exit(0),
+            # continue as normal
+            ExpectShell(workdir='source',
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
+            .exit(0),
+
+            ExpectShell(workdir='source',
+                        command=['git', 'submodule', 'sync'])
+            .exit(0),
+
+            ExpectShell(workdir='source',
+                        command=['git', 'submodule', 'update', '--init', '--recursive'])
+            .exit(0),
+
+            ExpectCpdir(fromdir='source', todir='wkdir', log_environ=True, timeout=1200)
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_mode_full_copy_recursive_fetch_fail_clobberOnFailure(self):
+        self.setup_step(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='copy', submodules='True', clobberOnFailure=True))
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            .stdout('git version 1.7.5')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200),
+            ExpectListdir(dir='source')
+            .files(['.git'])
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'fetch', '-f', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD', '--progress'])
+            .exit(1),
+
+            # clobber and re-clone the source dir here
+            ExpectRmdir(dir='source', log_environ=True, timeout=1200)
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'clone',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 '.', '--progress'])
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'submodule', 'update', '--init', '--recursive'])
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'submodule', 'sync'])
+            .exit(0),
+            ExpectShell(workdir='source',
+                        command=['git', 'submodule', 'update', '--init', '--recursive'])
+            .exit(0),
+            ExpectCpdir(fromdir='source', todir='wkdir', log_environ=True, timeout=1200)
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
 
 class TestGitPush(TestBuildStepMixin, config.ConfigErrorsMixin,
                   TestReactorMixin,
