@@ -47,11 +47,12 @@ class MakeDirectory(base.Command):
                     os.makedirs(dirname)
             except OSError as e:
                 log.msg("MakeDirectory {0} failed: {1}".format(dirname, e))
-                self.sendStatus(
-                    {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)})
-                self.sendStatus({'rc': e.errno})
+                self.sendStatus([
+                    ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)),
+                    ('rc', e.errno)
+                ])
                 return
-        self.sendStatus({'rc': 0})
+        self.sendStatus([('rc', 0)])
 
 
 class RemoveDirectory(base.Command):
@@ -82,7 +83,7 @@ class RemoveDirectory(base.Command):
             if res != 0:
                 self.rc = res
 
-        self.sendStatus({'rc': self.rc})
+        self.sendStatus([('rc', self.rc)])
 
     def removeSingleDir(self, path):
         if runtime.platformType != "posix":
@@ -92,8 +93,9 @@ class RemoveDirectory(base.Command):
                 return 0  # rc=0
 
             def eb(f):
-                self.sendStatus(
-                    {'header': 'exception from rmdirRecursive\n' + f.getTraceback()})
+                self.sendStatus([
+                    ('header', 'exception from rmdirRecursive\n' + f.getTraceback())
+                ])
                 return -1  # rc=-1
             d.addCallbacks(cb, eb)
         else:
@@ -177,14 +179,13 @@ class CopyDirectory(base.Command):
                 return 0  # rc=0
 
             def eb(f):
-                self.sendStatus(
-                    {'header': 'exception from copytree\n' + f.getTraceback()})
+                self.sendStatus([('header', 'exception from copytree\n' + f.getTraceback())])
                 return -1  # rc=-1
             d.addCallbacks(cb, eb)
 
             @d.addCallback
             def send_rc(rc):
-                self.sendStatus({'rc': rc})
+                self.sendStatus([('rc', rc)])
         else:
             if not os.path.exists(os.path.dirname(to_path)):
                 os.makedirs(os.path.dirname(to_path))
@@ -220,13 +221,13 @@ class StatFile(base.Command):
 
         try:
             stat = os.stat(filename)
-            self.sendStatus({'stat': tuple(stat)})
-            self.sendStatus({'rc': 0})
+            self.sendStatus([('stat', tuple(stat)), ('rc', 0)])
         except OSError as e:
             log.msg("StatFile {0} failed: {1}".format(filename, e))
-            self.sendStatus(
-                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, filename)})
-            self.sendStatus({'rc': e.errno})
+            self.sendStatus([
+                ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, filename)),
+                ('rc', e.errno)
+            ])
 
 
 class GlobPath(base.Command):
@@ -245,13 +246,13 @@ class GlobPath(base.Command):
                 files = glob.glob(pathname, recursive=True)
             else:
                 files = glob.glob(pathname)
-            self.sendStatus({'files': files})
-            self.sendStatus({'rc': 0})
+            self.sendStatus([('files', files), ('rc', 0)])
         except OSError as e:
             log.msg("GlobPath {0} failed: {1}".format(pathname, e))
-            self.sendStatus(
-                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)})
-            self.sendStatus({'rc': e.errno})
+            self.sendStatus([
+                ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)),
+                ('rc', e.errno)
+            ])
 
 
 class ListDir(base.Command):
@@ -266,13 +267,13 @@ class ListDir(base.Command):
 
         try:
             files = os.listdir(dirname)
-            self.sendStatus({'files': files})
-            self.sendStatus({'rc': 0})
+            self.sendStatus([('files', files), ('rc', 0)])
         except OSError as e:
             log.msg("ListDir {0} failed: {1}".format(dirname, e))
-            self.sendStatus(
-                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)})
-            self.sendStatus({'rc': e.errno})
+            self.sendStatus([
+                ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)),
+                ('rc', e.errno)
+            ])
 
 
 class RemoveFile(base.Command):
@@ -287,9 +288,10 @@ class RemoveFile(base.Command):
 
         try:
             os.remove(pathname)
-            self.sendStatus({'rc': 0})
+            self.sendStatus([('rc', 0)])
         except OSError as e:
             log.msg("remove file {0} failed: {1}".format(pathname, e))
-            self.sendStatus(
-                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)})
-            self.sendStatus({'rc': e.errno})
+            self.sendStatus([
+                ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)),
+                ('rc', e.errno)
+            ])

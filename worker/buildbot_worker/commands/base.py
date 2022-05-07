@@ -128,7 +128,7 @@ class Command(object):
     """
 
     # builder methods:
-    #  sendStatus(dict) (zero or more)
+    #  sendStatus(list of tuples) (zero or more)
     #  commandComplete() or commandInterrupted() (one, at end)
 
     requiredArgs = []
@@ -160,8 +160,7 @@ class Command(object):
         d = defer.maybeDeferred(self.start)
 
         def commandComplete(res):
-            self.sendStatus(
-                {"elapsed": util.now(self._reactor) - self.startTime})
+            self.sendStatus([("elapsed", util.now(self._reactor) - self.startTime)])
             self.running = False
             return res
         d.addBoth(commandComplete)
@@ -205,11 +204,11 @@ class Command(object):
         return rc
 
     def _sendRC(self, res):
-        self.sendStatus({'rc': 0})
+        self.sendStatus([('rc', 0)])
 
     def _checkAbandoned(self, why):
         log.msg("_checkAbandoned", why)
         why.trap(AbandonChain)
         log.msg(" abandoning chain", why.value)
-        self.sendStatus({'rc': why.value.args[0]})
+        self.sendStatus([('rc', why.value.args[0])])
         return None

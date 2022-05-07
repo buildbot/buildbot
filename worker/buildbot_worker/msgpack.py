@@ -86,9 +86,16 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
             args['reader'] = None
 
     # Returns a Deferred
-    def protocol_update(self, updates):
-        return self.protocol.get_message_result({'op': 'update', 'args': updates,
-                                                 'command_id': self.command_id})
+    def protocol_update(self, data):
+        dl = []
+        for element in data:
+            key, value = element
+            update = [{key: value}, 0]
+            updates = [update]
+            d = self.protocol.get_message_result({'op': 'update', 'args': updates,
+                                                  'command_id': self.command_id})
+            dl.append(d)
+        return defer.DeferredList(dl, fireOnOneErrback=True, consumeErrors=True)
 
     def protocol_notify_on_disconnect(self):
         pass

@@ -52,7 +52,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.RemoveDirectory, {'paths': [file_path]}, True)
         yield self.run_command()
         self.assertFalse(os.path.exists(os.path.abspath(file_path)))
-        self.assertIn({'rc': 0}, self.get_updates(), self.protocol_command.show())
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
@@ -68,7 +68,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 
         yield self.run_command()
 
-        self.assertEqual(self.get_updates()[-2], {'rc': 0})
+        self.assertEqual(self.get_updates()[-2], ('rc', 0))
         self.assertIn('elapsed', self.get_updates()[-1])
 
     @defer.inlineCallbacks
@@ -82,7 +82,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.RemoveDirectory, {'paths': ['workdir']}, True)
         yield self.run_command()
 
-        self.assertIn({'rc': -1}, self.get_updates(), self.protocol_command.show())
+        self.assertIn(('rc', -1), self.get_updates(), self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_multiple_dirs_real(self):
@@ -92,9 +92,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 
         for path in paths:
             self.assertFalse(os.path.exists(os.path.abspath(path)))
-        self.assertIn({'rc': 0},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
@@ -116,7 +114,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 
         yield self.run_command()
 
-        self.assertEqual(self.get_updates()[-2], {'rc': 0})
+        self.assertEqual(self.get_updates()[-2], ('rc', 0))
         self.assertIn('elapsed', self.get_updates()[-1])
 
     @skipUnlessPlatformIs('posix')
@@ -142,7 +140,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 
         yield self.run_command()
 
-        self.assertEqual(self.get_updates()[-2], {'rc': 0})
+        self.assertEqual(self.get_updates()[-2], ('rc', 0))
         self.assertIn('elapsed', self.get_updates()[-1])
 
     @skipUnlessPlatformIs('posix')
@@ -168,7 +166,7 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 
         yield self.run_command()
 
-        self.assertEqual(self.get_updates()[-2], {'rc': 1})
+        self.assertEqual(self.get_updates()[-2], ('rc', 1))
         self.assertIn('elapsed', self.get_updates()[-1])
 
 
@@ -189,7 +187,7 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
 
         self.assertTrue(
             os.path.exists(os.path.abspath(to_path)))
-        self.assertIn({'rc': 0},  # this may ignore a 'header' : '..', which is OK
+        self.assertIn(('rc', 0),  # this may ignore a 'header' : '..', which is OK
                       self.get_updates(),
                       self.protocol_command.show())
 
@@ -207,7 +205,7 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.CopyDirectory, {'from_path': from_path, 'to_path': to_path}, True)
         yield self.run_command()
 
-        self.assertIn({'rc': -1},
+        self.assertIn(('rc', -1),
                       self.get_updates(),
                       self.protocol_command.show())
 
@@ -225,7 +223,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.MakeDirectory, {'paths': []}, True)
         yield self.run_command()
 
-        self.assertUpdates([{'rc': 0}], self.protocol_command.show())
+        self.assertUpdates([('rc', 0)], self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_simple(self):
@@ -234,7 +232,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertTrue(os.path.exists(os.path.abspath(paths[0])))
-        self.assertUpdates([{'rc': 0}], self.protocol_command.show())
+        self.assertUpdates([('rc', 0)], self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_two_dirs(self):
@@ -245,7 +243,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         for path in paths:
             self.assertTrue(os.path.exists(os.path.abspath(path)))
 
-        self.assertUpdates([{'rc': 0}], self.protocol_command.show())
+        self.assertUpdates([('rc', 0)], self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_already_exists(self):
@@ -253,7 +251,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
                           True)
         yield self.run_command()
 
-        self.assertUpdates([{'rc': 0}], self.protocol_command.show())
+        self.assertUpdates([('rc', 0)], self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_error_existing_file(self):
@@ -264,7 +262,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
             pass
         yield self.run_command()
 
-        self.assertIn({'rc': errno.EEXIST}, self.get_updates(), self.protocol_command.show())
+        self.assertIn(('rc', errno.EEXIST), self.get_updates(), self.protocol_command.show())
 
 
 class TestStatFile(CommandTestMixin, unittest.TestCase):
@@ -281,9 +279,7 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.StatFile, {'path': path}, True)
         yield self.run_command()
 
-        self.assertIn({'rc': errno.ENOENT},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertIn(('rc', errno.ENOENT), self.get_updates(), self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_directory(self):
@@ -292,11 +288,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.StatFile, {'path': path}, True)
         yield self.run_command()
 
-        self.assertTrue(
-            stat.S_ISDIR(self.get_updates()[0]['stat'][stat.ST_MODE]))
-        self.assertIn({'rc': 0},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertTrue(stat.S_ISDIR(self.get_updates()[0][1][stat.ST_MODE]))
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_file(self):
@@ -308,11 +301,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
         yield self.run_command()
 
-        self.assertTrue(
-            stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
-        self.assertIn({'rc': 0},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertTrue(stat.S_ISREG(self.get_updates()[0][1][stat.ST_MODE]))
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_file_workdir(self):
@@ -323,12 +313,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
             pass
 
         yield self.run_command()
-
-        self.assertTrue(
-            stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
-        self.assertIn({'rc': 0},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertTrue(stat.S_ISREG(self.get_updates()[0][1][stat.ST_MODE]))
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
 
 
 class TestGlobPath(CommandTestMixin, unittest.TestCase):
@@ -344,21 +330,16 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.GlobPath, {'path': os.path.join(self.basedir, 'no-*-file')}, True)
         yield self.run_command()
 
-        self.assertEqual(self.get_updates()[0]['files'], [])
-        self.assertIn({'rc': 0},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertEqual(self.get_updates()[0][1], [])
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_directory(self):
         self.make_command(fs.GlobPath, {'path': os.path.join(self.basedir, '[wxyz]or?d*')}, True)
         yield self.run_command()
 
-        self.assertEqual(
-            self.get_updates()[0]['files'], [os.path.join(self.basedir, 'workdir')])
-        self.assertIn({'rc': 0},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertEqual(self.get_updates()[0][1], [os.path.join(self.basedir, 'workdir')])
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_file(self):
@@ -367,12 +348,8 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
             pass
 
         yield self.run_command()
-
-        self.assertEqual(
-            self.get_updates()[0]['files'], [os.path.join(self.basedir, 'test-file')])
-        self.assertIn({'rc': 0},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertEqual(self.get_updates()[0][1], [os.path.join(self.basedir, 'test-file')])
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_recursive(self):
@@ -389,13 +366,10 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
                 filename = 'test/testdir/test.txt'
 
             self.assertEqual(
-                self.get_updates()[0]['files'], [os.path.join(self.basedir, filename)])
+                self.get_updates()[0][1], [os.path.join(self.basedir, filename)])
         else:
-            self.assertEqual(
-                self.get_updates()[0]['files'], [])
-        self.assertIn({'rc': 0},
-                      self.get_updates(),
-                      self.protocol_command.show())
+            self.assertEqual(self.get_updates()[0][1], [])
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
 
 
 class TestListDir(CommandTestMixin, unittest.TestCase):
@@ -413,9 +387,7 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.ListDir, {'path': path}, True)
         yield self.run_command()
 
-        self.assertIn({'rc': errno.ENOENT},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertIn(('rc', errno.ENOENT), self.get_updates(), self.protocol_command.show())
 
     @defer.inlineCallbacks
     def test_dir(self):
@@ -434,10 +406,9 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
                     return True
             return None
 
-        self.assertIn({'rc': 0},
-                      self.get_updates(),
-                      self.protocol_command.show())
-        self.assertTrue(any('files' in upd and sorted(upd['files']) == ['file1', 'file2']
+        self.assertIn(('rc', 0), self.get_updates(), self.protocol_command.show())
+
+        self.assertTrue(any('files' in upd and sorted(upd[1]) == ['file1', 'file2']
             for upd in self.get_updates()),
             self.protocol_command.show())
 
@@ -461,7 +432,7 @@ class TestRemoveFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertFalse(os.path.exists(file1_path))
-        self.assertIn({'rc': 0},  # this may ignore a 'header' : '..', which is OK
+        self.assertIn(('rc', 0),  # this may ignore a 'header' : '..', which is OK
                       self.get_updates(),
                       self.protocol_command.show())
 
@@ -473,6 +444,4 @@ class TestRemoveFile(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.RemoveFile, {'path': file2_path}, True)
         yield self.run_command()
 
-        self.assertIn({'rc': 2},
-                      self.get_updates(),
-                      self.protocol_command.show())
+        self.assertIn(('rc', 2), self.get_updates(), self.protocol_command.show())

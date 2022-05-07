@@ -50,7 +50,7 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
 
         # note that WorkerShellCommand does not add any extra updates of it own
         self.assertUpdates(
-            [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
+            [('hdr', 'headers'), ('stdout', 'hello\n'), ('rc', 0)],
             self.protocol_command.show())
 
     # TODO: test all functionality that WorkerShellCommand adds atop RunProcess

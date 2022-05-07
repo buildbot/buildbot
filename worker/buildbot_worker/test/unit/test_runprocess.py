@@ -86,7 +86,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.updates = []
 
     def send_update(self, status):
-        self.updates.append(status)
+        for st in status:
+            self.updates.append(st)
 
     def show(self):
         return pprint.pformat(self.updates)
@@ -116,8 +117,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('hello\n')} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testNoStdout(self):
@@ -126,8 +127,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.failIf({'stdout': nl('hello\n')} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.failIf(('stdout', nl('hello\n')) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testKeepStdout(self):
@@ -136,8 +137,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('hello\n')} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
         self.assertEqual(s.stdout, nl('hello\n'))
 
     @defer.inlineCallbacks
@@ -146,8 +147,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.failIf({'stderr': nl('hello\n')} not in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.failIf(('stderr', nl('hello\n')) not in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testNoStderr(self):
@@ -156,8 +157,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.failIf({'stderr': nl('hello\n')} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.failIf(('stderr', nl('hello\n')) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def test_incrementalDecoder(self):
@@ -171,9 +172,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         pp.errReceived(b"\x98\x83")
         yield s.start()
 
-        self.assertTrue({'stderr': u"\N{SNOWMAN}"} in self.updates)
-        self.assertTrue({'stdout': u"\N{SNOWMAN}"} in self.updates)
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stderr', u"\N{SNOWMAN}") in self.updates)
+        self.assertTrue(('stdout', u"\N{SNOWMAN}") in self.updates)
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testInvalidUTF8(self):
@@ -185,10 +186,10 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             INVALID_UTF8.decode('utf-8')
         pp.outReceived(INVALID_UTF8)
         yield s.start()
-        stdout = [up['stdout'] for up in self.updates if 'stdout' in up][0]
+        stdout = [value for key, value in self.updates if key == 'stdout'][0]
         # On Python < 2.7 bytes is used, on Python >= 2.7 unicode
         self.assertIn(stdout, (b'\xef\xbf\xbd', u'\ufffd'))
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testKeepStderr(self):
@@ -197,8 +198,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.assertTrue({'stderr': nl('hello\n')} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stderr', nl('hello\n')) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
         self.assertEqual(s.stderr, nl('hello\n'))
 
     @defer.inlineCallbacks
@@ -208,8 +209,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('hello\n')} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     def testObfuscatedCommand(self):
         s = runprocess.RunProcess([('obfuscated', 'abcd', 'ABCD')], self.basedir, 'utf-8',
@@ -227,8 +228,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         exp = nl('Happy Days and Jubilation\n')
         yield s.start()
 
-        self.assertTrue({'stdout': exp} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stdout', exp) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testInitialStdinUnicode(self):
@@ -237,8 +238,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('hello')} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stdout', nl('hello')) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testMultiWordStringCommandQuotes(self):
@@ -254,8 +255,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             exp = nl('Happy Days and Jubilation\n')
         yield s.start()
 
-        self.assertTrue({'stdout': exp} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stdout', exp) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testTrickyArguments(self):
@@ -273,8 +274,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
                                   self.send_update)
         yield s.start()
 
-        self.assertTrue({'stdout': nl(repr(args))} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stdout', nl(repr(args))) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     @compat.skipUnlessPlatformIs("win32")
@@ -286,8 +287,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.assertTrue({'stdout': nl('a\nb\n')} in self.updates, self.show())
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('stdout', nl('a\nb\n')) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testCommandTimeout(self):
@@ -300,9 +301,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         clock.advance(6)
         yield d
 
-        self.assertTrue(
-            {'stdout': nl('hello\n')} not in self.updates, self.show())
-        self.assertTrue({'rc': FATAL_RC} in self.updates, self.show())
+        self.assertTrue(('stdout', nl('hello\n')) not in self.updates, self.show())
+        self.assertTrue(('rc', FATAL_RC) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testCommandMaxTime(self):
@@ -315,9 +315,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         clock.advance(6)  # should knock out maxTime
         yield d
 
-        self.assertTrue(
-            {'stdout': nl('hello\n')} not in self.updates, self.show())
-        self.assertTrue({'rc': FATAL_RC} in self.updates, self.show())
+        self.assertTrue(('stdout', nl('hello\n')) not in self.updates, self.show())
+        self.assertTrue(('rc', FATAL_RC) in self.updates, self.show())
 
     @compat.skipUnlessPlatformIs("posix")
     @defer.inlineCallbacks
@@ -329,7 +328,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
                                   logEnviron=False)
         yield s.start()
 
-        self.assertTrue({'rc': 0} in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
     def test_startCommand_exception(self):
@@ -348,9 +347,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         stderr = []
         # Here we're checking that the exception starting up the command
         # actually gets propagated back to the master in stderr.
-        for u in self.updates:
-            if 'stderr' in u:
-                stderr.append(u['stderr'])
+        for key, value in self.updates:
+            if key == 'stderr':
+                stderr.append(value)
         stderr = ''.join(stderr)
         self.assertTrue(stderr.startswith('error in RunProcess._startCommand (error message)'))
 
@@ -363,8 +362,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        headers = "".join([list(update.values())[0]
-                           for update in self.updates if list(update) == ["header"]])
+        headers = "".join([value for key, value in self.updates if key == "header"])
         self.assertTrue("FOO=BAR" in headers, "got:\n" + headers)
 
     @defer.inlineCallbacks
@@ -388,8 +386,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        headers = "".join([list(update.values())[0]
-                           for update in self.updates if list(update) == ["header"]])
+        headers = "".join([value for key, value in self.updates if key == "header"])
         self.assertTrue("EXPND=-$" not in headers, "got:\n" + headers)
         self.assertTrue("DOESNT_FIND=--" in headers, "got:\n" + headers)
         self.assertTrue(
@@ -927,7 +924,8 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         self.updates = []
 
     def send_update(self, status):
-        self.updates.append(status)
+        for st in status:
+            self.updates.append(st)
 
     def show(self):
         return pprint.pformat(self.updates)
@@ -937,15 +935,15 @@ class TestLogging(BasedirMixin, unittest.TestCase):
 
     def testSendStatus(self):
         s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
-        s.sendStatus({'stdout': nl('hello\n')})
-        self.assertEqual(self.updates, [{'stdout': nl('hello\n')}], self.show())
+        s.sendStatus([('stdout', nl('hello\n'))])
+        self.assertEqual(self.updates, [('stdout', nl('hello\n'))], self.show())
 
     def testSendBuffered(self):
         s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
         s._addToBuffers('stdout', 'hello ')
         s._addToBuffers('stdout', 'world')
         s._sendBuffers()
-        self.assertEqual(self.updates, [{'stdout': 'hello world'}], self.show())
+        self.assertEqual(self.updates, [('stdout', 'hello world')], self.show())
 
     def testSendBufferedInterleaved(self):
         s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
@@ -954,9 +952,9 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         s._addToBuffers('stdout', 'world')
         s._sendBuffers()
         self.assertEqual(self.updates, [
-            {'stdout': 'hello '},
-            {'stderr': 'DIEEEEEEE'},
-            {'stdout': 'world'},
+            ('stdout', 'hello '),
+            ('stderr', 'DIEEEEEEE'),
+            ('stdout', 'world'),
         ])
 
     def testSendChunked(self):
@@ -976,9 +974,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
         s._addToBuffers(('log', 'stdout'), 'hello ')
         s._sendBuffers()
-        self.assertEqual(self.updates, [
-            {'log': ('stdout', 'hello ')},
-        ])
+        self.assertEqual(self.updates, [('log', ('stdout', 'hello '))])
 
 
 class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
@@ -988,7 +984,8 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
         self.updates = []
 
     def send_update(self, status):
-        self.updates.append(status)
+        for st in status:
+            self.updates.append(st)
 
     def show(self):
         return pprint.pformat(self.updates)
@@ -1040,7 +1037,7 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
             # the log file content was captured and the invalid byte replaced with \ufffd (the
             # replacement character, often a black diamond with a white question mark)
             REPLACED = u'before\ufffdafter'
-            self.assertEqual(self.updates, [{'log': ('test', REPLACED)}])
+            self.assertEqual(self.updates, [('log', ('test', REPLACED))])
 
         finally:
             lf.stop()

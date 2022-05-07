@@ -175,7 +175,10 @@ class FakeRunProcess(object):
                 continue  # don't send this update
             if not upd:
                 continue
-            self.send_update(upd)
+            data = []
+            for key, value in upd.items():
+                data.append((key, value))
+            self.send_update(data)
 
         d = self.run_deferred = defer.Deferred()
 
@@ -191,6 +194,6 @@ class FakeRunProcess(object):
             self.run_deferred.callback(self._exp.result[1])
 
     def kill(self, reason):
-        self.send_update({'hdr': 'killing'})
-        self.send_update({'rc': -1})
+        self.send_update([('hdr', 'killing')])
+        self.send_update([('rc', -1)])
         self.run_deferred.callback(-1)

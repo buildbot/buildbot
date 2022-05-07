@@ -118,8 +118,16 @@ class ProtocolCommandPb(ProtocolCommandBase):
             del args['workerdest']
 
     # Returns a Deferred
-    def protocol_update(self, updates):
-        return self.command_ref.callRemote("update", updates)
+    def protocol_update(self, data):
+        # data is a list of tuples
+        # first element of the tuple is dictionary key, second element is value
+        dl = []
+        for key, value in data:
+            update = [{key: value}, 0]
+            updates = [update]
+            d = self.command_ref.callRemote("update", updates)
+            dl.append(d)
+        return defer.DeferredList(dl, fireOnOneErrback=True, consumeErrors=True)
 
     def protocol_notify_on_disconnect(self):
         self.command_ref.notifyOnDisconnect(self.on_lost_remote_step)
