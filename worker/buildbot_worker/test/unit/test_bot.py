@@ -206,12 +206,11 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # patch runprocess to handle the 'echo', below
         self.patch_runprocess(
-            Expect(['echo', 'hello'], os.path.join(
-                self.basedir, 'wfb', 'workdir')) +
-            {'hdr': 'headers'} +
-            {'stdout': 'hello\n'} +
-            {'rc': 0} +
-            0,
+            Expect(['echo', 'hello'], os.path.join(self.basedir, 'wfb', 'workdir'))
+            .update('hdr', 'headers')
+            .update('stdout', 'hello\n')
+            .update('rc', 0)
+            .exit(0)
         )
 
         yield self.wfb.callRemote("startCommand", FakeRemote(st),
@@ -235,10 +234,9 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to pretend to sleep (it will really just hang forever,
         # except that we interrupt it)
         self.patch_runprocess(
-            Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'wfb', 'workdir')) +
-            {'hdr': 'headers'} +
-            {'wait': True}
+            Expect(['sleep', '10'], os.path.join(self.basedir, 'wfb', 'workdir'))
+            .update('hdr', 'headers')
+            .update('wait', True)
         )
 
         yield self.wfb.callRemote("startCommand", FakeRemote(st),
@@ -269,9 +267,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # patch runprocess to generate a failure
         self.patch_runprocess(
-            Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'wfb', 'workdir')) +
-            failure.Failure(Exception("Oops"))
+            Expect(['sleep', '10'], os.path.join(self.basedir, 'wfb', 'workdir'))
+            .exception(failure.Failure(Exception("Oops")))
         )
         # patch the log.err, otherwise trial will think something *actually*
         # failed

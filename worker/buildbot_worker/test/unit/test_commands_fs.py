@@ -62,8 +62,10 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 
         self.patch_runprocess(
             Expect(["rm", "-rf", file_path], self.basedir, sendRC=0, timeout=120)
-            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
-            + 0,
+            .update('hdr', 'headers')
+            .update('stdout', '')
+            .update('rc', 0)
+            .exit(0)
         )
 
         yield self.run_command()
@@ -102,14 +104,16 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.RemoveDirectory, {'paths': [dir_1, dir_2]}, True)
 
         self.patch_runprocess(
-            Expect(["rm", "-rf", dir_1], self.basedir, sendRC=0,
-                   timeout=120)
-            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
-            + 0,
-            Expect(["rm", "-rf", dir_2], self.basedir, sendRC=0,
-                   timeout=120)
-            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
-            + 0,
+            Expect(["rm", "-rf", dir_1], self.basedir, sendRC=0, timeout=120)
+            .update('hdr', 'headers')
+            .update('stdout', '')
+            .update('rc', 0)
+            .exit(0),
+            Expect(["rm", "-rf", dir_2], self.basedir, sendRC=0, timeout=120)
+            .update('hdr', 'headers')
+            .update('stdout', '')
+            .update('rc', 0)
+            .exit(0)
         )
 
         yield self.run_command()
@@ -124,18 +128,21 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.RemoveDirectory, {'paths': [dir]}, True)
 
         self.patch_runprocess(
-            Expect(["rm", "-rf", dir], self.basedir, sendRC=0,
-                   timeout=120)
-            + {'hdr': 'headers'} + {'stderr': 'permission denied'} + {'rc': 1}
-            + 1,
-            Expect(['chmod', '-Rf', 'u+rwx', dir], self.basedir,
-                   sendRC=0, timeout=120)
-            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
-            + 0,
-            Expect(["rm", "-rf", dir], self.basedir, sendRC=0,
-                   timeout=120)
-            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
-            + 0,
+            Expect(["rm", "-rf", dir], self.basedir, sendRC=0, timeout=120)
+            .update('hdr', 'headers')
+            .update('stderr', 'permission denied')
+            .update('rc', 1)
+            .exit(1),
+            Expect(['chmod', '-Rf', 'u+rwx', dir], self.basedir, sendRC=0, timeout=120)
+            .update('hdr', 'headers')
+            .update('stdout', '')
+            .update('rc', 0)
+            .exit(0),
+            Expect(["rm", "-rf", dir], self.basedir, sendRC=0, timeout=120)
+            .update('hdr', 'headers')
+            .update('stdout', '')
+            .update('rc', 0)
+            .exit(0)
         )
 
         yield self.run_command()
@@ -150,18 +157,21 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.RemoveDirectory, {'paths': [dir]}, True)
 
         self.patch_runprocess(
-            Expect(["rm", "-rf", dir], self.basedir, sendRC=0,
-                   timeout=120)
-            + {'hdr': 'headers'} + {'stderr': 'permission denied'} + {'rc': 1}
-            + 1,
-            Expect(['chmod', '-Rf', 'u+rwx', dir], self.basedir,
-                   sendRC=0, timeout=120)
-            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 0}
-            + 0,
-            Expect(["rm", "-rf", dir], self.basedir, sendRC=0,
-                   timeout=120)
-            + {'hdr': 'headers'} + {'stdout': ''} + {'rc': 1}
-            + 1,
+            Expect(["rm", "-rf", dir], self.basedir, sendRC=0, timeout=120)
+            .update('hdr', 'headers')
+            .update('stderr', 'permission denied')
+            .update('rc', 1)
+            .exit(1),
+            Expect(['chmod', '-Rf', 'u+rwx', dir], self.basedir, sendRC=0, timeout=120)
+            .update('hdr', 'headers')
+            .update('stdout', '')
+            .update('rc', 0)
+            .exit(0),
+            Expect(["rm", "-rf", dir], self.basedir, sendRC=0, timeout=120)
+            .update('hdr', 'headers')
+            .update('stdout', '')
+            .update('rc', 1)
+            .exit(1)
         )
 
         yield self.run_command()

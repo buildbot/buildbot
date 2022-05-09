@@ -42,8 +42,10 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
 
         self.patch_runprocess(
             Expect(['echo', 'hello'], self.basedir_workdir)
-            + {'hdr': 'headers'} + {'stdout': 'hello\n'} + {'rc': 0}
-            + 0,
+            .update('hdr', 'headers')
+            .update('stdout', 'hello\n')
+            .update('rc', 0)
+            .exit(0)
         )
 
         yield self.run_command()

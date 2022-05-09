@@ -383,11 +383,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         # patch runprocess to handle the 'echo', below
         workdir = os.path.join('basedir', 'test_basedir')
         self.patch_runprocess(
-            Expect(['echo'], workdir) +
-            {'hdr': 'headers'} +
-            {'stdout': 'hello\n'} +
-            {'rc': 0} +
-            0,)
+            Expect(['echo'], workdir)
+            .update('hdr', 'headers')
+            .update('stdout', 'hello\n')
+            .update('rc', 0)
+            .exit(0)
+            )
 
         yield self.send_message({
             'op': 'start_command',
@@ -464,9 +465,9 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         # except that we interrupt it)
         workdir = os.path.join('basedir', 'test_basedir')
         self.patch_runprocess(
-            Expect(['sleep', '10'], workdir) +
-            {'hdr': 'headers'} +
-            {'wait': True}
+            Expect(['sleep', '10'], workdir)
+            .update('hdr', 'headers')
+            .update('wait', True)
         )
 
         yield self.send_message({
