@@ -14,11 +14,11 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from twisted.logger import Logger
 
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import kubeclientservice
 from buildbot.util.latent import CompatibleLatentWorkerMixin
-from buildbot.util.logger import Logger
 from buildbot.worker.docker import DockerBaseWorker
 
 log = Logger()

@@ -17,8 +17,7 @@
 import re
 
 from twisted.internet import defer
-
-from buildbot.util.logger import Logger
+from twisted.logger import Logger
 
 log = Logger()
 

@@ -16,13 +16,13 @@
 from datetime import datetime
 
 from twisted.internet import defer
+from twisted.logger import Logger
 
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import httpclientservice
-from buildbot.util.logger import Logger
 from buildbot.util.pullrequest import PullRequestMixin
 from buildbot.util.state import StateMixin
 

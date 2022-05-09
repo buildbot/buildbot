@@ -19,6 +19,7 @@ import json as jsonmodule
 import mock
 
 from twisted.internet import defer
+from twisted.logger import Logger
 from zope.interface import implementer
 
 from buildbot.interfaces import IHttpResponse
@@ -26,7 +27,6 @@ from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
-from buildbot.util.logger import Logger
 
 log = Logger()
 

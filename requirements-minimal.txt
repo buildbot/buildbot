@@ -3,3 +3,4 @@
 -e worker[test]
 -e pkg
 buildbot_www==3.2.0
+autobahn==22.3.2

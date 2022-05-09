@@ -15,6 +15,7 @@
 
 
 from twisted.internet import defer
+from twisted.logger import Logger
 from twisted.python import failure
 
 from buildbot.process.properties import Interpolate
@@ -30,7 +31,6 @@ from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import httpclientservice
-from buildbot.util.logger import Logger
 
 log = Logger()
 

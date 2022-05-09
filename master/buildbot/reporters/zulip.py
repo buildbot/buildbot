@@ -15,12 +15,12 @@
 
 
 from twisted.internet import defer
+from twisted.logger import Logger
 
 from buildbot import config
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.util import httpclientservice
-from buildbot.util.logger import Logger
 
 log = Logger()
 

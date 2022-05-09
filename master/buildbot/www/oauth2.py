@@ -25,12 +25,12 @@ import requests
 
 from twisted.internet import defer
 from twisted.internet import threads
+from twisted.logger import Logger
 
 import buildbot
 from buildbot import config
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
-from buildbot.util.logger import Logger
 from buildbot.www import auth
 from buildbot.www import resource
 
