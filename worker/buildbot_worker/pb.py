@@ -563,7 +563,7 @@ class Worker(WorkerBase):
 
         if protocol == 'pb':
             bot_class = BotPb
-        elif protocol == 'msgpack_experimental_v3':
+        elif protocol == 'msgpack_experimental_v4':
             if sys.version_info < (3, 6):
                 raise NotImplementedError(
                     'Msgpack protocol is only supported on Python 3.6 and newer'
@@ -596,7 +596,7 @@ class Worker(WorkerBase):
         if protocol == 'pb':
             bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
             bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
-        elif protocol == 'msgpack_experimental_v3':
+        elif protocol == 'msgpack_experimental_v4':
             if connection_string is None:
                 ws_conn_string = "ws://{}:{}".format(buildmaster_host, port)
             else:

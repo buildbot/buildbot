@@ -315,7 +315,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         msg = {'op': 'update', 'args': 'args', 'command_id': command_id}
         expected = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
-        command.remote_update.assert_called_once_with(msg['args'])
+        command.remote_update_msgpack.assert_called_once_with(msg['args'])
 
     @defer.inlineCallbacks
     def test_complete_success(self):

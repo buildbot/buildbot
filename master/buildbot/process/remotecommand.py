@@ -196,6 +196,16 @@ class RemoteCommand(base.RemoteCommandImpl):
         except Exception as e:
             log.msg("RemoteCommand.interrupt failed", self, e)
 
+    def remote_update_msgpack(self, updates):
+        self.worker.messageReceivedFromWorker()
+        try:
+            for key, value in updates:
+                if self.active and not self.ignore_updates:
+                    self.remoteUpdate({key: value})
+        except Exception:
+            # log failure, terminate build, let worker retire the update
+            self._finished(Failure())
+
     def remote_update(self, updates):
         """
         I am called by the worker's

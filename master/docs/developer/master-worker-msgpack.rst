@@ -366,9 +366,9 @@ Request
     Value is a string ``update``.
 
 ``args``
-    Value is a list of lists.
-    Inner list contains a dictionary and an integer.
-    Keys and values of the dictionary are further explained in section :ref:`MsgPack_Keys_And_Values_Message`.
+    Value is a list of two-element lists.
+    These two elements in sub-lists represent name-value pairs: first element is the name of update and second is its value.
+    The names and values are further explained in section :ref:`MsgPack_Keys_And_Values_Message`.
 
 ``command_id``
     Value is a string which identifies command the update refers to.
@@ -1087,13 +1087,17 @@ This command removes the specified file.
 .. _MsgPack_Keys_And_Values_Message:
 
 
-Keys and values of ``args`` dictionary value in ``update`` request message
---------------------------------------------------------------------------
+Contents of the value corresponding to ``args`` key in the dictionary of ``update`` request message
+---------------------------------------------------------------------------------------------------
 
-Commands may have specific key-value pairs so only common ones are described here.
+The ``args`` key-value pair describes information that the request sends to master.
+The value is a list of lists.
+Each sub-list contains name-value pairs.
+First element in a list represents the name of update (see below) and second element represents its value.
+Commands may have their own update names so only common ones are described here.
 
 ``stdout``
-    Value is a standard output of a process.
+    Value is a standard output of a process as a string.
     Some of the commands that master requests worker to start, may initiate processes which output a result as a standard output and this result is saved in the value of ``stdout``.
 
 ``rc``
@@ -1103,7 +1107,7 @@ Commands may have specific key-value pairs so only common ones are described her
     Any other number represents a failure.
 
 ``header``
-    Value is a string.
+    Value is a string of a header.
     It represents additional information about how the command worked.
     For example, information may include the command name and arguments, working directory and environment or various errors or warnings of a process or other information that may be useful for debugging.
 
@@ -1115,11 +1119,11 @@ Commands may have specific key-value pairs so only common ones are described her
     2) If the ``update`` message was a response to master request message ``start_command`` with a key value pair ``command_name`` and ``listdir``, then strings in this list represent the names of the entries in the directory given by path, which master sent as an argument.
 
 ``stderr``
-    Value is a standard error of a process.
+    Value is a standard error of a process as a string.
     Some of the commands that master requests worker to start may initiate processes which can output a result as a standard error and this result is saved in the value of ``stderr``.
 
-``Tuple (“log”, name)``
-    Value is a string.
+``log``
+    Value is a list where first element represents the name of the log and second element represents the contents of the file as a string.
     This message is used to transfer the contents of the file that master requested worker to read.
     This file is identified by the second member in workers tuple.
     The same value is sent by master as the key of dictionary represented by ``logfile`` key within ``args`` dictionary of ``StartCommand`` command.
