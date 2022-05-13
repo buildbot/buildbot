@@ -24,6 +24,7 @@
 # `unicode` and `raw_*` attributes for `bytes`.
 
 
+import importlib
 from urllib.parse import urlparse
 
 from twisted.internet import threads
@@ -36,7 +37,6 @@ from buildbot.www import avatar
 try:
     import ldap3
 except ImportError:
-    import importlib
     ldap3 = None
 
 
