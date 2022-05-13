@@ -32,7 +32,7 @@ from buildbot_worker import util
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util import command
 
-if sys.version_info.major >= 3:
+if sys.version_info >= (3, 6):
     import msgpack
     # pylint: disable=ungrouped-imports
     from buildbot_worker.msgpack import decode_http_authorization_header
@@ -43,8 +43,8 @@ if sys.version_info.major >= 3:
 
 class TestHttpAuthorization(unittest.TestCase):
     maxDiff = None
-    if sys.version_info.major < 3:
-        skip = "Not python 3"
+    if sys.version_info < (3, 6):
+        skip = "Not python 3.6 or newer"
 
     def test_encode(self):
         result = encode_http_authorization_header(b'name', b'pass')
@@ -116,7 +116,7 @@ class FakeBot(base.BotBase):
 
 class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.TestCase):
     maxDiff = None
-    if sys.version_info.major < 3:
+    if sys.version_info < (3, 6):
         skip = "Not python 3"
 
     def setUp(self):

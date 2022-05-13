@@ -16,7 +16,6 @@
 
 import asyncio
 import inspect
-import sys
 from asyncio import base_events
 from asyncio import events
 
@@ -41,15 +40,6 @@ def as_deferred(f):
 
 def as_future(d):
     return d.asFuture(asyncio.get_event_loop())
-
-
-if sys.version_info[:2] >= (3, 7):
-    def make_handle(callback, args, loop, context):
-        return events.Handle(callback, args, loop, context)
-else:
-    def make_handle(callback, args, loop, context):
-        # python 3.6 does not support async contextvars
-        return events.Handle(callback, args, loop)
 
 
 class AsyncIOLoopWithTwisted(base_events.BaseEventLoop):
@@ -79,13 +69,13 @@ class AsyncIOLoopWithTwisted(base_events.BaseEventLoop):
         return self._running
 
     def call_soon(self, callback, *args, context=None):
-        handle = make_handle(callback, args, self, context)
+        handle = events.Handle(callback, args, self, context)
 
         self._reactor.callLater(0, handle._run)
         return handle
 
     def call_soon_threadsafe(self, callback, *args, context=None):
-        handle = make_handle(callback, args, self, context)
+        handle = events.Handle(callback, args, self, context)
 
         self._reactor.callFromThread(handle._run)
         return handle
@@ -95,7 +85,7 @@ class AsyncIOLoopWithTwisted(base_events.BaseEventLoop):
         return self._reactor.seconds()
 
     def call_at(self, when, callback, *args, context=None):
-        handle = make_handle(callback, args, self, context)
+        handle = events.Handle(callback, args, self, context)
 
         # Twisted timers are relatives, contrary to asyncio.
         delay = when - self.time()

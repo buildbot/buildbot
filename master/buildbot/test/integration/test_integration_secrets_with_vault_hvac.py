@@ -24,12 +24,16 @@ from buildbot.process.properties import Interpolate
 from buildbot.secrets.providers.vault_hvac import HashiCorpVaultKvSecretProvider
 from buildbot.secrets.providers.vault_hvac import VaultAuthenticatorToken
 from buildbot.steps.shell import ShellCommand
+from buildbot.test.util.decorators import skipUnlessPlatformIs
 from buildbot.test.util.integration import RunMasterBase
 
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step
 
 
+# Test needs to be explicitly disabled on Windows, as docker may be present there, but not able
+# to properly launch images.
+@skipUnlessPlatformIs('posix')
 class TestVaultHvac(RunMasterBase):
     def setUp(self):
         try:

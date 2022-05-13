@@ -1,13 +1,16 @@
 # AppVeyor CI
 # https://www.appveyor.com/docs
 
+image:
+  - Visual Studio 2019
+
 environment:
   matrix:
     # For Python versions available on AppVeyor, see
     # http://www.appveyor.com/docs/installed-software#python
-    - PYTHON: "C:\\Python36"
     - PYTHON: "C:\\Python37"
     - PYTHON: "C:\\Python38"
+    - PYTHON: "C:\\Python39"
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"

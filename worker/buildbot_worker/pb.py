@@ -43,7 +43,7 @@ from buildbot_worker.pbutil import AutoLoginPBFactory
 from buildbot_worker.pbutil import decode
 from buildbot_worker.tunnel import HTTPTunnelEndpoint
 
-if sys.version_info.major >= 3:
+if sys.version_info >= (3, 6):
     from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
     from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
     from buildbot_worker.msgpack import ProtocolCommandMsgpack
@@ -351,7 +351,7 @@ class BotPb(BotPbLike, pb.Referenceable):
     WorkerForBuilder = WorkerForBuilderPb
 
 
-if sys.version_info.major >= 3:
+if sys.version_info >= (3, 6):
     class BotMsgpack(BotBase):
         def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
             BotBase.__init__(self, basedir, unicode_encoding=unicode_encoding,
@@ -556,8 +556,10 @@ class Worker(WorkerBase):
         if protocol == 'pb':
             bot_class = BotPb
         elif protocol == 'msgpack_experimental_v3':
-            if sys.version_info.major < 3:
-                raise NotImplementedError('Msgpack protocol is not supported in Python2')
+            if sys.version_info < (3, 6):
+                raise NotImplementedError(
+                    'Msgpack protocol is only supported on Python 3.6 and newer'
+                )
             bot_class = BotMsgpack
         else:
             raise ValueError('Unknown protocol {}'.format(protocol))
