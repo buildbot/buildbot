@@ -224,7 +224,6 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 {
                     "message": "Cannot query field 'notexistant' on type 'Query'.",
                     "locations": [{"line": 1, "column": 2}],
-                    "path": None,
                 }
             ],
             200,

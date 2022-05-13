@@ -269,7 +269,6 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                         {
                             "locations": [{"column": 11, "line": 1}],
                             "message": "Cannot query field 'not_existing' on type 'Builder'.",
-                            "path": None,
                         }
                     ],
                 },
