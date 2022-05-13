@@ -37,7 +37,6 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         # We must explicitly call both parent constructors.
         ApplicationSession.__init__(self)
         service.AsyncMultiService.__init__(self)
-        self.config = config
         self.leaving = False
         self.setServiceParent(config.extra['parent'])
 
