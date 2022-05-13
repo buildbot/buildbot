@@ -1,6 +1,9 @@
 # AppVeyor CI
 # https://www.appveyor.com/docs
 
+image:
+  - Visual Studio 2019
+
 environment:
   matrix:
     # For Python versions available on AppVeyor, see
