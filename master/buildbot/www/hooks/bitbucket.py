@@ -24,11 +24,10 @@ from twisted.python import log
 from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
 
-_HEADER_EVENT = b'X-Event-Key'
+_HEADER_EVENT = b"X-Event-Key"
 
 
 class BitBucketHandler(BaseHookHandler):
-
     def getChanges(self, request):
         """Catch a POST request from BitBucket and start a build process
 
@@ -41,31 +40,33 @@ class BitBucketHandler(BaseHookHandler):
 
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
-        payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
+        payload = json.loads(bytes2unicode(request.args[b"payload"][0]))
         repo_url = f"{payload['canon_url']}{payload['repository']['absolute_url']}"
-        project = request.args.get(b'project', [b''])[0]
+        project = request.args.get(b"project", [b""])[0]
         project = bytes2unicode(project)
 
         changes = []
-        for commit in payload['commits']:
-            changes.append({
-                'author': commit['raw_author'],
-                'files': [f['file'] for f in commit['files']],
-                'comments': commit['message'],
-                'revision': commit['raw_node'],
-                'when_timestamp': dateparse(commit['utctimestamp']),
-                'branch': commit['branch'],
-                'revlink': f"{repo_url}commits/{commit['raw_node']}",
-                'repository': repo_url,
-                'project': project,
-                'properties': {
-                    'event': event_type,
-                },
-            })
+        for commit in payload["commits"]:
+            changes.append(
+                {
+                    "author": commit["raw_author"],
+                    "files": [f["file"] for f in commit["files"]],
+                    "comments": commit["message"],
+                    "revision": commit["raw_node"],
+                    "when_timestamp": dateparse(commit["utctimestamp"]),
+                    "branch": commit["branch"],
+                    "revlink": f"{repo_url}commits/{commit['raw_node']}",
+                    "repository": repo_url,
+                    "project": project,
+                    "properties": {
+                        "event": event_type,
+                    },
+                }
+            )
             log.msg(f"New revision: {commit['node']}")
 
-        log.msg(f'Received {len(changes)} changes from bitbucket')
-        return (changes, payload['repository']['scm'])
+        log.msg(f"Received {len(changes)} changes from bitbucket")
+        return (changes, payload["repository"]["scm"])
 
 
 bitbucket = BitBucketHandler

@@ -24,13 +24,12 @@ from buildbot.test.util import endpoint
 
 
 class ResourceType(TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
 
     def makeResourceTypeSubclass(self, **attributes):
-        attributes.setdefault('name', 'thing')
-        return type('ThingResourceType', (base.ResourceType,), attributes)
+        attributes.setdefault("name", "thing")
+        return type("ThingResourceType", (base.ResourceType,), attributes)
 
     def test_sets_master(self):
         cls = self.makeResourceTypeSubclass()
@@ -48,6 +47,7 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
     def test_getEndpoints_classes(self):
         class MyEndpoint(base.Endpoint):
             pass
+
         cls = self.makeResourceTypeSubclass(endpoints=[MyEndpoint])
         master = mock.Mock()
         inst = cls(master)
@@ -57,16 +57,15 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
 
     def test_produceEvent(self):
         cls = self.makeResourceTypeSubclass(
-            name='singular',
-            eventPathPatterns="/foo/:fooid/bar/:barid")
+            name="singular", eventPathPatterns="/foo/:fooid/bar/:barid"
+        )
         master = fakemaster.make_master(self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = cls(master)
-        inst.produceEvent(dict(fooid=10, barid='20'),  # note integer vs. string
-                          'tested')
-        master.mq.assertProductions([
-            (('foo', '10', 'bar', '20', 'tested'), dict(fooid=10, barid='20'))
-        ])
+        inst.produceEvent(dict(fooid=10, barid="20"), "tested")  # note integer vs. string
+        master.mq.assertProductions(
+            [(("foo", "10", "bar", "20", "tested"), dict(fooid=10, barid="20"))]
+        )
 
     def test_compilePatterns(self):
         class MyResourceType(base.ResourceType):
@@ -74,15 +73,16 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
                 /builder/:builderid/build/:number
                 /build/:buildid
             """
+
         master = fakemaster.make_master(self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = MyResourceType(master)
         self.assertEqual(
-            inst.eventPaths, ['builder/{builderid}/build/{number}', 'build/{buildid}'])
+            inst.eventPaths, ["builder/{builderid}/build/{number}", "build/{buildid}"]
+        )
 
 
 class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     class MyResourceType(base.ResourceType):
         name = "my"
 
@@ -105,7 +105,6 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class ListResult(unittest.TestCase):
-
     def test_constructor(self):
         lr = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
         self.assertEqual(lr.data, [1, 2, 3])
@@ -115,7 +114,7 @@ class ListResult(unittest.TestCase):
 
     def test_repr(self):
         lr = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
-        self.assertTrue(repr(lr).startswith('ListResult'))
+        self.assertTrue(repr(lr).startswith("ListResult"))
 
     def test_eq(self):
         lr1 = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)

@@ -20,17 +20,15 @@ from setuptools import setup
 import buildbot_pkg
 
 setup(
-    name='buildbot-pkg',
+    name="buildbot-pkg",
     version=buildbot_pkg.getVersion("."),
-    description='Buildbot packaging tools',
-    author=u'Pierre Tardy',
-    author_email=u'tardyp@gmail.com',
-    url='http://buildbot.net/',
-    py_modules=['buildbot_pkg'],
+    description="Buildbot packaging tools",
+    author="Pierre Tardy",
+    author_email="tardyp@gmail.com",
+    url="http://buildbot.net/",
+    py_modules=["buildbot_pkg"],
     install_requires=[
         "setuptools >= 21.2.1",
     ],
-    classifiers=[
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
-    ],
+    classifiers=["License :: OSI Approved :: GNU General Public License v2 (GPLv2)"],
 )

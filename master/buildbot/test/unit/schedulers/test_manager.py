@@ -23,7 +23,6 @@ from buildbot.schedulers import manager
 
 
 class SchedulerManager(unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.next_objectid = 13
@@ -40,6 +39,7 @@ class SchedulerManager(unittest.TestCase):
                 rv = self.objectids[k] = self.next_objectid
                 self.next_objectid += 1
             return defer.succeed(rv)
+
         self.master.db.state.getObjectId = getObjectId
 
         def getScheduler(sched_id):
@@ -61,7 +61,7 @@ class SchedulerManager(unittest.TestCase):
     class Sched(base.BaseScheduler):
 
         # changing sch.attr should make a scheduler look "updated"
-        compare_attrs = ('attr', )
+        compare_attrs = ("attr",)
         already_started = False
         reconfig_count = 0
 
@@ -83,7 +83,6 @@ class SchedulerManager(unittest.TestCase):
             return f"{self.__class__.__name__}(attr={self.attr})"
 
     class ReconfigSched(Sched):
-
         def reconfigServiceWithSibling(self, sibling):
             self.reconfig_count += 1
             self.attr = sibling.attr
@@ -92,8 +91,8 @@ class SchedulerManager(unittest.TestCase):
     class ReconfigSched2(ReconfigSched):
         pass
 
-    def makeSched(self, cls, name, attr='alpha'):
-        sch = cls(name=name, builderNames=['x'], properties={})
+    def makeSched(self, cls, name, attr="alpha"):
+        sch = cls(name=name, builderNames=["x"], properties={})
         sch.attr = attr
         return sch
 
@@ -101,7 +100,7 @@ class SchedulerManager(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_add_and_change_and_remove(self):
-        sch1 = self.makeSched(self.ReconfigSched, 'sch1', attr='alpha')
+        sch1 = self.makeSched(self.ReconfigSched, "sch1", attr="alpha")
         self.new_config.schedulers = dict(sch1=sch1)
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
@@ -110,8 +109,8 @@ class SchedulerManager(unittest.TestCase):
         self.assertIdentical(sch1.master, self.master)
         self.assertEqual(sch1.reconfig_count, 1)
 
-        sch1_new = self.makeSched(self.ReconfigSched, 'sch1', attr='beta')
-        sch2 = self.makeSched(self.ReconfigSched, 'sch2', attr='alpha')
+        sch1_new = self.makeSched(self.ReconfigSched, "sch1", attr="beta")
+        sch2 = self.makeSched(self.ReconfigSched, "sch2", attr="alpha")
         self.new_config.schedulers = dict(sch1=sch1_new, sch2=sch2)
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
@@ -120,7 +119,7 @@ class SchedulerManager(unittest.TestCase):
         # and has the correct attribute
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
-        self.assertEqual(sch1.attr, 'beta')
+        self.assertEqual(sch1.attr, "beta")
         self.assertEqual(sch1.reconfig_count, 2)
         self.assertIdentical(sch1_new.parent, None)
         self.assertIdentical(sch1_new.master, None)
@@ -136,7 +135,7 @@ class SchedulerManager(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_class_name_change(self):
-        sch1 = self.makeSched(self.ReconfigSched, 'sch1')
+        sch1 = self.makeSched(self.ReconfigSched, "sch1")
         self.new_config.schedulers = dict(sch1=sch1)
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
@@ -145,7 +144,7 @@ class SchedulerManager(unittest.TestCase):
         self.assertIdentical(sch1.master, self.master)
         self.assertEqual(sch1.reconfig_count, 1)
 
-        sch1_new = self.makeSched(self.ReconfigSched2, 'sch1')
+        sch1_new = self.makeSched(self.ReconfigSched2, "sch1")
         self.new_config.schedulers = dict(sch1=sch1_new)
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
@@ -157,7 +156,7 @@ class SchedulerManager(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_not_reconfigurable(self):
-        sch1 = self.makeSched(self.Sched, 'sch1', attr='beta')
+        sch1 = self.makeSched(self.Sched, "sch1", attr="beta")
         self.new_config.schedulers = dict(sch1=sch1)
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
@@ -165,7 +164,7 @@ class SchedulerManager(unittest.TestCase):
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
 
-        sch1_new = self.makeSched(self.Sched, 'sch1', attr='alpha')
+        sch1_new = self.makeSched(self.Sched, "sch1", attr="alpha")
         self.new_config.schedulers = dict(sch1=sch1_new)
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
@@ -179,7 +178,7 @@ class SchedulerManager(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_not_reconfigurable_no_change(self):
-        sch1 = self.makeSched(self.Sched, 'sch1', attr='beta')
+        sch1 = self.makeSched(self.Sched, "sch1", attr="beta")
         self.new_config.schedulers = dict(sch1=sch1)
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
@@ -187,7 +186,7 @@ class SchedulerManager(unittest.TestCase):
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
 
-        sch1_new = self.makeSched(self.Sched, 'sch1', attr='beta')
+        sch1_new = self.makeSched(self.Sched, "sch1", attr="beta")
         self.new_config.schedulers = dict(sch1=sch1_new)
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)

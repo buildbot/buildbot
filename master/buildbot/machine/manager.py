@@ -20,9 +20,9 @@ from buildbot.worker.manager import WorkerManager
 
 class MachineManager(service.BuildbotServiceManager):
     reconfig_priority = WorkerManager.reconfig_priority + 1
-    name = 'MachineManager'
-    managed_services_name = 'machines'
-    config_attr = 'machines'
+    name = "MachineManager"
+    managed_services_name = "machines"
+    config_attr = "machines"
 
     @property
     def machines(self):

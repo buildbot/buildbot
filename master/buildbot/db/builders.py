@@ -24,7 +24,6 @@ from buildbot.db import base
 
 
 class BuildersConnectorComponent(base.DBConnectorComponent):
-
     def findBuilderId(self, name, autoCreate=True):
         tbl = self.db.model.builders
         name_hash = self.hashColumns(name)
@@ -34,7 +33,9 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             insert_values=dict(
                 name=name,
                 name_hash=name_hash,
-            ), autoCreate=autoCreate)
+            ),
+            autoCreate=autoCreate,
+        )
 
     @defer.inlineCallbacks
     def updateBuilderInfo(self, builderid, description, tags):
@@ -45,28 +46,37 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             ssConnector = self.master.db.tags
             return ssConnector.findTagId(tag)
 
-        tagsids = [r[1] for r in (yield defer.DeferredList(
-            [toTagid(tag) for tag in tags],
-            fireOnOneErrback=True,
-            consumeErrors=True))]
+        tagsids = [
+            r[1]
+            for r in (
+                yield defer.DeferredList(
+                    [toTagid(tag) for tag in tags],
+                    fireOnOneErrback=True,
+                    consumeErrors=True,
+                )
+            )
+        ]
 
         def thd(conn):
             builders_tbl = self.db.model.builders
             builders_tags_tbl = self.db.model.builders_tags
             transaction = conn.begin()
 
-            q = builders_tbl.update(
-                whereclause=(builders_tbl.c.id == builderid))
+            q = builders_tbl.update(whereclause=(builders_tbl.c.id == builderid))
             conn.execute(q, description=description).close()
             # remove previous builders_tags
-            conn.execute(builders_tags_tbl.delete(
-                whereclause=((builders_tags_tbl.c.builderid == builderid)))).close()
+            conn.execute(
+                builders_tags_tbl.delete(
+                    whereclause=((builders_tags_tbl.c.builderid == builderid))
+                )
+            ).close()
 
             # add tag ids
             if tagsids:
-                conn.execute(builders_tags_tbl.insert(),
-                             [dict(builderid=builderid, tagid=tagid)
-                              for tagid in tagsids]).close()
+                conn.execute(
+                    builders_tags_tbl.insert(),
+                    [dict(builderid=builderid, tagid=tagid) for tagid in tagsids],
+                ).close()
 
             transaction.commit()
 
@@ -80,6 +90,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             if bldrs:
                 return bldrs[0]
             return None
+
         return d
 
     # returns a Deferred that returns None
@@ -91,15 +102,19 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 conn.execute(q, builderid=builderid, masterid=masterid)
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 pass
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
     def removeBuilderMaster(self, builderid=None, masterid=None):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.builder_masters
-            conn.execute(tbl.delete(
-                whereclause=((tbl.c.builderid == builderid) &
-                             (tbl.c.masterid == masterid))))
+            conn.execute(
+                tbl.delete(
+                    whereclause=((tbl.c.builderid == builderid) & (tbl.c.masterid == masterid))
+                )
+            )
+
         return self.db.pool.do(thd)
 
     def getBuilders(self, masterid=None, _builderid=None):
@@ -114,14 +129,21 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             # again, so we can still get the full set of masters for each
             # builder
             if masterid is not None:
-                limiting_bm_tbl = bm_tbl.alias('limiting_bm')
-                j = j.join(limiting_bm_tbl,
-                           onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
+                limiting_bm_tbl = bm_tbl.alias("limiting_bm")
+                j = j.join(
+                    limiting_bm_tbl,
+                    onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid),
+                )
             q = sa.select(
-                [bldr_tbl.c.id, bldr_tbl.c.name,
-                    bldr_tbl.c.description, bm_tbl.c.masterid],
+                [
+                    bldr_tbl.c.id,
+                    bldr_tbl.c.name,
+                    bldr_tbl.c.description,
+                    bm_tbl.c.masterid,
+                ],
                 from_obj=[j],
-                order_by=[bldr_tbl.c.id, bm_tbl.c.masterid])
+                order_by=[bldr_tbl.c.id, bm_tbl.c.masterid],
+            )
             if masterid is not None:
                 # filter the masterid from the limiting table
                 q = q.where(limiting_bm_tbl.c.masterid == masterid)
@@ -141,11 +163,17 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             last = None
             for row in conn.execute(q).fetchall():
                 # pylint: disable=unsubscriptable-object
-                if not last or row['id'] != last['id']:
-                    last = dict(id=row.id, name=row.name, masterids=[], description=row.description,
-                                tags=bldr_id_to_tags[row.id])
+                if not last or row["id"] != last["id"]:
+                    last = dict(
+                        id=row.id,
+                        name=row.name,
+                        masterids=[],
+                        description=row.description,
+                        tags=bldr_id_to_tags[row.id],
+                    )
                     rv.append(last)
-                if row['masterid']:
-                    last['masterids'].append(row['masterid'])
+                if row["masterid"]:
+                    last["masterids"].append(row["masterid"])
             return rv
+
         return self.db.pool.do(thd)

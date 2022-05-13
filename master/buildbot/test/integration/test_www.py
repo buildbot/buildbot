@@ -54,7 +54,7 @@ class BodyReader(protocol.Protocol):
 
     def connectionLost(self, reason):
         if reason.check(client.ResponseDone):
-            self.finishedDeferred.callback(b''.join(self.body))
+            self.finishedDeferred.callback(b"".join(self.body))
         else:
             self.finishedDeferred.errback(reason)
 
@@ -66,17 +66,18 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         # set up a full master serving HTTP
-        yield self.setUpRealDatabase(table_names=['masters', 'objects', 'object_state'],
-                                     sqlite_memory=False)
+        yield self.setUpRealDatabase(
+            table_names=["masters", "objects", "object_state"], sqlite_memory=False
+        )
 
         master = fakemaster.FakeMaster(reactor)
 
         master.config.db = dict(db_url=self.db_url)
-        master.db = dbconnector.DBConnector('basedir')
+        master.db = dbconnector.DBConnector("basedir")
         yield master.db.setServiceParent(master)
         yield master.db.setup(check_version=False)
 
-        master.config.mq = dict(type='simple')
+        master.config.mq = dict(type="simple")
         master.mq = mqconnector.MQConnector()
         yield master.mq.setServiceParent(master)
         yield master.mq.setup()
@@ -85,12 +86,13 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         yield master.data.setServiceParent(master)
 
         master.config.www = dict(
-            port='tcp:0:interface=127.0.0.1',
+            port="tcp:0:interface=127.0.0.1",
             debug=True,
             auth=auth.NoAuth(),
             authz=authz.Authz(),
             avatar_methods=[],
-            logfileName='http.log')
+            logfileName="http.log",
+        )
         master.www = wwwservice.WWWService()
         yield master.www.setServiceParent(master)
         yield master.www.startService()
@@ -102,7 +104,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         # now that we have a port, construct the real URL and insert it into
         # the config.  The second reconfig isn't really required, but doesn't
         # hurt.
-        self.url = f'http://127.0.0.1:{master.www.getPortnum()}/'
+        self.url = f"http://127.0.0.1:{master.www.getPortnum()}/"
         self.url = unicode2bytes(self.url)
         master.config.buildbotURL = self.url
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
@@ -111,7 +113,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         # build an HTTP agent, using an explicit connection pool if Twisted
         # supports it (Twisted 13.0.0 and up)
-        if hasattr(client, 'HTTPConnectionPool'):
+        if hasattr(client, "HTTPConnectionPool"):
             self.pool = client.HTTPConnectionPool(reactor)
             self.agent = client.Agent(reactor, pool=self.pool)
         else:
@@ -128,7 +130,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def apiGet(self, url, expect200=True):
-        pg = yield self.agent.request(b'GET', url)
+        pg = yield self.agent.request(b"GET", url)
 
         # this is kind of obscene, but protocols are like that
         d = defer.Deferred()
@@ -144,7 +146,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         return json.loads(bytes2unicode(body))
 
     def link(self, suffix):
-        return self.url + b'api/v2/' + suffix
+        return self.url + b"api/v2/" + suffix
 
     # tests
 
@@ -154,30 +156,49 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_masters(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master',
-                          active=0, last_active=SOMETIME),
-            fakedb.Master(id=8, name='other:master',
-                          active=1, last_active=OTHERTIME),
-        ])
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master", active=0, last_active=SOMETIME),
+                fakedb.Master(id=8, name="other:master", active=1, last_active=OTHERTIME),
+            ]
+        )
 
-        res = yield self.apiGet(self.link(b'masters'))
-        self.assertEqual(res, {
-            'masters': [
-                {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME},
-                {'active': True, 'masterid': 8, 'name': 'other:master',
-                 'last_active': OTHERTIME},
-            ],
-            'meta': {
-                'total': 2,
-            }})
+        res = yield self.apiGet(self.link(b"masters"))
+        self.assertEqual(
+            res,
+            {
+                "masters": [
+                    {
+                        "active": False,
+                        "masterid": 7,
+                        "name": "some:master",
+                        "last_active": SOMETIME,
+                    },
+                    {
+                        "active": True,
+                        "masterid": 8,
+                        "name": "other:master",
+                        "last_active": OTHERTIME,
+                    },
+                ],
+                "meta": {
+                    "total": 2,
+                },
+            },
+        )
 
-        res = yield self.apiGet(self.link(b'masters/7'))
-        self.assertEqual(res, {
-            'masters': [
-                {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME},
-            ],
-            'meta': {
-            }})
+        res = yield self.apiGet(self.link(b"masters/7"))
+        self.assertEqual(
+            res,
+            {
+                "masters": [
+                    {
+                        "active": False,
+                        "masterid": 7,
+                        "name": "some:master",
+                        "last_active": SOMETIME,
+                    },
+                ],
+                "meta": {},
+            },
+        )

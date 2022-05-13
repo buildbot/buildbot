@@ -31,15 +31,15 @@ def dataspec(config):
     master = yield fakemaster.make_master(None, wantRealReactor=True)
     data = connector.DataConnector()
     yield data.setServiceParent(master)
-    if config['out'] != '--':
-        dirs = os.path.dirname(config['out'])
+    if config["out"] != "--":
+        dirs = os.path.dirname(config["out"])
         if dirs and not os.path.exists(dirs):
             os.makedirs(dirs)
-        f = open(config['out'], "w", encoding='utf-8')  # noqa pylint: disable=consider-using-with
+        f = open(config["out"], "w", encoding="utf-8")  # noqa pylint: disable=consider-using-with
     else:
         f = sys.stdout
-    if config['global'] is not None:
-        f.write("window." + config['global'] + '=')
+    if config["global"] is not None:
+        f.write("window." + config["global"] + "=")
     f.write(json.dumps(data.allEndpoints(), indent=2))
     f.close()
     return 0

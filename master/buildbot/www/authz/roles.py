@@ -15,7 +15,6 @@
 
 
 class RolesFromBase:
-
     def __init__(self):
         pass
 
@@ -28,22 +27,20 @@ class RolesFromBase:
 
 
 class RolesFromGroups(RolesFromBase):
-
     def __init__(self, groupPrefix=""):
         super().__init__()
         self.groupPrefix = groupPrefix
 
     def getRolesFromUser(self, userDetails):
         roles = []
-        if 'groups' in userDetails:
-            for group in userDetails['groups']:
+        if "groups" in userDetails:
+            for group in userDetails["groups"]:
                 if group.startswith(self.groupPrefix):
-                    roles.append(group[len(self.groupPrefix):])
+                    roles.append(group[len(self.groupPrefix) :])
         return roles
 
 
 class RolesFromEmails(RolesFromBase):
-
     def __init__(self, **kwargs):
         super().__init__()
         self.roles = {}
@@ -52,13 +49,12 @@ class RolesFromEmails(RolesFromBase):
                 self.roles.setdefault(email, []).append(role)
 
     def getRolesFromUser(self, userDetails):
-        if 'email' in userDetails:
-            return self.roles.get(userDetails['email'], [])
+        if "email" in userDetails:
+            return self.roles.get(userDetails["email"], [])
         return []
 
 
 class RolesFromDomain(RolesFromEmails):
-
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -68,22 +64,21 @@ class RolesFromDomain(RolesFromEmails):
                 self.domain_roles.setdefault(domain, []).append(role)
 
     def getRolesFromUser(self, userDetails):
-        if 'email' in userDetails:
-            email = userDetails['email']
-            edomain = email.split('@')[-1]
+        if "email" in userDetails:
+            email = userDetails["email"]
+            edomain = email.split("@")[-1]
             return self.domain_roles.get(edomain, [])
         return []
 
 
 class RolesFromOwner(RolesFromBase):
-
     def __init__(self, role):
         super().__init__()
         self.role = role
 
     def getRolesFromUser(self, userDetails, owner):
-        if 'email' in userDetails:
-            if userDetails['email'] == owner and owner is not None:
+        if "email" in userDetails:
+            if userDetails["email"] == owner and owner is not None:
                 return [self.role]
         return []
 
@@ -93,10 +88,11 @@ class RolesFromUsername(RolesFromBase):
         self.roles = roles
         if None in usernames:
             from buildbot import config
-            config.error('Usernames cannot be None')
+
+            config.error("Usernames cannot be None")
         self.usernames = usernames
 
     def getRolesFromUser(self, userDetails):
-        if userDetails.get('username') in self.usernames:
+        if userDetails.get("username") in self.usernames:
             return self.roles
         return []

@@ -24,26 +24,23 @@ from buildbot.test.util.integration import RunFakeMasterTestCase
 
 
 class Tests(RunFakeMasterTestCase):
-
     @defer.inlineCallbacks
     def do_terminates_ping_on_shutdown(self, quick_mode):
         """
         During shutdown we want to terminate any outstanding pings.
         """
-        controller = WorkerController(self, 'local')
+        controller = WorkerController(self, "local")
 
         config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=['local'],
-                              factory=BuildFactory()),
+            "builders": [
+                BuilderConfig(name="testy", workernames=["local"], factory=BuildFactory()),
             ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            'multiMaster': True,
+            "workers": [controller.worker],
+            "protocols": {"null": {}},
+            "multiMaster": True,
         }
         yield self.setup_master(config_dict)
-        builder_id = yield self.master.data.updates.findBuilderId('testy')
+        builder_id = yield self.master.data.updates.findBuilderId("testy")
 
         yield controller.connect_worker()
         controller.sever_connection()

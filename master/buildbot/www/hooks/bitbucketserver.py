@@ -26,7 +26,7 @@ GIT_BRANCH_REF = "refs/heads/{}"
 GIT_MERGE_REF = "refs/pull-requests/{}/merge"
 GIT_TAG_REF = "refs/tags/{}"
 
-_HEADER_EVENT = b'X-Event-Key'
+_HEADER_EVENT = b"X-Event-Key"
 
 
 class BitbucketServerEventHandler(PullRequestMixin):
@@ -40,10 +40,8 @@ class BitbucketServerEventHandler(PullRequestMixin):
         if not isinstance(options, dict):
             options = {}
         self.options = options
-        self._codebase = self.options.get('codebase', None)
-        self.external_property_whitelist = self.options.get(
-            'bitbucket_property_whitelist', []
-        )
+        self._codebase = self.options.get("codebase", None)
+        self.external_property_whitelist = self.options.get("bitbucket_property_whitelist", [])
 
     def process(self, request):
         payload = self._get_payload(request)
@@ -51,22 +49,22 @@ class BitbucketServerEventHandler(PullRequestMixin):
         event_type = bytes2unicode(event_type)
         log.msg(f"Processing event {_HEADER_EVENT}: {event_type}")
         event_type = event_type.replace(":", "_")
-        handler = getattr(self, f'handle_{event_type}', None)
+        handler = getattr(self, f"handle_{event_type}", None)
 
         if handler is None:
-            raise ValueError(f'Unknown event: {event_type}')
+            raise ValueError(f"Unknown event: {event_type}")
 
         return handler(payload)
 
     def _get_payload(self, request):
         content = request.content.read()
         content = bytes2unicode(content)
-        content_type = request.getHeader(b'Content-Type')
+        content_type = request.getHeader(b"Content-Type")
         content_type = bytes2unicode(content_type)
-        if content_type.startswith('application/json'):
+        if content_type.startswith("application/json"):
             payload = json.loads(content)
         else:
-            raise ValueError(f'Unknown content type: {content_type}')
+            raise ValueError(f"Unknown content type: {content_type}")
 
         log.msg(f"Payload: {payload}")
 
@@ -83,97 +81,99 @@ class BitbucketServerEventHandler(PullRequestMixin):
 
     def _handle_repo_refs_changed_common(self, payload):
         changes = []
-        project = payload['repository']['project']['name']
-        repo_url = payload['repository']['links']['self'][0]['href']
-        repo_url = repo_url.rstrip('browse')
+        project = payload["repository"]["project"]["name"]
+        repo_url = payload["repository"]["links"]["self"][0]["href"]
+        repo_url = repo_url.rstrip("browse")
 
-        for payload_change in payload['push']['changes']:
-            if payload_change['new']:
-                age = 'new'
-                category = 'push'
+        for payload_change in payload["push"]["changes"]:
+            if payload_change["new"]:
+                age = "new"
+                category = "push"
             else:  # when new is null the ref is deleted
-                age = 'old'
-                category = 'ref-deleted'
+                age = "old"
+                category = "ref-deleted"
 
-            commit_hash = payload_change[age]['target']['hash']
+            commit_hash = payload_change[age]["target"]["hash"]
 
-            if payload_change[age]['type'] == 'branch':
-                branch = GIT_BRANCH_REF.format(payload_change[age]['name'])
-            elif payload_change[age]['type'] == 'tag':
-                branch = GIT_TAG_REF.format(payload_change[age]['name'])
+            if payload_change[age]["type"] == "branch":
+                branch = GIT_BRANCH_REF.format(payload_change[age]["name"])
+            elif payload_change[age]["type"] == "tag":
+                branch = GIT_TAG_REF.format(payload_change[age]["name"])
 
             change = {
-                'revision': commit_hash,
-                'revlink': f'{repo_url}commits/{commit_hash}',
-                'repository': repo_url,
-                'author': f"{payload['actor']['displayName']} <{payload['actor']['username']}>",
-                'comments': f'Bitbucket Server commit {commit_hash}',
-                'branch': branch,
-                'project': project,
-                'category': category
+                "revision": commit_hash,
+                "revlink": f"{repo_url}commits/{commit_hash}",
+                "repository": repo_url,
+                "author": f"{payload['actor']['displayName']} <{payload['actor']['username']}>",
+                "comments": f"Bitbucket Server commit {commit_hash}",
+                "branch": branch,
+                "project": project,
+                "category": category,
             }
 
             if callable(self._codebase):
-                change['codebase'] = self._codebase(payload)
+                change["codebase"] = self._codebase(payload)
             elif self._codebase is not None:
-                change['codebase'] = self._codebase
+                change["codebase"] = self._codebase
 
             changes.append(change)
 
-        return (changes, payload['repository']['scmId'])
+        return (changes, payload["repository"]["scmId"])
 
     def handle_pullrequest_created(self, payload):
         return self.handle_pullrequest(
             payload,
-            GIT_MERGE_REF.format(int(payload['pullrequest']['id'])),
-            "pull-created")
+            GIT_MERGE_REF.format(int(payload["pullrequest"]["id"])),
+            "pull-created",
+        )
 
     def handle_pullrequest_updated(self, payload):
         return self.handle_pullrequest(
             payload,
-            GIT_MERGE_REF.format(int(payload['pullrequest']['id'])),
-            "pull-updated")
+            GIT_MERGE_REF.format(int(payload["pullrequest"]["id"])),
+            "pull-updated",
+        )
 
     def handle_pullrequest_fulfilled(self, payload):
         return self.handle_pullrequest(
             payload,
-            GIT_BRANCH_REF.format(
-                payload['pullrequest']['toRef']['branch']['name']),
-            "pull-fulfilled")
+            GIT_BRANCH_REF.format(payload["pullrequest"]["toRef"]["branch"]["name"]),
+            "pull-fulfilled",
+        )
 
     def handle_pullrequest_rejected(self, payload):
         return self.handle_pullrequest(
             payload,
-            GIT_BRANCH_REF.format(
-                payload['pullrequest']['fromRef']['branch']['name']),
-            "pull-rejected")
+            GIT_BRANCH_REF.format(payload["pullrequest"]["fromRef"]["branch"]["name"]),
+            "pull-rejected",
+        )
 
     def handle_pullrequest(self, payload, refname, category):
-        pr_number = int(payload['pullrequest']['id'])
-        repo_url = payload['repository']['links']['self'][0]['href']
-        repo_url = repo_url.rstrip('browse')
-        revlink = payload['pullrequest']['link']
+        pr_number = int(payload["pullrequest"]["id"])
+        repo_url = payload["repository"]["links"]["self"][0]["href"]
+        repo_url = repo_url.rstrip("browse")
+        revlink = payload["pullrequest"]["link"]
         change = {
-            'revision': payload['pullrequest']['fromRef']['commit']['hash'],
-            'revlink': revlink,
-            'repository': repo_url,
-            'author': f"{payload['actor']['displayName']} <{payload['actor']['username']}>",
-            'comments': f'Bitbucket Server Pull Request #{pr_number}',
-            'branch': refname,
-            'project': payload['repository']['project']['name'],
-            'category': category,
-            'properties': {
-                'pullrequesturl': revlink,
-                **self.extractProperties(payload['pullrequest']),
-            }
+            "revision": payload["pullrequest"]["fromRef"]["commit"]["hash"],
+            "revlink": revlink,
+            "repository": repo_url,
+            "author": f"{payload['actor']['displayName']} <{payload['actor']['username']}>",
+            "comments": f"Bitbucket Server Pull Request #{pr_number}",
+            "branch": refname,
+            "project": payload["repository"]["project"]["name"],
+            "category": category,
+            "properties": {
+                "pullrequesturl": revlink,
+                **self.extractProperties(payload["pullrequest"]),
+            },
         }
 
         if callable(self._codebase):
-            change['codebase'] = self._codebase(payload)
+            change["codebase"] = self._codebase(payload)
         elif self._codebase is not None:
-            change['codebase'] = self._codebase
+            change["codebase"] = self._codebase
 
-        return [change], payload['repository']['scmId']
+        return [change], payload["repository"]["scmId"]
 
     def getChanges(self, request):
         return self.process(request)

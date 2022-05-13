@@ -27,6 +27,7 @@ class BaseManager(service.AsyncMultiService):
     Allows various pieces of code to request a (port, username) combo, along
     with a password and a connection factory.
     """
+
     def __init__(self, name):
         super().__init__()
         self.setName(name)
@@ -42,7 +43,7 @@ class BaseManager(service.AsyncMultiService):
         portstr = config_portstr
 
         # do some basic normalization of portstrs
-        if isinstance(portstr, int) or ':' not in portstr:
+        if isinstance(portstr, int) or ":" not in portstr:
             portstr = f"tcp:{portstr}".format(portstr)
 
         reg = Registration(self, portstr, username)
@@ -68,7 +69,6 @@ class BaseManager(service.AsyncMultiService):
 
 
 class Registration:
-
     def __init__(self, manager, portstr, username):
         self.portstr = portstr
         "portstr this registration is active on"

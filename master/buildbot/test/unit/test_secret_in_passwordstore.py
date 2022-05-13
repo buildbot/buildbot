@@ -28,9 +28,9 @@ from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 
 
-class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixin,
-                       unittest.TestCase):
-
+class TestSecretInPass(
+    MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixin, unittest.TestCase
+):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -81,10 +81,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass(self):
-        self.expect_commands(
-            ExpectMasterShell(['pass', 'secret'])
-            .stdout(b'value')
-        )
+        self.expect_commands(ExpectMasterShell(["pass", "secret"]).stdout(b"value"))
 
         value = yield self.srvpass.get("secret")
         self.assertEqual(value, "value")
@@ -94,8 +91,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
     @defer.inlineCallbacks
     def test_get_secret_in_pass_multiple_lines_unix(self):
         self.expect_commands(
-            ExpectMasterShell(['pass', 'secret'])
-            .stdout(b"value1\nvalue2\nvalue3")
+            ExpectMasterShell(["pass", "secret"]).stdout(b"value1\nvalue2\nvalue3")
         )
 
         value = yield self.srvpass.get("secret")
@@ -106,8 +102,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
     @defer.inlineCallbacks
     def test_get_secret_in_pass_multiple_lines_darwin(self):
         self.expect_commands(
-            ExpectMasterShell(['pass', 'secret'])
-            .stdout(b"value1\rvalue2\rvalue3")
+            ExpectMasterShell(["pass", "secret"]).stdout(b"value1\rvalue2\rvalue3")
         )
 
         value = yield self.srvpass.get("secret")
@@ -118,8 +113,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
     @defer.inlineCallbacks
     def test_get_secret_in_pass_multiple_lines_windows(self):
         self.expect_commands(
-            ExpectMasterShell(['pass', 'secret'])
-            .stdout(b"value1\r\nvalue2\r\nvalue3")
+            ExpectMasterShell(["pass", "secret"]).stdout(b"value1\r\nvalue2\r\nvalue3")
         )
 
         value = yield self.srvpass.get("secret")
@@ -129,10 +123,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass_not_found(self):
-        self.expect_commands(
-            ExpectMasterShell(['pass', 'secret'])
-            .stderr(b"Not found")
-        )
+        self.expect_commands(ExpectMasterShell(["pass", "secret"]).stderr(b"Not found"))
 
         value = yield self.srvpass.get("secret")
         self.assertEqual(value, None)

@@ -21,7 +21,6 @@ from buildbot import interfaces
 
 @implementer(interfaces.ILogObserver)
 class LogObserver:
-
     def setStep(self, step):
         self.step = step
 
@@ -31,11 +30,11 @@ class LogObserver:
     def gotData(self, stream, data):
         if data is None:
             self.finishReceived()
-        elif stream is None or stream == 'o':
+        elif stream is None or stream == "o":
             self.outReceived(data)
-        elif stream == 'e':
+        elif stream == "e":
             self.errReceived(data)
-        elif stream == 'h':
+        elif stream == "h":
             self.headerReceived(data)
 
     def finishReceived(self):
@@ -97,7 +96,6 @@ class LogLineObserver(LogObserver):
 
 
 class LineConsumerLogObserver(LogLineObserver):
-
     def __init__(self, consumerFunction):
         super().__init__()
         self.generator = None
@@ -114,13 +112,13 @@ class LineConsumerLogObserver(LogLineObserver):
         self.feed(input)
 
     def outLineReceived(self, line):
-        self.feed(('o', line))
+        self.feed(("o", line))
 
     def errLineReceived(self, line):
-        self.feed(('e', line))
+        self.feed(("e", line))
 
     def headerLineReceived(self, line):
-        self.feed(('h', line))
+        self.feed(("h", line))
 
     def finishReceived(self):
         if self.generator:
@@ -140,7 +138,6 @@ class OutputProgressObserver(LogObserver):
 
 
 class BufferLogObserver(LogObserver):
-
     def __init__(self, wantStdout=True, wantStderr=False):
         super().__init__()
         self.stdout = [] if wantStdout else None
@@ -156,8 +153,8 @@ class BufferLogObserver(LogObserver):
 
     def _get(self, chunks):
         if chunks is None or not chunks:
-            return ''
-        return ''.join(chunks)
+            return ""
+        return "".join(chunks)
 
     def getStdout(self):
         return self._get(self.stdout)

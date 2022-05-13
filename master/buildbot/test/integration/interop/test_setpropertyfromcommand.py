@@ -25,7 +25,6 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class SetPropertyFromCommand(RunMasterBase):
-
     @defer.inlineCallbacks
     def test_setProp(self):
         yield self.setupConfig(masterConfig())
@@ -36,14 +35,14 @@ class SetPropertyFromCommand(RunMasterBase):
             # Simulate db delay. We usually don't test race conditions
             # with delays, but in integrations test, that would be pretty
             # tricky
-            yield task.deferLater(reactor, .1, lambda: None)
+            yield task.deferLater(reactor, 0.1, lambda: None)
             res = yield oldNewLog(*arg, **kw)
             return res
+
         self.master.data.updates.addLog = newLog
         build = yield self.doForceBuild(wantProperties=True)
 
-        self.assertEqual(
-            build['properties']['test'], ('foo', 'SetPropertyFromCommand Step'))
+        self.assertEqual(build["properties"]["test"], ("foo", "SetPropertyFromCommand Step"))
 
 
 class SetPropertyFromCommandPB(SetPropertyFromCommand):
@@ -65,17 +64,10 @@ def masterConfig():
     c = {}
     from buildbot.plugins import schedulers, steps, util
 
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c["schedulers"] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
     f = util.BuildFactory()
-    f.addStep(steps.SetPropertyFromCommand(
-        property="test", command=["echo", "foo"]))
-    c['builders'] = [
-        util.BuilderConfig(name="testy",
-                           workernames=["local1"],
-                           factory=f)]
+    f.addStep(steps.SetPropertyFromCommand(property="test", command=["echo", "foo"]))
+    c["builders"] = [util.BuilderConfig(name="testy", workernames=["local1"], factory=f)]
 
     return c

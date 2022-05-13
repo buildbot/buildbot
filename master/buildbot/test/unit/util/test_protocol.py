@@ -19,7 +19,6 @@ from buildbot.util.protocol import LineProcessProtocol
 
 
 class FakeLineProcessProtocol(LineProcessProtocol):
-
     def __init__(self):
         super().__init__()
         self.out_lines = []
@@ -33,19 +32,18 @@ class FakeLineProcessProtocol(LineProcessProtocol):
 
 
 class TestLineProcessProtocol(unittest.TestCase):
-
     def test_stdout(self):
         p = FakeLineProcessProtocol()
-        p.outReceived(b'\nline2\nline3\nli')
-        p.outReceived(b'ne4\nli')
-        self.assertEqual(p.out_lines, [b'', b'line2', b'line3', b'line4'])
+        p.outReceived(b"\nline2\nline3\nli")
+        p.outReceived(b"ne4\nli")
+        self.assertEqual(p.out_lines, [b"", b"line2", b"line3", b"line4"])
         p.processEnded(0)
-        self.assertEqual(p.out_lines, [b'', b'line2', b'line3', b'line4', b'li'])
+        self.assertEqual(p.out_lines, [b"", b"line2", b"line3", b"line4", b"li"])
 
     def test_stderr(self):
         p = FakeLineProcessProtocol()
-        p.errReceived(b'\nline2\nline3\nli')
-        p.errReceived(b'ne4\nli')
-        self.assertEqual(p.err_lines, [b'', b'line2', b'line3', b'line4'])
+        p.errReceived(b"\nline2\nline3\nli")
+        p.errReceived(b"ne4\nli")
+        self.assertEqual(p.err_lines, [b"", b"line2", b"line3", b"line4"])
         p.processEnded(0)
-        self.assertEqual(p.err_lines, [b'', b'line2', b'line3', b'line4', b'li'])
+        self.assertEqual(p.err_lines, [b"", b"line2", b"line3", b"line4", b"li"])

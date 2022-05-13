@@ -29,11 +29,18 @@ from buildbot.steps.source.base import Source
 
 class Bzr(Source):
 
-    name = 'bzr'
-    renderables = ['repourl', 'baseURL']
+    name = "bzr"
+    renderables = ["repourl", "baseURL"]
 
-    def __init__(self, repourl=None, baseURL=None, mode='incremental',
-                 method=None, defaultBranch=None, **kwargs):
+    def __init__(
+        self,
+        repourl=None,
+        baseURL=None,
+        mode="incremental",
+        method=None,
+        defaultBranch=None,
+        **kwargs,
+    ):
 
         self.repourl = repourl
         self.baseURL = baseURL
@@ -42,21 +49,21 @@ class Bzr(Source):
         self.method = method
         super().__init__(**kwargs)
         if repourl and baseURL:
-            raise ValueError("you must provide exactly one of repourl and"
-                             " baseURL")
+            raise ValueError("you must provide exactly one of repourl and" " baseURL")
 
         if repourl is None and baseURL is None:
-            raise ValueError("you must provide at least one of repourl and"
-                             " baseURL")
+            raise ValueError("you must provide at least one of repourl and" " baseURL")
 
         if baseURL is not None and defaultBranch is None:
             raise ValueError("you must provide defaultBranch with baseURL")
 
-        if not self._hasAttrGroupMember('mode', self.mode):
-            raise ValueError(f"mode {self.mode} is not one of {self._listAttrGroupMembers('mode')}")
+        if not self._hasAttrGroupMember("mode", self.mode):
+            raise ValueError(
+                f"mode {self.mode} is not one of {self._listAttrGroupMembers('mode')}"
+            )
 
-        if self.mode == 'full':
-            assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
+        if self.mode == "full":
+            assert self.method in ["clean", "fresh", "clobber", "copy", None]
 
     @defer.inlineCallbacks
     def run_vc(self, branch, revision, patch):
@@ -77,9 +84,9 @@ class Bzr(Source):
         patched = yield self.sourcedirIsPatched()
 
         if patched:
-            yield self._dovccmd(['clean-tree', '--ignored', '--force'])
+            yield self._dovccmd(["clean-tree", "--ignored", "--force"])
 
-        yield self._getAttrGroupMember('mode', self.mode)()
+        yield self._getAttrGroupMember("mode", self.mode)()
 
         if patch:
             yield self.patch(patch)
@@ -90,20 +97,20 @@ class Bzr(Source):
     def mode_incremental(self):
         updatable = yield self._sourcedirIsUpdatable()
         if updatable:
-            command = ['update']
+            command = ["update"]
             if self.revision:
-                command.extend(['-r', self.revision])
+                command.extend(["-r", self.revision])
             yield self._dovccmd(command)
         else:
             yield self._doFull()
 
     @defer.inlineCallbacks
     def mode_full(self):
-        if self.method == 'clobber':
+        if self.method == "clobber":
             yield self.clobber()
             return
-        elif self.method == 'copy':
-            self.workdir = 'source'
+        elif self.method == "copy":
+            self.workdir = "source"
             yield self.copy()
             return
 
@@ -111,17 +118,22 @@ class Bzr(Source):
         if not updatable:
             log.msg("No bzr repo present, making full checkout")
             yield self._doFull()
-        elif self.method == 'clean':
+        elif self.method == "clean":
             yield self.clean()
-        elif self.method == 'fresh':
+        elif self.method == "fresh":
             yield self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
 
     @defer.inlineCallbacks
     def _clobber(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron, })
+        cmd = remotecommand.RemoteCommand(
+            "rmdir",
+            {
+                "dir": self.workdir,
+                "logEnviron": self.logEnviron,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -135,43 +147,52 @@ class Bzr(Source):
 
     @defer.inlineCallbacks
     def copy(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': 'build',
-                                                    'logEnviron': self.logEnviron, })
+        cmd = remotecommand.RemoteCommand(
+            "rmdir",
+            {
+                "dir": "build",
+                "logEnviron": self.logEnviron,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
         yield self.mode_incremental()
 
-        cmd = remotecommand.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir': 'build',
-                                           'logEnviron': self.logEnviron, })
+        cmd = remotecommand.RemoteCommand(
+            "cpdir",
+            {
+                "fromdir": "source",
+                "todir": "build",
+                "logEnviron": self.logEnviron,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
     def clean(self):
-        d = self._dovccmd(['clean-tree', '--ignored', '--force'])
-        command = ['update']
+        d = self._dovccmd(["clean-tree", "--ignored", "--force"])
+        command = ["update"]
         if self.revision:
-            command.extend(['-r', self.revision])
+            command.extend(["-r", self.revision])
         d.addCallback(lambda _: self._dovccmd(command))
         return d
 
     def fresh(self):
-        d = self._dovccmd(['clean-tree', '--force'])
-        command = ['update']
+        d = self._dovccmd(["clean-tree", "--force"])
+        command = ["update"]
         if self.revision:
-            command.extend(['-r', self.revision])
+            command.extend(["-r", self.revision])
         d.addCallback(lambda _: self._dovccmd(command))
         return d
 
     @defer.inlineCallbacks
     def _doFull(self):
-        command = ['checkout', self.repourl, '.']
+        command = ["checkout", self.repourl, "."]
         if self.revision:
-            command.extend(['-r', self.revision])
+            command.extend(["-r", self.revision])
 
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
 
@@ -193,7 +214,7 @@ class Bzr(Source):
         return res
 
     def _sourcedirIsUpdatable(self):
-        return self.pathExists(self.build.path_module.join(self.workdir, '.bzr'))
+        return self.pathExists(self.build.path_module.join(self.workdir, ".bzr"))
 
     def computeSourceRevision(self, changes):
         if not changes:
@@ -202,11 +223,14 @@ class Bzr(Source):
         return lastChange
 
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
-        cmd = remotecommand.RemoteShellCommand(self.workdir, ['bzr'] + command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               collectStdout=collectStdout)
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir,
+            ["bzr"] + command,
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+            collectStdout=collectStdout,
+        )
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -218,29 +242,32 @@ class Bzr(Source):
             if collectStdout:
                 return cmd.stdout
             return cmd.rc
+
         return d
 
     def checkBzr(self):
-        d = self._dovccmd(['--version'])
+        d = self._dovccmd(["--version"])
 
         @d.addCallback
         def check(res):
             return res == 0
+
         return d
 
     def _getMethod(self):
-        if self.method is not None and self.mode != 'incremental':
+        if self.method is not None and self.mode != "incremental":
             return self.method
-        elif self.mode == 'incremental':
+        elif self.mode == "incremental":
             return None
-        elif self.method is None and self.mode == 'full':
-            return 'fresh'
+        elif self.method is None and self.mode == "full":
+            return "fresh"
         return None
 
     @defer.inlineCallbacks
     def parseGotRevision(self):
-        stdout = yield self._dovccmd(["version-info", "--custom", "--template='{revno}"],
-                                     collectStdout=True)
+        stdout = yield self._dovccmd(
+            ["version-info", "--custom", "--template='{revno}"], collectStdout=True
+        )
 
         revision = stdout.strip("'")
         try:
@@ -250,4 +277,4 @@ class Bzr(Source):
             raise buildstep.BuildStepFailed() from e
 
         log.msg(f"Got Git revision {revision}")
-        self.updateSourceProperty('got_revision', revision)
+        self.updateSourceProperty("got_revision", revision)

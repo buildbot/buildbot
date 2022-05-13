@@ -58,11 +58,13 @@ class TestException(Exception):
 
 
 class TestConnectableThreadQueue(unittest.TestCase):
-
     def setUp(self):
-        self.queue = TestableConnectableThreadQueue(self, connect_backoff_start_seconds=0,
-                                                    connect_backoff_multiplier=0,
-                                                    connect_backoff_max_wait_seconds=0)
+        self.queue = TestableConnectableThreadQueue(
+            self,
+            connect_backoff_start_seconds=0,
+            connect_backoff_multiplier=0,
+            connect_backoff_max_wait_seconds=0,
+        )
 
     def tearDown(self):
         self.join_queue()
@@ -70,7 +72,7 @@ class TestConnectableThreadQueue(unittest.TestCase):
     def join_queue(self, connection_called_count=None):
         self.queue.join(timeout=1)
         if self.queue.is_alive():
-            raise AssertionError('Thread is still alive')
+            raise AssertionError("Thread is still alive")
         if connection_called_count is not None:
             self.assertEqual(self.queue.create_connection_called_count, connection_called_count)
             self.assertEqual(self.queue.close_connection_called_count, connection_called_count)
@@ -82,12 +84,12 @@ class TestConnectableThreadQueue(unittest.TestCase):
     def test_single_item_called(self):
         def work(conn, *args, **kwargs):
             self.assertIs(conn, self.queue.conn)
-            self.assertEqual(args, ('arg',))
-            self.assertEqual(kwargs, {'kwarg': 'kwvalue'})
-            return 'work_result'
+            self.assertEqual(args, ("arg",))
+            self.assertEqual(kwargs, {"kwarg": "kwvalue"})
+            return "work_result"
 
-        result = yield self.queue.execute_in_thread(work, 'arg', kwarg='kwvalue')
-        self.assertEqual(result, 'work_result')
+        result = yield self.queue.execute_in_thread(work, "arg", kwarg="kwvalue")
+        self.assertEqual(result, "work_result")
 
         self.join_queue(1)
 
@@ -107,13 +109,13 @@ class TestConnectableThreadQueue(unittest.TestCase):
             raise TestException()
 
         def work_success(conn):
-            return 'work_result'
+            return "work_result"
 
         with self.assertRaises(TestException):
             yield self.queue.execute_in_thread(work_exception)
 
         result = yield self.queue.execute_in_thread(work_success)
-        self.assertEqual(result, 'work_result')
+        self.assertEqual(result, "work_result")
 
         self.join_queue(1)
 
@@ -182,23 +184,25 @@ class NoneReturningConnectableThreadQueue(FailingConnectableThreadQueue):
 
 
 class ConnectionErrorTests:
-
     def setUp(self):
         self.lock = threading.Lock()
-        self.queue = self.QueueClass(self, self.lock,
-                                     connect_backoff_start_seconds=0.001,
-                                     connect_backoff_multiplier=1,
-                                     connect_backoff_max_wait_seconds=0.0039)
+        self.queue = self.QueueClass(
+            self,
+            self.lock,
+            connect_backoff_start_seconds=0.001,
+            connect_backoff_multiplier=1,
+            connect_backoff_max_wait_seconds=0.0039,
+        )
 
     def tearDown(self):
         self.queue.join(timeout=1)
         if self.queue.is_alive():
-            raise AssertionError('Thread is still alive')
+            raise AssertionError("Thread is still alive")
 
     @defer.inlineCallbacks
     def test_resets_after_reject(self):
         def work(conn):
-            raise AssertionError('work should not be executed')
+            raise AssertionError("work should not be executed")
 
         with self.lock:
             d = self.queue.execute_in_thread(work)
@@ -220,7 +224,7 @@ class ConnectionErrorTests:
     @defer.inlineCallbacks
     def test_multiple_work_rejected(self):
         def work(conn):
-            raise AssertionError('work should not be executed')
+            raise AssertionError("work should not be executed")
 
         with self.lock:
             d1 = self.queue.execute_in_thread(work)

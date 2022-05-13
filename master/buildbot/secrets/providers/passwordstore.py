@@ -30,6 +30,7 @@ class SecretInPass(SecretProviderBase):
     """
     secret is stored in a password store
     """
+
     name = "SecretInPass"
 
     def checkPassIsInPath(self):
@@ -58,9 +59,13 @@ class SecretInPass(SecretProviderBase):
         get the value from pass identified by 'entry'
         """
         try:
-            rc, output = yield runprocess.run_process(self.master.reactor,
-                                                      ['pass', entry], env=self._env,
-                                                      collect_stderr=False, stderr_is_error=True)
+            rc, output = yield runprocess.run_process(
+                self.master.reactor,
+                ["pass", entry],
+                env=self._env,
+                collect_stderr=False,
+                stderr_is_error=True,
+            )
             if rc != 0:
                 return None
             return output.decode("utf-8", "ignore").splitlines()[0]

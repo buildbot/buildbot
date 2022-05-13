@@ -49,7 +49,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
         """
         formatted_results = ""
 
-        if op == 'add':
+        if op == "add":
             # list, alternating ident, uid
             formatted_results += "user(s) added:\n"
             for user in results:
@@ -57,25 +57,25 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                     formatted_results += f"identifier: {user}\n"
                 else:
                     formatted_results += f"uid: {user}\n\n"
-        elif op == 'remove':
+        elif op == "remove":
             # list of dictionaries
             formatted_results += "user(s) removed:\n"
             for user in results:
                 if user:
                     formatted_results += f"identifier: {user}\n"
-        elif op == 'update':
+        elif op == "update":
             # list, alternating ident, None
             formatted_results += "user(s) updated:\n"
             for user in results:
                 if user:
                     formatted_results += f"identifier: {user}\n"
-        elif op == 'get':
+        elif op == "get":
             # list of dictionaries
             formatted_results += "user(s) found:\n"
             for user in results:
                 if user:
                     for key in sorted(user.keys()):
-                        if key != 'bb_password':
+                        if key != "bb_password":
                             formatted_results += f"{key}: {user[key]}\n"
                     formatted_results += "\n"
                 else:
@@ -116,17 +116,16 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             for user in ids:
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
-                uid = yield self.master.db.users.identifierToUid(
-                    identifier=user)
+                uid = yield self.master.db.users.identifierToUid(identifier=user)
 
                 result = None
-                if op == 'remove':
+                if op == "remove":
                     if uid:
                         yield self.master.db.users.removeUser(uid)
                         result = user
                     else:
                         log.msg(f"Unable to find uid for identifier {user}")
-                elif op == 'get':
+                elif op == "get":
                     if uid:
                         result = yield self.master.db.users.getUser(uid)
                     else:
@@ -137,9 +136,8 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             for user in info:
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
-                ident = user.pop('identifier')
-                uid = yield self.master.db.users.identifierToUid(
-                    identifier=ident)
+                ident = user.pop("identifier")
+                uid = yield self.master.db.users.identifierToUid(identifier=ident)
 
                 # if only an identifier was in user, we're updating only
                 # the bb_username and bb_password.
@@ -149,7 +147,8 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                             uid=uid,
                             identifier=ident,
                             bb_username=bb_username,
-                            bb_password=bb_password)
+                            bb_password=bb_password,
+                        )
                         results.append(ident)
                     else:
                         log.msg(f"Unable to find uid for identifier {user}")
@@ -158,7 +157,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                     once_through = False
                     for attr in user:
                         result = None
-                        if op == 'update' or once_through:
+                        if op == "update" or once_through:
                             if uid:
                                 result = yield self.master.db.users.updateUser(
                                     uid=uid,
@@ -166,14 +165,14 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                                     bb_username=bb_username,
                                     bb_password=bb_password,
                                     attr_type=attr,
-                                    attr_data=user[attr])
+                                    attr_data=user[attr],
+                                )
                             else:
                                 log.msg(f"Unable to find uid for identifier {user}")
-                        elif op == 'add':
+                        elif op == "add":
                             result = yield self.master.db.users.findUserByAttr(
-                                identifier=ident,
-                                attr_type=attr,
-                                attr_data=user[attr])
+                                identifier=ident, attr_type=attr, attr_data=user[attr]
+                            )
                             once_through = True
                         results.append(ident)
 
@@ -194,8 +193,9 @@ class CommandlineUserManager(service.AsyncMultiService):
 
     def __init__(self, username=None, passwd=None, port=None):
         super().__init__()
-        assert username and passwd, ("A username and password pair must be given "
-                                     "to connect and use `buildbot user`")
+        assert username and passwd, (
+            "A username and password pair must be given " "to connect and use `buildbot user`"
+        )
         self.username = username
         self.passwd = passwd
 
@@ -209,8 +209,9 @@ class CommandlineUserManager(service.AsyncMultiService):
         def factory(mind, username):
             return CommandlineUserManagerPerspective(self.master)
 
-        self.registration = yield self.master.pbmanager.register(self.port, self.username,
-                                                                 self.passwd, factory)
+        self.registration = yield self.master.pbmanager.register(
+            self.port, self.username, self.passwd, factory
+        )
         yield super().startService()
 
     def stopService(self):
@@ -221,4 +222,5 @@ class CommandlineUserManager(service.AsyncMultiService):
             if self.registration:
                 return self.registration.unregister()
             return None
+
         return d

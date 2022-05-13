@@ -100,27 +100,19 @@ class WsProtocol(WebSocketServerProtocol):
             self.is_graphql = False
             cmd = frame.pop("cmd", None)
             if cmd is None:
-                return self.send_error(
-                    error="no 'cmd' in websocket frame", code=400, _id=None
-                )
+                return self.send_error(error="no 'cmd' in websocket frame", code=400, _id=None)
             cmdmeth = "cmd_" + cmd
 
         meth = getattr(self, cmdmeth, None)
         if meth is None:
-            return self.send_error(
-                error=f"no such command type '{cmd}'", code=404, _id=_id
-            )
+            return self.send_error(error=f"no such command type '{cmd}'", code=404, _id=_id)
         try:
             return meth(**frame)
         except TypeError as e:
-            return self.send_error(
-                error=f"Invalid method argument '{str(e)}'", code=400, _id=_id
-            )
+            return self.send_error(error=f"Invalid method argument '{str(e)}'", code=400, _id=_id)
         except Exception as e:
             log.err(e, f"while calling command {cmdmeth}")
-            return self.send_error(
-                error=f"Internal Error '{str(e)}'", code=500, _id=_id
-            )
+            return self.send_error(error=f"Internal Error '{str(e)}'", code=500, _id=_id)
 
     # legacy protocol methods
 
@@ -242,9 +234,7 @@ class WsProtocol(WebSocketServerProtocol):
         if id in self.graphql_subs:
             del self.graphql_subs[id]
         else:
-            return self.send_error(
-                error="stopping unknown subscription", code=400, _id=id
-            )
+            return self.send_error(error="stopping unknown subscription", code=400, _id=id)
         if not self.graphql_subs and self.graphql_consumer:
             self.graphql_consumer.stopConsuming()
             self.graphql_consumer = None

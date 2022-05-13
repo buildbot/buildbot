@@ -23,7 +23,6 @@ from buildbot.util.async_sort import async_sort
 
 
 class AsyncSort(unittest.TestCase, LoggingMixin):
-
     def setUp(self) -> None:
         self.setUpLogging()
         return super().setUp()
@@ -47,9 +46,12 @@ class AsyncSort(unittest.TestCase, LoggingMixin):
 
         class SortFail(Exception):
             pass
+
         with self.assertRaises(SortFail):
-            yield async_sort(l, lambda x:
-                defer.succeed(x) if x != "a" else defer.fail(SortFail("ono")))
+            yield async_sort(
+                l,
+                lambda x: defer.succeed(x) if x != "a" else defer.fail(SortFail("ono")),
+            )
 
         self.assertEqual(len(self.flushLoggedErrors(SortFail)), 1)
         self.assertEqual(l, ["b", "c", "a"])

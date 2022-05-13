@@ -19,25 +19,24 @@ from twisted.internet import protocol
 
 class LineBuffer:
     def __init__(self):
-        self._buffer = b''
+        self._buffer = b""
 
     def add_data(self, data):
         # returns lines that have been processed, if any
-        lines = (self._buffer + data).split(b'\n')
+        lines = (self._buffer + data).split(b"\n")
         self._buffer = lines.pop(-1)
         for l in lines:
-            yield l.rstrip(b'\r')
+            yield l.rstrip(b"\r")
 
     def get_trailing_line(self):
         if self._buffer:
             ret = [self._buffer]
-            self._buffer = b''
+            self._buffer = b""
             return ret
         return []
 
 
 class LineProcessProtocol(protocol.ProcessProtocol):
-
     def __init__(self):
         self._out_buffer = LineBuffer()
         self._err_buffer = LineBuffer()

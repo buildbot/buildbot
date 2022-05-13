@@ -34,8 +34,7 @@ class Tests(interfaces.InterfaceTests):
     # common sample data
 
     master_row = [
-        fakedb.Master(id=7, name="some:master",
-                      active=1, last_active=SOMETIME),
+        fakedb.Master(id=7, name="some:master", active=1, last_active=SOMETIME),
     ]
 
     # tests
@@ -62,102 +61,120 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findMasterId_new(self):
-        id = yield self.db.masters.findMasterId('some:master')
+        id = yield self.db.masters.findMasterId("some:master")
         masterdict = yield self.db.masters.getMaster(id)
-        self.assertEqual(masterdict,
-                         dict(id=id, name='some:master', active=False,
-                              last_active=SOMETIME_DT))
+        self.assertEqual(
+            masterdict,
+            dict(id=id, name="some:master", active=False, last_active=SOMETIME_DT),
+        )
 
     @defer.inlineCallbacks
     def test_findMasterId_new_name_differs_only_by_case(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master'),
-        ])
-        id = yield self.db.masters.findMasterId('some:Master')
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master"),
+            ]
+        )
+        id = yield self.db.masters.findMasterId("some:Master")
         masterdict = yield self.db.masters.getMaster(id)
-        self.assertEqual(masterdict, {'id': id, 'name': 'some:Master', 'active': False,
-                                      'last_active': SOMETIME_DT})
+        self.assertEqual(
+            masterdict,
+            {
+                "id": id,
+                "name": "some:Master",
+                "active": False,
+                "last_active": SOMETIME_DT,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_findMasterId_exists(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master'),
-        ])
-        id = yield self.db.masters.findMasterId('some:master')
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master"),
+            ]
+        )
+        id = yield self.db.masters.findMasterId("some:master")
         self.assertEqual(id, 7)
 
     @defer.inlineCallbacks
     def test_setMasterState_when_missing(self):
-        activated = \
-            yield self.db.masters.setMasterState(masterid=7, active=True)
+        activated = yield self.db.masters.setMasterState(masterid=7, active=True)
         self.assertFalse(activated)
 
     @defer.inlineCallbacks
     def test_setMasterState_true_when_active(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master',
-                          active=1, last_active=OTHERTIME),
-        ])
-        activated = yield self.db.masters.setMasterState(
-            masterid=7, active=True)
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master", active=1, last_active=OTHERTIME),
+            ]
+        )
+        activated = yield self.db.masters.setMasterState(masterid=7, active=True)
         self.assertFalse(activated)  # it was already active
         masterdict = yield self.db.masters.getMaster(7)
-        self.assertEqual(masterdict,
-                         dict(id=7, name='some:master', active=True,
-                              last_active=SOMETIME_DT))  # timestamp updated
+        self.assertEqual(
+            masterdict,
+            dict(id=7, name="some:master", active=True, last_active=SOMETIME_DT),
+        )  # timestamp updated
 
     @defer.inlineCallbacks
     def test_setMasterState_true_when_inactive(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master',
-                          active=0, last_active=OTHERTIME),
-        ])
-        activated = yield self.db.masters.setMasterState(
-            masterid=7, active=True)
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master", active=0, last_active=OTHERTIME),
+            ]
+        )
+        activated = yield self.db.masters.setMasterState(masterid=7, active=True)
         self.assertTrue(activated)
         masterdict = yield self.db.masters.getMaster(7)
-        self.assertEqual(masterdict,
-                         dict(id=7, name='some:master', active=True,
-                              last_active=SOMETIME_DT))
+        self.assertEqual(
+            masterdict,
+            dict(id=7, name="some:master", active=True, last_active=SOMETIME_DT),
+        )
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_active(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master',
-                          active=1, last_active=OTHERTIME),
-        ])
-        deactivated = yield self.db.masters.setMasterState(
-            masterid=7, active=False)
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master", active=1, last_active=OTHERTIME),
+            ]
+        )
+        deactivated = yield self.db.masters.setMasterState(masterid=7, active=False)
         self.assertTrue(deactivated)
         masterdict = yield self.db.masters.getMaster(7)
-        self.assertEqual(masterdict,
-                         dict(id=7, name='some:master', active=False,
-                              last_active=OTHERTIME_DT))
+        self.assertEqual(
+            masterdict,
+            dict(id=7, name="some:master", active=False, last_active=OTHERTIME_DT),
+        )
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_inactive(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master',
-                          active=0, last_active=OTHERTIME),
-        ])
-        deactivated = yield self.db.masters.setMasterState(
-            masterid=7, active=False)
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master", active=0, last_active=OTHERTIME),
+            ]
+        )
+        deactivated = yield self.db.masters.setMasterState(masterid=7, active=False)
         self.assertFalse(deactivated)
         masterdict = yield self.db.masters.getMaster(7)
-        self.assertEqual(masterdict,
-                         dict(id=7, name='some:master', active=False,
-                              last_active=OTHERTIME_DT))
+        self.assertEqual(
+            masterdict,
+            dict(id=7, name="some:master", active=False, last_active=OTHERTIME_DT),
+        )
 
     @defer.inlineCallbacks
     def test_getMaster(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master',
-                          active=0, last_active=SOMETIME),
-        ])
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master", active=0, last_active=SOMETIME),
+            ]
+        )
         masterdict = yield self.db.masters.getMaster(7)
-        validation.verifyDbDict(self, 'masterdict', masterdict)
-        self.assertEqual(masterdict, dict(id=7, name='some:master',
-                                          active=False, last_active=SOMETIME_DT))
+        validation.verifyDbDict(self, "masterdict", masterdict)
+        self.assertEqual(
+            masterdict,
+            dict(id=7, name="some:master", active=False, last_active=SOMETIME_DT),
+        )
 
     @defer.inlineCallbacks
     def test_getMaster_missing(self):
@@ -166,25 +183,26 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getMasters(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master',
-                          active=0, last_active=SOMETIME),
-            fakedb.Master(id=8, name='other:master',
-                          active=1, last_active=OTHERTIME),
-        ])
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master", active=0, last_active=SOMETIME),
+                fakedb.Master(id=8, name="other:master", active=1, last_active=OTHERTIME),
+            ]
+        )
         masterlist = yield self.db.masters.getMasters()
         for masterdict in masterlist:
-            validation.verifyDbDict(self, 'masterdict', masterdict)
+            validation.verifyDbDict(self, "masterdict", masterdict)
 
         def masterKey(master):
-            return master['id']
+            return master["id"]
 
-        expected = sorted([
-            dict(id=7, name='some:master',
-                 active=0, last_active=SOMETIME_DT),
-            dict(id=8, name='other:master',
-                 active=1, last_active=OTHERTIME_DT),
-        ], key=masterKey)
+        expected = sorted(
+            [
+                dict(id=7, name="some:master", active=0, last_active=SOMETIME_DT),
+                dict(id=8, name="other:master", active=1, last_active=OTHERTIME_DT),
+            ],
+            key=masterKey,
+        )
         self.assertEqual(sorted(masterlist, key=masterKey), expected)
 
 
@@ -194,39 +212,37 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_setMasterState_false_deletes_links(self):
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='some:master',
-                          active=1, last_active=OTHERTIME),
-            fakedb.Scheduler(id=21),
-            fakedb.SchedulerMaster(schedulerid=21, masterid=7),
-        ])
-        deactivated = yield self.db.masters.setMasterState(
-            masterid=7, active=False)
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="some:master", active=1, last_active=OTHERTIME),
+                fakedb.Scheduler(id=21),
+                fakedb.SchedulerMaster(schedulerid=21, masterid=7),
+            ]
+        )
+        deactivated = yield self.db.masters.setMasterState(masterid=7, active=False)
         self.assertTrue(deactivated)
 
         # check that the scheduler_masters row was deleted
         def thd(conn):
             tbl = self.db.model.scheduler_masters
             self.assertEqual(conn.execute(tbl.select()).fetchall(), [])
+
         yield self.db.pool.do(thd)
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent()
         self.reactor.advance(SOMETIME)
 
 
-class TestRealDB(unittest.TestCase,
-                 connector_component.ConnectorComponentMixin,
-                 RealTests):
-
+class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(
-            table_names=['masters', 'schedulers', 'scheduler_masters'])
+            table_names=["masters", "schedulers", "scheduler_masters"]
+        )
 
         self.reactor.advance(SOMETIME)
 

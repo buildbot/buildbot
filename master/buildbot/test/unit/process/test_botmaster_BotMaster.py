@@ -28,7 +28,6 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -145,7 +144,6 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
 
 
 class TestBotMaster(TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -163,31 +161,30 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigServiceWithBuildbotConfig(self):
         # check that reconfigServiceBuilders is called.
-        self.patch(self.botmaster, 'reconfigServiceBuilders',
-                   mock.Mock(side_effect=lambda c: defer.succeed(None)))
-        self.patch(self.botmaster, 'maybeStartBuildsForAllBuilders',
-                   mock.Mock())
+        self.patch(
+            self.botmaster,
+            "reconfigServiceBuilders",
+            mock.Mock(side_effect=lambda c: defer.succeed(None)),
+        )
+        self.patch(self.botmaster, "maybeStartBuildsForAllBuilders", mock.Mock())
 
         new_config = mock.Mock()
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
 
-        self.botmaster.reconfigServiceBuilders.assert_called_with(
-            new_config)
-        self.assertTrue(
-            self.botmaster.maybeStartBuildsForAllBuilders.called)
+        self.botmaster.reconfigServiceBuilders.assert_called_with(new_config)
+        self.assertTrue(self.botmaster.maybeStartBuildsForAllBuilders.called)
 
     @defer.inlineCallbacks
     def test_reconfigServiceBuilders_add_remove(self):
-        bc = config.BuilderConfig(name='bldr', factory=factory.BuildFactory(),
-                                  workername='f')
+        bc = config.BuilderConfig(name="bldr", factory=factory.BuildFactory(), workername="f")
         self.new_config.builders = [bc]
 
         yield self.botmaster.reconfigServiceBuilders(self.new_config)
 
-        bldr = self.botmaster.builders['bldr']
+        bldr = self.botmaster.builders["bldr"]
         self.assertIdentical(bldr.parent, self.botmaster)
         self.assertIdentical(bldr.master, self.master)
-        self.assertEqual(self.botmaster.builderNames, ['bldr'])
+        self.assertEqual(self.botmaster.builderNames, ["bldr"])
 
         self.new_config.builders = []
 
@@ -201,27 +198,27 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
     def test_maybeStartBuildsForBuilder(self):
         brd = self.botmaster.brd = mock.Mock()
 
-        self.botmaster.maybeStartBuildsForBuilder('frank')
+        self.botmaster.maybeStartBuildsForBuilder("frank")
 
-        brd.maybeStartBuildsOn.assert_called_once_with(['frank'])
+        brd.maybeStartBuildsOn.assert_called_once_with(["frank"])
 
     def test_maybeStartBuildsForWorker(self):
         brd = self.botmaster.brd = mock.Mock()
-        b1 = mock.Mock(name='frank')
-        b1.name = 'frank'
-        b2 = mock.Mock(name='larry')
-        b2.name = 'larry'
+        b1 = mock.Mock(name="frank")
+        b1.name = "frank"
+        b2 = mock.Mock(name="larry")
+        b2.name = "larry"
         self.botmaster.getBuildersForWorker = mock.Mock(return_value=[b1, b2])
 
-        self.botmaster.maybeStartBuildsForWorker('centos')
+        self.botmaster.maybeStartBuildsForWorker("centos")
 
-        self.botmaster.getBuildersForWorker.assert_called_once_with('centos')
-        brd.maybeStartBuildsOn.assert_called_once_with(['frank', 'larry'])
+        self.botmaster.getBuildersForWorker.assert_called_once_with("centos")
+        brd.maybeStartBuildsOn.assert_called_once_with(["frank", "larry"])
 
     def test_maybeStartBuildsForAll(self):
         brd = self.botmaster.brd = mock.Mock()
-        self.botmaster.builderNames = ['frank', 'larry']
+        self.botmaster.builderNames = ["frank", "larry"]
 
         self.botmaster.maybeStartBuildsForAllBuilders()
 
-        brd.maybeStartBuildsOn.assert_called_once_with(['frank', 'larry'])
+        brd.maybeStartBuildsOn.assert_called_once_with(["frank", "larry"])

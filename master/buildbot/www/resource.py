@@ -24,7 +24,7 @@ from twisted.web.error import Error
 
 from buildbot.util import unicode2bytes
 
-_CR_LF_RE = re.compile(br"[\r\n]+.*")
+_CR_LF_RE = re.compile(rb"[\r\n]+.*")
 
 
 def protect_redirect_url(url):
@@ -63,9 +63,10 @@ class Resource(resource.Resource):
     def asyncRenderHelper(self, request, _callable, writeError=None):
         def writeErrorDefault(msg, errcode=400):
             request.setResponseCode(errcode)
-            request.setHeader(b'content-type', b'text/plain; charset=utf-8')
+            request.setHeader(b"content-type", b"text/plain; charset=utf-8")
             request.write(msg)
             request.finish()
+
         if writeError is None:
             writeError = writeErrorDefault
         try:
@@ -100,9 +101,9 @@ class Resource(resource.Resource):
 
         @d.addErrback
         def fail(f):
-            log.err(f, 'While rendering resource:')
+            log.err(f, "While rendering resource:")
             try:
-                writeError(b'internal error - see logs', errcode=500)
+                writeError(b"internal error - see logs", errcode=500)
             except Exception:
                 try:
                     request.finish()
@@ -113,7 +114,6 @@ class Resource(resource.Resource):
 
 
 class RedirectResource(Resource):
-
     def __init__(self, master, basepath):
         super().__init__(master)
         self.basepath = basepath

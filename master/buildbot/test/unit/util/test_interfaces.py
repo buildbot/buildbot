@@ -19,7 +19,6 @@ from buildbot.test.util import interfaces
 
 
 class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
-
     def test_simple_decorator(self):
         def myfunc(x, y=2, *args):
             pass
@@ -29,17 +28,18 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             pass
 
         try:
+
             @self.assertArgSpecMatches(myfunc)
             def myfunc3(x, y=3, *args):
                 pass
+
         except Exception as e:
             error = e
         else:
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(
-            error.args, ('Expected: (x, y=3, *args); got: (x, y=2, *args)',))
+        self.assertEqual(error.args, ("Expected: (x, y=3, *args); got: (x, y=2, *args)",))
 
     def test_double_decorator(self):
         def myfunc(x, y):
@@ -56,28 +56,32 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             pass
 
         try:
+
             @self.assertArgSpecMatches(myfunc, myfunc3)
             def myfunc5(x, y):
                 pass
+
         except Exception as e:
             error = e
         else:
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(error.args, ('Expected: (x, y); got: (x, yy)',))
+        self.assertEqual(error.args, ("Expected: (x, y); got: (x, yy)",))
 
         try:
+
             @self.assertArgSpecMatches(myfunc, myfunc3)
             def myfunc6(xx, yy):
                 pass
+
         except Exception as e:
             error = e
         else:
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(error.args, ('Expected: (x, y); got: (x, yy)',))
+        self.assertEqual(error.args, ("Expected: (x, y); got: (x, yy)",))
 
     def test_function_style(self):
         def myfunc(x, y=2, *args):
@@ -99,5 +103,4 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(
-            error.args, ('Expected: (x, y=2, *args); got: (x, y=3, *args)',))
+        self.assertEqual(error.args, ("Expected: (x, y=2, *args); got: (x, y=3, *args)",))

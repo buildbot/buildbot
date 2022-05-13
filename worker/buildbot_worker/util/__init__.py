@@ -33,16 +33,16 @@ __all__ = [
 
 
 def remove_userpassword(url):
-    if '@' not in url:
+    if "@" not in url:
         return url
-    if '://' not in url:
+    if "://" not in url:
         return url
 
     # urlparse would've been nice, but doesn't support ssh... sigh
-    (protocol, repo_url) = url.split('://')
-    repo_url = repo_url.split('@')[-1]
+    (protocol, repo_url) = url.split("://")
+    repo_url = repo_url.split("@")[-1]
 
-    return protocol + '://' + repo_url
+    return protocol + "://" + repo_url
 
 
 def now(_reactor=None):
@@ -66,9 +66,11 @@ class Obfuscated(object):
         return repr(self.fake)
 
     def __eq__(self, other):
-        return other.__class__ is self.__class__ and \
-            other.real == self.real and \
-            other.fake == self.fake
+        return (
+            other.__class__ is self.__class__
+            and other.real == self.real
+            and other.fake == self.fake
+        )
 
     @staticmethod
     def to_text(s):
@@ -125,9 +127,8 @@ def rewrap(text, width=None):
 
     # Split text by lines and group lines that comprise paragraphs.
     wrapped_text = ""
-    for do_wrap, lines in itertools.groupby(text.splitlines(True),
-                                            key=needs_wrapping):
-        paragraph = ''.join(lines)
+    for do_wrap, lines in itertools.groupby(text.splitlines(True), key=needs_wrapping):
+        paragraph = "".join(lines)
 
         if do_wrap:
             paragraph = textwrap.fill(paragraph, width)

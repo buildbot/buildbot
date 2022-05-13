@@ -21,7 +21,6 @@ from buildbot.interfaces import IRenderable
 
 @implementer(IRenderable)
 class ConstantRenderable:
-
     def __init__(self, value):
         self.value = value
 

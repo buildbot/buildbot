@@ -31,6 +31,7 @@ from buildbot.test.util import misc
 
 try:
     import lz4
+
     [lz4]
     hasLz4 = True
 except ImportError:
@@ -38,7 +39,7 @@ except ImportError:
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, basedir=os.path.abspath('basedir'), force=True)
+    config = dict(quiet=False, basedir=os.path.abspath("basedir"), force=True)
     config.update(kwargs)
     return config
 
@@ -52,22 +53,27 @@ def patch_environ(case, key, value):
     def cleanup():
         os.environ.clear()
         os.environ.update(old_environ)
+
     os.environ[key] = value
     case.addCleanup(cleanup)
 
 
-class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
-                    TestReactorMixin, unittest.TestCase):
-
+class TestCleanupDb(
+    misc.StdoutAssertionsMixin, dirs.DirsMixin, TestReactorMixin, unittest.TestCase
+):
     def setUp(self):
         self.setup_test_reactor()
         self.origcwd = os.getcwd()
-        self.setUpDirs('basedir')
-        with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
-            f.write(textwrap.dedent("""
+        self.setUpDirs("basedir")
+        with open(os.path.join("basedir", "buildbot.tac"), "wt", encoding="utf-8") as f:
+            f.write(
+                textwrap.dedent(
+                    """
                 from twisted.application import service
                 application = service.Application('buildmaster')
-            """))
+            """
+                )
+            )
         self.setUpStdoutAssertions()
         self.ensureNoSqliteMemory()
 
@@ -78,32 +84,39 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
     def ensureNoSqliteMemory(self):
         # test may use mysql or pg if configured in env
         envkey = "BUILDBOT_TEST_DB_URL"
-        if envkey not in os.environ or os.environ[envkey] == 'sqlite://':
+        if envkey not in os.environ or os.environ[envkey] == "sqlite://":
 
-            patch_environ(self, envkey, "sqlite:///" + os.path.join(
-                self.origcwd, "basedir", "state.sqlite"))
+            patch_environ(
+                self,
+                envkey,
+                "sqlite:///" + os.path.join(self.origcwd, "basedir", "state.sqlite"),
+            )
 
     def createMasterCfg(self, extraconfig=""):
         os.chdir(self.origcwd)
-        with open(os.path.join('basedir', 'master.cfg'), 'wt', encoding='utf-8') as f:
-            f.write(textwrap.dedent(f"""
+        with open(os.path.join("basedir", "master.cfg"), "wt", encoding="utf-8") as f:
+            f.write(
+                textwrap.dedent(
+                    f"""
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
                 c['db_url'] = {repr(os.environ["BUILDBOT_TEST_DB_URL"])}
                 c['buildbotNetUsageData'] = None
                 c['multiMaster'] = True  # don't complain for no builders
                 {extraconfig}
-            """))
+            """
+                )
+            )
 
     @defer.inlineCallbacks
     def test_cleanup_not_basedir(self):
-        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='doesntexist'))
+        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir="doesntexist"))
         self.assertEqual(res, 1)
-        self.assertInStdout('invalid buildmaster directory')
+        self.assertInStdout("invalid buildmaster directory")
 
     @defer.inlineCallbacks
     def test_cleanup_bad_config(self):
-        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
+        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir="basedir"))
         self.assertEqual(res, 1)
         self.assertInStdout("master.cfg' does not exist")
 
@@ -111,10 +124,9 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
     def test_cleanup_bad_config2(self):
 
         self.createMasterCfg(extraconfig="++++ # syntaxerror")
-        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
+        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir="basedir"))
         self.assertEqual(res, 1)
-        self.assertInStdout(
-            "encountered a SyntaxError while parsing config file:")
+        self.assertInStdout("encountered a SyntaxError while parsing config file:")
         # config logs an error via log.err, we must eat it or trial will
         # complain
         self.flushLoggedErrors()
@@ -129,14 +141,20 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
 
 class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()
 
         table_names = [
-            'logs', 'logchunks', 'steps', 'builds', 'builders',
-            'masters', 'buildrequests', 'buildsets', 'workers'
+            "logs",
+            "logchunks",
+            "steps",
+            "builds",
+            "builders",
+            "masters",
+            "buildrequests",
+            "buildsets",
+            "workers",
         ]
 
         self.master = fakemaster.make_master(self, wantRealReactor=True)
@@ -165,7 +183,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 continue
             # create a master.cfg with different compression method
             self.createMasterCfg(f"c['logCompressionMethod'] = '{mode}'")
-            res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
+            res = yield cleanupdb._cleanupDatabase(mkconfig(basedir="basedir"))
             self.assertEqual(res, 0)
 
             # make sure the compression don't change the data we can retrieve
@@ -179,7 +197,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
                 q = q.where(tbl.c.logid == logid)
                 return conn.execute(q).fetchone()[0]
+
             lengths[mode] = yield self.master.db.pool.do(thd)
 
-        self.assertDictAlmostEqual(
-            lengths, {'raw': 5999, 'bz2': 44, 'lz4': 40, 'gz': 31})
+        self.assertDictAlmostEqual(lengths, {"raw": 5999, "bz2": 44, "lz4": 40, "gz": 31})

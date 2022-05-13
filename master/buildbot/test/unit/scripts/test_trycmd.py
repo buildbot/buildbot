@@ -22,11 +22,10 @@ from buildbot.scripts import trycmd
 
 
 class TestStatusLog(unittest.TestCase):
-
     def test_trycmd(self):
         Try = mock.Mock()
-        self.patch(tryclient, 'Try', Try)
-        inst = Try.return_value = mock.Mock(name='Try-instance')
+        self.patch(tryclient, "Try", Try)
+        inst = Try.return_value = mock.Mock(name="Try-instance")
 
         rc = trycmd.trycmd(dict(cfg=1))
 

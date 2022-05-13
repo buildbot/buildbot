@@ -20,12 +20,14 @@ def _noop():
 
 
 class HangCheckProtocol(
-    proxyForInterface(IProtocol, '_wrapped_protocol'), object,
+    proxyForInterface(IProtocol, "_wrapped_protocol"),
+    object,
 ):
     """
     Wrap a protocol, so the underlying connection will disconnect if
     the other end doesn't send data within a given timeout.
     """
+
     transport = None
     _hungConnectionTimer = None
 
@@ -67,12 +69,15 @@ class HangCheckProtocol(
         """
         Start a timer to detect if the connection is hung.
         """
+
         def hungConnection():
             self._hung_callback()
             self._hungConnectionTimer = None
             self.transport.loseConnection()
+
         self._hungConnectionTimer = self._reactor.callLater(
-            self._HUNG_CONNECTION_TIMEOUT, hungConnection)
+            self._HUNG_CONNECTION_TIMEOUT, hungConnection
+        )
 
     def _stopHungConnectionTimer(self):
         """
@@ -85,7 +90,8 @@ class HangCheckProtocol(
 
 
 class HangCheckFactory(
-    proxyForInterface(IProtocolFactory, '_wrapped_factory'), object,
+    proxyForInterface(IProtocolFactory, "_wrapped_factory"),
+    object,
 ):
     """
     Wrap a protocol factory, so the underlying connection will

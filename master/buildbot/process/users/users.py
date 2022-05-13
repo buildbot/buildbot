@@ -26,7 +26,7 @@ from buildbot.util import unicode2bytes
 
 # TODO: fossil comes from a plugin. We should have an API that plugins could use to
 # register allowed user types.
-srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr', 'fossil']
+srcs = ["git", "svn", "hg", "cvs", "darcs", "bzr", "fossil"]
 salt_len = 8
 
 
@@ -57,9 +57,10 @@ def createUserObject(master, author, src=None):
         return defer.succeed(None)
 
     return master.db.users.findUserByAttr(
-        identifier=usdict['identifier'],
-        attr_type=usdict['attr_type'],
-        attr_data=usdict['attr_data'])
+        identifier=usdict["identifier"],
+        attr_type=usdict["attr_type"],
+        attr_data=usdict["attr_data"],
+    )
 
 
 def _extractContact(usdict, contact_types, uid):
@@ -71,8 +72,11 @@ def _extractContact(usdict, contact_types, uid):
     else:
         contact = None
     if contact is None:
-        log.msg(format="Unable to find any of %(contact_types)r for uid: %(uid)r",
-                contact_types=contact_types, uid=uid)
+        log.msg(
+            format="Unable to find any of %(contact_types)r for uid: %(uid)r",
+            contact_types=contact_types,
+            uid=uid,
+        )
     return contact
 
 
@@ -127,7 +131,7 @@ def check_passwd(guess, passwd):
     @returns: boolean
     """
     m = sha1()
-    salt = passwd[:salt_len * 2]  # salt_len * 2 due to encode('hex_codec')
+    salt = passwd[: salt_len * 2]  # salt_len * 2 due to encode('hex_codec')
     m.update(unicode2bytes(guess) + unicode2bytes(salt))
     crypted_guess = bytes2unicode(salt) + m.hexdigest()
 

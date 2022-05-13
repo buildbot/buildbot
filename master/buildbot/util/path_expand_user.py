@@ -27,7 +27,7 @@ def posix_expanduser(path, worker_environ):
     """Expand ~ and ~user constructions.  If user or $HOME is unknown,
     do nothing."""
     path = os.fspath(path)
-    tilde = '~'
+    tilde = "~"
     if not path.startswith(tilde):
         return path
     sep = posixpath._get_sep(path)
@@ -35,7 +35,7 @@ def posix_expanduser(path, worker_environ):
     if i < 0:
         i = len(path)
     if i == 1:
-        if 'HOME' not in worker_environ:
+        if "HOME" not in worker_environ:
             try:
                 import pwd
             except ImportError:
@@ -48,7 +48,7 @@ def posix_expanduser(path, worker_environ):
                 # password database, return the path unchanged
                 return path
         else:
-            userhome = worker_environ['HOME']
+            userhome = worker_environ["HOME"]
     else:
         try:
             import pwd
@@ -63,7 +63,7 @@ def posix_expanduser(path, worker_environ):
             # password database, return the path unchanged
             return path
         userhome = pwent.pw_dir
-    root = '/'
+    root = "/"
     userhome = userhome.rstrip(root)
     return (userhome + path[i:]) or root
 
@@ -72,27 +72,27 @@ def nt_expanduser(path, worker_environ):
     """Expand ~ and ~user constructs.
     If user or $HOME is unknown, do nothing."""
     path = os.fspath(path)
-    tilde = '~'
+    tilde = "~"
     if not path.startswith(tilde):
         return path
     i, n = 1, len(path)
     while i < n and path[i] not in ntpath._get_bothseps(path):
         i += 1
 
-    if 'USERPROFILE' in worker_environ:
-        userhome = worker_environ['USERPROFILE']
-    elif 'HOMEPATH' not in worker_environ:
+    if "USERPROFILE" in worker_environ:
+        userhome = worker_environ["USERPROFILE"]
+    elif "HOMEPATH" not in worker_environ:
         return path
     else:
         try:
-            drive = worker_environ['HOMEDRIVE']
+            drive = worker_environ["HOMEDRIVE"]
         except KeyError:
-            drive = ''
-        userhome = ntpath.join(drive, worker_environ['HOMEPATH'])
+            drive = ""
+        userhome = ntpath.join(drive, worker_environ["HOMEPATH"])
 
     if i != 1:  # ~user
         target_user = path[1:i]
-        current_user = worker_environ.get('USERNAME')
+        current_user = worker_environ.get("USERNAME")
 
         if target_user != current_user:
             # Try to guess user home directory.  By default all user

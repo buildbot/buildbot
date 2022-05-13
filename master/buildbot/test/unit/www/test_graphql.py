@@ -37,7 +37,7 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         skip = "graphql is required for V3RootResource tests"
 
     def setUp(self):
-        self.patch(connector.DataConnector, 'submodules', [])
+        self.patch(connector.DataConnector, "submodules", [])
         self.setup_test_reactor(use_asyncio=True)
         self.master = self.make_master(url="http://server/path/", wantGraphql=True)
         self.master.config.www["graphql"] = {"debug": True}
@@ -58,9 +58,7 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_failure(self):
-        self.master.graphql.query = mock.Mock(
-            return_value=defer.fail(RuntimeError("oh noes"))
-        )
+        self.master.graphql.query = mock.Mock(return_value=defer.fail(RuntimeError("oh noes")))
         yield self.render_resource(
             self.rsrc,
             b"/?query={builders{name}}",
@@ -246,9 +244,7 @@ class DisabledV3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         yield self.render_resource(self.rsrc, b"/")
         self.assertRequest(
             content=unicode2bytes(
-                json.dumps(
-                    {"data": None, "errors": [{"message": "graphql not enabled"}]}
-                )
+                json.dumps({"data": None, "errors": [{"message": "graphql not enabled"}]})
             ),
             responseCode=501,
         )

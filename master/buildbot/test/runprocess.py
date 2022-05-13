@@ -27,13 +27,25 @@ class MasterRunProcessMixin:
         self._master_run_process_expect_env = {}
 
     def assert_all_commands_ran(self):
-        self.assertEqual(self._expected_master_commands, [],
-                         "assert all expected commands were run")
+        self.assertEqual(
+            self._expected_master_commands, [], "assert all expected commands were run"
+        )
 
-    def patched_run_process(self, reactor, command, workdir=None, env=None,
-                            collect_stdout=True, collect_stderr=True, stderr_is_error=False,
-                            io_timeout=300, runtime_timeout=3600, sigterm_timeout=5,
-                            initial_stdin=None, use_pty=False):
+    def patched_run_process(
+        self,
+        reactor,
+        command,
+        workdir=None,
+        env=None,
+        collect_stdout=True,
+        collect_stderr=True,
+        stderr_is_error=False,
+        io_timeout=300,
+        runtime_timeout=3600,
+        sigterm_timeout=5,
+        initial_stdin=None,
+        use_pty=False,
+    ):
 
         _check_env_is_expected(self, self._master_run_process_expect_env, env)
 
@@ -66,7 +78,7 @@ class MasterRunProcessMixin:
     def expect_commands(self, *exp):
         for e in exp:
             if not isinstance(e, ExpectMasterShell):
-                raise Exception('All expectation must be an instance of ExpectMasterShell')
+                raise Exception("All expectation must be an instance of ExpectMasterShell")
 
         self._patch_runprocess()
         self._expected_master_commands.extend(exp)

@@ -34,8 +34,10 @@ from buildbot.worker.protocols.manager.base import BaseManager
 @implementer(portal.IRealm, checkers.ICredentialsChecker)
 class Dispatcher(BaseDispatcher):
 
-    credentialInterfaces = [credentials.IUsernamePassword,
-                            credentials.IUsernameHashedPassword]
+    credentialInterfaces = [
+        credentials.IUsernamePassword,
+        credentials.IUsernameHashedPassword,
+    ]
 
     def __init__(self, config_portstr, portstr):
         super().__init__(portstr)
@@ -91,6 +93,6 @@ class Dispatcher(BaseDispatcher):
 
 class PBManager(BaseManager):
     def __init__(self):
-        super().__init__('pbmanager')
+        super().__init__("pbmanager")
 
     dispatcher_class = Dispatcher

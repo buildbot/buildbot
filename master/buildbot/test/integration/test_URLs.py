@@ -33,14 +33,13 @@ class UrlForBuildMaster(RunMasterBase):
         yield self.setupConfig(masterConfig())
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
-        self.assertEqual(build['results'], SUCCESS)
-        if runtime.platformType == 'win32':
+        self.assertEqual(build["results"], SUCCESS)
+        if runtime.platformType == "win32":
             command = "echo http://localhost:8080/#builders/1/builds/1"
         else:
             command = "echo 'http://localhost:8080/#builders/1/builds/1'"
 
-        self.assertIn(command,
-                      build['steps'][1]['logs'][0]['contents']['content'])
+        self.assertIn(command, build["steps"][1]["logs"][0]["contents"]["content"])
 
 
 # master configuration
@@ -50,17 +49,10 @@ def masterConfig():
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import steps, schedulers, util
 
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c["schedulers"] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
     f = BuildFactory()
     # do a bunch of transfer to exercise the protocol
     f.addStep(steps.ShellCommand(command=["echo", util.URLForBuild]))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)
-    ]
+    c["builders"] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
     return c

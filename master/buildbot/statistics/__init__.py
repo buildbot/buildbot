@@ -27,16 +27,16 @@ from buildbot.statistics.stats_service import StatsService
 from buildbot.statistics.storage_backends.influxdb_client import InfluxStorageService
 
 __all__ = [
-    'CaptureBuildDuration',
-    'CaptureBuildDurationAllBuilders',
-    'CaptureBuildEndTime',
-    'CaptureBuildEndTimeAllBuilders',
-    'CaptureBuildStartTime',
-    'CaptureBuildStartTimeAllBuilders',
-    'CaptureData',
-    'CaptureDataAllBuilders',
-    'CaptureProperty',
-    'CapturePropertyAllBuilders',
-    'InfluxStorageService',
-    'StatsService'
+    "CaptureBuildDuration",
+    "CaptureBuildDurationAllBuilders",
+    "CaptureBuildEndTime",
+    "CaptureBuildEndTimeAllBuilders",
+    "CaptureBuildStartTime",
+    "CaptureBuildStartTimeAllBuilders",
+    "CaptureData",
+    "CaptureDataAllBuilders",
+    "CaptureProperty",
+    "CapturePropertyAllBuilders",
+    "InfluxStorageService",
+    "StatsService",
 ]

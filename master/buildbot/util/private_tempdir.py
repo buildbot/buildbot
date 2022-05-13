@@ -20,10 +20,10 @@ import tempfile
 
 
 class PrivateTemporaryDirectory:
-    """ Works similarly to python 3.2+ TemporaryDirectory except the
-        also sets the permissions of the created directory and
+    """Works similarly to python 3.2+ TemporaryDirectory except the
+    also sets the permissions of the created directory and
 
-        Note, that Windows ignores the permissions.
+    Note, that Windows ignores the permissions.
     """
 
     def __init__(self, suffix=None, prefix=None, dir=None, mode=0o700):
@@ -39,12 +39,14 @@ class PrivateTemporaryDirectory:
 
     def cleanup(self):
         if self._cleanup_needed:
+
             def remove_readonly(func, path, _):
-                """ Workaround Permission Error on Windows if any files in path are read-only.
+                """Workaround Permission Error on Windows if any files in path are read-only.
 
                 See https://docs.python.org/3/library/shutil.html#rmtree-example
                 """
                 os.chmod(path, stat.S_IWRITE)
                 func(path)
+
             shutil.rmtree(self.name, onerror=remove_readonly)
             self._cleanup_needed = False

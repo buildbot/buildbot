@@ -21,12 +21,14 @@ def check_param_length(value, name, max_length):
         error(f"{name} '{value}' exceeds maximum length of {max_length}")
 
     qualified_name = f"{type(value).__module__}.{type(value).__name__}"
-    if qualified_name == 'buildbot.process.properties.Interpolate':
+    if qualified_name == "buildbot.process.properties.Interpolate":
         if value.args:
-            interpolations = tuple([''] * len(value.args))
+            interpolations = tuple([""] * len(value.args))
         else:
-            interpolations = {k: '' for k in value.interpolations}
+            interpolations = {k: "" for k in value.interpolations}
         shortest_value = value.fmtstring % interpolations
         if len(shortest_value) > max_length:
-            error(f"{name} '{value}' (shortest interpolation) exceeds maximum length of "
-                  f"{max_length}")
+            error(
+                f"{name} '{value}' (shortest interpolation) exceeds maximum length of "
+                f"{max_length}"
+            )

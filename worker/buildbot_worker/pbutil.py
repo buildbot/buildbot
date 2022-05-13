@@ -64,10 +64,10 @@ class AutoLoginPBFactory(PBClientFactory):
         self._client = client
 
     def doLogin(self, root, broker):
-        d = self._cbSendUsername(root, self._credentials.username,
-                                 self._credentials.password, self._client)
-        d.addCallbacks(self.gotPerspective, self.failedToGetPerspective,
-                       errbackArgs=(broker,))
+        d = self._cbSendUsername(
+            root, self._credentials.username, self._credentials.password, self._client
+        )
+        d.addCallbacks(self.gotPerspective, self.failedToGetPerspective, errbackArgs=(broker,))
         return d
 
     # methods to override
@@ -95,7 +95,7 @@ class AutoLoginPBFactory(PBClientFactory):
             log.msg("unauthorized login; check worker name and password")
             # fall through
         else:
-            log.err(why, 'While trying to connect:')
+            log.err(why, "While trying to connect:")
             reactor.stop()
             return
 
@@ -103,7 +103,7 @@ class AutoLoginPBFactory(PBClientFactory):
         broker.transport.loseConnection()
 
 
-def decode(data, encoding='utf-8', errors='strict'):
+def decode(data, encoding="utf-8", errors="strict"):
     """We need to convert a dictionary where keys and values
     are bytes, to unicode strings.  This happens when a
     Python 2 master sends a dictionary back to a Python 3 worker.

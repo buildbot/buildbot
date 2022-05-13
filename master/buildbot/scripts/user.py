@@ -25,23 +25,23 @@ from buildbot.util import in_reactor
 @defer.inlineCallbacks
 def user(config):
 
-    master = config.get('master')
-    op = config.get('op')
-    username = config.get('username')
-    passwd = config.get('passwd')
+    master = config.get("master")
+    op = config.get("op")
+    username = config.get("username")
+    passwd = config.get("passwd")
     master, port = master.split(":")
     port = int(port)
-    bb_username = config.get('bb_username')
-    bb_password = config.get('bb_password')
+    bb_username = config.get("bb_username")
+    bb_password = config.get("bb_password")
     if bb_username or bb_password:
         bb_password = users.encrypt(bb_password)
-    info = config.get('info')
-    ids = config.get('ids')
+    info = config.get("info")
+    ids = config.get("ids")
 
     # find identifier if op == add
-    if info and op == 'add':
+    if info and op == "add":
         for user in info:
-            user['identifier'] = sorted(user.values())[0]
+            user["identifier"] = sorted(user.values())[0]
 
     uc = usersclient.UsersClient(master, username, passwd, port)
     output = yield uc.send(op, bb_username, bb_password, ids, info)

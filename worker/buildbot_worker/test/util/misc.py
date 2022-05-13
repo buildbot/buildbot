@@ -51,7 +51,7 @@ def nl(s):
     appropriate expectation in an assertEqual"""
     if not isinstance(s, string_types):
         return s
-    return s.replace('\n', os.linesep)
+    return s.replace("\n", os.linesep)
 
 
 class BasedirMixin(object):
@@ -89,11 +89,13 @@ class PatcherMixin(object):
     def patch_os_uname(self, replacement):
         # twisted's 'patch' doesn't handle the case where an attribute
         # doesn't exist..
-        if hasattr(os, 'uname'):
-            self.patch(os, 'uname', replacement)
+        if hasattr(os, "uname"):
+            self.patch(os, "uname", replacement)
         else:
+
             def cleanup():
                 del os.uname
+
             self.addCleanup(cleanup)
             os.uname = replacement
 
@@ -125,8 +127,7 @@ class FileIOMixin(object):
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(builtins, "open", self.open)
 
-    def setUpOpenError(self, errno=errno.ENOENT, strerror="dummy-msg",
-                       filename="dummy-file"):
+    def setUpOpenError(self, errno=errno.ENOENT, strerror="dummy-msg", filename="dummy-file"):
         """
         patch open() to raise IOError
 
@@ -144,8 +145,7 @@ class FileIOMixin(object):
         self.open = fakeOpen
         self.patch(builtins, "open", self.open)
 
-    def setUpReadError(self, errno=errno.EIO, strerror="dummy-msg",
-                       filename="dummy-file"):
+    def setUpReadError(self, errno=errno.EIO, strerror="dummy-msg", filename="dummy-file"):
         """
         patch open() to return a file object that will raise IOError on read()
 
@@ -170,8 +170,7 @@ class FileIOMixin(object):
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(builtins, "open", self.open)
 
-    def setUpWriteError(self, errno=errno.ENOSPC, strerror="dummy-msg",
-                        filename="dummy-file"):
+    def setUpWriteError(self, errno=errno.ENOSPC, strerror="dummy-msg", filename="dummy-file"):
         """
         patch open() to return a file object that will raise IOError on write()
 
@@ -197,7 +196,6 @@ class FileIOMixin(object):
 
 
 class LoggingMixin(object):
-
     def setUpLogging(self):
         self._logEvents = []
         log.addObserver(self._logEvents.append)
@@ -210,8 +208,7 @@ class LoggingMixin(object):
                 msg = log.textFromEventDict(event)
                 if msg is not None and r.search(msg):
                     return
-            self.fail(
-                "{0!r} not matched in log output.\n{1} ".format(regexp, self._logEvents))
+            self.fail("{0!r} not matched in log output.\n{1} ".format(regexp, self._logEvents))
 
     def assertWasQuiet(self):
         self.assertEqual(self._logEvents, [])
@@ -234,10 +231,10 @@ class StdoutAssertionsMixin(object):
             self.stdout = StringIO()
         else:
             self.stdout = BytesIO()
-        self.patch(sys, 'stdout', self.stdout)
+        self.patch(sys, "stdout", self.stdout)
 
     def assertWasQuiet(self):
-        self.assertEqual(self.stdout.getvalue(), '')
+        self.assertEqual(self.stdout.getvalue(), "")
 
     def assertInStdout(self, exp):
         self.assertIn(exp, self.stdout.getvalue())

@@ -31,16 +31,23 @@ class TryClientE2E(RunMasterBase):
         yield self.setupConfig(masterConfig())
 
         def trigger_callback():
-            port = self.master.pbmanager.dispatchers['tcp:0'].port.getHost().port
+            port = self.master.pbmanager.dispatchers["tcp:0"].port.getHost().port
 
             def thd():
-                os.system(f"buildbot try --connect=pb --master=127.0.0.1:{port} -b testy "
-                          "--property=foo:bar --username=alice --passwd=pw1 --vc=none")
+                os.system(
+                    f"buildbot try --connect=pb --master=127.0.0.1:{port} -b testy "
+                    "--property=foo:bar --username=alice --passwd=pw1 --vc=none"
+                )
+
             reactor.callInThread(thd)
 
-        build = yield self.doForceBuild(wantSteps=True, triggerCallback=trigger_callback,
-                                        wantLogs=True, wantProperties=True)
-        self.assertEqual(build['buildid'], 1)
+        build = yield self.doForceBuild(
+            wantSteps=True,
+            triggerCallback=trigger_callback,
+            wantLogs=True,
+            wantProperties=True,
+        )
+        self.assertEqual(build["buildid"], 1)
 
 
 # master configuration
@@ -50,16 +57,15 @@ def masterConfig():
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import steps, schedulers
 
-    c['schedulers'] = [
-        schedulers.Try_Userpass(name="try",
-                                builderNames=["testy"],
-                                port='tcp:0',
-                                userpass=[("alice", "pw1")])
+    c["schedulers"] = [
+        schedulers.Try_Userpass(
+            name="try",
+            builderNames=["testy"],
+            port="tcp:0",
+            userpass=[("alice", "pw1")],
+        )
     ]
     f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
+    f.addStep(steps.ShellCommand(command="echo hello"))
+    c["builders"] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
     return c

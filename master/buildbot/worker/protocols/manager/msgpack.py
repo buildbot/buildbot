@@ -39,22 +39,22 @@ class RemoteWorkerError(Exception):
 
 
 def decode_http_authorization_header(value):
-    if value[:5] != 'Basic':
+    if value[:5] != "Basic":
         raise ValueError("Value should always start with 'Basic'")
 
     credentials_str = base64.b64decode(value[6:]).decode()
-    if ':' not in credentials_str:
+    if ":" not in credentials_str:
         raise ValueError("String of credentials should always have a colon.")
 
-    username, password = credentials_str.split(':', maxsplit=1)
+    username, password = credentials_str.split(":", maxsplit=1)
     return (username, password)
 
 
 def encode_http_authorization_header(name, password):
     if b":" in name:
         raise ValueError("Username is not allowed to contain a colon.")
-    userpass = name + b':' + password
-    return 'Basic ' + base64.b64encode(userpass).decode()
+    userpass = name + b":" + password
+    return "Basic " + base64.b64encode(userpass).decode()
 
 
 class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
@@ -118,13 +118,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id', 'args'))
+            self.contains_msg_key(msg, ("command_id", "args"))
 
-            if msg['command_id'] not in self.command_id_to_command_map:
+            if msg["command_id"] not in self.command_id_to_command_map:
                 raise KeyError('unknown "command_id"')
 
-            command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_update(msg['args'])
+            command = self.command_id_to_command_map[msg["command_id"]]
+            yield command.remote_update(msg["args"])
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -136,19 +136,19 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id', 'args'))
+            self.contains_msg_key(msg, ("command_id", "args"))
 
-            if msg['command_id'] not in self.command_id_to_command_map:
+            if msg["command_id"] not in self.command_id_to_command_map:
                 raise KeyError('unknown "command_id"')
-            command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_complete(msg['args'])
+            command = self.command_id_to_command_map[msg["command_id"]]
+            yield command.remote_complete(msg["args"])
 
-            if msg['command_id'] in self.command_id_to_command_map:
-                del self.command_id_to_command_map[msg['command_id']]
-            if msg['command_id'] in self.command_id_to_reader_map:
-                del self.command_id_to_reader_map[msg['command_id']]
-            if msg['command_id'] in self.command_id_to_writer_map:
-                del self.command_id_to_writer_map[msg['command_id']]
+            if msg["command_id"] in self.command_id_to_command_map:
+                del self.command_id_to_command_map[msg["command_id"]]
+            if msg["command_id"] in self.command_id_to_reader_map:
+                del self.command_id_to_reader_map[msg["command_id"]]
+            if msg["command_id"] in self.command_id_to_writer_map:
+                del self.command_id_to_writer_map[msg["command_id"]]
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -159,13 +159,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id', 'args'))
+            self.contains_msg_key(msg, ("command_id", "args"))
 
-            if msg['command_id'] not in self.command_id_to_writer_map:
+            if msg["command_id"] not in self.command_id_to_writer_map:
                 raise KeyError('unknown "command_id"')
 
-            file_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield file_writer.remote_write(msg['args'])
+            file_writer = self.command_id_to_writer_map[msg["command_id"]]
+            yield file_writer.remote_write(msg["args"])
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -176,13 +176,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id', 'access_time', 'modified_time'))
+            self.contains_msg_key(msg, ("command_id", "access_time", "modified_time"))
 
-            if msg['command_id'] not in self.command_id_to_writer_map:
+            if msg["command_id"] not in self.command_id_to_writer_map:
                 raise KeyError('unknown "command_id"')
 
-            file_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield file_writer.remote_utime('access_time', 'modified_time')
+            file_writer = self.command_id_to_writer_map[msg["command_id"]]
+            yield file_writer.remote_utime("access_time", "modified_time")
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -193,12 +193,12 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id',))
+            self.contains_msg_key(msg, ("command_id",))
 
-            if msg['command_id'] not in self.command_id_to_writer_map:
+            if msg["command_id"] not in self.command_id_to_writer_map:
                 raise KeyError('unknown "command_id"')
 
-            file_writer = self.command_id_to_writer_map[msg['command_id']]
+            file_writer = self.command_id_to_writer_map[msg["command_id"]]
             yield file_writer.remote_close()
         except Exception as e:
             is_exception = True
@@ -210,13 +210,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id', 'length'))
+            self.contains_msg_key(msg, ("command_id", "length"))
 
-            if msg['command_id'] not in self.command_id_to_reader_map:
+            if msg["command_id"] not in self.command_id_to_reader_map:
                 raise KeyError('unknown "command_id"')
 
-            file_reader = self.command_id_to_reader_map[msg['command_id']]
-            yield file_reader.remote_read(msg['length'])
+            file_reader = self.command_id_to_reader_map[msg["command_id"]]
+            yield file_reader.remote_read(msg["length"])
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -227,12 +227,12 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id',))
+            self.contains_msg_key(msg, ("command_id",))
 
-            if msg['command_id'] not in self.command_id_to_reader_map:
+            if msg["command_id"] not in self.command_id_to_reader_map:
                 raise KeyError('unknown "command_id"')
 
-            file_reader = self.command_id_to_reader_map[msg['command_id']]
+            file_reader = self.command_id_to_reader_map[msg["command_id"]]
             yield file_reader.remote_close()
         except Exception as e:
             is_exception = True
@@ -244,12 +244,12 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id',))
+            self.contains_msg_key(msg, ("command_id",))
 
-            if msg['command_id'] not in self.command_id_to_writer_map:
+            if msg["command_id"] not in self.command_id_to_writer_map:
                 raise KeyError('unknown "command_id"')
 
-            directory_writer = self.command_id_to_writer_map[msg['command_id']]
+            directory_writer = self.command_id_to_writer_map[msg["command_id"]]
             yield directory_writer.remote_unpack()
         except Exception as e:
             is_exception = True
@@ -261,16 +261,16 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id',))
+            self.contains_msg_key(msg, ("command_id",))
 
             if "args" not in msg:
                 raise KeyError('message did not contain obligatory "args" key')
 
-            if msg['command_id'] not in self.command_id_to_writer_map:
+            if msg["command_id"] not in self.command_id_to_writer_map:
                 raise KeyError('unknown "command_id"')
 
-            directory_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield directory_writer.remote_write(msg['args'])
+            directory_writer = self.command_id_to_writer_map[msg["command_id"]]
+            yield directory_writer.remote_write(msg["args"])
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -278,12 +278,12 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
     def send_response_msg(self, msg, result, is_exception):
         dict_output = {
-            'op': 'response',
-            'seq_number': msg['seq_number'],
-            'result': result
+            "op": "response",
+            "seq_number": msg["seq_number"],
+            "result": result,
         }
         if is_exception:
-            dict_output['is_exception'] = True
+            dict_output["is_exception"] = True
 
         self.maybe_log_master_to_worker_msg(dict_output)
         payload = msgpack.packb(dict_output, use_bin_type=True)
@@ -292,57 +292,56 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
     def onMessage(self, payload, isBinary):
         if not isBinary:
-            name = self.worker_name if self.worker_name is not None else '<???>'
-            log.msg(f'Message type from worker {name} unsupported')
+            name = self.worker_name if self.worker_name is not None else "<???>"
+            log.msg(f"Message type from worker {name} unsupported")
             return
 
         msg = msgpack.unpackb(payload, raw=False)
         self.maybe_log_worker_to_master_msg(msg)
 
-        if 'seq_number' not in msg or 'op' not in msg:
-            log.msg(f'Invalid message from worker: {msg}')
+        if "seq_number" not in msg or "op" not in msg:
+            log.msg(f"Invalid message from worker: {msg}")
             return
 
-        if msg['op'] != "response" and self.connection is None:
+        if msg["op"] != "response" and self.connection is None:
             self.send_response_msg(msg, "Worker not authenticated.", is_exception=True)
             return
 
-        if msg['op'] == "update":
+        if msg["op"] == "update":
             self._deferwaiter.add(self.call_update(msg))
-        elif msg['op'] == "update_upload_file_write":
+        elif msg["op"] == "update_upload_file_write":
             self._deferwaiter.add(self.call_update_upload_file_write(msg))
-        elif msg['op'] == "update_upload_file_close":
+        elif msg["op"] == "update_upload_file_close":
             self._deferwaiter.add(self.call_update_upload_file_close(msg))
-        elif msg['op'] == "update_upload_file_utime":
+        elif msg["op"] == "update_upload_file_utime":
             self._deferwaiter.add(self.call_update_upload_file_utime(msg))
-        elif msg['op'] == "update_read_file":
+        elif msg["op"] == "update_read_file":
             self._deferwaiter.add(self.call_update_read_file(msg))
-        elif msg['op'] == "update_read_file_close":
+        elif msg["op"] == "update_read_file_close":
             self._deferwaiter.add(self.call_update_read_file_close(msg))
-        elif msg['op'] == "update_upload_directory_unpack":
+        elif msg["op"] == "update_upload_directory_unpack":
             self._deferwaiter.add(self.call_update_upload_directory_unpack(msg))
-        elif msg['op'] == "update_upload_directory_write":
+        elif msg["op"] == "update_upload_directory_write":
             self._deferwaiter.add(self.call_update_upload_directory_write(msg))
-        elif msg['op'] == "complete":
+        elif msg["op"] == "complete":
             self._deferwaiter.add(self.call_complete(msg))
-        elif msg['op'] == "response":
-            seq_number = msg['seq_number']
+        elif msg["op"] == "response":
+            seq_number = msg["seq_number"]
             if "is_exception" in msg:
-                self.seq_num_to_waiters_map[seq_number].errback(RemoteWorkerError(msg['result']))
+                self.seq_num_to_waiters_map[seq_number].errback(RemoteWorkerError(msg["result"]))
             else:
-                self.seq_num_to_waiters_map[seq_number].callback(msg['result'])
+                self.seq_num_to_waiters_map[seq_number].callback(msg["result"])
             # stop waiting for a response of this command
             del self.seq_num_to_waiters_map[seq_number]
         else:
-            self.send_response_msg(msg, f"Command {msg['op']} does not exist.",
-                                   is_exception=True)
+            self.send_response_msg(msg, f"Command {msg['op']} does not exist.", is_exception=True)
 
     @defer.inlineCallbacks
     def get_message_result(self, msg):
-        if msg['op'] != 'print' and msg['op'] != 'get_worker_info' and self.connection is None:
+        if msg["op"] != "print" and msg["op"] != "get_worker_info" and self.connection is None:
             raise ConnectioLostError("No worker connection")
 
-        msg['seq_number'] = self.seq_number
+        msg["seq_number"] = self.seq_number
 
         self.maybe_log_master_to_worker_msg(msg)
 
@@ -360,7 +359,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         if self.debug:
             log.msg(f"Client connecting: {request.peer}")
 
-        value = request.headers.get('authorization')
+        value = request.headers.get("authorization")
         if value is None:
             raise ConnectionDeny(401, "Unauthorized")
 
@@ -411,7 +410,7 @@ class Dispatcher(BaseDispatcher):
         try:
             port = int(config_portstr)
         except ValueError as e:
-            raise ValueError(f'portstr unsupported: {config_portstr}') from e
+            raise ValueError(f"portstr unsupported: {config_portstr}") from e
 
         # Autobahn does not support zero port meaning to pick whatever port number is free, so
         # we work around this by setting the port to nonzero value and resetting the value once
@@ -438,6 +437,6 @@ class Dispatcher(BaseDispatcher):
 
 class MsgManager(BaseManager):
     def __init__(self):
-        super().__init__('msgmanager')
+        super().__init__("msgmanager")
 
     dispatcher_class = Dispatcher

@@ -31,26 +31,33 @@ class Cppcheck(ShellMixin, BuildStep):
     name = "cppcheck"
     description = ["running", "cppcheck"]
     descriptionDone = ["cppcheck"]
-    flunkingIssues = ('error',)
+    flunkingIssues = ("error",)
 
     MESSAGES = (
-        'error', 'warning', 'style', 'performance', 'portability', 'information')
+        "error",
+        "warning",
+        "style",
+        "performance",
+        "portability",
+        "information",
+    )
 
-    renderables = ('binary', 'source', 'extra_args')
+    renderables = ("binary", "source", "extra_args")
 
     def __init__(self, *args, **kwargs):
 
-        for name, default in [('binary', 'cppcheck'),
-                              ('source', ['.']),
-                              ('enable', []),
-                              ('inconclusive', False),
-                              ('extra_args', [])]:
+        for name, default in [
+            ("binary", "cppcheck"),
+            ("source", ["."]),
+            ("enable", []),
+            ("inconclusive", False),
+            ("extra_args", []),
+        ]:
             setattr(self, name, kwargs.pop(name, default))
 
-        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=["command"])
         super().__init__(*args, **kwargs)
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
+        self.addLogObserver("stdio", logobserver.LineConsumerLogObserver(self._log_consumer))
 
         self.counts = {}
         summaries = self.summaries = {}
@@ -59,14 +66,13 @@ class Cppcheck(ShellMixin, BuildStep):
             summaries[m] = []
 
     def _log_consumer(self):
-        line_re = re.compile(
-                fr"(?:\[.+\]: )?\((?P<severity>{'|'.join(self.MESSAGES)})\) .+")
+        line_re = re.compile(rf"(?:\[.+\]: )?\((?P<severity>{'|'.join(self.MESSAGES)})\) .+")
 
         while True:
             _, line = yield
             m = line_re.match(line)
             if m is not None:
-                msgsev = m.group('severity')
+                msgsev = m.group("severity")
                 self.summaries[msgsev].append(line)
                 self.counts[msgsev] += 1
 
@@ -77,24 +83,24 @@ class Cppcheck(ShellMixin, BuildStep):
         if self.enable:
             command.append(f"--enable={','.join(self.enable)}")
         if self.inconclusive:
-            command.append('--inconclusive')
+            command.append("--inconclusive")
         command.extend(self.extra_args)
 
         cmd = yield self.makeRemoteShellCommand(command=command)
 
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
         self.descriptionDone = self.descriptionDone[:]
         for msg in self.MESSAGES:
-            self.setProperty(f'cppcheck-{msg}', self.counts[msg], 'Cppcheck')
+            self.setProperty(f"cppcheck-{msg}", self.counts[msg], "Cppcheck")
             if not self.counts[msg]:
                 continue
             self.descriptionDone.append(f"{msg}={self.counts[msg]}")
-            yield self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
-        self.setProperty('cppcheck-total', sum(self.counts.values()), 'Cppcheck')
+            yield self.addCompleteLog(msg, "\n".join(self.summaries[msg]))
+        self.setProperty("cppcheck-total", sum(self.counts.values()), "Cppcheck")
 
         yield self.updateSummary()
 

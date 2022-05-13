@@ -69,7 +69,7 @@ class V3RootResource(resource.Resource):
                 query = request.content.read().decode()
             elif content_type == b"application/json":
                 json_query = json.load(request.content)
-                query = json_query.pop('query')
+                query = json_query.pop("query")
                 if json_query:
                     fields = " ".join(json_query.keys())
                     raise Error(400, b"json request unsupported fields: " + fields.encode())

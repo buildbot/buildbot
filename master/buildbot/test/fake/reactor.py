@@ -77,6 +77,7 @@ class NonThreadPool:
     :ivar int calls: The number of calls which have been dispatched to this
         object.
     """
+
     calls = 0
 
     def __init__(self, **kwargs):
@@ -117,7 +118,6 @@ class NonReactor:
 
 
 class TestReactor(NonReactor, CoreReactor, Clock):
-
     def __init__(self):
         super().__init__()
 
@@ -127,8 +127,7 @@ class TestReactor(NonReactor, CoreReactor, Clock):
 
     def _executeCurrentDelayedCalls(self):
         while self.getDelayedCalls():
-            first = sorted(self.getDelayedCalls(),
-                           key=lambda a: a.getTime())[0]
+            first = sorted(self.getDelayedCalls(), key=lambda a: a.getTime())[0]
             if first.getTime() > self.seconds():
                 break
             self.advance(0)
@@ -142,8 +141,10 @@ class TestReactor(NonReactor, CoreReactor, Clock):
             if isinstance(r, defer.Deferred):
                 yield r
         except Exception as e:
-            log.msg('Unhandled exception from deferred when doing '
-                    'TestReactor.advance()', e)
+            log.msg(
+                "Unhandled exception from deferred when doing " "TestReactor.advance()",
+                e,
+            )
             raise
 
     def callLater(self, when, what, *a, **kw):
@@ -161,8 +162,7 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         if when <= 0 and not self._pendingCurrentCalls:
             reactor.callLater(0, self._executeCurrentDelayedCalls)
 
-        return super().callLater(when, self._catchPrintExceptions,
-                                 what, *a, **kw)
+        return super().callLater(when, self._catchPrintExceptions, what, *a, **kw)
 
     def stop(self):
         # first fire pending calls until the current time. Note that the real
@@ -170,6 +170,6 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         self.advance(0)
 
         # then, fire the shutdown event
-        self.fireSystemEvent('shutdown')
+        self.fireSystemEvent("shutdown")
 
         self.stop_called = True

@@ -40,6 +40,7 @@ from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process import results
+
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import ALL_RESULTS
@@ -130,7 +131,8 @@ class _BuildStepFactory(util.ComparableMixin):
     We use an instance of this class, rather than a closure mostly to make it
     easier to test that the right factories are getting created.
     """
-    compare_attrs = ('factory', 'args', 'kwargs')
+
+    compare_attrs = ("factory", "args", "kwargs")
 
     def __init__(self, factory, *args, **kwargs):
         self.factory = factory
@@ -141,8 +143,10 @@ class _BuildStepFactory(util.ComparableMixin):
         try:
             return self.factory(*self.args, **self.kwargs)
         except Exception:
-            log.msg(f"error while creating step, factory={self.factory}, args={self.args}, "
-                    f"kwargs={self.kwargs}")
+            log.msg(
+                f"error while creating step, factory={self.factory}, args={self.args}, "
+                f"kwargs={self.kwargs}"
+            )
             raise
 
 
@@ -152,7 +156,7 @@ class BuildStepStatus:
 
 
 def get_factory_from_step_or_factory(step_or_factory):
-    if hasattr(step_or_factory, 'get_step_factory'):
+    if hasattr(step_or_factory, "get_step_factory"):
         factory = step_or_factory.get_step_factory()
     else:
         factory = step_or_factory
@@ -165,9 +169,9 @@ def create_step_from_step_or_factory(step_or_factory):
 
 
 @implementer(interfaces.IBuildStep)
-class BuildStep(results.ResultComputingConfigMixin,
-                properties.PropertiesMixin,
-                util.ComparableMixin):
+class BuildStep(
+    results.ResultComputingConfigMixin, properties.PropertiesMixin, util.ComparableMixin
+):
     # Note that the BuildStep is at the same time a template from which per-build steps are
     # constructed. This works by creating a new IBuildStepFactory in __new__, retrieving it via
     # get_step_factory() and then calling buildStep() on that factory.
@@ -180,13 +184,13 @@ class BuildStep(results.ResultComputingConfigMixin,
     set_runtime_properties = True
 
     renderables = results.ResultComputingConfigMixin.resultConfig + [
-        'alwaysRun',
-        'description',
-        'descriptionDone',
-        'descriptionSuffix',
-        'doStepIf',
-        'hideStepIf',
-        'workdir',
+        "alwaysRun",
+        "description",
+        "descriptionDone",
+        "descriptionSuffix",
+        "doStepIf",
+        "hideStepIf",
+        "workdir",
     ]
 
     # 'parms' holds a list of all the parameters we care about, to allow
@@ -197,24 +201,24 @@ class BuildStep(results.ResultComputingConfigMixin,
     # subclasses will use this list to figure out which arguments are meant
     # for us and which should be given to someone else.
     parms = [
-        'alwaysRun',
-        'description',
-        'descriptionDone',
-        'descriptionSuffix',
-        'doStepIf',
-        'flunkOnFailure',
-        'flunkOnWarnings',
-        'haltOnFailure',
-        'updateBuildSummaryPolicy',
-        'hideStepIf',
-        'locks',
-        'logEncoding',
-        'name',
-        'progressMetrics',
-        'useProgress',
-        'warnOnFailure',
-        'warnOnWarnings',
-        'workdir',
+        "alwaysRun",
+        "description",
+        "descriptionDone",
+        "descriptionSuffix",
+        "doStepIf",
+        "flunkOnFailure",
+        "flunkOnWarnings",
+        "haltOnFailure",
+        "updateBuildSummaryPolicy",
+        "hideStepIf",
+        "locks",
+        "logEncoding",
+        "name",
+        "progressMetrics",
+        "useProgress",
+        "warnOnFailure",
+        "warnOnWarnings",
+        "workdir",
     ]
 
     name = "generic"
@@ -242,16 +246,21 @@ class BuildStep(results.ResultComputingConfigMixin,
                 setattr(self, p, kwargs.pop(p))
 
         if kwargs:
-            config.error(f"{self.__class__}.__init__ got unexpected keyword argument(s) "
-                         f"{list(kwargs)}")
+            config.error(
+                f"{self.__class__}.__init__ got unexpected keyword argument(s) " f"{list(kwargs)}"
+            )
         self._pendingLogObservers = []
 
         if not isinstance(self.name, str) and not IRenderable.providedBy(self.name):
-            config.error(f"BuildStep name must be a string or a renderable object: "
-                         f"{repr(self.name)}")
+            config.error(
+                f"BuildStep name must be a string or a renderable object: " f"{repr(self.name)}"
+            )
 
-        check_param_length(self.name, f'Step {self.__class__.__name__} name',
-                           Model.steps.c.name.type.length)
+        check_param_length(
+            self.name,
+            f"Step {self.__class__.__name__} name",
+            Model.steps.c.name.type.length,
+        )
 
         if isinstance(self.description, str):
             self.description = [self.description]
@@ -272,9 +281,11 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self.updateBuildSummaryPolicy is True:
             self.updateBuildSummaryPolicy = ALL_RESULTS
         if not isinstance(self.updateBuildSummaryPolicy, list):
-            config.error("BuildStep updateBuildSummaryPolicy must be "
-                         "a list of result ids or boolean but it is "
-                         f"{repr(self.updateBuildSummaryPolicy)}")
+            config.error(
+                "BuildStep updateBuildSummaryPolicy must be "
+                "a list of result ids or boolean but it is "
+                f"{repr(self.updateBuildSummaryPolicy)}"
+            )
         self._acquiringLocks = []
         self.stopped = False
         self.master = None
@@ -293,8 +304,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def __str__(self):
         args = [repr(x) for x in self._factory.args]
-        args.extend([str(k) + "=" + repr(v)
-                     for k, v in self._factory.kwargs.items()])
+        args.extend([str(k) + "=" + repr(v) for k, v in self._factory.kwargs.items()])
         return f'{self.__class__.__name__}({", ".join(args)})'
 
     __repr__ = __str__
@@ -356,30 +366,33 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self.description is not None:
             stepsumm = util.join_list(self.description)
             if self.descriptionSuffix:
-                stepsumm += ' ' + util.join_list(self.descriptionSuffix)
+                stepsumm += " " + util.join_list(self.descriptionSuffix)
         else:
-            stepsumm = 'running'
-        return {'step': stepsumm}
+            stepsumm = "running"
+        return {"step": stepsumm}
 
     def getResultSummary(self):
         if self.descriptionDone is not None or self.description is not None:
             stepsumm = util.join_list(self.descriptionDone or self.description)
             if self.descriptionSuffix:
-                stepsumm += ' ' + util.join_list(self.descriptionSuffix)
+                stepsumm += " " + util.join_list(self.descriptionSuffix)
         else:
-            stepsumm = 'finished'
+            stepsumm = "finished"
 
         if self.results != SUCCESS:
-            stepsumm += f' ({Results[self.results]})'
+            stepsumm += f" ({Results[self.results]})"
 
-        return {'step': stepsumm}
+        return {"step": stepsumm}
 
     @defer.inlineCallbacks
     def getBuildResultSummary(self):
         summary = yield self.getResultSummary()
-        if self.results in self.updateBuildSummaryPolicy and \
-                'build' not in summary and 'step' in summary:
-            summary['build'] = summary['step']
+        if (
+            self.results in self.updateBuildSummaryPolicy
+            and "build" not in summary
+            and "step" in summary
+        ):
+            summary["build"] = summary["step"]
         return summary
 
     @debounce.method(wait=1)
@@ -387,30 +400,34 @@ class BuildStep(results.ResultComputingConfigMixin,
     def updateSummary(self):
         def methodInfo(m):
             lines = inspect.getsourcelines(m)
-            return "\nat {}:{}:\n {}".format(inspect.getsourcefile(m), lines[1],
-                                             "\n".join(lines[0]))
+            return "\nat {}:{}:\n {}".format(
+                inspect.getsourcefile(m), lines[1], "\n".join(lines[0])
+            )
+
         if not self._running:
             summary = yield self.getResultSummary()
             if not isinstance(summary, dict):
-                raise TypeError('getResultSummary must return a dictionary: ' +
-                                methodInfo(self.getResultSummary))
+                raise TypeError(
+                    "getResultSummary must return a dictionary: "
+                    + methodInfo(self.getResultSummary)
+                )
         else:
             summary = yield self.getCurrentSummary()
             if not isinstance(summary, dict):
-                raise TypeError('getCurrentSummary must return a dictionary: ' +
-                                methodInfo(self.getCurrentSummary))
+                raise TypeError(
+                    "getCurrentSummary must return a dictionary: "
+                    + methodInfo(self.getCurrentSummary)
+                )
 
-        stepResult = summary.get('step', 'finished')
+        stepResult = summary.get("step", "finished")
         if not isinstance(stepResult, str):
             raise TypeError(f"step result string must be unicode (got {repr(stepResult)})")
         if self.stepid is not None:
-            stepResult = self.build.properties.cleanupTextFromSecrets(
-                stepResult)
-            yield self.master.data.updates.setStepStateString(self.stepid,
-                                                              stepResult)
+            stepResult = self.build.properties.cleanupTextFromSecrets(stepResult)
+            yield self.master.data.updates.setStepStateString(self.stepid, stepResult)
 
         if not self._running:
-            buildResult = summary.get('build', None)
+            buildResult = summary.get("build", None)
             if buildResult and not isinstance(buildResult, str):
                 raise TypeError("build result string must be unicode")
 
@@ -421,8 +438,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.name = yield self.build.render(self.name)
         self.build.setUniqueStepName(self)
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
-            buildid=self.build.buildid,
-            name=util.bytes2unicode(self.name))
+            buildid=self.build.buildid, name=util.bytes2unicode(self.name)
+        )
         yield self.master.data.updates.startStep(self.stepid)
 
     @defer.inlineCallbacks
@@ -438,14 +455,17 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         # then narrow WorkerLocks down to the worker that this build is being
         # run on
-        self.locks = [(l.getLockForWorker(self.build.workerforbuilder.worker.workername),
-                       la)
-                      for l, la in self.locks]
+        self.locks = [
+            (l.getLockForWorker(self.build.workerforbuilder.worker.workername), la)
+            for l, la in self.locks
+        ]
 
         for l, _ in self.locks:
             if l in self.build.locks:
-                log.msg(f"Hey, lock {l} is claimed by both a Step ({self}) and the"
-                        f" parent Build ({self.build})")
+                log.msg(
+                    f"Hey, lock {l} is claimed by both a Step ({self}) and the"
+                    f" parent Build ({self.build})"
+                )
                 raise RuntimeError("lock claimed by both Step and Build")
 
         try:
@@ -457,7 +477,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
             # render renderables in parallel
             renderables = []
-            accumulateClassList(self.__class__, 'renderables', renderables)
+            accumulateClassList(self.__class__, "renderables", renderables)
 
             def setRenderable(res, attr):
                 setattr(self, attr, res)
@@ -542,8 +562,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         self.releaseLocks()
 
-        yield self.master.data.updates.finishStep(self.stepid, self.results,
-                                                  hidden)
+        yield self.master.data.updates.finishStep(self.stepid, self.results, hidden)
 
         return self.results
 
@@ -555,8 +574,9 @@ class BuildStep(results.ResultComputingConfigMixin,
     def _cleanup_logs(self):
         all_success = True
         not_finished_logs = [v for (k, v) in self.logs.items() if not v.finished]
-        finish_logs = yield defer.DeferredList([v.finish() for v in not_finished_logs],
-                                               consumeErrors=True)
+        finish_logs = yield defer.DeferredList(
+            [v.finish() for v in not_finished_logs], consumeErrors=True
+        )
         for success, res in finish_logs:
             if not success:
                 log.err(res, "when trying to finish a log")
@@ -579,11 +599,22 @@ class BuildStep(results.ResultComputingConfigMixin,
         self._test_result_submitters[setid] = sub
         return setid
 
-    def addTestResult(self, setid, value, test_name=None, test_code_path=None, line=None,
-                      duration_ns=None):
-        self._test_result_submitters[setid].add_test_result(value, test_name=test_name,
-                                                            test_code_path=test_code_path,
-                                                            line=line, duration_ns=duration_ns)
+    def addTestResult(
+        self,
+        setid,
+        value,
+        test_name=None,
+        test_code_path=None,
+        line=None,
+        duration_ns=None,
+    ):
+        self._test_result_submitters[setid].add_test_result(
+            value,
+            test_name=test_name,
+            test_code_path=test_code_path,
+            line=line,
+            duration_ns=duration_ns,
+        )
 
     def acquireLocks(self, res=None):
         if not self.locks:
@@ -614,7 +645,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         raise NotImplementedError("A custom build step must implement run()")
 
     def isNewStyle(self):
-        warn_deprecated('3.0.0', 'BuildStep.isNewStyle() always returns True')
+        warn_deprecated("3.0.0", "BuildStep.isNewStyle() always returns True")
         return True
 
     @defer.inlineCallbacks
@@ -625,7 +656,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         try:
             yield self.cmd.interrupt(reason)
         except Exception as e:
-            log.err(e, 'while cancelling command')
+            log.err(e, "while cancelling command")
 
     @defer.inlineCallbacks
     def interrupt(self, reason):
@@ -643,10 +674,9 @@ class BuildStep(results.ResultComputingConfigMixin,
             self._acquiringLocks = []
 
         if self._waitingForLocks:
-            yield self.addCompleteLog(
-                'cancelled while waiting for locks', str(reason))
+            yield self.addCompleteLog("cancelled while waiting for locks", str(reason))
         else:
-            yield self.addCompleteLog('cancelled', str(reason))
+            yield self.addCompleteLog("cancelled", str(reason))
 
         yield self._maybe_interrupt_cmd(reason)
 
@@ -680,16 +710,15 @@ class BuildStep(results.ResultComputingConfigMixin,
     def getWorkerName(self):
         return self.build.getWorkerName()
 
-    def addLog(self, name, type='s', logEncoding=None):
+    def addLog(self, name, type="s", logEncoding=None):
         if self.stepid is None:
             raise BuildStepCancelled
-        d = self.master.data.updates.addLog(self.stepid,
-                                            util.bytes2unicode(name),
-                                            str(type))
+        d = self.master.data.updates.addLog(self.stepid, util.bytes2unicode(name), str(type))
 
         @d.addCallback
         def newLog(logid):
             return self._newLog(name, type, logid, logEncoding)
+
         return d
 
     def getLog(self, name):
@@ -699,9 +728,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addCompleteLog(self, name, text):
         if self.stepid is None:
             raise BuildStepCancelled
-        logid = yield self.master.data.updates.addLog(self.stepid,
-                                                      util.bytes2unicode(name), 't')
-        _log = self._newLog(name, 't', logid)
+        logid = yield self.master.data.updates.addLog(self.stepid, util.bytes2unicode(name), "t")
+        _log = self._newLog(name, "t", logid)
         yield _log.addContent(text)
         yield _log.finish()
 
@@ -709,9 +737,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addHTMLLog(self, name, html):
         if self.stepid is None:
             raise BuildStepCancelled
-        logid = yield self.master.data.updates.addLog(self.stepid,
-                                                      util.bytes2unicode(name), 'h')
-        _log = self._newLog(name, 'h', logid)
+        logid = yield self.master.data.updates.addLog(self.stepid, util.bytes2unicode(name), "h")
+        _log = self._newLog(name, "h", logid)
         html = bytes2unicode(html)
         yield _log.addContent(html)
         yield _log.finish()
@@ -782,14 +809,13 @@ class BuildStep(results.ResultComputingConfigMixin,
 
 
 class CommandMixin:
-
     @defer.inlineCallbacks
     def _runRemoteCommand(self, cmd, abandonOnFailure, args, makeResult=None):
         cmd = remotecommand.RemoteCommand(cmd, args)
         try:
-            log = self.getLog('stdio')
+            log = self.getLog("stdio")
         except Exception:
-            log = yield self.addLog('stdio')
+            log = yield self.addLog("stdio")
         cmd.useLog(log, False)
         yield self.runCommand(cmd)
         if abandonOnFailure and cmd.didFail():
@@ -800,21 +826,21 @@ class CommandMixin:
             return not cmd.didFail()
 
     def runRmdir(self, dir, log=None, abandonOnFailure=True):
-        return self._runRemoteCommand('rmdir', abandonOnFailure,
-                                      {'dir': dir, 'logEnviron': False})
+        return self._runRemoteCommand("rmdir", abandonOnFailure, {"dir": dir, "logEnviron": False})
 
     def pathExists(self, path, log=None):
-        return self._runRemoteCommand('stat', False,
-                                      {'file': path, 'logEnviron': False})
+        return self._runRemoteCommand("stat", False, {"file": path, "logEnviron": False})
 
     def runMkdir(self, dir, log=None, abandonOnFailure=True):
-        return self._runRemoteCommand('mkdir', abandonOnFailure,
-                                      {'dir': dir, 'logEnviron': False})
+        return self._runRemoteCommand("mkdir", abandonOnFailure, {"dir": dir, "logEnviron": False})
 
     def runGlob(self, path):
         return self._runRemoteCommand(
-            'glob', True, {'path': path, 'logEnviron': False},
-            makeResult=lambda cmd: cmd.updates['files'][0])
+            "glob",
+            True,
+            {"path": path, "logEnviron": False},
+            makeResult=lambda cmd: cmd.updates["files"][0],
+        )
 
 
 class ShellMixin:
@@ -829,27 +855,27 @@ class ShellMixin:
     timeout = 1200
     maxTime = None
     logEnviron = True
-    interruptSignal = 'KILL'
+    interruptSignal = "KILL"
     sigtermTime = None
     initialStdin = None
     decodeRC = {0: SUCCESS}
 
     _shellMixinArgs = [
-        'command',
-        'workdir',
-        'env',
-        'want_stdout',
-        'want_stderr',
-        'usePTY',
-        'logfiles',
-        'lazylogfiles',
-        'timeout',
-        'maxTime',
-        'logEnviron',
-        'interruptSignal',
-        'sigtermTime',
-        'initialStdin',
-        'decodeRC',
+        "command",
+        "workdir",
+        "env",
+        "want_stdout",
+        "want_stderr",
+        "usePTY",
+        "logfiles",
+        "lazylogfiles",
+        "timeout",
+        "maxTime",
+        "logEnviron",
+        "interruptSignal",
+        "sigtermTime",
+        "initialStdin",
+        "decodeRC",
     ]
     renderables = _shellMixinArgs
 
@@ -861,6 +887,7 @@ class ShellMixin:
 
         def bad(arg):
             config.error(f"invalid {self.__class__.__name__} argument {arg}")
+
         for arg in self._shellMixinArgs:
             if arg not in constructorArgs:
                 continue
@@ -876,11 +903,14 @@ class ShellMixin:
         return constructorArgs
 
     @defer.inlineCallbacks
-    def makeRemoteShellCommand(self, collectStdout=False, collectStderr=False,
-                               stdioLogName='stdio',
-                               **overrides):
-        kwargs = {arg: getattr(self, arg)
-                  for arg in self._shellMixinArgs}
+    def makeRemoteShellCommand(
+        self,
+        collectStdout=False,
+        collectStderr=False,
+        stdioLogName="stdio",
+        **overrides,
+    ):
+        kwargs = {arg: getattr(self, arg) for arg in self._shellMixinArgs}
         kwargs.update(overrides)
         stdio = None
         if stdioLogName is not None:
@@ -890,47 +920,47 @@ class ShellMixin:
             except KeyError:
                 stdio = yield self.addLog(stdioLogName)
 
-        kwargs['command'] = flatten(kwargs['command'], (list, tuple))
+        kwargs["command"] = flatten(kwargs["command"], (list, tuple))
 
         # store command away for display
-        self.command = kwargs['command']
+        self.command = kwargs["command"]
 
         # check for the usePTY flag
-        if kwargs['usePTY'] is not None:
+        if kwargs["usePTY"] is not None:
             if self.workerVersionIsOlderThan("shell", "2.7"):
                 if stdio is not None:
                     yield stdio.addHeader(
-                        "NOTE: worker does not allow master to override usePTY\n")
-                del kwargs['usePTY']
+                        "NOTE: worker does not allow master to override usePTY\n"
+                    )
+                del kwargs["usePTY"]
 
         # check for the interruptSignal flag
         if kwargs["interruptSignal"] and self.workerVersionIsOlderThan("shell", "2.15"):
             if stdio is not None:
                 yield stdio.addHeader(
-                    "NOTE: worker does not allow master to specify interruptSignal\n")
-            del kwargs['interruptSignal']
+                    "NOTE: worker does not allow master to specify interruptSignal\n"
+                )
+            del kwargs["interruptSignal"]
 
         # lazylogfiles are handled below
-        del kwargs['lazylogfiles']
+        del kwargs["lazylogfiles"]
 
         # merge the builder's environment with that supplied here
         builderEnv = self.build.builder.config.env
-        kwargs['env'] = yield self.build.render(builderEnv)
-        kwargs['env'].update(self.env)
-        kwargs['stdioLogName'] = stdioLogName
+        kwargs["env"] = yield self.build.render(builderEnv)
+        kwargs["env"].update(self.env)
+        kwargs["stdioLogName"] = stdioLogName
 
         # default the workdir appropriately
-        if not kwargs.get('workdir') and not self.workdir:
+        if not kwargs.get("workdir") and not self.workdir:
             if callable(self.build.workdir):
-                kwargs['workdir'] = self.build.workdir(self.build.sources)
+                kwargs["workdir"] = self.build.workdir(self.build.sources)
             else:
-                kwargs['workdir'] = self.build.workdir
+                kwargs["workdir"] = self.build.workdir
 
         # the rest of the args go to RemoteShellCommand
         cmd = remotecommand.RemoteShellCommand(
-            collectStdout=collectStdout,
-            collectStderr=collectStderr,
-            **kwargs
+            collectStdout=collectStdout, collectStderr=collectStderr, **kwargs
         )
 
         # set up logging
@@ -941,6 +971,7 @@ class ShellMixin:
                 # it's OK if this does, or does not, return a Deferred
                 def callback(cmd_arg, local_logname=logname):
                     return self.addLog(local_logname)
+
                 cmd.useLogDelayed(logname, callback, True)
             else:
                 # add a LogFile
@@ -956,8 +987,8 @@ class ShellMixin:
         summary = util.command_to_string(self.command)
         if summary:
             if self.results != SUCCESS:
-                summary += f' ({Results[self.results]})'
-            return {'step': summary}
+                summary += f" ({Results[self.results]})"
+            return {"step": summary}
         return super().getResultSummary()
 
 

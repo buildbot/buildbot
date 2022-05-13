@@ -28,29 +28,28 @@ from buildbot.util import service
 
 
 class LockRetrieverMixin:
-
     @defer.inlineCallbacks
     def getLockByID(self, lockid, config_version):
-        ''' Convert a Lock identifier into an actual Lock instance.
-            @lockid: a locks.MasterLock or locks.WorkerLock instance
-            @config_version: The version of the config from which the list of locks has been
-                acquired by the downstream user.
-            @return: a locks.RealMasterLock or locks.RealWorkerLock instance
+        """Convert a Lock identifier into an actual Lock instance.
+        @lockid: a locks.MasterLock or locks.WorkerLock instance
+        @config_version: The version of the config from which the list of locks has been
+            acquired by the downstream user.
+        @return: a locks.RealMasterLock or locks.RealWorkerLock instance
 
-            The real locks are tracked using lock ID and config_version. The latter is used as a
-            way to track most recent properties of real locks.
+        The real locks are tracked using lock ID and config_version. The latter is used as a
+        way to track most recent properties of real locks.
 
-            This approach is needed because there's no central registry of lock access instances
-            that are used within a Buildbot master.cfg (like there is for e.g c['builders']). All
-            lock accesses bring all lock information with themselves as the lockid member.
-            Therefore, the reconfig process is relatively complicated, because we don't know
-            whether a specific access instance encodes lock information before reconfig or after.
-            Taking into account config_version allows us to know when properties of a lock should
-            be updated.
+        This approach is needed because there's no central registry of lock access instances
+        that are used within a Buildbot master.cfg (like there is for e.g c['builders']). All
+        lock accesses bring all lock information with themselves as the lockid member.
+        Therefore, the reconfig process is relatively complicated, because we don't know
+        whether a specific access instance encodes lock information before reconfig or after.
+        Taking into account config_version allows us to know when properties of a lock should
+        be updated.
 
-            Note that the user may create multiple lock ids with different maxCount values. It's
-            unspecified which maxCount value the real lock will have.
-        '''
+        Note that the user may create multiple lock ids with different maxCount values. It's
+        unspecified which maxCount value the real lock will have.
+        """
         assert isinstance(config_version, int)
         lock = yield lockid.lockClass.getService(self, lockid.name)
 
@@ -68,8 +67,9 @@ class LockRetrieverMixin:
     @defer.inlineCallbacks
     def getLockFromLockAccesses(self, accesses, config_version):
         # converts locks to their real forms
-        locks = yield defer.gatherResults([self.getLockFromLockAccess(access, config_version)
-                                           for access in accesses])
+        locks = yield defer.gatherResults(
+            [self.getLockFromLockAccess(access, config_version) for access in accesses]
+        )
         return zip(locks, accesses)
 
 
@@ -178,17 +178,16 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         log.msg("Cancelling clean shutdown")
         self.shuttingDown = False
 
-    @metrics.countMethod('BotMaster.workerLost()')
+    @metrics.countMethod("BotMaster.workerLost()")
     def workerLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_workers", -1)
         for b in self.builders.values():
             if bot.workername in b.config.workernames:
                 b.detached(bot)
 
-    @metrics.countMethod('BotMaster.getBuildersForWorker()')
+    @metrics.countMethod("BotMaster.getBuildersForWorker()")
     def getBuildersForWorker(self, workername):
-        return [b for b in self.builders.values()
-                if workername in b.config.workernames]
+        return [b for b in self.builders.values() if workername in b.config.workernames]
 
     def getBuildernames(self):
         return self.builderNames
@@ -207,7 +206,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     def startService(self):
         @defer.inlineCallbacks
         def buildRequestAdded(key, msg):
-            builderid = msg['builderid']
+            builderid = msg["builderid"]
             builder = yield self.getBuilderById(builderid)
             if builder is not None:
                 self.maybeStartBuildsForBuilder(builder.name)
@@ -215,11 +214,11 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         # consume both 'new' and 'unclaimed' build requests
         startConsuming = self.master.mq.startConsuming
         self.buildrequest_consumer_new = yield startConsuming(
-            buildRequestAdded,
-            ('buildrequests', None, "new"))
+            buildRequestAdded, ("buildrequests", None, "new")
+        )
         self.buildrequest_consumer_unclaimed = yield startConsuming(
-            buildRequestAdded,
-            ('buildrequests', None, 'unclaimed'))
+            buildRequestAdded, ("buildrequests", None, "unclaimed")
+        )
         yield super().startService()
 
     @defer.inlineCallbacks
@@ -246,12 +245,9 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         timer.start()
 
         # arrange builders by name
-        old_by_name = {b.name: b
-                       for b in list(self)
-                       if isinstance(b, Builder)}
+        old_by_name = {b.name: b for b in list(self) if isinstance(b, Builder)}
         old_set = set(old_by_name)
-        new_by_name = {bc.name: bc
-                       for bc in new_config.builders}
+        new_by_name = {bc.name: bc for bc in new_config.builders}
         new_set = set(new_by_name)
 
         # calculate new builders, by name, and removed builders
@@ -280,11 +276,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.builderNames = list(self.builders)
 
         yield self.master.data.updates.updateBuilderList(
-            self.master.masterid,
-            [util.bytes2unicode(n) for n in self.builderNames])
+            self.master.masterid, [util.bytes2unicode(n) for n in self.builderNames]
+        )
 
-        metrics.MetricCountEvent.log("num_builders",
-                                     len(self.builders), absolute=True)
+        metrics.MetricCountEvent.log("num_builders", len(self.builders), absolute=True)
 
         timer.stop()
 

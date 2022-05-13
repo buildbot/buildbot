@@ -35,19 +35,19 @@ from .interop import test_worker_reconnect
 
 
 def get_log_path():
-    return f'test_worker_proxy_stdout_{os.getpid()}.txt'
+    return f"test_worker_proxy_stdout_{os.getpid()}.txt"
 
 
 def write_to_log(msg, with_traceback=False):
-    with open(get_log_path(), 'a', encoding='utf-8') as outfile:
+    with open(get_log_path(), "a", encoding="utf-8") as outfile:
         outfile.write(msg)
         if with_traceback:
             import traceback
+
             traceback.print_exc(file=outfile)
 
 
 async def handle_client(local_reader, local_writer):
-
     async def pipe(reader, writer):
         try:
             while not reader.at_eof():
@@ -66,9 +66,7 @@ async def handle_client(local_reader, local_writer):
             return
         host, port = lines[0].split(b" ")[1].split(b":")
         try:
-            remote_reader, remote_writer = await asyncio.open_connection(
-                host.decode(), int(port)
-            )
+            remote_reader, remote_writer = await asyncio.open_connection(host.decode(), int(port))
         except socket.gaierror:
             write_to_log(f"failed to relay to {host} {port}\n")
             local_writer.write(b"HTTP/1.1 404 Not Found\r\n\r\n")
@@ -145,10 +143,10 @@ class RunMasterBehindProxy(RunMasterBase):
         self.proxy_process.join()
         if self.debug:
             print("---- stdout ----")
-            with open(get_log_path(), encoding='utf-8') as file:
+            with open(get_log_path(), encoding="utf-8") as file:
                 print(file.read())
             print("---- ------ ----")
-            with open(self.queue.get(), encoding='utf-8') as file:
+            with open(self.queue.get(), encoding="utf-8") as file:
                 print(file.read())
             print("---- ------ ----")
             os.unlink(get_log_path())
@@ -156,18 +154,24 @@ class RunMasterBehindProxy(RunMasterBase):
     @defer.inlineCallbacks
     def setupConfig(self, config_dict, startWorker=True):
         proxy_connection_string = f"tcp:127.0.0.1:{self.target_port}"
-        yield RunMasterBase.setupConfig(self, config_dict, startWorker,
-                                        proxy_connection_string=proxy_connection_string)
+        yield RunMasterBase.setupConfig(
+            self,
+            config_dict,
+            startWorker,
+            proxy_connection_string=proxy_connection_string,
+        )
 
 
 # Use interoperability test cases to test the HTTP proxy tunneling.
+
 
 class ProxyCommandMixinMasterPB(RunMasterBehindProxy, test_commandmixin.CommandMixinMasterPB):
     pass
 
 
-class ProxyCompositeStepMixinMasterPb(RunMasterBehindProxy,
-                                      test_compositestepmixin.CompositeStepMixinMasterPb):
+class ProxyCompositeStepMixinMasterPb(
+    RunMasterBehindProxy, test_compositestepmixin.CompositeStepMixinMasterPb
+):
     pass
 
 
@@ -179,8 +183,9 @@ class ProxySecretsConfigPB(RunMasterBehindProxy, test_integration_secrets.Secret
     pass
 
 
-class ProxySetPropertyFromCommandPB(RunMasterBehindProxy,
-                                    test_setpropertyfromcommand.SetPropertyFromCommandPB):
+class ProxySetPropertyFromCommandPB(
+    RunMasterBehindProxy, test_setpropertyfromcommand.SetPropertyFromCommandPB
+):
     pass
 
 

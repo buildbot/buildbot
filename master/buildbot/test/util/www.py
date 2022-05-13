@@ -35,7 +35,6 @@ from buildbot.www import authz
 
 
 class FakeSession:
-
     def __init__(self):
         self.user_info = {"anonymous": True}
 
@@ -44,20 +43,20 @@ class FakeSession:
 
 
 class FakeRequest:
-    written = b''
+    written = b""
     finished = False
     redirected_to = None
     rendered_resource = None
     failure = None
-    method = b'GET'
-    path = b'/req.path'
+    method = b"GET"
+    path = b"/req.path"
     responseCode = 200
 
     def __init__(self, path=None):
         self.headers = {}
         self.input_headers = {}
         self.prepath = []
-        x = path.split(b'?', 1)
+        x = path.split(b"?", 1)
         if len(x) == 1:
             self.path = path
             self.args = {}
@@ -67,7 +66,7 @@ class FakeRequest:
             self.args = parse_qs(argstring, 1)
         self.uri = self.path
         self.postpath = []
-        for p in path[1:].split(b'/'):
+        for p in path[1:].split(b"/"):
             path = urlunquote(bytes2unicode(p))
             self.postpath.append(unicode2bytes(path))
 
@@ -115,6 +114,7 @@ class FakeRequest:
         def finished(res):
             d.callback(res)
             return res
+
         return d
 
     def getSession(self):
@@ -124,11 +124,12 @@ class FakeRequest:
 class RequiresWwwMixin:
     # mix this into a TestCase to skip if buildbot-www is not installed
 
-    if not list(pkg_resources.iter_entry_points('buildbot.www', 'base')):
-        if 'BUILDBOT_TEST_REQUIRE_WWW' in os.environ:
-            raise RuntimeError('$BUILDBOT_TEST_REQUIRE_WWW is set but '
-                               'buildbot-www is not installed')
-        skip = 'buildbot-www not installed'
+    if not list(pkg_resources.iter_entry_points("buildbot.www", "base")):
+        if "BUILDBOT_TEST_REQUIRE_WWW" in os.environ:
+            raise RuntimeError(
+                "$BUILDBOT_TEST_REQUIRE_WWW is set but " "buildbot-www is not installed"
+            )
+        skip = "buildbot-www not installed"
 
 
 class WwwTestMixin(RequiresWwwMixin):
@@ -139,7 +140,8 @@ class WwwTestMixin(RequiresWwwMixin):
         self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
         master.www.getUserInfos = lambda _: getattr(
-            self.master.session, "user_info", {"anonymous": True})
+            self.master.session, "user_info", {"anonymous": True}
+        )
         cfg = dict(port=None, auth=auth.NoAuth(), authz=authz.Authz())
         cfg.update(kwargs)
         master.config.www = cfg
@@ -150,29 +152,39 @@ class WwwTestMixin(RequiresWwwMixin):
         self.master.authz.setMaster(self.master)
         return master
 
-    def make_request(self, path=None, method=b'GET'):
+    def make_request(self, path=None, method=b"GET"):
         self.request = FakeRequest(path)
         self.request.session = self.master.session
         self.request.method = method
         return self.request
 
-    def render_resource(self, rsrc, path=b'/', accept=None, method=b'GET',
-                        origin=None, access_control_request_method=None,
-                        extraHeaders=None, request=None,
-                        content=None, content_type=None):
+    def render_resource(
+        self,
+        rsrc,
+        path=b"/",
+        accept=None,
+        method=b"GET",
+        origin=None,
+        access_control_request_method=None,
+        extraHeaders=None,
+        request=None,
+        content=None,
+        content_type=None,
+    ):
         if not request:
             request = self.make_request(path, method=method)
             if accept:
-                request.input_headers[b'accept'] = accept
+                request.input_headers[b"accept"] = accept
             if origin:
-                request.input_headers[b'origin'] = origin
+                request.input_headers[b"origin"] = origin
             if access_control_request_method:
-                request.input_headers[b'access-control-request-method'] = \
-                    access_control_request_method
+                request.input_headers[
+                    b"access-control-request-method"
+                ] = access_control_request_method
             if extraHeaders is not None:
                 request.input_headers.update(extraHeaders)
             if content_type is not None:
-                request.input_headers.update({b'content-type': content_type})
+                request.input_headers.update({b"content-type": content_type})
                 request.content = BytesIO(content)
 
         rv = rsrc.render(request)
@@ -183,18 +195,27 @@ class WwwTestMixin(RequiresWwwMixin):
         return request.deferred
 
     @defer.inlineCallbacks
-    def render_control_resource(self, rsrc, path=b'/', params=None,
-                                requestJson=None, action="notfound", id=None,
-                                content_type=b'application/json'):
+    def render_control_resource(
+        self,
+        rsrc,
+        path=b"/",
+        params=None,
+        requestJson=None,
+        action="notfound",
+        id=None,
+        content_type=b"application/json",
+    ):
         # pass *either* a request or postpath
         if params is None:
             params = {}
         id = id or self.UUID
         request = self.make_request(path)
         request.method = b"POST"
-        request.content = StringIO(requestJson or json.dumps(
-            {"jsonrpc": "2.0", "method": action, "params": params, "id": id}))
-        request.input_headers = {b'content-type': content_type}
+        request.content = StringIO(
+            requestJson
+            or json.dumps({"jsonrpc": "2.0", "method": action, "params": params, "id": id})
+        )
+        request.input_headers = {b"content-type": content_type}
         rv = rsrc.render(request)
         if rv == server.NOT_DONE_YET:
             rv = yield request.deferred
@@ -207,24 +228,30 @@ class WwwTestMixin(RequiresWwwMixin):
             self.assertIn("id", res)
             self.assertEqual(res["id"], id)
 
-    def assertRequest(self, content=None, contentJson=None, contentType=None,
-                      responseCode=None, contentDisposition=None, headers=None):
+    def assertRequest(
+        self,
+        content=None,
+        contentJson=None,
+        contentType=None,
+        responseCode=None,
+        contentDisposition=None,
+        headers=None,
+    ):
         if headers is None:
             headers = {}
         got, exp = {}, {}
         if content is not None:
-            got['content'] = self.request.written
-            exp['content'] = content
+            got["content"] = self.request.written
+            exp["content"] = content
         if contentJson is not None:
-            got['contentJson'] = json.loads(
-                bytes2unicode(self.request.written))
-            exp['contentJson'] = contentJson
+            got["contentJson"] = json.loads(bytes2unicode(self.request.written))
+            exp["contentJson"] = contentJson
         if contentType is not None:
-            got['contentType'] = self.request.headers[b'content-type']
-            exp['contentType'] = [contentType]
+            got["contentType"] = self.request.headers[b"content-type"]
+            exp["contentType"] = [contentType]
         if responseCode is not None:
-            got['responseCode'] = str(self.request.responseCode)
-            exp['responseCode'] = str(responseCode)
+            got["responseCode"] = str(self.request.responseCode)
+            exp["responseCode"] = str(responseCode)
         for header, value in headers.items():
             got[header] = self.request.headers.get(header)
             exp[header] = value

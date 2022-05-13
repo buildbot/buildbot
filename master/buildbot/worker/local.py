@@ -23,28 +23,29 @@ from buildbot.worker.base import Worker
 
 
 class LocalWorker(Worker):
-
     def checkConfig(self, name, workdir=None, **kwargs):
-        kwargs['password'] = None
+        kwargs["password"] = None
         super().checkConfig(name, **kwargs)
         self.LocalWorkerFactory = None
         try:
             # importing here to avoid dependency on buildbot worker package
             from buildbot_worker.bot import LocalWorker as RemoteLocalWorker
+
             self.LocalWorkerFactory = RemoteLocalWorker
         except ImportError:
-            error("LocalWorker needs the buildbot-worker package installed "
-                  "(pip install buildbot-worker)")
+            error(
+                "LocalWorker needs the buildbot-worker package installed "
+                "(pip install buildbot-worker)"
+            )
         self.remote_worker = None
 
     @defer.inlineCallbacks
     def reconfigService(self, name, workdir=None, **kwargs):
-        kwargs['password'] = None
+        kwargs["password"] = None
         yield super().reconfigService(name, **kwargs)
         if workdir is None:
             workdir = name
-        workdir = os.path.abspath(
-            os.path.join(self.master.basedir, "workers", workdir))
+        workdir = os.path.abspath(os.path.join(self.master.basedir, "workers", workdir))
         if not os.path.isdir(workdir):
             os.makedirs(workdir)
 

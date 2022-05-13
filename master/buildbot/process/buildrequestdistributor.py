@@ -81,14 +81,12 @@ class BuildChooserBase:
         # the self.unclaimedBrdicts to None before calling."""
         if self.unclaimedBrdicts is None:
             # TODO: use order of the DATA API
-            brdicts = yield self.master.data.get(('builders',
-                                                  (yield self.bldr.getBuilderId()),
-                                                  'buildrequests'),
-                                                 [resultspec.Filter('claimed',
-                                                                    'eq',
-                                                                    [False])])
+            brdicts = yield self.master.data.get(
+                ("builders", (yield self.bldr.getBuilderId()), "buildrequests"),
+                [resultspec.Filter("claimed", "eq", [False])],
+            )
             # sort by submitted_at, so the first is the oldest
-            brdicts.sort(key=lambda brd: brd['submitted_at'])
+            brdicts.sort(key=lambda brd: brd["submitted_at"])
             self.unclaimedBrdicts = brdicts
         return self.unclaimedBrdicts
 
@@ -97,11 +95,11 @@ class BuildChooserBase:
         # Turn a brdict into a BuildRequest into a brdict. This is useful
         # for API like 'nextBuild', which operate on BuildRequest objects.
 
-        breq = self.breqCache.get(brdict['buildrequestid'])
+        breq = self.breqCache.get(brdict["buildrequestid"])
         if not breq:
             breq = yield BuildRequest.fromBrdict(self.master, brdict)
             if breq:
-                self.breqCache[brdict['buildrequestid']] = breq
+                self.breqCache[brdict["buildrequestid"]] = breq
         return breq
 
     def _getBrdictForBuildRequest(self, breq):
@@ -113,7 +111,7 @@ class BuildChooserBase:
 
         brid = breq.id
         for brdict in self.unclaimedBrdicts:
-            if brid == brdict['buildrequestid']:
+            if brid == brdict["buildrequestid"]:
                 return brdict
         return None
 
@@ -133,9 +131,9 @@ class BuildChooserBase:
 
     def _getUnclaimedBuildRequests(self):
         # Retrieve the list of BuildRequest objects for all unclaimed builds
-        return defer.gatherResults([
-            self._getBuildRequestForBrdict(brdict)
-            for brdict in self.unclaimedBrdicts])
+        return defer.gatherResults(
+            [self._getBuildRequestForBrdict(brdict) for brdict in self.unclaimedBrdicts]
+        )
 
 
 class BasicBuildChooser(BuildChooserBase):
@@ -159,8 +157,7 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.nextWorker = self.bldr.config.nextWorker
         if not self.nextWorker:
-            self.nextWorker = lambda _, workers, __: random.choice(
-                workers) if workers else None
+            self.nextWorker = lambda _, workers, __: random.choice(workers) if workers else None
 
         self.workerpool = self.bldr.getAvailableWorkers()
 
@@ -226,8 +223,10 @@ class BasicBuildChooser(BuildChooserBase):
                 if nextBreq not in breqs:
                     nextBreq = None
             except Exception:
-                log.err(Failure(),
-                        f"from _getNextUnclaimedBuildRequest for builder '{self.bldr}'")
+                log.err(
+                    Failure(),
+                    f"from _getNextUnclaimedBuildRequest for builder '{self.bldr}'",
+                )
                 nextBreq = None
         else:
             # otherwise just return the first build
@@ -247,8 +246,7 @@ class BasicBuildChooser(BuildChooserBase):
             try:
                 worker = yield self.nextWorker(self.bldr, self.workerpool, buildrequest)
             except Exception:
-                log.err(Failure(),
-                        f"from nextWorker for builder '{self.bldr}'")
+                log.err(Failure(), f"from nextWorker for builder '{self.bldr}'")
                 worker = None
 
             if not worker or worker not in self.workerpool:
@@ -349,9 +347,9 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 existing_pending = set(self._pending_builders)
 
                 # then sort the new, expanded set of builders
-                self._pending_builders = \
-                    yield self._sortBuilders(
-                        list(existing_pending | new_builders))
+                self._pending_builders = yield self._sortBuilders(
+                    list(existing_pending | new_builders)
+                )
 
                 # start the activity loop, if we aren't already
                 # working on that.
@@ -360,8 +358,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
             except Exception:  # pragma: no cover
                 log.err(Failure(), f"while attempting to start builds on {self.name}")
 
-        yield self.pending_builders_lock.run(
-            resetPendingBuildersList, new_builders)
+        yield self.pending_builders_lock.run(resetPendingBuildersList, new_builders)
         return None
 
     @defer.inlineCallbacks
@@ -394,9 +391,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         # convert builder names to builders
         builders_dict = self.botmaster.builders
-        builders = [builders_dict.get(n)
-                    for n in buildernames
-                    if n in builders_dict]
+        builders = [builders_dict.get(n) for n in buildernames if n in builders_dict]
 
         # find a sorting function
         sorter = self.master.config.prioritizeBuilders
@@ -418,7 +413,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
     def _activityLoop(self):
         self.active = True
 
-        timer = metrics.Timer('BuildRequestDistributor._activityLoop()')
+        timer = metrics.Timer("BuildRequestDistributor._activityLoop()")
         timer.start()
         pending_builders = []
         while True:
@@ -473,8 +468,9 @@ class BuildRequestDistributor(service.AsyncMultiService):
             brids = [br.id for br in breqs]
             claimed_at_epoch = self.master.reactor.seconds()
             claimed_at = epoch2datetime(claimed_at_epoch)
-            if not (yield self.master.data.updates.claimBuildRequests(
-                    brids, claimed_at=claimed_at)):
+            if not (
+                yield self.master.data.updates.claimBuildRequests(brids, claimed_at=claimed_at)
+            ):
                 # some brids were already claimed, so start over
                 bc = self.createBuildChooser(bldr, self.master)
                 continue

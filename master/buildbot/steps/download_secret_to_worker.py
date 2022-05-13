@@ -26,7 +26,7 @@ from buildbot.steps.worker import CompositeStepMixin
 
 class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
 
-    renderables = ['secret_to_be_populated']
+    renderables = ["secret_to_be_populated"]
 
     def __init__(self, populated_secret_list, **kwargs):
         super().__init__(**kwargs)
@@ -39,8 +39,9 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
             if not isinstance(path, str):
                 raise ValueError(f"Secret path {path} is not a string")
             self.secret_to_be_interpolated = secretvalue
-            res = yield self.downloadFileContentToWorker(path, self.secret_to_be_interpolated,
-                                                         mode=stat.S_IRUSR | stat.S_IWUSR)
+            res = yield self.downloadFileContentToWorker(
+                path, self.secret_to_be_interpolated, mode=stat.S_IRUSR | stat.S_IWUSR
+            )
             result = worst_status(result, res)
         return result
 
@@ -52,7 +53,7 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
 
 class RemoveWorkerFileSecret(BuildStep, CompositeStepMixin):
 
-    renderables = ['secret_to_be_populated']
+    renderables = ["secret_to_be_populated"]
 
     def __init__(self, populated_secret_list, logEnviron=False, **kwargs):
         super().__init__(**kwargs)

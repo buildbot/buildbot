@@ -25,6 +25,7 @@ class ConfiguratorMixin:
     @ivar configurator: the configurator under test
     @ivar config_dict: the config dict that the configurator is modifying
     """
+
     def setUp(self):
         self.config_dict = {}
 
@@ -33,23 +34,23 @@ class ConfiguratorMixin:
         return self.configurator.configure(self.config_dict)
 
     def expectWorker(self, name, klass):
-        if 'workers' in self.config_dict and 'slaves' in self.config_dict:
+        if "workers" in self.config_dict and "slaves" in self.config_dict:
             self.fail("both 'workers' and 'slaves' are in the config dict!")
-        for worker in self.config_dict.get('workers', []) + self.config_dict.get('slaves', []):
+        for worker in self.config_dict.get("workers", []) + self.config_dict.get("slaves", []):
             if isinstance(worker, klass) and worker.name == name:
                 return worker
         self.fail(f"expected a worker named {name} of class {klass}")
         return None
 
     def expectScheduler(self, name, klass):
-        for scheduler in self.config_dict['schedulers']:
+        for scheduler in self.config_dict["schedulers"]:
             if scheduler.name == name and isinstance(scheduler, klass):
                 return scheduler
         self.fail(f"expected a scheduler named {name} of class {klass}")
         return None
 
     def expectBuilder(self, name):
-        for builder in self.config_dict['builders']:
+        for builder in self.config_dict["builders"]:
             if builder.name == name:
                 return builder
         self.fail(f"expected a builder named {name}")
@@ -58,10 +59,7 @@ class ConfiguratorMixin:
     def expectBuilderHasSteps(self, name, step_classes):
         builder = self.expectBuilder(name)
         for step_class in step_classes:
-            found = [
-                step
-                for step in builder.factory.steps if step.factory == step_class
-            ]
+            found = [step for step in builder.factory.steps if step.factory == step_class]
             if not found:
                 self.fail(f"expected a buildstep of {step_class!r} in {name}")
 

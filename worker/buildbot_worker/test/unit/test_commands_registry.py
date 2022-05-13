@@ -23,17 +23,16 @@ from buildbot_worker.commands import shell
 
 
 class Registry(unittest.TestCase):
-
     def test_getFactory(self):
-        factory = registry.getFactory('shell')
+        factory = registry.getFactory("shell")
         self.assertEqual(factory, shell.WorkerShellCommand)
 
     def test_getFactory_KeyError(self):
         with self.assertRaises(KeyError):
-            registry.getFactory('nosuchcommand')
+            registry.getFactory("nosuchcommand")
 
     def test_getAllCommandNames(self):
-        self.assertTrue('shell' in registry.getAllCommandNames())
+        self.assertTrue("shell" in registry.getAllCommandNames())
 
     def test_all_commands_exist(self):
         # if this doesn't raise a KeyError, then we're good

@@ -33,46 +33,87 @@ from buildbot.warnings import DeprecatedApiWarning
 class SecretsConfig(RunMasterBase):
     def setUp(self):
         try:
-            subprocess.check_call(['docker', 'pull', 'vault'])
+            subprocess.check_call(["docker", "pull", "vault"])
 
-            subprocess.check_call(['docker', 'run', '-d',
-                                   '-e', 'SKIP_SETCAP=yes',
-                                   '-e', 'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken',
-                                   '-e', 'VAULT_TOKEN=my_vaulttoken',
-                                   '--name=vault_for_buildbot',
-                                   '-p', '8200:8200', 'vault'])
+            subprocess.check_call(
+                [
+                    "docker",
+                    "run",
+                    "-d",
+                    "-e",
+                    "SKIP_SETCAP=yes",
+                    "-e",
+                    "VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken",
+                    "-e",
+                    "VAULT_TOKEN=my_vaulttoken",
+                    "--name=vault_for_buildbot",
+                    "-p",
+                    "8200:8200",
+                    "vault",
+                ]
+            )
             self.addCleanup(self.remove_container)
 
-            subprocess.check_call(['docker', 'exec',
-                                   '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
-                                   'vault_for_buildbot',
-                                   'vault', 'kv', 'put', 'secret/key', 'value=word'])
+            subprocess.check_call(
+                [
+                    "docker",
+                    "exec",
+                    "-e",
+                    "VAULT_ADDR=http://127.0.0.1:8200/",
+                    "vault_for_buildbot",
+                    "vault",
+                    "kv",
+                    "put",
+                    "secret/key",
+                    "value=word",
+                ]
+            )
 
-            subprocess.check_call(['docker', 'exec',
-                                   '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
-                                   'vault_for_buildbot',
-                                   'vault', 'kv', 'put', 'secret/anykey', 'anyvalue=anyword'])
+            subprocess.check_call(
+                [
+                    "docker",
+                    "exec",
+                    "-e",
+                    "VAULT_ADDR=http://127.0.0.1:8200/",
+                    "vault_for_buildbot",
+                    "vault",
+                    "kv",
+                    "put",
+                    "secret/anykey",
+                    "anyvalue=anyword",
+                ]
+            )
 
-            subprocess.check_call(['docker', 'exec',
-                                   '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
-                                   'vault_for_buildbot',
-                                   'vault', 'kv', 'put', 'secret/key1/key2', 'id=val'])
+            subprocess.check_call(
+                [
+                    "docker",
+                    "exec",
+                    "-e",
+                    "VAULT_ADDR=http://127.0.0.1:8200/",
+                    "vault_for_buildbot",
+                    "vault",
+                    "kv",
+                    "put",
+                    "secret/key1/key2",
+                    "id=val",
+                ]
+            )
         except (FileNotFoundError, subprocess.CalledProcessError) as e:
             raise SkipTest("Vault integration needs docker environment to be setup") from e
 
     def remove_container(self):
-        subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'])
+        subprocess.call(["docker", "rm", "-f", "vault_for_buildbot"])
 
     @defer.inlineCallbacks
     def do_secret_test(self, secret_specifier, expected_obfuscation, expected_value):
         with assertProducesWarning(DeprecatedApiWarning):
             yield self.setupConfig(masterConfig(secret_specifier=secret_specifier))
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
-        self.assertEqual(build['buildid'], 1)
+        self.assertEqual(build["buildid"], 1)
 
         patterns = [
             f"echo {expected_obfuscation}",
-            base64.b64encode((expected_value + "\n").encode('utf-8')).decode('utf-8'),
+            base64.b64encode((expected_value + "\n").encode("utf-8")).decode("utf-8"),
         ]
 
         res = yield self.checkBuildStepLogExist(build, patterns)
@@ -80,19 +121,19 @@ class SecretsConfig(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_key(self):
-        yield self.do_secret_test('%(secret:key)s', '<key>', 'word')
+        yield self.do_secret_test("%(secret:key)s", "<key>", "word")
 
     @defer.inlineCallbacks
     def test_key_value(self):
-        yield self.do_secret_test('%(secret:key/value)s', '<key/value>', 'word')
+        yield self.do_secret_test("%(secret:key/value)s", "<key/value>", "word")
 
     @defer.inlineCallbacks
     def test_any_key(self):
-        yield self.do_secret_test('%(secret:anykey/anyvalue)s', '<anykey/anyvalue>', 'anyword')
+        yield self.do_secret_test("%(secret:anykey/anyvalue)s", "<anykey/anyvalue>", "anyword")
 
     @defer.inlineCallbacks
     def test_nested_key(self):
-        yield self.do_secret_test('%(secret:key1/key2/id)s', '<key1/key2/id>', 'val')
+        yield self.do_secret_test("%(secret:key1/key2/id)s", "<key1/key2/id>", "val")
 
 
 def masterConfig(secret_specifier):
@@ -101,24 +142,20 @@ def masterConfig(secret_specifier):
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import schedulers
 
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c["schedulers"] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
     # note that as of December 2018, the vault docker image default to kv
     # version 2 to be enabled by default
-    c['secretsProviders'] = [HashiCorpVaultSecretProvider(
-        vaultToken='my_vaulttoken',
-        vaultServer="http://localhost:8200",
-        apiVersion=2
-    )]
+    c["secretsProviders"] = [
+        HashiCorpVaultSecretProvider(
+            vaultToken="my_vaulttoken",
+            vaultServer="http://localhost:8200",
+            apiVersion=2,
+        )
+    ]
 
     f = BuildFactory()
-    f.addStep(ShellCommand(command=Interpolate(f'echo {secret_specifier} | base64')))
+    f.addStep(ShellCommand(command=Interpolate(f"echo {secret_specifier} | base64")))
 
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
+    c["builders"] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
     return c

@@ -28,43 +28,53 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
-            fakedb.SourceStamp(id=13, branch='oak'),
-            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
-                         patch_author='bar', patch_comment='foo', subdir='/foo',
-                         patchlevel=3),
-            fakedb.SourceStamp(id=14, patchid=99, branch='poplar'),
-        ])
+        self.db.insertTestData(
+            [
+                fakedb.SourceStamp(id=13, branch="oak"),
+                fakedb.Patch(
+                    id=99,
+                    patch_base64="aGVsbG8sIHdvcmxk",
+                    patch_author="bar",
+                    patch_comment="foo",
+                    subdir="/foo",
+                    patchlevel=3,
+                ),
+                fakedb.SourceStamp(id=14, patchid=99, branch="poplar"),
+            ]
+        )
 
     def tearDown(self):
         self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        sourcestamp = yield self.callGet(('sourcestamps', 13))
+        sourcestamp = yield self.callGet(("sourcestamps", 13))
 
         self.validateData(sourcestamp)
-        self.assertEqual(sourcestamp['branch'], 'oak')
-        self.assertEqual(sourcestamp['patch'], None)
+        self.assertEqual(sourcestamp["branch"], "oak")
+        self.assertEqual(sourcestamp["patch"], None)
 
     @defer.inlineCallbacks
     def test_get_existing_patch(self):
-        sourcestamp = yield self.callGet(('sourcestamps', 14))
+        sourcestamp = yield self.callGet(("sourcestamps", 14))
 
         self.validateData(sourcestamp)
-        self.assertEqual(sourcestamp['branch'], 'poplar')
-        self.assertEqual(sourcestamp['patch'], {
-            'patchid': 99,
-            'author': 'bar',
-            'body': b'hello, world',
-            'comment': 'foo',
-            'level': 3,
-            'subdir': '/foo',
-        })
+        self.assertEqual(sourcestamp["branch"], "poplar")
+        self.assertEqual(
+            sourcestamp["patch"],
+            {
+                "patchid": 99,
+                "author": "bar",
+                "body": b"hello, world",
+                "comment": "foo",
+                "level": 3,
+                "subdir": "/foo",
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        sourcestamp = yield self.callGet(('sourcestamps', 99))
+        sourcestamp = yield self.callGet(("sourcestamps", 99))
 
         self.assertEqual(sourcestamp, None)
 
@@ -76,23 +86,24 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
-            fakedb.SourceStamp(id=13),
-            fakedb.SourceStamp(id=14),
-        ])
+        self.db.insertTestData(
+            [
+                fakedb.SourceStamp(id=13),
+                fakedb.SourceStamp(id=14),
+            ]
+        )
 
     def tearDown(self):
         self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):
-        sourcestamps = yield self.callGet(('sourcestamps',))
+        sourcestamps = yield self.callGet(("sourcestamps",))
 
         for m in sourcestamps:
             self.validateData(m)
 
-        self.assertEqual(sorted([m['ssid'] for m in sourcestamps]),
-                         [13, 14])
+        self.assertEqual(sorted([m["ssid"] for m in sourcestamps]), [13, 14])
 
 
 class SourceStamp(unittest.TestCase):

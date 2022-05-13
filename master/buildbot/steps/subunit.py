@@ -40,8 +40,9 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
             from subunit import TestProtocolServer, PROGRESS_CUR, PROGRESS_SET
             from subunit import PROGRESS_PUSH, PROGRESS_POP
         except ImportError as e:
-            raise ImportError("subunit is not importable, but is required for "
-                              "SubunitLogObserver support.") from e
+            raise ImportError(
+                "subunit is not importable, but is required for " "SubunitLogObserver support."
+            ) from e
         self.PROGRESS_CUR = PROGRESS_CUR
         self.PROGRESS_SET = PROGRESS_SET
         self.PROGRESS_PUSH = PROGRESS_PUSH
@@ -54,18 +55,18 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
     def outLineReceived(self, line):
         # Impedance mismatch: subunit wants lines, observers get lines-no\n
         # Note that observers get already decoded lines whereas protocol wants bytes
-        self.protocol.lineReceived(line.encode('utf-8') + b'\n')
+        self.protocol.lineReceived(line.encode("utf-8") + b"\n")
 
     def errLineReceived(self, line):
         # Same note as in outLineReceived applies
-        self.protocol.lineReceived(line.encode('utf-8') + b'\n')
+        self.protocol.lineReceived(line.encode("utf-8") + b"\n")
 
     def stopTest(self, test):
         super().stopTest(test)
-        self.step.setProgress('tests', self.testsRun)
+        self.step.setProgress("tests", self.testsRun)
 
     def addSkip(self, test, detail):
-        if hasattr(TestResult, 'addSkip'):
+        if hasattr(TestResult, "addSkip"):
             super().addSkip(test, detail)
         else:
             self.skips.append((test, detail))
@@ -80,8 +81,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
 
     def issue(self, test, err):
         """An issue - failing, erroring etc test."""
-        self.step.setProgress('tests failed', len(self.failures) +
-                              len(self.errors))
+        self.step.setProgress("tests failed", len(self.failures) + len(self.errors))
 
     def tags(self, new_tags, gone_tags):
         """Accumulate the seen tags."""
@@ -89,7 +89,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
 
 
 class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
-    name = 'shell'
+    name = "shell"
 
     """A ShellCommand that sniffs subunit output.
     """
@@ -101,15 +101,15 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         self.failureOnNoTests = failureOnNoTests
 
         self._observer = SubunitLogObserver()
-        self.addLogObserver('stdio', self._observer)
-        self.progressMetrics = self.progressMetrics + ('tests', 'tests failed')
+        self.addLogObserver("stdio", self._observer)
+        self.progressMetrics = self.progressMetrics + ("tests", "tests failed")
 
     @defer.inlineCallbacks
     def run(self):
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
         problems = ""
@@ -164,6 +164,6 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         # TODO: expectedFailures/unexpectedSuccesses
 
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
+            summary += f" ({Results[self.results]})"
 
-        return {'step': summary}
+        return {"step": summary}

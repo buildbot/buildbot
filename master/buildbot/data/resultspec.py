@@ -27,47 +27,48 @@ class FieldBase:
     to wrap value into a `Field` instance
 
     """
-    __slots__ = ['field', 'op', 'values']
+
+    __slots__ = ["field", "op", "values"]
 
     singular_operators = {
-        'eq': lambda d, v: d == v[0],
-        'ne': lambda d, v: d != v[0],
-        'lt': lambda d, v: d < v[0],
-        'le': lambda d, v: d <= v[0],
-        'gt': lambda d, v: d > v[0],
-        'ge': lambda d, v: d >= v[0],
-        'contains': lambda d, v: v[0] in d,
-        'in': lambda d, v: d in v,
-        'notin': lambda d, v: d not in v,
+        "eq": lambda d, v: d == v[0],
+        "ne": lambda d, v: d != v[0],
+        "lt": lambda d, v: d < v[0],
+        "le": lambda d, v: d <= v[0],
+        "gt": lambda d, v: d > v[0],
+        "ge": lambda d, v: d >= v[0],
+        "contains": lambda d, v: v[0] in d,
+        "in": lambda d, v: d in v,
+        "notin": lambda d, v: d not in v,
     }
 
     singular_operators_sql = {
-        'eq': lambda d, v: d == v[0],
-        'ne': lambda d, v: d != v[0],
-        'lt': lambda d, v: d < v[0],
-        'le': lambda d, v: d <= v[0],
-        'gt': lambda d, v: d > v[0],
-        'ge': lambda d, v: d >= v[0],
-        'contains': lambda d, v: d.contains(v[0]),
+        "eq": lambda d, v: d == v[0],
+        "ne": lambda d, v: d != v[0],
+        "lt": lambda d, v: d < v[0],
+        "le": lambda d, v: d <= v[0],
+        "gt": lambda d, v: d > v[0],
+        "ge": lambda d, v: d >= v[0],
+        "contains": lambda d, v: d.contains(v[0]),
         # only support string values, because currently there are no queries against lists in SQL
-        'in': lambda d, v: d.in_(v),
-        'notin': lambda d, v: d.notin_(v),
+        "in": lambda d, v: d.in_(v),
+        "notin": lambda d, v: d.notin_(v),
     }
 
     plural_operators = {
-        'eq': lambda d, v: d in v,
-        'ne': lambda d, v: d not in v,
-        'contains': lambda d, v: len(set(v).intersection(set(d))) > 0,
-        'in': lambda d, v: d in v,
-        'notin': lambda d, v: d not in v,
+        "eq": lambda d, v: d in v,
+        "ne": lambda d, v: d not in v,
+        "contains": lambda d, v: len(set(v).intersection(set(d))) > 0,
+        "in": lambda d, v: d in v,
+        "notin": lambda d, v: d not in v,
     }
 
     plural_operators_sql = {
-        'eq': lambda d, v: d.in_(v),
-        'ne': lambda d, v: d.notin_(v),
-        'contains': lambda d, vs: sa.or_(*[d.contains(v) for v in vs]),
-        'in': lambda d, v: d.in_(v),
-        'notin': lambda d, v: d.notin_(v),
+        "eq": lambda d, v: d.in_(v),
+        "ne": lambda d, v: d.notin_(v),
+        "contains": lambda d, vs: sa.or_(*[d.contains(v) for v in vs]),
+        "in": lambda d, v: d.in_(v),
+        "notin": lambda d, v: d.notin_(v),
         # sqlalchemy v0.8's or_ cannot take generator arguments, so this has to be manually expanded
         # only support string values, because currently there are no queries against lists in SQL
     }
@@ -133,6 +134,7 @@ class NoneComparator:
     '> None' and '< None' are not supported
     in Python 3.
     """
+
     def __init__(self, value):
         self.value = value
 
@@ -168,6 +170,7 @@ class ReverseComparator:
     and instead of a > b, it does b > a.
     This can be used in reverse comparisons.
     """
+
     def __init__(self, value):
         self.value = value
 
@@ -186,11 +189,25 @@ class ReverseComparator:
 
 class ResultSpec:
 
-    __slots__ = ['filters', 'fields', 'properties',
-                 'order', 'limit', 'offset', 'fieldMapping']
+    __slots__ = [
+        "filters",
+        "fields",
+        "properties",
+        "order",
+        "limit",
+        "offset",
+        "fieldMapping",
+    ]
 
-    def __init__(self, filters=None, fields=None, properties=None, order=None,
-                 limit=None, offset=None):
+    def __init__(
+        self,
+        filters=None,
+        fields=None,
+        properties=None,
+        order=None,
+        limit=None,
+        offset=None,
+    ):
         self.filters = filters or []
         self.properties = properties or []
         self.fields = fields
@@ -200,12 +217,14 @@ class ResultSpec:
         self.fieldMapping = {}
 
     def __repr__(self):
-        return (f"ResultSpec(**{{'filters': {self.filters}, 'fields': {self.fields}, "
-                f"'properties': {self.properties}, 'order': {self.order}, 'limit': {self.limit}, "
-                f"'offset': {self.offset}" + "})")
+        return (
+            f"ResultSpec(**{{'filters': {self.filters}, 'fields': {self.fields}, "
+            f"'properties': {self.properties}, 'order': {self.order}, 'limit': {self.limit}, "
+            f"'offset': {self.offset}" + "})"
+        )
 
     def __eq__(self, b):
-        for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:
+        for i in ["filters", "fields", "properties", "order", "limit", "offset"]:
             if getattr(self, i) != getattr(b, i):
                 return False
         return True
@@ -216,7 +235,7 @@ class ResultSpec:
     def popProperties(self):
         values = []
         for p in self.properties:
-            if p.field == b'property' and p.op == 'eq':
+            if p.field == b"property" and p.op == "eq":
                 self.properties.remove(p)
                 values = p.values
                 break
@@ -234,28 +253,29 @@ class ResultSpec:
         return v[0] if v is not None else None
 
     def popBooleanFilter(self, field):
-        eqVals = self.popFilter(field, 'eq')
+        eqVals = self.popFilter(field, "eq")
         if eqVals and len(eqVals) == 1:
             return eqVals[0]
-        neVals = self.popFilter(field, 'ne')
+        neVals = self.popFilter(field, "ne")
         if neVals and len(neVals) == 1:
             return not neVals[0]
         return None
 
     def popStringFilter(self, field):
-        eqVals = self.popFilter(field, 'eq')
+        eqVals = self.popFilter(field, "eq")
         if eqVals and len(eqVals) == 1:
             return eqVals[0]
         return None
 
     def popIntegerFilter(self, field):
-        eqVals = self.popFilter(field, 'eq')
+        eqVals = self.popFilter(field, "eq")
         if eqVals and len(eqVals) == 1:
             try:
                 return int(eqVals[0])
             except ValueError as e:
                 raise ValueError(
-                    f"Filter value for {field} should be integer, but got: {eqVals[0]}") from e
+                    f"Filter value for {field} should be integer, but got: {eqVals[0]}"
+                ) from e
         return None
 
     def removePagination(self):
@@ -289,7 +309,7 @@ class ResultSpec:
 
     def applyOrderToSQLQuery(self, query, o):
         reverse = False
-        if o.startswith('-'):
+        if o.startswith("-"):
             reverse = True
             o = o[1:]
         col = self.findColumn(query, o)
@@ -325,13 +345,16 @@ class ResultSpec:
         # we cannot limit in sql if there is missing filtering or ordering
         if unmatched_filters or unmatched_order:
             if self.offset is not None or self.limit is not None:
-                log.msg("Warning: limited data api query is not backed by db "
-                        "because of following filters",
-                        unmatched_filters, unmatched_order)
+                log.msg(
+                    "Warning: limited data api query is not backed by db "
+                    "because of following filters",
+                    unmatched_filters,
+                    unmatched_order,
+                )
             self.filters = unmatched_filters
             self.order = tuple(unmatched_order)
             return query, None
-        count_query = sa.select([sa.func.count()]).select_from(query.alias('query'))
+        count_query = sa.select([sa.func.count()]).select_from(query.alias("query"))
         self.order = None
         self.filters = []
         # finally, slice out the limit/offset
@@ -365,8 +388,8 @@ class ResultSpec:
             fields = set(self.fields)
 
             def includeFields(d):
-                return dict((k, v) for k, v in d.items()
-                            if k in fields)
+                return dict((k, v) for k, v in d.items() if k in fields)
+
             applyFields = includeFields
         else:
             fields = None
@@ -383,8 +406,9 @@ class ResultSpec:
             # item collection
             if isinstance(data, base.ListResult):
                 # if pagination was applied, then fields, etc. must be empty
-                assert not fields and not order and not filters, \
-                    "endpoint must apply fields, order, and filters if it performs pagination"
+                assert (
+                    not fields and not order and not filters
+                ), "endpoint must apply fields, order, and filters if it performs pagination"
                 offset, total = data.offset, data.total
                 limit = data.limit
             else:
@@ -403,6 +427,7 @@ class ResultSpec:
                 total = len(data)
 
             if self.order:
+
                 def keyFunc(elem, order=self.order):
                     """
                     Do a multi-level sort by passing in the keys
@@ -420,7 +445,7 @@ class ResultSpec:
                     compareKey = []
                     for k in order:
                         doReverse = False
-                        if k[0] == '-':
+                        if k[0] == "-":
                             # If we get a key '-lastName',
                             # it means sort by 'lastName' in reverse.
                             k = k[1:]
@@ -437,10 +462,8 @@ class ResultSpec:
             if self.offset is not None or self.limit is not None:
                 if offset is not None or limit is not None:
                     raise AssertionError("endpoint must clear offset/limit")
-                end = ((self.offset or 0) + self.limit
-                       if self.limit is not None
-                       else None)
-                data = data[self.offset:end]
+                end = (self.offset or 0) + self.limit if self.limit is not None else None
+                data = data[self.offset : end]
                 offset = self.offset
                 limit = self.limit
 
@@ -452,6 +475,5 @@ class ResultSpec:
 
 # a resultSpec which does not implement filtering in python (for tests)
 class OptimisedResultSpec(ResultSpec):
-
     def apply(self, data):
         return data

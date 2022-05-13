@@ -28,28 +28,27 @@ from buildbot.www.hooks.base import BaseHookHandler
 
 
 class GitoriousHandler(BaseHookHandler):
-
     def getChanges(self, request):
-        payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
-        user = payload['repository']['owner']['name']
-        repo = payload['repository']['name']
-        repo_url = payload['repository']['url']
-        project = payload['project']['name']
+        payload = json.loads(bytes2unicode(request.args[b"payload"][0]))
+        user = payload["repository"]["owner"]["name"]
+        repo = payload["repository"]["name"]
+        repo_url = payload["repository"]["url"]
+        project = payload["project"]["name"]
 
         changes = self.process_change(payload, user, repo, repo_url, project)
         log.msg(f"Received {len(changes)} changes from gitorious")
-        return (changes, 'git')
+        return (changes, "git")
 
     def process_change(self, payload, user, repo, repo_url, project):
         changes = []
-        newrev = payload['after']
+        newrev = payload["after"]
 
-        branch = payload['ref']
+        branch = payload["ref"]
         if re.match(r"^0*$", newrev):
             log.msg(f"Branch `{branch}' deleted, ignoring")
             return []
         else:
-            for commit in payload['commits']:
+            for commit in payload["commits"]:
                 files = []
                 # Gitorious doesn't send these, maybe later
                 # if 'added' in commit:
@@ -58,20 +57,22 @@ class GitoriousHandler(BaseHookHandler):
                 #     files.extend(commit['modified'])
                 # if 'removed' in commit:
                 #     files.extend(commit['removed'])
-                when_timestamp = dateparse(commit['timestamp'])
+                when_timestamp = dateparse(commit["timestamp"])
 
                 log.msg(f"New revision: {commit['id'][:8]}")
-                changes.append({
-                    'author': f"{commit['author']['name']} <{commit['author']['email']}>",
-                    'files': files,
-                    'comments': commit['message'],
-                    'revision': commit['id'],
-                    'when_timestamp': when_timestamp,
-                    'branch': branch,
-                    'revlink': commit['url'],
-                    'repository': repo_url,
-                    'project': project
-                })
+                changes.append(
+                    {
+                        "author": f"{commit['author']['name']} <{commit['author']['email']}>",
+                        "files": files,
+                        "comments": commit["message"],
+                        "revision": commit["id"],
+                        "when_timestamp": when_timestamp,
+                        "branch": branch,
+                        "revlink": commit["url"],
+                        "repository": repo_url,
+                        "project": project,
+                    }
+                )
 
         return changes
 

@@ -42,7 +42,7 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
     """
 
     @defer.inlineCallbacks
-    def setUpConnectorComponent(self, table_names=None, basedir='basedir', dialect_name='sqlite'):
+    def setUpConnectorComponent(self, table_names=None, basedir="basedir", dialect_name="sqlite"):
         """Set up C{self.db}, using the given db_url and basedir."""
         self.setup_test_reactor()
 

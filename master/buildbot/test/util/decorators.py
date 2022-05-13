@@ -22,19 +22,21 @@ import sys
 
 from twisted.python import runtime
 
-_FLAKY_ENV_VAR = 'RUN_FLAKY_TESTS'
+_FLAKY_ENV_VAR = "RUN_FLAKY_TESTS"
 
 
 def todo(message):
     """
     decorator to mark a todo test
     """
+
     def wrap(func):
         """
         just mark the test
         """
         func.todo = message
         return func
+
     return wrap
 
 
@@ -47,12 +49,17 @@ def flaky(bugNumber=None, issueNumber=None, onPlatform=None):
             return fn
 
         if bugNumber is not None:
-            fn.skip = (f"Flaky test (http://trac.buildbot.net/ticket/{bugNumber}) "
-                       f"- set ${_FLAKY_ENV_VAR} to run anyway")
+            fn.skip = (
+                f"Flaky test (http://trac.buildbot.net/ticket/{bugNumber}) "
+                f"- set ${_FLAKY_ENV_VAR} to run anyway"
+            )
         if issueNumber is not None:
-            fn.skip = (f"Flaky test (https://github.com/buildbot/buildbot/issues/{issueNumber}) "
-                       f"- set ${_FLAKY_ENV_VAR} to run anyway")
+            fn.skip = (
+                f"Flaky test (https://github.com/buildbot/buildbot/issues/{issueNumber}) "
+                f"- set ${_FLAKY_ENV_VAR} to run anyway"
+            )
         return fn
+
     return wrap
 
 
@@ -61,6 +68,7 @@ def skipUnlessPlatformIs(platform):
         if runtime.platformType != platform:
             test.skip = f"not a {platform} platform"
         return test
+
     return closure
 
 
@@ -71,4 +79,5 @@ def skipIfPythonVersionIsLess(min_version_info):
         if sys.version_info < min_version_info:
             test.skip = f"requires Python >= {min_version_info}"
         return test
+
     return closure

@@ -79,6 +79,7 @@ class TestAsyncioTestLoop(TestReactorMixin, unittest.TestCase):
             self.reactor.advance(1)
             if self.calls < 3:
                 self.reactor.callLater(0, advance)
+
         yield advance()
         yield as_deferred(f1)
 

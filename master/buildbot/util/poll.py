@@ -1,4 +1,3 @@
-
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -24,7 +23,6 @@ _poller_instances = None
 
 
 class Poller:
-
     def __init__(self, fn, instance, reactor):
         self.fn = fn
         self.instance = instance
@@ -58,7 +56,7 @@ class Poller:
         try:
             yield self.fn(self.instance)
         except Exception as e:
-            log.err(e, f'while executing {self.fn}')
+            log.err(e, f"while executing {self.fn}")
         finally:
             self._currently_executing = False
 
@@ -87,8 +85,9 @@ class Poller:
 
     def _schedule(self, force_now=False, force_initial_now=False):
         curr_time = self._reactor.seconds()
-        wait_time = self._get_wait_time(curr_time, force_now=force_now,
-                                        force_initial_now=force_initial_now)
+        wait_time = self._get_wait_time(
+            curr_time, force_now=force_now, force_initial_now=force_initial_now
+        )
         next_call_time = curr_time + wait_time
 
         if self._call is not None:

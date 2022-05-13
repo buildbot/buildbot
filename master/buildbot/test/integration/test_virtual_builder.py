@@ -23,18 +23,24 @@ from buildbot.test.util.integration import RunMasterBase
 # with one builder and a shellcommand step
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
-
     @defer.inlineCallbacks
     def test_shell(self):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
-        self.assertEqual(build['buildid'], 1)
+        self.assertEqual(build["buildid"], 1)
         builders = yield self.master.data.get(("builders",))
         self.assertEqual(len(builders), 2)
-        self.assertEqual(builders[1], {
-            'masterids': [], 'tags': ['virtual', '_virtual_'],
-            'description': 'I am a virtual builder', 'name': 'virtual_testy', 'builderid': 2})
-        self.assertEqual(build['builderid'], builders[1]['builderid'])
+        self.assertEqual(
+            builders[1],
+            {
+                "masterids": [],
+                "tags": ["virtual", "_virtual_"],
+                "description": "I am a virtual builder",
+                "name": "virtual_testy",
+                "builderid": 2,
+            },
+        )
+        self.assertEqual(build["builderid"], builders[1]["builderid"])
 
 
 # master configuration
@@ -44,20 +50,20 @@ def masterConfig():
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import steps, schedulers
 
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c["schedulers"] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
     f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      properties={
-                          'virtual_builder_name': 'virtual_testy',
-                          'virtual_builder_description': 'I am a virtual builder',
-                          'virtual_builder_tags': ['virtual'],
-                      },
-                      factory=f)]
+    f.addStep(steps.ShellCommand(command="echo hello"))
+    c["builders"] = [
+        BuilderConfig(
+            name="testy",
+            workernames=["local1"],
+            properties={
+                "virtual_builder_name": "virtual_testy",
+                "virtual_builder_description": "I am a virtual builder",
+                "virtual_builder_tags": ["virtual"],
+            },
+            factory=f,
+        )
+    ]
     return c

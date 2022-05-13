@@ -18,13 +18,11 @@ from buildbot.steps.source.git import Git
 
 
 class Gerrit(Git):
-
     def run_vc(self, branch, revision, patch):
         gerrit_branch = None
 
-        changed_project = self.build.getProperty('event.change.project')
-        if (not self.sourcestamp or (self.sourcestamp.project !=
-                                     changed_project)):
+        changed_project = self.build.getProperty("event.change.project")
+        if not self.sourcestamp or (self.sourcestamp.project != changed_project):
             # If we don't have a sourcestamp, or the project is  wrong, this
             # isn't the repo that's changed.  Drop through and check out the
             # head of the given branch
@@ -34,10 +32,9 @@ class Gerrit(Git):
             self.updateSourceProperty("gerrit_branch", gerrit_branch)
         else:
             try:
-                change = self.build.getProperty("gerrit_change", '').split('/')
+                change = self.build.getProperty("gerrit_change", "").split("/")
                 if len(change) == 2:
-                    gerrit_branch = \
-                        f"refs/changes/{(int(change[0]) % 100):2}/{int(change[0])}/{int(change[1])}"
+                    gerrit_branch = f"refs/changes/{(int(change[0]) % 100):2}/{int(change[0])}/{int(change[1])}"
                     self.updateSourceProperty("gerrit_branch", gerrit_branch)
             except Exception:
                 pass

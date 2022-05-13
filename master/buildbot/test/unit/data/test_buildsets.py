@@ -40,36 +40,37 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
-            fakedb.Buildset(id=13, reason='because I said so'),
-            fakedb.SourceStamp(id=92),
-            fakedb.SourceStamp(id=93),
-            fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=92),
-            fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=93),
-
-            fakedb.Buildset(id=14, reason='no sourcestamps'),
-        ])
+        self.db.insertTestData(
+            [
+                fakedb.Buildset(id=13, reason="because I said so"),
+                fakedb.SourceStamp(id=92),
+                fakedb.SourceStamp(id=93),
+                fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=92),
+                fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=93),
+                fakedb.Buildset(id=14, reason="no sourcestamps"),
+            ]
+        )
 
     def tearDown(self):
         self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        buildset = yield self.callGet(('buildsets', 13))
+        buildset = yield self.callGet(("buildsets", 13))
 
         self.validateData(buildset)
-        self.assertEqual(buildset['reason'], 'because I said so')
+        self.assertEqual(buildset["reason"], "because I said so")
 
     @defer.inlineCallbacks
     def test_get_existing_no_sourcestamps(self):
-        buildset = yield self.callGet(('buildsets', 14))
+        buildset = yield self.callGet(("buildsets", 14))
 
         self.validateData(buildset)
-        self.assertEqual(buildset['sourcestamps'], [])
+        self.assertEqual(buildset["sourcestamps"], [])
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        buildset = yield self.callGet(('buildsets', 99))
+        buildset = yield self.callGet(("buildsets", 99))
 
         self.assertEqual(buildset, None)
 
@@ -81,79 +82,103 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
-            fakedb.SourceStamp(id=92),
-            fakedb.Buildset(id=13, complete=True),
-            fakedb.Buildset(id=14, complete=False),
-            fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=92),
-            fakedb.BuildsetSourceStamp(buildsetid=14, sourcestampid=92),
-        ])
+        self.db.insertTestData(
+            [
+                fakedb.SourceStamp(id=92),
+                fakedb.Buildset(id=13, complete=True),
+                fakedb.Buildset(id=14, complete=False),
+                fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=92),
+                fakedb.BuildsetSourceStamp(buildsetid=14, sourcestampid=92),
+            ]
+        )
 
     def tearDown(self):
         self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):
-        buildsets = yield self.callGet(('buildsets',))
+        buildsets = yield self.callGet(("buildsets",))
 
         self.validateData(buildsets[0])
-        self.assertEqual(buildsets[0]['bsid'], 13)
+        self.assertEqual(buildsets[0]["bsid"], 13)
         self.validateData(buildsets[1])
-        self.assertEqual(buildsets[1]['bsid'], 14)
+        self.assertEqual(buildsets[1]["bsid"], 14)
 
     @defer.inlineCallbacks
     def test_get_complete(self):
-        f = resultspec.Filter('complete', 'eq', [True])
-        buildsets = yield self.callGet(('buildsets',),
-                         resultSpec=resultspec.ResultSpec(filters=[f]))
+        f = resultspec.Filter("complete", "eq", [True])
+        buildsets = yield self.callGet(
+            ("buildsets",), resultSpec=resultspec.ResultSpec(filters=[f])
+        )
 
         self.assertEqual(len(buildsets), 1)
         self.validateData(buildsets[0])
-        self.assertEqual(buildsets[0]['bsid'], 13)
+        self.assertEqual(buildsets[0]["bsid"], 13)
 
     @defer.inlineCallbacks
     def test_get_incomplete(self):
-        f = resultspec.Filter('complete', 'eq', [False])
-        buildsets = yield self.callGet(('buildsets',),
-                         resultSpec=resultspec.ResultSpec(filters=[f]))
+        f = resultspec.Filter("complete", "eq", [False])
+        buildsets = yield self.callGet(
+            ("buildsets",), resultSpec=resultspec.ResultSpec(filters=[f])
+        )
 
         self.assertEqual(len(buildsets), 1)
         self.validateData(buildsets[0])
-        self.assertEqual(buildsets[0]['bsid'], 14)
+        self.assertEqual(buildsets[0]["bsid"], 14)
 
 
-class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
-               unittest.TestCase):
-
+class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = buildsets.Buildset(self.master)
-        return self.master.db.insertTestData([
-            fakedb.SourceStamp(id=234, branch='br', codebase='cb',
-                               project='pr', repository='rep', revision='rev',
-                               created_at=89834834),
-            fakedb.Builder(id=42, name='bldr1'),
-            fakedb.Builder(id=43, name='bldr2'),
-        ])
+        return self.master.db.insertTestData(
+            [
+                fakedb.SourceStamp(
+                    id=234,
+                    branch="br",
+                    codebase="cb",
+                    project="pr",
+                    repository="rep",
+                    revision="rev",
+                    created_at=89834834,
+                ),
+                fakedb.Builder(id=42, name="bldr1"),
+                fakedb.Builder(id=43, name="bldr2"),
+            ]
+        )
 
-    SS234_DATA = {'branch': 'br', 'codebase': 'cb', 'patch': None,
-                  'project': 'pr', 'repository': 'rep', 'revision': 'rev',
-                  'created_at': epoch2datetime(89834834), 'ssid': 234}
+    SS234_DATA = {
+        "branch": "br",
+        "codebase": "cb",
+        "patch": None,
+        "project": "pr",
+        "repository": "rep",
+        "revision": "rev",
+        "created_at": epoch2datetime(89834834),
+        "ssid": 234,
+    }
 
     def test_signature_addBuildset(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.addBuildset,  # fake
-            self.rtype.addBuildset)  # real
-        def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
-                        properties=None, builderids=None, external_idstring=None,
-                        parent_buildid=None, parent_relationship=None):
+            self.master.data.updates.addBuildset, self.rtype.addBuildset  # fake
+        )  # real
+        def addBuildset(
+            self,
+            waited_for,
+            scheduler=None,
+            sourcestamps=None,
+            reason="",
+            properties=None,
+            builderids=None,
+            external_idstring=None,
+            parent_buildid=None,
+            parent_relationship=None,
+        ):
             pass
 
     @defer.inlineCallbacks
-    def do_test_addBuildset(self, kwargs, expectedReturn,
-                            expectedMessages, expectedBuildset):
+    def do_test_addBuildset(self, kwargs, expectedReturn, expectedMessages, expectedBuildset):
         """Run a test of addBuildset.
 
         @param kwargs: kwargs to addBuildset
@@ -170,75 +195,116 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         (bsid, brids) = yield self.rtype.addBuildset(**kwargs)
         self.assertEqual((bsid, brids), expectedReturn)
         # check the correct message was received
-        self.master.mq.assertProductions(
-            expectedMessages, orderMatters=False)
+        self.master.mq.assertProductions(expectedMessages, orderMatters=False)
         # and that the correct data was inserted into the db
         self.master.db.buildsets.assertBuildset(bsid, expectedBuildset)
 
     def _buildRequestMessageDict(self, brid, bsid, builderid):
-        return {'builderid': builderid,
-                'buildrequestid': brid,
-                'buildsetid': bsid,
-                'claimed': False,
-                'claimed_at': None,
-                'claimed_by_masterid': None,
-                'complete': False,
-                'complete_at': None,
-                'priority': 0,
-                'results': -1,
-                'submitted_at': epoch2datetime(A_TIMESTAMP),
-                'waited_for': True,
-                'properties': None}
+        return {
+            "builderid": builderid,
+            "buildrequestid": brid,
+            "buildsetid": bsid,
+            "claimed": False,
+            "claimed_at": None,
+            "claimed_by_masterid": None,
+            "complete": False,
+            "complete_at": None,
+            "priority": 0,
+            "results": -1,
+            "submitted_at": epoch2datetime(A_TIMESTAMP),
+            "waited_for": True,
+            "properties": None,
+        }
 
     def _buildRequestMessage1(self, brid, bsid, builderid):
         return (
-            ('buildsets', str(bsid),
-             'builders', str(builderid),
-             'buildrequests', str(brid), 'new'),
-            self._buildRequestMessageDict(brid, bsid, builderid))
+            (
+                "buildsets",
+                str(bsid),
+                "builders",
+                str(builderid),
+                "buildrequests",
+                str(brid),
+                "new",
+            ),
+            self._buildRequestMessageDict(brid, bsid, builderid),
+        )
 
     def _buildRequestMessage2(self, brid, bsid, builderid):
         return (
-            ('buildrequests', str(brid), 'new'),
-            self._buildRequestMessageDict(brid, bsid, builderid))
+            ("buildrequests", str(brid), "new"),
+            self._buildRequestMessageDict(brid, bsid, builderid),
+        )
 
     def _buildRequestMessage3(self, brid, bsid, builderid):
         return (
-            ('builders', str(builderid),
-             'buildrequests', str(brid), 'new'),
-            self._buildRequestMessageDict(brid, bsid, builderid))
+            ("builders", str(builderid), "buildrequests", str(brid), "new"),
+            self._buildRequestMessageDict(brid, bsid, builderid),
+        )
 
-    def _buildsetMessage(self, bsid, external_idstring='extid',
-                         reason='because', scheduler='fakesched', sourcestampids=None,
-                         submitted_at=A_TIMESTAMP):
+    def _buildsetMessage(
+        self,
+        bsid,
+        external_idstring="extid",
+        reason="because",
+        scheduler="fakesched",
+        sourcestampids=None,
+        submitted_at=A_TIMESTAMP,
+    ):
         if sourcestampids is None:
             sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
         return (
-            ('buildsets', str(bsid), 'new'),
-            dict(bsid=bsid, complete=False, complete_at=None,
-                 external_idstring=external_idstring, reason=reason,
-                 results=None, scheduler=scheduler,
-                 sourcestamps=[ssmap[ssid] for ssid in sourcestampids],
-                 submitted_at=submitted_at))
+            ("buildsets", str(bsid), "new"),
+            dict(
+                bsid=bsid,
+                complete=False,
+                complete_at=None,
+                external_idstring=external_idstring,
+                reason=reason,
+                results=None,
+                scheduler=scheduler,
+                sourcestamps=[ssmap[ssid] for ssid in sourcestampids],
+                submitted_at=submitted_at,
+            ),
+        )
 
-    def _buildsetCompleteMessage(self, bsid, complete_at=A_TIMESTAMP_EPOCH,
-                                 submitted_at=A_TIMESTAMP_EPOCH, external_idstring='extid',
-                                 reason='because', results=0, sourcestampids=None):
+    def _buildsetCompleteMessage(
+        self,
+        bsid,
+        complete_at=A_TIMESTAMP_EPOCH,
+        submitted_at=A_TIMESTAMP_EPOCH,
+        external_idstring="extid",
+        reason="because",
+        results=0,
+        sourcestampids=None,
+    ):
         if sourcestampids is None:
             sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
         return (
-            ('buildsets', str(bsid), 'complete'),
-            dict(bsid=bsid, complete=True, complete_at=complete_at,
-                 external_idstring=external_idstring, reason=reason,
-                 results=results, submitted_at=submitted_at,
-                 sourcestamps=[ssmap[ssid] for ssid in sourcestampids]))
+            ("buildsets", str(bsid), "complete"),
+            dict(
+                bsid=bsid,
+                complete=True,
+                complete_at=complete_at,
+                external_idstring=external_idstring,
+                reason=reason,
+                results=results,
+                submitted_at=submitted_at,
+                sourcestamps=[ssmap[ssid] for ssid in sourcestampids],
+            ),
+        )
 
     def test_addBuildset_two_builderNames(self):
-        kwargs = dict(scheduler='fakesched', reason='because',
-                      sourcestamps=[234], external_idstring='extid',
-                      builderids=[42, 43], waited_for=True)
+        kwargs = dict(
+            scheduler="fakesched",
+            reason="because",
+            sourcestamps=[234],
+            external_idstring="extid",
+            builderids=[42, 43],
+            waited_for=True,
+        )
         expectedReturn = (200, {42: 1000, 43: 1001})
         expectedMessages = [
             self._buildRequestMessage1(1000, 200, 42),
@@ -249,42 +315,44 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             self._buildRequestMessage3(1001, 200, 43),
             self._buildsetMessage(200),
         ]
-        expectedBuildset = dict(reason='because',
-                                properties={},
-                                external_idstring='extid')
-        return self.do_test_addBuildset(kwargs,
-                                        expectedReturn, expectedMessages, expectedBuildset)
+        expectedBuildset = dict(reason="because", properties={}, external_idstring="extid")
+        return self.do_test_addBuildset(kwargs, expectedReturn, expectedMessages, expectedBuildset)
 
     def test_addBuildset_no_builderNames(self):
-        kwargs = dict(scheduler='fakesched', reason='because',
-                      sourcestamps=[234], external_idstring='extid', waited_for=False)
+        kwargs = dict(
+            scheduler="fakesched",
+            reason="because",
+            sourcestamps=[234],
+            external_idstring="extid",
+            waited_for=False,
+        )
         expectedReturn = (200, {})
         expectedMessages = [
             self._buildsetMessage(200),
             # with no builderNames, this is done already
             self._buildsetCompleteMessage(200),
         ]
-        expectedBuildset = dict(reason='because',
-                                properties={},
-                                external_idstring='extid')
-        return self.do_test_addBuildset(kwargs,
-                                        expectedReturn, expectedMessages, expectedBuildset)
+        expectedBuildset = dict(reason="because", properties={}, external_idstring="extid")
+        return self.do_test_addBuildset(kwargs, expectedReturn, expectedMessages, expectedBuildset)
 
     def test_signature_maybeBuildsetComplete(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.maybeBuildsetComplete,  # fake
-            self.rtype.maybeBuildsetComplete)  # real
+            self.rtype.maybeBuildsetComplete,
+        )  # real
         def maybeBuildsetComplete(self, bsid):
             pass
 
     @defer.inlineCallbacks
-    def do_test_maybeBuildsetComplete(self,
-                                      buildRequestCompletions=None,
-                                      buildRequestResults=None,
-                                      buildsetComplete=False,
-                                      expectComplete=False,
-                                      expectMessage=False,
-                                      expectSuccess=True):
+    def do_test_maybeBuildsetComplete(
+        self,
+        buildRequestCompletions=None,
+        buildRequestResults=None,
+        buildsetComplete=False,
+        expectComplete=False,
+        expectMessage=False,
+        expectSuccess=True,
+    ):
         """Test maybeBuildsetComplete.
 
         @param buildRequestCompletions: dict mapping brid to True if complete,
@@ -314,46 +382,60 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         self.reactor.advance(A_TIMESTAMP)
 
         def mkbr(brid, bsid=72):
-            return fakedb.BuildRequest(id=brid, buildsetid=bsid, builderid=42,
-                                       complete=buildRequestCompletions.get(
-                                           brid),
-                                       results=buildRequestResults.get(brid, SUCCESS))
-        yield self.master.db.insertTestData([
-            fakedb.Builder(id=42, name='bldr1'),
-            fakedb.Buildset(id=72,
-                            submitted_at=EARLIER,
-                            complete=buildsetComplete,
-                            complete_at=A_TIMESTAMP if buildsetComplete else None),
-            mkbr(42), mkbr(43), mkbr(44),
-            fakedb.BuildsetSourceStamp(buildsetid=72, sourcestampid=234),
-            fakedb.Buildset(id=73,
-                            complete=False),
-            mkbr(45, bsid=73),
-            fakedb.BuildsetSourceStamp(buildsetid=73, sourcestampid=234),
-        ])
+            return fakedb.BuildRequest(
+                id=brid,
+                buildsetid=bsid,
+                builderid=42,
+                complete=buildRequestCompletions.get(brid),
+                results=buildRequestResults.get(brid, SUCCESS),
+            )
+
+        yield self.master.db.insertTestData(
+            [
+                fakedb.Builder(id=42, name="bldr1"),
+                fakedb.Buildset(
+                    id=72,
+                    submitted_at=EARLIER,
+                    complete=buildsetComplete,
+                    complete_at=A_TIMESTAMP if buildsetComplete else None,
+                ),
+                mkbr(42),
+                mkbr(43),
+                mkbr(44),
+                fakedb.BuildsetSourceStamp(buildsetid=72, sourcestampid=234),
+                fakedb.Buildset(id=73, complete=False),
+                mkbr(45, bsid=73),
+                fakedb.BuildsetSourceStamp(buildsetid=73, sourcestampid=234),
+            ]
+        )
 
         yield self.rtype.maybeBuildsetComplete(72)
 
         self.master.db.buildsets.assertBuildsetCompletion(72, expectComplete)
         if expectMessage:
-            self.assertEqual(self.master.mq.productions, [
-                self._buildsetCompleteMessage(72,
-                                              results=SUCCESS if expectSuccess else FAILURE,
-                                              submitted_at=EARLIER_EPOCH),
-            ])
+            self.assertEqual(
+                self.master.mq.productions,
+                [
+                    self._buildsetCompleteMessage(
+                        72,
+                        results=SUCCESS if expectSuccess else FAILURE,
+                        submitted_at=EARLIER_EPOCH,
+                    ),
+                ],
+            )
         else:
             self.assertEqual(self.master.mq.productions, [])
 
     def test_maybeBuildsetComplete_not_yet(self):
         # only brid 42 is complete, so the buildset is not complete
-        return self.do_test_maybeBuildsetComplete(
-            buildRequestCompletions={42: True})
+        return self.do_test_maybeBuildsetComplete(buildRequestCompletions={42: True})
 
     def test_maybeBuildsetComplete_complete(self):
         return self.do_test_maybeBuildsetComplete(
             buildRequestCompletions={42: True, 43: True, 44: True},
             expectComplete=True,
-            expectMessage=True)
+            expectMessage=True,
+        )
 
     def test_maybeBuildsetComplete_complete_failure(self):
         return self.do_test_maybeBuildsetComplete(
@@ -361,11 +443,13 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             buildRequestResults={43: FAILURE},
             expectComplete=True,
             expectMessage=True,
-            expectSuccess=False)
+            expectSuccess=False,
+        )
 
     def test_maybeBuildsetComplete_already_complete(self):
         return self.do_test_maybeBuildsetComplete(
             buildRequestCompletions={42: True, 43: True, 44: True},
             buildsetComplete=True,
             expectComplete=True,
-            expectMessage=False)
+            expectMessage=False,
+        )

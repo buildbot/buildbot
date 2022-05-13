@@ -34,6 +34,7 @@ class DisconnectingStep(BuildStep):
 
 class WorkerReconnectPb(RunMasterBase):
     """integration test for testing worker disconnection and reconnection"""
+
     proto = "pb"
 
     @defer.inlineCallbacks
@@ -41,7 +42,7 @@ class WorkerReconnectPb(RunMasterBase):
         DisconnectingStep.disconnection_list = []
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild()
-        self.assertEqual(build['buildid'], 2)
+        self.assertEqual(build["buildid"], 2)
         self.assertEqual(len(DisconnectingStep.disconnection_list), 2)
 
 
@@ -56,18 +57,12 @@ def masterConfig():
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import schedulers
 
-    c['schedulers'] = [
-        schedulers.AnyBranchScheduler(
-            name="sched",
-            builderNames=["testy"]),
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c["schedulers"] = [
+        schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"]),
+        schedulers.ForceScheduler(name="force", builderNames=["testy"]),
+    ]
 
     f = BuildFactory()
     f.addStep(DisconnectingStep())
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
+    c["builders"] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
     return c

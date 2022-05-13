@@ -35,13 +35,13 @@ class UpdateRegistrationListener(Listener):
         # NOTE: this method is only present on the PB and MsgPack protocols; others do not
         # use registrations
         if username in self._registrations:
-            currentPassword, currentPortStr, currentReg = \
-                self._registrations[username]
+            currentPassword, currentPortStr, currentReg = self._registrations[username]
         else:
             currentPassword, currentPortStr, currentReg = None, None, None
 
-        iseq = (ComparableMixin.isEquivalent(currentPassword, password) and
-                ComparableMixin.isEquivalent(currentPortStr, portStr))
+        iseq = ComparableMixin.isEquivalent(
+            currentPassword, password
+        ) and ComparableMixin.isEquivalent(currentPortStr, portStr)
         if iseq:
             return currentReg
         if currentReg:
@@ -49,8 +49,9 @@ class UpdateRegistrationListener(Listener):
             del self._registrations[username]
 
         if portStr is not None and password:
-            reg = yield self.get_manager().register(portStr, username, password,
-                                                    self._create_connection)
+            reg = yield self.get_manager().register(
+                portStr, username, password, self._create_connection
+            )
             self._registrations[username] = (password, portStr, reg)
             return reg
         return currentReg
@@ -136,7 +137,6 @@ class Connection:
 
 # RemoteCommand base implementation and base proxy
 class RemoteCommandImpl:
-
     def remote_update(self, updates):
         raise NotImplementedError
 
@@ -146,7 +146,6 @@ class RemoteCommandImpl:
 
 # FileWriter base implementation
 class FileWriterImpl:
-
     def remote_write(self, data):
         raise NotImplementedError
 
@@ -162,7 +161,6 @@ class FileWriterImpl:
 
 # FileReader base implementation
 class FileReaderImpl:
-
     def remote_read(self, maxLength):
         raise NotImplementedError
 

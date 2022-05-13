@@ -22,7 +22,6 @@ from buildbot.util import eventual
 
 
 class Eventually(unittest.TestCase):
-
     def setUp(self):
         # reset the queue to its base state
         eventual._theSimpleQueue = eventual._SimpleCallQueue()
@@ -54,8 +53,8 @@ class Eventually(unittest.TestCase):
         return self.assertResults([()])
 
     def test_eventually_args(self):
-        eventual.eventually(self.cb, 1, 2, a='a')
-        return self.assertResults([(1, 2, dict(a='a'))])
+        eventual.eventually(self.cb, 1, 2, a="a")
+        return self.assertResults([(1, 2, dict(a="a"))])
 
     def test_eventually_err(self):
         # monkey-patch log.err; this is restored by tearDown
@@ -63,8 +62,9 @@ class Eventually(unittest.TestCase):
 
         def cb_fails():
             raise RuntimeError("should not cause test failure")
+
         eventual.eventually(cb_fails)
-        return self.assertResults(['err'])
+        return self.assertResults(["err"])
 
     def test_eventually_butNotNow(self):
         eventual.eventually(self.cb, 1)
@@ -83,6 +83,7 @@ class Eventually(unittest.TestCase):
             if n <= 0:
                 return
             eventual.eventually(chain, n - 1)
+
         chain(3)
         # (the flush this tests is implicit in assertResults)
         return self.assertResults([3, 2, 1, 0])
@@ -95,6 +96,7 @@ class Eventually(unittest.TestCase):
                 return
             eventual.eventually(tree, n - 1)
             eventual.eventually(tree, n - 1)
+
         tree(2)
         # (the flush this tests is implicit in assertResults)
         return self.assertResults([2, 1, 1, 0, 0, 0, 0])
@@ -105,6 +107,7 @@ class Eventually(unittest.TestCase):
         def cb():
             d = eventual.flushEventualQueue()
             d.addCallback(testd.callback)
+
         eventual.eventually(cb)
         return testd
 

@@ -22,10 +22,10 @@ from buildbot.util import ssl
 
 
 class Tests(unittest.TestCase, ConfigErrorsMixin):
-
     @ssl.skipUnless
     def test_ClientContextFactory(self):
         from twisted.internet.ssl import ClientContextFactory
+
         self.assertEqual(ssl.ClientContextFactory, ClientContextFactory)
 
     @ssl.skipUnless
@@ -37,9 +37,11 @@ class Tests(unittest.TestCase, ConfigErrorsMixin):
             ssl.has_ssl = False
             with capture_config_errors() as errors:
                 ssl.ensureHasSSL("myplugin")
-            self.assertConfigError(errors,
+            self.assertConfigError(
+                errors,
                 "TLS dependencies required for myplugin are not installed : "
-                "lib xxx do not exist\n pip install 'buildbot[tls]'")
+                "lib xxx do not exist\n pip install 'buildbot[tls]'",
+            )
         finally:
             ssl.ssl_import_error = old_error
             ssl.has_ssl = old_has_ssl

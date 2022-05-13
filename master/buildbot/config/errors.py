@@ -18,7 +18,6 @@ import contextlib
 
 
 class ConfigErrors(Exception):
-
     def __init__(self, errors=None):
         if errors is None:
             errors = []

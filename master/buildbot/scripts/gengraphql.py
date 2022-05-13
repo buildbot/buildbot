@@ -34,15 +34,14 @@ def gengraphql(config):
     graphql = GraphQLConnector()
     yield graphql.setServiceParent(master)
     graphql.data = data
-    master.config.www = dict(
-        graphql={"debug": True})
+    master.config.www = dict(graphql={"debug": True})
     graphql.reconfigServiceWithBuildbotConfig(master.config)
     yield master.startService()
-    if config['out'] != '--':
-        dirs = os.path.dirname(config['out'])
+    if config["out"] != "--":
+        dirs = os.path.dirname(config["out"])
         if dirs and not os.path.exists(dirs):
             os.makedirs(dirs)
-        f = open(config['out'], "w", encoding='utf-8')  # noqa pylint: disable=consider-using-with
+        f = open(config["out"], "w", encoding="utf-8")  # noqa pylint: disable=consider-using-with
     else:
         f = sys.stdout
     schema = graphql.get_schema()

@@ -40,15 +40,17 @@ class AvatarBase(ConfiguredMixin):
 class AvatarGitHub(AvatarBase):
     name = "github"
 
-    DEFAULT_GITHUB_API_URL = 'https://api.github.com'
+    DEFAULT_GITHUB_API_URL = "https://api.github.com"
 
-    def __init__(self,
-                 github_api_endpoint=None,
-                 token=None,
-                 client_id=None,
-                 client_secret=None,
-                 debug=False,
-                 verify=False):
+    def __init__(
+        self,
+        github_api_endpoint=None,
+        token=None,
+        client_id=None,
+        client_secret=None,
+        debug=False,
+        verify=False,
+    ):
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
         self.github_api_endpoint = github_api_endpoint
@@ -57,13 +59,13 @@ class AvatarGitHub(AvatarBase):
         self.token = token
         self.client_creds = None
         if bool(client_id) != bool(client_secret):
-            config.error('client_id and client_secret must be both provided or none')
+            config.error("client_id and client_secret must be both provided or none")
         if client_id:
             if token:
-                config.error('client_id and client_secret must not be provided when token is')
-            self.client_creds = base64.b64encode(b':'.join(
-                cred.encode('utf-8') for cred in (client_id, client_secret)
-            )).decode('ascii')
+                config.error("client_id and client_secret must not be provided when token is")
+            self.client_creds = base64.b64encode(
+                b":".join(cred.encode("utf-8") for cred in (client_id, client_secret))
+            ).decode("ascii")
         self.debug = debug
         self.verify = verify
 
@@ -76,26 +78,30 @@ class AvatarGitHub(AvatarBase):
             return self.client
 
         headers = {
-            'User-Agent': 'Buildbot',
+            "User-Agent": "Buildbot",
         }
         if self.token:
-            headers['Authorization'] = 'token ' + self.token
+            headers["Authorization"] = "token " + self.token
         elif self.client_creds:
-            headers['Authorization'] = 'basic ' + self.client_creds
+            headers["Authorization"] = "basic " + self.client_creds
 
-        self.client = yield httpclientservice.HTTPClientService.getService(self.master,
-            self.github_api_endpoint, headers=headers,
-            debug=self.debug, verify=self.verify)
+        self.client = yield httpclientservice.HTTPClientService.getService(
+            self.master,
+            self.github_api_endpoint,
+            headers=headers,
+            debug=self.debug,
+            verify=self.verify,
+        )
 
         return self.client
 
     @defer.inlineCallbacks
     def _get_avatar_by_username(self, username):
         headers = {
-            'Accept': 'application/vnd.github.v3+json',
+            "Accept": "application/vnd.github.v3+json",
         }
 
-        url = f'/users/{username}'
+        url = f"/users/{username}"
         http = yield self._get_http_client()
         res = yield http.get(url, headers=headers)
         if res.code == 404:
@@ -103,77 +109,84 @@ class AvatarGitHub(AvatarBase):
             return None
         if 200 <= res.code < 300:
             data = yield res.json()
-            return data['avatar_url']
+            return data["avatar_url"]
 
-        log.msg(f'Failed looking up user: response code {res.code}')
+        log.msg(f"Failed looking up user: response code {res.code}")
         return None
 
     @defer.inlineCallbacks
     def _search_avatar_by_user_email(self, email):
         headers = {
-            'Accept': 'application/vnd.github.v3+json',
+            "Accept": "application/vnd.github.v3+json",
         }
 
-        query = f'{email} in:email'
+        query = f"{email} in:email"
         url = f"/search/users?{urlencode({'q': query,})}"
         http = yield self._get_http_client()
         res = yield http.get(url, headers=headers)
         if 200 <= res.code < 300:
             data = yield res.json()
-            if data['total_count'] == 0:
+            if data["total_count"] == 0:
                 # Not found
                 return None
-            return data['items'][0]['avatar_url']
+            return data["items"][0]["avatar_url"]
 
-        log.msg(f'Failed searching user by email: response code {res.code}')
+        log.msg(f"Failed searching user by email: response code {res.code}")
         return None
 
     @defer.inlineCallbacks
     def _search_avatar_by_commit(self, email):
         headers = {
-            'Accept': 'application/vnd.github.v3+json,application/vnd.github.cloak-preview',
+            "Accept": "application/vnd.github.v3+json,application/vnd.github.cloak-preview",
         }
 
         query = {
-            'q': f'author-email:{email}',
-            'sort': 'committer-date',
-            'per_page': '1',
+            "q": f"author-email:{email}",
+            "sort": "committer-date",
+            "per_page": "1",
         }
         sorted_query = sorted(query.items(), key=lambda x: x[0])
-        url = f'/search/commits?{urlencode(sorted_query)}'
+        url = f"/search/commits?{urlencode(sorted_query)}"
         http = yield self._get_http_client()
         res = yield http.get(url, headers=headers)
         if 200 <= res.code < 300:
             data = yield res.json()
-            if data['total_count'] == 0:
+            if data["total_count"] == 0:
                 # Not found
                 return None
-            author = data['items'][0]['author']
+            author = data["items"][0]["author"]
             if author is None:
                 # No Github account found
                 return None
-            return author['avatar_url']
+            return author["avatar_url"]
 
-        log.msg(f'Failed searching user by commit: response code {res.code}')
+        log.msg(f"Failed searching user by commit: response code {res.code}")
         return None
 
     def _add_size_to_url(self, avatar, size):
         parts = urlparse(avatar)
         query = parts.query
         if query:
-            query += '&'
-        query += f's={size}'
-        return urlunparse((parts.scheme,
-            parts.netloc, parts.path, parts.params,
-            query, parts.fragment))
+            query += "&"
+        query += f"s={size}"
+        return urlunparse(
+            (
+                parts.scheme,
+                parts.netloc,
+                parts.path,
+                parts.params,
+                query,
+                parts.fragment,
+            )
+        )
 
     @defer.inlineCallbacks
     def getUserAvatar(self, email, username, size, defaultAvatarUrl):
         avatar = None
         if username:
-            username = username.decode('utf-8')
+            username = username.decode("utf-8")
         if email:
-            email = email.decode('utf-8')
+            email = email.decode("utf-8")
 
         if username:
             avatar = yield self._get_avatar_by_username(username)
@@ -208,7 +221,7 @@ class AvatarGravatar(AvatarBase):
         gravatar_url += emailHash.hexdigest() + "?"
         if self.default != "url":
             defaultAvatarUrl = self.default
-        url = {'d': defaultAvatarUrl, 's': str(size)}
+        url = {"d": defaultAvatarUrl, "s": str(size)}
         sorted_url = sorted(url.items(), key=lambda x: x[0])
         gravatar_url += urlencode(sorted_url)
         raise resource.Redirect(gravatar_url)
@@ -220,13 +233,14 @@ class AvatarResource(resource.Resource):
     defaultAvatarUrl = b"img/nobody.png"
 
     def reconfigResource(self, new_config):
-        self.avatarMethods = new_config.www.get('avatar_methods', [])
+        self.avatarMethods = new_config.www.get("avatar_methods", [])
         self.defaultAvatarFullUrl = urljoin(
-            unicode2bytes(new_config.buildbotURL), unicode2bytes(self.defaultAvatarUrl))
+            unicode2bytes(new_config.buildbotURL), unicode2bytes(self.defaultAvatarUrl)
+        )
         self.cache = {}
         # ensure the avatarMethods is a iterable
         if isinstance(self.avatarMethods, AvatarBase):
-            self.avatarMethods = (self.avatarMethods, )
+            self.avatarMethods = (self.avatarMethods,)
 
         for method in self.avatarMethods:
             method.master = self.master
@@ -253,8 +267,8 @@ class AvatarResource(resource.Resource):
                 self.cache[cache_key] = r
                 raise
             if res is not None:
-                request.setHeader(b'content-type', res[0])
-                request.setHeader(b'content-length', unicode2bytes(str(len(res[1]))))
+                request.setHeader(b"content-type", res[0])
+                request.setHeader(b"content-length", unicode2bytes(str(len(res[1]))))
                 request.write(res[1])
                 return
         raise resource.Redirect(self.defaultAvatarUrl)

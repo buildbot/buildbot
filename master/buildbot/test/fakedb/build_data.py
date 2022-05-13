@@ -20,20 +20,25 @@ from buildbot.test.fakedb.row import Row
 
 
 class BuildData(Row):
-    table = 'build_data'
+    table = "build_data"
 
-    id_column = 'id'
-    foreignKeys = ('buildid',)
-    required_columns = ('buildid', 'name', 'value', 'length', 'source')
-    binary_columns = ('value',)
+    id_column = "id"
+    foreignKeys = ("buildid",)
+    required_columns = ("buildid", "name", "value", "length", "source")
+    binary_columns = ("value",)
 
     def __init__(self, id=None, buildid=None, name=None, value=None, source=None):
-        super().__init__(id=id, buildid=buildid, name=name, value=value, source=source,
-                         length=len(value))
+        super().__init__(
+            id=id,
+            buildid=buildid,
+            name=name,
+            value=value,
+            source=source,
+            length=len(value),
+        )
 
 
 class FakeBuildDataComponent(FakeDBComponent):
-
     def setUp(self):
         self.build_data = {}
 
@@ -44,7 +49,7 @@ class FakeBuildDataComponent(FakeDBComponent):
 
     def _get_build_data_row(self, buildid, name):
         for row in self.build_data.values():
-            if row['buildid'] == buildid and row['name'] == name:
+            if row["buildid"] == buildid and row["name"] == name:
                 return row
         return None
 
@@ -52,19 +57,19 @@ class FakeBuildDataComponent(FakeDBComponent):
         assert isinstance(value, bytes)
         row = self._get_build_data_row(buildid, name)
         if row is not None:
-            row['value'] = value
-            row['length'] = len(value)
-            row['source'] = source
+            row["value"] = value
+            row["length"] = len(value)
+            row["source"] = source
             return
 
         id = Row.nextId()
         self.build_data[id] = {
-            'id': id,
-            'buildid': buildid,
-            'name': name,
-            'value': value,
-            'length': len(value),
-            'source': source
+            "id": id,
+            "buildid": buildid,
+            "name": name,
+            "value": value,
+            "length": len(value),
+            "source": source,
         }
 
     # returns a Deferred
@@ -85,7 +90,7 @@ class FakeBuildDataComponent(FakeDBComponent):
     def getAllBuildDataNoValues(self, buildid):
         ret = []
         for row in self.build_data.values():
-            if row['buildid'] != buildid:
+            if row["buildid"] != buildid:
                 continue
             ret.append(self._row2dict_novalue(row))
 
@@ -95,16 +100,18 @@ class FakeBuildDataComponent(FakeDBComponent):
     def deleteOldBuildData(self, older_than_timestamp):
         buildids_to_keep = []
         for build_dict in self.db.builds.builds.values():
-            if build_dict['complete_at'] is None or \
-                    build_dict['complete_at'] >= older_than_timestamp:
-                buildids_to_keep.append(build_dict['id'])
+            if (
+                build_dict["complete_at"] is None
+                or build_dict["complete_at"] >= older_than_timestamp
+            ):
+                buildids_to_keep.append(build_dict["id"])
 
         count_before = len(self.build_data)
 
         build_dataids_to_remove = []
         for build_datadict in self.build_data.values():
-            if build_datadict['buildid'] not in buildids_to_keep:
-                build_dataids_to_remove.append(build_datadict['id'])
+            if build_datadict["buildid"] not in buildids_to_keep:
+                build_dataids_to_remove.append(build_datadict["id"])
 
         for id in build_dataids_to_remove:
             self.build_data.pop(id)
@@ -115,11 +122,11 @@ class FakeBuildDataComponent(FakeDBComponent):
 
     def _row2dict(self, row):
         ret = row.copy()
-        del ret['id']
+        del ret["id"]
         return ret
 
     def _row2dict_novalue(self, row):
         ret = row.copy()
-        del ret['id']
-        ret['value'] = None
+        del ret["id"]
+        ret["value"] = None
         return ret

@@ -23,18 +23,18 @@ from buildbot.test.fakedb.row import Row
 class Builder(Row):
     table = "builders"
 
-    id_column = 'id'
-    hashedColumns = [('name_hash', ('name',))]
+    id_column = "id"
+    hashedColumns = [("name_hash", ("name",))]
 
-    def __init__(self, id=None, name='some:builder', name_hash=None, description=None):
+    def __init__(self, id=None, name="some:builder", name_hash=None, description=None):
         super().__init__(id=id, name=name, name_hash=name_hash, description=description)
 
 
 class BuilderMaster(Row):
     table = "builder_masters"
 
-    id_column = 'id'
-    required_columns = ('builderid', 'masterid')
+    id_column = "id"
+    required_columns = ("builderid", "masterid")
 
     def __init__(self, id=None, builderid=None, masterid=None):
         super().__init__(id=id, builderid=builderid, masterid=masterid)
@@ -43,16 +43,18 @@ class BuilderMaster(Row):
 class BuildersTags(Row):
     table = "builders_tags"
 
-    foreignKeys = ('builderid', 'tagid')
-    required_columns = ('builderid', 'tagid', )
-    id_column = 'id'
+    foreignKeys = ("builderid", "tagid")
+    required_columns = (
+        "builderid",
+        "tagid",
+    )
+    id_column = "id"
 
     def __init__(self, id=None, builderid=None, tagid=None):
         super().__init__(id=id, builderid=builderid, tagid=tagid)
 
 
 class FakeBuildersComponent(FakeDBComponent):
-
     def setUp(self):
         self.builders = {}
         self.builder_masters = {}
@@ -61,37 +63,30 @@ class FakeBuildersComponent(FakeDBComponent):
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Builder):
-                self.builders[row.id] = dict(
-                    id=row.id,
-                    name=row.name,
-                    description=row.description)
+                self.builders[row.id] = dict(id=row.id, name=row.name, description=row.description)
             if isinstance(row, BuilderMaster):
-                self.builder_masters[row.id] = \
-                    (row.builderid, row.masterid)
+                self.builder_masters[row.id] = (row.builderid, row.masterid)
             if isinstance(row, BuildersTags):
                 assert row.builderid in self.builders
-                self.builders_tags.setdefault(row.builderid,
-                                              []).append(row.tagid)
+                self.builders_tags.setdefault(row.builderid, []).append(row.tagid)
 
     def findBuilderId(self, name, autoCreate=True):
         for m in self.builders.values():
-            if m['name'] == name:
-                return defer.succeed(m['id'])
+            if m["name"] == name:
+                return defer.succeed(m["id"])
         if not autoCreate:
             return defer.succeed(None)
         id = len(self.builders) + 1
-        self.builders[id] = dict(
-            id=id,
-            name=name,
-            description=None,
-            tags=[])
+        self.builders[id] = dict(id=id, name=name, description=None, tags=[])
         return defer.succeed(id)
 
     def addBuilderMaster(self, builderid=None, masterid=None):
         if (builderid, masterid) not in list(self.builder_masters.values()):
-            self.insertTestData([
-                BuilderMaster(builderid=builderid, masterid=masterid),
-            ])
+            self.insertTestData(
+                [
+                    BuilderMaster(builderid=builderid, masterid=masterid),
+                ]
+            )
         return defer.succeed(None)
 
     def removeBuilderMaster(self, builderid=None, masterid=None):
@@ -103,38 +98,37 @@ class FakeBuildersComponent(FakeDBComponent):
 
     def getBuilder(self, builderid):
         if builderid in self.builders:
-            masterids = [bm[1] for bm in self.builder_masters.values()
-                         if bm[0] == builderid]
+            masterids = [bm[1] for bm in self.builder_masters.values() if bm[0] == builderid]
             bldr = self.builders[builderid].copy()
-            bldr['masterids'] = sorted(masterids)
+            bldr["masterids"] = sorted(masterids)
             return defer.succeed(self._row2dict(bldr))
         return defer.succeed(None)
 
     def getBuilders(self, masterid=None):
         rv = []
         for builderid, bldr in self.builders.items():
-            masterids = [bm[1] for bm in self.builder_masters.values()
-                         if bm[0] == builderid]
+            masterids = [bm[1] for bm in self.builder_masters.values() if bm[0] == builderid]
             bldr = bldr.copy()
-            bldr['masterids'] = sorted(masterids)
+            bldr["masterids"] = sorted(masterids)
             rv.append(self._row2dict(bldr))
         if masterid is not None:
-            rv = [bd for bd in rv
-                  if masterid in bd['masterids']]
+            rv = [bd for bd in rv if masterid in bd["masterids"]]
         return defer.succeed(rv)
 
     def addTestBuilder(self, builderid, name=None):
         if name is None:
             name = f"SomeBuilder-{builderid}"
-        self.db.insertTestData([
-            Builder(id=builderid, name=name),
-        ])
+        self.db.insertTestData(
+            [
+                Builder(id=builderid, name=name),
+            ]
+        )
 
     @defer.inlineCallbacks
     def updateBuilderInfo(self, builderid, description, tags):
         if builderid in self.builders:
             tags = tags if tags else []
-            self.builders[builderid]['description'] = description
+            self.builders[builderid]["description"] = description
 
             # add tags
             tagids = []
@@ -146,6 +140,7 @@ class FakeBuildersComponent(FakeDBComponent):
 
     def _row2dict(self, row):
         row = row.copy()
-        row['tags'] = [self.db.tags.tags[tagid]['name']
-                       for tagid in self.builders_tags.get(row['id'], [])]
+        row["tags"] = [
+            self.db.tags.tags[tagid]["name"] for tagid in self.builders_tags.get(row["id"], [])
+        ]
         return row

@@ -31,11 +31,10 @@ SUBMITTED_AT_TIME = 111111111
 COMPLETE_AT_TIME = 222222222
 OBJECTID = 33
 SCHEDULERID = 133
-UPSTREAM_NAME = 'uppy'
+UPSTREAM_NAME = "uppy"
 
 
 class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         self.setUpScheduler()
@@ -46,23 +45,25 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     def makeScheduler(self, upstream=None):
         # build a fake upstream scheduler
         class Upstream(base.BaseScheduler):
-
             def __init__(self, name):
                 self.name = name
+
         if not upstream:
             upstream = Upstream(UPSTREAM_NAME)
 
-        sched = dependent.Dependent(name='n', builderNames=['b'],
-                                    upstream=upstream)
-        self.attachScheduler(sched, OBJECTID, SCHEDULERID,
-                             overrideBuildsetMethods=True,
-                             createBuilderDB=True)
+        sched = dependent.Dependent(name="n", builderNames=["b"], upstream=upstream)
+        self.attachScheduler(
+            sched,
+            OBJECTID,
+            SCHEDULERID,
+            overrideBuildsetMethods=True,
+            createBuilderDB=True,
+        )
 
         return sched
 
     def assertBuildsetSubscriptions(self, bsids=None):
-        self.db.state.assertState(OBJECTID,
-                                  upstream_bsids=bsids)
+        self.db.state.assertState(OBJECTID, upstream_bsids=bsids)
 
     # tests
 
@@ -73,7 +74,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     def test_constructor_string_arg(self):
         with self.assertRaises(config.ConfigErrors):
-            self.makeScheduler(upstream='foo')
+            self.makeScheduler(upstream="foo")
 
     @defer.inlineCallbacks
     def test_activate(self):
@@ -82,16 +83,29 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(
             sorted([q.filter for q in sched.master.mq.qrefs]),
-            [('buildsets', None, 'complete',), ('buildsets', None, 'new',),
-             ('schedulers', '133', 'updated')])
+            [
+                (
+                    "buildsets",
+                    None,
+                    "complete",
+                ),
+                (
+                    "buildsets",
+                    None,
+                    "new",
+                ),
+                ("schedulers", "133", "updated"),
+            ],
+        )
 
         yield sched.deactivate()
 
-        self.assertEqual([q.filter for q in sched.master.mq.qrefs],
-                         [('schedulers', '133', 'updated')])
+        self.assertEqual(
+            [q.filter for q in sched.master.mq.qrefs],
+            [("schedulers", "133", "updated")],
+        )
 
-    def sendBuildsetMessage(self, scheduler_name=None, results=-1,
-                            complete=False):
+    def sendBuildsetMessage(self, scheduler_name=None, results=-1, complete=False):
         """Call callConsumer with a buildset message.  Most of the values here
         are hard-coded to correspond to those in do_test."""
         msg = dict(
@@ -101,19 +115,16 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             complete=complete,
             complete_at=COMPLETE_AT_TIME if complete else None,
             external_idstring=None,
-            reason='Because',
+            reason="Because",
             results=results if complete else -1,
             parent_buildid=None,
             parent_relationship=None,
         )
         if not complete:
-            msg['scheduler'] = scheduler_name
-        self.master.mq.callConsumer(
-            ('buildsets', '44', 'complete' if complete else 'new'),
-            msg)
+            msg["scheduler"] = scheduler_name
+        self.master.mq.callConsumer(("buildsets", "44", "complete" if complete else "new"), msg)
 
-    def do_test(self, scheduler_name, expect_subscription,
-                results, expect_buildset):
+    def do_test(self, scheduler_name, expect_subscription, results, expect_buildset):
         """Test the dependent scheduler by faking a buildset and subsequent
         completion from an upstream scheduler.
 
@@ -129,21 +140,28 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched.activate()
 
         # announce a buildset with a matching name..
-        self.db.insertTestData([
-            fakedb.SourceStamp(id=93, revision='555',
-                               branch='master', project='proj', repository='repo',
-                               codebase='cb'),
-            fakedb.Buildset(
-                id=44,
-                submitted_at=SUBMITTED_AT_TIME,
-                complete=False,
-                complete_at=None,
-                external_idstring=None,
-                reason='Because',
-                results=-1,
-            ),
-            fakedb.BuildsetSourceStamp(buildsetid=44, sourcestampid=93),
-        ])
+        self.db.insertTestData(
+            [
+                fakedb.SourceStamp(
+                    id=93,
+                    revision="555",
+                    branch="master",
+                    project="proj",
+                    repository="repo",
+                    codebase="cb",
+                ),
+                fakedb.Buildset(
+                    id=44,
+                    submitted_at=SUBMITTED_AT_TIME,
+                    complete=False,
+                    complete_at=None,
+                    external_idstring=None,
+                    reason="Because",
+                    results=-1,
+                ),
+                fakedb.BuildsetSourceStamp(buildsetid=44, sourcestampid=93),
+            ]
+        )
         self.sendBuildsetMessage(scheduler_name=scheduler_name, complete=False)
 
         # check whether scheduler is subscribed to that buildset
@@ -158,14 +176,21 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         # and check whether a buildset was added in response
         if expect_buildset:
-            self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamps', dict(
-                    builderNames=None,  # defaults
-                    external_idstring=None,
-                    properties=None,
-                    reason='downstream',
-                    sourcestamps=[93])),
-            ])
+            self.assertEqual(
+                self.addBuildsetCalls,
+                [
+                    (
+                        "addBuildsetForSourceStamps",
+                        dict(
+                            builderNames=None,  # defaults
+                            external_idstring=None,
+                            properties=None,
+                            reason="downstream",
+                            sourcestamps=[93],
+                        ),
+                    ),
+                ],
+            )
         else:
             self.assertEqual(self.addBuildsetCalls, [])
 
@@ -179,26 +204,31 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         return self.do_test(UPSTREAM_NAME, True, FAILURE, False)
 
     def test_unrelated_buildset(self):
-        return self.do_test('unrelated', False, SUCCESS, False)
+        return self.do_test("unrelated", False, SUCCESS, False)
 
     @defer.inlineCallbacks
     def test_getUpstreamBuildsets_missing(self):
         sched = self.makeScheduler()
 
         # insert some state, with more bsids than exist
-        self.db.insertTestData([
-            fakedb.SourceStamp(id=1234),
-            fakedb.Buildset(id=11),
-            fakedb.Buildset(id=13),
-            fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=1234),
-            fakedb.Object(id=OBJECTID),
-            fakedb.ObjectState(objectid=OBJECTID,
-                               name='upstream_bsids', value_json='[11,12,13]'),
-        ])
+        self.db.insertTestData(
+            [
+                fakedb.SourceStamp(id=1234),
+                fakedb.Buildset(id=11),
+                fakedb.Buildset(id=13),
+                fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=1234),
+                fakedb.Object(id=OBJECTID),
+                fakedb.ObjectState(
+                    objectid=OBJECTID, name="upstream_bsids", value_json="[11,12,13]"
+                ),
+            ]
+        )
 
         # check return value (missing 12)
-        self.assertEqual((yield sched._getUpstreamBuildsets()),
-                         [(11, [], False, -1), (13, [1234], False, -1)])
+        self.assertEqual(
+            (yield sched._getUpstreamBuildsets()),
+            [(11, [], False, -1), (13, [1234], False, -1)],
+        )
 
         # and check that it wrote the correct value back to the state
         self.db.state.assertState(OBJECTID, upstream_bsids=[11, 13])
@@ -207,16 +237,16 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     def test_enabled_callback(self):
         sched = self.makeScheduler()
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        yield sched._enabledCallback(None, {"enabled": not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        yield sched._enabledCallback(None, {"enabled": not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
 
     @defer.inlineCallbacks
     def test_disabled_activate(self):
         sched = self.makeScheduler()
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        yield sched._enabledCallback(None, {"enabled": not sched.enabled})
         self.assertEqual(sched.enabled, False)
         r = yield sched.activate()
         self.assertEqual(r, None)
@@ -224,7 +254,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_disabled_deactivate(self):
         sched = self.makeScheduler()
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        yield sched._enabledCallback(None, {"enabled": not sched.enabled})
         self.assertEqual(sched.enabled, False)
         r = yield sched.deactivate()
         self.assertEqual(r, None)

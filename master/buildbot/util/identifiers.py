@@ -17,11 +17,12 @@ import re
 
 from buildbot import util
 
-ident_re = re.compile('^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$',
-                      flags=re.UNICODE)
-initial_re = re.compile('^[^a-zA-Z_-]')
-subsequent_re = re.compile('[^a-zA-Z0-9_-]')
-trailing_digits_re = re.compile('_([0-9]+)$')
+ident_re = re.compile(
+    "^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$", flags=re.UNICODE
+)
+initial_re = re.compile("^[^a-zA-Z_-]")
+subsequent_re = re.compile("[^a-zA-Z0-9_-]")
+trailing_digits_re = re.compile("_([0-9]+)$")
 
 
 def isIdentifier(maxLength, obj):
@@ -45,8 +46,8 @@ def forceIdentifier(maxLength, s):
 
     # trim to length and substitute out invalid characters
     s = s[:maxLength]
-    s = initial_re.sub('_', s)
-    s = subsequent_re.subn('_', s)[0]
+    s = initial_re.sub("_", s)
+    s = subsequent_re.subn("_", s)[0]
     return s
 
 
@@ -54,10 +55,10 @@ def incrementIdentifier(maxLength, ident):
     num = 1
     mo = trailing_digits_re.search(ident)
     if mo:
-        ident = ident[:mo.start(1) - 1]
+        ident = ident[: mo.start(1) - 1]
         num = int(mo.group(1))
-    num = f'_{num + 1}'
+    num = f"_{num + 1}"
     if len(num) > maxLength:
         raise ValueError("cannot generate a larger identifier")
-    ident = ident[:maxLength - len(num)] + num
+    ident = ident[: maxLength - len(num)] + num
     return ident

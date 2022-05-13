@@ -44,7 +44,6 @@ class Listener(base.UpdateRegistrationListener):
 
 
 class ReferenceableProxy(pb.Referenceable):
-
     def __init__(self, impl):
         assert isinstance(impl, self.ImplClass)
         self.impl = impl
@@ -75,15 +74,19 @@ def _wrapRemoteException():
     try:
         yield
     except pb.RemoteError as e:
-        if e.remoteType in (b'twisted.spread.flavors.NoSuchMethod',
-                            'twisted.spread.flavors.NoSuchMethod'):
+        if e.remoteType in (
+            b"twisted.spread.flavors.NoSuchMethod",
+            "twisted.spread.flavors.NoSuchMethod",
+        ):
             raise _NoSuchMethod(e) from e
         raise
 
 
 class Connection(base.Connection, pb.Avatar):
-    proxies = {base.FileWriterImpl: FileWriterProxy,
-               base.FileReaderImpl: FileReaderProxy}
+    proxies = {
+        base.FileWriterImpl: FileWriterProxy,
+        base.FileReaderImpl: FileReaderProxy,
+    }
     # TODO: configure keepalive_interval in
     # c['protocols']['pb']['keepalive_interval']
     keepalive_timer = None
@@ -96,9 +99,12 @@ class Connection(base.Connection, pb.Avatar):
         self.worker = worker
         self.mind = mind
         self._keepalive_waiter = deferwaiter.DeferWaiter()
-        self._keepalive_action_handler = \
-            deferwaiter.RepeatedActionHandler(master.reactor, self._keepalive_waiter,
-                                              self.keepalive_interval, self._do_keepalive)
+        self._keepalive_action_handler = deferwaiter.RepeatedActionHandler(
+            master.reactor,
+            self._keepalive_waiter,
+            self.keepalive_interval,
+            self._do_keepalive,
+        )
 
     # methods called by the PBManager
 
@@ -146,7 +152,7 @@ class Connection(base.Connection, pb.Avatar):
     # keepalive handling
 
     def _do_keepalive(self):
-        return self.mind.callRemote('print', message="keepalive")
+        return self.mind.callRemote("print", message="keepalive")
 
     def stopKeepaliveTimer(self):
         self._keepalive_action_handler.stop()
@@ -158,28 +164,31 @@ class Connection(base.Connection, pb.Avatar):
     # methods to send messages to the worker
 
     def remotePrint(self, message):
-        return self.mind.callRemote('print', message=message)
+        return self.mind.callRemote("print", message=message)
 
     @defer.inlineCallbacks
     def remoteGetWorkerInfo(self):
         try:
             with _wrapRemoteException():
                 # Try to call buildbot-worker method.
-                info = yield self.mind.callRemote('getWorkerInfo')
+                info = yield self.mind.callRemote("getWorkerInfo")
             return decode(info)
         except _NoSuchMethod:
             yield self.remotePrint(
                 "buildbot-slave detected, failing back to deprecated buildslave API. "
-                "(Ignoring missing getWorkerInfo method.)")
+                "(Ignoring missing getWorkerInfo method.)"
+            )
             info = {}
 
             # Probably this is deprecated buildslave.
-            log.msg("Worker.getWorkerInfo is unavailable - falling back to "
-                    "deprecated buildslave API")
+            log.msg(
+                "Worker.getWorkerInfo is unavailable - falling back to "
+                "deprecated buildslave API"
+            )
 
             try:
                 with _wrapRemoteException():
-                    info = yield self.mind.callRemote('getSlaveInfo')
+                    info = yield self.mind.callRemote("getSlaveInfo")
             except _NoSuchMethod:
                 log.msg("Worker.getSlaveInfo is unavailable - ignoring")
 
@@ -193,14 +202,13 @@ class Connection(base.Connection, pb.Avatar):
             # commands and version using separate requests.
             try:
                 with _wrapRemoteException():
-                    info["worker_commands"] = yield self.mind.callRemote(
-                        'getCommands')
+                    info["worker_commands"] = yield self.mind.callRemote("getCommands")
             except _NoSuchMethod:
                 log.msg("Worker.getCommands is unavailable - ignoring")
 
             try:
                 with _wrapRemoteException():
-                    info["version"] = yield self.mind.callRemote('getVersion')
+                    info["version"] = yield self.mind.callRemote("getVersion")
             except _NoSuchMethod:
                 log.msg("Worker.getVersion is unavailable - ignoring")
 
@@ -208,7 +216,7 @@ class Connection(base.Connection, pb.Avatar):
 
     @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):
-        builders = yield self.mind.callRemote('setBuilderList', builders)
+        builders = yield self.mind.callRemote("setBuilderList", builders)
         self.builders = builders
         return builders
 
@@ -216,8 +224,9 @@ class Connection(base.Connection, pb.Avatar):
         workerforbuilder = self.builders.get(builderName)
         remoteCommand = RemoteCommand(remoteCommand)
         args = self.createArgsProxies(args)
-        return workerforbuilder.callRemote('startCommand',
-                                           remoteCommand, commandId, commandName, args)
+        return workerforbuilder.callRemote(
+            "startCommand", remoteCommand, commandId, commandName, args
+        )
 
     @defer.inlineCallbacks
     def remoteShutdown(self):
@@ -228,7 +237,7 @@ class Connection(base.Connection, pb.Avatar):
         def new_way():
             try:
                 with _wrapRemoteException():
-                    yield self.mind.callRemote('shutdown')
+                    yield self.mind.callRemote("shutdown")
                     # successful shutdown request
                     return True
             except _NoSuchMethod:
@@ -268,19 +277,20 @@ class Connection(base.Connection, pb.Avatar):
                         log.msg(f"Lost connection to {name}")
                     else:
                         log.err(f"Unexpected error when trying to shutdown {name}")
+
                 return d
             log.err("Couldn't find remote builder to shut down worker")
             return defer.succeed(None)
+
         yield old_way()
 
     def remoteStartBuild(self, builderName):
         workerforbuilder = self.builders.get(builderName)
-        return workerforbuilder.callRemote('startBuild')
+        return workerforbuilder.callRemote("startBuild")
 
     def remoteInterruptCommand(self, builderName, commandId, why):
         workerforbuilder = self.builders.get(builderName)
-        return defer.maybeDeferred(workerforbuilder.callRemote, "interruptCommand",
-                                   commandId, why)
+        return defer.maybeDeferred(workerforbuilder.callRemote, "interruptCommand", commandId, why)
 
     # perspective methods called by the worker
 

@@ -7,7 +7,7 @@ import sys
 spaces = re.compile("^ +")
 for fn in sys.argv[1:]:
     lines = []
-    with open(fn, 'r') as f:
+    with open(fn, "r") as f:
         for line in f:
             lines.append(line)
 
@@ -28,6 +28,6 @@ for fn in sys.argv[1:]:
         if missingIndent != 4:
             IndentBlock(i, missingIndent)
 
-    with open(fn, 'w') as f:
+    with open(fn, "w") as f:
         for line in lines:
             f.write(line)

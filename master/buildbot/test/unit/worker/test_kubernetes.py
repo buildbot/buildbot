@@ -46,8 +46,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
         config = KubeHardcodedConfig(master_url="https://kube.example.com")
-        self.worker = worker = kubernetes.KubeLatentWorker(
-            *args, kube_config=config, **kwargs)
+        self.worker = worker = kubernetes.KubeLatentWorker(*args, kube_config=config, **kwargs)
         master = fakemaster.make_master(self, wantData=True)
         self._kube = yield KubeClientService.getService(master, self, kube_config=config)
         worker.setServiceParent(master)
@@ -62,57 +61,58 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         return worker
 
     def test_instantiate(self):
-        worker = kubernetes.KubeLatentWorker('worker')
+        worker = kubernetes.KubeLatentWorker("worker")
         # class instantiation configures nothing
-        self.assertEqual(getattr(worker, '_kube', None), None)
+        self.assertEqual(getattr(worker, "_kube", None), None)
 
     @defer.inlineCallbacks
     def test_wrong_arg(self):
         with self.assertRaises(TypeError):
-            yield self.setupWorker('worker', wrong_param='wrong_param')
+            yield self.setupWorker("worker", wrong_param="wrong_param")
 
     def test_service_arg(self):
-        return self.setupWorker('worker')
+        return self.setupWorker("worker")
 
     @defer.inlineCallbacks
     def test_builds_may_be_incompatible(self):
-        yield self.setupWorker('worker')
+        yield self.setupWorker("worker")
         # http is lazily created on worker substantiation
         self.assertEqual(self.worker.builds_may_be_incompatible, True)
 
     @defer.inlineCallbacks
     def test_start_service(self):
-        yield self.setupWorker('worker')
+        yield self.setupWorker("worker")
         # http is lazily created on worker substantiation
         self.assertNotEqual(self.worker._kube, None)
 
     @defer.inlineCallbacks
     def test_start_worker(self):
-        worker = yield self.setupWorker('worker')
+        worker = yield self.setupWorker("worker")
         d = worker.substantiate(None, FakeBuild())
         worker.attached(FakeBot())
         yield d
         self.assertEqual(len(worker._kube.pods), 1)
         pod_name = list(worker._kube.pods.keys())[0]
-        self.assertRegex(pod_name, r'default/buildbot-worker-[0-9a-f]+')
+        self.assertRegex(pod_name, r"default/buildbot-worker-[0-9a-f]+")
         pod = worker._kube.pods[pod_name]
+        self.assertEqual(sorted(pod["spec"].keys()), ["containers", "restartPolicy"])
         self.assertEqual(
-            sorted(pod['spec'].keys()), ['containers', 'restartPolicy'])
+            sorted(pod["spec"]["containers"][0].keys()),
+            ["env", "image", "name", "resources"],
+        )
         self.assertEqual(
-            sorted(pod['spec']['containers'][0].keys()),
-            ['env', 'image', 'name', 'resources'])
-        self.assertEqual(pod['spec']['containers'][0]['image'],
-                         'rendered:buildbot/buildbot-worker')
-        self.assertEqual(pod['spec']['restartPolicy'], 'Never')
+            pod["spec"]["containers"][0]["image"], "rendered:buildbot/buildbot-worker"
+        )
+        self.assertEqual(pod["spec"]["restartPolicy"], "Never")
 
     @defer.inlineCallbacks
     def test_start_worker_but_error(self):
-        worker = yield self.setupWorker('worker')
+        worker = yield self.setupWorker("worker")
 
         def createPod(namespace, spec):
-            raise KubeError({'message': "yeah, but no"})
+            raise KubeError({"message": "yeah, but no"})
 
-        self.patch(self._kube, 'createPod', createPod)
+        self.patch(self._kube, "createPod", createPod)
         with self.assertRaises(LatentWorkerFailedToSubstantiate):
             yield worker.substantiate(None, FakeBuild())
         self.assertEqual(worker.instance, None)
@@ -121,7 +121,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
     def test_interpolate_renderables_for_new_build(self):
         build1 = Properties(img_prop="image1")
         build2 = Properties(img_prop="image2")
-        worker = yield self.setupWorker('worker', image=Interpolate("%(prop:img_prop)s"))
+        worker = yield self.setupWorker("worker", image=Interpolate("%(prop:img_prop)s"))
 
         yield worker.start_instance(build1)
         yield worker.stop_instance()
@@ -131,7 +131,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
     def test_reject_incompatible_build_while_running(self):
         build1 = Properties(img_prop="image1")
         build2 = Properties(img_prop="image2")
-        worker = yield self.setupWorker('worker', image=Interpolate("%(prop:img_prop)s"))
+        worker = yield self.setupWorker("worker", image=Interpolate("%(prop:img_prop)s"))
 
         yield worker.start_instance(build1)
         self.assertFalse((yield worker.isCompatibleWithBuild(build2)))

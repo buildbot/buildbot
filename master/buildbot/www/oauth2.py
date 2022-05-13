@@ -59,32 +59,31 @@ class OAuth2LoginResource(auth.LoginResource):
         details = yield self.auth.verifyCode(code)
 
         if self.auth.userInfoProvider is not None:
-            infos = yield self.auth.userInfoProvider.getUserInfo(details['username'])
+            infos = yield self.auth.userInfoProvider.getUserInfo(details["username"])
             details.update(infos)
         session = request.getSession()
         session.user_info = details
         session.updateSession(request)
         state = request.args.get(b"state", [b""])[0]
         if state:
-            for redirect in parse_qs(state).get('redirect', []):
+            for redirect in parse_qs(state).get("redirect", []):
                 raise resource.Redirect(self.auth.homeUri + "#" + redirect)
         raise resource.Redirect(self.auth.homeUri)
 
 
 class OAuth2Auth(auth.AuthBase):
-    name = 'oauth2'
+    name = "oauth2"
     getTokenUseAuthHeaders = False
     authUri = None
     tokenUri = None
-    grantType = 'authorization_code'
+    grantType = "authorization_code"
     authUriAdditionalParams = {}
     tokenUriAdditionalParams = {}
     loginUri = None
     homeUri = None
     sslVerify = None
 
-    def __init__(self,
-                 clientId, clientSecret, autologin=False, **kwargs):
+    def __init__(self, clientId, clientSecret, autologin=False, **kwargs):
         super().__init__(**kwargs)
         self.clientId = clientId
         self.clientSecret = clientSecret
@@ -96,11 +95,7 @@ class OAuth2Auth(auth.AuthBase):
         self.homeUri = new_config.buildbotURL
 
     def getConfigDict(self):
-        return dict(name=self.name,
-                    oauth2=True,
-                    fa_icon=self.faIcon,
-                    autologin=self.autologin
-                    )
+        return dict(name=self.name, oauth2=True, fa_icon=self.faIcon, autologin=self.autologin)
 
     def getLoginResource(self):
         return OAuth2LoginResource(self.master, self)
@@ -113,17 +108,20 @@ class OAuth2Auth(auth.AuthBase):
         p = Properties()
         p.master = self.master
         clientId = yield p.render(self.clientId)
-        oauth_params = {'redirect_uri': self.loginUri,
-                        'client_id': clientId, 'response_type': 'code'}
+        oauth_params = {
+            "redirect_uri": self.loginUri,
+            "client_id": clientId,
+            "response_type": "code",
+        }
         if redirect_url is not None:
-            oauth_params['state'] = urlencode(dict(redirect=redirect_url))
+            oauth_params["state"] = urlencode(dict(redirect=redirect_url))
         oauth_params.update(self.authUriAdditionalParams)
         sorted_oauth_params = sorted(oauth_params.items(), key=lambda val: val[0])
         return f"{self.authUri}?{urlencode(sorted_oauth_params)}"
 
     def createSessionFromToken(self, token):
         s = requests.Session()
-        s.params = {'access_token': token['access_token']}
+        s.params = {"access_token": token["access_token"]}
         s.verify = self.sslVerify
         return s
 
@@ -139,17 +137,18 @@ class OAuth2Auth(auth.AuthBase):
         # everything in deferToThread is not counted with trial  --coverage :-(
         def thd(client_id, client_secret):
             url = self.tokenUri
-            data = {'redirect_uri': self.loginUri, 'code': code,
-                    'grant_type': self.grantType}
+            data = {
+                "redirect_uri": self.loginUri,
+                "code": code,
+                "grant_type": self.grantType,
+            }
             auth = None
             if self.getTokenUseAuthHeaders:
                 auth = (client_id, client_secret)
             else:
-                data.update(
-                    {'client_id': client_id, 'client_secret': client_secret})
+                data.update({"client_id": client_id, "client_secret": client_secret})
             data.update(self.tokenUriAdditionalParams)
-            response = requests.post(
-                url, data=data, auth=auth, verify=self.sslVerify)
+            response = requests.post(url, data=data, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
             responseContent = bytes2unicode(response.content)
             try:
@@ -163,6 +162,7 @@ class OAuth2Auth(auth.AuthBase):
 
             session = self.createSessionFromToken(content)
             return self.getUserInfoFromOAuthClient(session)
+
         p = Properties()
         p.master = self.master
         client_id = yield p.render(self.clientId)
@@ -178,30 +178,37 @@ class GoogleAuth(OAuth2Auth):
     name = "Google"
     faIcon = "fa-google-plus"
     resourceEndpoint = "https://www.googleapis.com/oauth2/v1"
-    authUri = 'https://accounts.google.com/o/oauth2/auth'
-    tokenUri = 'https://accounts.google.com/o/oauth2/token'
-    authUriAdditionalParams = dict(scope=" ".join([
-                                   'https://www.googleapis.com/auth/userinfo.email',
-                                   'https://www.googleapis.com/auth/userinfo.profile'
-                                   ]))
+    authUri = "https://accounts.google.com/o/oauth2/auth"
+    tokenUri = "https://accounts.google.com/o/oauth2/token"
+    authUriAdditionalParams = dict(
+        scope=" ".join(
+            [
+                "https://www.googleapis.com/auth/userinfo.email",
+                "https://www.googleapis.com/auth/userinfo.profile",
+            ]
+        )
+    )
 
     def getUserInfoFromOAuthClient(self, c):
-        data = self.get(c, '/userinfo')
-        return dict(full_name=data["name"],
-                    username=data['email'].split("@")[0],
-                    email=data["email"],
-                    avatar_url=data["picture"])
+        data = self.get(c, "/userinfo")
+        return dict(
+            full_name=data["name"],
+            username=data["email"].split("@")[0],
+            email=data["email"],
+            avatar_url=data["picture"],
+        )
 
 
 class GitHubAuth(OAuth2Auth):
     name = "GitHub"
     faIcon = "fa-github"
-    authUri = 'https://github.com/login/oauth/authorize'
-    authUriAdditionalParams = {'scope': 'user:email read:org'}
-    tokenUri = 'https://github.com/login/oauth/access_token'
-    resourceEndpoint = 'https://api.github.com'
+    authUri = "https://github.com/login/oauth/authorize"
+    authUriAdditionalParams = {"scope": "user:email read:org"}
+    tokenUri = "https://github.com/login/oauth/access_token"
+    resourceEndpoint = "https://api.github.com"
 
-    getUserTeamsGraphqlTpl = textwrap.dedent(r'''
+    getUserTeamsGraphqlTpl = textwrap.dedent(
+        r"""
         {%- if organizations %}
         query getOrgTeamMembership {
           {%- for org_slug, org_name in organizations.items() %}
@@ -218,12 +225,20 @@ class GitHubAuth(OAuth2Auth):
           {%- endfor %}
         }
         {%- endif %}
-    ''')
+    """
+    )
 
-    def __init__(self,
-                 clientId, clientSecret, serverURL=None, autologin=False,
-                 apiVersion=3, getTeamsMembership=False, debug=False,
-                 **kwargs):
+    def __init__(
+        self,
+        clientId,
+        clientSecret,
+        serverURL=None,
+        autologin=False,
+        apiVersion=3,
+        getTeamsMembership=False,
+        debug=False,
+        **kwargs,
+    ):
 
         super().__init__(clientId, clientSecret, autologin, **kwargs)
         self.apiResourceEndpoint = None
@@ -231,41 +246,42 @@ class GitHubAuth(OAuth2Auth):
             # setup for enterprise github
             serverURL = serverURL.rstrip("/")
             # v3 is accessible directly at /api/v3 for enterprise, but directly for SaaS..
-            self.resourceEndpoint = serverURL + '/api/v3'
+            self.resourceEndpoint = serverURL + "/api/v3"
             # v4 is accessible endpoint for enterprise
-            self.apiResourceEndpoint = serverURL + '/api/graphql'
+            self.apiResourceEndpoint = serverURL + "/api/graphql"
 
-            self.authUri = f'{serverURL}/login/oauth/authorize'
-            self.tokenUri = f'{serverURL}/login/oauth/access_token'
+            self.authUri = f"{serverURL}/login/oauth/authorize"
+            self.tokenUri = f"{serverURL}/login/oauth/access_token"
         self.serverURL = serverURL or self.resourceEndpoint
 
         if apiVersion not in (3, 4):
-            config.error(f'GitHubAuth apiVersion must be 3 or 4 not {apiVersion}')
+            config.error(f"GitHubAuth apiVersion must be 3 or 4 not {apiVersion}")
         self.apiVersion = apiVersion
         if apiVersion == 3:
             if getTeamsMembership is True:
                 config.error(
-                    'Retrieving team membership information using GitHubAuth is only '
-                    'possible using GitHub api v4.')
+                    "Retrieving team membership information using GitHubAuth is only "
+                    "possible using GitHub api v4."
+                )
         else:
-            defaultGraphqlEndpoint = self.serverURL + '/graphql'
+            defaultGraphqlEndpoint = self.serverURL + "/graphql"
             self.apiResourceEndpoint = self.apiResourceEndpoint or defaultGraphqlEndpoint
         if getTeamsMembership:
             # GraphQL name aliases must comply with /^[_a-zA-Z][_a-zA-Z0-9]*$/
-            self._orgname_slug_sub_re = re.compile(r'[^_a-zA-Z0-9]')
-            self.getUserTeamsGraphqlTplC = jinja2.Template(
-                self.getUserTeamsGraphqlTpl.strip())
+            self._orgname_slug_sub_re = re.compile(r"[^_a-zA-Z0-9]")
+            self.getUserTeamsGraphqlTplC = jinja2.Template(self.getUserTeamsGraphqlTpl.strip())
         self.getTeamsMembership = getTeamsMembership
         self.debug = debug
 
     def post(self, session, query):
         if self.debug:
-            log.info('{klass} GraphQL POST Request: {endpoint} -> '
-                     'DATA:\n----\n{data}\n----',
-                     klass=self.__class__.__name__,
-                     endpoint=self.apiResourceEndpoint,
-                     data=query)
-        ret = session.post(self.apiResourceEndpoint, json={'query': query})
+            log.info(
+                "{klass} GraphQL POST Request: {endpoint} -> " "DATA:\n----\n{data}\n----",
+                klass=self.__class__.__name__,
+                endpoint=self.apiResourceEndpoint,
+                data=query,
+            )
+        ret = session.post(self.apiResourceEndpoint, json={"query": query})
         return ret.json()
 
     def getUserInfoFromOAuthClient(self, c):
@@ -274,29 +290,32 @@ class GitHubAuth(OAuth2Auth):
         return self.getUserInfoFromOAuthClient_v4(c)
 
     def getUserInfoFromOAuthClient_v3(self, c):
-        user = self.get(c, '/user')
-        emails = self.get(c, '/user/emails')
+        user = self.get(c, "/user")
+        emails = self.get(c, "/user/emails")
         for email in emails:
-            if email.get('primary', False):
-                user['email'] = email['email']
+            if email.get("primary", False):
+                user["email"] = email["email"]
                 break
-        orgs = self.get(c, '/user/orgs')
-        return dict(full_name=user['name'],
-                    email=user['email'],
-                    username=user['login'],
-                    groups=[org['login'] for org in orgs])
+        orgs = self.get(c, "/user/orgs")
+        return dict(
+            full_name=user["name"],
+            email=user["email"],
+            username=user["login"],
+            groups=[org["login"] for org in orgs],
+        )
 
     def createSessionFromToken(self, token):
         s = requests.Session()
         s.headers = {
-            'Authorization': 'token ' + token['access_token'],
-            'User-Agent': f'buildbot/{buildbot.version}',
+            "Authorization": "token " + token["access_token"],
+            "User-Agent": f"buildbot/{buildbot.version}",
         }
         s.verify = self.sslVerify
         return s
 
     def getUserInfoFromOAuthClient_v4(self, c):
-        graphql_query = textwrap.dedent('''
+        graphql_query = textwrap.dedent(
+            """
             query {
               viewer {
                 email
@@ -311,38 +330,44 @@ class GitHubAuth(OAuth2Auth):
                 }
               }
             }
-        ''')
+        """
+        )
         data = self.post(c, graphql_query.strip())
-        data = data['data']
+        data = data["data"]
         if self.debug:
-            log.info('{klass} GraphQL Response: {response}',
-                     klass=self.__class__.__name__,
-                     response=data)
-        user_info = dict(full_name=data['viewer']['name'],
-                         email=data['viewer']['email'],
-                         username=data['viewer']['login'],
-                         groups=[org['node']['login'] for org in
-                                 data['viewer']['organizations']['edges']])
+            log.info(
+                "{klass} GraphQL Response: {response}",
+                klass=self.__class__.__name__,
+                response=data,
+            )
+        user_info = dict(
+            full_name=data["viewer"]["name"],
+            email=data["viewer"]["email"],
+            username=data["viewer"]["login"],
+            groups=[org["node"]["login"] for org in data["viewer"]["organizations"]["edges"]],
+        )
         if self.getTeamsMembership:
             orgs_name_slug_mapping = {
-                self._orgname_slug_sub_re.sub('_', n): n
-                for n in user_info['groups']}
+                self._orgname_slug_sub_re.sub("_", n): n for n in user_info["groups"]
+            }
             graphql_query = self.getUserTeamsGraphqlTplC.render(
-                {'user_info': user_info,
-                 'organizations': orgs_name_slug_mapping})
+                {"user_info": user_info, "organizations": orgs_name_slug_mapping}
+            )
             if graphql_query:
                 data = self.post(c, graphql_query)
                 if self.debug:
-                    log.info('{klass} GraphQL Response: {response}',
-                             klass=self.__class__.__name__,
-                             response=data)
+                    log.info(
+                        "{klass} GraphQL Response: {response}",
+                        klass=self.__class__.__name__,
+                        response=data,
+                    )
                 teams = set()
-                for org, team_data in data['data'].items():
+                for org, team_data in data["data"].items():
                     if team_data is None:
                         # Organizations can have OAuth App access restrictions enabled,
                         # disallowing team data access to third-parties.
                         continue
-                    for node in team_data['teams']['edges']:
+                    for node in team_data["teams"]["edges"]:
                         # On github we can mentions organization teams like
                         # @org-name/team-name. Let's keep the team formatting
                         # identical with the inclusion of the organization
@@ -350,11 +375,13 @@ class GitHubAuth(OAuth2Auth):
                         # team name
                         teams.add(f"{orgs_name_slug_mapping[org]}/{node['node']['name']}")
                         teams.add(f"{orgs_name_slug_mapping[org]}/{node['node']['slug']}")
-                user_info['groups'].extend(sorted(teams))
+                user_info["groups"].extend(sorted(teams))
         if self.debug:
-            log.info('{klass} User Details: {user_info}',
-                     klass=self.__class__.__name__,
-                     user_info=user_info)
+            log.info(
+                "{klass} User Details: {user_info}",
+                klass=self.__class__.__name__,
+                user_info=user_info,
+            )
         return user_info
 
 
@@ -372,29 +399,33 @@ class GitLabAuth(OAuth2Auth):
     def getUserInfoFromOAuthClient(self, c):
         user = self.get(c, "/user")
         groups = self.get(c, "/groups")
-        return dict(full_name=user["name"],
-                    username=user["username"],
-                    email=user["email"],
-                    avatar_url=user["avatar_url"],
-                    groups=[g["path"] for g in groups])
+        return dict(
+            full_name=user["name"],
+            username=user["username"],
+            email=user["email"],
+            avatar_url=user["avatar_url"],
+            groups=[g["path"] for g in groups],
+        )
 
 
 class BitbucketAuth(OAuth2Auth):
     name = "Bitbucket"
     faIcon = "fa-bitbucket"
-    authUri = 'https://bitbucket.org/site/oauth2/authorize'
-    tokenUri = 'https://bitbucket.org/site/oauth2/access_token'
-    resourceEndpoint = 'https://api.bitbucket.org/2.0'
+    authUri = "https://bitbucket.org/site/oauth2/authorize"
+    tokenUri = "https://bitbucket.org/site/oauth2/access_token"
+    resourceEndpoint = "https://api.bitbucket.org/2.0"
 
     def getUserInfoFromOAuthClient(self, c):
-        user = self.get(c, '/user')
-        emails = self.get(c, '/user/emails')
+        user = self.get(c, "/user")
+        emails = self.get(c, "/user/emails")
         for email in emails["values"]:
-            if email.get('is_primary', False):
-                user['email'] = email['email']
+            if email.get("is_primary", False):
+                user["email"] = email["email"]
                 break
-        orgs = self.get(c, '/workspaces?role=member')
-        return dict(full_name=user['display_name'],
-                    email=user['email'],
-                    username=user['username'],
-                    groups=[org['slug'] for org in orgs["values"]])
+        orgs = self.get(c, "/workspaces?role=member")
+        return dict(
+            full_name=user["display_name"],
+            email=user["email"],
+            username=user["username"],
+            groups=[org["slug"] for org in orgs["values"]],
+        )

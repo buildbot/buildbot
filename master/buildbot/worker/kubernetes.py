@@ -24,8 +24,7 @@ from buildbot.worker.docker import DockerBaseWorker
 log = Logger()
 
 
-class KubeLatentWorker(CompatibleLatentWorkerMixin,
-                       DockerBaseWorker):
+class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
 
     instance = None
 
@@ -33,27 +32,25 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
     def getPodSpec(self, build):
         image = yield build.render(self.image)
         env = yield self.createEnvironment(build)
-        defer.returnValue({
-            "apiVersion": "v1",
-            "kind": "Pod",
-            "metadata": {
-                "name": self.getContainerName()
-            },
-            "spec": {
-                "containers": [{
-                    "name":
-                    self.getContainerName(),
-                    "image": image,
-                    "env": [{
-                        "name": k,
-                        "value": v
-                    } for k, v in env.items()],
-                    "resources": (yield self.getBuildContainerResources(build))
-                }] + (yield self.getServicesContainers(build)),
-                "restartPolicy":
-                "Never"
+        defer.returnValue(
+            {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "metadata": {"name": self.getContainerName()},
+                "spec": {
+                    "containers": [
+                        {
+                            "name": self.getContainerName(),
+                            "image": image,
+                            "env": [{"name": k, "value": v} for k, v in env.items()],
+                            "resources": (yield self.getBuildContainerResources(build)),
+                        }
+                    ]
+                    + (yield self.getServicesContainers(build)),
+                    "restartPolicy": "Never",
+                },
             }
-        })
+        )
 
     def getBuildContainerResources(self, build):
         # customization point to generate Build container resources
@@ -68,38 +65,42 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
     def renderWorkerProps(self, build_props):
         return self.getPodSpec(build_props)
 
-    def checkConfig(self,
-                    name,
-                    image='buildbot/buildbot-worker',
-                    namespace=None,
-                    masterFQDN=None,
-                    kube_config=None,
-                    **kwargs):
+    def checkConfig(
+        self,
+        name,
+        image="buildbot/buildbot-worker",
+        namespace=None,
+        masterFQDN=None,
+        kube_config=None,
+        **kwargs
+    ):
 
         super().checkConfig(name, None, **kwargs)
-        kubeclientservice.KubeClientService.checkAvailable(
-            self.__class__.__name__)
+        kubeclientservice.KubeClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self,
-                        name,
-                        image='buildbot/buildbot-worker',
-                        namespace=None,
-                        masterFQDN=None,
-                        kube_config=None,
-                        **kwargs):
+    def reconfigService(
+        self,
+        name,
+        image="buildbot/buildbot-worker",
+        namespace=None,
+        masterFQDN=None,
+        kube_config=None,
+        **kwargs
+    ):
 
         # Set build_wait_timeout to 0 if not explicitly set: Starting a
         # container is almost immediate, we can afford doing so for each build.
-        if 'build_wait_timeout' not in kwargs:
-            kwargs['build_wait_timeout'] = 0
+        if "build_wait_timeout" not in kwargs:
+            kwargs["build_wait_timeout"] = 0
         if masterFQDN is None:
             masterFQDN = self.get_ip
         if callable(masterFQDN):
             masterFQDN = masterFQDN()
         yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
         self._kube = yield kubeclientservice.KubeClientService.getService(
-            self.master, kube_config=kube_config)
+            self.master, kube_config=kube_config
+        )
         self.namespace = namespace or self._kube.namespace
 
     @defer.inlineCallbacks
@@ -119,11 +120,10 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
         try:
             yield self._kube.deletePod(self.namespace, self.getContainerName())
         except kubeclientservice.KubeError as e:
-            if reportFailure and e.reason != 'NotFound':
+            if reportFailure and e.reason != "NotFound":
                 raise
         if fast:
             return
         yield self._kube.waitForPodDeletion(
-            self.namespace,
-            self.getContainerName(),
-            timeout=self.missing_timeout)
+            self.namespace, self.getContainerName(), timeout=self.missing_timeout
+        )

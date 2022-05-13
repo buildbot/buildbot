@@ -23,31 +23,31 @@ class TupleMatchingMixin:
         raise NotImplementedError
 
     def test_simple_tuple_match(self):
-        return self.do_test_match(('abc',), True, ('abc',))
+        return self.do_test_match(("abc",), True, ("abc",))
 
     def test_simple_tuple_no_match(self):
-        return self.do_test_match(('abc',), False, ('def',))
+        return self.do_test_match(("abc",), False, ("def",))
 
     def test_multiple_tuple_match(self):
-        return self.do_test_match(('a', 'b', 'c'), True, ('a', 'b', 'c'))
+        return self.do_test_match(("a", "b", "c"), True, ("a", "b", "c"))
 
     def test_multiple_tuple_match_tuple_prefix(self):
-        return self.do_test_match(('a', 'b', 'c'), False, ('a', 'b'))
+        return self.do_test_match(("a", "b", "c"), False, ("a", "b"))
 
     def test_multiple_tuple_match_tuple_suffix(self):
-        return self.do_test_match(('a', 'b', 'c'), False, ('b', 'c'))
+        return self.do_test_match(("a", "b", "c"), False, ("b", "c"))
 
     def test_multiple_tuple_match_rk_prefix(self):
-        return self.do_test_match(('a', 'b'), False, ('a', 'b', 'c'))
+        return self.do_test_match(("a", "b"), False, ("a", "b", "c"))
 
     def test_multiple_tuple_match_rk_suffix(self):
-        return self.do_test_match(('b', 'c'), False, ('a', 'b', 'c'))
+        return self.do_test_match(("b", "c"), False, ("a", "b", "c"))
 
     def test_None_match(self):
-        return self.do_test_match(('a', 'b', 'c'), True, ('a', None, 'c'))
+        return self.do_test_match(("a", "b", "c"), True, ("a", None, "c"))
 
     def test_None_match_empty(self):
-        return self.do_test_match(('a', '', 'c'), True, ('a', None, 'c'))
+        return self.do_test_match(("a", "", "c"), True, ("a", None, "c"))
 
     def test_None_no_match(self):
-        return self.do_test_match(('a', 'b', 'c'), False, ('a', None, 'x'))
+        return self.do_test_match(("a", "b", "c"), False, ("a", None, "x"))

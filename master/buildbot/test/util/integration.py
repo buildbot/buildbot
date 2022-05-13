@@ -48,12 +48,11 @@ except ImportError:
 
 @implementer(IConfigLoader)
 class DictLoader:
-
     def __init__(self, config_dict):
         self.config_dict = config_dict
 
     def loadConfig(self):
-        return MasterConfig.loadFromDict(self.config_dict, '<dict>')
+        return MasterConfig.loadFromDict(self.config_dict, "<dict>")
 
 
 @defer.inlineCallbacks
@@ -63,16 +62,15 @@ def getMaster(case, reactor, config_dict):
     """
     basedir = FilePath(case.mktemp())
     basedir.createDirectory()
-    config_dict['buildbotNetUsageData'] = None
-    master = BuildMaster(
-        basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
+    config_dict["buildbotNetUsageData"] = None
+    master = BuildMaster(basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
 
-    if 'db_url' not in config_dict:
-        config_dict['db_url'] = 'sqlite://'
+    if "db_url" not in config_dict:
+        config_dict["db_url"] = "sqlite://"
 
     # TODO: Allow BuildMaster to transparently upgrade the database, at least
     # for tests.
-    master.config.db['db_url'] = config_dict['db_url']
+    master.config.db["db_url"] = config_dict["db_url"]
     yield master.db.setup(check_version=False)
     yield master.db.model.upgrade()
     master.db.setup = lambda: None
@@ -85,9 +83,7 @@ def getMaster(case, reactor, config_dict):
     return master
 
 
-class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
-                            DebugIntegrationLogsMixin):
-
+class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     def setUp(self):
         self.setup_test_reactor()
         self.setupDebugIntegrationLogs()
@@ -117,23 +113,24 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
     @defer.inlineCallbacks
     def assertBuildResults(self, build_id, result):
         dbdict = yield self.master.db.builds.getBuild(build_id)
-        self.assertEqual(result, dbdict['results'])
+        self.assertEqual(result, dbdict["results"])
 
     @defer.inlineCallbacks
     def assertStepStateString(self, step_id, state_string):
-        datadict = yield self.master.data.get(('steps', step_id))
-        self.assertEqual(datadict['state_string'], state_string)
+        datadict = yield self.master.data.get(("steps", step_id))
+        self.assertEqual(datadict["state_string"], state_string)
 
     @defer.inlineCallbacks
     def assertLogs(self, build_id, exp_logs):
         got_logs = {}
-        data_logs = yield self.master.data.get(('builds', build_id, 'steps', 1, 'logs'))
+        data_logs = yield self.master.data.get(("builds", build_id, "steps", 1, "logs"))
         for log in data_logs:
-            self.assertTrue(log['complete'])
-            log_contents = yield self.master.data.get(('builds', build_id, 'steps', 1, 'logs',
-                                                       log['slug'], 'contents'))
+            self.assertTrue(log["complete"])
+            log_contents = yield self.master.data.get(
+                ("builds", build_id, "steps", 1, "logs", log["slug"], "contents")
+            )
 
-            got_logs[log['name']] = log_contents['content']
+            got_logs[log["name"]] = log_contents["content"]
 
         self.assertEqual(got_logs, exp_logs)
 
@@ -144,11 +141,13 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
-                {'codebase': '',
-                 'repository': '',
-                 'branch': None,
-                 'revision': None,
-                 'project': ''},
+                {
+                    "codebase": "",
+                    "repository": "",
+                    "branch": None,
+                    "revision": None,
+                    "project": "",
+                },
             ],
             properties=properties,
         )
@@ -168,7 +167,8 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
         def on_finished(_, __):
             if not d_finished.called:
                 d_finished.callback(None)
-        consumer = yield self.master.mq.startConsuming(on_finished, ('builds', None, 'finished'))
+
+        consumer = yield self.master.mq.startConsuming(on_finished, ("builds", None, "finished"))
 
         # start the builder
         yield self.create_build_request([builder_id])
@@ -195,42 +195,42 @@ class RunMasterBase(unittest.TestCase):
         # mock reactor.stop (which trial *really* doesn't
         # like test code to call!)
         stop = mock.create_autospec(reactor.stop)
-        self.patch(reactor, 'stop', stop)
+        self.patch(reactor, "stop", stop)
 
         if startWorker:
-            if self.proto == 'pb':
+            if self.proto == "pb":
                 proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
                 workerclass = worker.Worker
-            if self.proto == 'msgpack':
+            if self.proto == "msgpack":
                 proto = {"msgpack_experimental_v3": {"port": 0}}
                 workerclass = worker.Worker
-            elif self.proto == 'null':
+            elif self.proto == "null":
                 proto = {"null": {}}
                 workerclass = worker.LocalWorker
-            config_dict['workers'] = [workerclass("local1", password=Interpolate("localpw"),
-                                                  missing_timeout=0)]
-            config_dict['protocols'] = proto
+            config_dict["workers"] = [
+                workerclass("local1", password=Interpolate("localpw"), missing_timeout=0)
+            ]
+            config_dict["protocols"] = proto
 
         m = yield getMaster(self, reactor, config_dict)
         self.master = m
-        self.assertFalse(stop.called,
-                         "startService tried to stop the reactor; check logs")
+        self.assertFalse(stop.called, "startService tried to stop the reactor; check logs")
 
         if not startWorker:
             return
 
-        if self.proto in ('pb', 'msgpack'):
+        if self.proto in ("pb", "msgpack"):
             sandboxed_worker_path = os.environ.get("SANDBOXED_WORKER_PATH", None)
             worker_python_version = os.environ.get("WORKER_PYTHON", None)
-            if self.proto == 'pb':
-                protocol = 'pb'
+            if self.proto == "pb":
+                protocol = "pb"
                 dispatcher = list(m.pbmanager.dispatchers.values())[0]
             else:
-                protocol = 'msgpack_experimental_v3'
+                protocol = "msgpack_experimental_v3"
                 dispatcher = list(m.msgmanager.dispatchers.values())[0]
 
-                if sandboxed_worker_path is not None and worker_python_version == '2.7':
-                    raise SkipTest('MessagePack protocol is not supported on python 2.7 worker')
+                if sandboxed_worker_path is not None and worker_python_version == "2.7":
+                    raise SkipTest("MessagePack protocol is not supported on python 2.7 worker")
 
                 # We currently don't handle connection closing cleanly.
                 dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)
@@ -243,15 +243,29 @@ class RunMasterBase(unittest.TestCase):
             worker_dir.createDirectory()
             if sandboxed_worker_path is None:
                 self.w = Worker(
-                    "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    False, protocol=protocol, **worker_kwargs)
+                    "127.0.0.1",
+                    workerPort,
+                    "local1",
+                    "localpw",
+                    worker_dir.path,
+                    False,
+                    protocol=protocol,
+                    **worker_kwargs,
+                )
             else:
                 self.w = SandboxedWorker(
-                    "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    sandboxed_worker_path, protocol=protocol, **worker_kwargs)
+                    "127.0.0.1",
+                    workerPort,
+                    "local1",
+                    "localpw",
+                    worker_dir.path,
+                    sandboxed_worker_path,
+                    protocol=protocol,
+                    **worker_kwargs,
+                )
                 self.addCleanup(self.w.shutdownWorker)
 
-        elif self.proto == 'null':
+        elif self.proto == "null":
             self.w = None
 
         if self.w is not None:
@@ -267,11 +281,19 @@ class RunMasterBase(unittest.TestCase):
                     yield self.printBuild(build, dump, withLogs=True)
 
                 raise self.failureException(dump.getvalue())
+
         self.addCleanup(dump)
 
     @defer.inlineCallbacks
-    def doForceBuild(self, wantSteps=False, wantProperties=False,
-                     wantLogs=False, useChange=False, forceParams=None, triggerCallback=None):
+    def doForceBuild(
+        self,
+        wantSteps=False,
+        wantProperties=False,
+        wantLogs=False,
+        useChange=False,
+        forceParams=None,
+        triggerCallback=None,
+    ):
 
         if forceParams is None:
             forceParams = {}
@@ -284,20 +306,18 @@ class RunMasterBase(unittest.TestCase):
 
         def newCallback(_, data):
             if self.firstbsid is None:
-                self.firstbsid = data['bsid']
+                self.firstbsid = data["bsid"]
                 newConsumer.stopConsuming()
 
         def finishedCallback(_, data):
-            if self.firstbsid == data['bsid']:
+            if self.firstbsid == data["bsid"]:
                 d.callback(data)
 
-        newConsumer = yield self.master.mq.startConsuming(
-            newCallback,
-            ('buildsets', None, 'new'))
+        newConsumer = yield self.master.mq.startConsuming(newCallback, ("buildsets", None, "new"))
 
         finishedConsumer = yield self.master.mq.startConsuming(
-            finishedCallback,
-            ('buildsets', None, 'complete'))
+            finishedCallback, ("buildsets", None, "complete")
+        )
 
         if triggerCallback is not None:
             yield triggerCallback()
@@ -311,12 +331,14 @@ class RunMasterBase(unittest.TestCase):
         # wait until we receive the build finished event
         buildset = yield d
         buildrequests = yield self.master.data.get(
-            ('buildrequests',),
-            filters=[resultspec.Filter('buildsetid', 'eq', [buildset['bsid']])])
+            ("buildrequests",),
+            filters=[resultspec.Filter("buildsetid", "eq", [buildset["bsid"]])],
+        )
         buildrequest = buildrequests[-1]
         builds = yield self.master.data.get(
-            ('builds',),
-            filters=[resultspec.Filter('buildrequestid', 'eq', [buildrequest['buildrequestid']])])
+            ("builds",),
+            filters=[resultspec.Filter("buildrequestid", "eq", [buildrequest["buildrequestid"]])],
+        )
         # if the build has been retried, there will be several matching builds.
         # We return the last build
         build = builds[-1]
@@ -328,35 +350,43 @@ class RunMasterBase(unittest.TestCase):
     def enrichBuild(self, build, wantSteps=False, wantProperties=False, wantLogs=False):
         # enrich the build result, with the step results
         if wantSteps:
-            build["steps"] = yield self.master.data.get(("builds", build['buildid'], "steps"))
+            build["steps"] = yield self.master.data.get(("builds", build["buildid"], "steps"))
             # enrich the step result, with the logs results
             if wantLogs:
                 build["steps"] = list(build["steps"])
                 for step in build["steps"]:
-                    step['logs'] = yield self.master.data.get(("steps", step['stepid'], "logs"))
-                    step["logs"] = list(step['logs'])
+                    step["logs"] = yield self.master.data.get(("steps", step["stepid"], "logs"))
+                    step["logs"] = list(step["logs"])
                     for log in step["logs"]:
-                        log['contents'] = yield self.master.data.get(("logs", log['logid'],
-                                                                      "contents"))
+                        log["contents"] = yield self.master.data.get(
+                            ("logs", log["logid"], "contents")
+                        )
 
         if wantProperties:
-            build["properties"] = yield self.master.data.get(("builds", build['buildid'],
-                                                              "properties"))
+            build["properties"] = yield self.master.data.get(
+                ("builds", build["buildid"], "properties")
+            )
 
     @defer.inlineCallbacks
     def printBuild(self, build, out=sys.stdout, withLogs=False):
         # helper for debugging: print a build
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
-        print(f"*** BUILD {build['buildid']} *** ==> {build['state_string']} "
-              f"({statusToString(build['results'])})", file=out)
-        for step in build['steps']:
-            print(f"    *** STEP {step['name']} *** ==> {step['state_string']} "
-                  f"({statusToString(step['results'])})", file=out)
-            for url in step['urls']:
+        print(
+            f"*** BUILD {build['buildid']} *** ==> {build['state_string']} "
+            f"({statusToString(build['results'])})",
+            file=out,
+        )
+        for step in build["steps"]:
+            print(
+                f"    *** STEP {step['name']} *** ==> {step['state_string']} "
+                f"({statusToString(step['results'])})",
+                file=out,
+            )
+            for url in step["urls"]:
                 print(f"       url:{url['name']} ({url['url']})", file=out)
-            for log in step['logs']:
+            for log in step["logs"]:
                 print(f"        log:{log['name']} ({log['num_lines']})", file=out)
-                if step['results'] != SUCCESS or withLogs:
+                if step["results"] != SUCCESS or withLogs:
                     self.printLog(log, out)
 
     def _match_patterns_consume(self, text, patterns, is_regex):
@@ -374,13 +404,13 @@ class RunMasterBase(unittest.TestCase):
         if isinstance(expectedLog, str):
             expectedLog = [expectedLog]
         if not isinstance(expectedLog, list):
-            raise Exception('The expectedLog argument must be either string or a list of strings')
+            raise Exception("The expectedLog argument must be either string or a list of strings")
 
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
-        for step in build['steps']:
-            for log in step['logs']:
-                for line in log['contents']['content'].splitlines():
-                    if onlyStdout and line[0] != 'o':
+        for step in build["steps"]:
+            for log in step["logs"]:
+                for line in log["contents"]["content"].splitlines():
+                    if onlyStdout and line[0] != "o":
                         continue
                     expectedLog = self._match_patterns_consume(line, expectedLog, is_regex=regex)
         if expectedLog:
@@ -389,17 +419,17 @@ class RunMasterBase(unittest.TestCase):
 
     def printLog(self, log, out):
         print(" " * 8 + f"*********** LOG: {log['name']} *********", file=out)
-        if log['type'] == 's':
-            for line in log['contents']['content'].splitlines():
+        if log["type"] == "s":
+            for line in log["contents"]["content"].splitlines():
                 linetype = line[0]
                 line = line[1:]
-                if linetype == 'h':
+                if linetype == "h":
                     # cyan
                     line = "\x1b[36m" + line + "\x1b[0m"
-                if linetype == 'e':
+                if linetype == "e":
                     # red
                     line = "\x1b[31m" + line + "\x1b[0m"
                 print(" " * 8 + line)
         else:
-            print("" + log['contents']['content'], file=out)
+            print("" + log["contents"]["content"], file=out)
         print(" " * 8 + "********************************", file=out)

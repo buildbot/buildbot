@@ -38,20 +38,22 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
         bdict = yield self.master.db.builders.getBuilder(builderid)
         if not bdict:
             return None
-        if 'masterid' in kwargs:
-            if kwargs['masterid'] not in bdict['masterids']:
+        if "masterid" in kwargs:
+            if kwargs["masterid"] not in bdict["masterids"]:
                 return None
-        return dict(builderid=builderid,
-                    name=bdict['name'],
-                    masterids=bdict['masterids'],
-                    description=bdict['description'],
-                    tags=bdict['tags'])
+        return dict(
+            builderid=builderid,
+            name=bdict["name"],
+            masterids=bdict["masterids"],
+            description=bdict["description"],
+            tags=bdict["tags"],
+        )
 
 
 class BuildersEndpoint(base.Endpoint):
 
     isCollection = True
-    rootLinkName = 'builders'
+    rootLinkName = "builders"
     pathPatterns = """
         /builders
         /masters/n:masterid/builders
@@ -59,18 +61,21 @@ class BuildersEndpoint(base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        bdicts = yield self.master.db.builders.getBuilders(
-            masterid=kwargs.get('masterid', None))
-        return [dict(builderid=bd['id'],
-                     name=bd['name'],
-                     masterids=bd['masterids'],
-                     description=bd['description'],
-                     tags=bd['tags'])
-               for bd in bdicts]
+        bdicts = yield self.master.db.builders.getBuilders(masterid=kwargs.get("masterid", None))
+        return [
+            dict(
+                builderid=bd["id"],
+                name=bd["name"],
+                masterids=bd["masterids"],
+                description=bd["description"],
+                tags=bd["tags"],
+            )
+            for bd in bdicts
+        ]
 
     def get_kwargs_from_graphql(self, parent, resolve_info, args):
         if parent is not None:
-            return {'masterid': parent['masterid']}
+            return {"masterid": parent["masterid"]}
         return {}
 
 
@@ -79,7 +84,7 @@ class Builder(base.ResourceType):
     name = "builder"
     plural = "builders"
     endpoints = [BuilderEndpoint, BuildersEndpoint]
-    keyField = 'builderid'
+    keyField = "builderid"
     eventPathPatterns = """
         /builders/:builderid
     """
@@ -91,11 +96,12 @@ class Builder(base.ResourceType):
         masterids = types.List(of=types.Integer())
         description = types.NoneOk(types.String())
         tags = types.List(of=types.String())
-    entityType = EntityType(name, 'Builder')
+
+    entityType = EntityType(name, "Builder")
 
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):
-        builder = yield self.master.data.get(('builders', str(_id)))
+        builder = yield self.master.data.get(("builders", str(_id)))
         self.produceEvent(builder, event)
 
     @base.updateMethod
@@ -120,23 +126,26 @@ class Builder(base.ResourceType):
         # figure out what to remove and remove it
         builderNames_set = set(builderNames)
         for bldr in builders:
-            if bldr['name'] not in builderNames_set:
-                builderid = bldr['id']
+            if bldr["name"] not in builderNames_set:
+                builderid = bldr["id"]
                 yield self.master.db.builders.removeBuilderMaster(
-                    masterid=masterid, builderid=builderid)
-                self.master.mq.produce(('builders', str(builderid), 'stopped'),
-                                       dict(builderid=builderid, masterid=masterid,
-                                            name=bldr['name']))
+                    masterid=masterid, builderid=builderid
+                )
+                self.master.mq.produce(
+                    ("builders", str(builderid), "stopped"),
+                    dict(builderid=builderid, masterid=masterid, name=bldr["name"]),
+                )
             else:
-                builderNames_set.remove(bldr['name'])
+                builderNames_set.remove(bldr["name"])
 
         # now whatever's left in builderNames_set is new
         for name in builderNames_set:
             builderid = yield self.master.db.builders.findBuilderId(name)
-            yield self.master.db.builders.addBuilderMaster(
-                masterid=masterid, builderid=builderid)
-            self.master.mq.produce(('builders', str(builderid), 'started'),
-                                   dict(builderid=builderid, masterid=masterid, name=name))
+            yield self.master.db.builders.addBuilderMaster(masterid=masterid, builderid=builderid)
+            self.master.mq.produce(
+                ("builders", str(builderid), "started"),
+                dict(builderid=builderid, masterid=masterid, name=name),
+            )
 
     # returns a Deferred that returns None
     def _masterDeactivated(self, masterid):

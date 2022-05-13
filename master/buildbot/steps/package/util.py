@@ -19,14 +19,13 @@ from buildbot.process import logobserver
 
 
 class WEObserver(logobserver.LogLineObserver):
-
     def __init__(self):
         super().__init__()
         self.warnings = []
         self.errors = []
 
     def outLineReceived(self, line):
-        if line.startswith('W: '):
+        if line.startswith("W: "):
             self.warnings.append(line)
-        elif line.startswith('E: '):
+        elif line.startswith("E: "):
             self.errors.append(line)

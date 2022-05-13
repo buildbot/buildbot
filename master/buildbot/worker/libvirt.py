@@ -106,7 +106,7 @@ class ServerThreadPool:
         if uri in self.threads:
             self.threads[uri].close_connection()
         else:
-            log.err(f'libvirt.ServerThreadPool: Unknown connection {uri}')
+            log.err(f"libvirt.ServerThreadPool: Unknown connection {uri}")
 
 
 # A module is effectively a singleton class, so this is OK
@@ -121,21 +121,32 @@ class Connection:
 class LibVirtWorker(AbstractLatentWorker):
     pool = threadpool
     metadata = '<auth username="{}" password="{}" master="{}"/>'
-    ns = 'http://buildbot.net/'
-    metakey = 'buildbot'
+    ns = "http://buildbot.net/"
+    metakey = "buildbot"
 
-    def __init__(self, name, password, connection=None, hd_image=None, base_image=None,
-                 uri="system:///", xml=None, masterFQDN=None, **kwargs):
+    def __init__(
+        self,
+        name,
+        password,
+        connection=None,
+        hd_image=None,
+        base_image=None,
+        uri="system:///",
+        xml=None,
+        masterFQDN=None,
+        **kwargs,
+    ):
         super().__init__(name, password, **kwargs)
         if not libvirt:
-            config.error(
-                "The python module 'libvirt' is needed to use a LibVirtWorker")
+            config.error("The python module 'libvirt' is needed to use a LibVirtWorker")
 
         if connection is not None:
-            warn_deprecated('3.2.0', 'LibVirtWorker connection argument has been deprecated: ' +
-                            'please use uri')
+            warn_deprecated(
+                "3.2.0",
+                "LibVirtWorker connection argument has been deprecated: " + "please use uri",
+            )
             if uri != "system:///":
-                config.error('connection and uri arguments cannot be used together')
+                config.error("connection and uri arguments cannot be used together")
             uri = connection.uri
 
         self.uri = uri
@@ -159,11 +170,11 @@ class LibVirtWorker(AbstractLatentWorker):
             domain = yield self._pool_do(lambda conn: conn.lookupByName(self.workername))
             return domain
         except libvirt.libvirtError as e:
-            log.err(f'LibVirtWorker: got error when accessing domain: {e}')
+            log.err(f"LibVirtWorker: got error when accessing domain: {e}")
             try:
                 self.pool.reset_connection(self.uri)
             except Exception as e1:
-                log.err(f'LibVirtWorker: got error when resetting connection: {e1}')
+                log.err(f"LibVirtWorker: got error when resetting connection: {e1}")
             raise e
 
     @defer.inlineCallbacks
@@ -184,17 +195,29 @@ class LibVirtWorker(AbstractLatentWorker):
             return
 
         if self.cheap_copy:
-            clone_cmd = ['qemu-img', 'create', '-b', self.base_image, '-f', 'qcow2', self.image]
+            clone_cmd = [
+                "qemu-img",
+                "create",
+                "-b",
+                self.base_image,
+                "-f",
+                "qcow2",
+                self.image,
+            ]
         else:
-            clone_cmd = ['cp', self.base_image, self.image]
+            clone_cmd = ["cp", self.base_image, self.image]
 
         log.msg(f"Cloning base image: {clone_cmd}'")
 
         try:
-            rc = yield runprocess.run_process(self.master.reactor, clone_cmd, collect_stdout=False,
-                                              collect_stderr=False)
+            rc = yield runprocess.run_process(
+                self.master.reactor,
+                clone_cmd,
+                collect_stdout=False,
+                collect_stderr=False,
+            )
             if rc != 0:
-                raise LatentWorkerFailedToSubstantiate(f'Failed to clone image (rc={rc})')
+                raise LatentWorkerFailedToSubstantiate(f"Failed to clone image (rc={rc})")
         except Exception as e:
             log.err(f"Cloning failed: {e}")
             raise
@@ -215,10 +238,12 @@ class LibVirtWorker(AbstractLatentWorker):
             domain_id = yield self._get_domain_id()
             if domain_id != -1:
                 raise LatentWorkerFailedToSubstantiate(
-                    f"{self}: Cannot start_instance as it's already active")
+                    f"{self}: Cannot start_instance as it's already active"
+                )
         except Exception as e:
             raise LatentWorkerFailedToSubstantiate(
-                f'{self}: Got error while retrieving domain ID: {e}') from e
+                f"{self}: Got error while retrieving domain ID: {e}"
+            ) from e
 
         yield self._prepare_base_image()
 
@@ -227,18 +252,22 @@ class LibVirtWorker(AbstractLatentWorker):
                 yield self._pool_do(lambda conn: conn.createXML(self.xml, 0))
             else:
                 domain = yield self._get_domain()
-                yield self._pool_do(lambda conn: domain.setMetadata(
-                    libvirt.VIR_DOMAIN_METADATA_ELEMENT,
-                    self.metadata.format(self.workername, self.password, self.masterFQDN),
-                    self.metakey,
-                    self.ns,
-                    libvirt.VIR_DOMAIN_AFFECT_CONFIG))
+                yield self._pool_do(
+                    lambda conn: domain.setMetadata(
+                        libvirt.VIR_DOMAIN_METADATA_ELEMENT,
+                        self.metadata.format(self.workername, self.password, self.masterFQDN),
+                        self.metakey,
+                        self.ns,
+                        libvirt.VIR_DOMAIN_AFFECT_CONFIG,
+                    )
+                )
 
                 yield self._pool_do(lambda conn: domain.create())
 
         except Exception as e:
             raise LatentWorkerFailedToSubstantiate(
-                f'{self}: Got error while starting VM: {e}') from e
+                f"{self}: Got error while starting VM: {e}"
+            ) from e
 
         return True
 
@@ -263,7 +292,7 @@ class LibVirtWorker(AbstractLatentWorker):
             try:
                 yield self._pool_do(lambda conn: domain.shutdown())
             except Exception as e:
-                log.msg(f'{self}: Graceful shutdown failed ({e}). Force destroying domain')
+                log.msg(f"{self}: Graceful shutdown failed ({e}). Force destroying domain")
                 # Don't re-throw to stop propagating shutdown error if destroy was successful.
                 yield self._pool_do(lambda conn: domain.destroy())
 
@@ -271,5 +300,5 @@ class LibVirtWorker(AbstractLatentWorker):
             yield self._pool_do(lambda conn: domain.destroy())
 
         if self.base_image:
-            log.msg(f'{self}: Removing image {self.image}')
+            log.msg(f"{self}: Removing image {self.image}")
             os.remove(self.image)

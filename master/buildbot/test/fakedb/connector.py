@@ -98,7 +98,7 @@ class FakeDBConnector(service.AsyncMultiService):
 
     def insertTestData(self, rows):
         """Insert a list of Row instances into the database; this method can be
-        called synchronously or asynchronously (it completes immediately) """
+        called synchronously or asynchronously (it completes immediately)"""
         for row in rows:
             if self.checkForeignKeys:
                 row.checkForeignKeys(self, self.t)

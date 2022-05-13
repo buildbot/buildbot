@@ -38,7 +38,7 @@ class TestTemporaryDirectory(unittest.TestCase):
             self.assertTrue(os.path.isdir(dir))
         self.assertFalse(os.path.isdir(dir))
 
-    @skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs("posix")
     def test_mode(self):
         with PrivateTemporaryDirectory(dir=self.tempdir, mode=0o700) as dir:
             self.assertEqual(0o40700, os.stat(dir).st_mode)

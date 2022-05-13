@@ -26,7 +26,6 @@ from buildbot.util import bytes2unicode
 
 
 class NewCredPerspective(pb.Avatar):
-
     def attached(self, mind):
         return self
 
@@ -34,8 +33,7 @@ class NewCredPerspective(pb.Avatar):
         pass
 
 
-class ReconnectingPBClientFactory(PBClientFactory,
-                                  protocol.ReconnectingClientFactory):
+class ReconnectingPBClientFactory(PBClientFactory, protocol.ReconnectingClientFactory):
 
     """Reconnecting client factory for PB brokers.
 
@@ -97,21 +95,19 @@ class ReconnectingPBClientFactory(PBClientFactory,
     def getPerspective(self, *args):
         raise RuntimeError("getPerspective is one-shot: use startGettingPerspective instead")
 
-    def startGettingPerspective(self, username, password, serviceName,
-                                perspectiveName=None, client=None):
+    def startGettingPerspective(
+        self, username, password, serviceName, perspectiveName=None, client=None
+    ):
         self._doingGetPerspective = True
         if perspectiveName is None:
             perspectiveName = username
-        self._oldcredArgs = (username, password, serviceName,
-                             perspectiveName, client)
+        self._oldcredArgs = (username, password, serviceName, perspectiveName, client)
 
     def doGetPerspective(self, root):
         # oldcred getPerspective()
-        (username, password,
-         serviceName, perspectiveName, client) = self._oldcredArgs
+        (username, password, serviceName, perspectiveName, client) = self._oldcredArgs
         d = self._cbAuthIdentity(root, username, password)
-        d.addCallback(self._cbGetPerspective,
-                      serviceName, perspectiveName, client)
+        d.addCallback(self._cbGetPerspective, serviceName, perspectiveName, client)
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective)
 
     # newcred methods
@@ -125,8 +121,9 @@ class ReconnectingPBClientFactory(PBClientFactory,
 
     def doLogin(self, root):
         # newcred login()
-        d = self._cbSendUsername(root, self._credentials.username,
-                                 self._credentials.password, self._client)
+        d = self._cbSendUsername(
+            root, self._credentials.username, self._credentials.password, self._client
+        )
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective)
 
     # methods to override
@@ -154,7 +151,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
         log.err(why)
 
 
-def decode(data, encoding='utf-8', errors='strict'):
+def decode(data, encoding="utf-8", errors="strict"):
     """We need to convert a dictionary where keys and values
     are bytes, to unicode strings.  This happens when a
     Python 2 worker sends a dictionary back to a Python 3 master.

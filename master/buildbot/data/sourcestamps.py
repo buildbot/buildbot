@@ -23,23 +23,23 @@ from buildbot.data import types
 
 def _db2data(ss):
     data = {
-        'ssid': ss['ssid'],
-        'branch': ss['branch'],
-        'revision': ss['revision'],
-        'project': ss['project'],
-        'repository': ss['repository'],
-        'codebase': ss['codebase'],
-        'created_at': ss['created_at'],
-        'patch': None,
+        "ssid": ss["ssid"],
+        "branch": ss["branch"],
+        "revision": ss["revision"],
+        "project": ss["project"],
+        "repository": ss["repository"],
+        "codebase": ss["codebase"],
+        "created_at": ss["created_at"],
+        "patch": None,
     }
-    if ss['patch_body']:
-        data['patch'] = {
-            'patchid': ss['patchid'],
-            'level': ss['patch_level'],
-            'subdir': ss['patch_subdir'],
-            'author': ss['patch_author'],
-            'comment': ss['patch_comment'],
-            'body': ss['patch_body'],
+    if ss["patch_body"]:
+        data["patch"] = {
+            "patchid": ss["patchid"],
+            "level": ss["patch_level"],
+            "subdir": ss["patch_subdir"],
+            "author": ss["patch_author"],
+            "comment": ss["patch_comment"],
+            "body": ss["patch_body"],
         }
     return data
 
@@ -53,8 +53,7 @@ class SourceStampEndpoint(base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        ssdict = yield self.master.db.sourcestamps.getSourceStamp(
-            kwargs['ssid'])
+        ssdict = yield self.master.db.sourcestamps.getSourceStamp(kwargs["ssid"])
         return _db2data(ssdict) if ssdict else None
 
 
@@ -64,12 +63,13 @@ class SourceStampsEndpoint(base.Endpoint):
     pathPatterns = """
         /sourcestamps
     """
-    rootLinkName = 'sourcestamps'
+    rootLinkName = "sourcestamps"
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        return [_db2data(ssdict) for ssdict in
-            (yield self.master.db.sourcestamps.getSourceStamps())]
+        return [
+            _db2data(ssdict) for ssdict in (yield self.master.db.sourcestamps.getSourceStamps())
+        ]
 
 
 class SourceStamp(base.ResourceType):
@@ -77,7 +77,7 @@ class SourceStamp(base.ResourceType):
     name = "sourcestamp"
     plural = "sourcestamps"
     endpoints = [SourceStampEndpoint, SourceStampsEndpoint]
-    keyField = 'ssid'
+    keyField = "ssid"
     subresources = ["Change"]
 
     class EntityType(types.Entity):
@@ -89,4 +89,5 @@ class SourceStamp(base.ResourceType):
         codebase = types.String()
         patch = types.NoneOk(patches.Patch.entityType)
         created_at = types.DateTime()
-    entityType = EntityType(name, 'Sourcestamp')
+
+    entityType = EntityType(name, "Sourcestamp")

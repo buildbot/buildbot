@@ -25,7 +25,6 @@ from buildbot.util import tuplematch
 
 
 class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
-
     def __init__(self):
         super().__init__()
         self.qrefs = []
@@ -33,7 +32,7 @@ class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
         self.debug = False
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        self.debug = new_config.mq.get('debug', False)
+        self.debug = new_config.mq.get("debug", False)
         return super().reconfigServiceWithBuildbotConfig(new_config)
 
     def produce(self, routingKey, data):
@@ -62,7 +61,7 @@ class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
 class QueueRef(base.QueueRef):
 
-    __slots__ = ['mq', 'filter']
+    __slots__ = ["mq", "filter"]
 
     def __init__(self, mq, callback, filter):
         super().__init__(callback)
@@ -79,7 +78,7 @@ class QueueRef(base.QueueRef):
 
 class PersistentQueueRef(QueueRef):
 
-    __slots__ = ['active', 'queue']
+    __slots__ = ["active", "queue"]
 
     def __init__(self, mq, callback, filter):
         super().__init__(mq, callback, filter)

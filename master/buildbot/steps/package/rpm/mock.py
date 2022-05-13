@@ -28,7 +28,7 @@ class MockStateObserver(logobserver.LogLineObserver):
     """Supports reading state changes from Mock state.log from mock version
     1.1.23."""
 
-    _line_re = re.compile(r'^.*(Start|Finish): (.*)$')
+    _line_re = re.compile(r"^.*(Start|Finish): (.*)$")
 
     def outLineReceived(self, line):
         m = self._line_re.search(line.strip())
@@ -52,16 +52,13 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
     haltOnFailure = 1
     flunkOnFailure = 1
 
-    mock_logfiles = ['build.log', 'root.log', 'state.log']
+    mock_logfiles = ["build.log", "root.log", "state.log"]
 
     root = None
     resultdir = None
 
-    def __init__(self,
-                 root=None,
-                 resultdir=None,
-                 **kwargs):
-        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
+    def __init__(self, root=None, resultdir=None, **kwargs):
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=["command"])
         super().__init__(**kwargs)
         if root:
             self.root = root
@@ -71,9 +68,9 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
         if not self.root:
             config.error("You must specify a mock root")
 
-        self.command = ['mock', '--root', self.root]
+        self.command = ["mock", "--root", self.root]
         if self.resultdir:
-            self.command += ['--resultdir', self.resultdir]
+            self.command += ["--resultdir", self.resultdir]
 
     @defer.inlineCallbacks
     def run(self):
@@ -84,10 +81,11 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
         else:
             for lname in self.mock_logfiles:
                 self.logfiles[lname] = lname
-        self.addLogObserver('state.log', MockStateObserver())
+        self.addLogObserver("state.log", MockStateObserver())
 
-        yield self.runRmdir([self.build.path_module.join('build', self.logfiles[l])
-                             for l in self.mock_logfiles])
+        yield self.runRmdir(
+            [self.build.path_module.join("build", self.logfiles[l]) for l in self.mock_logfiles]
+        )
 
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
@@ -109,12 +107,9 @@ class MockBuildSRPM(Mock):
     descriptionDone = ["mock buildsrpm"]
 
     spec = None
-    sources = '.'
+    sources = "."
 
-    def __init__(self,
-                 spec=None,
-                 sources=None,
-                 **kwargs):
+    def __init__(self, spec=None, sources=None, **kwargs):
         """
         Creates the MockBuildSRPM object.
 
@@ -136,10 +131,8 @@ class MockBuildSRPM(Mock):
         if not self.sources:
             config.error("You must specify a sources dir")
 
-        self.command += ['--buildsrpm', '--spec', self.spec,
-                         '--sources', self.sources]
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.command += ["--buildsrpm", "--spec", self.spec, "--sources", self.sources]
+        self.addLogObserver("stdio", logobserver.LineConsumerLogObserver(self.logConsumer))
 
     def logConsumer(self):
         r = re.compile(r"Wrote: .*/([^/]*.src.rpm)")
@@ -147,7 +140,7 @@ class MockBuildSRPM(Mock):
             _, line = yield
             m = r.search(line)
             if m:
-                self.setProperty("srpm", m.group(1), 'MockBuildSRPM')
+                self.setProperty("srpm", m.group(1), "MockBuildSRPM")
 
 
 class MockRebuild(Mock):
@@ -177,4 +170,4 @@ class MockRebuild(Mock):
         if not self.srpm:
             config.error("You must specify a srpm")
 
-        self.command += ['--rebuild', self.srpm]
+        self.command += ["--rebuild", self.srpm]

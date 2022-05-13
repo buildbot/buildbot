@@ -26,7 +26,8 @@ class SecretManager(service.BuildbotServiceManager):
     """
     Secret manager
     """
-    name = 'secrets'
+
+    name = "secrets"
     config_attr = "secretsProviders"
 
     @defer.inlineCallbacks

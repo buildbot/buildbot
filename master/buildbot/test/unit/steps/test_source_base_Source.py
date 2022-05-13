@@ -26,14 +26,11 @@ from buildbot.test.util import sourcesteps
 
 
 class OldStyleSourceStep(Source):
-
     def startVC(self):
         self.finished(results.SUCCESS)
 
 
-class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
-                 unittest.TestCase):
-
+class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -52,109 +49,116 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         return wrapper
 
     def test_start_alwaysUseLatest_True(self):
-        step = self.setup_step(Source(alwaysUseLatest=True),
-                              {
-                                  'branch': 'other-branch',
-                                  'revision': 'revision',
-        },
-            patch='patch'
+        step = self.setup_step(
+            Source(alwaysUseLatest=True),
+            {
+                "branch": "other-branch",
+                "revision": "revision",
+            },
+            patch="patch",
         )
-        step.branch = 'branch'
+        step.branch = "branch"
         step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(step.run_vc.mock.call_args, (('branch', None, None), {}))
+        self.assertEqual(step.run_vc.mock.call_args, (("branch", None, None), {}))
 
     def test_start_alwaysUseLatest_False(self):
-        step = self.setup_step(Source(),
-                              {
-                                  'branch': 'other-branch',
-                                  'revision': 'revision',
-        },
-            patch='patch'
+        step = self.setup_step(
+            Source(),
+            {
+                "branch": "other-branch",
+                "revision": "revision",
+            },
+            patch="patch",
         )
-        step.branch = 'branch'
+        step.branch = "branch"
         step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(step.run_vc.mock.call_args, (('other-branch', 'revision', 'patch'), {}))
+        self.assertEqual(step.run_vc.mock.call_args, (("other-branch", "revision", "patch"), {}))
 
     def test_start_alwaysUseLatest_False_binary_patch(self):
         args = {
-            'branch': 'other-branch',
-            'revision': 'revision',
+            "branch": "other-branch",
+            "revision": "revision",
         }
-        step = self.setup_step(Source(), args, patch=(1, b'patch\xf8'))
-        step.branch = 'branch'
+        step = self.setup_step(Source(), args, patch=(1, b"patch\xf8"))
+        step.branch = "branch"
         step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(step.run_vc.mock.call_args,
-                         (('other-branch', 'revision', (1, b'patch\xf8')), {}))
+        self.assertEqual(
+            step.run_vc.mock.call_args,
+            (("other-branch", "revision", (1, b"patch\xf8")), {}),
+        )
 
     def test_start_alwaysUseLatest_False_no_branch(self):
         step = self.setup_step(Source())
-        step.branch = 'branch'
+        step.branch = "branch"
         step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(step.run_vc.mock.call_args, (('branch', None, None), {}))
+        self.assertEqual(step.run_vc.mock.call_args, (("branch", None, None), {}))
 
     def test_start_no_codebase(self):
         step = self.setup_step(Source())
-        step.branch = 'branch'
+        step.branch = "branch"
         step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
-        self.assertEqual(step.getCurrentSummary(), {'step': 'updating'})
+        self.assertEqual(step.getCurrentSummary(), {"step": "updating"})
         self.assertEqual(step.name, Source.name)
 
         step.startStep(mock.Mock())
-        self.assertEqual(step.build.getSourceStamp.call_args[0], ('',))
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ("",))
 
-        self.assertEqual(step.getCurrentSummary(), {'step': 'updating'})
+        self.assertEqual(step.getCurrentSummary(), {"step": "updating"})
 
     @defer.inlineCallbacks
     def test_start_with_codebase(self):
-        step = self.setup_step(Source(codebase='codebase'))
-        step.branch = 'branch'
+        step = self.setup_step(Source(codebase="codebase"))
+        step.branch = "branch"
         step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
-        self.assertEqual(step.getCurrentSummary(), {'step': 'updating codebase'})
+        self.assertEqual(step.getCurrentSummary(), {"step": "updating codebase"})
         step.name = yield step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-codebase")
 
         step.startStep(mock.Mock())
-        self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ("codebase",))
 
-        self.assertEqual(step.getResultSummary(),
-                         {'step': 'Codebase codebase not in build codebase (failure)'})
+        self.assertEqual(
+            step.getResultSummary(),
+            {"step": "Codebase codebase not in build codebase (failure)"},
+        )
 
     @defer.inlineCallbacks
     def test_start_with_codebase_and_descriptionSuffix(self):
-        step = self.setup_step(Source(codebase='my-code',
-                                     descriptionSuffix='suffix'))
-        step.branch = 'branch'
+        step = self.setup_step(Source(codebase="my-code", descriptionSuffix="suffix"))
+        step.branch = "branch"
         step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
-        self.assertEqual(step.getCurrentSummary(), {'step': 'updating suffix'})
+        self.assertEqual(step.getCurrentSummary(), {"step": "updating suffix"})
         step.name = yield step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-my-code")
 
         step.startStep(mock.Mock())
-        self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ("my-code",))
 
-        self.assertEqual(step.getResultSummary(),
-                         {'step': 'Codebase my-code not in build suffix (failure)'})
+        self.assertEqual(
+            step.getResultSummary(),
+            {"step": "Codebase my-code not in build suffix (failure)"},
+        )
 
     def test_old_style_source_step_throws_exception(self):
         step = self.setup_step(OldStyleSourceStep())
@@ -165,9 +169,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.flushLoggedErrors(NotImplementedError)
 
 
-class TestSourceDescription(TestBuildStepMixin, TestReactorMixin,
-                            unittest.TestCase):
-
+class TestSourceDescription(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -176,22 +178,25 @@ class TestSourceDescription(TestBuildStepMixin, TestReactorMixin,
         return self.tear_down_test_build_step()
 
     def test_constructor_args_strings(self):
-        step = Source(workdir='build',
-                      description='svn update (running)',
-                      descriptionDone='svn update')
-        self.assertEqual(step.description, ['svn update (running)'])
-        self.assertEqual(step.descriptionDone, ['svn update'])
+        step = Source(
+            workdir="build",
+            description="svn update (running)",
+            descriptionDone="svn update",
+        )
+        self.assertEqual(step.description, ["svn update (running)"])
+        self.assertEqual(step.descriptionDone, ["svn update"])
 
     def test_constructor_args_lists(self):
-        step = Source(workdir='build',
-                      description=['svn', 'update', '(running)'],
-                      descriptionDone=['svn', 'update'])
-        self.assertEqual(step.description, ['svn', 'update', '(running)'])
-        self.assertEqual(step.descriptionDone, ['svn', 'update'])
+        step = Source(
+            workdir="build",
+            description=["svn", "update", "(running)"],
+            descriptionDone=["svn", "update"],
+        )
+        self.assertEqual(step.description, ["svn", "update", "(running)"])
+        self.assertEqual(step.descriptionDone, ["svn", "update"])
 
 
 class AttrGroup(Source):
-
     def other_method(self):
         pass
 
@@ -202,9 +207,7 @@ class AttrGroup(Source):
         pass
 
 
-class TestSourceAttrGroup(sourcesteps.SourceStepMixin, TestReactorMixin,
-                          unittest.TestCase):
-
+class TestSourceAttrGroup(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -214,20 +217,17 @@ class TestSourceAttrGroup(sourcesteps.SourceStepMixin, TestReactorMixin,
 
     def test_attrgroup_hasattr(self):
         step = AttrGroup()
-        self.assertTrue(step._hasAttrGroupMember('mode', 'full'))
-        self.assertTrue(step._hasAttrGroupMember('mode', 'incremental'))
-        self.assertFalse(step._hasAttrGroupMember('mode', 'nothing'))
+        self.assertTrue(step._hasAttrGroupMember("mode", "full"))
+        self.assertTrue(step._hasAttrGroupMember("mode", "incremental"))
+        self.assertFalse(step._hasAttrGroupMember("mode", "nothing"))
 
     def test_attrgroup_getattr(self):
         step = AttrGroup()
-        self.assertEqual(step._getAttrGroupMember('mode', 'full'),
-                         step.mode_full)
-        self.assertEqual(step._getAttrGroupMember('mode', 'incremental'),
-                         step.mode_incremental)
+        self.assertEqual(step._getAttrGroupMember("mode", "full"), step.mode_full)
+        self.assertEqual(step._getAttrGroupMember("mode", "incremental"), step.mode_incremental)
         with self.assertRaises(AttributeError):
-            step._getAttrGroupMember('mode', 'nothing')
+            step._getAttrGroupMember("mode", "nothing")
 
     def test_attrgroup_listattr(self):
         step = AttrGroup()
-        self.assertEqual(sorted(step._listAttrGroupMembers('mode')),
-                         ['full', 'incremental'])
+        self.assertEqual(sorted(step._listAttrGroupMembers("mode")), ["full", "incremental"])

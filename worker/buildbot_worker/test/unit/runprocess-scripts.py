@@ -35,10 +35,17 @@ import psutil
 
 def invoke_script(function, *args):
     cmd = [sys.executable, __file__, function] + list(args)
-    if os.name == 'nt':
+    if os.name == "nt":
         DETACHED_PROCESS = 0x00000008
-        subprocess.Popen(cmd, shell=False, stdin=None, stdout=None, stderr=None, close_fds=True,
-                         creationflags=DETACHED_PROCESS)
+        subprocess.Popen(
+            cmd,
+            shell=False,
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            close_fds=True,
+            creationflags=DETACHED_PROCESS,
+        )
     else:
         subprocess.Popen(cmd, shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
 
@@ -64,6 +71,7 @@ def script(fn):
     script_fns[fn.__name__] = fn
     return fn
 
+
 # scripts
 
 
@@ -77,7 +85,7 @@ def write_pidfile_and_sleep():
 @script
 def spawn_child():
     parent_pidfile, child_pidfile = sys.argv[2:]
-    invoke_script('write_pidfile_and_sleep', child_pidfile)
+    invoke_script("write_pidfile_and_sleep", child_pidfile)
     write_pidfile(parent_pidfile)
     sleep_forever()
 
@@ -96,7 +104,7 @@ def wait_for_pid_death_and_write_pidfile_and_sleep():
 
 @script
 def double_fork():
-    if os.name == 'posix':
+    if os.name == "posix":
         # when using a PTY, the child process will get SIGHUP when the
         # parent process exits, so ignore that.
         signal.signal(signal.SIGHUP, signal.SIG_IGN)
@@ -104,7 +112,7 @@ def double_fork():
     parent_pidfile, child_pidfile = sys.argv[2:]
     parent_pid = os.getpid()
 
-    invoke_script('wait_for_pid_death_and_write_pidfile_and_sleep', str(parent_pid), child_pidfile)
+    invoke_script("wait_for_pid_death_and_write_pidfile_and_sleep", str(parent_pid), child_pidfile)
     write_pidfile(parent_pidfile)
     sys.exit(0)
 
@@ -124,7 +132,7 @@ def assert_stdin_closed():
 
 # make sure this process dies if necessary
 
-if not hasattr(signal, 'alarm'):
+if not hasattr(signal, "alarm"):
     signal.alarm = lambda t: None
 signal.alarm(110)  # die after 110 seconds
 

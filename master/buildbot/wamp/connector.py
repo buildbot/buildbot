@@ -38,7 +38,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         ApplicationSession.__init__(self)
         service.AsyncMultiService.__init__(self)
         self.leaving = False
-        self.setServiceParent(config.extra['parent'])
+        self.setServiceParent(config.extra["parent"])
 
     @defer.inlineCallbacks
     def onJoin(self, details):
@@ -62,8 +62,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         # It is possible that such failure is practically non-existent
         # so for now, we just crash the master
         log.msg("Guru meditation! We have been disconnected from wamp server")
-        log.msg(
-            "We don't know how to recover this without restarting the whole system")
+        log.msg("We don't know how to recover this without restarting the whole system")
         log.msg(str(details))
         yield self.master.stopService()
 
@@ -75,8 +74,10 @@ def make(config):
     if config:
         return MasterService(config)
     # if no config given, return a description of this WAMPlet ..
-    return {'label': 'Buildbot master wamplet',
-            'description': 'This contains all the wamp methods provided by a buildbot master'}
+    return {
+        "label": "Buildbot master wamplet",
+        "description": "This contains all the wamp methods provided by a buildbot master",
+    }
 
 
 class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
@@ -101,6 +102,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         def gotService(service):
             d.callback(service)
             return service
+
         return d
 
     def stopService(self):
@@ -127,24 +129,27 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        if new_config.mq.get('type', 'simple') != "wamp":
+        if new_config.mq.get("type", "simple") != "wamp":
             if self.app is not None:
                 raise ValueError("Cannot use different wamp settings when reconfiguring")
             return
 
         wamp = new_config.mq
         log.msg("Starting wamp with config: %r", wamp)
-        router_url = wamp.get('router_url', None)
-        realm = bytes2unicode(wamp.get('realm', 'buildbot'))
-        wamp_debug_level = wamp.get('wamp_debug_level', 'error')
+        router_url = wamp.get("router_url", None)
+        realm = bytes2unicode(wamp.get("realm", "buildbot"))
+        wamp_debug_level = wamp.get("wamp_debug_level", "error")
 
         # MQ router can be reconfigured only once. Changes to configuration are not supported.
         # We can't switch realm nor the URL as that would leave transactions in inconsistent state.
         # Implementing reconfiguration just for wamp_debug_level does not seem like a good
         # investment.
         if self.app is not None:
-            if self.router_url != router_url or self.realm != realm or \
-                    self.wamp_debug_level != wamp_debug_level:
+            if (
+                self.router_url != router_url
+                or self.realm != realm
+                or self.wamp_debug_level != wamp_debug_level
+            ):
                 raise ValueError("Cannot use different wamp settings when reconfiguring")
             return
 
@@ -159,7 +164,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
             url=self.router_url,
             extra=dict(master=self.master, parent=self),
             realm=realm,
-            make=make
+            make=make,
         )
         txaio.set_global_log_level(wamp_debug_level)
         yield self.app.setServiceParent(self)

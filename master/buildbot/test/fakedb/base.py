@@ -30,7 +30,7 @@ class FakeDBComponent:
         return resultspec.Filter(field, f.op, f.values)
 
     def mapOrder(self, o, fieldMapping):
-        if o.startswith('-'):
+        if o.startswith("-"):
             reverse, o = o[0], o[1:]
         else:
             reverse = ""
@@ -39,18 +39,20 @@ class FakeDBComponent:
 
     def applyResultSpec(self, data, rs):
         def applicable(field):
-            if field.startswith('-'):
+            if field.startswith("-"):
                 field = field[1:]
             return field in rs.fieldMapping
-        filters = [self.mapFilter(f, rs.fieldMapping)
-                   for f in rs.filters if applicable(f.field)]
+
+        filters = [self.mapFilter(f, rs.fieldMapping) for f in rs.filters if applicable(f.field)]
         order = []
         offset = limit = None
         if rs.order:
-            order = [self.mapOrder(o, rs.fieldMapping)
-                     for o in rs.order if applicable(o)]
-        if len(filters) == len(rs.filters) and rs.order is not None and len(order) == len(rs.order):
+            order = [self.mapOrder(o, rs.fieldMapping) for o in rs.order if applicable(o)]
+        if (
+            len(filters) == len(rs.filters)
+            and rs.order is not None
+            and len(order) == len(rs.order)
+        ):
             offset, limit = rs.offset, rs.limit
-        rs = resultspec.ResultSpec(
-            filters=filters, order=order, limit=limit, offset=offset)
+        rs = resultspec.ResultSpec(filters=filters, order=order, limit=limit, offset=offset)
         return rs.apply(data)

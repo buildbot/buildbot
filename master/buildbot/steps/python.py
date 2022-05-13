@@ -35,7 +35,7 @@ class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
     def __init__(self, **kwargs):
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
-        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
+        self.addLogObserver("stdio", logobserver.LineConsumerLogObserver(self._log_consumer))
 
     def _log_consumer(self):
         self.import_errors = 0
@@ -52,7 +52,7 @@ class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
                 self.errors += 1
 
     def getResultSummary(self):
-        summary = ' '.join(self.descriptionDone)
+        summary = " ".join(self.descriptionDone)
         if self.import_errors:
             summary += f" ierr={self.import_errors}"
         if self.warnings:
@@ -60,15 +60,15 @@ class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
         if self.errors:
             summary += f" err={self.errors}"
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
-        return {'step': summary}
+            summary += f" ({Results[self.results]})"
+        return {"step": summary}
 
     @defer.inlineCallbacks
     def run(self):
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
         if cmd.didFail():
@@ -94,12 +94,12 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
         # PyFlakes return 1 for both warnings and errors. We
         # categorize this initially as WARNINGS so that
         # evaluateCommand below can inspect the results more closely.
-        kwargs['decodeRC'] = {0: SUCCESS, 1: WARNINGS}
+        kwargs["decodeRC"] = {0: SUCCESS, 1: WARNINGS}
 
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(*args, **kwargs)
 
-        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
+        self.addLogObserver("stdio", logobserver.LineConsumerLogObserver(self._log_consumer))
 
         counts = self.counts = {}
         summaries = self.summaries = {}
@@ -116,13 +116,13 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
         first = True
         while True:
             stream, line = yield
-            if stream == 'h':
+            if stream == "h":
                 continue
             # the first few lines might contain echoed commands from a 'make
             # pyflakes' step, so don't count these as warnings. Stop ignoring
             # the initial lines as soon as we see one with a colon.
             if first:
-                if ':' in line:
+                if ":" in line:
                     # there's the colon, this is the first real line
                     first = False
                     # fall through and parse the line
@@ -150,27 +150,27 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
             counts[m] += 1
 
     def getResultSummary(self):
-        summary = ' '.join(self.descriptionDone)
+        summary = " ".join(self.descriptionDone)
         for m in self._MESSAGES:
             if self.counts[m]:
                 summary += f" {m}={self.counts[m]}"
 
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
+            summary += f" ({Results[self.results]})"
 
-        return {'step': summary}
+        return {"step": summary}
 
     @defer.inlineCallbacks
     def run(self):
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
         # we log 'misc' as syntax-error
         if self._hasSyntaxError:
-            yield self.addCompleteLog("syntax-error", "\n".join(self.summaries['misc']))
+            yield self.addCompleteLog("syntax-error", "\n".join(self.summaries["misc"]))
         else:
             for m in self._MESSAGES:
                 if self.counts[m]:
@@ -190,10 +190,11 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
 
 class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
 
-    '''A command that knows about pylint output.
+    """A command that knows about pylint output.
     It is a good idea to add --output-format=parseable to your
     command, since it includes the filename in the message.
-    '''
+    """
+
     name = "pylint"
     description = "running pylint"
     descriptionDone = "pylint"
@@ -217,22 +218,24 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
     # The message types:
 
     _MESSAGES = {
-        'C': "convention",  # for programming standard violation
-        'R': "refactor",  # for bad code smell
-        'W': "warning",  # for python specific problems
-        'E': "error",  # for much probably bugs in the code
-        'F': "fatal",  # error prevented pylint from further processing.
-        'I': "info",
+        "C": "convention",  # for programming standard violation
+        "R": "refactor",  # for bad code smell
+        "W": "warning",  # for python specific problems
+        "E": "error",  # for much probably bugs in the code
+        "F": "fatal",  # error prevented pylint from further processing.
+        "I": "info",
     }
 
     _flunkingIssues = ("F", "E")  # msg categories that cause FAILURE
 
     _msgtypes_re_str = f"(?P<errtype>[{''.join(list(_MESSAGES))}])"
-    _default_line_re = re.compile(fr'^{_msgtypes_re_str}(\d+)?: *\d+(, *\d+)?:.+')
-    _default_2_0_0_line_re = \
-        re.compile(fr'^(?P<path>[^:]+):(?P<line>\d+):\d+: *{_msgtypes_re_str}(\d+)?:.+')
+    _default_line_re = re.compile(rf"^{_msgtypes_re_str}(\d+)?: *\d+(, *\d+)?:.+")
+    _default_2_0_0_line_re = re.compile(
+        rf"^(?P<path>[^:]+):(?P<line>\d+):\d+: *{_msgtypes_re_str}(\d+)?:.+"
+    )
     _parseable_line_re = re.compile(
-        fr'(?P<path>[^:]+):(?P<line>\d+): \[{_msgtypes_re_str}(\d+)?(\([a-z-]+\))?[,\]] .+')
+        rf"(?P<path>[^:]+):(?P<line>\d+): \[{_msgtypes_re_str}(\d+)?(\([a-z-]+\))?[,\]] .+"
+    )
 
     def __init__(self, store_results=True, **kwargs):
         kwargs = self.setupShellMixin(kwargs)
@@ -245,36 +248,36 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
             self.counts[m] = 0
             self.summaries[m] = []
 
-        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
+        self.addLogObserver("stdio", logobserver.LineConsumerLogObserver(self._log_consumer))
 
     # returns (message type, path, line) tuple if line has been matched, or None otherwise
     def _match_line(self, line):
         m = self._default_2_0_0_line_re.match(line)
         if m:
             try:
-                line_int = int(m.group('line'))
+                line_int = int(m.group("line"))
             except ValueError:
                 line_int = None
-            return (m.group('errtype'), m.group('path'), line_int)
+            return (m.group("errtype"), m.group("path"), line_int)
 
         m = self._parseable_line_re.match(line)
         if m:
             try:
-                line_int = int(m.group('line'))
+                line_int = int(m.group("line"))
             except ValueError:
                 line_int = None
-            return (m.group('errtype'), m.group('path'), line_int)
+            return (m.group("errtype"), m.group("path"), line_int)
 
         m = self._default_line_re.match(line)
         if m:
-            return (m.group('errtype'), None, None)
+            return (m.group("errtype"), None, None)
 
         return None
 
     def _log_consumer(self):
         while True:
             stream, line = yield
-            if stream == 'h':
+            if stream == "h":
                 continue
 
             ret = self._match_line(line)
@@ -288,33 +291,38 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
             self.counts[msgtype] += 1
 
             if self._store_results and path is not None:
-                self.addTestResult(self._result_setid, line, test_name=None, test_code_path=path,
-                                   line=line_number)
+                self.addTestResult(
+                    self._result_setid,
+                    line,
+                    test_name=None,
+                    test_code_path=path,
+                    line=line_number,
+                )
 
     def getResultSummary(self):
-        summary = ' '.join(self.descriptionDone)
+        summary = " ".join(self.descriptionDone)
         for msg, fullmsg in sorted(self._MESSAGES.items()):
             if self.counts[msg]:
                 summary += f" {fullmsg}={self.counts[msg]}"
 
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
+            summary += f" ({Results[self.results]})"
 
-        return {'step': summary}
+        return {"step": summary}
 
     @defer.inlineCallbacks
     def run(self):
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
         for msg, fullmsg in sorted(self._MESSAGES.items()):
             if self.counts[msg]:
                 yield self.addCompleteLog(fullmsg, "\n".join(self.summaries[msg]))
-            self.setProperty(f"pylint-{fullmsg}", self.counts[msg], 'Pylint')
-        self.setProperty("pylint-total", sum(self.counts.values()), 'Pylint')
+            self.setProperty(f"pylint-{fullmsg}", self.counts[msg], "Pylint")
+        self.setProperty("pylint-total", sum(self.counts.values()), "Pylint")
 
         if cmd.rc & (self.RC_FATAL | self.RC_ERROR | self.RC_USAGE):
             return FAILURE
@@ -330,12 +338,14 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
     def addTestResultSets(self):
         if not self._store_results:
             return
-        self._result_setid = yield self.addTestResultSet('Pylint warnings', 'code_issue', 'message')
+        self._result_setid = yield self.addTestResultSet(
+            "Pylint warnings", "code_issue", "message"
+        )
 
 
 class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
 
-    ''' A Step to build sphinx documentation '''
+    """A Step to build sphinx documentation"""
 
     name = "sphinx"
     description = "running sphinx"
@@ -343,9 +353,18 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
 
     haltOnFailure = True
 
-    def __init__(self, sphinx_sourcedir='.', sphinx_builddir=None,
-                 sphinx_builder=None, sphinx='sphinx-build', tags=None,
-                 defines=None, strict_warnings=False, mode='incremental', **kwargs):
+    def __init__(
+        self,
+        sphinx_sourcedir=".",
+        sphinx_builddir=None,
+        sphinx_builder=None,
+        sphinx="sphinx-build",
+        tags=None,
+        defines=None,
+        strict_warnings=False,
+        mode="incremental",
+        **kwargs,
+    ):
 
         if tags is None:
             tags = []
@@ -357,9 +376,8 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
             # Who the heck is not interested in the built doc ?
             config.error("Sphinx argument sphinx_builddir is required")
 
-        if mode not in ('incremental', 'full'):
-            config.error("Sphinx argument mode has to be 'incremental' or" +
-                         "'full' is required")
+        if mode not in ("incremental", "full"):
+            config.error("Sphinx argument mode has to be 'incremental' or" + "'full' is required")
 
         self.success = False
 
@@ -370,32 +388,31 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
         # build the command
         command = [sphinx]
         if sphinx_builder is not None:
-            command.extend(['-b', sphinx_builder])
+            command.extend(["-b", sphinx_builder])
 
         for tag in tags:
-            command.extend(['-t', tag])
+            command.extend(["-t", tag])
 
         for key in sorted(defines):
             if defines[key] is None:
-                command.extend(['-D', key])
+                command.extend(["-D", key])
             elif isinstance(defines[key], bool):
-                command.extend(['-D',
-                                f'{key}={defines[key] and 1 or 0}'])
+                command.extend(["-D", f"{key}={defines[key] and 1 or 0}"])
             else:
-                command.extend(['-D', f'{key}={defines[key]}'])
+                command.extend(["-D", f"{key}={defines[key]}"])
 
-        if mode == 'full':
-            command.extend(['-E'])  # Don't use a saved environment
+        if mode == "full":
+            command.extend(["-E"])  # Don't use a saved environment
 
         if strict_warnings:
-            command.extend(['-W'])  # Convert warnings to errors
+            command.extend(["-W"])  # Convert warnings to errors
 
         command.extend([sphinx_sourcedir, sphinx_builddir])
         self.command = command
 
-        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
+        self.addLogObserver("stdio", logobserver.LineConsumerLogObserver(self._log_consumer))
 
-    _msgs = ('WARNING', 'ERROR', 'SEVERE')
+    _msgs = ("WARNING", "ERROR", "SEVERE")
 
     def _log_consumer(self):
         self.warnings = []
@@ -403,10 +420,11 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
 
         while True:
             _, line = yield
-            if line.startswith('build succeeded') or \
-               line.startswith('no targets are out of date.'):
+            if line.startswith("build succeeded") or line.startswith(
+                "no targets are out of date."
+            ):
                 self.success = True
-            elif line.startswith('Warning, treated as error:'):
+            elif line.startswith("Warning, treated as error:"):
                 next_is_warning = True
             else:
                 if next_is_warning:
@@ -418,25 +436,25 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
                             self.warnings.append(line)
 
     def getResultSummary(self):
-        summary = f'{self.name} {len(self.warnings)} warnings'
+        summary = f"{self.name} {len(self.warnings)} warnings"
 
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
+            summary += f" ({Results[self.results]})"
 
-        return {'step': summary}
+        return {"step": summary}
 
     @defer.inlineCallbacks
     def run(self):
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
         if self.warnings:
-            yield self.addCompleteLog('warnings', "\n".join(self.warnings))
+            yield self.addCompleteLog("warnings", "\n".join(self.warnings))
 
-        self.setStatistic('warnings', len(self.warnings))
+        self.setStatistic("warnings", len(self.warnings))
 
         if self.success:
             if not self.warnings:

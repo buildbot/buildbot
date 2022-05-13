@@ -24,10 +24,9 @@ from buildbot.test.util import changesource
 from buildbot.test.util import dirs
 
 
-class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
-                        TestReactorMixin,
-                        unittest.TestCase):
-
+class TestMaildirSource(
+    changesource.ChangeSourceMixin, dirs.DirsMixin, TestReactorMixin, unittest.TestCase
+):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -46,14 +45,12 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
 
         fake_message = "Subject: test\n\nthis is a test"
         mailfile = os.path.join(newdir, "newmsg")
-        with open(mailfile, "w", encoding='utf-8') as f:
+        with open(mailfile, "w", encoding="utf-8") as f:
             f.write(fake_message)
 
     def assertMailProcessed(self):
-        self.assertFalse(
-            os.path.exists(os.path.join(self.maildir, "new", "newmsg")))
-        self.assertTrue(
-            os.path.exists(os.path.join(self.maildir, "cur", "newmsg")))
+        self.assertFalse(os.path.exists(os.path.join(self.maildir, "new", "newmsg")))
+        self.assertTrue(os.path.exists(os.path.join(self.maildir, "cur", "newmsg")))
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -74,29 +71,35 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
 
         # monkey-patch in a parse method
         def parse(message, prefix):
-            assert 'this is a test' in message.get_payload()
-            return ('svn', dict(author='jimmy'))
+            assert "this is a test" in message.get_payload()
+            return ("svn", dict(author="jimmy"))
+
         mds.parse = parse
 
-        yield mds.messageReceived('newmsg')
+        yield mds.messageReceived("newmsg")
 
         self.assertMailProcessed()
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': 'jimmy',
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': None,
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': 'svn',
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    "author": "jimmy",
+                    "committer": None,
+                    "branch": None,
+                    "category": None,
+                    "codebase": None,
+                    "comments": None,
+                    "files": None,
+                    "project": "",
+                    "properties": {},
+                    "repository": "",
+                    "revision": None,
+                    "revlink": "",
+                    "src": "svn",
+                    "when_timestamp": None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_messageReceived_bzr(self):
@@ -106,26 +109,32 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
 
         # monkey-patch in a parse method
         def parse(message, prefix):
-            assert 'this is a test' in message.get_payload()
-            return ('bzr', dict(author='jimmy'))
+            assert "this is a test" in message.get_payload()
+            return ("bzr", dict(author="jimmy"))
+
         mds.parse = parse
 
-        yield mds.messageReceived('newmsg')
+        yield mds.messageReceived("newmsg")
 
         self.assertMailProcessed()
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': 'jimmy',
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': None,
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': 'bzr',
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    "author": "jimmy",
+                    "committer": None,
+                    "branch": None,
+                    "category": None,
+                    "codebase": None,
+                    "comments": None,
+                    "files": None,
+                    "project": "",
+                    "properties": {},
+                    "repository": "",
+                    "revision": None,
+                    "revlink": "",
+                    "src": "bzr",
+                    "when_timestamp": None,
+                }
+            ],
+        )

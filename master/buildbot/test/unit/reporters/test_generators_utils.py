@@ -34,14 +34,13 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
-                         unittest.TestCase, ReporterTestMixin):
-
+class TestBuildGenerator(
+    ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin
+):
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def insert_build_finished_get_props(self, results, **kwargs):
@@ -49,49 +48,72 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         yield utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
-    def create_generator(self, mode=("failing", "passing", "warnings"),
-                         tags=None, builders=None, schedulers=None, branches=None,
-                         subject="Some subject", add_logs=False, add_patch=False):
-        return BuildStatusGeneratorMixin(mode, tags, builders, schedulers, branches, subject,
-                                         add_logs, add_patch)
+    def create_generator(
+        self,
+        mode=("failing", "passing", "warnings"),
+        tags=None,
+        builders=None,
+        schedulers=None,
+        branches=None,
+        subject="Some subject",
+        add_logs=False,
+        add_patch=False,
+    ):
+        return BuildStatusGeneratorMixin(
+            mode, tags, builders, schedulers, branches, subject, add_logs, add_patch
+        )
 
     def test_generate_name(self):
-        g = self.create_generator(tags=['tag1', 'tag2'], builders=['b1', 'b2'],
-                                  schedulers=['s1', 's2'], branches=['b1', 'b2'])
-        self.assertEqual(g.generate_name(),
-                         'BuildStatusGeneratorMixin_tags_tag1+tag2_builders_b1+b2_' +
-                         'schedulers_s1+s2_branches_b1+b2failing_passing_warnings')
+        g = self.create_generator(
+            tags=["tag1", "tag2"],
+            builders=["b1", "b2"],
+            schedulers=["s1", "s2"],
+            branches=["b1", "b2"],
+        )
+        self.assertEqual(
+            g.generate_name(),
+            "BuildStatusGeneratorMixin_tags_tag1+tag2_builders_b1+b2_"
+            + "schedulers_s1+s2_branches_b1+b2failing_passing_warnings",
+        )
 
-    @parameterized.expand([
-        ('tags', 'tag'),
-        ('tags', 1),
-        ('builders', 'builder'),
-        ('builders', 1),
-        ('schedulers', 'scheduler'),
-        ('schedulers', 1),
-        ('branches', 'branch'),
-        ('branches', 1),
-    ])
+    @parameterized.expand(
+        [
+            ("tags", "tag"),
+            ("tags", 1),
+            ("builders", "builder"),
+            ("builders", 1),
+            ("schedulers", "scheduler"),
+            ("schedulers", 1),
+            ("branches", "branch"),
+            ("branches", 1),
+        ]
+    )
     def test_list_params_check_raises(self, arg_name, arg_value):
         kwargs = {arg_name: arg_value}
         g = self.create_generator(**kwargs)
-        with self.assertRaisesConfigError('must be a list or None'):
+        with self.assertRaisesConfigError("must be a list or None"):
             g.check()
 
-    @parameterized.expand([
-        ('unknown_str', 'unknown', 'not a valid mode'),
-        ('unknown_list', ['unknown'], 'not a valid mode'),
-        ('unknown_list_two', ['unknown', 'failing'], 'not a valid mode'),
-        ('all_in_list', ['all', 'failing'], 'must be passed in as a separate string'),
-    ])
+    @parameterized.expand(
+        [
+            ("unknown_str", "unknown", "not a valid mode"),
+            ("unknown_list", ["unknown"], "not a valid mode"),
+            ("unknown_list_two", ["unknown", "failing"], "not a valid mode"),
+            (
+                "all_in_list",
+                ["all", "failing"],
+                "must be passed in as a separate string",
+            ),
+        ]
+    )
     def test_tag_check_raises(self, name, mode, expected_exception):
         g = self.create_generator(mode=mode)
         with self.assertRaisesConfigError(expected_exception):
             g.check()
 
     def test_subject_newlines_not_allowed(self):
-        g = self.create_generator(subject='subject\nwith\nnewline')
-        with self.assertRaisesConfigError('Newlines are not allowed'):
+        g = self.create_generator(subject="subject\nwith\nnewline")
+        with self.assertRaisesConfigError("Newlines are not allowed"):
             g.check()
 
     @defer.inlineCallbacks
@@ -99,7 +121,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         build = yield self.insert_build_finished_get_props(SUCCESS)
 
         # force tags
-        build['builder']['tags'] = ['slow']
+        build["builder"]["tags"] = ["slow"]
         g = self.create_generator(tags=["fast"])
         self.assertFalse(g.is_message_needed_by_props(build))
 
@@ -108,32 +130,32 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         build = yield self.insert_build_finished_get_props(SUCCESS)
 
         # force tags
-        build['builder']['tags'] = ['fast']
+        build["builder"]["tags"] = ["fast"]
         g = self.create_generator(tags=["fast"])
         self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_schedulers_sends_mail(self):
         build = yield self.insert_build_finished_get_props(SUCCESS)
-        g = self.create_generator(schedulers=['checkin'])
+        g = self.create_generator(schedulers=["checkin"])
         self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_schedulers_doesnt_send_mail(self):
         build = yield self.insert_build_finished_get_props(SUCCESS)
-        g = self.create_generator(schedulers=['some-random-scheduler'])
+        g = self.create_generator(schedulers=["some-random-scheduler"])
         self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_branches_sends_mail(self):
         build = yield self.insert_build_finished_get_props(SUCCESS)
-        g = self.create_generator(branches=['refs/pull/34/merge'])
+        g = self.create_generator(branches=["refs/pull/34/merge"])
         self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_branches_doesnt_send_mail(self):
         build = yield self.insert_build_finished_get_props(SUCCESS)
-        g = self.create_generator(branches=['some-random-branch'])
+        g = self.create_generator(branches=["some-random-branch"])
         self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
@@ -217,10 +239,10 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         g = self.create_generator(mode=mode)
 
         if results1 is not None:
-            build['prev_build'] = copy.deepcopy(build)
-            build['prev_build']['results'] = results1
+            build["prev_build"] = copy.deepcopy(build)
+            build["prev_build"]["results"] = results1
         else:
-            build['prev_build'] = None
+            build["prev_build"] = None
         self.assertEqual(g.is_message_needed_by_results(build), should_send)
 
     def test_is_message_needed_mode_problem_sends_on_problem(self):
@@ -250,50 +272,58 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
     def test_is_message_needed_mode_change_ignores_same_result_in_sequence2(self):
         return self.run_sends_message_for_problems("change", FAILURE, FAILURE, False)
 
-    @parameterized.expand([
-        ('bool_true', True, 'step', 'log', True),
-        ('bool_false', False, 'step', 'log', False),
-        ('match_by_log_name', ['log'], 'step', 'log', True),
-        ('no_match_by_log_name', ['not_existing'], 'step', 'log', False),
-        ('match_by_log_step_name', ['step.log'], 'step', 'log', True),
-        ('no_match_by_log_step_name', ['step1.log1'], 'step', 'log', False),
-    ])
+    @parameterized.expand(
+        [
+            ("bool_true", True, "step", "log", True),
+            ("bool_false", False, "step", "log", False),
+            ("match_by_log_name", ["log"], "step", "log", True),
+            ("no_match_by_log_name", ["not_existing"], "step", "log", False),
+            ("match_by_log_step_name", ["step.log"], "step", "log", True),
+            ("no_match_by_log_step_name", ["step1.log1"], "step", "log", False),
+        ]
+    )
     def test_should_attach_log(self, name, add_logs, log_step_name, log_name, expected_result):
         g = self.create_generator(add_logs=add_logs)
-        log = {'stepname': log_step_name, 'name': log_name}
+        log = {"stepname": log_step_name, "name": log_name}
         self.assertEqual(g._should_attach_log(log), expected_result)
 
-    @parameterized.expand([
-        ('both_none', None, None, (None, False)),
-        ('old_none', None, 'type', ('type', True)),
-        ('new_none', 'type', None, ('type', False)),
-        ('same', 'type', 'type', ('type', True)),
-        ('different', 'type1', 'type2', ('type1', False)),
-    ])
+    @parameterized.expand(
+        [
+            ("both_none", None, None, (None, False)),
+            ("old_none", None, "type", ("type", True)),
+            ("new_none", "type", None, ("type", False)),
+            ("same", "type", "type", ("type", True)),
+            ("different", "type1", "type2", ("type1", False)),
+        ]
+    )
     def test_merge_msgtype(self, name, old, new, expected_result):
         g = self.create_generator()
         self.assertEqual(g._merge_msgtype(old, new), expected_result)
 
-    @parameterized.expand([
-        ('both_none', None, None, None),
-        ('old_none', None, 'sub', 'sub'),
-        ('new_none', 'sub', None, 'sub'),
-        ('same', 'sub', 'sub', 'sub'),
-        ('different', 'sub1', 'sub2', 'sub1'),
-    ])
+    @parameterized.expand(
+        [
+            ("both_none", None, None, None),
+            ("old_none", None, "sub", "sub"),
+            ("new_none", "sub", None, "sub"),
+            ("same", "sub", "sub", "sub"),
+            ("different", "sub1", "sub2", "sub1"),
+        ]
+    )
     def test_merge_subject(self, name, old, new, expected_result):
         g = self.create_generator()
         self.assertEqual(g._merge_subject(old, new), expected_result)
 
-    @parameterized.expand([
-        ('both_none', None, None, (None, True)),
-        ('old_none', None, 'body', ('body', True)),
-        ('new_none', 'body', None, ('body', True)),
-        ('both_str', 'body1\n', 'body2\n', ('body1\nbody2\n', True)),
-        ('both_list', ['body1'], ['body2'], (['body1', 'body2'], True)),
-        ('both_dict', {'v': 'body1'}, {'v': 'body2'}, ({'v': 'body1'}, False)),
-        ('str_list', ['body1'], 'body2', (['body1'], False)),
-    ])
+    @parameterized.expand(
+        [
+            ("both_none", None, None, (None, True)),
+            ("old_none", None, "body", ("body", True)),
+            ("new_none", "body", None, ("body", True)),
+            ("both_str", "body1\n", "body2\n", ("body1\nbody2\n", True)),
+            ("both_list", ["body1"], ["body2"], (["body1", "body2"], True)),
+            ("both_dict", {"v": "body1"}, {"v": "body2"}, ({"v": "body1"}, False)),
+            ("str_list", ["body1"], "body2", (["body1"], False)),
+        ]
+    )
     def test_merge_body(self, name, old, new, expected_result):
         g = self.create_generator()
         self.assertEqual(g._merge_body(old, new), expected_result)

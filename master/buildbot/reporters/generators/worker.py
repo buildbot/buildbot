@@ -21,26 +21,26 @@ from buildbot import interfaces
 from buildbot import util
 from buildbot.reporters.message import MessageFormatterMissingWorker
 
-ENCODING = 'utf-8'
+ENCODING = "utf-8"
 
 
 @implementer(interfaces.IReportGenerator)
 class WorkerMissingGenerator(util.ComparableMixin):
 
-    compare_attrs = ['workers', 'formatter']
+    compare_attrs = ["workers", "formatter"]
 
     wanted_event_keys = [
-        ('workers', None, 'missing'),
+        ("workers", None, "missing"),
     ]
 
-    def __init__(self, workers='all', message_formatter=None):
+    def __init__(self, workers="all", message_formatter=None):
         self.workers = workers
         self.formatter = message_formatter
         if self.formatter is None:
             self.formatter = MessageFormatterMissingWorker()
 
     def check(self):
-        if not (self.workers == 'all' or isinstance(self.workers, (list, tuple, set))):
+        if not (self.workers == "all" or isinstance(self.workers, (list, tuple, set))):
             config.error("workers must be 'all', or list of worker names")
 
     @defer.inlineCallbacks
@@ -49,23 +49,25 @@ class WorkerMissingGenerator(util.ComparableMixin):
             return None
 
         msg = yield self.formatter.formatMessageForMissingWorker(master, worker)
-        body = msg['body'].encode(ENCODING)
-        subject = msg['subject']
+        body = msg["body"].encode(ENCODING)
+        subject = msg["subject"]
         if subject is None:
             subject = f"Buildbot worker {worker['name']} missing"
-        assert msg['type'] in ('plain', 'html'), \
-            f"'{msg['type']}' message type must be 'plain' or 'html'."
+        assert msg["type"] in (
+            "plain",
+            "html",
+        ), f"'{msg['type']}' message type must be 'plain' or 'html'."
 
         return {
-            'body': body,
-            'subject': subject,
-            'type': msg['type'],
-            'results': None,
-            'builds': None,
-            'users': worker['notify'],
-            'patches': None,
-            'logs': None,
-            'worker': worker['name']
+            "body": body,
+            "subject": subject,
+            "type": msg["type"],
+            "results": None,
+            "builds": None,
+            "users": worker["notify"],
+            "patches": None,
+            "logs": None,
+            "worker": worker["name"],
         }
 
     def generate_name(self):
@@ -75,4 +77,4 @@ class WorkerMissingGenerator(util.ComparableMixin):
         return name
 
     def _is_message_needed(self, worker):
-        return (self.workers == 'all' or worker['name'] in self.workers) and worker['notify']
+        return (self.workers == "all" or worker["name"] in self.workers) and worker["notify"]

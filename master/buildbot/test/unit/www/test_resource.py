@@ -27,34 +27,32 @@ class ResourceSubclass(resource.Resource):
 
 
 class Resource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
 
     def test_base_url(self):
-        master = self.make_master(url=b'h:/a/b/')
+        master = self.make_master(url=b"h:/a/b/")
         rsrc = resource.Resource(master)
-        self.assertEqual(rsrc.base_url, b'h:/a/b/')
+        self.assertEqual(rsrc.base_url, b"h:/a/b/")
 
     def test_reconfigResource_registration(self):
-        master = self.make_master(url=b'h:/a/b/')
+        master = self.make_master(url=b"h:/a/b/")
         rsrc = ResourceSubclass(master)
         master.www.resourceNeedsReconfigs.assert_called_with(rsrc)
 
 
 class RedirectResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
 
     def test_redirect(self):
-        master = self.make_master(url=b'h:/a/b/')
-        rsrc = resource.RedirectResource(master, b'foo')
-        self.render_resource(rsrc, b'/')
-        self.assertEqual(self.request.redirected_to, b'h:/a/b/foo')
+        master = self.make_master(url=b"h:/a/b/")
+        rsrc = resource.RedirectResource(master, b"foo")
+        self.render_resource(rsrc, b"/")
+        self.assertEqual(self.request.redirected_to, b"h:/a/b/foo")
 
     def test_redirect_cr_lf(self):
-        master = self.make_master(url=b'h:/a/b/')
-        rsrc = resource.RedirectResource(master, b'foo\r\nbar')
-        self.render_resource(rsrc, b'/')
-        self.assertEqual(self.request.redirected_to, b'h:/a/b/foo')
+        master = self.make_master(url=b"h:/a/b/")
+        rsrc = resource.RedirectResource(master, b"foo\r\nbar")
+        self.render_resource(rsrc, b"/")
+        self.assertEqual(self.request.redirected_to, b"h:/a/b/foo")

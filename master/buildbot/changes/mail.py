@@ -42,16 +42,17 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     """Generic base class for Maildir-based change sources"""
 
     compare_attrs = ("basedir", "pollinterval", "prefix")
-    name = 'MaildirSource'
+    name = "MaildirSource"
 
-    def __init__(self, maildir, prefix=None, category='', repository=''):
+    def __init__(self, maildir, prefix=None, category="", repository=""):
         super().__init__(maildir)
         self.prefix = prefix
         self.category = category
         self.repository = repository
         if prefix and not prefix.endswith("/"):
-            log.msg(f"MaildirSource: you probably want your prefix=('{prefix}') to end with "
-                    "a slash")
+            log.msg(
+                f"MaildirSource: you probably want your prefix=('{prefix}') to end with " "a slash"
+            )
 
     def describe(self):
         return f"{self.__class__.__name__} watching maildir '{self.basedir}'"
@@ -77,16 +78,14 @@ class MaildirSource(MaildirService, util.ComparableMixin):
 class CVSMaildirSource(MaildirSource):
     name = "CVSMaildirSource"
 
-    def __init__(self, maildir, prefix=None, category='',
-                 repository='', properties=None):
+    def __init__(self, maildir, prefix=None, category="", repository="", properties=None):
         super().__init__(maildir, prefix, category, repository)
         if properties is None:
             properties = {}
         self.properties = properties
 
     def parse(self, m, prefix=None):
-        """Parse messages sent by the 'buildbot-cvs-mail' program.
-        """
+        """Parse messages sent by the 'buildbot-cvs-mail' program."""
         # The mail is sent from the person doing the checkin. Assume that the
         # local username is enough to identify them (this assumes a one-server
         # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
@@ -109,7 +108,7 @@ class CVSMaildirSource(MaildirSource):
 
         # calculate a "revision" based on that timestamp, or the current time
         # if we're unable to parse the date.
-        log.msg('Processing CVS mail')
+        log.msg("Processing CVS mail")
         dateTuple = parsedate_tz(m["date"])
         if dateTuple is None:
             when = util.now()
@@ -117,18 +116,18 @@ class CVSMaildirSource(MaildirSource):
             when = mktime_tz(dateTuple)
 
         theTime = datetime.datetime.utcfromtimestamp(float(when))
-        rev = theTime.strftime('%Y-%m-%d %H:%M:%S')
+        rev = theTime.strftime("%Y-%m-%d %H:%M:%S")
 
-        catRE = re.compile(r'^Category:\s*(\S.*)')
-        cvsRE = re.compile(r'^CVSROOT:\s*(\S.*)')
-        cvsmodeRE = re.compile(r'^Cvsmode:\s*(\S.*)')
-        filesRE = re.compile(r'^Files:\s*(\S.*)')
-        modRE = re.compile(r'^Module:\s*(\S.*)')
-        pathRE = re.compile(r'^Path:\s*(\S.*)')
-        projRE = re.compile(r'^Project:\s*(\S.*)')
-        singleFileRE = re.compile(r'(.*) (NONE|\d(\.|\d)+) (NONE|\d(\.|\d)+)')
-        tagRE = re.compile(r'^\s+Tag:\s*(\S.*)')
-        updateRE = re.compile(r'^Update of:\s*(\S.*)')
+        catRE = re.compile(r"^Category:\s*(\S.*)")
+        cvsRE = re.compile(r"^CVSROOT:\s*(\S.*)")
+        cvsmodeRE = re.compile(r"^Cvsmode:\s*(\S.*)")
+        filesRE = re.compile(r"^Files:\s*(\S.*)")
+        modRE = re.compile(r"^Module:\s*(\S.*)")
+        pathRE = re.compile(r"^Path:\s*(\S.*)")
+        projRE = re.compile(r"^Project:\s*(\S.*)")
+        singleFileRE = re.compile(r"(.*) (NONE|\d(\.|\d)+) (NONE|\d(\.|\d)+)")
+        tagRE = re.compile(r"^\s+Tag:\s*(\S.*)")
+        updateRE = re.compile(r"^Update of:\s*(\S.*)")
         comments = ""
         branch = None
         cvsroot = None
@@ -204,53 +203,68 @@ class CVSMaildirSource(MaildirSource):
         #  modified_file.c 1.1,1.2
 
         if fileList is None:
-            log.msg('CVSMaildirSource Mail with no files. Ignoring')
-            return None       # We don't have any files. Email not from CVS
+            log.msg("CVSMaildirSource Mail with no files. Ignoring")
+            return None  # We don't have any files. Email not from CVS
 
-        if cvsmode == '1.11':
+        if cvsmode == "1.11":
             # Please, no repo paths with spaces!
-            m = re.search('([^ ]*) ', fileList)
+            m = re.search("([^ ]*) ", fileList)
             if m:
                 path = m.group(1)
             else:
-                log.msg(
-                    'CVSMaildirSource can\'t get path from file list. Ignoring mail')
+                log.msg("CVSMaildirSource can't get path from file list. Ignoring mail")
                 return None
-            fileList = fileList[len(path):].strip()
+            fileList = fileList[len(path) :].strip()
             singleFileRE = re.compile(
-                r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')  # noqa pylint: disable=line-too-long
-        elif cvsmode == '1.12':
+                r"(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)"
+            )  # noqa pylint: disable=line-too-long
+        elif cvsmode == "1.12":
             singleFileRE = re.compile(
-                r'(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')  # noqa pylint: disable=line-too-long
+                r"(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)"
+            )  # noqa pylint: disable=line-too-long
             if path is None:
                 raise ValueError(
-                    'CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
+                    "CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config"
+                )
         else:
-            raise ValueError(f'Expected cvsmode 1.11 or 1.12. got: {cvsmode}')
+            raise ValueError(f"Expected cvsmode 1.11 or 1.12. got: {cvsmode}")
 
         log.msg(f"CVSMaildirSource processing filelist: {fileList}")
         while fileList:
             m = singleFileRE.match(fileList)
             if m:
-                curFile = path + '/' + m.group(1)
+                curFile = path + "/" + m.group(1)
                 files.append(curFile)
-                fileList = fileList[m.end():]
+                fileList = fileList[m.end() :]
             else:
-                log.msg('CVSMaildirSource no files matched regex. Ignoring')
-                return None   # bail - we couldn't parse the files that changed
+                log.msg("CVSMaildirSource no files matched regex. Ignoring")
+                return None  # bail - we couldn't parse the files that changed
         # Now get comments
         while lines:
             line = lines.pop(0)
             comments += line
 
         comments = comments.rstrip() + "\n"
-        if comments == '\n':
+        if comments == "\n":
             comments = None
-        return ('cvs', dict(author=author, committer=None, files=files, comments=comments,
-                            isdir=isdir, when=when, branch=branch,
-                            revision=rev, category=category,
-                            repository=cvsroot, project=project,
-                            properties=self.properties))
+        return (
+            "cvs",
+            dict(
+                author=author,
+                committer=None,
+                files=files,
+                comments=comments,
+                isdir=isdir,
+                when=when,
+                branch=branch,
+                revision=rev,
+                category=category,
+                repository=cvsroot,
+                project=project,
+                properties=self.properties,
+            ),
+        )
+
 
 # svn "commit-email.pl" handler.  The format is very similar to freshcvs mail;
 # here's a sample:
@@ -282,8 +296,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
     name = "SVN commit-email.pl"
 
     def parse(self, m, prefix=None):
-        """Parse messages sent by the svn 'commit-email.pl' trigger.
-        """
+        """Parse messages sent by the svn 'commit-email.pl' trigger."""
 
         # The mail is sent from the person doing the checkin. Assume that the
         # local username is enough to identify them (this assumes a one-server
@@ -348,11 +361,11 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             if line == "\n":
                 break
             if line.find("Modified:\n") == 0:
-                continue            # ignore this line
+                continue  # ignore this line
             if line.find("Added:\n") == 0:
-                continue            # ignore this line
+                continue  # ignore this line
             if line.find("Removed:\n") == 0:
-                continue            # ignore this line
+                continue  # ignore this line
             line = line.strip()
 
             thesefiles = line.split(" ")
@@ -361,10 +374,12 @@ class SVNCommitEmailMaildirSource(MaildirSource):
                     # insist that the file start with the prefix: we may get
                     # changes we don't care about too
                     if f.startswith(prefix):
-                        f = f[len(prefix):]
+                        f = f[len(prefix) :]
                     else:
-                        log.msg(f"ignored file from svn commit: prefix '{prefix}' "
-                                f"does not match filename '{f}'")
+                        log.msg(
+                            f"ignored file from svn commit: prefix '{prefix}' "
+                            f"does not match filename '{f}'"
+                        )
                         continue
 
                 # TODO: figure out how new directories are described, set
@@ -375,8 +390,18 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             log.msg("no matching files found, ignoring commit")
             return None
 
-        return ('svn', dict(author=author, committer=None, files=files, comments=comments,
-                            when=when, revision=rev))
+        return (
+            "svn",
+            dict(
+                author=author,
+                committer=None,
+                files=files,
+                comments=comments,
+                when=when,
+                revision=rev,
+            ),
+        )
+
 
 # bzr Launchpad branch subscription mails. Sample mail:
 #
@@ -418,8 +443,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         super().__init__(maildir, prefix, **kwargs)
 
     def parse(self, m, prefix=None):
-        """Parse branch notification messages sent by Launchpad.
-        """
+        """Parse branch notification messages sent by Launchpad."""
 
         subject = m["subject"]
         match = re.search(r"^\s*\[Branch\s+([^]]+)\]", subject)
@@ -430,30 +454,30 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
 
         # Put these into a dictionary, otherwise we cannot assign them
         # from nested function definitions.
-        d = {'files': [], 'comments': ""}
+        d = {"files": [], "comments": ""}
         gobbler = None
         rev = None
         author = None
         when = util.now()
 
         def gobble_comment(s):
-            d['comments'] += s + "\n"
+            d["comments"] += s + "\n"
 
         def gobble_removed(s):
-            d['files'].append(f'{s} REMOVED')
+            d["files"].append(f"{s} REMOVED")
 
         def gobble_added(s):
-            d['files'].append(f'{s} ADDED')
+            d["files"].append(f"{s} ADDED")
 
         def gobble_modified(s):
-            d['files'].append(f'{s} MODIFIED')
+            d["files"].append(f"{s} MODIFIED")
 
         def gobble_renamed(s):
             match = re.search(r"^(.+) => (.+)$", s)
             if match:
-                d['files'].append(f'{match.group(1)} RENAMED {match.group(2)}')
+                d["files"].append(f"{match.group(1)} RENAMED {match.group(2)}")
             else:
-                d['files'].append(f'{s} RENAMED')
+                d["files"].append(f"{s} RENAMED")
 
         lines = list(body_line_iterator(m, True))
         rev = None
@@ -474,14 +498,15 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
             # datetime.strptime() is supposed to support %z for time zone, but
             # it does not seem to work. So handle the time zone manually.
             match = re.search(
-                r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$", line)  # noqa pylint: disable=line-too-long
+                r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$",
+                line,
+            )  # noqa pylint: disable=line-too-long
             if match:
                 datestr = match.group(1)
                 tz_sign = match.group(2)
                 tz_hours = match.group(3)
                 tz_minutes = match.group(4)
-                when = parseLaunchpadDate(
-                    datestr, tz_sign, tz_hours, tz_minutes)
+                when = parseLaunchpadDate(datestr, tz_sign, tz_hours, tz_minutes)
 
             if re.search(r"^message:\s*$", line):
                 gobbler = gobble_comment
@@ -502,21 +527,30 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
             if repository in self.branchMap:
                 branch = self.branchMap[repository]
             elif "lp:" + repository in self.branchMap:
-                branch = self.branchMap['lp:' + repository]
+                branch = self.branchMap["lp:" + repository]
         if not branch:
             if self.defaultBranch:
                 branch = self.defaultBranch
             else:
                 if repository:
-                    branch = 'lp:' + repository
+                    branch = "lp:" + repository
                 else:
                     branch = None
 
         if rev and author:
-            return ('bzr', dict(author=author, committer=None, files=d['files'],
-                                comments=d['comments'],
-                                when=when, revision=rev,
-                                branch=branch, repository=repository or ''))
+            return (
+                "bzr",
+                dict(
+                    author=author,
+                    committer=None,
+                    files=d["files"],
+                    comments=d["comments"],
+                    when=when,
+                    revision=rev,
+                    branch=branch,
+                    repository=repository or "",
+                ),
+            )
         return None
 
 

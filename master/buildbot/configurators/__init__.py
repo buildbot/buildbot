@@ -27,22 +27,23 @@ from buildbot.interfaces import IConfigurator
 @implementer(IConfigurator)
 class ConfiguratorBase:
     """
-        I provide base helper methods for configurators
+    I provide base helper methods for configurators
     """
+
     def __init__(self):
         pass
 
     def configure(self, config_dict):
         self.config_dict = c = config_dict
-        if 'schedulers' not in c:
-            c['schedulers'] = []
-        self.schedulers = c['schedulers']
-        if 'protocols' not in c:
-            c['protocols'] = {}
-        self.protocols = c['protocols']
-        if 'builders' not in c:
-            c['builders'] = []
-        self.builders = c['builders']
-        if 'workers' not in c:
-            c['workers'] = []
-        self.workers = c['workers']
+        if "schedulers" not in c:
+            c["schedulers"] = []
+        self.schedulers = c["schedulers"]
+        if "protocols" not in c:
+            c["protocols"] = {}
+        self.protocols = c["protocols"]
+        if "builders" not in c:
+            c["builders"] = []
+        self.builders = c["builders"]
+        if "workers" not in c:
+            c["workers"] = []
+        self.workers = c["workers"]

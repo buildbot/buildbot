@@ -22,31 +22,31 @@ from buildbot_worker.commands import base
 
 class WorkerShellCommand(base.Command):
 
-    requiredArgs = ['workdir', 'command']
+    requiredArgs = ["workdir", "command"]
 
     def start(self):
         args = self.args
-        workdir = args['workdir']
+        workdir = args["workdir"]
 
         c = runprocess.RunProcess(
-            args['command'],
+            args["command"],
             workdir,
             self.protocol_command.unicode_encoding,
             self.protocol_command.send_update,
-            environ=args.get('env'),
-            timeout=args.get('timeout', None),
-            maxTime=args.get('maxTime', None),
-            sigtermTime=args.get('sigtermTime', None),
-            sendStdout=args.get('want_stdout', True),
-            sendStderr=args.get('want_stderr', True),
+            environ=args.get("env"),
+            timeout=args.get("timeout", None),
+            maxTime=args.get("maxTime", None),
+            sigtermTime=args.get("sigtermTime", None),
+            sendStdout=args.get("want_stdout", True),
+            sendStderr=args.get("want_stderr", True),
             sendRC=True,
-            initialStdin=args.get('initial_stdin'),
-            logfiles=args.get('logfiles', {}),
-            usePTY=args.get('usePTY', False),
-            logEnviron=args.get('logEnviron', True),
+            initialStdin=args.get("initial_stdin"),
+            logfiles=args.get("logfiles", {}),
+            usePTY=args.get("usePTY", False),
+            logEnviron=args.get("logEnviron", True),
         )
-        if args.get('interruptSignal'):
-            c.interruptSignal = args['interruptSignal']
+        if args.get("interruptSignal"):
+            c.interruptSignal = args["interruptSignal"]
         c._reactor = self._reactor
         self.command = c
         d = self.command.start()

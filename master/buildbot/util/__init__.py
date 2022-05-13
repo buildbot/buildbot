@@ -50,7 +50,8 @@ def naturalSort(array):
             return s
 
     def key_func(item):
-        return [try_int(s) for s in re.split(r'(\d+)', item)]
+        return [try_int(s) for s in re.split(r"(\d+)", item)]
+
     # prepend integer keys to each element, sort them, then strip the keys
     keyed_array = sorted([(key_func(i), i) for i in array])
     array = [i[1] for i in keyed_array]
@@ -74,7 +75,7 @@ def flattened_iterator(l, types=(list, tuple)):
             yield sub_element
 
 
-def flatten(l, types=(list, )):
+def flatten(l, types=(list,)):
     """
     Given a list/tuple that potentially contains nested lists/tuples of arbitrary nesting,
     flatten into a single dimension.  In other words, turn [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
@@ -117,14 +118,14 @@ def fuzzyInterval(seconds):
         return f"{seconds} seconds".format(seconds)
     if seconds < 55:
         return f"{round(seconds / 10.) * 10} seconds"
-    minutes = round(seconds / 60.)
+    minutes = round(seconds / 60.0)
     if minutes == 1:
         return "a minute"
     if minutes < 20:
         return f"{minutes} minutes"
     if minutes < 55:
         return f"{round(minutes / 10.) * 10} minutes"
-    hours = round(minutes / 60.)
+    hours = round(minutes / 60.0)
     if hours == 1:
         return "an hour"
     if hours < 24:
@@ -154,11 +155,9 @@ class ComparableMixin:
 
     def __hash__(self):
         compare_attrs = []
-        reflect.accumulateClassList(
-            self.__class__, 'compare_attrs', compare_attrs)
+        reflect.accumulateClassList(self.__class__, "compare_attrs", compare_attrs)
 
-        alist = [self.__class__] + \
-                [getattr(self, name, self._None) for name in compare_attrs]
+        alist = [self.__class__] + [getattr(self, name, self._None) for name in compare_attrs]
         return hash(tuple(map(str, alist)))
 
     def _cmp_common(self, them):
@@ -169,13 +168,10 @@ class ComparableMixin:
             return (False, None, None)
 
         compare_attrs = []
-        reflect.accumulateClassList(
-            self.__class__, 'compare_attrs', compare_attrs)
+        reflect.accumulateClassList(self.__class__, "compare_attrs", compare_attrs)
 
-        self_list = [getattr(self, name, self._None)
-                     for name in compare_attrs]
-        them_list = [getattr(them, name, self._None)
-                     for name in compare_attrs]
+        self_list = [getattr(self, name, self._None) for name in compare_attrs]
+        them_list = [getattr(them, name, self._None) for name in compare_attrs]
         return (True, self_list, them_list)
 
     def __eq__(self, them):
@@ -192,7 +188,9 @@ class ComparableMixin:
             (isComparable, us_list, them_list) = us._cmp_common(them)
             if not isComparable:
                 return False
-            return all(ComparableMixin.isEquivalent(v, them_list[i]) for i, v in enumerate(us_list))
+            return all(
+                ComparableMixin.isEquivalent(v, them_list[i]) for i, v in enumerate(us_list)
+            )
         return us == them
 
     def __ne__(self, them):
@@ -227,11 +225,12 @@ class ComparableMixin:
 
     def getConfigDict(self):
         compare_attrs = []
-        reflect.accumulateClassList(
-            self.__class__, 'compare_attrs', compare_attrs)
-        return {k: getattr(self, k)
-                for k in compare_attrs
-                if hasattr(self, k) and k not in ("passwd", "password")}
+        reflect.accumulateClassList(self.__class__, "compare_attrs", compare_attrs)
+        return {
+            k: getattr(self, k)
+            for k in compare_attrs
+            if hasattr(self, k) and k not in ("passwd", "password")
+        }
 
 
 def diffSets(old, new):
@@ -244,13 +243,14 @@ def diffSets(old, new):
 
 # Remove potentially harmful characters from builder name if it is to be
 # used as the build dir.
-badchars_map = bytes.maketrans(b"\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
-                               b"______________________________")
+badchars_map = bytes.maketrans(
+    b"\t !#$%&'()*+,./:;<=>?@[\\]^{|}~", b"______________________________"
+)
 
 
 def safeTranslate(s):
     if isinstance(s, str):
-        s = s.encode('utf8')
+        s = s.encode("utf8")
     return s.translate(badchars_map)
 
 
@@ -260,13 +260,13 @@ def none_or_str(x):
     return x
 
 
-def unicode2bytes(x, encoding='utf-8', errors='strict'):
+def unicode2bytes(x, encoding="utf-8", errors="strict"):
     if isinstance(x, str):
         x = x.encode(encoding, errors)
     return x
 
 
-def bytes2unicode(x, encoding='utf-8', errors='strict'):
+def bytes2unicode(x, encoding="utf-8", errors="strict"):
     if isinstance(x, (str, type(None))):
         return x
     return str(x, encoding, errors)
@@ -294,7 +294,6 @@ def toJson(obj):
 
 
 class NotABranch:
-
     def __bool__(self):
         return False
 
@@ -332,21 +331,21 @@ def human_readable_delta(start, end):
 
     result = []
     if delta.days > 0:
-        result.append(f'{delta.days} days')
+        result.append(f"{delta.days} days")
     if delta.seconds > 0:
         hours = int(delta.seconds / 3600)
         if hours > 0:
-            result.append(f'{hours} hours')
+            result.append(f"{hours} hours")
         minutes = int((delta.seconds - hours * 3600) / 60)
         if minutes:
-            result.append(f'{minutes} minutes')
+            result.append(f"{minutes} minutes")
         seconds = delta.seconds % 60
         if seconds > 0:
-            result.append(f'{seconds} seconds')
+            result.append(f"{seconds} seconds")
 
     if result:
-        return ', '.join(result)
-    return 'super fast'
+        return ", ".join(result)
+    return "super fast"
 
 
 def makeList(input):
@@ -359,8 +358,10 @@ def makeList(input):
 
 def in_reactor(f):
     """decorate a function by running it with maybeDeferred in a reactor"""
+
     def wrap(*args, **kwargs):
         from twisted.internet import reactor, defer
+
         result = []
 
         def _async():
@@ -374,9 +375,11 @@ def in_reactor(f):
             def do_stop(r):
                 result.append(r)
                 reactor.stop()
+
         reactor.callWhenRunning(_async)
         reactor.run()
         return result[0]
+
     wrap.__doc__ = f.__doc__
     wrap.__name__ = f.__name__
     wrap._orig = f  # for tests
@@ -385,20 +388,21 @@ def in_reactor(f):
 
 def string2boolean(str):
     return {
-        b'on': True,
-        b'true': True,
-        b'yes': True,
-        b'1': True,
-        b'off': False,
-        b'false': False,
-        b'no': False,
-        b'0': False,
+        b"on": True,
+        b"true": True,
+        b"yes": True,
+        b"1": True,
+        b"off": False,
+        b"false": False,
+        b"no": False,
+        b"0": False,
     }[str.lower()]
 
 
 def asyncSleep(delay, reactor=None):
     from twisted.internet import defer
     from twisted.internet import reactor as internet_reactor
+
     if reactor is None:
         reactor = internet_reactor
 
@@ -411,26 +415,31 @@ def check_functional_environment(config):
     try:
         locale.getdefaultlocale()
     except (KeyError, ValueError) as e:
-        config.error("\n".join([
-            "Your environment has incorrect locale settings. This means python cannot handle "
-            "strings safely.",
-            " Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE'"
-            " are either unset or set to a valid locale.", str(e)
-        ]))
+        config.error(
+            "\n".join(
+                [
+                    "Your environment has incorrect locale settings. This means python cannot handle "
+                    "strings safely.",
+                    " Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE'"
+                    " are either unset or set to a valid locale.",
+                    str(e),
+                ]
+            )
+        )
 
 
-_netloc_url_re = re.compile(r':[^@]*@')
+_netloc_url_re = re.compile(r":[^@]*@")
 
 
 def stripUrlPassword(url):
     parts = list(urlsplit(url))
-    parts[1] = _netloc_url_re.sub(':xxxx@', parts[1])
+    parts[1] = _netloc_url_re.sub(":xxxx@", parts[1])
     return urlunsplit(parts)
 
 
 def join_list(maybeList):
     if isinstance(maybeList, (list, tuple)):
-        return ' '.join(bytes2unicode(s) for s in maybeList)
+        return " ".join(bytes2unicode(s) for s in maybeList)
     return bytes2unicode(maybeList)
 
 
@@ -495,9 +504,8 @@ def rewrap(text, width=None):
 
     # Split text by lines and group lines that comprise paragraphs.
     wrapped_text = ""
-    for do_wrap, lines in itertools.groupby(text.splitlines(True),
-                                            key=needs_wrapping):
-        paragraph = ''.join(lines)
+    for do_wrap, lines in itertools.groupby(text.splitlines(True), key=needs_wrapping):
+        paragraph = "".join(lines)
 
         if do_wrap:
             paragraph = textwrap.fill(paragraph, width)
@@ -509,7 +517,7 @@ def rewrap(text, width=None):
 
 def dictionary_merge(a, b):
     """merges dictionary b into a
-       Like dict.update, but recursive
+    Like dict.update, but recursive
     """
     for key, value in b.items():
         if key in a and isinstance(a[key], dict) and isinstance(value, dict):
@@ -520,12 +528,22 @@ def dictionary_merge(a, b):
 
 
 __all__ = [
-    'naturalSort', 'now', 'formatInterval', 'ComparableMixin',
-    'safeTranslate', 'none_or_str',
-    'NotABranch', 'deferredLocked', 'UTC',
-    'diffSets', 'makeList', 'in_reactor', 'string2boolean',
-    'check_functional_environment', 'human_readable_delta',
-    'rewrap',
-    'Notifier',
+    "naturalSort",
+    "now",
+    "formatInterval",
+    "ComparableMixin",
+    "safeTranslate",
+    "none_or_str",
+    "NotABranch",
+    "deferredLocked",
+    "UTC",
+    "diffSets",
+    "makeList",
+    "in_reactor",
+    "string2boolean",
+    "check_functional_environment",
+    "human_readable_delta",
+    "rewrap",
+    "Notifier",
     "giturlparse",
 ]

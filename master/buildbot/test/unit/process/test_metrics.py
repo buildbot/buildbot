@@ -25,7 +25,6 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class TestMetricBase(TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         self.observer = metrics.MetricLogObserver()
@@ -41,51 +40,49 @@ class TestMetricBase(TestReactorMixin, unittest.TestCase):
 
 
 class TestMetricCountEvent(TestMetricBase):
-
     def testIncrement(self):
-        metrics.MetricCountEvent.log('num_widgets', 1)
+        metrics.MetricCountEvent.log("num_widgets", 1)
         report = self.observer.asDict()
-        self.assertEqual(report['counters']['num_widgets'], 1)
+        self.assertEqual(report["counters"]["num_widgets"], 1)
 
-        metrics.MetricCountEvent.log('num_widgets', 1)
+        metrics.MetricCountEvent.log("num_widgets", 1)
         report = self.observer.asDict()
-        self.assertEqual(report['counters']['num_widgets'], 2)
+        self.assertEqual(report["counters"]["num_widgets"], 2)
 
     def testDecrement(self):
-        metrics.MetricCountEvent.log('num_widgets', 1)
+        metrics.MetricCountEvent.log("num_widgets", 1)
         report = self.observer.asDict()
-        self.assertEqual(report['counters']['num_widgets'], 1)
+        self.assertEqual(report["counters"]["num_widgets"], 1)
 
-        metrics.MetricCountEvent.log('num_widgets', -1)
+        metrics.MetricCountEvent.log("num_widgets", -1)
         report = self.observer.asDict()
-        self.assertEqual(report['counters']['num_widgets'], 0)
+        self.assertEqual(report["counters"]["num_widgets"], 0)
 
     def testAbsolute(self):
-        metrics.MetricCountEvent.log('num_widgets', 10, absolute=True)
+        metrics.MetricCountEvent.log("num_widgets", 10, absolute=True)
         report = self.observer.asDict()
-        self.assertEqual(report['counters']['num_widgets'], 10)
+        self.assertEqual(report["counters"]["num_widgets"], 10)
 
     def testCountMethod(self):
-        @metrics.countMethod('foo_called')
+        @metrics.countMethod("foo_called")
         def foo():
             return "foo!"
 
         for _ in range(10):
             foo()
         report = self.observer.asDict()
-        self.assertEqual(report['counters']['foo_called'], 10)
+        self.assertEqual(report["counters"]["foo_called"], 10)
 
 
 class TestMetricTimeEvent(TestMetricBase):
-
     def testManualEvent(self):
-        metrics.MetricTimeEvent.log('foo_time', 0.001)
+        metrics.MetricTimeEvent.log("foo_time", 0.001)
         report = self.observer.asDict()
-        self.assertEqual(report['timers']['foo_time'], 0.001)
+        self.assertEqual(report["timers"]["foo_time"], 0.001)
 
     def testTimer(self):
         clock = task.Clock()
-        t = metrics.Timer('foo_time')
+        t = metrics.Timer("foo_time")
         t._reactor = clock
         t.start()
 
@@ -93,11 +90,11 @@ class TestMetricTimeEvent(TestMetricBase):
         t.stop()
 
         report = self.observer.asDict()
-        self.assertEqual(report['timers']['foo_time'], 5)
+        self.assertEqual(report["timers"]["foo_time"], 5)
 
     def testStartStopDecorators(self):
         clock = task.Clock()
-        t = metrics.Timer('foo_time')
+        t = metrics.Timer("foo_time")
         t._reactor = clock
 
         @t.startTimer
@@ -113,34 +110,33 @@ class TestMetricTimeEvent(TestMetricBase):
         foo()
         bar()
         report = self.observer.asDict()
-        self.assertEqual(report['timers']['foo_time'], 10)
+        self.assertEqual(report["timers"]["foo_time"], 10)
 
     def testTimeMethod(self):
         clock = task.Clock()
 
-        @metrics.timeMethod('foo_time', _reactor=clock)
+        @metrics.timeMethod("foo_time", _reactor=clock)
         def foo():
             clock.advance(5)
             return "foo!"
+
         foo()
         report = self.observer.asDict()
-        self.assertEqual(report['timers']['foo_time'], 5)
+        self.assertEqual(report["timers"]["foo_time"], 5)
 
     def testAverages(self):
         data = list(range(10))
         for i in data:
-            metrics.MetricTimeEvent.log('foo_time', i)
+            metrics.MetricTimeEvent.log("foo_time", i)
         report = self.observer.asDict()
-        self.assertEqual(
-            report['timers']['foo_time'], sum(data) / float(len(data)))
+        self.assertEqual(report["timers"]["foo_time"], sum(data) / float(len(data)))
 
 
 class TestPeriodicChecks(TestMetricBase):
-
     def testPeriodicCheck(self):
         # fake out that there's no garbage (since we can't rely on Python
         # not having any garbage while running tests)
-        self.patch(gc, 'garbage', [])
+        self.patch(gc, "garbage", [])
 
         clock = task.Clock()
         metrics.periodicCheck(_reactor=clock)
@@ -148,13 +144,13 @@ class TestPeriodicChecks(TestMetricBase):
 
         # We should have 0 reactor delay since we're using a fake clock
         report = self.observer.asDict()
-        self.assertEqual(report['timers']['reactorDelay'], 0)
-        self.assertEqual(report['counters']['gc.garbage'], 0)
-        self.assertEqual(report['alarms']['gc.garbage'][0], 'OK')
+        self.assertEqual(report["timers"]["reactorDelay"], 0)
+        self.assertEqual(report["counters"]["gc.garbage"], 0)
+        self.assertEqual(report["alarms"]["gc.garbage"][0], "OK")
 
     def testUncollectable(self):
         # make some fake garbage
-        self.patch(gc, 'garbage', [1, 2])
+        self.patch(gc, "garbage", [1, 2])
 
         clock = task.Clock()
         metrics.periodicCheck(_reactor=clock)
@@ -162,18 +158,18 @@ class TestPeriodicChecks(TestMetricBase):
 
         # We should have 0 reactor delay since we're using a fake clock
         report = self.observer.asDict()
-        self.assertEqual(report['timers']['reactorDelay'], 0)
-        self.assertEqual(report['counters']['gc.garbage'], 2)
-        self.assertEqual(report['alarms']['gc.garbage'][0], 'WARN')
+        self.assertEqual(report["timers"]["reactorDelay"], 0)
+        self.assertEqual(report["counters"]["gc.garbage"], 2)
+        self.assertEqual(report["alarms"]["gc.garbage"][0], "WARN")
 
     def testGetRSS(self):
         self.assertTrue(metrics._get_rss() > 0)
-    if sys.platform != 'linux':
+
+    if sys.platform != "linux":
         testGetRSS.skip = "only available on linux platforms"
 
 
 class TestReconfig(TestMetricBase):
-
     def testReconfig(self):
         observer = self.observer
         new_config = self.master.config
@@ -220,7 +216,6 @@ class TestReconfig(TestMetricBase):
 
 
 class _LogObserver:
-
     def __init__(self):
         self.events = []
 
@@ -229,26 +224,26 @@ class _LogObserver:
 
 
 class TestReports(unittest.TestCase):
-
     def testMetricCountReport(self):
         handler = metrics.MetricCountHandler(None)
-        handler.handle({}, metrics.MetricCountEvent('num_foo', 1))
+        handler.handle({}, metrics.MetricCountEvent("num_foo", 1))
 
         self.assertEqual("Counter num_foo: 1", handler.report())
         self.assertEqual({"counters": {"num_foo": 1}}, handler.asDict())
 
     def testMetricTimeReport(self):
         handler = metrics.MetricTimeHandler(None)
-        handler.handle({}, metrics.MetricTimeEvent('time_foo', 1))
+        handler.handle({}, metrics.MetricTimeEvent("time_foo", 1))
 
         self.assertEqual("Timer time_foo: 1", handler.report())
         self.assertEqual({"timers": {"time_foo": 1}}, handler.asDict())
 
     def testMetricAlarmReport(self):
         handler = metrics.MetricAlarmHandler(None)
-        handler.handle({}, metrics.MetricAlarmEvent(
-            'alarm_foo', msg='Uh oh', level=metrics.ALARM_WARN))
+        handler.handle(
+            {},
+            metrics.MetricAlarmEvent("alarm_foo", msg="Uh oh", level=metrics.ALARM_WARN),
+        )
 
         self.assertEqual("WARN alarm_foo: Uh oh", handler.report())
-        self.assertEqual(
-            {"alarms": {"alarm_foo": ("WARN", "Uh oh")}}, handler.asDict())
+        self.assertEqual({"alarms": {"alarm_foo": ("WARN", "Uh oh")}}, handler.asDict())

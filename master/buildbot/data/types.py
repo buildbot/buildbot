@@ -23,7 +23,7 @@ from buildbot.util import bytes2unicode
 
 
 def capitalize(word):
-    return ''.join(x.capitalize() or '_' for x in word.split('_'))
+    return "".join(x.capitalize() or "_" for x in word.split("_"))
 
 
 class Type:
@@ -74,7 +74,6 @@ class Type:
 
 
 class NoneOk(Type):
-
     def __init__(self, nestedType):
         assert isinstance(nestedType, Type)
         self.nestedType = nestedType
@@ -209,7 +208,7 @@ class Boolean(Instance):
 class Identifier(Type):
 
     name = "identifier"
-    identRe = re.compile('^[a-zA-Z_-][a-zA-Z0-9._-]*$')
+    identRe = re.compile("^[a-zA-Z_-][a-zA-Z0-9._-]*$")
     ramlType = "string"
     graphQLType = "String"
 
@@ -234,8 +233,7 @@ class Identifier(Type):
             yield f"{name} - {repr(object)} - is longer than {self.len} characters"
 
     def toRaml(self):
-        return {'type': self.ramlType,
-                'pattern': self.identRe.pattern}
+        return {"type": self.ramlType, "pattern": self.identRe.pattern}
 
 
 class List(Type):
@@ -266,11 +264,10 @@ class List(Type):
         return self.of.valueFromString(arg)
 
     def getSpec(self):
-        return dict(type=self.name,
-                    of=self.of.getSpec())
+        return dict(type=self.name, of=self.of.getSpec())
 
     def toRaml(self):
-        return {'type': 'array', 'items': self.of.name}
+        return {"type": "array", "items": self.of.name}
 
     def toGraphQL(self):
         return f"[{self.of.toGraphQLTypeName()}]!"
@@ -316,20 +313,24 @@ class SourcedProperties(Type):
                 yield f"{name}[{repr(k)}] value is not JSON-able"
 
     def toRaml(self):
-        return {'type': "object",
-                'properties':
-                {'[]': {'type': 'object',
-                        'properties': {
-                            1: 'string',
-                            2: 'integer | string | object | array | boolean'
-                        }
-                        }}}
+        return {
+            "type": "object",
+            "properties": {
+                "[]": {
+                    "type": "object",
+                    "properties": {
+                        1: "string",
+                        2: "integer | string | object | array | boolean",
+                    },
+                }
+            },
+        }
 
     def toGraphQL(self):
         return "[Property]!"
 
     def graphQLDependentTypes(self):
-        return [PropertyEntityType("property", 'Property')]
+        return [PropertyEntityType("property", "Property")]
 
     def getGraphQLInputType(self):
         return None
@@ -337,7 +338,7 @@ class SourcedProperties(Type):
 
 class JsonObject(Type):
     name = "jsonobject"
-    ramlname = 'object'
+    ramlname = "object"
     graphQLType = "JSON"
 
     def validate(self, name, object):
@@ -400,28 +401,33 @@ class Entity(Type):
                 yield msg
 
     def getSpec(self):
-        return dict(type=self.name,
-                    fields=[dict(name=k,
-                                 type=v.name,
-                                 type_spec=v.getSpec())
-                            for k, v in self.fields.items()
-                            ])
+        return dict(
+            type=self.name,
+            fields=[
+                dict(name=k, type=v.name, type_spec=v.getSpec()) for k, v in self.fields.items()
+            ],
+        )
 
     def toRaml(self):
-        return {'type': "object",
-                'properties': {
-                    ramlMaybeNoneOrList(k, v): {'type': v.ramlname, 'description': ''}
-                    for k, v in self.fields.items()}}
+        return {
+            "type": "object",
+            "properties": {
+                ramlMaybeNoneOrList(k, v): {"type": v.ramlname, "description": ""}
+                for k, v in self.fields.items()
+            },
+        }
 
     def toGraphQL(self):
-        return dict(type=self.graphql_name,
-                    fields=[dict(name=k,
-                                 type=v.toGraphQL())
-                            for k, v in self.fields.items()
-                            # in graphql, we handle properties as queriable sub resources
-                            # instead of hardcoded attributes like in rest api
-                            if k != "properties"
-                            ])
+        return dict(
+            type=self.graphql_name,
+            fields=[
+                dict(name=k, type=v.toGraphQL())
+                for k, v in self.fields.items()
+                # in graphql, we handle properties as queriable sub resources
+                # instead of hardcoded attributes like in rest api
+                if k != "properties"
+            ],
+        )
 
     def toGraphQLTypeName(self):
         return self.graphql_name

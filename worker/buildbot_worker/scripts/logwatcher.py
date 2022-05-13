@@ -39,7 +39,6 @@ class WorkerTimeoutError(Exception):
 
 
 class TailProcess(protocol.ProcessProtocol):
-
     def outReceived(self, data):
         self.lw.dataReceived(unicode2bytes(data))
 
@@ -63,23 +62,25 @@ class LogWatcher(LineOnlyReceiver):
     def start(self):
         # If the log file doesn't exist, create it now.
         if not os.path.exists(self.logfile):
-            open(self.logfile, 'a').close()
+            open(self.logfile, "a").close()
 
         # return a Deferred that fires when the start process has
         # finished. It errbacks with TimeoutError if the finish line has not
         # been seen within 10 seconds, and with ReconfigError if the error
         # line was seen. If the logfile could not be opened, it errbacks with
         # an IOError.
-        if platform.system().lower() == 'sunos' and os.path.exists('/usr/xpg4/bin/tail'):
+        if platform.system().lower() == "sunos" and os.path.exists("/usr/xpg4/bin/tail"):
             tailBin = "/usr/xpg4/bin/tail"
-        elif platform.system().lower() == 'haiku' and os.path.exists('/bin/tail'):
+        elif platform.system().lower() == "haiku" and os.path.exists("/bin/tail"):
             tailBin = "/bin/tail"
         else:
             tailBin = "/usr/bin/tail"
-        self.p = reactor.spawnProcess(self.pp, tailBin,
-                                      ("tail", "-f", "-n", "0", self.logfile),
-                                      env=os.environ,
-                                      )
+        self.p = reactor.spawnProcess(
+            self.pp,
+            tailBin,
+            ("tail", "-f", "-n", "0", self.logfile),
+            env=os.environ,
+        )
         self.running = True
         d = defer.maybeDeferred(self._start)
         return d

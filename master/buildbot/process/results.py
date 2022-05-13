@@ -15,9 +15,24 @@
 
 ALL_RESULTS = list(range(7))
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = ALL_RESULTS
-Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
-MultipleResults = ["successes", "warnings", "failures", "skipped", "exceptions",
-                   "retries", "cancelled"]
+Results = [
+    "success",
+    "warnings",
+    "failure",
+    "skipped",
+    "exception",
+    "retry",
+    "cancelled",
+]
+MultipleResults = [
+    "successes",
+    "warnings",
+    "failures",
+    "skipped",
+    "exceptions",
+    "retries",
+    "cancelled",
+]
 
 
 def statusToString(status, count=1):

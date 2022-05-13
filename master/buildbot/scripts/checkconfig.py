@@ -40,8 +40,8 @@ def _loadConfig(basedir, configFile, quiet):
 
 @in_reactor
 def checkconfig(config):
-    quiet = config.get('quiet')
-    configFile = config.get('configFile', os.getcwd())
+    quiet = config.get("quiet")
+    configFile = config.get("configFile", os.getcwd())
 
     if os.path.isdir(configFile):
         basedir = configFile
@@ -58,4 +58,4 @@ def checkconfig(config):
     return _loadConfig(basedir=basedir, configFile=configFile, quiet=quiet)
 
 
-__all__ = ['checkconfig']
+__all__ = ["checkconfig"]

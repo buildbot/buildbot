@@ -37,8 +37,17 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandBase:
-    def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
-                 on_command_complete, on_lost_remote_step, command, command_id, args):
+    def __init__(
+        self,
+        unicode_encoding,
+        worker_basedir,
+        builder_is_running,
+        on_command_complete,
+        on_lost_remote_step,
+        command,
+        command_id,
+        args,
+    ):
         self.unicode_encoding = unicode_encoding
         self.worker_basedir = worker_basedir
         self.builder_is_running = builder_is_running
@@ -50,7 +59,7 @@ class ProtocolCommandBase:
         try:
             factory = registry.getFactory(command)
         except KeyError:
-            raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
+            raise UnknownCommand("unrecognized WorkerCommand '{0}'".format(command))
 
         # .command points to a WorkerCommand instance, and is set while the step is running.
         self.command = factory(self, command_id, args)
@@ -113,6 +122,7 @@ class WorkerForBuilderBase(service.Service):
 class BotBase(service.MultiService):
 
     """I represent the worker-side bot."""
+
     name = "bot"
     WorkerForBuilder = WorkerForBuilderBase
 
@@ -122,8 +132,7 @@ class BotBase(service.MultiService):
         service.MultiService.__init__(self)
         self.basedir = basedir
         self.numcpus = None
-        self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding(
-        ) or 'ascii'
+        self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or "ascii"
         self.delete_leftover_dirs = delete_leftover_dirs
         self.builders = {}
 
@@ -136,10 +145,7 @@ class BotBase(service.MultiService):
         service.MultiService.startService(self)
 
     def remote_getCommands(self):
-        commands = {
-            n: base.command_version
-            for n in registry.getAllCommandNames()
-        }
+        commands = {n: base.command_version for n in registry.getAllCommandNames()}
         return commands
 
     def remote_print(self, message):
@@ -154,12 +160,12 @@ class BotBase(service.MultiService):
             for line in fin:
                 line = line.strip("\r\n")
                 # as per man page: Lines beginning with "#" shall be ignored as comments.
-                if len(line) == 0 or line.startswith('#'):
+                if len(line) == 0 or line.startswith("#"):
                     continue
                 # parse key-values
                 key, value = line.split("=", 1)
                 if value:
-                    key = 'os_{}'.format(key.lower())
+                    key = "os_{}".format(key.lower())
                     props[key] = value.strip('"')
 
     def remote_getWorkerInfo(self):
@@ -185,17 +191,19 @@ class BotBase(service.MultiService):
             try:
                 self.numcpus = multiprocessing.cpu_count()
             except NotImplementedError:
-                log.msg("warning: could not detect the number of CPUs for "
-                        "this worker. Assuming 1 CPU.")
+                log.msg(
+                    "warning: could not detect the number of CPUs for "
+                    "this worker. Assuming 1 CPU."
+                )
                 self.numcpus = 1
-        files['environ'] = os.environ.copy()
-        files['system'] = os.name
-        files['basedir'] = self.basedir
-        files['numcpus'] = self.numcpus
+        files["environ"] = os.environ.copy()
+        files["system"] = os.name
+        files["basedir"] = self.basedir
+        files["numcpus"] = self.numcpus
 
-        files['version'] = self.remote_getVersion()
-        files['worker_commands'] = self.remote_getCommands()
-        files['delete_leftover_dirs'] = self.delete_leftover_dirs
+        files["version"] = self.remote_getVersion()
+        files["worker_commands"] = self.remote_getCommands()
+        files["delete_leftover_dirs"] = self.delete_leftover_dirs
         return files
 
     def remote_getVersion(self):
@@ -212,16 +220,23 @@ class BotBase(service.MultiService):
 
 
 class WorkerBase(service.MultiService):
-
-    def __init__(self, name, basedir, bot_class,
-                 umask=None,
-                 unicode_encoding=None,
-                 delete_leftover_dirs=False):
+    def __init__(
+        self,
+        name,
+        basedir,
+        bot_class,
+        umask=None,
+        unicode_encoding=None,
+        delete_leftover_dirs=False,
+    ):
 
         service.MultiService.__init__(self)
         self.name = name
-        bot = bot_class(basedir, unicode_encoding=unicode_encoding,
-                       delete_leftover_dirs=delete_leftover_dirs)
+        bot = bot_class(
+            basedir,
+            unicode_encoding=unicode_encoding,
+            delete_leftover_dirs=delete_leftover_dirs,
+        )
         bot.setServiceParent(self)
         self.bot = bot
         self.umask = umask

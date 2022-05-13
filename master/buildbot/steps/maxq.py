@@ -24,20 +24,19 @@ from buildbot.process.results import SUCCESS
 
 
 class MaxQObserver(logobserver.LogLineObserver):
-
     def __init__(self):
         super().__init__()
         self.failures = 0
 
     def outLineReceived(self, line):
-        if line.startswith('TEST FAILURE:'):
+        if line.startswith("TEST FAILURE:"):
             self.failures += 1
 
 
 class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
     flunkOnFailure = True
     name = "maxq"
-    binary = 'run_maxq.py'
+    binary = "run_maxq.py"
 
     failures = 0
 
@@ -49,7 +48,7 @@ class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
         self.observer = MaxQObserver()
-        self.addLogObserver('stdio', self.observer)
+        self.addLogObserver("stdio", self.observer)
 
     @defer.inlineCallbacks
     def run(self):
@@ -59,7 +58,7 @@ class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
         cmd = yield self.makeRemoteShellCommand(command=command)
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
         self.failures = self.observer.failures
@@ -74,5 +73,5 @@ class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
 
     def getResultSummary(self):
         if self.failures:
-            return {'step': f"{self.failures} maxq failures"}
-        return {'step': 'success'}
+            return {"step": f"{self.failures} maxq failures"}
+        return {"step": "success"}

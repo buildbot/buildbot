@@ -27,8 +27,15 @@ PH_RUNNING_QUEUED = 3
 
 
 class Debouncer:
-    __slots__ = ['phase', 'timer', 'wait', 'function', 'stopped',
-                 'completeDeferreds', 'get_reactor']
+    __slots__ = [
+        "phase",
+        "timer",
+        "wait",
+        "function",
+        "stopped",
+        "completeDeferreds",
+        "get_reactor",
+    ]
 
     def __init__(self, wait, function, get_reactor):
         # time to wait
@@ -65,7 +72,7 @@ class Debouncer:
         self.phase = PH_RUNNING
         self.completeDeferreds = []
         d = defer.maybeDeferred(self.function)
-        d.addErrback(log.err, 'from debounced function:')
+        d.addErrback(log.err, "from debounced function:")
 
         @d.addCallback
         def retry(_):
@@ -93,7 +100,6 @@ class Debouncer:
 
 
 class _Descriptor:
-
     def __init__(self, fn, wait, attrName, get_reactor):
         self.fn = fn
         self.wait = wait
@@ -104,8 +110,11 @@ class _Descriptor:
         try:
             db = getattr(instance, self.attrName)
         except AttributeError:
-            db = Debouncer(self.wait, functools.partial(self.fn, instance),
-                           functools.partial(self.get_reactor, instance))
+            db = Debouncer(
+                self.wait,
+                functools.partial(self.fn, instance),
+                functools.partial(self.get_reactor, instance),
+            )
             setattr(instance, self.attrName, db)
         return db
 
@@ -118,4 +127,5 @@ def method(wait, get_reactor=_get_reactor_from_master):
     def wrap(fn):
         stateName = "__debounce_" + fn.__name__ + "__"
         return _Descriptor(fn, wait, stateName, get_reactor)
+
     return wrap

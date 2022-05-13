@@ -46,12 +46,12 @@ NUM_CONCURRENT = int(os.environ.get("MARATHON_TEST_NUM_CONCURRENT_BUILD", 1))
 
 
 class MarathonMaster(RunMasterBase):
-
     def setUp(self):
         if "BBTEST_MARATHON_URL" not in os.environ:
             raise SkipTest(
                 "marathon integration tests only run when environment variable BBTEST_MARATHON_URL"
-                " is with url to Marathon api ")
+                " is with url to Marathon api "
+            )
 
     @defer.inlineCallbacks
     def test_trigger(self):
@@ -62,7 +62,7 @@ class MarathonMaster(RunMasterBase):
         # if there are some retry, there will be more builds
         self.assertEqual(len(builds), 1 + NUM_CONCURRENT)
         for b in builds:
-            self.assertEqual(b['results'], SUCCESS)
+            self.assertEqual(b["results"], SUCCESS)
 
 
 # master configuration
@@ -71,50 +71,50 @@ def masterConfig(num_concurrent, extra_steps=None):
         extra_steps = []
     c = {}
 
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c["schedulers"] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
     triggereables = []
     for i in range(num_concurrent):
-        c['schedulers'].append(
-            schedulers.Triggerable(
-                name="trigsched" + str(i),
-                builderNames=["build"]))
+        c["schedulers"].append(
+            schedulers.Triggerable(name="trigsched" + str(i), builderNames=["build"])
+        )
         triggereables.append("trigsched" + str(i))
 
     f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
-    f.addStep(steps.Trigger(schedulerNames=triggereables,
-                            waitForFinish=True,
-                            updateSourceStamp=True))
-    f.addStep(steps.ShellCommand(command='echo world'))
+    f.addStep(steps.ShellCommand(command="echo hello"))
+    f.addStep(
+        steps.Trigger(schedulerNames=triggereables, waitForFinish=True, updateSourceStamp=True)
+    )
+    f.addStep(steps.ShellCommand(command="echo world"))
     f2 = BuildFactory()
-    f2.addStep(steps.ShellCommand(command='echo ola'))
+    f2.addStep(steps.ShellCommand(command="echo ola"))
     for step in extra_steps:
         f2.addStep(step)
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["marathon0"],
-                      factory=f),
-        BuilderConfig(name="build",
-                      workernames=["marathon" + str(i)
-                                   for i in range(num_concurrent)],
-                      factory=f2)]
-    url = os.environ.get('BBTEST_MARATHON_URL')
-    creds = os.environ.get('BBTEST_MARATHON_CREDS')
+    c["builders"] = [
+        BuilderConfig(name="testy", workernames=["marathon0"], factory=f),
+        BuilderConfig(
+            name="build",
+            workernames=["marathon" + str(i) for i in range(num_concurrent)],
+            factory=f2,
+        ),
+    ]
+    url = os.environ.get("BBTEST_MARATHON_URL")
+    creds = os.environ.get("BBTEST_MARATHON_CREDS")
     if creds is not None:
         user, password = creds.split(":")
     else:
         user = password = None
-    masterFQDN = os.environ.get('masterFQDN')
-    marathon_extra_config = {
-    }
-    c['workers'] = [
-        MarathonLatentWorker('marathon' + str(i), url, user, password,
-                             'buildbot/buildbot-worker:master',
-                             marathon_extra_config=marathon_extra_config,
-                             masterFQDN=masterFQDN)
+    masterFQDN = os.environ.get("masterFQDN")
+    marathon_extra_config = {}
+    c["workers"] = [
+        MarathonLatentWorker(
+            "marathon" + str(i),
+            url,
+            user,
+            password,
+            "buildbot/buildbot-worker:master",
+            marathon_extra_config=marathon_extra_config,
+            masterFQDN=masterFQDN,
+        )
         for i in range(num_concurrent)
     ]
     # un comment for debugging what happens if things looks locked.
@@ -122,8 +122,8 @@ def masterConfig(num_concurrent, extra_steps=None):
     # if the masterFQDN is forced (proxy case), then we use 9989 default port
     # else, we try to find a free port
     if masterFQDN is not None:
-        c['protocols'] = {"pb": {"port": "tcp:9989"}}
+        c["protocols"] = {"pb": {"port": "tcp:9989"}}
     else:
-        c['protocols'] = {"pb": {"port": "tcp:0"}}
+        c["protocols"] = {"pb": {"port": "tcp:0"}}
 
     return c

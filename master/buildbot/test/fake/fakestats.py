@@ -26,11 +26,10 @@ class FakeStatsStorageService(StatsStorageBase):
     Fake Storage service used in unit tests
     """
 
-    def __init__(self, stats=None, name='FakeStatsStorageService'):
+    def __init__(self, stats=None, name="FakeStatsStorageService"):
         self.stored_data = []
         if not stats:
-            self.stats = [capture.CaptureProperty("TestBuilder",
-                                                  'test')]
+            self.stats = [capture.CaptureProperty("TestBuilder", "test")]
         else:
             self.stats = stats
         self.name = name

@@ -33,7 +33,7 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
     DEFAULT_CACHE_SIZE = 1
 
     def __init__(self):
-        self.setName('caches')
+        self.setName("caches")
         self.config = {}
         self._caches = {}
 
@@ -61,13 +61,17 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.config = new_config.caches
         for name, cache in self._caches.items():
-            cache.set_max_size(new_config.caches.get(name,
-                                                     self.DEFAULT_CACHE_SIZE))
+            cache.set_max_size(new_config.caches.get(name, self.DEFAULT_CACHE_SIZE))
 
         return super().reconfigServiceWithBuildbotConfig(new_config)
 
     def get_metrics(self):
         return {
-            n: {'hits': c.hits, 'refhits': c.refhits,
-                'misses': c.misses, 'max_size': c.max_size}
-            for n, c in self._caches.items()}
+            n: {
+                "hits": c.hits,
+                "refhits": c.refhits,
+                "misses": c.misses,
+                "max_size": c.max_size,
+            }
+            for n, c in self._caches.items()
+        }

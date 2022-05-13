@@ -36,10 +36,10 @@ class MakeDirectory(base.Command):
     header = "mkdir"
 
     # args['paths'] specifies the absolute paths of directories to create
-    requiredArgs = ['paths']
+    requiredArgs = ["paths"]
 
     def start(self):
-        paths = self.args['paths']
+        paths = self.args["paths"]
 
         for dirname in paths:
             try:
@@ -48,10 +48,11 @@ class MakeDirectory(base.Command):
             except OSError as e:
                 log.msg("MakeDirectory {0} failed: {1}".format(dirname, e))
                 self.sendStatus(
-                    {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)})
-                self.sendStatus({'rc': e.errno})
+                    {"header": "{0}: {1}: {2}".format(self.header, e.strerror, dirname)}
+                )
+                self.sendStatus({"rc": e.errno})
                 return
-        self.sendStatus({'rc': 0})
+        self.sendStatus({"rc": 0})
 
 
 class RemoveDirectory(base.Command):
@@ -59,18 +60,18 @@ class RemoveDirectory(base.Command):
     header = "rmdir"
 
     # args['paths'] specifies the absolute paths of directories or files to remove
-    requiredArgs = ['paths']
+    requiredArgs = ["paths"]
 
     def setup(self, args):
-        self.logEnviron = args.get('logEnviron', True)
+        self.logEnviron = args.get("logEnviron", True)
 
     @defer.inlineCallbacks
     def start(self):
         args = self.args
-        dirnames = args['paths']
+        dirnames = args["paths"]
 
-        self.timeout = args.get('timeout', 120)
-        self.maxTime = args.get('maxTime', None)
+        self.timeout = args.get("timeout", 120)
+        self.maxTime = args.get("maxTime", None)
         self.rc = 0
 
         assert dirnames
@@ -82,7 +83,7 @@ class RemoveDirectory(base.Command):
             if res != 0:
                 self.rc = res
 
-        self.sendStatus({'rc': self.rc})
+        self.sendStatus({"rc": self.rc})
 
     def removeSingleDir(self, path):
         if runtime.platformType != "posix":
@@ -92,9 +93,9 @@ class RemoveDirectory(base.Command):
                 return 0  # rc=0
 
             def eb(f):
-                self.sendStatus(
-                    {'header': 'exception from rmdirRecursive\n' + f.getTraceback()})
+                self.sendStatus({"header": "exception from rmdirRecursive\n" + f.getTraceback()})
                 return -1  # rc=-1
+
             d.addCallbacks(cb, eb)
         else:
             d = self._clobber(None, path)
@@ -105,11 +106,17 @@ class RemoveDirectory(base.Command):
     def _clobber(self, dummy, path, chmodDone=False):
         command = ["rm", "-rf", path]
 
-        c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
-                                  self.protocol_command.unicode_encoding,
-                                  self.protocol_command.send_update,
-                                  sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                                  logEnviron=self.logEnviron, usePTY=False)
+        c = runprocess.RunProcess(
+            command,
+            self.protocol_command.worker_basedir,
+            self.protocol_command.unicode_encoding,
+            self.protocol_command.send_update,
+            sendRC=0,
+            timeout=self.timeout,
+            maxTime=self.maxTime,
+            logEnviron=self.logEnviron,
+            usePTY=False,
+        )
 
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
@@ -132,17 +139,23 @@ class RemoveDirectory(base.Command):
         # Attempt a recursive chmod and re-try the rm -rf after.
 
         command = ["chmod", "-Rf", "u+rwx", path]
-        if sys.platform.startswith('freebsd'):
+        if sys.platform.startswith("freebsd"):
             # Work around a broken 'chmod -R' on FreeBSD (it tries to recurse into a
             # directory for which it doesn't have permission, before changing that
             # permission) by running 'find' instead
-            command = ["find", path, '-exec', 'chmod', 'u+rwx', '{}', ';']
+            command = ["find", path, "-exec", "chmod", "u+rwx", "{}", ";"]
 
-        c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
-                                  self.protocol_command.unicode_encoding,
-                                  self.protocol_command.send_update,
-                                  sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                                  logEnviron=self.logEnviron, usePTY=False)
+        c = runprocess.RunProcess(
+            command,
+            self.protocol_command.worker_basedir,
+            self.protocol_command.unicode_encoding,
+            self.protocol_command.send_update,
+            sendRC=0,
+            timeout=self.timeout,
+            maxTime=self.maxTime,
+            logEnviron=self.logEnviron,
+            usePTY=False,
+        )
 
         self.command = c
         rc = yield c.start()
@@ -156,19 +169,19 @@ class CopyDirectory(base.Command):
 
     # args['to_path'] and args['from_path'] are relative to Builder directory, and
     # are required.
-    requiredArgs = ['to_path', 'from_path']
+    requiredArgs = ["to_path", "from_path"]
 
     def setup(self, args):
-        self.logEnviron = args.get('logEnviron', True)
+        self.logEnviron = args.get("logEnviron", True)
 
     def start(self):
         args = self.args
 
-        from_path = self.args['from_path']
-        to_path = self.args['to_path']
+        from_path = self.args["from_path"]
+        to_path = self.args["to_path"]
 
-        self.timeout = args.get('timeout', 120)
-        self.maxTime = args.get('maxTime', None)
+        self.timeout = args.get("timeout", 120)
+        self.maxTime = args.get("maxTime", None)
 
         if runtime.platformType != "posix":
             d = threads.deferToThread(shutil.copytree, from_path, to_path)
@@ -177,29 +190,38 @@ class CopyDirectory(base.Command):
                 return 0  # rc=0
 
             def eb(f):
-                self.sendStatus(
-                    {'header': 'exception from copytree\n' + f.getTraceback()})
+                self.sendStatus({"header": "exception from copytree\n" + f.getTraceback()})
                 return -1  # rc=-1
+
             d.addCallbacks(cb, eb)
 
             @d.addCallback
             def send_rc(rc):
-                self.sendStatus({'rc': rc})
+                self.sendStatus({"rc": rc})
+
         else:
             if not os.path.exists(os.path.dirname(to_path)):
                 os.makedirs(os.path.dirname(to_path))
             if os.path.exists(to_path):
                 # I don't think this happens, but just in case..
-                log.msg(("cp target '{0}' already exists -- cp will not do what you think!"
-                         ).format(to_path))
+                log.msg(
+                    ("cp target '{0}' already exists -- cp will not do what you think!").format(
+                        to_path
+                    )
+                )
 
-            command = ['cp', '-R', '-P', '-p', '-v', from_path, to_path]
-            c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
-                                      self.protocol_command.unicode_encoding,
-                                      self.protocol_command.send_update,
-                                      sendRC=False, timeout=self.timeout,
-                                      maxTime=self.maxTime, logEnviron=self.logEnviron,
-                                      usePTY=False)
+            command = ["cp", "-R", "-P", "-p", "-v", from_path, to_path]
+            c = runprocess.RunProcess(
+                command,
+                self.protocol_command.worker_basedir,
+                self.protocol_command.unicode_encoding,
+                self.protocol_command.send_update,
+                sendRC=False,
+                timeout=self.timeout,
+                maxTime=self.maxTime,
+                logEnviron=self.logEnviron,
+                usePTY=False,
+            )
             self.command = c
             d = c.start()
             d.addCallback(self._abandonOnFailure)
@@ -213,20 +235,19 @@ class StatFile(base.Command):
     header = "stat"
 
     # args['path'] absolute path of a file
-    requireArgs = ['path']
+    requireArgs = ["path"]
 
     def start(self):
-        filename = self.args['path']
+        filename = self.args["path"]
 
         try:
             stat = os.stat(filename)
-            self.sendStatus({'stat': tuple(stat)})
-            self.sendStatus({'rc': 0})
+            self.sendStatus({"stat": tuple(stat)})
+            self.sendStatus({"rc": 0})
         except OSError as e:
             log.msg("StatFile {0} failed: {1}".format(filename, e))
-            self.sendStatus(
-                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, filename)})
-            self.sendStatus({'rc': e.errno})
+            self.sendStatus({"header": "{0}: {1}: {2}".format(self.header, e.strerror, filename)})
+            self.sendStatus({"rc": e.errno})
 
 
 class GlobPath(base.Command):
@@ -234,10 +255,10 @@ class GlobPath(base.Command):
     header = "glob"
 
     # args['path'] shell-style path specification of a pattern
-    requiredArgs = ['path']
+    requiredArgs = ["path"]
 
     def start(self):
-        pathname = self.args['path']
+        pathname = self.args["path"]
 
         try:
             # recursive matching is only support in python3.5+
@@ -245,13 +266,12 @@ class GlobPath(base.Command):
                 files = glob.glob(pathname, recursive=True)
             else:
                 files = glob.glob(pathname)
-            self.sendStatus({'files': files})
-            self.sendStatus({'rc': 0})
+            self.sendStatus({"files": files})
+            self.sendStatus({"rc": 0})
         except OSError as e:
             log.msg("GlobPath {0} failed: {1}".format(pathname, e))
-            self.sendStatus(
-                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)})
-            self.sendStatus({'rc': e.errno})
+            self.sendStatus({"header": "{0}: {1}: {2}".format(self.header, e.strerror, pathname)})
+            self.sendStatus({"rc": e.errno})
 
 
 class ListDir(base.Command):
@@ -259,20 +279,19 @@ class ListDir(base.Command):
     header = "listdir"
 
     # args['path'] absolute path of the directory to list
-    requireArgs = ['path']
+    requireArgs = ["path"]
 
     def start(self):
-        dirname = self.args['path']
+        dirname = self.args["path"]
 
         try:
             files = os.listdir(dirname)
-            self.sendStatus({'files': files})
-            self.sendStatus({'rc': 0})
+            self.sendStatus({"files": files})
+            self.sendStatus({"rc": 0})
         except OSError as e:
             log.msg("ListDir {0} failed: {1}".format(dirname, e))
-            self.sendStatus(
-                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)})
-            self.sendStatus({'rc': e.errno})
+            self.sendStatus({"header": "{0}: {1}: {2}".format(self.header, e.strerror, dirname)})
+            self.sendStatus({"rc": e.errno})
 
 
 class RemoveFile(base.Command):
@@ -280,16 +299,15 @@ class RemoveFile(base.Command):
     header = "rmfile"
 
     # args['path'] absolute path of a file to delete
-    requiredArgs = ['path']
+    requiredArgs = ["path"]
 
     def start(self):
-        pathname = self.args['path']
+        pathname = self.args["path"]
 
         try:
             os.remove(pathname)
-            self.sendStatus({'rc': 0})
+            self.sendStatus({"rc": 0})
         except OSError as e:
             log.msg("remove file {0} failed: {1}".format(pathname, e))
-            self.sendStatus(
-                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)})
-            self.sendStatus({'rc': e.errno})
+            self.sendStatus({"header": "{0}: {1}: {2}".format(self.header, e.strerror, pathname)})
+            self.sendStatus({"rc": e.errno})

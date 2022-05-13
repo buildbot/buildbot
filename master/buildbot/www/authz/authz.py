@@ -27,7 +27,6 @@ from buildbot.www.authz.roles import RolesFromOwner
 
 
 class Forbidden(Error):
-
     def __init__(self, msg):
         super().__init__(403, msg)
 
@@ -43,7 +42,6 @@ def reStrMatcher(value, match):
 
 @implementer(IConfigured)
 class Authz:
-
     def getConfigDict(self):
         return {}
 
@@ -54,10 +52,8 @@ class Authz:
         if roleMatchers is None:
             roleMatchers = []
         self.allowRules = allowRules
-        self.roleMatchers = [
-            r for r in roleMatchers if not isinstance(r, RolesFromOwner)]
-        self.ownerRoleMatchers = [
-            r for r in roleMatchers if isinstance(r, RolesFromOwner)]
+        self.roleMatchers = [r for r in roleMatchers if not isinstance(r, RolesFromOwner)]
+        self.ownerRoleMatchers = [r for r in roleMatchers if isinstance(r, RolesFromOwner)]
 
     def setMaster(self, master):
         self.master = master
@@ -86,14 +82,13 @@ class Authz:
                 if self.ownerRoleMatchers:
                     owner = yield match.getOwner()
                     if owner is not None:
-                        roles.update(
-                            self.getOwnerRolesFromUser(userDetails, owner))
+                        roles.update(self.getOwnerRolesFromUser(userDetails, owner))
                 for role in roles:
                     if self.match(role, rule.role):
                         return None
 
                 if not rule.defaultDeny:
-                    continue   # check next suitable rule if not denied
+                    continue  # check next suitable rule if not denied
 
                 error_msg = unicode2bytes(f"you need to have role '{rule.role}'")
                 raise Forbidden(error_msg)

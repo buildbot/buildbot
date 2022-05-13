@@ -34,13 +34,10 @@ class RpmLint(Test):
     description = ["Checking for RPM/SPEC issues"]
     descriptionDone = ["Finished checking RPM/SPEC issues"]
 
-    fileloc = '.'
+    fileloc = "."
     config = None
 
-    def __init__(self,
-                 fileloc=None,
-                 config=None,
-                 **kwargs):
+    def __init__(self, fileloc=None, config=None, **kwargs):
         """
         Create the Rpmlint object.
 
@@ -59,11 +56,11 @@ class RpmLint(Test):
 
         self.command = ["rpmlint", "-i"]
         if self.config:
-            self.command += ['-f', self.config]
+            self.command += ["-f", self.config]
         self.command.append(self.fileloc)
 
         self.obs = pkgutil.WEObserver()
-        self.addLogObserver('stdio', self.obs)
+        self.addLogObserver("stdio", self.obs)
 
     @defer.inlineCallbacks
     def createSummary(self):
@@ -75,6 +72,6 @@ class RpmLint(Test):
         warnings = self.obs.warnings
         errors = []
         if warnings:
-            yield self.addCompleteLog(f'{len(warnings)} Warnings', "\n".join(warnings))
+            yield self.addCompleteLog(f"{len(warnings)} Warnings", "\n".join(warnings))
         if errors:
-            yield self.addCompleteLog(f'{len(errors)} Errors', "\n".join(errors))
+            yield self.addCompleteLog(f"{len(errors)} Errors", "\n".join(errors))

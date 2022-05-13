@@ -22,7 +22,6 @@ from buildbot.util import service
 
 @implementer(interfaces.IMachine)
 class Machine(service.BuildbotService):
-
     def checkConfig(self, name, **kwargs):
         super().checkConfig(**kwargs)
         self.name = name

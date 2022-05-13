@@ -15,7 +15,7 @@
 
 import re
 
-_ident_re = re.compile('^[a-zA-Z_-][.a-zA-Z0-9_-]*$')
+_ident_re = re.compile("^[a-zA-Z_-][.a-zA-Z0-9_-]*$")
 
 
 def ident(x):
@@ -25,7 +25,6 @@ def ident(x):
 
 
 class Matcher:
-
     def __init__(self):
         self._patterns = {}
         self._dirty = True
@@ -36,9 +35,9 @@ class Matcher:
         self._dirty = True
 
     def __repr__(self):
-        return f'<Matcher {repr(self._patterns)}>'
+        return f"<Matcher {repr(self._patterns)}>"
 
-    path_elt_re = re.compile('^(.?):([a-z0-9_.]+)$')
+    path_elt_re = re.compile("^(.?):([a-z0-9_.]+)$")
     type_fns = dict(n=int, i=ident)
 
     def __getitem__(self, path):
@@ -68,7 +67,7 @@ class Matcher:
             else:
                 # complete match
                 return patterns[pattern], kwargs
-        raise KeyError(f'No match for {repr(path)}')
+        raise KeyError(f"No match for {repr(path)}")
 
     def iterPatterns(self):
         return list(self._patterns.items())

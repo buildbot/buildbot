@@ -38,7 +38,6 @@ class FakeMaster:
 
 
 class TestPBManager(unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.pbm = PBManager()
@@ -64,20 +63,20 @@ class TestPBManager(unittest.TestCase):
         # make sure things look right
         self.assertIn(portstr, self.pbm.dispatchers)
         disp = self.pbm.dispatchers[portstr]
-        self.assertIn('boris', disp.users)
+        self.assertIn("boris", disp.users)
 
         # we can't actually connect to it, as that requires finding the
         # dynamically allocated port number which is buried out of reach;
         # however, we can try the requestAvatar and requestAvatarId methods.
 
-        username = yield disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
+        username = yield disp.requestAvatarId(credentials.UsernamePassword(b"boris", b"pass"))
 
-        self.assertEqual(username, b'boris')
-        avatar = yield disp.requestAvatar(b'boris', mock.Mock(), pb.IPerspective)
+        self.assertEqual(username, b"boris")
+        avatar = yield disp.requestAvatar(b"boris", mock.Mock(), pb.IPerspective)
 
         _, persp, __ = avatar
         self.assertTrue(persp.is_my_persp)
-        self.assertIn('boris', self.connections)
+        self.assertIn("boris", self.connections)
 
         yield reg.unregister()
 
@@ -89,19 +88,19 @@ class TestPBManager(unittest.TestCase):
         # make sure things look right
         self.assertIn(portstr, self.pbm.dispatchers)
         disp = self.pbm.dispatchers[portstr]
-        self.assertIn('boris', disp.users)
+        self.assertIn("boris", disp.users)
 
         # we can't actually connect to it, as that requires finding the
         # dynamically allocated port number which is buried out of reach;
         # however, we can try the requestAvatar and requestAvatarId methods.
 
-        username = yield disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
+        username = yield disp.requestAvatarId(credentials.UsernamePassword(b"boris", b"pass"))
 
-        self.assertEqual(username, b'boris')
+        self.assertEqual(username, b"boris")
         with self.assertRaises(ValueError):
-            yield disp.requestAvatar(b'notboris', mock.Mock(), pb.IPerspective)
+            yield disp.requestAvatar(b"notboris", mock.Mock(), pb.IPerspective)
 
-        self.assertNotIn('boris', self.connections)
+        self.assertNotIn("boris", self.connections)
 
         yield reg.unregister()
 
@@ -112,9 +111,8 @@ class TestPBManager(unittest.TestCase):
 
         disp = self.pbm.dispatchers[portstr]
 
-        d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
-        self.assertTrue(d.called,
-            "requestAvatarId should have been called since the lock is free")
+        d = disp.requestAvatarId(credentials.UsernamePassword(b"boris", b"pass"))
+        self.assertTrue(d.called, "requestAvatarId should have been called since the lock is free")
 
         yield reg.unregister()
 
@@ -129,13 +127,14 @@ class TestPBManager(unittest.TestCase):
             # simulate a reconfig/restart in progress
             yield self.pbm.master.initLock.acquire()
             # try to authenticate while the lock is locked
-            d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
-            self.assertFalse(d.called,
-                "requestAvatarId should block until the lock is released")
+            d = disp.requestAvatarId(credentials.UsernamePassword(b"boris", b"pass"))
+            self.assertFalse(d.called, "requestAvatarId should block until the lock is released")
         finally:
             # release the lock, it should allow for auth to proceed
             yield self.pbm.master.initLock.release()
 
-        self.assertTrue(d.called,
-            "requestAvatarId should have been called after the lock was released")
+        self.assertTrue(
+            d.called,
+            "requestAvatarId should have been called after the lock was released",
+        )
         yield reg.unregister()

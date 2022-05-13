@@ -35,34 +35,53 @@ class RemoteWorkerError(Exception):
 
 
 def decode_http_authorization_header(value):
-    if value[:5] != 'Basic':
+    if value[:5] != "Basic":
         raise ValueError("Value should always start with 'Basic'")
 
     credentials_str = base64.b64decode(value[6:]).decode()
-    if ':' not in credentials_str:
+    if ":" not in credentials_str:
         raise ValueError("String of credentials should always have a colon.")
 
-    username, password = credentials_str.split(':', maxsplit=1)
+    username, password = credentials_str.split(":", maxsplit=1)
     return (username, password)
 
 
 def encode_http_authorization_header(name, password):
     if b":" in name:
         raise ValueError("Username is not allowed to contain a colon.")
-    userpass = name + b':' + password
-    return 'Basic ' + base64.b64encode(userpass).decode()
+    userpass = name + b":" + password
+    return "Basic " + base64.b64encode(userpass).decode()
 
 
 def remote_print(self, message):
-    log.msg("WorkerForBuilder.remote_print({0}): message from master: {1}".format(
-            self.name, message))
+    log.msg(
+        "WorkerForBuilder.remote_print({0}): message from master: {1}".format(self.name, message)
+    )
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):
-    def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
-                 on_command_complete, protocol, command_id, command, args):
-        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
-                                     on_command_complete, None, command, command_id, args)
+    def __init__(
+        self,
+        unicode_encoding,
+        worker_basedir,
+        builder_is_running,
+        on_command_complete,
+        protocol,
+        command_id,
+        command,
+        args,
+    ):
+        ProtocolCommandBase.__init__(
+            self,
+            unicode_encoding,
+            worker_basedir,
+            builder_is_running,
+            on_command_complete,
+            None,
+            command,
+            command_id,
+            args,
+        )
         self.protocol = protocol
         self.command_id = command_id
 
@@ -80,15 +99,16 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
                 args["want_stderr"] = 0
 
         # to silence the ValueError in class Command() init
-        if (command in ("upload_directory", "upload_file")) and 'writer' not in args:
-            args['writer'] = None
-        if command == "download_file" and 'reader' not in args:
-            args['reader'] = None
+        if (command in ("upload_directory", "upload_file")) and "writer" not in args:
+            args["writer"] = None
+        if command == "download_file" and "reader" not in args:
+            args["reader"] = None
 
     # Returns a Deferred
     def protocol_update(self, updates):
-        return self.protocol.get_message_result({'op': 'update', 'args': updates,
-                                                 'command_id': self.command_id})
+        return self.protocol.get_message_result(
+            {"op": "update", "args": updates, "command_id": self.command_id}
+        )
 
     def protocol_notify_on_disconnect(self):
         pass
@@ -97,45 +117,64 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
     def protocol_complete(self, failure):
         if failure is not None:
             failure = str(failure)
-        return self.protocol.get_message_result({'op': 'complete', 'args': failure,
-                                                 'command_id': self.command_id})
+        return self.protocol.get_message_result(
+            {"op": "complete", "args": failure, "command_id": self.command_id}
+        )
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
-        return self.protocol.get_message_result({'op': 'update_upload_file_close',
-                                                 'command_id': self.command_id})
+        return self.protocol.get_message_result(
+            {"op": "update_upload_file_close", "command_id": self.command_id}
+        )
 
     # Returns a Deferred
     def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
-        return self.protocol.get_message_result({'op': 'update_upload_file_utime',
-                                                 'access_time': access_time,
-                                                 'modified_time': modified_time,
-                                                 'command_id': self.command_id})
+        return self.protocol.get_message_result(
+            {
+                "op": "update_upload_file_utime",
+                "access_time": access_time,
+                "modified_time": modified_time,
+                "command_id": self.command_id,
+            }
+        )
 
     # Returns a Deferred
     def protocol_update_upload_file_write(self, writer, data):
-        return self.protocol.get_message_result({'op': 'update_upload_file_write', 'args': data,
-                                                 'command_id': self.command_id})
+        return self.protocol.get_message_result(
+            {
+                "op": "update_upload_file_write",
+                "args": data,
+                "command_id": self.command_id,
+            }
+        )
 
     # Returns a Deferred
     def protocol_update_upload_directory(self, writer):
-        return self.protocol.get_message_result({'op': 'update_upload_directory_unpack',
-                                                 'command_id': self.command_id})
+        return self.protocol.get_message_result(
+            {"op": "update_upload_directory_unpack", "command_id": self.command_id}
+        )
 
     # Returns a Deferred
     def protocol_update_upload_directory_write(self, writer, data):
-        return self.protocol.get_message_result({'op': 'update_upload_directory_write',
-                                                 'args': data, 'command_id': self.command_id})
+        return self.protocol.get_message_result(
+            {
+                "op": "update_upload_directory_write",
+                "args": data,
+                "command_id": self.command_id,
+            }
+        )
 
     # Returns a Deferred
     def protocol_update_read_file_close(self, reader):
-        return self.protocol.get_message_result({'op': 'update_read_file_close',
-                                                 'command_id': self.command_id})
+        return self.protocol.get_message_result(
+            {"op": "update_read_file_close", "command_id": self.command_id}
+        )
 
     # Returns a Deferred
     def protocol_update_read_file(self, reader, length):
-        return self.protocol.get_message_result({'op': 'update_read_file', 'length': length,
-                                                 'command_id': self.command_id})
+        return self.protocol.get_message_result(
+            {"op": "update_read_file", "length": length, "command_id": self.command_id}
+        )
 
 
 class ConnectionLostError(Exception):
@@ -167,7 +206,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             headers={"Authorization": auth_header},
             useragent=self.factory.useragent,
             origin=self.factory.origin,
-            protocols=self.factory.protocols
+            protocols=self.factory.protocols,
         )
 
     def maybe_log_worker_to_master_msg(self, message):
@@ -191,8 +230,8 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     def call_print(self, msg):
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('message',))
-            self.factory.buildbot_bot.remote_print(msg['message'])
+            self.contains_msg_key(msg, ("message",))
+            self.factory.buildbot_bot.remote_print(msg["message"])
             result = None
         except Exception as e:
             is_exception = True
@@ -225,10 +264,11 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     def call_start_command(self, msg):
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id', 'command_name', 'args'))
+            self.contains_msg_key(msg, ("command_id", "command_name", "args"))
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.start_command(self, msg['command_id'],
-                                                          msg['command_name'], msg['args'])
+            yield self.factory.buildbot_bot.start_command(
+                self, msg["command_id"], msg["command_name"], msg["args"]
+            )
             result = None
         except Exception as e:
             is_exception = True
@@ -252,9 +292,9 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     def call_interrupt_command(self, msg):
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id', 'why'))
+            self.contains_msg_key(msg, ("command_id", "why"))
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.interrupt_command(msg['command_id'], msg['why'])
+            yield self.factory.buildbot_bot.interrupt_command(msg["command_id"], msg["why"])
             result = None
         except Exception as e:
             is_exception = True
@@ -263,55 +303,56 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
     def send_response_msg(self, msg, result, is_exception):
         dict_output = {
-            'op': 'response',
-            'seq_number': msg['seq_number'],
-            'result': result
+            "op": "response",
+            "seq_number": msg["seq_number"],
+            "result": result,
         }
 
         if is_exception:
-            dict_output['is_exception'] = True
+            dict_output["is_exception"] = True
         self.maybe_log_worker_to_master_msg(dict_output)
         payload = msgpack.packb(dict_output)
         self.sendMessage(payload, isBinary=True)
 
     def onMessage(self, payload, isBinary):
         if not isBinary:
-            log.msg('Message type form master unsupported')
+            log.msg("Message type form master unsupported")
             return
 
         msg = msgpack.unpackb(payload, raw=False)
         self.maybe_log_master_to_worker_msg(msg)
 
-        if 'seq_number' not in msg or 'op' not in msg:
-            log.msg('Invalid message from master: {}'.format(msg))
+        if "seq_number" not in msg or "op" not in msg:
+            log.msg("Invalid message from master: {}".format(msg))
             return
-        if msg['op'] == "print":
+        if msg["op"] == "print":
             self._deferwaiter.add(self.call_print(msg))
-        elif msg['op'] == "keepalive":
+        elif msg["op"] == "keepalive":
             self._deferwaiter.add(self.call_keepalive(msg))
-        elif msg['op'] == "get_worker_info":
+        elif msg["op"] == "get_worker_info":
             self._deferwaiter.add(self.call_get_worker_info(msg))
-        elif msg['op'] == "start_command":
+        elif msg["op"] == "start_command":
             self._deferwaiter.add(self.call_start_command(msg))
-        elif msg['op'] == "shutdown":
+        elif msg["op"] == "shutdown":
             self._deferwaiter.add(self.call_shutdown(msg))
-        elif msg['op'] == "interrupt_command":
+        elif msg["op"] == "interrupt_command":
             self._deferwaiter.add(self.call_interrupt_command(msg))
-        elif msg['op'] == "response":
-            seq_number = msg['seq_number']
+        elif msg["op"] == "response":
+            seq_number = msg["seq_number"]
             if "is_exception" in msg:
-                self.seq_num_to_waiters_map[seq_number].errback(RemoteWorkerError(msg['result']))
+                self.seq_num_to_waiters_map[seq_number].errback(RemoteWorkerError(msg["result"]))
             else:
-                self.seq_num_to_waiters_map[seq_number].callback(msg['result'])
+                self.seq_num_to_waiters_map[seq_number].callback(msg["result"])
             # stop waiting for a response of this command
             del self.seq_num_to_waiters_map[seq_number]
         else:
-            self.send_response_msg(msg, "Command {} does not exist.".format(msg['op']),
-                                   is_exception=True)
+            self.send_response_msg(
+                msg, "Command {} does not exist.".format(msg["op"]), is_exception=True
+            )
 
     @defer.inlineCallbacks
     def get_message_result(self, msg):
-        msg['seq_number'] = self.seq_number
+        msg["seq_number"] = self.seq_number
         self.maybe_log_worker_to_master_msg(msg)
         msg = msgpack.packb(msg)
         d = defer.Deferred()

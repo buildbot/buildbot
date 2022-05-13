@@ -27,11 +27,11 @@ class BackoffTimeoutExceededError(Exception):
 class ExponentialBackoffEngine:
     def __init__(self, start_seconds, multiplier, max_wait_seconds):
         if start_seconds < 0:
-            raise ValueError('start_seconds cannot be negative')
+            raise ValueError("start_seconds cannot be negative")
         if multiplier < 0:
-            raise ValueError('multiplier cannot be negative')
+            raise ValueError("multiplier cannot be negative")
         if max_wait_seconds < 0:
-            raise ValueError('max_wait_seconds cannot be negative')
+            raise ValueError("max_wait_seconds cannot be negative")
 
         self.start_seconds = start_seconds
         self.multiplier = multiplier

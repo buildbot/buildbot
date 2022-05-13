@@ -30,14 +30,16 @@ from buildbot.util import sautils
 
 
 class TestBase(unittest.TestCase):
-
     def setUp(self):
         meta = sa.MetaData()
-        self.tbl = sautils.Table('tbl', meta,
-                                 sa.Column('str32', sa.String(length=32)),
-                                 sa.Column('txt', sa.Text))
+        self.tbl = sautils.Table(
+            "tbl",
+            meta,
+            sa.Column("str32", sa.String(length=32)),
+            sa.Column("txt", sa.Text),
+        )
         self.db = mock.Mock()
-        self.db.pool.engine.dialect.name = 'mysql'
+        self.db.pool.engine.dialect.name = "mysql"
         self.comp = base.DBConnectorComponent(self.db)
 
     def test_checkLength_ok(self):
@@ -61,7 +63,7 @@ class TestBase(unittest.TestCase):
             self.comp.checkLength(self.tbl.c.txt, ("long string" * 5))
 
     def test_checkLength_long_not_mysql(self):
-        self.db.pool.engine.dialect.name = 'sqlite'
+        self.db.pool.engine.dialect.name = "sqlite"
         self.comp.checkLength(self.tbl.c.str32, "long string" * 5)
         # run that again since the method gets stubbed out
         self.comp.checkLength(self.tbl.c.str32, "long string" * 5)
@@ -70,95 +72,97 @@ class TestBase(unittest.TestCase):
         return hashlib.sha1(s).hexdigest()
 
     def test_hashColumns_single(self):
-        self.assertEqual(self.comp.hashColumns('master'),
-                         self._sha1(b'master'))
+        self.assertEqual(self.comp.hashColumns("master"), self._sha1(b"master"))
 
     def test_hashColumns_multiple(self):
-        self.assertEqual(self.comp.hashColumns('a', None, 'b', 1),
-                         self._sha1(b'a\0\xf5\x00b\x001'))
+        self.assertEqual(
+            self.comp.hashColumns("a", None, "b", 1), self._sha1(b"a\0\xf5\x00b\x001")
+        )
 
     def test_hashColumns_None(self):
-        self.assertEqual(self.comp.hashColumns(None),
-                         self._sha1(b'\xf5'))
+        self.assertEqual(self.comp.hashColumns(None), self._sha1(b"\xf5"))
 
     def test_hashColumns_integer(self):
-        self.assertEqual(self.comp.hashColumns(11),
-                         self._sha1(b'11'))
+        self.assertEqual(self.comp.hashColumns(11), self._sha1(b"11"))
 
     def test_hashColumns_unicode_ascii_match(self):
-        self.assertEqual(self.comp.hashColumns('master'),
-                         self.comp.hashColumns('master'))
+        self.assertEqual(self.comp.hashColumns("master"), self.comp.hashColumns("master"))
 
 
-class TestBaseAsConnectorComponent(unittest.TestCase,
-                                   connector_component.ConnectorComponentMixin):
-
+class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.ConnectorComponentMixin):
     @defer.inlineCallbacks
     def setUp(self):
         # this co-opts the masters table to test findSomethingId
-        yield self.setUpConnectorComponent(
-            table_names=['masters'])
+        yield self.setUpConnectorComponent(table_names=["masters"])
 
         self.db.base = base.DBConnectorComponent(self.db)
 
     @defer.inlineCallbacks
     def test_findSomethingId_race(self):
         tbl = self.db.model.masters
-        hash = hashlib.sha1(b'somemaster').hexdigest()
+        hash = hashlib.sha1(b"somemaster").hexdigest()
 
         def race_thd(conn):
-            conn.execute(tbl.insert(),
-                         id=5, name='somemaster', name_hash=hash,
-                         active=1, last_active=1)
+            conn.execute(
+                tbl.insert(),
+                id=5,
+                name="somemaster",
+                name_hash=hash,
+                active=1,
+                last_active=1,
+            )
+
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
-            insert_values=dict(name='somemaster', name_hash=hash,
-                               active=1, last_active=1),
-            _race_hook=race_thd)
+            insert_values=dict(name="somemaster", name_hash=hash, active=1, last_active=1),
+            _race_hook=race_thd,
+        )
         self.assertEqual(id, 5)
 
     @defer.inlineCallbacks
     def test_findSomethingId_new(self):
         tbl = self.db.model.masters
-        hash = hashlib.sha1(b'somemaster').hexdigest()
+        hash = hashlib.sha1(b"somemaster").hexdigest()
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
-            insert_values=dict(name='somemaster', name_hash=hash,
-                               active=1, last_active=1))
+            insert_values=dict(name="somemaster", name_hash=hash, active=1, last_active=1),
+        )
         self.assertEqual(id, 1)
 
     @defer.inlineCallbacks
     def test_findSomethingId_existing(self):
         tbl = self.db.model.masters
-        hash = hashlib.sha1(b'somemaster').hexdigest()
+        hash = hashlib.sha1(b"somemaster").hexdigest()
 
-        yield self.insertTestData([
-            fakedb.Master(id=7, name='somemaster', name_hash=hash),
-        ])
+        yield self.insertTestData(
+            [
+                fakedb.Master(id=7, name="somemaster", name_hash=hash),
+            ]
+        )
 
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
-            insert_values=dict(name='somemaster', name_hash=hash,
-                               active=1, last_active=1))
+            insert_values=dict(name="somemaster", name_hash=hash, active=1, last_active=1),
+        )
         self.assertEqual(id, 7)
 
     @defer.inlineCallbacks
     def test_findSomethingId_new_noCreate(self):
         tbl = self.db.model.masters
-        hash = hashlib.sha1(b'somemaster').hexdigest()
+        hash = hashlib.sha1(b"somemaster").hexdigest()
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
-            insert_values=dict(name='somemaster', name_hash=hash,
-                               active=1, last_active=1), autoCreate=False)
+            insert_values=dict(name="somemaster", name_hash=hash, active=1, last_active=1),
+            autoCreate=False,
+        )
         self.assertEqual(id, None)
 
 
 class TestCachedDecorator(unittest.TestCase):
-
     def setUp(self):
         # set this to True to check that cache.get isn't called (for
         # no_cache=1)
@@ -178,8 +182,10 @@ class TestCachedDecorator(unittest.TestCase):
         self.assertEqual(cache_name, "mycache")
         cache = mock.Mock(name="mycache")
         if self.cache_get_raises_exception:
+
             def ex(key):
                 raise RuntimeError("cache.get called unexpectedly")
+
             cache.get = ex
         else:
             cache.get = miss_fn
@@ -201,8 +207,7 @@ class TestCachedDecorator(unittest.TestCase):
 
         res2 = yield comp.getThing("bar")
 
-        self.assertEqual((res1, res2, comp.invocations),
-                         ('foofoo', 'barbar', ['foo', 'bar']))
+        self.assertEqual((res1, res2, comp.invocations), ("foofoo", "barbar", ["foo", "bar"]))
 
     @defer.inlineCallbacks
     def test_cached_no_cache(self):

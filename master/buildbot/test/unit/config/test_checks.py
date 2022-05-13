@@ -21,23 +21,22 @@ from buildbot.test.util import config
 
 
 class TestCheckParamLength(unittest.TestCase, config.ConfigErrorsMixin):
-
     def test_short_string(self):
-        check_param_length('1234567890', 'Step name', 10)
+        check_param_length("1234567890", "Step name", 10)
 
     def test_long_string(self):
         with self.assertRaisesConfigError("exceeds maximum length of 10"):
-            check_param_length('12345678901', 'Step name', 10)
+            check_param_length("12345678901", "Step name", 10)
 
     def test_short_interpolate(self):
-        check_param_length(Interpolate('123456%(prop:xy)s7890'), 'Step name', 10)
+        check_param_length(Interpolate("123456%(prop:xy)s7890"), "Step name", 10)
 
     def test_short_interpolate_args(self):
-        check_param_length(Interpolate('123456%s7890', 'arg'), 'Step name', 10)
+        check_param_length(Interpolate("123456%s7890", "arg"), "Step name", 10)
 
     def test_short_interpolate_kwargs(self):
-        check_param_length(Interpolate('123456%(prop:xy)s7890', kw='arg'), 'Step name', 10)
+        check_param_length(Interpolate("123456%(prop:xy)s7890", kw="arg"), "Step name", 10)
 
     def test_long_interpolate(self):
         with self.assertRaisesConfigError("xceeds maximum length of 10"):
-            check_param_length(Interpolate('123456%(prop:xy)s78901'), 'Step name', 10)
+            check_param_length(Interpolate("123456%(prop:xy)s78901"), "Step name", 10)

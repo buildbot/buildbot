@@ -35,7 +35,7 @@ else:
     from io import BytesIO as NativeStringIO
 
 
-def bytes2NativeString(x, encoding='utf-8'):
+def bytes2NativeString(x, encoding="utf-8"):
     """
     Convert C{bytes} to a native C{str}.
 
@@ -56,7 +56,7 @@ def bytes2NativeString(x, encoding='utf-8'):
     return x
 
 
-def unicode2bytes(x, encoding='utf-8', errors='strict'):
+def unicode2bytes(x, encoding="utf-8", errors="strict"):
     """
     Convert a unicode string to C{bytes}.
 
@@ -71,7 +71,7 @@ def unicode2bytes(x, encoding='utf-8', errors='strict'):
     return x
 
 
-def bytes2unicode(x, encoding='utf-8', errors='strict'):
+def bytes2unicode(x, encoding="utf-8", errors="strict"):
     """
     Convert a C{bytes} to a unicode string.
 
@@ -87,9 +87,4 @@ def bytes2unicode(x, encoding='utf-8', errors='strict'):
     return text_type(x, encoding, errors)
 
 
-__all__ = [
-    "NativeStringIO",
-    "bytes2NativeString",
-    "bytes2unicode",
-    "unicode2bytes"
-]
+__all__ = ["NativeStringIO", "bytes2NativeString", "bytes2unicode", "unicode2bytes"]

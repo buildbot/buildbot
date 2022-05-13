@@ -38,19 +38,19 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
     @defer.inlineCallbacks
     def setUp(self):
         if not graphql:
-            raise unittest.SkipTest('Test requires graphql-core module installed')
+            raise unittest.SkipTest("Test requires graphql-core module installed")
         self.setup_test_reactor(use_asyncio=True)
         self.master = fakemaster.make_master(self)
         # don't load by default
         self.all_submodules = connector.DataConnector.submodules
-        self.patch(connector.DataConnector, 'submodules', [])
+        self.patch(connector.DataConnector, "submodules", [])
         self.master.data = self.data = connector.DataConnector()
         yield self.data.setServiceParent(self.master)
         self.graphql = GraphQLConnector()
         yield self.graphql.setServiceParent(self.master)
 
     def configure_graphql(self):
-        self.master.config.www = {'graphql': {}}
+        self.master.config.www = {"graphql": {}}
         self.graphql.reconfigServiceWithBuildbotConfig(self.master.config)
 
     def test_signature_query(self):
@@ -61,11 +61,14 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
     def test_graphql_get_schema(self):
 
         # use the test module for basic graphQLSchema generation
-        mod = reflect.namedModule('buildbot.test.unit.data.test_connector')
+        mod = reflect.namedModule("buildbot.test.unit.data.test_connector")
         self.data._scanModule(mod)
         self.configure_graphql()
         schema = self.graphql.get_schema()
-        self.assertEqual(schema, textwrap.dedent("""
+        self.assertEqual(
+            schema,
+            textwrap.dedent(
+                """
         # custom scalar types for buildbot data model
         scalar Date   # stored as utc unix timestamp
         scalar Binary # arbitrary data stored as base85
@@ -105,12 +108,14 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
         type Test {
           testid: Int!
         }
-        """))
+        """
+            ),
+        )
         schema = graphql.build_schema(schema)
 
     def test_get_fake_graphql_schema(self):
         # use the test module for basic graphQLSchema generation
-        mod = reflect.namedModule('buildbot.test.fake.endpoint')
+        mod = reflect.namedModule("buildbot.test.fake.endpoint")
         self.data._scanModule(mod)
         self.configure_graphql()
         schema = self.graphql.get_schema()
@@ -119,7 +124,7 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
 
     def test_graphql_get_full_schema(self):
         if not graphql:
-            raise unittest.SkipTest('Test requires graphql')
+            raise unittest.SkipTest("Test requires graphql")
 
         for mod in self.all_submodules:
             mod = reflect.namedModule(mod)
@@ -133,10 +138,9 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
 
 
 class TestGraphQlConnectorService(TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         if not graphql:
-            raise unittest.SkipTest('Test requires graphql-core module installed')
+            raise unittest.SkipTest("Test requires graphql-core module installed")
         self.setup_test_reactor(use_asyncio=False)
 
     @defer.inlineCallbacks
@@ -147,7 +151,7 @@ class TestGraphQlConnectorService(TestReactorMixin, unittest.TestCase):
         self.graphql = GraphQLConnector()
         yield self.graphql.setServiceParent(self.master)
         yield self.master.startService()
-        self.master.config.www = {'graphql': {}}
+        self.master.config.www = {"graphql": {}}
         self.graphql.reconfigServiceWithBuildbotConfig(self.master.config)
         self.assertIsNotNone(self.graphql.asyncio_loop)
         yield self.master.stopService()

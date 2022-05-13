@@ -37,9 +37,10 @@ class SetPropertiesFromEnv(WorkerBuildStep):
 
     Note this is transferred when the worker first connects
     """
-    name = 'SetPropertiesFromEnv'
-    description = ['Setting']
-    descriptionDone = ['Set']
+
+    name = "SetPropertiesFromEnv"
+    description = ["Setting"]
+    descriptionDone = ["Set"]
 
     def __init__(self, variables, source="WorkerEnvironment", **kwargs):
         super().__init__(**kwargs)
@@ -52,7 +53,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
         # a case-sensitive dictionary in worker_environ.  Fortunately, that
         # dictionary is also folded to uppercase, so we can simply fold the
         # variable names to uppercase to duplicate the case-insensitivity.
-        fold_to_uppercase = (self.worker.worker_system == 'win32')
+        fold_to_uppercase = self.worker.worker_system == "win32"
 
         properties = self.build.getProperties()
         environ = self.worker.worker_environ
@@ -67,8 +68,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
             value = environ.get(key, None)
             if value:
                 # note that the property is not uppercased
-                properties.setProperty(variable, value, self.source,
-                                       runtime=True)
+                properties.setProperty(variable, value, self.source, runtime=True)
                 log.append(f"{variable} = {repr(value)}")
         yield self.addCompleteLog("properties", "\n".join(log))
         return SUCCESS
@@ -79,8 +79,9 @@ class FileExists(WorkerBuildStep):
     """
     Check for the existence of a file on the worker.
     """
-    name = 'FileExists'
-    renderables = ['file']
+
+    name = "FileExists"
+    renderables = ["file"]
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -90,8 +91,8 @@ class FileExists(WorkerBuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        self.checkWorkerHasCommand('stat')
-        cmd = remotecommand.RemoteCommand('stat', {'file': self.file})
+        self.checkWorkerHasCommand("stat")
+        cmd = remotecommand.RemoteCommand("stat", {"file": self.file})
 
         yield self.runCommand(cmd)
 
@@ -113,11 +114,12 @@ class CopyDirectory(WorkerBuildStep):
     """
     Copy a directory tree on the worker.
     """
-    name = 'CopyDirectory'
-    description = ['Copying']
-    descriptionDone = ['Copied']
 
-    renderables = ['src', 'dest']
+    name = "CopyDirectory"
+    description = ["Copying"]
+    descriptionDone = ["Copied"]
+
+    renderables = ["src", "dest"]
 
     haltOnFailure = True
     flunkOnFailure = True
@@ -131,14 +133,14 @@ class CopyDirectory(WorkerBuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        self.checkWorkerHasCommand('cpdir')
+        self.checkWorkerHasCommand("cpdir")
 
-        args = {'fromdir': self.src, 'todir': self.dest}
-        args['timeout'] = self.timeout
+        args = {"fromdir": self.src, "todir": self.dest}
+        args["timeout"] = self.timeout
         if self.maxTime:
-            args['maxTime'] = self.maxTime
+            args["maxTime"] = self.maxTime
 
-        cmd = remotecommand.RemoteCommand('cpdir', args)
+        cmd = remotecommand.RemoteCommand("cpdir", args)
 
         yield self.runCommand(cmd)
 
@@ -155,11 +157,12 @@ class RemoveDirectory(WorkerBuildStep):
     """
     Remove a directory tree on the worker.
     """
-    name = 'RemoveDirectory'
-    description = ['Deleting']
-    descriptionDone = ['Deleted']
 
-    renderables = ['dir']
+    name = "RemoveDirectory"
+    description = ["Deleting"]
+    descriptionDone = ["Deleted"]
+
+    renderables = ["dir"]
 
     haltOnFailure = True
     flunkOnFailure = True
@@ -170,8 +173,8 @@ class RemoveDirectory(WorkerBuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        self.checkWorkerHasCommand('rmdir')
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.dir})
+        self.checkWorkerHasCommand("rmdir")
+        cmd = remotecommand.RemoteCommand("rmdir", {"dir": self.dir})
 
         yield self.runCommand(cmd)
 
@@ -187,11 +190,12 @@ class MakeDirectory(WorkerBuildStep):
     """
     Create a directory on the worker.
     """
-    name = 'MakeDirectory'
-    description = ['Creating']
-    descriptionDone = ['Created']
 
-    renderables = ['dir']
+    name = "MakeDirectory"
+    description = ["Creating"]
+    descriptionDone = ["Created"]
+
+    renderables = ["dir"]
 
     haltOnFailure = True
     flunkOnFailure = True
@@ -202,8 +206,8 @@ class MakeDirectory(WorkerBuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        self.checkWorkerHasCommand('mkdir')
-        cmd = remotecommand.RemoteCommand('mkdir', {'dir': self.dir})
+        self.checkWorkerHasCommand("mkdir")
+        cmd = remotecommand.RemoteCommand("mkdir", {"dir": self.dir})
         yield self.runCommand(cmd)
 
         if cmd.didFail():
@@ -213,8 +217,7 @@ class MakeDirectory(WorkerBuildStep):
         return SUCCESS
 
 
-class CompositeStepMixin():
-
+class CompositeStepMixin:
     def workerPathToMasterPath(self, path):
         return os.path.join(*self.worker.path_module.split(path))
 
@@ -227,8 +230,13 @@ class CompositeStepMixin():
         self.rc_log = yield self.addLog(logname)
         return self.rc_log
 
-    def runRemoteCommand(self, cmd, args, abandonOnFailure=True,
-                         evaluateCommand=lambda cmd: cmd.didFail()):
+    def runRemoteCommand(
+        self,
+        cmd,
+        args,
+        abandonOnFailure=True,
+        evaluateCommand=lambda cmd: cmd.didFail(),
+    ):
         """generic RemoteCommand boilerplate"""
         cmd = remotecommand.RemoteCommand(cmd, args)
         if hasattr(self, "rc_log"):
@@ -244,75 +252,96 @@ class CompositeStepMixin():
         return d
 
     def runRmdir(self, dir, timeout=None, **kwargs):
-        """ remove a directory from the worker """
-        cmd_args = {'dir': dir, 'logEnviron': self.logEnviron}
+        """remove a directory from the worker"""
+        cmd_args = {"dir": dir, "logEnviron": self.logEnviron}
         if timeout:
-            cmd_args['timeout'] = timeout
-        return self.runRemoteCommand('rmdir', cmd_args, **kwargs)
+            cmd_args["timeout"] = timeout
+        return self.runRemoteCommand("rmdir", cmd_args, **kwargs)
 
     def runRmFile(self, path, timeout=None, **kwargs):
-        """ remove a file from the worker """
-        cmd_args = {'path': path, 'logEnviron': self.logEnviron}
+        """remove a file from the worker"""
+        cmd_args = {"path": path, "logEnviron": self.logEnviron}
         if timeout:
-            cmd_args['timeout'] = timeout
-        if self.workerVersionIsOlderThan('rmfile', '3.1'):
-            cmd_args['dir'] = os.path.abspath(path)
-            return self.runRemoteCommand('rmdir', cmd_args, **kwargs)
-        return self.runRemoteCommand('rmfile', cmd_args, **kwargs)
+            cmd_args["timeout"] = timeout
+        if self.workerVersionIsOlderThan("rmfile", "3.1"):
+            cmd_args["dir"] = os.path.abspath(path)
+            return self.runRemoteCommand("rmdir", cmd_args, **kwargs)
+        return self.runRemoteCommand("rmfile", cmd_args, **kwargs)
 
     def pathExists(self, path):
-        """ test whether path exists"""
+        """test whether path exists"""
+
         def commandComplete(cmd):
             return not cmd.didFail()
 
-        return self.runRemoteCommand('stat', {'file': path,
-                                              'logEnviron': self.logEnviron, },
-                                     abandonOnFailure=False,
-                                     evaluateCommand=commandComplete)
+        return self.runRemoteCommand(
+            "stat",
+            {
+                "file": path,
+                "logEnviron": self.logEnviron,
+            },
+            abandonOnFailure=False,
+            evaluateCommand=commandComplete,
+        )
 
     def runMkdir(self, _dir, **kwargs):
-        """ create a directory and its parents"""
-        return self.runRemoteCommand('mkdir', {'dir': _dir,
-                                               'logEnviron': self.logEnviron, },
-                                     **kwargs)
+        """create a directory and its parents"""
+        return self.runRemoteCommand(
+            "mkdir",
+            {
+                "dir": _dir,
+                "logEnviron": self.logEnviron,
+            },
+            **kwargs,
+        )
 
     def runGlob(self, path, **kwargs):
-        """ find files matching a shell-style pattern"""
-        def commandComplete(cmd):
-            return cmd.updates['files'][-1]
+        """find files matching a shell-style pattern"""
 
-        return self.runRemoteCommand('glob', {'path': path,
-                                              'logEnviron': self.logEnviron, },
-                                     evaluateCommand=commandComplete, **kwargs)
+        def commandComplete(cmd):
+            return cmd.updates["files"][-1]
+
+        return self.runRemoteCommand(
+            "glob",
+            {
+                "path": path,
+                "logEnviron": self.logEnviron,
+            },
+            evaluateCommand=commandComplete,
+            **kwargs,
+        )
 
     def getFileContentFromWorker(self, filename, abandonOnFailure=False):
         self.checkWorkerHasCommand("uploadFile")
         fileWriter = remotetransfer.StringFileWriter()
         # default arguments
         args = {
-            'workdir': self.workdir,
-            'writer': fileWriter,
-            'maxsize': None,
-            'blocksize': 32 * 1024,
+            "workdir": self.workdir,
+            "writer": fileWriter,
+            "maxsize": None,
+            "blocksize": 32 * 1024,
         }
 
-        if self.workerVersionIsOlderThan('uploadFile', '3.0'):
-            args['slavesrc'] = filename
+        if self.workerVersionIsOlderThan("uploadFile", "3.0"):
+            args["slavesrc"] = filename
         else:
-            args['workersrc'] = filename
+            args["workersrc"] = filename
 
         def commandComplete(cmd):
             if cmd.didFail():
                 return None
             return fileWriter.buffer
 
-        return self.runRemoteCommand('uploadFile', args,
-                                     abandonOnFailure=abandonOnFailure,
-                                     evaluateCommand=commandComplete)
+        return self.runRemoteCommand(
+            "uploadFile",
+            args,
+            abandonOnFailure=abandonOnFailure,
+            evaluateCommand=commandComplete,
+        )
 
-    def downloadFileContentToWorker(self, workerdest, strfile,
-                                    abandonOnFailure=False, mode=None,
-                                    workdir=None):
+    def downloadFileContentToWorker(
+        self, workerdest, strfile, abandonOnFailure=False, mode=None, workdir=None
+    ):
         if workdir is None:
             workdir = self.workdir
 
@@ -320,22 +349,26 @@ class CompositeStepMixin():
         fileReader = remotetransfer.StringFileReader(strfile)
         # default arguments
         args = {
-            'workdir': workdir,
-            'maxsize': None,
-            'mode': mode,
-            'reader': fileReader,
-            'blocksize': 32 * 1024,
+            "workdir": workdir,
+            "maxsize": None,
+            "mode": mode,
+            "reader": fileReader,
+            "blocksize": 32 * 1024,
         }
 
-        if self.workerVersionIsOlderThan('downloadFile', '3.0'):
-            args['slavedest'] = workerdest
+        if self.workerVersionIsOlderThan("downloadFile", "3.0"):
+            args["slavedest"] = workerdest
         else:
-            args['workerdest'] = workerdest
+            args["workerdest"] = workerdest
 
         def commandComplete(cmd):
             if cmd.didFail():
                 return None
             return fileReader
-        return self.runRemoteCommand('downloadFile', args,
-                                     abandonOnFailure=abandonOnFailure,
-                                     evaluateCommand=commandComplete)
+
+        return self.runRemoteCommand(
+            "downloadFile",
+            args,
+            abandonOnFailure=abandonOnFailure,
+            evaluateCommand=commandComplete,
+        )

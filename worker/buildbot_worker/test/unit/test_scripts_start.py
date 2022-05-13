@@ -63,6 +63,6 @@ class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
         # check that isWorkerDir() and startWorker() were called
         # with correct argument
         self.isWorkerDir.assert_called_once_with("dummy")
-        mocked_startWorker.assert_called_once_with(config["basedir"],
-                                                   config["quiet"],
-                                                   config["nodaemon"])
+        mocked_startWorker.assert_called_once_with(
+            config["basedir"], config["quiet"], config["nodaemon"]
+        )

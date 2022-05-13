@@ -43,7 +43,7 @@ class FileWriter(base.FileWriterImpl):
         self.destfile = destfile
         self.mode = mode
         fd, self.tmpname = tempfile.mkstemp(dir=dirname)
-        self.fp = os.fdopen(fd, 'wb')
+        self.fp = os.fdopen(fd, "wb")
         self.remaining = maxsize
 
     def remote_write(self, data):
@@ -57,7 +57,7 @@ class FileWriter(base.FileWriterImpl):
         data = unicode2bytes(data)
         if self.remaining is not None:
             if len(data) > self.remaining:
-                data = data[:self.remaining]
+                data = data[: self.remaining]
             self.fp.write(data)
             self.remaining = self.remaining - len(data)
         else:
@@ -117,12 +117,12 @@ class DirectoryWriter(FileWriter):
         self.remote_close()
 
         # Map configured compression to a TarFile setting
-        if self.compress == 'bz2':
-            mode = 'r|bz2'
-        elif self.compress == 'gz':
-            mode = 'r|gz'
+        if self.compress == "bz2":
+            mode = "r|bz2"
+        elif self.compress == "gz":
+            mode = "r|gz"
         else:
-            mode = 'r'
+            mode = "r"
 
         # Unpack archive and clean up after self
         with tarfile.open(name=self.tarname, mode=mode) as archive:
@@ -150,7 +150,7 @@ class FileReader(base.FileReaderImpl):
         @rtype: C{string} of bytes read from file
         """
         if self.fp is None:
-            return ''
+            return ""
 
         data = self.fp.read(maxlength)
         return data

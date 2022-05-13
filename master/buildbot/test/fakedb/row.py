@@ -56,7 +56,7 @@ class Row:
 
     def __init__(self, **kwargs):
         if self.__init__.__func__ is Row.__init__:
-            raise Exception('Row.__init__ must be overridden to supply default values for columns')
+            raise Exception("Row.__init__ must be overridden to supply default values for columns")
 
         self.values = kwargs.copy()
         if self.id_column:
@@ -82,8 +82,7 @@ class Row:
             self.values[col] = unicode2bytes(self.values[col])
         # calculate any necessary hashes
         for hash_col, src_cols in self.hashedColumns:
-            self.values[hash_col] = self.hashColumns(
-                *(self.values[c] for c in src_cols))
+            self.values[hash_col] = self.hashColumns(*(self.values[c] for c in src_cols))
 
         # make the values appear as attributes
         self.__dict__.update(self.values)
@@ -119,7 +118,7 @@ class Row:
         return self.values >= other.values
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(**{repr(self.values)})'
+        return f"{self.__class__.__name__}(**{repr(self.values)})"
 
     @staticmethod
     def nextId():
@@ -131,12 +130,12 @@ class Row:
         # copied from master/buildbot/db/base.py
         def encode(x):
             if x is None:
-                return b'\xf5'
+                return b"\xf5"
             elif isinstance(x, str):
-                return x.encode('utf-8')
-            return str(x).encode('utf-8')
+                return x.encode("utf-8")
+            return str(x).encode("utf-8")
 
-        return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
+        return hashlib.sha1(b"\0".join(map(encode, args))).hexdigest()
 
     @defer.inlineCallbacks
     def checkForeignKeys(self, db, t):
@@ -152,14 +151,16 @@ class Row:
             schedulerid=db.schedulers.getScheduler,
             brid=db.buildrequests.getBuildRequest,
             stepid=db.steps.getStep,
-            masterid=db.masters.getMaster)
+            masterid=db.masters.getMaster,
+        )
         for foreign_key in self.foreignKeys:
             if foreign_key in accessors:
                 key = getattr(self, foreign_key)
                 if key is not None:
                     val = yield accessors[foreign_key](key)
-                    t.assertTrue(val is not None,
-                                 f"foreign key {foreign_key}:{repr(key)} does not exit")
+                    t.assertTrue(
+                        val is not None,
+                        f"foreign key {foreign_key}:{repr(key)} does not exit",
+                    )
             else:
-                raise ValueError(
-                    "warning, unsupported foreign key", foreign_key, self.table)
+                raise ValueError("warning, unsupported foreign key", foreign_key, self.table)

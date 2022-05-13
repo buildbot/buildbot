@@ -21,37 +21,59 @@ from buildbot.util import unicode2bytes
 
 
 class Sender:
-
-    def __init__(self, master, auth=('change', 'changepw'), encoding='utf8'):
+    def __init__(self, master, auth=("change", "changepw"), encoding="utf8"):
         self.username = unicode2bytes(auth[0])
         self.password = unicode2bytes(auth[1])
         self.host, self.port = master.split(":")
         self.port = int(self.port)
         self.encoding = encoding
 
-    def send(self, branch, revision, comments, files, who=None, category=None,
-             when=None, properties=None, repository='', vc=None, project='',
-             revlink='', codebase=None):
+    def send(
+        self,
+        branch,
+        revision,
+        comments,
+        files,
+        who=None,
+        category=None,
+        when=None,
+        properties=None,
+        repository="",
+        vc=None,
+        project="",
+        revlink="",
+        codebase=None,
+    ):
         if properties is None:
             properties = {}
 
-        change = {'project': project, 'repository': repository, 'who': who,
-                  'files': files, 'comments': comments, 'branch': branch,
-                  'revision': revision, 'category': category, 'when': when,
-                  'properties': properties, 'revlink': revlink, 'src': vc}
+        change = {
+            "project": project,
+            "repository": repository,
+            "who": who,
+            "files": files,
+            "comments": comments,
+            "branch": branch,
+            "revision": revision,
+            "category": category,
+            "when": when,
+            "properties": properties,
+            "revlink": revlink,
+            "src": vc,
+        }
 
         # codebase is only sent if set; this won't work with masters older than
         # 0.8.7
         if codebase:
-            change['codebase'] = codebase
+            change["codebase"] = codebase
 
         for key, value in change.items():
             if isinstance(value, bytes):
-                change[key] = value.decode(self.encoding, 'replace')
-        change['files'] = list(change['files'])
-        for i, file in enumerate(change.get('files', [])):
+                change[key] = value.decode(self.encoding, "replace")
+        change["files"] = list(change["files"])
+        for i, file in enumerate(change.get("files", [])):
             if isinstance(file, bytes):
-                change['files'][i] = file.decode(self.encoding, 'replace')
+                change["files"][i] = file.decode(self.encoding, "replace")
 
         f = pb.PBClientFactory()
         d = f.login(credentials.UsernamePassword(self.username, self.password))
@@ -59,7 +81,7 @@ class Sender:
 
         @d.addCallback
         def call_addChange(remote):
-            d = remote.callRemote('addChange', change)
+            d = remote.callRemote("addChange", change)
             d.addCallback(lambda res: remote.broker.transport.loseConnection())
             return d
 

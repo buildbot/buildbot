@@ -29,16 +29,16 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.warnings import DeprecatedApiWarning
 
 
-class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMixin,
-                            unittest.TestCase):
+class TestBuildSetGenerator(
+    ConfigErrorsMixin, TestReactorMixin, ReporterTestMixin, unittest.TestCase
+):
     # Note: most of the functionality of BuildSetStatusGenerator is shared with
     # BuildStatusGenerator and is tested there.
 
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def insert_build_finished_get_props(self, results, **kwargs):
@@ -49,11 +49,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
     @defer.inlineCallbacks
     def setup_generator(self, results=SUCCESS, message=None, db_args=None, **kwargs):
         if message is None:
-            message = {
-                "body": "body",
-                "type": "text",
-                "subject": "subject"
-            }
+            message = {"body": "body", "type": "text", "subject": "subject"}
         if db_args is None:
             db_args = {}
 
@@ -91,45 +87,51 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         g, build, _ = yield self.setup_generator(mode=("change",))
         report = yield self.buildset_message(g, [build])
 
-        g.formatter.format_message_for_build.assert_called_with(self.master, build,
-                                                                is_buildset=True, mode=('change',),
-                                                                users=[])
+        g.formatter.format_message_for_build.assert_called_with(
+            self.master, build, is_buildset=True, mode=("change",), users=[]
+        )
 
-        self.assertEqual(report, {
-            'body': 'body',
-            'subject': 'subject',
-            'type': 'text',
-            'results': SUCCESS,
-            'builds': [build],
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "subject",
+                "type": "text",
+                "results": SUCCESS,
+                "builds": [build],
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_buildset_message_no_result(self):
         g, build, _ = yield self.setup_generator(results=None, mode=("change",))
         report = yield self.buildset_message(g, [build], results=None)
 
-        g.formatter.format_message_for_build.assert_called_with(self.master, build,
-                                                                is_buildset=True,
-                                                                mode=('change',), users=[])
+        g.formatter.format_message_for_build.assert_called_with(
+            self.master, build, is_buildset=True, mode=("change",), users=[]
+        )
 
-        self.assertEqual(report, {
-            'body': 'body',
-            'subject': 'subject',
-            'type': 'text',
-            'results': None,
-            'builds': [build],
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "subject",
+                "type": "text",
+                "results": None,
+                "builds": [build],
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_buildset_subject_deprecated(self):
         with assertProducesWarning(DeprecatedApiWarning, "subject parameter"):
-            yield self.setup_generator(subject='subject')
+            yield self.setup_generator(subject="subject")
 
     @defer.inlineCallbacks
     def test_buildset_message_no_result_formatter_no_subject(self):
@@ -142,52 +144,58 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         g, build, _ = yield self.setup_generator(results=None, message=message, mode=("change",))
         report = yield self.buildset_message(g, [build], results=None)
 
-        g.formatter.format_message_for_build.assert_called_with(self.master, build,
-                                                                is_buildset=True,
-                                                                mode=('change',), users=[])
+        g.formatter.format_message_for_build.assert_called_with(
+            self.master, build, is_buildset=True, mode=("change",), users=[]
+        )
 
-        self.assertEqual(report, {
-            'body': 'body',
-            'subject': 'Buildbot not finished in Buildbot on whole buildset',
-            'type': 'text',
-            'results': None,
-            'builds': [build],
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "Buildbot not finished in Buildbot on whole buildset",
+                "type": "text",
+                "results": None,
+                "builds": [build],
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_generate_complete(self):
         g, build, buildset = yield self.setup_generator()
-        report = yield self.generate(g, ('buildsets', 98, 'complete'), buildset)
+        report = yield self.generate(g, ("buildsets", 98, "complete"), buildset)
 
         # we retrieve build data differently when processing the buildset, so adjust it to match
-        del build['buildrequest']
-        del build['parentbuild']
-        del build['parentbuilder']
+        del build["buildrequest"]
+        del build["parentbuild"]
+        del build["parentbuilder"]
 
-        self.assertEqual(report, {
-            'body': 'body',
-            'subject': 'subject',
-            'type': 'text',
-            'results': SUCCESS,
-            'builds': [build],
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "subject",
+                "type": "text",
+                "results": SUCCESS,
+                "builds": [build],
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_generate_complete_non_matching_builder(self):
-        g, _, buildset = yield self.setup_generator(builders=['non-matched'])
-        report = yield self.generate(g, ('buildsets', 98, 'complete'), buildset)
+        g, _, buildset = yield self.setup_generator(builders=["non-matched"])
+        report = yield self.generate(g, ("buildsets", 98, "complete"), buildset)
 
         self.assertIsNone(report)
 
     @defer.inlineCallbacks
     def test_generate_complete_non_matching_result(self):
-        g, _, buildset = yield self.setup_generator(mode=('failing',))
-        report = yield self.generate(g, ('buildsets', 98, 'complete'), buildset)
+        g, _, buildset = yield self.setup_generator(mode=("failing",))
+        report = yield self.generate(g, ("buildsets", 98, "complete"), buildset)
 
         self.assertIsNone(report)

@@ -134,143 +134,121 @@ mercurialJsonNoCommitsPayload = b"""{
 }"""
 
 
-class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase,
-                                                  TestReactorMixin):
+class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase, TestReactorMixin):
 
-    """Unit tests for BitBucket Change Hook
-    """
+    """Unit tests for BitBucket Change Hook"""
 
     def setUp(self):
         self.setup_test_reactor()
         self.change_hook = change_hook.ChangeHookResource(
-            dialects={'bitbucket': True}, master=fakeMasterForHooks(self))
+            dialects={"bitbucket": True}, master=fakeMasterForHooks(self)
+        )
 
     @inlineCallbacks
     def testGitWithChange(self):
-        change_dict = {b'payload': [gitJsonPayload]}
+        change_dict = {b"payload": [gitJsonPayload]}
 
         request = FakeRequest(change_dict)
         request.received_headers[_HEADER_EVENT] = b"repo:push"
-        request.uri = b'/change_hook/bitbucket'
-        request.method = b'POST'
+        request.uri = b"/change_hook/bitbucket"
+        request.method = b"POST"
 
         yield request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         commit = self.change_hook.master.data.updates.changesAdded[0]
 
-        self.assertEqual(commit['files'], ['somefile.py'])
+        self.assertEqual(commit["files"], ["somefile.py"])
+        self.assertEqual(commit["repository"], "https://bitbucket.org/marcus/project-x/")
+        self.assertEqual(commit["when_timestamp"], 1338350336)
+        self.assertEqual(commit["author"], "Marcus Bertrand <marcus@somedomain.com>")
+        self.assertEqual(commit["revision"], "620ade18607ac42d872b568bb92acaa9a28620e9")
+        self.assertEqual(commit["comments"], "Added some more things to somefile.py")
+        self.assertEqual(commit["branch"], "master")
         self.assertEqual(
-            commit['repository'], 'https://bitbucket.org/marcus/project-x/')
-        self.assertEqual(
-            commit['when_timestamp'],
-            1338350336
+            commit["revlink"],
+            "https://bitbucket.org/marcus/project-x/commits/"
+            "620ade18607ac42d872b568bb92acaa9a28620e9",
         )
-        self.assertEqual(
-            commit['author'], 'Marcus Bertrand <marcus@somedomain.com>')
-        self.assertEqual(
-            commit['revision'], '620ade18607ac42d872b568bb92acaa9a28620e9')
-        self.assertEqual(
-            commit['comments'], 'Added some more things to somefile.py')
-        self.assertEqual(commit['branch'], 'master')
-        self.assertEqual(
-            commit['revlink'],
-            'https://bitbucket.org/marcus/project-x/commits/'
-            '620ade18607ac42d872b568bb92acaa9a28620e9'
-        )
-        self.assertEqual(
-            commit['properties']['event'],
-            'repo:push')
+        self.assertEqual(commit["properties"]["event"], "repo:push")
 
     @inlineCallbacks
     def testGitWithNoCommitsPayload(self):
-        change_dict = {b'payload': [gitJsonNoCommitsPayload]}
+        change_dict = {b"payload": [gitJsonNoCommitsPayload]}
 
         request = FakeRequest(change_dict)
-        request.uri = b'/change_hook/bitbucket'
-        request.method = b'POST'
+        request.uri = b"/change_hook/bitbucket"
+        request.method = b"POST"
 
         yield request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
-        self.assertEqual(request.written, b'no change found')
+        self.assertEqual(request.written, b"no change found")
 
     @inlineCallbacks
     def testMercurialWithChange(self):
-        change_dict = {b'payload': [mercurialJsonPayload]}
+        change_dict = {b"payload": [mercurialJsonPayload]}
 
         request = FakeRequest(change_dict)
         request.received_headers[_HEADER_EVENT] = b"repo:push"
-        request.uri = b'/change_hook/bitbucket'
-        request.method = b'POST'
+        request.uri = b"/change_hook/bitbucket"
+        request.method = b"POST"
 
         yield request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         commit = self.change_hook.master.data.updates.changesAdded[0]
 
-        self.assertEqual(commit['files'], ['somefile.py'])
+        self.assertEqual(commit["files"], ["somefile.py"])
+        self.assertEqual(commit["repository"], "https://bitbucket.org/marcus/project-x/")
+        self.assertEqual(commit["when_timestamp"], 1338350336)
+        self.assertEqual(commit["author"], "Marcus Bertrand <marcus@somedomain.com>")
+        self.assertEqual(commit["revision"], "620ade18607ac42d872b568bb92acaa9a28620e9")
+        self.assertEqual(commit["comments"], "Added some more things to somefile.py")
+        self.assertEqual(commit["branch"], "master")
         self.assertEqual(
-            commit['repository'], 'https://bitbucket.org/marcus/project-x/')
-        self.assertEqual(
-            commit['when_timestamp'],
-            1338350336
+            commit["revlink"],
+            "https://bitbucket.org/marcus/project-x/commits/"
+            "620ade18607ac42d872b568bb92acaa9a28620e9",
         )
-        self.assertEqual(
-            commit['author'], 'Marcus Bertrand <marcus@somedomain.com>')
-        self.assertEqual(
-            commit['revision'], '620ade18607ac42d872b568bb92acaa9a28620e9')
-        self.assertEqual(
-            commit['comments'], 'Added some more things to somefile.py')
-        self.assertEqual(commit['branch'], 'master')
-        self.assertEqual(
-            commit['revlink'],
-            'https://bitbucket.org/marcus/project-x/commits/'
-            '620ade18607ac42d872b568bb92acaa9a28620e9'
-        )
-        self.assertEqual(
-            commit['properties']['event'],
-            'repo:push')
+        self.assertEqual(commit["properties"]["event"], "repo:push")
 
     @inlineCallbacks
     def testMercurialWithNoCommitsPayload(self):
-        change_dict = {b'payload': [mercurialJsonNoCommitsPayload]}
+        change_dict = {b"payload": [mercurialJsonNoCommitsPayload]}
 
         request = FakeRequest(change_dict)
-        request.uri = b'/change_hook/bitbucket'
-        request.method = b'POST'
+        request.uri = b"/change_hook/bitbucket"
+        request.method = b"POST"
 
         yield request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
-        self.assertEqual(request.written, b'no change found')
+        self.assertEqual(request.written, b"no change found")
 
     @inlineCallbacks
     def testWithNoJson(self):
         request = FakeRequest()
-        request.uri = b'/change_hook/bitbucket'
-        request.method = b'POST'
+        request.uri = b"/change_hook/bitbucket"
+        request.method = b"POST"
 
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
-        self.assertEqual(request.written, b'Error processing changes.')
-        request.setResponseCode.assert_called_with(
-            500, b'Error processing changes.')
+        self.assertEqual(request.written, b"Error processing changes.")
+        request.setResponseCode.assert_called_with(500, b"Error processing changes.")
         self.assertEqual(len(self.flushLoggedErrors()), 1)
 
     @inlineCallbacks
     def testGitWithChangeAndProject(self):
-        change_dict = {
-            b'payload': [gitJsonPayload],
-            b'project': [b'project-name']}
+        change_dict = {b"payload": [gitJsonPayload], b"project": [b"project-name"]}
 
         request = FakeRequest(change_dict)
-        request.uri = b'/change_hook/bitbucket'
-        request.method = b'POST'
+        request.uri = b"/change_hook/bitbucket"
+        request.method = b"POST"
 
         yield request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         commit = self.change_hook.master.data.updates.changesAdded[0]
 
-        self.assertEqual(commit['project'], 'project-name')
+        self.assertEqual(commit["project"], "project-name")

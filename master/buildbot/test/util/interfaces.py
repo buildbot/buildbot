@@ -37,6 +37,7 @@ class InterfaceTests:
 
             self.assertArgSpecMatches(obj.methodUnderTest, self.fakeMethod)
         """
+
         def filter(spec):
             # the tricky thing here is to align args and defaults, since the
             # defaults correspond to the *last* n elements of args.  To make
@@ -47,7 +48,7 @@ class InterfaceTests:
             di = -1
             for ai in range(len(args) - 1, -1, -1):
                 arg = args[ai]
-                if arg.startswith('_') or (arg == 'self' and ai == 0):
+                if arg.startswith("_") or (arg == "self" and ai == 0):
                     del args[ai]
                     if -di <= len(defaults):
                         del defaults[di]
@@ -63,13 +64,14 @@ class InterfaceTests:
                 return func
 
         def filter_argspec(func):
-            return filter(
-                inspect.getfullargspec(remove_decorators(func)))
+            return filter(inspect.getfullargspec(remove_decorators(func)))
 
         def assert_same_argspec(expected, actual):
             if expected != actual:
-                msg = (f"Expected: {inspect.formatargspec(*expected)}; got: "
-                       f"{inspect.formatargspec(*actual)}")
+                msg = (
+                    f"Expected: {inspect.formatargspec(*expected)}; got: "
+                    f"{inspect.formatargspec(*actual)}"
+                )
                 self.fail(msg)
 
         actual_argspec = filter_argspec(actualMethod)
@@ -83,6 +85,7 @@ class InterfaceTests:
             assert_same_argspec(expected_argspec, actual_argspec)
             # The decorated function works as usual.
             return decorated
+
         return assert_same_argspec_decorator
 
     def assertInterfacesImplemented(self, cls):
@@ -90,27 +93,30 @@ class InterfaceTests:
 
         # see if this version of zope.interface is too old to run these tests
         zi_vers = pkg_resources.working_set.find(
-            pkg_resources.Requirement.parse('zope.interface')).version
-        if pkg_resources.parse_version(zi_vers) < pkg_resources.parse_version('4.1.1'):
-            raise unittest.SkipTest(
-                "zope.interfaces is too old to run this test")
+            pkg_resources.Requirement.parse("zope.interface")
+        ).version
+        if pkg_resources.parse_version(zi_vers) < pkg_resources.parse_version("4.1.1"):
+            raise unittest.SkipTest("zope.interfaces is too old to run this test")
 
         for interface in zope.interface.implementedBy(cls):
             for attr, template_argspec in interface.namesAndDescriptions():
                 if not hasattr(cls, attr):
-                    msg = (f"Expected: {repr(cls)}; to implement: {attr} as specified in "
-                           f"{repr(interface)}")
+                    msg = (
+                        f"Expected: {repr(cls)}; to implement: {attr} as specified in "
+                        f"{repr(interface)}"
+                    )
                     self.fail(msg)
                 actual_argspec = getattr(cls, attr)
                 if isinstance(template_argspec, Attribute):
                     continue
                 # else check method signatures
-                while hasattr(actual_argspec, '__wrapped__'):
+                while hasattr(actual_argspec, "__wrapped__"):
                     actual_argspec = actual_argspec.__wrapped__
-                actual_argspec = zope.interface.interface.fromMethod(
-                    actual_argspec)
+                actual_argspec = zope.interface.interface.fromMethod(actual_argspec)
 
                 if actual_argspec.getSignatureInfo() != template_argspec.getSignatureInfo():
-                    msg = (f"{attr}: expected: {template_argspec.getSignatureString()}; got: "
-                           f"{actual_argspec.getSignatureString()}")
+                    msg = (
+                        f"{attr}: expected: {template_argspec.getSignatureString()}; got: "
+                        f"{actual_argspec.getSignatureString()}"
+                    )
                     self.fail(msg)

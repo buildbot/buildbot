@@ -24,12 +24,17 @@ from buildbot.util import epoch2datetime
 class Master(Row):
     table = "masters"
 
-    id_column = 'id'
-    hashedColumns = [('name_hash', ('name',))]
+    id_column = "id"
+    hashedColumns = [("name_hash", ("name",))]
 
-    def __init__(self, id=None, name='some:master', name_hash=None, active=1, last_active=9998999):
-        super().__init__(id=id, name=name, name_hash=name_hash, active=active,
-                         last_active=last_active)
+    def __init__(self, id=None, name="some:master", name_hash=None, active=1, last_active=9998999):
+        super().__init__(
+            id=id,
+            name=name,
+            name_hash=name_hash,
+            active=active,
+            last_active=last_active,
+        )
 
 
 class FakeMastersComponent(FakeDBComponent):
@@ -46,27 +51,28 @@ class FakeMastersComponent(FakeDBComponent):
                     id=row.id,
                     name=row.name,
                     active=bool(row.active),
-                    last_active=epoch2datetime(row.last_active))
+                    last_active=epoch2datetime(row.last_active),
+                )
 
     def findMasterId(self, name):
         for m in self.masters.values():
-            if m['name'] == name:
-                return defer.succeed(m['id'])
+            if m["name"] == name:
+                return defer.succeed(m["id"])
         id = len(self.masters) + 1
         self.masters[id] = dict(
             id=id,
             name=name,
             active=False,
-            last_active=epoch2datetime(self.reactor.seconds()))
+            last_active=epoch2datetime(self.reactor.seconds()),
+        )
         return defer.succeed(id)
 
     def setMasterState(self, masterid, active):
         if masterid in self.masters:
-            was_active = self.masters[masterid]['active']
-            self.masters[masterid]['active'] = active
+            was_active = self.masters[masterid]["active"]
+            self.masters[masterid]["active"] = active
             if active:
-                self.masters[masterid]['last_active'] = \
-                    epoch2datetime(self.reactor.seconds())
+                self.masters[masterid]["last_active"] = epoch2datetime(self.reactor.seconds())
             return defer.succeed(bool(was_active) != bool(active))
         else:
             return defer.succeed(False)
@@ -77,12 +83,11 @@ class FakeMastersComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def getMasters(self):
-        return defer.succeed(sorted(self.masters.values(),
-                                    key=lambda x: x['id']))
+        return defer.succeed(sorted(self.masters.values(), key=lambda x: x["id"]))
 
     # test helpers
 
     def markMasterInactive(self, masterid):
         if masterid in self.masters:
-            self.masters[masterid]['active'] = False
+            self.masters[masterid]["active"] = False
         return defer.succeed(None)

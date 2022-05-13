@@ -20,14 +20,17 @@ from twisted.python import util
 
 
 def onlyOnce(fn):
-    'Set up FN to only run once within an interpreter instance'
+    "Set up FN to only run once within an interpreter instance"
+
     def wrap(*args, **kwargs):
-        if hasattr(fn, 'called'):
+        if hasattr(fn, "called"):
             return None
         fn.called = 1
         return fn(*args, **kwargs)
+
     util.mergeFunctionMetadata(fn, wrap)
     return wrap
+
 
 # NOTE: all of these patches test for applicability *before* importing the
 # patch module.  This will help cut down on unnecessary imports where the
@@ -49,18 +52,21 @@ def patch_testcase_timeout():
 @onlyOnce
 def patch_servicechecks():
     from buildbot.monkeypatches import servicechecks
+
     servicechecks.patch()
 
 
 @onlyOnce
 def patch_decorators():
     from buildbot.monkeypatches import decorators
+
     decorators.patch()
 
 
 @onlyOnce
 def patch_config_for_unit_tests():
     from buildbot.config.master import set_is_in_unit_tests
+
     # by default, buildbot.config warns about not configured buildbotNetUsageData.
     # its important for users to not leak information, but unneeded and painful for tests
     set_is_in_unit_tests(True)

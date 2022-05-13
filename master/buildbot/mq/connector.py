@@ -23,16 +23,16 @@ from buildbot.util import service
 class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     classes = {
-        'simple': {
-            'class': "buildbot.mq.simple.SimpleMQ",
-            'keys': set(['debug']),
+        "simple": {
+            "class": "buildbot.mq.simple.SimpleMQ",
+            "keys": set(["debug"]),
         },
-        'wamp': {
-            'class': "buildbot.mq.wamp.WampMQ",
-            'keys': set(["router_url", "realm", "wamp_debug_level"]),
+        "wamp": {
+            "class": "buildbot.mq.wamp.WampMQ",
+            "keys": set(["router_url", "realm", "wamp_debug_level"]),
         },
     }
-    name = 'mq'
+    name = "mq"
 
     def __init__(self):
         super().__init__()
@@ -45,10 +45,10 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
         # imports are done locally so that we don't try to import
         # implementation-specific modules unless they're required.
-        typ = self.master.config.mq['type']
+        typ = self.master.config.mq["type"]
         assert typ in self.classes  # this is checked by MasterConfig
         self.impl_type = typ
-        cls = namedObject(self.classes[typ]['class'])
+        cls = namedObject(self.classes[typ]["class"])
         self.impl = cls()
 
         # set up the impl as a child service
@@ -64,7 +64,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # double-check -- the master ensures this in config checks
-        assert self.impl_type == new_config.mq['type']
+        assert self.impl_type == new_config.mq["type"]
 
         return super().reconfigServiceWithBuildbotConfig(new_config)
 

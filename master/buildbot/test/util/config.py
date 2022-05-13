@@ -37,7 +37,6 @@ class _AssertRaisesConfigErrorContext:
 
 
 class ConfigErrorsMixin:
-
     def assertConfigError(self, errors, substr_or_re):
         if len(errors.errors) > 1:
             self.fail(f"too many errors: {errors.errors}")

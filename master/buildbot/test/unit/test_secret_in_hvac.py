@@ -28,6 +28,7 @@ from buildbot.test.util.config import ConfigErrorsMixin
 
 try:
     import hvac
+
     assert hvac
 except ImportError:
     hvac = None
@@ -51,7 +52,7 @@ class FakeHvacKvV1:
             raise hvac.exceptions.Unauthorized
         if path == "wrong/path":
             raise hvac.exceptions.InvalidPath(message="Fake InvalidPath exception")
-        return {'data': {'key': "value"}}
+        return {"data": {"key": "value"}}
 
 
 class FakeHvacKvV2:
@@ -62,7 +63,7 @@ class FakeHvacKvV2:
             raise hvac.exceptions.Unauthorized(message="Fake Unauthorized exception")
         if path == "wrong/path":
             raise hvac.exceptions.InvalidPath(message="Fake InvalidPath exception")
-        return {'data': {'data': {'key': "value"}}}
+        return {"data": {"data": {"key": "value"}}}
 
 
 class FakeHvacKv:
@@ -99,17 +100,14 @@ def mock_vault(*args, **kwargs):
 
 
 class TestSecretInVaultAuthenticator(interfaces.InterfaceTests):
-
     def test_authenticate(self):
         raise NotImplementedError
 
 
 class TestSecretInVaultAuthenticatorToken(unittest.TestCase, TestSecretInVaultAuthenticator):
-
     def setUp(self):
         if hvac is None:
-            raise unittest.SkipTest(
-                "Need to install hvac to test VaultAuthenticatorToken")
+            raise unittest.SkipTest("Need to install hvac to test VaultAuthenticatorToken")
 
     def test_authenticate(self):
         token = "mockToken"
@@ -120,7 +118,6 @@ class TestSecretInVaultAuthenticatorToken(unittest.TestCase, TestSecretInVaultAu
 
 
 class TestSecretInVaultAuthenticatorApprole(unittest.TestCase, TestSecretInVaultAuthenticator):
-
     def test_authenticate(self):
         authenticator = VaultAuthenticatorApprole("testRole", "testSecret")
         client = FakeHvacClient()
@@ -129,40 +126,65 @@ class TestSecretInVaultAuthenticatorApprole(unittest.TestCase, TestSecretInVault
 
 
 class TestSecretInHashiCorpVaultKvSecretProvider(ConfigErrorsMixin, unittest.TestCase):
-
     def setUp(self):
         if hvac is None:
-            raise unittest.SkipTest(
-                "Need to install hvac to test HashiCorpVaultKvSecretProvider")
-        param = dict(vault_server="", authenticator=VaultAuthenticatorToken("mockToken"),
-                     path_delimiter='|', path_escape='\\', api_version=2)
+            raise unittest.SkipTest("Need to install hvac to test HashiCorpVaultKvSecretProvider")
+        param = dict(
+            vault_server="",
+            authenticator=VaultAuthenticatorToken("mockToken"),
+            path_delimiter="|",
+            path_escape="\\",
+            api_version=2,
+        )
         self.provider = HashiCorpVaultKvSecretProvider(**param)
         self.provider.reconfigService(**param)
         self.provider.client = FakeHvacClient()
-        self.provider.client.secrets.kv.default_kv_version = param['api_version']
+        self.provider.client.secrets.kv.default_kv_version = param["api_version"]
         self.provider.client.token = "mockToken"
 
-    @parameterized.expand([
-        ('vault_server_not_string', {'vault_server': {}}, 'vault_server must be a string'),
-        ('path_delimiter_not_char', {'vault_server': 'abc', 'path_delimiter': {}},
-         'path_delimiter must be a single character'),
-        ('path_delimiter_too_long', {'vault_server': 'abc', 'path_delimiter': 'ab'},
-         'path_delimiter must be a single character'),
-        ('path_escape_not_char', {'vault_server': 'abc', 'path_escape': {}},
-         'path_escape must be a single character'),
-        ('path_escape_too_long', {'vault_server': 'abc', 'path_escape': 'ab'},
-         'path_escape must be a single character'),
-        ('api_version_unsupported', {'vault_server': 'abc', 'api_version': 3},
-         'api_version 3 is not supported'),
-    ])
+    @parameterized.expand(
+        [
+            (
+                "vault_server_not_string",
+                {"vault_server": {}},
+                "vault_server must be a string",
+            ),
+            (
+                "path_delimiter_not_char",
+                {"vault_server": "abc", "path_delimiter": {}},
+                "path_delimiter must be a single character",
+            ),
+            (
+                "path_delimiter_too_long",
+                {"vault_server": "abc", "path_delimiter": "ab"},
+                "path_delimiter must be a single character",
+            ),
+            (
+                "path_escape_not_char",
+                {"vault_server": "abc", "path_escape": {}},
+                "path_escape must be a single character",
+            ),
+            (
+                "path_escape_too_long",
+                {"vault_server": "abc", "path_escape": "ab"},
+                "path_escape must be a single character",
+            ),
+            (
+                "api_version_unsupported",
+                {"vault_server": "abc", "api_version": 3},
+                "api_version 3 is not supported",
+            ),
+        ]
+    )
     def test_check_config(self, name, params, error):
         with self.assertRaisesConfigError(error):
-            HashiCorpVaultKvSecretProvider(authenticator=VaultAuthenticatorToken("mockToken"),
-                                           **params)
+            HashiCorpVaultKvSecretProvider(
+                authenticator=VaultAuthenticatorToken("mockToken"), **params
+            )
 
     def test_check_config_authenticator(self):
-        with self.assertRaisesConfigError('authenticator must be instance of VaultAuthenticator'):
-            HashiCorpVaultKvSecretProvider(vault_server='abc')
+        with self.assertRaisesConfigError("authenticator must be instance of VaultAuthenticator"):
+            HashiCorpVaultKvSecretProvider(vault_server="abc")
 
     def test_escaped_split(self):
         parts = self.provider.escaped_split("a/b\\|c/d|e/f\\|g/h")
@@ -176,19 +198,20 @@ class TestSecretInHashiCorpVaultKvSecretProvider(ConfigErrorsMixin, unittest.Tes
         self.provider.api_version = 1
         self.provider.client.token = "mockToken"
         value = self.provider.thd_hvac_wrap_read("some/path")
-        self.assertEqual(value['data']['key'], "value")
+        self.assertEqual(value["data"]["key"], "value")
 
     def test_thd_hvac_wrap_read_v2(self):
         self.provider.client.token = "mockToken"
         value = self.provider.thd_hvac_wrap_read("some/path")
-        self.assertEqual(value['data']['data']['key'], "value")
+        self.assertEqual(value["data"]["data"]["key"], "value")
 
     # for some reason, errors regarding generator function were thrown
     @patch("hvac.Client", side_effect=mock_vault)
     def test_thd_hvac_wrap_read_unauthorized(self, mock_vault):
         self.provider.client.token = None
-        yield self.assertFailure(self.provider.thd_hvac_wrap_read("some/path"),
-                                 hvac.exceptions.Unauthorized)
+        yield self.assertFailure(
+            self.provider.thd_hvac_wrap_read("some/path"), hvac.exceptions.Unauthorized
+        )
 
     def test_thd_hvac_get_reauthorize(self):
         """
@@ -196,7 +219,7 @@ class TestSecretInHashiCorpVaultKvSecretProvider(ConfigErrorsMixin, unittest.Tes
         """
         self.provider.client.token = None
         value = self.provider.thd_hvac_get("some/path")
-        self.assertEqual(value['data']['data']['key'], "value")
+        self.assertEqual(value["data"]["data"]["key"], "value")
 
     @defer.inlineCallbacks
     def test_get_v1(self):

@@ -34,7 +34,6 @@ class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.tearDownScheduler()
 
     class Subclass(timed.Timed):
-
         def getNextBuildTime(self, lastActuation):
             self.got_lastActuation = lastActuation
             return defer.succeed((lastActuation or 1000) + 60)
@@ -47,6 +46,7 @@ class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched = self.attachScheduler(self.Subclass(**kwargs), self.OBJECTID)
         self.clock = sched._reactor = task.Clock()
         return sched
+
     # tests
 
     # note that most of the heavy-lifting for testing this class is handled by

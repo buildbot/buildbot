@@ -22,31 +22,26 @@ from buildbot.test.fakedb.row import Row
 class Tag(Row):
     table = "tags"
 
-    id_column = 'id'
-    hashedColumns = [('name_hash', ('name',))]
+    id_column = "id"
+    hashedColumns = [("name_hash", ("name",))]
 
-    def __init__(self, id=None, name='some:tag', name_hash=None):
+    def __init__(self, id=None, name="some:tag", name_hash=None):
         super().__init__(id=id, name=name, name_hash=name_hash)
 
 
 class FakeTagsComponent(FakeDBComponent):
-
     def setUp(self):
         self.tags = {}
 
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Tag):
-                self.tags[row.id] = dict(
-                    id=row.id,
-                    name=row.name)
+                self.tags[row.id] = dict(id=row.id, name=row.name)
 
     def findTagId(self, name):
         for m in self.tags.values():
-            if m['name'] == name:
-                return defer.succeed(m['id'])
+            if m["name"] == name:
+                return defer.succeed(m["id"])
         id = len(self.tags) + 1
-        self.tags[id] = dict(
-            id=id,
-            name=name)
+        self.tags[id] = dict(id=id, name=name)
         return defer.succeed(id)

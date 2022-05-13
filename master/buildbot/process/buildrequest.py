@@ -44,14 +44,12 @@ class BuildRequestCollapser:
     @defer.inlineCallbacks
     def _getUnclaimedBrs(self, builderid):
         # Retrieve the list of Brs for all unclaimed builds
-        unclaim_brs = yield self.master.data.get(('builders',
-                                                  builderid,
-                                                  'buildrequests'),
-                                                 [resultspec.Filter('claimed',
-                                                                    'eq',
-                                                                    [False])])
+        unclaim_brs = yield self.master.data.get(
+            ("builders", builderid, "buildrequests"),
+            [resultspec.Filter("claimed", "eq", [False])],
+        )
         # sort by submitted_at, so the first is the oldest
-        unclaim_brs.sort(key=lambda brd: brd['submitted_at'])
+        unclaim_brs.sort(key=lambda brd: brd["submitted_at"])
         return unclaim_brs
 
     @defer.inlineCallbacks
@@ -60,12 +58,12 @@ class BuildRequestCollapser:
 
         for brid in self.brids:
             # Get the BuildRequest object
-            br = yield self.master.data.get(('buildrequests', brid))
+            br = yield self.master.data.get(("buildrequests", brid))
             # Retrieve the buildername
-            builderid = br['builderid']
-            bldrdict = yield self.master.data.get(('builders', builderid))
+            builderid = br["builderid"]
+            bldrdict = yield self.master.data.get(("builders", builderid))
             # Get the builder object
-            bldr = self.master.botmaster.builders.get(bldrdict['name'])
+            bldr = self.master.botmaster.builders.get(bldrdict["name"])
             # Get the Collapse BuildRequest function (from the configuration)
             collapseRequestsFn = bldr.getCollapseRequestsFn() if bldr else None
             unclaim_brs = yield self._getUnclaimedBrs(builderid)
@@ -75,12 +73,12 @@ class BuildRequestCollapser:
                 continue
 
             for unclaim_br in unclaim_brs:
-                if unclaim_br['buildrequestid'] == br['buildrequestid']:
+                if unclaim_br["buildrequestid"] == br["buildrequestid"]:
                     continue
 
                 canCollapse = yield collapseRequestsFn(self.master, bldr, br, unclaim_br)
                 if canCollapse is True:
-                    brids_to_collapse.add(unclaim_br['buildrequestid'])
+                    brids_to_collapse.add(unclaim_br["buildrequestid"])
 
         collapsed_brids = []
         for brid in brids_to_collapse:
@@ -95,30 +93,30 @@ class BuildRequestCollapser:
 class TempSourceStamp:
     # temporary fake sourcestamp
 
-    ATTRS = ('branch', 'revision', 'repository', 'project', 'codebase')
+    ATTRS = ("branch", "revision", "repository", "project", "codebase")
 
     PATCH_ATTRS = (
-        ('patch_level', 'level'),
-        ('patch_body', 'body'),
-        ('patch_subdir', 'subdir'),
-        ('patch_author', 'author'),
-        ('patch_comment', 'comment')
+        ("patch_level", "level"),
+        ("patch_body", "body"),
+        ("patch_subdir", "subdir"),
+        ("patch_author", "author"),
+        ("patch_comment", "comment"),
     )
 
     def __init__(self, ssdict):
         self._ssdict = ssdict
 
     def __getattr__(self, attr):
-        patch = self._ssdict.get('patch')
-        if attr == 'patch':
+        patch = self._ssdict.get("patch")
+        if attr == "patch":
             if patch:
-                return (patch['level'], patch['body'], patch['subdir'])
+                return (patch["level"], patch["body"], patch["subdir"])
             return None
-        elif attr == 'patch_info':
+        elif attr == "patch_info":
             if patch:
-                return (patch['author'], patch['comment'])
+                return (patch["author"], patch["comment"])
             return (None, None)
-        elif attr in self.ATTRS or attr == 'ssid':
+        elif attr in self.ATTRS or attr == "ssid":
             return self._ssdict[attr]
         raise AttributeError(attr)
 
@@ -132,13 +130,12 @@ class TempSourceStamp:
         for attr in self.ATTRS:
             result[attr] = self._ssdict.get(attr)
 
-        patch = self._ssdict.get('patch') or {}
+        patch = self._ssdict.get("patch") or {}
         for patch_attr, attr in self.PATCH_ATTRS:
             result[patch_attr] = patch.get(attr)
 
         assert all(
-            isinstance(val, (str, int, bytes, type(None)))
-            for attr, val in result.items()
+            isinstance(val, (str, int, bytes, type(None))) for attr, val in result.items()
         ), result
         return result
 
@@ -150,10 +147,10 @@ class TempChange:
         self._chdict = d
 
     def __getattr__(self, attr):
-        if attr == 'who':
-            return self._chdict['author']
-        elif attr == 'properties':
-            return properties.Properties.fromDict(self._chdict['properties'])
+        if attr == "who":
+            return self._chdict["author"]
+        elif attr == "properties":
+            return properties.Properties.fromDict(self._chdict["properties"])
         return self._chdict[attr]
 
     def asChDict(self):
@@ -213,41 +210,39 @@ class BuildRequest:
         @returns: L{BuildRequest}, via Deferred
         """
         cache = master.caches.get_cache("BuildRequests", cls._make_br)
-        return cache.get(brdict['buildrequestid'], brdict=brdict, master=master)
+        return cache.get(brdict["buildrequestid"], brdict=brdict, master=master)
 
     @classmethod
     @defer.inlineCallbacks
     def _make_br(cls, brid, brdict, master):
         buildrequest = cls()
         buildrequest.id = brid
-        buildrequest.bsid = brdict['buildsetid']
-        builder = yield master.db.builders.getBuilder(brdict['builderid'])
-        buildrequest.buildername = builder['name']
-        buildrequest.builderid = brdict['builderid']
-        buildrequest.priority = brdict['priority']
-        dt = brdict['submitted_at']
+        buildrequest.bsid = brdict["buildsetid"]
+        builder = yield master.db.builders.getBuilder(brdict["builderid"])
+        buildrequest.buildername = builder["name"]
+        buildrequest.builderid = brdict["builderid"]
+        buildrequest.priority = brdict["priority"]
+        dt = brdict["submitted_at"]
         buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
         buildrequest.master = master
-        buildrequest.waitedFor = brdict['waited_for']
+        buildrequest.waitedFor = brdict["waited_for"]
 
         # fetch the buildset to get the reason
-        buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])
+        buildset = yield master.db.buildsets.getBuildset(brdict["buildsetid"])
         assert buildset  # schema should guarantee this
-        buildrequest.reason = buildset['reason']
+        buildrequest.reason = buildset["reason"]
 
         # fetch the buildset properties, and convert to Properties
-        buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict['buildsetid'])
+        buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict["buildsetid"])
 
-        buildrequest.properties = properties.Properties.fromDict(
-            buildset_properties)
+        buildrequest.properties = properties.Properties.fromDict(buildset_properties)
 
         # make a fake sources dict (temporary)
-        bsdata = yield master.data.get(('buildsets', str(buildrequest.bsid)))
-        assert bsdata[
-            'sourcestamps'], "buildset must have at least one sourcestamp"
+        bsdata = yield master.data.get(("buildsets", str(buildrequest.bsid)))
+        assert bsdata["sourcestamps"], "buildset must have at least one sourcestamp"
         buildrequest.sources = {}
-        for ssdata in bsdata['sourcestamps']:
-            ss = buildrequest.sources[ssdata['codebase']] = TempSourceStamp(ssdata)
+        for ssdata in bsdata["sourcestamps"]:
+            ss = buildrequest.sources[ssdata["codebase"]] = TempSourceStamp(ssdata)
             changes = yield master.data.get(("sourcestamps", ss.ssid, "changes"))
             ss.changes = [TempChange(change) for change in changes]
 
@@ -255,8 +250,11 @@ class BuildRequest:
 
     @staticmethod
     def filter_buildset_props_for_collapsing(bs_props):
-        return {name: value for name, (value, source) in bs_props.items()
-                if name != 'scheduler' and source == 'Scheduler'}
+        return {
+            name: value
+            for name, (value, source) in bs_props.items()
+            if name != "scheduler" and source == "Scheduler"
+        }
 
     @staticmethod
     @defer.inlineCallbacks
@@ -267,24 +265,22 @@ class BuildRequest:
         This implements Buildbot's default collapse strategy.
         """
         # short-circuit: if these are for the same buildset, collapse away
-        if new_br['buildsetid'] == old_br['buildsetid']:
+        if new_br["buildsetid"] == old_br["buildsetid"]:
             return True
 
         # the new buildrequest must actually be newer than the old build request, otherwise we
         # may end up with situations where two build requests submitted at the same time will
         # cancel each other.
-        if new_br['buildrequestid'] < old_br['buildrequestid']:
+        if new_br["buildrequestid"] < old_br["buildrequestid"]:
             return False
 
         # get the buildsets for each buildrequest
-        selfBuildsets = yield master.data.get(('buildsets', str(new_br['buildsetid'])))
-        otherBuildsets = yield master.data.get(('buildsets', str(old_br['buildsetid'])))
+        selfBuildsets = yield master.data.get(("buildsets", str(new_br["buildsetid"])))
+        otherBuildsets = yield master.data.get(("buildsets", str(old_br["buildsetid"])))
 
         # extract sourcestamps, as dictionaries by codebase
-        selfSources = dict((ss['codebase'], ss)
-                           for ss in selfBuildsets['sourcestamps'])
-        otherSources = dict((ss['codebase'], ss)
-                            for ss in otherBuildsets['sourcestamps'])
+        selfSources = dict((ss["codebase"], ss) for ss in selfBuildsets["sourcestamps"])
+        otherSources = dict((ss["codebase"], ss) for ss in otherBuildsets["sourcestamps"])
 
         # if the sets of codebases do not match, we can't collapse
         if set(selfSources) != set(otherSources):
@@ -292,21 +288,21 @@ class BuildRequest:
 
         for c, selfSS in selfSources.items():
             otherSS = otherSources[c]
-            if selfSS['repository'] != otherSS['repository']:
+            if selfSS["repository"] != otherSS["repository"]:
                 return False
 
-            if selfSS['branch'] != otherSS['branch']:
+            if selfSS["branch"] != otherSS["branch"]:
                 return False
 
-            if selfSS['project'] != otherSS['project']:
+            if selfSS["project"] != otherSS["project"]:
                 return False
 
             # anything with a patch won't be collapsed
-            if selfSS['patch'] or otherSS['patch']:
+            if selfSS["patch"] or otherSS["patch"]:
                 return False
             # get changes & compare
-            selfChanges = yield master.data.get(('sourcestamps', selfSS['ssid'], 'changes'))
-            otherChanges = yield master.data.get(('sourcestamps', otherSS['ssid'], 'changes'))
+            selfChanges = yield master.data.get(("sourcestamps", selfSS["ssid"], "changes"))
+            otherChanges = yield master.data.get(("sourcestamps", otherSS["ssid"], "changes"))
             # if both have changes, proceed, else fail - if no changes check revision instead
             if selfChanges and otherChanges:
                 continue
@@ -318,12 +314,16 @@ class BuildRequest:
                 return False
 
             # else check revisions
-            if selfSS['revision'] != otherSS['revision']:
+            if selfSS["revision"] != otherSS["revision"]:
                 return False
 
         # don't collapse build requests if the properties injected by the scheduler differ
-        new_bs_props = yield master.data.get(('buildsets', str(new_br['buildsetid']), 'properties'))
-        old_bs_props = yield master.data.get(('buildsets', str(old_br['buildsetid']), 'properties'))
+        new_bs_props = yield master.data.get(
+            ("buildsets", str(new_br["buildsetid"]), "properties")
+        )
+        old_bs_props = yield master.data.get(
+            ("buildsets", str(old_br["buildsetid"]), "properties")
+        )
 
         new_bs_props = BuildRequest.filter_buildset_props_for_collapsing(new_bs_props)
         old_bs_props = BuildRequest.filter_buildset_props_for_collapsing(old_bs_props)
@@ -333,7 +333,7 @@ class BuildRequest:
         return True
 
     def mergeSourceStampsWith(self, others):
-        """ Returns one merged sourcestamp for every codebase """
+        """Returns one merged sourcestamp for every codebase"""
         # get all codebases from all requests
         all_codebases = set(self.sources)
         for other in others:

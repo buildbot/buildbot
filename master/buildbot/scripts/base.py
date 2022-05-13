@@ -44,72 +44,71 @@ class BusyError(RuntimeError):
 
 
 def checkPidFile(pidfile):
-    """ mostly comes from _twistd_unix.py which is not twisted public API :-/
+    """mostly comes from _twistd_unix.py which is not twisted public API :-/
 
-        except it returns an exception instead of exiting
+    except it returns an exception instead of exiting
     """
     if os.path.exists(pidfile):
         try:
-            with open(pidfile, encoding='utf-8') as f:
+            with open(pidfile, encoding="utf-8") as f:
                 pid = int(f.read())
         except ValueError as e:
-            raise ValueError(f'Pidfile {pidfile} contains non-numeric value') from e
+            raise ValueError(f"Pidfile {pidfile} contains non-numeric value") from e
         try:
             os.kill(pid, 0)
         except OSError as why:
             if why.errno == errno.ESRCH:
                 # The pid doesn't exist.
-                print(f'Removing stale pidfile {pidfile}')
+                print(f"Removing stale pidfile {pidfile}")
                 os.remove(pidfile)
             else:
                 raise OSError(
-                    f"Can't check status of PID {pid} from pidfile {pidfile}: {why}") from why
+                    f"Can't check status of PID {pid} from pidfile {pidfile}: {why}"
+                ) from why
         else:
             raise BusyError(f"'{pidfile}' exists - is this master still running?")
 
 
 def checkBasedir(config):
-    if not config['quiet']:
+    if not config["quiet"]:
         print("checking basedir")
 
-    if not isBuildmasterDir(config['basedir']):
+    if not isBuildmasterDir(config["basedir"]):
         return False
 
-    if runtime.platformType != 'win32':  # no pids on win32
-        if not config['quiet']:
+    if runtime.platformType != "win32":  # no pids on win32
+        if not config["quiet"]:
             print("checking for running master")
 
-        pidfile = os.path.join(config['basedir'], 'twistd.pid')
+        pidfile = os.path.join(config["basedir"], "twistd.pid")
         try:
             checkPidFile(pidfile)
         except Exception as e:
             print(str(e))
             return False
 
-    tac = getConfigFromTac(config['basedir'])
+    tac = getConfigFromTac(config["basedir"])
     if tac:
-        if isinstance(tac.get('rotateLength', 0), str):
+        if isinstance(tac.get("rotateLength", 0), str):
             print("ERROR: rotateLength is a string, it should be a number")
             print("ERROR: Please, edit your buildbot.tac file and run again")
-            print(
-                "ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
+            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
             return False
-        if isinstance(tac.get('maxRotatedFiles', 0), str):
+        if isinstance(tac.get("maxRotatedFiles", 0), str):
             print("ERROR: maxRotatedFiles is a string, it should be a number")
             print("ERROR: Please, edit your buildbot.tac file and run again")
-            print(
-                "ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
+            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
             return False
 
     return True
 
 
-def loadConfig(config, configFileName='master.cfg'):
-    if not config['quiet']:
+def loadConfig(config, configFileName="master.cfg"):
+    if not config["quiet"]:
         print(f"checking {configFileName}")
 
     try:
-        master_cfg = FileLoader(config['basedir'], configFileName).loadConfig()
+        master_cfg = FileLoader(config["basedir"], configFileName).loadConfig()
     except ConfigErrors as e:
         print("Errors loading configuration:")
 
@@ -130,7 +129,7 @@ def isBuildmasterDir(dir):
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
-        with open(buildbot_tac, encoding='utf-8') as f:
+        with open(buildbot_tac, encoding="utf-8") as f:
             contents = f.read()
     except IOError as exception:
         print_error(f"error reading '{buildbot_tac}': {exception.strerror}")
@@ -144,13 +143,13 @@ def isBuildmasterDir(dir):
 
 
 def getConfigFromTac(basedir, quiet=False):
-    tacFile = os.path.join(basedir, 'buildbot.tac')
+    tacFile = os.path.join(basedir, "buildbot.tac")
     if os.path.exists(tacFile):
         # don't mess with the global namespace, but set __file__ for
         # relocatable buildmasters
-        tacGlobals = {'__file__': tacFile}
+        tacGlobals = {"__file__": tacFile}
         try:
-            with open(tacFile, encoding='utf-8') as f:
+            with open(tacFile, encoding="utf-8") as f:
                 exec(f.read(), tacGlobals)  # pylint: disable=exec-used
         except Exception:
             if not quiet:
@@ -186,7 +185,7 @@ class SubcommandOptions(usage.Options):
         # attribute; however, we do not want to permanently change the class.
         # So we patch it temporarily and restore it after.
         cls = self.__class__
-        if hasattr(cls, 'optParameters'):
+        if hasattr(cls, "optParameters"):
             old_optParameters = cls.optParameters
             cls.optParameters = op = copy.deepcopy(cls.optParameters)
             if self.buildbotOptions:
@@ -194,12 +193,11 @@ class SubcommandOptions(usage.Options):
                 # pylint: disable=not-an-iterable
                 for optfile_name, option_name in self.buildbotOptions:
                     for i, val in enumerate(op):
-                        if (val[0] == option_name and
-                                optfile_name in optfile):
+                        if val[0] == option_name and optfile_name in optfile:
                             op[i] = list(val)
                             op[i][2] = optfile[optfile_name]
         super().__init__(*args)
-        if hasattr(cls, 'optParameters'):
+        if hasattr(cls, "optParameters"):
             cls.optParameters = old_optParameters
 
     def loadOptionsFile(self, _here=None):
@@ -215,9 +213,10 @@ class SubcommandOptions(usage.Options):
 
         here = _here or os.path.abspath(os.getcwd())
 
-        if runtime.platformType == 'win32':
+        if runtime.platformType == "win32":
             # never trust env-vars, use the proper API
             from win32com.shell import shellcon, shell
+
             appdata = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
             home = os.path.join(appdata, "buildbot")
         else:
@@ -233,8 +232,9 @@ class SubcommandOptions(usage.Options):
             here = next
             toomany -= 1  # just in case
             if toomany == 0:
-                print("I seem to have wandered up into the infinite glories "
-                      "of the heavens. Oops.")
+                print(
+                    "I seem to have wandered up into the infinite glories " "of the heavens. Oops."
+                )
                 break
 
         searchpath.append(home)
@@ -243,14 +243,14 @@ class SubcommandOptions(usage.Options):
 
         for d in searchpath:
             if os.path.isdir(d):
-                if runtime.platformType != 'win32':
+                if runtime.platformType != "win32":
                     if os.stat(d)[stat.ST_UID] != os.getuid():
                         print(f"skipping {d} because you don't own it")
                         continue  # security, skip other people's directories
                 optfile = os.path.join(d, "options")
                 if os.path.exists(optfile):
                     try:
-                        with open(optfile, "r", encoding='utf-8') as f:
+                        with open(optfile, "r", encoding="utf-8") as f:
                             options = f.read()
                         exec(options, localDict)  # pylint: disable=exec-used
                     except Exception:
@@ -267,9 +267,9 @@ class SubcommandOptions(usage.Options):
         missing = [k for k in self.requiredOptions if self[k] is None]
         if missing:
             if len(missing) > 1:
-                msg = 'Required arguments missing: ' + ', '.join(missing)
+                msg = "Required arguments missing: " + ", ".join(missing)
             else:
-                msg = 'Required argument missing: ' + missing[0]
+                msg = "Required argument missing: " + missing[0]
             raise usage.UsageError(msg)
 
 
@@ -279,22 +279,23 @@ class BasedirMixin:
     argument"""
 
     # on tab completion, suggest directories as first argument
-    if hasattr(usage, 'Completions'):
+    if hasattr(usage, "Completions"):
         # only set completion suggestion if running with
         # twisted version (>=11.1.0) that supports it
         compData = usage.Completions(
-            extraActions=[usage.CompleteDirs(descr="buildbot base directory")])
+            extraActions=[usage.CompleteDirs(descr="buildbot base directory")]
+        )
 
     def parseArgs(self, *args):
         if args:
-            self['basedir'] = args[0]
+            self["basedir"] = args[0]
         else:
             # Use the current directory if no basedir was specified.
-            self['basedir'] = os.getcwd()
+            self["basedir"] = os.getcwd()
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
     def postOptions(self):
         # get an unambiguous, expanded basedir, including expanding '~', which
         # may be useful in a .buildbot/config file
-        self['basedir'] = os.path.abspath(os.path.expanduser(self['basedir']))
+        self["basedir"] = os.path.abspath(os.path.expanduser(self["basedir"]))

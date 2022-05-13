@@ -36,7 +36,7 @@ def now():
 
 
 class LogChunksJanitor(BuildStep):
-    name = 'LogChunksJanitor'
+    name = "LogChunksJanitor"
     renderables = ["logHorizon"]
 
     def __init__(self, logHorizon):
@@ -52,7 +52,7 @@ class LogChunksJanitor(BuildStep):
 
 
 class BuildDataJanitor(BuildStep):
-    name = 'BuildDataJanitor'
+    name = "BuildDataJanitor"
     renderables = ["build_data_horizon"]
 
     def __init__(self, build_data_horizon):
@@ -68,7 +68,7 @@ class BuildDataJanitor(BuildStep):
 
 
 class JanitorConfigurator(ConfiguratorBase):
-    """ Janitor is a configurator which create a Janitor Builder with all needed Janitor steps"""
+    """Janitor is a configurator which create a Janitor Builder with all needed Janitor steps"""
 
     def __init__(self, logHorizon=None, hour=0, build_data_horizon=None, **kwargs):
         super().__init__()
@@ -94,19 +94,24 @@ class JanitorConfigurator(ConfiguratorBase):
         nightly_kwargs = {}
 
         # we take the defaults of Nightly, except for hour
-        for arg in ('minute', 'dayOfMonth', 'month', 'dayOfWeek'):
+        for arg in ("minute", "dayOfMonth", "month", "dayOfWeek"):
             if arg in kwargs:
                 nightly_kwargs[arg] = kwargs[arg]
 
-        self.schedulers.append(Nightly(
-            name=JANITOR_NAME, builderNames=[JANITOR_NAME], hour=hour, **nightly_kwargs))
+        self.schedulers.append(
+            Nightly(name=JANITOR_NAME, builderNames=[JANITOR_NAME], hour=hour, **nightly_kwargs)
+        )
 
-        self.schedulers.append(ForceScheduler(
-            name=JANITOR_NAME + "_force",
-            builderNames=[JANITOR_NAME]))
+        self.schedulers.append(
+            ForceScheduler(name=JANITOR_NAME + "_force", builderNames=[JANITOR_NAME])
+        )
 
-        self.builders.append(BuilderConfig(
-            name=JANITOR_NAME, workername=JANITOR_NAME, factory=BuildFactory(steps=steps)
-        ))
-        self.protocols.setdefault('null', {})
+        self.builders.append(
+            BuilderConfig(
+                name=JANITOR_NAME,
+                workername=JANITOR_NAME,
+                factory=BuildFactory(steps=steps),
+            )
+        )
+        self.protocols.setdefault("null", {})
         self.workers.append(LocalWorker(JANITOR_NAME))

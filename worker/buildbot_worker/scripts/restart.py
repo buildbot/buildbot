@@ -22,8 +22,8 @@ from buildbot_worker.scripts import stop
 
 
 def restart(config):
-    quiet = config['quiet']
-    basedir = config['basedir']
+    quiet = config["quiet"]
+    basedir = config["basedir"]
 
     if not base.isWorkerDir(basedir):
         return 1
@@ -36,4 +36,4 @@ def restart(config):
     if not quiet:
         print("now restarting worker process..")
 
-    return start.startWorker(basedir, quiet, config['nodaemon'])
+    return start.startWorker(basedir, quiet, config["nodaemon"])

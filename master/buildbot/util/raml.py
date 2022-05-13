@@ -28,7 +28,7 @@ class RamlLoader(yaml.SafeLoader):
 
 def construct_include(loader, node):
     path = os.path.join(os.path.dirname(loader.stream.name), node.value)
-    with open(path, encoding='utf-8') as f:
+    with open(path, encoding="utf-8") as f:
         return yaml.load(f, Loader=RamlLoader)
 
 
@@ -37,10 +37,8 @@ def construct_mapping(loader, node):
     return OrderedDict(loader.construct_pairs(node))
 
 
-RamlLoader.add_constructor(
-    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-    construct_mapping)
-RamlLoader.add_constructor('!include', construct_include)
+RamlLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
+RamlLoader.add_constructor("!include", construct_include)
 
 
 class RamlSpec:
@@ -54,12 +52,11 @@ class RamlSpec:
     """
 
     def __init__(self):
-        fn = os.path.join(os.path.dirname(__file__),
-                          os.pardir, 'spec', 'api.raml')
-        with open(fn, encoding='utf-8') as f:
+        fn = os.path.join(os.path.dirname(__file__), os.pardir, "spec", "api.raml")
+        with open(fn, encoding="utf-8") as f:
             self.api = yaml.load(f, Loader=RamlLoader)
 
-        with open(fn, encoding='utf-8') as f:
+        with open(fn, encoding="utf-8") as f:
             self.rawraml = f.read()
 
         endpoints = {}
@@ -81,24 +78,24 @@ class RamlSpec:
                     v["uriParameters"] = p
                     endpoints[ep] = v
                 self.parse_endpoints(endpoints, ep, v, p)
-            elif k in ['get', 'post']:
-                if 'is' not in v:
+            elif k in ["get", "post"]:
+                if "is" not in v:
                     continue
 
-                for _is in v['is']:
+                for _is in v["is"]:
                     if not isinstance(_is, dict):
                         raise Exception(f'Unexpected "is" target {type(_is)}: {_is}')
 
-                    if 'bbget' in _is:
+                    if "bbget" in _is:
                         try:
-                            v['eptype'] = _is['bbget']['bbtype']
+                            v["eptype"] = _is["bbget"]["bbtype"]
                         except TypeError as e:
                             raise Exception(f"Unexpected 'is' target {_is['bbget']}") from e
 
-                        self.endpoints_by_type.setdefault(v['eptype'], {})
-                        self.endpoints_by_type[v['eptype']][base] = api
+                        self.endpoints_by_type.setdefault(v["eptype"], {})
+                        self.endpoints_by_type[v["eptype"]][base] = api
 
-                    if 'bbgetraw' in _is:
+                    if "bbgetraw" in _is:
                         self.rawendpoints.setdefault(base, {})
                         self.rawendpoints[base] = api
         return endpoints
@@ -111,15 +108,15 @@ class RamlSpec:
         return self.reindent(j, indent)
 
     def parse_types(self):
-        types = self.api['types']
+        types = self.api["types"]
         return types
 
     def iter_actions(self, endpoint):
-        ACTIONS_MAGIC = '/actions/'
+        ACTIONS_MAGIC = "/actions/"
         for k, v in endpoint.items():
             if k.startswith(ACTIONS_MAGIC):
-                k = k[len(ACTIONS_MAGIC):]
-                v = v['post']
+                k = k[len(ACTIONS_MAGIC) :]
+                v = v["post"]
                 # simplify the raml tree for easier processing
-                v['body'] = v['body']['application/json'].get('properties', {})
+                v["body"] = v["body"]["application/json"].get("properties", {})
                 yield (k, v)

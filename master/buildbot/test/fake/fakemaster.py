@@ -52,6 +52,7 @@ class FakeCache:
             if x is not None:
                 weakref.ref(x)
             return x
+
         return d
 
     def put(self, key, val):
@@ -59,13 +60,11 @@ class FakeCache:
 
 
 class FakeCaches:
-
     def get_cache(self, name, miss_fn):
         return FakeCache(name, miss_fn)
 
 
 class FakeBuilder:
-
     def __init__(self, master=None, buildername="Builder"):
         if master:
             self.master = master
@@ -87,8 +86,7 @@ class FakeMaster(service.MasterService):
     - Non-caching implementation for C{self.caches}
     """
 
-    def __init__(self, reactor,
-                 master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+    def __init__(self, reactor, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
         super().__init__()
         self._master_id = master_id
         self.reactor = reactor
@@ -97,10 +95,10 @@ class FakeMaster(service.MasterService):
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
         self.initLock = defer.DeferredLock()
-        self.basedir = 'basedir'
+        self.basedir = "basedir"
         self.botmaster = FakeBotMaster()
         self.botmaster.setServiceParent(self)
-        self.name = 'fake:/master'
+        self.name = "fake:/master"
         self.masterid = master_id
         self.msgmanager = msgmanager.FakeMsgManager()
         self.workers = bworkermanager.FakeWorkerManager()
@@ -120,6 +118,7 @@ class FakeMaster(service.MasterService):
                 rv = self.objectids[k] = self.next_objectid
                 self.next_objectid += 1
             return defer.succeed(rv)
+
         self.db.state.getObjectId = getObjectId
 
     def getObjectId(self):
@@ -128,11 +127,20 @@ class FakeMaster(service.MasterService):
     def subscribeToBuildRequests(self, callback):
         pass
 
+
 # Leave this alias, in case we want to add more behavior later
 
 
-def make_master(testcase, wantMq=False, wantDb=False, wantData=False,
-                wantRealReactor=False, wantGraphql=False, url=None, **kwargs):
+def make_master(
+    testcase,
+    wantMq=False,
+    wantDb=False,
+    wantData=False,
+    wantRealReactor=False,
+    wantGraphql=False,
+    url=None,
+    **kwargs
+):
     if wantRealReactor:
         _reactor = reactor
     else:
@@ -160,7 +168,7 @@ def make_master(testcase, wantMq=False, wantDb=False, wantData=False,
         master.graphql.setServiceParent(master)
         master.graphql.data = master.data.realConnector
         master.data._scanModule(endpoint)
-        master.config.www = {'graphql': {"debug": True}}
+        master.config.www = {"graphql": {"debug": True}}
         try:
             master.graphql.reconfigServiceWithBuildbotConfig(master.config)
         except ImportError:

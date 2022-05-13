@@ -29,7 +29,7 @@ class BuildsetPropertiesEndpoint(base.Endpoint):
     """
 
     def get(self, resultSpec, kwargs):
-        return self.master.db.buildsets.getBuildsetProperties(kwargs['bsid'])
+        return self.master.db.buildsets.getBuildsetProperties(kwargs["bsid"])
 
 
 class BuildPropertiesEndpoint(base.Endpoint):
@@ -89,7 +89,7 @@ class PropertiesListEndpoint(base.Endpoint):
             if resultSpec is not None:
                 resultSpec.fieldMapping = self.buildsetFieldMapping
             props = yield self.master.db.changes.getChangeProperties(changeid)
-        return [{'name': k, 'source': v[1], 'value': json.dumps(v[0])} for k, v in props.items()]
+        return [{"name": k, "source": v[1], "value": json.dumps(v[0])} for k, v in props.items()]
 
 
 class Property(base.ResourceType):
@@ -99,7 +99,7 @@ class Property(base.ResourceType):
     endpoints = [PropertiesListEndpoint]
     keyField = "name"
 
-    entityType = types.PropertyEntityType(name, 'Property')
+    entityType = types.PropertyEntityType(name, "Property")
 
 
 class Properties(base.ResourceType):
@@ -117,7 +117,7 @@ class Properties(base.ResourceType):
         # We only send the new properties, and count on the client to merge the resulting properties
         # dict
         # We are good, as there is no way to delete a property.
-        routingKey = ('builds', str(buildid), "properties", "update")
+        routingKey = ("builds", str(buildid), "properties", "update")
         newprops = self.sanitizeMessage(newprops)
         return self.master.mq.produce(routingKey, newprops)
 
@@ -125,7 +125,7 @@ class Properties(base.ResourceType):
     @defer.inlineCallbacks
     def setBuildProperties(self, buildid, properties):
         to_update = {}
-        oldproperties = yield self.master.data.get(('builds', str(buildid), "properties"))
+        oldproperties = yield self.master.data.get(("builds", str(buildid), "properties"))
         properties = properties.getProperties()
         properties = yield properties.render(properties.asDict())
         for k, v in properties.items():
@@ -135,14 +135,12 @@ class Properties(base.ResourceType):
 
         if to_update:
             for k, v in to_update.items():
-                yield self.master.db.builds.setBuildProperty(
-                    buildid, k, v[0], v[1])
+                yield self.master.db.builds.setBuildProperty(buildid, k, v[0], v[1])
             yield self.generateUpdateEvent(buildid, to_update)
 
     @base.updateMethod
     @defer.inlineCallbacks
     def setBuildProperty(self, buildid, name, value, source):
-        res = yield self.master.db.builds.setBuildProperty(
-            buildid, name, value, source)
+        res = yield self.master.db.builds.setBuildProperty(buildid, name, value, source)
         yield self.generateUpdateEvent(buildid, dict(name=(value, source)))
         return res

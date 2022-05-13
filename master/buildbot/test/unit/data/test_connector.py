@@ -31,14 +31,12 @@ from buildbot.test.util import interfaces
 
 
 class Tests(interfaces.InterfaceTests):
-
     def setUp(self):
         raise NotImplementedError
 
     def test_signature_get(self):
         @self.assertArgSpecMatches(self.data.get)
-        def get(self, path, filters=None, fields=None,
-                order=None, limit=None, offset=None):
+        def get(self, path, filters=None, fields=None, order=None, limit=None, offset=None):
             pass
 
     def test_signature_getEndpoint(self):
@@ -53,10 +51,23 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_updates_addChange(self):
         @self.assertArgSpecMatches(self.data.updates.addChange)
-        def addChange(self, files=None, comments=None, author=None, committer=None,
-                      revision=None, when_timestamp=None, branch=None, category=None,
-                      revlink='', properties=None, repository='', codebase=None,
-                      project='', src=None):
+        def addChange(
+            self,
+            files=None,
+            comments=None,
+            author=None,
+            committer=None,
+            revision=None,
+            when_timestamp=None,
+            branch=None,
+            category=None,
+            revlink="",
+            properties=None,
+            repository="",
+            codebase=None,
+            project="",
+            src=None,
+        ):
             pass
 
     def test_signature_updates_masterActive(self):
@@ -71,10 +82,18 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_updates_addBuildset(self):
         @self.assertArgSpecMatches(self.data.updates.addBuildset)
-        def addBuildset(self, waited_for, scheduler=None, sourcestamps=None,
-                        reason='', properties=None, builderids=None,
-                        external_idstring=None,
-                        parent_buildid=None, parent_relationship=None):
+        def addBuildset(
+            self,
+            waited_for,
+            scheduler=None,
+            sourcestamps=None,
+            reason="",
+            properties=None,
+            builderids=None,
+            external_idstring=None,
+            parent_buildid=None,
+            parent_relationship=None,
+        ):
             pass
 
     def test_signature_updates_maybeBuildsetComplete(self):
@@ -89,16 +108,13 @@ class Tests(interfaces.InterfaceTests):
 
 
 class TestFakeData(TestReactorMixin, unittest.TestCase, Tests):
-
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
-                                             wantDb=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.data = self.master.data
 
 
 class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -115,25 +131,24 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         # don't load by default
-        self.patch(connector.DataConnector, 'submodules', [])
+        self.patch(connector.DataConnector, "submodules", [])
         self.data = connector.DataConnector()
         yield self.data.setServiceParent(self.master)
 
     def patchFooPattern(self):
-        cls = type('FooEndpoint', (base.Endpoint,), {})
+        cls = type("FooEndpoint", (base.Endpoint,), {})
         ep = cls(None, self.master)
-        ep.get = mock.Mock(name='FooEndpoint.get')
-        ep.get.return_value = defer.succeed({'val': 9999})
-        self.data.matcher[('foo', 'n:fooid', 'bar')] = ep
+        ep.get = mock.Mock(name="FooEndpoint.get")
+        ep.get.return_value = defer.succeed({"val": 9999})
+        self.data.matcher[("foo", "n:fooid", "bar")] = ep
         return ep
 
     def patchFooListPattern(self):
-        cls = type('FoosEndpoint', (base.Endpoint,), {})
+        cls = type("FoosEndpoint", (base.Endpoint,), {})
         ep = cls(None, self.master)
-        ep.get = mock.Mock(name='FoosEndpoint.get')
-        ep.get.return_value = defer.succeed(
-            [{'val': v} for v in range(900, 920)])
-        self.data.matcher[('foo',)] = ep
+        ep.get = mock.Mock(name="FoosEndpoint.get")
+        ep.get.return_value = defer.succeed([{"val": v} for v in range(900, 920)])
+        self.data.matcher[("foo",)] = ep
         return ep
 
     # tests
@@ -143,21 +158,21 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
 
     def test_scanModule(self):
         # use this module as a test
-        mod = reflect.namedModule('buildbot.test.unit.data.test_connector')
+        mod = reflect.namedModule("buildbot.test.unit.data.test_connector")
         self.data._scanModule(mod)
 
         # check that it discovered MyResourceType and updated endpoints
-        match = self.data.matcher[('test', '10')]
+        match = self.data.matcher[("test", "10")]
         self.assertIsInstance(match[0], TestEndpoint)
         self.assertEqual(match[1], dict(testid=10))
-        match = self.data.matcher[('test', '10', 'p1')]
+        match = self.data.matcher[("test", "10", "p1")]
         self.assertIsInstance(match[0], TestEndpoint)
-        match = self.data.matcher[('test', '10', 'p2')]
+        match = self.data.matcher[("test", "10", "p2")]
         self.assertIsInstance(match[0], TestEndpoint)
-        match = self.data.matcher[('tests',)]
+        match = self.data.matcher[("tests",)]
         self.assertIsInstance(match[0], TestsEndpoint)
         self.assertEqual(match[1], {})
-        match = self.data.matcher[('test', 'foo')]
+        match = self.data.matcher[("test", "foo")]
         self.assertIsInstance(match[0], TestsEndpointSubclass)
         self.assertEqual(match[1], {})
 
@@ -165,61 +180,57 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.data.updates.testUpdate(), "testUpdate return")
 
         # and that it added the single root link
-        self.assertEqual(self.data.rootLinks,
-                         [{'name': 'tests'}])
+        self.assertEqual(self.data.rootLinks, [{"name": "tests"}])
 
         # and that it added an attribute
         self.assertIsInstance(self.data.rtypes.test, TestResourceType)
 
     def test_getEndpoint(self):
         ep = self.patchFooPattern()
-        got = self.data.getEndpoint(('foo', '10', 'bar'))
-        self.assertEqual(got, (ep, {'fooid': 10}))
+        got = self.data.getEndpoint(("foo", "10", "bar"))
+        self.assertEqual(got, (ep, {"fooid": 10}))
 
     def test_getEndpoint_missing(self):
         with self.assertRaises(exceptions.InvalidPathError):
-            self.data.getEndpoint(('xyz',))
+            self.data.getEndpoint(("xyz",))
 
     @defer.inlineCallbacks
     def test_get(self):
         ep = self.patchFooPattern()
-        gotten = yield self.data.get(('foo', '10', 'bar'))
+        gotten = yield self.data.get(("foo", "10", "bar"))
 
-        self.assertEqual(gotten, {'val': 9999})
-        ep.get.assert_called_once_with(mock.ANY, {'fooid': 10})
+        self.assertEqual(gotten, {"val": 9999})
+        ep.get.assert_called_once_with(mock.ANY, {"fooid": 10})
 
     @defer.inlineCallbacks
     def test_get_filters(self):
         ep = self.patchFooListPattern()
-        gotten = yield self.data.get(('foo',),
-                          filters=[resultspec.Filter('val', 'lt', [902])])
+        gotten = yield self.data.get(("foo",), filters=[resultspec.Filter("val", "lt", [902])])
 
-        self.assertEqual(gotten, base.ListResult(
-            [{'val': 900}, {'val': 901}], total=2))
+        self.assertEqual(gotten, base.ListResult([{"val": 900}, {"val": 901}], total=2))
         ep.get.assert_called_once_with(mock.ANY, {})
 
     @defer.inlineCallbacks
     def test_get_resultSpec_args(self):
         ep = self.patchFooListPattern()
-        f = resultspec.Filter('val', 'gt', [909])
-        gotten = yield self.data.get(('foo',), filters=[f], fields=['val'],
-                          order=['-val'], limit=2)
+        f = resultspec.Filter("val", "gt", [909])
+        gotten = yield self.data.get(
+            ("foo",), filters=[f], fields=["val"], order=["-val"], limit=2
+        )
 
-        self.assertEqual(gotten, base.ListResult(
-            [{'val': 919}, {'val': 918}], total=10, limit=2))
+        self.assertEqual(gotten, base.ListResult([{"val": 919}, {"val": 918}], total=10, limit=2))
         ep.get.assert_called_once_with(mock.ANY, {})
 
     @defer.inlineCallbacks
     def test_control(self):
         ep = self.patchFooPattern()
-        ep.control = mock.Mock(name='MyEndpoint.control')
-        ep.control.return_value = defer.succeed('controlled')
+        ep.control = mock.Mock(name="MyEndpoint.control")
+        ep.control.return_value = defer.succeed("controlled")
 
-        gotten = yield self.data.control('foo!', {'arg': 2}, ('foo', '10', 'bar'))
+        gotten = yield self.data.control("foo!", {"arg": 2}, ("foo", "10", "bar"))
 
-        self.assertEqual(gotten, 'controlled')
-        ep.control.assert_called_once_with('foo!', {'arg': 2},
-                                           {'fooid': 10})
+        self.assertEqual(gotten, "controlled")
+        ep.control.assert_called_once_with("foo!", {"arg": 2}, {"fooid": 10})
 
 
 # classes discovered by test_scanModule, above
@@ -227,11 +238,11 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
 
 class TestsEndpoint(base.Endpoint):
     pathPatterns = "/tests"
-    rootLinkName = 'tests'
+    rootLinkName = "tests"
 
 
 class TestsEndpointParentClass(base.Endpoint):
-    rootLinkName = 'shouldnt-see-this'
+    rootLinkName = "shouldnt-see-this"
 
 
 class TestsEndpointSubclass(TestsEndpointParentClass):
@@ -247,15 +258,16 @@ class TestEndpoint(base.Endpoint):
 
 
 class TestResourceType(base.ResourceType):
-    name = 'test'
-    plural = 'tests'
+    name = "test"
+    plural = "tests"
 
     endpoints = [TestsEndpoint, TestEndpoint, TestsEndpointSubclass]
-    keyField = 'testid'
+    keyField = "testid"
 
     class EntityType(types.Entity):
         testid = types.Integer()
-    entityType = EntityType(name, 'Test')
+
+    entityType = EntityType(name, "Test")
 
     @base.updateMethod
     def testUpdate(self):

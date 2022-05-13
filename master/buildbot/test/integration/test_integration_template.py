@@ -23,23 +23,24 @@ from buildbot.test.util.integration import RunMasterBase
 # with one builder and a shellcommand step
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
-
     @defer.inlineCallbacks
     def test_shell(self):
         yield self.setupConfig(masterConfig())
         # if you don't need change, you can just remove this change, and useChange parameter
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none"
-                      )
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True,
-                                        wantProperties=True)
-        self.assertEqual(build['buildid'], 1)
-        self.assertEqual(build['properties']['owners'], (['me@foo.com'], 'Build'))
+        change = dict(
+            branch="master",
+            files=["foo.c"],
+            author="me@foo.com",
+            committer="me@foo.com",
+            comments="good stuff",
+            revision="HEAD",
+            project="none",
+        )
+        build = yield self.doForceBuild(
+            wantSteps=True, useChange=change, wantLogs=True, wantProperties=True
+        )
+        self.assertEqual(build["buildid"], 1)
+        self.assertEqual(build["properties"]["owners"], (["me@foo.com"], "Build"))
 
 
 # master configuration
@@ -49,19 +50,13 @@ def masterConfig():
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import steps, schedulers
 
-    c['schedulers'] = [
-        schedulers.AnyBranchScheduler(
-            name="sched",
-            builderNames=["testy"]),
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c["schedulers"] = [
+        schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"]),
+        schedulers.ForceScheduler(name="force", builderNames=["testy"]),
+    ]
 
     f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
-    c['www'] = {'graphql': True}
+    f.addStep(steps.ShellCommand(command="echo hello"))
+    c["builders"] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
+    c["www"] = {"graphql": True}
     return c

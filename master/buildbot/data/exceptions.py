@@ -18,9 +18,9 @@
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 
 __all__ = [
-    'SchedulerAlreadyClaimedError',
-    'InvalidPathError',
-    'InvalidControlException',
+    "SchedulerAlreadyClaimedError",
+    "InvalidPathError",
+    "InvalidControlException",
 ]
 
 

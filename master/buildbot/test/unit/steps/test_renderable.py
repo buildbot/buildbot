@@ -24,14 +24,16 @@ from buildbot.test.util import config as configmixin
 
 class TestBuildStep(BuildStep):
     def run(self):
-        self.setProperty('name', self.name)
+        self.setProperty("name", self.name)
         return 0
 
 
-class TestBuildStepNameIsRenderable(TestBuildStepMixin, unittest.TestCase,
-                                    TestReactorMixin,
-                                    configmixin.ConfigErrorsMixin):
-
+class TestBuildStepNameIsRenderable(
+    TestBuildStepMixin,
+    unittest.TestCase,
+    TestReactorMixin,
+    configmixin.ConfigErrorsMixin,
+):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -40,8 +42,8 @@ class TestBuildStepNameIsRenderable(TestBuildStepMixin, unittest.TestCase,
         return self.tear_down_test_build_step()
 
     def test_name_is_renderable(self):
-        step = TestBuildStep(name=Interpolate('%(kw:foo)s', foo='bar'))
+        step = TestBuildStep(name=Interpolate("%(kw:foo)s", foo="bar"))
         self.setup_step(step)
-        self.expect_property('name', 'bar')
+        self.expect_property("name", "bar")
         self.expect_outcome(0)
         return self.run_step()

@@ -25,7 +25,6 @@ from buildbot.test.steps import TestBuildStepMixin
 
 
 class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         self.setup_test_build_step()
@@ -36,121 +35,111 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def expect_and_run_command(self, *params):
         command = [CMake.DEFAULT_CMAKE] + list(params)
 
-        self.expect_commands(
-            ExpectShell(command=command, workdir='wkdir').exit(0))
+        self.expect_commands(ExpectShell(command=command, workdir="wkdir").exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_definitions_type(self):
         with self.assertRaises(ConfigErrors):
-            CMake(definitions='hello')
+            CMake(definitions="hello")
 
     def test_options_type(self):
         with self.assertRaises(ConfigErrors):
-            CMake(options='hello')
+            CMake(options="hello")
 
     def test_plain(self):
         self.setup_step(CMake())
-        self.expect_commands(
-            ExpectShell(command=[CMake.DEFAULT_CMAKE], workdir='wkdir').exit(0))
+        self.expect_commands(ExpectShell(command=[CMake.DEFAULT_CMAKE], workdir="wkdir").exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_cmake(self):
-        cmake_bin = 'something/else/cmake'
+        cmake_bin = "something/else/cmake"
 
         self.setup_step(CMake(cmake=cmake_bin))
-        self.expect_commands(
-            ExpectShell(command=[cmake_bin], workdir='wkdir').exit(0))
+        self.expect_commands(ExpectShell(command=[cmake_bin], workdir="wkdir").exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_cmake_interpolation(self):
-        prop = 'CMAKE'
-        value = 'Real_CMAKE'
+        prop = "CMAKE"
+        value = "Real_CMAKE"
 
         self.setup_step(CMake(cmake=Property(prop)))
-        self.properties.setProperty(prop, value, source='test')
+        self.properties.setProperty(prop, value, source="test")
 
-        self.expect_commands(
-            ExpectShell(command=[value], workdir='wkdir').exit(0))
+        self.expect_commands(ExpectShell(command=[value], workdir="wkdir").exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_definitions(self):
-        definition = {
-            'a': 'b'
-        }
+        definition = {"a": "b"}
         self.setup_step(CMake(definitions=definition))
-        self.expect_and_run_command('-Da=b')
+        self.expect_and_run_command("-Da=b")
 
     def test_environment(self):
         command = [CMake.DEFAULT_CMAKE]
-        environment = {'a': 'b'}
+        environment = {"a": "b"}
         self.setup_step(CMake(env=environment))
-        self.expect_commands(
-            ExpectShell(
-                command=command, workdir='wkdir', env={'a': 'b'}).exit(0))
+        self.expect_commands(ExpectShell(command=command, workdir="wkdir", env={"a": "b"}).exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_definitions_interpolation(self):
-        definitions = {
-            'a': Property('b')
-        }
+        definitions = {"a": Property("b")}
 
         self.setup_step(CMake(definitions=definitions))
-        self.properties.setProperty('b', 'real_b', source='test')
-        self.expect_and_run_command('-Da=real_b')
+        self.properties.setProperty("b", "real_b", source="test")
+        self.expect_and_run_command("-Da=real_b")
 
     def test_definitions_renderable(self):
-        definitions = Property('b')
+        definitions = Property("b")
         self.setup_step(CMake(definitions=definitions))
-        self.properties.setProperty('b', {'a': 'real_b'}, source='test')
-        self.expect_and_run_command('-Da=real_b')
+        self.properties.setProperty("b", {"a": "real_b"}, source="test")
+        self.expect_and_run_command("-Da=real_b")
 
     def test_generator(self):
-        generator = 'Ninja'
+        generator = "Ninja"
 
         self.setup_step(CMake(generator=generator))
-        self.expect_and_run_command('-G', generator)
+        self.expect_and_run_command("-G", generator)
 
     def test_generator_interpolation(self):
-        value = 'Our_GENERATOR'
+        value = "Our_GENERATOR"
 
-        self.setup_step(CMake(generator=Property('GENERATOR')))
-        self.properties.setProperty('GENERATOR', value, source='test')
+        self.setup_step(CMake(generator=Property("GENERATOR")))
+        self.properties.setProperty("GENERATOR", value, source="test")
 
-        self.expect_and_run_command('-G', value)
+        self.expect_and_run_command("-G", value)
 
     def test_options(self):
-        options = ('A', 'B')
+        options = ("A", "B")
 
         self.setup_step(CMake(options=options))
         self.expect_and_run_command(*options)
 
     def test_options_interpolation(self):
-        prop = 'option'
-        value = 'value'
+        prop = "option"
+        value = "value"
 
         self.setup_step(CMake(options=(Property(prop),)))
-        self.properties.setProperty(prop, value, source='test')
+        self.properties.setProperty(prop, value, source="test")
         self.expect_and_run_command(value)
 
     def test_path(self):
-        path = 'some/path'
+        path = "some/path"
 
         self.setup_step(CMake(path=path))
         self.expect_and_run_command(path)
 
     def test_path_interpolation(self):
-        prop = 'path'
-        value = 'some/path'
+        prop = "path"
+        value = "some/path"
 
         self.setup_step(CMake(path=Property(prop)))
-        self.properties.setProperty(prop, value, source='test')
+        self.properties.setProperty(prop, value, source="test")
         self.expect_and_run_command(value)
 
     def test_options_path(self):
-        self.setup_step(CMake(path='some/path', options=('A', 'B')))
-        self.expect_and_run_command('A', 'B', 'some/path')
+        self.setup_step(CMake(path="some/path", options=("A", "B")))
+        self.expect_and_run_command("A", "B", "some/path")

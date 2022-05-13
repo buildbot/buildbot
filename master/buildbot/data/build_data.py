@@ -21,14 +21,13 @@ from buildbot.data import types
 
 
 class Db2DataMixin:
-
     def db2data(self, dbdict):
         data = {
-            'buildid': dbdict['buildid'],
-            'name': dbdict['name'],
-            'value': dbdict['value'],
-            'length': dbdict['length'],
-            'source': dbdict['source'],
+            "buildid": dbdict["buildid"],
+            "name": dbdict["name"],
+            "value": dbdict["value"],
+            "length": dbdict["length"],
+            "source": dbdict["source"],
         }
         return defer.succeed(data)
 
@@ -66,7 +65,7 @@ class BuildDataNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoi
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         buildid = yield self.getBuildid(kwargs)
-        name = kwargs['name']
+        name = kwargs["name"]
 
         build_datadict = yield self.master.db.build_data.getBuildDataNoValue(buildid, name)
 
@@ -86,15 +85,17 @@ class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         buildid = yield self.getBuildid(kwargs)
-        name = kwargs['name']
+        name = kwargs["name"]
 
         dbdict = yield self.master.db.build_data.getBuildData(buildid, name)
         if not dbdict:
             return None
 
-        return {'raw': dbdict['value'],
-                'mime-type': 'application/octet-stream',
-                'filename': dbdict['name']}
+        return {
+            "raw": dbdict["value"],
+            "mime-type": "application/octet-stream",
+            "filename": dbdict["name"],
+        }
 
 
 class BuildData(base.ResourceType):
@@ -110,7 +111,8 @@ class BuildData(base.ResourceType):
         length = types.Integer()
         value = types.NoneOk(types.Binary())
         source = types.String()
-    entityType = EntityType(name, 'BuildData')
+
+    entityType = EntityType(name, "BuildData")
 
     @base.updateMethod
     def setBuildData(self, buildid, name, value, source):

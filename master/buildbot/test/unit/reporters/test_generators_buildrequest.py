@@ -30,35 +30,37 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
-                                unittest.TestCase, ReporterTestMixin):
+class TestBuildRequestGenerator(
+    ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin
+):
 
-    all_messages = ('failing', 'passing', 'warnings', 'exception', 'cancelled')
+    all_messages = ("failing", "passing", "warnings", "exception", "cancelled")
 
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         builder = Mock(spec=Builder)
         builder.master = self.master
         self.master.botmaster.getBuilderById = Mock(return_value=builder)
 
-    @parameterized.expand([
-        ('tags', 'tag'),
-        ('tags', 1),
-        ('builders', 'builder'),
-        ('builders', 1),
-        ('schedulers', 'scheduler'),
-        ('schedulers', 1),
-        ('branches', 'branch'),
-        ('branches', 1),
-    ])
+    @parameterized.expand(
+        [
+            ("tags", "tag"),
+            ("tags", 1),
+            ("builders", "builder"),
+            ("builders", 1),
+            ("schedulers", "scheduler"),
+            ("schedulers", 1),
+            ("branches", "branch"),
+            ("branches", 1),
+        ]
+    )
     def test_list_params_check_raises(self, arg_name, arg_value):
         kwargs = {arg_name: arg_value}
         g = BuildRequestGenerator(**kwargs)
-        with self.assertRaisesConfigError('must be a list or None'):
+        with self.assertRaisesConfigError("must be a list or None"):
             g.check()
 
     def setup_generator(self, message=None, **kwargs):
@@ -66,7 +68,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
             message = {
                 "body": "start body",
                 "type": "plain",
-                "subject": "start subject"
+                "subject": "start subject",
             }
 
         g = BuildRequestGenerator(**kwargs)
@@ -83,21 +85,23 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
         build = yield g.partial_build_dict(self.master, buildrequest)
         report = yield g.buildrequest_message(self.master, build)
 
-        g.formatter.format_message_for_build.assert_called_with(self.master, build,
-                                                                is_buildset=True,
-                                                                mode=self.all_messages,
-                                                                users=[])
+        g.formatter.format_message_for_build.assert_called_with(
+            self.master, build, is_buildset=True, mode=self.all_messages, users=[]
+        )
 
-        self.assertEqual(report, {
-            'body': 'start body',
-            'subject': 'start subject',
-            'type': 'plain',
-            'results': None,
-            'builds': [build],
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "start body",
+                "subject": "start subject",
+                "type": "plain",
+                "results": None,
+                "builds": [build],
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_build_message_add_patch(self):
@@ -107,14 +111,14 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield g.buildrequest_message(self.master, build)
 
         patch_dict = {
-            'author': 'him@foo',
-            'body': b'hello, world',
-            'comment': 'foo',
-            'level': 3,
-            'patchid': 99,
-            'subdir': '/foo'
+            "author": "him@foo",
+            "body": b"hello, world",
+            "comment": "foo",
+            "level": 3,
+            "patchid": 99,
+            "subdir": "/foo",
         }
-        self.assertEqual(report['patches'], [patch_dict])
+        self.assertEqual(report["patches"], [patch_dict])
 
     @defer.inlineCallbacks
     def test_build_message_add_patch_no_patch(self):
@@ -122,25 +126,28 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
         buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
         build = yield g.partial_build_dict(self.master, buildrequest)
         report = yield g.buildrequest_message(self.master, build)
-        self.assertEqual(report['patches'], [])
+        self.assertEqual(report["patches"], [])
 
     @defer.inlineCallbacks
     def test_generate_new(self):
         g = yield self.setup_generator(add_patch=True)
         buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
         build = yield g.partial_build_dict(self.master, buildrequest)
-        report = yield g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)
+        report = yield g.generate(self.master, None, ("buildrequests", 11, "new"), buildrequest)
 
-        self.assertEqual(report, {
-            'body': 'start body',
-            'subject': 'start subject',
-            'type': 'plain',
-            'results': None,
-            'builds': [build],
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "start body",
+                "subject": "start subject",
+                "type": "plain",
+                "results": None,
+                "builds": [build],
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_generate_cancel(self):
@@ -148,26 +155,29 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
         g = yield self.setup_generator(add_patch=True)
         buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
         build = yield g.partial_build_dict(self.master, buildrequest)
-        report = yield g.generate(self.master, None, ('buildrequests', 11, 'cancel'), buildrequest)
+        report = yield g.generate(self.master, None, ("buildrequests", 11, "cancel"), buildrequest)
 
-        build['complete'] = True
-        build['results'] = CANCELLED
+        build["complete"] = True
+        build["results"] = CANCELLED
 
-        self.assertEqual(report, {
-            'body': 'start body',
-            'subject': 'start subject',
-            'type': 'plain',
-            'results': CANCELLED,
-            'builds': [build],
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "start body",
+                "subject": "start subject",
+                "type": "plain",
+                "results": CANCELLED,
+                "builds": [build],
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_generate_none(self):
-        g = BuildRequestGenerator(builders=['not_existing_builder'])
+        g = BuildRequestGenerator(builders=["not_existing_builder"])
         buildrequest = yield self.insert_buildrequest_new()
-        report = yield g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)
+        report = yield g.generate(self.master, None, ("buildrequests", 11, "new"), buildrequest)
 
         self.assertIsNone(report, None)

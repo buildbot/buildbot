@@ -33,9 +33,9 @@ from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 def mkconfig(**kwargs):
     config = {
-        'quiet': False,
-        'basedir': os.path.abspath('basedir'),
-        'nodaemon': False,
+        "quiet": False,
+        "basedir": os.path.abspath("basedir"),
+        "nodaemon": False,
     }
     config.update(kwargs)
     return config
@@ -58,10 +58,9 @@ app.setServiceParent(application)
 
 
 class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
-
     def setUp(self):
-        self.setUpDirs('basedir')
-        with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
+        self.setUpDirs("basedir")
+        with open(os.path.join("basedir", "buildbot.tac"), "wt", encoding="utf-8") as f:
             f.write(fake_master_tac)
         self.setUpStdoutAssertions()
 
@@ -71,17 +70,17 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
     # tests
 
     def test_start_not_basedir(self):
-        self.assertEqual(start.start(mkconfig(basedir='doesntexist')), 1)
-        self.assertInStdout('invalid buildmaster directory')
+        self.assertEqual(start.start(mkconfig(basedir="doesntexist")), 1)
+        self.assertInStdout("invalid buildmaster directory")
 
     def runStart(self, **config):
         args = [
-            '-c',
-            'from buildbot.scripts.start import start; import sys; '
-            f'sys.exit(start({repr(mkconfig(**config))}))',
+            "-c",
+            "from buildbot.scripts.start import start; import sys; "
+            f"sys.exit(start({repr(mkconfig(**config))}))",
         ]
         env = os.environ.copy()
-        env['PYTHONPATH'] = os.pathsep.join(sys.path)
+        env["PYTHONPATH"] = os.pathsep.join(sys.path)
         return getProcessOutputAndValue(sys.executable, args=args, env=env)
 
     @defer.inlineCallbacks
@@ -90,7 +89,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
         # on python 3.5, cryptography loudly complains to upgrade
         if sys.version_info[:2] != (3, 5):
-            self.assertEqual((err, rc), (b'', 0))
+            self.assertEqual((err, rc), (b"", 0))
 
     @defer.inlineCallbacks
     def test_start_quiet(self):
@@ -98,41 +97,43 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
         # on python 3.5, cryptography loudly complains to upgrade
         if sys.version_info[:2] != (3, 5):
-            self.assertEqual(res, (b'', b'', 0))
+            self.assertEqual(res, (b"", b"", 0))
 
-    @skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs("posix")
     @defer.inlineCallbacks
     def test_start_timeout_nonnumber(self):
-        (out, err, rc) = yield self.runStart(start_timeout='a')
+        (out, err, rc) = yield self.runStart(start_timeout="a")
 
-        self.assertEqual((rc, err), (1, b''))
-        self.assertSubstring(b'Start timeout must be a number\n', out)
+        self.assertEqual((rc, err), (1, b""))
+        self.assertSubstring(b"Start timeout must be a number\n", out)
 
-    @skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs("posix")
     @defer.inlineCallbacks
     def test_start_timeout_number_string(self):
         # integer values from command-line options come in as strings
-        res = yield self.runStart(start_timeout='10')
+        res = yield self.runStart(start_timeout="10")
 
-        self.assertEqual(res, (mock.ANY, b'', 0))
+        self.assertEqual(res, (mock.ANY, b"", 0))
 
-    @skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs("posix")
     @defer.inlineCallbacks
     def test_start(self):
         try:
             (out, err, rc) = yield self.runStart()
 
-            self.assertEqual((rc, err), (0, b''))
-            self.assertSubstring(b'buildmaster appears to have (re)started correctly', out)
+            self.assertEqual((rc, err), (0, b""))
+            self.assertSubstring(b"buildmaster appears to have (re)started correctly", out)
         finally:
             # wait for the pidfile to go away after the reactor.stop
             # in buildbot.tac takes effect
-            pidfile = os.path.join('basedir', 'twistd.pid')
+            pidfile = os.path.join("basedir", "twistd.pid")
             while os.path.exists(pidfile):
                 time.sleep(0.01)
 
-    if twisted.version <= versions.Version('twisted', 9, 0, 0):
-        test_start.skip = test_start_quiet.skip = "Skipping due to suprious PotentialZombieWarning."
+    if twisted.version <= versions.Version("twisted", 9, 0, 0):
+        test_start.skip = (
+            test_start_quiet.skip
+        ) = "Skipping due to suprious PotentialZombieWarning."
 
     # the remainder of this script does obscene things:
     #  - forks

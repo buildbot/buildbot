@@ -25,36 +25,41 @@ from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestRemoteShellCommand(unittest.TestCase):
-
     def test_obfuscated_arguments(self):
-        command = ["echo",
-                   ("obfuscated", "real", "fake"),
-                   "test",
-                   ("obfuscated", "real2", "fake2"),
-                   ("not obfuscated", "a", "b"),
-                   ("obfuscated"),  # not obfuscated
-                   ("obfuscated", "test"),  # not obfuscated
-                   ("obfuscated", "1", "2", "3"),  # not obfuscated)
-                   ]
+        command = [
+            "echo",
+            ("obfuscated", "real", "fake"),
+            "test",
+            ("obfuscated", "real2", "fake2"),
+            ("not obfuscated", "a", "b"),
+            ("obfuscated"),  # not obfuscated
+            ("obfuscated", "test"),  # not obfuscated
+            ("obfuscated", "1", "2", "3"),  # not obfuscated)
+        ]
         cmd = remotecommand.RemoteShellCommand("build", command)
         self.assertEqual(cmd.command, command)
-        self.assertEqual(cmd.fake_command, ["echo",
-                                            "fake",
-                                            "test",
-                                            "fake2",
-                                            ("not obfuscated", "a", "b"),
-                                            ("obfuscated"),  # not obfuscated
-                                            # not obfuscated
-                                            ("obfuscated", "test"),
-                                            # not obfuscated)
-                                            ("obfuscated", "1", "2", "3"),
-                                            ])
+        self.assertEqual(
+            cmd.fake_command,
+            [
+                "echo",
+                "fake",
+                "test",
+                "fake2",
+                ("not obfuscated", "a", "b"),
+                ("obfuscated"),  # not obfuscated
+                # not obfuscated
+                ("obfuscated", "test"),
+                # not obfuscated)
+                ("obfuscated", "1", "2", "3"),
+            ],
+        )
 
     def test_not_obfuscated_arguments(self):
         command = "echo test"
         cmd = remotecommand.RemoteShellCommand("build", command)
         self.assertEqual(cmd.command, command)
         self.assertEqual(cmd.fake_command, command)
+
 
 # NOTE:
 #
@@ -63,27 +68,45 @@ class TestRemoteShellCommand(unittest.TestCase):
 
 
 class Tests(interfaces.InterfaceTests, unittest.TestCase):
-
-    def makeRemoteCommand(self, stdioLogName='stdio'):
-        return remotecommand.RemoteCommand('ping', {'arg': 'val'},
-                                           stdioLogName=stdioLogName)
+    def makeRemoteCommand(self, stdioLogName="stdio"):
+        return remotecommand.RemoteCommand("ping", {"arg": "val"}, stdioLogName=stdioLogName)
 
     def test_signature_RemoteCommand_constructor(self):
         @self.assertArgSpecMatches(remotecommand.RemoteCommand.__init__)
-        def __init__(self, remote_command, args, ignore_updates=False,
-                     collectStdout=False, collectStderr=False,
-                     decodeRC=None,
-                     stdioLogName='stdio'):
+        def __init__(
+            self,
+            remote_command,
+            args,
+            ignore_updates=False,
+            collectStdout=False,
+            collectStderr=False,
+            decodeRC=None,
+            stdioLogName="stdio",
+        ):
             pass
 
     def test_signature_RemoteShellCommand_constructor(self):
         @self.assertArgSpecMatches(remotecommand.RemoteShellCommand.__init__)
-        def __init__(self, workdir, command, env=None, want_stdout=1,
-                     want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles=None,
-                     usePTY=None, logEnviron=True, collectStdout=False,
-                     collectStderr=False, interruptSignal=None, initialStdin=None,
-                     decodeRC=None,
-                     stdioLogName='stdio'):
+        def __init__(
+            self,
+            workdir,
+            command,
+            env=None,
+            want_stdout=1,
+            want_stderr=1,
+            timeout=20 * 60,
+            maxTime=None,
+            sigtermTime=None,
+            logfiles=None,
+            usePTY=None,
+            logEnviron=True,
+            collectStdout=False,
+            collectStderr=False,
+            interruptSignal=None,
+            initialStdin=None,
+            decodeRC=None,
+            stdioLogName="stdio",
+        ):
             pass
 
     def test_signature_run(self):
@@ -104,8 +127,7 @@ class Tests(interfaces.InterfaceTests, unittest.TestCase):
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.useLogDelayed)
-        def useLogDelayed(self, logfileName, activateCallBack,
-                          closeWhenFinished=False):
+        def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
             pass
 
     def test_signature_interrupt(self):
@@ -131,28 +153,28 @@ class Tests(interfaces.InterfaceTests, unittest.TestCase):
         self.assertIsInstance(cmd.active, bool)
 
     def test_RemoteShellCommand_constructor(self):
-        remotecommand.RemoteShellCommand('wkdir', 'some-command')
+        remotecommand.RemoteShellCommand("wkdir", "some-command")
 
     def test_notStdioLog(self):
-        logname = 'notstdio'
+        logname = "notstdio"
         cmd = self.makeRemoteCommand(stdioLogName=logname)
         log = logfile.FakeLogFile(logname)
         cmd.useLog(log)
-        cmd.addStdout('some stdout')
-        self.assertEqual(log.stdout, 'some stdout')
-        cmd.addStderr('some stderr')
-        self.assertEqual(log.stderr, 'some stderr')
-        cmd.addHeader('some header')
-        self.assertEqual(log.header, 'some header')
+        cmd.addStdout("some stdout")
+        self.assertEqual(log.stdout, "some stdout")
+        cmd.addStderr("some stderr")
+        self.assertEqual(log.stderr, "some stderr")
+        cmd.addHeader("some header")
+        self.assertEqual(log.header, "some header")
 
     def test_RemoteShellCommand_usePTY_on_worker_2_16(self):
-        cmd = remotecommand.RemoteShellCommand('workdir', 'shell')
+        cmd = remotecommand.RemoteShellCommand("workdir", "shell")
 
         def workerVersion(command, oldversion=None):
-            return '2.16'
+            return "2.16"
 
         def workerVersionIsOlderThan(command, minversion):
-            return ['2', '16'] < minversion.split('.')
+            return ["2", "16"] < minversion.split(".")
 
         step = mock.Mock()
         step.workerVersionIsOlderThan = workerVersionIsOlderThan
@@ -160,28 +182,24 @@ class Tests(interfaces.InterfaceTests, unittest.TestCase):
         conn = mock.Mock()
         conn.remoteStartCommand = mock.Mock(return_value=None)
 
-        cmd.run(step, conn, 'builder')
+        cmd.run(step, conn, "builder")
 
-        self.assertEqual(cmd.args['usePTY'], 'slave-config')
+        self.assertEqual(cmd.args["usePTY"], "slave-config")
 
 
 class TestWorkerTransition(unittest.TestCase):
-
     def test_RemoteShellCommand_usePTY(self):
         with assertNotProducesWarnings(DeprecatedApiWarning):
-            cmd = remotecommand.RemoteShellCommand(
-                'workdir', 'command')
+            cmd = remotecommand.RemoteShellCommand("workdir", "command")
 
-        self.assertTrue(cmd.args['usePTY'] is None)
-
-        with assertNotProducesWarnings(DeprecatedApiWarning):
-            cmd = remotecommand.RemoteShellCommand(
-                'workdir', 'command', usePTY=True)
-
-        self.assertTrue(cmd.args['usePTY'])
+        self.assertTrue(cmd.args["usePTY"] is None)
 
         with assertNotProducesWarnings(DeprecatedApiWarning):
-            cmd = remotecommand.RemoteShellCommand(
-                'workdir', 'command', usePTY=False)
+            cmd = remotecommand.RemoteShellCommand("workdir", "command", usePTY=True)
 
-        self.assertFalse(cmd.args['usePTY'])
+        self.assertTrue(cmd.args["usePTY"])
+
+        with assertNotProducesWarnings(DeprecatedApiWarning):
+            cmd = remotecommand.RemoteShellCommand("workdir", "command", usePTY=False)
+
+        self.assertFalse(cmd.args["usePTY"])

@@ -20,7 +20,6 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class ShellMaster(RunMasterBase):
-
     @defer.inlineCallbacks
     def test_shell(self):
         yield self.setupConfig(masterConfig())
@@ -28,23 +27,22 @@ class ShellMaster(RunMasterBase):
         @defer.inlineCallbacks
         def newStepCallback(_, data):
             # when the sleep step start, we kill it
-            if data['name'] == 'sleep':
-                brs = yield self.master.data.get(('buildrequests',))
-                brid = brs[-1]['buildrequestid']
+            if data["name"] == "sleep":
+                brs = yield self.master.data.get(("buildrequests",))
+                brid = brs[-1]["buildrequestid"]
                 self.master.data.control(
-                    'cancel', {'reason': 'cancelled by test'}, ('buildrequests', brid))
+                    "cancel", {"reason": "cancelled by test"}, ("buildrequests", brid)
+                )
 
-        yield self.master.mq.startConsuming(
-            newStepCallback,
-            ('steps', None, 'new'))
+        yield self.master.mq.startConsuming(newStepCallback, ("steps", None, "new"))
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True, wantProperties=True)
-        self.assertEqual(build['buildid'], 1)
+        self.assertEqual(build["buildid"], 1)
 
         # make sure the cancel reason is transferred all the way to the step log
-        cancel_log = build['steps'][1]['logs'][-1]
-        self.assertEqual(cancel_log['name'], 'cancelled')
-        self.assertIn('cancelled by test', cancel_log['contents']['content'])
+        cancel_log = build["steps"][1]["logs"][-1]
+        self.assertEqual(cancel_log["name"], "cancelled")
+        self.assertIn("cancelled by test", cancel_log["contents"]["content"])
 
 
 # master configuration
@@ -54,18 +52,12 @@ def masterConfig():
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import steps, schedulers
 
-    c['schedulers'] = [
-        schedulers.AnyBranchScheduler(
-            name="sched",
-            builderNames=["testy"]),
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c["schedulers"] = [
+        schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"]),
+        schedulers.ForceScheduler(name="force", builderNames=["testy"]),
+    ]
 
     f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='sleep 100', name='sleep'))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
+    f.addStep(steps.ShellCommand(command="sleep 100", name="sleep"))
+    c["builders"] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
     return c

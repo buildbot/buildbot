@@ -39,7 +39,7 @@ class ChangeSourceMixin:
     def setUpChangeSource(self):
         "Set up the mixin - returns a deferred."
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
-        assert not hasattr(self.master, 'addChange')  # just checking..
+        assert not hasattr(self.master, "addChange")  # just checking..
         return defer.succeed(None)
 
     @defer.inlineCallbacks
@@ -95,11 +95,8 @@ class ChangeSourceMixin:
         else:
             name = self.DEFAULT_NAME
 
-        self.master.data.updates.changesourceIds[
-            name] = self.DUMMY_CHANGESOURCE_ID
+        self.master.data.updates.changesourceIds[name] = self.DUMMY_CHANGESOURCE_ID
         if otherMaster:
-            self.master.data.updates.changesourceMasters[
-                self.DUMMY_CHANGESOURCE_ID] = otherMaster
+            self.master.data.updates.changesourceMasters[self.DUMMY_CHANGESOURCE_ID] = otherMaster
         else:
-            del self.master.data.updates.changesourceMasters[
-                self.DUMMY_CHANGESOURCE_ID]
+            del self.master.data.updates.changesourceMasters[self.DUMMY_CHANGESOURCE_ID]

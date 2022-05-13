@@ -41,9 +41,12 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             self.checkLength(tbl_info.c.attr_data, attr_data)
 
             # try to find the user
-            q = sa.select([tbl_info.c.uid],
-                          whereclause=and_(tbl_info.c.attr_type == attr_type,
-                                           tbl_info.c.attr_data == attr_data))
+            q = sa.select(
+                [tbl_info.c.uid],
+                whereclause=and_(
+                    tbl_info.c.attr_type == attr_type, tbl_info.c.attr_data == attr_data
+                ),
+            )
             rows = conn.execute(q).fetchall()
 
             if rows:
@@ -62,9 +65,10 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 uid = r.inserted_primary_key[0]
                 inserted_user = True
 
-                conn.execute(tbl_info.insert(),
-                             dict(uid=uid, attr_type=attr_type,
-                                  attr_data=attr_data))
+                conn.execute(
+                    tbl_info.insert(),
+                    dict(uid=uid, attr_type=attr_type, attr_data=attr_data),
+                )
 
                 transaction.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
@@ -79,14 +83,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 # if we failed to insert the user, then it's because the
                 # identifier wasn't unique
                 if not inserted_user:
-                    identifier = identifiers.incrementIdentifier(
-                        256, identifier)
+                    identifier = identifiers.incrementIdentifier(256, identifier)
                 else:
                     no_recurse = True
 
                 return thd(conn, no_recurse=no_recurse, identifier=identifier)
 
             return uid
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
@@ -107,6 +111,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
+
         return self.db.pool.do(thd)
 
     def thd_createUsDict(self, users_row, rows):
@@ -117,10 +122,10 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
         # add the users_row data *after* the attributes in case attr_type
         # matches one of these keys.
-        usdict['uid'] = users_row.uid
-        usdict['identifier'] = users_row.identifier
-        usdict['bb_username'] = users_row.bb_username
-        usdict['bb_password'] = users_row.bb_password
+        usdict["uid"] = users_row.uid
+        usdict["identifier"] = users_row.identifier
+        usdict["bb_username"] = users_row.bb_username
+        usdict["bb_password"] = users_row.bb_password
 
         return usdict
 
@@ -141,6 +146,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
@@ -155,12 +161,20 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     ud = dict(uid=row.uid, identifier=row.identifier)
                     dicts.append(ud)
             return dicts
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
-    def updateUser(self, uid=None, identifier=None, bb_username=None,
-                   bb_password=None, attr_type=None, attr_data=None,
-                   _race_hook=None):
+    def updateUser(
+        self,
+        uid=None,
+        identifier=None,
+        bb_username=None,
+        bb_password=None,
+        attr_type=None,
+        attr_data=None,
+        _race_hook=None,
+    ):
         def thd(conn):
             transaction = conn.begin()
             tbl = self.db.model.users
@@ -170,15 +184,15 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             # first, add the identifier is it exists
             if identifier is not None:
                 self.checkLength(tbl.c.identifier, identifier)
-                update_dict['identifier'] = identifier
+                update_dict["identifier"] = identifier
 
             # then, add the creds if they exist
             if bb_username is not None:
                 assert bb_password is not None
                 self.checkLength(tbl.c.bb_username, bb_username)
                 self.checkLength(tbl.c.bb_password, bb_password)
-                update_dict['bb_username'] = bb_username
-                update_dict['bb_password'] = bb_password
+                update_dict["bb_username"] = bb_username
+                update_dict["bb_password"] = bb_password
 
             # update the users table if it needs to be updated
             if update_dict:
@@ -195,8 +209,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
                 # first update, then insert
                 q = tbl_info.update(
-                    whereclause=(tbl_info.c.uid == uid)
-                    & (tbl_info.c.attr_type == attr_type))
+                    whereclause=(tbl_info.c.uid == uid) & (tbl_info.c.attr_type == attr_type)
+                )
                 res = conn.execute(q, attr_data=attr_data)
                 if res.rowcount == 0:
                     if _race_hook is not None:
@@ -205,10 +219,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     # the update hit 0 rows, so try inserting a new one
                     try:
                         q = tbl_info.insert()
-                        res = conn.execute(q,
-                                           uid=uid,
-                                           attr_type=attr_type,
-                                           attr_data=attr_data)
+                        res = conn.execute(q, uid=uid, attr_type=attr_type, attr_data=attr_data)
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # someone else beat us to the punch inserting this row;
                         # let them win.
@@ -216,6 +227,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                         return
 
             transaction.commit()
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
@@ -223,11 +235,12 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # delete from dependent tables first, followed by 'users'
             for tbl in [
-                    self.db.model.change_users,
-                    self.db.model.users_info,
-                    self.db.model.users,
+                self.db.model.change_users,
+                self.db.model.users_info,
+                self.db.model.users,
             ]:
                 conn.execute(tbl.delete(whereclause=(tbl.c.uid == uid)))
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
@@ -241,4 +254,5 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 return None
 
             return row.uid
+
         return self.db.pool.do(thd)

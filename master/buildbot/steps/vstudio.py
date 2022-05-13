@@ -31,10 +31,10 @@ class MSLogLineObserver(LogLineObserver):
     stdoutDelimiter = "\r\n"
     stderrDelimiter = "\r\n"
 
-    _re_delimiter = re.compile(r'^(\d+>)?-{5}.+-{5}$')
-    _re_file = re.compile(r'^(\d+>)?[^ ]+\.(cpp|c)$')
-    _re_warning = re.compile(r' ?: warning [A-Z]+[0-9]+:')
-    _re_error = re.compile(r' ?error ([A-Z]+[0-9]+)?\s?: ')
+    _re_delimiter = re.compile(r"^(\d+>)?-{5}.+-{5}$")
+    _re_file = re.compile(r"^(\d+>)?[^ ]+\.(cpp|c)$")
+    _re_warning = re.compile(r" ?: warning [A-Z]+[0-9]+:")
+    _re_error = re.compile(r" ?error ([A-Z]+[0-9]+)?\s?: ")
 
     nbFiles = 0
     nbProjects = 0
@@ -54,14 +54,14 @@ class MSLogLineObserver(LogLineObserver):
             self.nbProjects += 1
             self.logwarnings.addStdout(f"{line}\n")
             self.logerrors.addStdout(f"{line}\n")
-            self.step.setProgress('projects', self.nbProjects)
+            self.step.setProgress("projects", self.nbProjects)
         elif self._re_file.search(line):
             self.nbFiles += 1
-            self.step.setProgress('files', self.nbFiles)
+            self.step.setProgress("files", self.nbFiles)
         elif self._re_warning.search(line):
             self.nbWarnings += 1
             self.logwarnings.addStdout(f"{line}\n")
-            self.step.setProgress('warnings', self.nbWarnings)
+            self.step.setProgress("warnings", self.nbWarnings)
         elif self._re_error.search(f"{line}\n"):
             # error has no progress indication
             self.nbErrors += 1
@@ -75,8 +75,11 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
     description = "compiling"
     descriptionDone = "compile"
 
-    progressMetrics = (buildstep.BuildStep.progressMetrics +
-                       ('projects', 'files', 'warnings',))
+    progressMetrics = buildstep.BuildStep.progressMetrics + (
+        "projects",
+        "files",
+        "warnings",
+    )
 
     logobserver = None
 
@@ -94,19 +97,21 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
     INCLUDE = []
     LIB = []
 
-    renderables = ['projectfile', 'config', 'project', 'mode']
+    renderables = ["projectfile", "config", "project", "mode"]
 
-    def __init__(self,
-                 installdir=None,
-                 mode="rebuild",
-                 projectfile=None,
-                 config='release',
-                 useenv=False,
-                 project=None,
-                 INCLUDE=None,
-                 LIB=None,
-                 PATH=None,
-                 **kwargs):
+    def __init__(
+        self,
+        installdir=None,
+        mode="rebuild",
+        projectfile=None,
+        config="release",
+        useenv=False,
+        project=None,
+        INCLUDE=None,
+        LIB=None,
+        PATH=None,
+        **kwargs,
+    ):
         if INCLUDE is None:
             INCLUDE = []
         if LIB is None:
@@ -128,19 +133,19 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
         if PATH:
             self.PATH = PATH
 
-        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=["command"])
         super().__init__(**kwargs)
 
     def add_env_path(self, name, value):
-        """ concat a path for this name """
+        """concat a path for this name"""
         try:
             oldval = self.env[name]
-            if not oldval.endswith(';'):
-                oldval = oldval + ';'
+            if not oldval.endswith(";"):
+                oldval = oldval + ";"
         except KeyError:
             oldval = ""
-        if not value.endswith(';'):
-            value = value + ';'
+        if not value.endswith(";"):
+            value = value + ";"
         self.env[name] = oldval + value
 
     @defer.inlineCallbacks
@@ -148,7 +153,7 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
         logwarnings = yield self.addLog("warnings")
         logerrors = yield self.addLog("errors")
         self.logobserver = MSLogLineObserver(logwarnings, logerrors)
-        yield self.addLogObserver('stdio', self.logobserver)
+        yield self.addLogObserver("stdio", self.logobserver)
 
     def setupEnvironment(self):
         if self.env is None:
@@ -166,10 +171,10 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
             self.installdir = self.default_installdir
 
     def evaluate_result(self, cmd):
-        self.setStatistic('projects', self.logobserver.nbProjects)
-        self.setStatistic('files', self.logobserver.nbFiles)
-        self.setStatistic('warnings', self.logobserver.nbWarnings)
-        self.setStatistic('errors', self.logobserver.nbErrors)
+        self.setStatistic("projects", self.logobserver.nbProjects)
+        self.setStatistic("files", self.logobserver.nbFiles)
+        self.setStatistic("warnings", self.logobserver.nbWarnings)
+        self.setStatistic("errors", self.logobserver.nbErrors)
 
         if cmd.didFail():
             return results.FAILURE
@@ -192,18 +197,19 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
         return self.results
 
     def getResultSummary(self):
-        description = (f'compile {self.logobserver.nbProjects} projects {self.logobserver.nbFiles} '
-                       'files')
+        description = (
+            f"compile {self.logobserver.nbProjects} projects {self.logobserver.nbFiles} " "files"
+        )
 
         if self.logobserver.nbWarnings > 0:
-            description += f' {self.logobserver.nbWarnings} warnings'
+            description += f" {self.logobserver.nbWarnings} warnings"
         if self.logobserver.nbErrors > 0:
-            description += f' {self.logobserver.nbErrors} errors'
+            description += f" {self.logobserver.nbErrors} errors"
 
         if self.results != results.SUCCESS:
-            description += f' ({results.Results[self.results]})'
+            description += f" ({results.Results[self.results]})"
 
-        return {'step': description}
+        return {"step": description}
 
     @defer.inlineCallbacks
     def finish_logs(self):
@@ -215,35 +221,31 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
 
 class VC6(VisualStudio):
 
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio'
+    default_installdir = "C:\\Program Files\\Microsoft Visual Studio"
 
     def setupEnvironment(self):
         super().setupEnvironment()
 
         # Root of Visual Developer Studio Common files.
-        VSCommonDir = self.installdir + '\\Common'
-        MSVCDir = self.installdir + '\\VC98'
-        MSDevDir = VSCommonDir + '\\msdev98'
+        VSCommonDir = self.installdir + "\\Common"
+        MSVCDir = self.installdir + "\\VC98"
+        MSDevDir = VSCommonDir + "\\msdev98"
 
-        self.add_env_path("PATH", MSDevDir + '\\BIN')
-        self.add_env_path("PATH", MSVCDir + '\\BIN')
-        self.add_env_path("PATH", VSCommonDir + '\\TOOLS\\WINNT')
-        self.add_env_path("PATH", VSCommonDir + '\\TOOLS')
+        self.add_env_path("PATH", MSDevDir + "\\BIN")
+        self.add_env_path("PATH", MSVCDir + "\\BIN")
+        self.add_env_path("PATH", VSCommonDir + "\\TOOLS\\WINNT")
+        self.add_env_path("PATH", VSCommonDir + "\\TOOLS")
 
-        self.add_env_path("INCLUDE", MSVCDir + '\\INCLUDE')
-        self.add_env_path("INCLUDE", MSVCDir + '\\ATL\\INCLUDE')
-        self.add_env_path("INCLUDE", MSVCDir + '\\MFC\\INCLUDE')
+        self.add_env_path("INCLUDE", MSVCDir + "\\INCLUDE")
+        self.add_env_path("INCLUDE", MSVCDir + "\\ATL\\INCLUDE")
+        self.add_env_path("INCLUDE", MSVCDir + "\\MFC\\INCLUDE")
 
-        self.add_env_path("LIB", MSVCDir + '\\LIB')
-        self.add_env_path("LIB", MSVCDir + '\\MFC\\LIB')
+        self.add_env_path("LIB", MSVCDir + "\\LIB")
+        self.add_env_path("LIB", MSVCDir + "\\MFC\\LIB")
 
     @defer.inlineCallbacks
     def run(self):
-        command = [
-            "msdev",
-            self.projectfile,
-            "/MAKE"
-        ]
+        command = ["msdev", self.projectfile, "/MAKE"]
         if self.project is not None:
             command.append(self.project + " - " + self.config)
         else:
@@ -263,36 +265,33 @@ class VC6(VisualStudio):
 
 
 class VC7(VisualStudio):
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio .NET 2003'
+    default_installdir = "C:\\Program Files\\Microsoft Visual Studio .NET 2003"
 
     def setupEnvironment(self):
         super().setupEnvironment()
 
-        VSInstallDir = self.installdir + '\\Common7\\IDE'
+        VSInstallDir = self.installdir + "\\Common7\\IDE"
         VCInstallDir = self.installdir
-        MSVCDir = self.installdir + '\\VC7'
+        MSVCDir = self.installdir + "\\VC7"
 
         self.add_env_path("PATH", VSInstallDir)
-        self.add_env_path("PATH", MSVCDir + '\\BIN')
-        self.add_env_path("PATH", VCInstallDir + '\\Common7\\Tools')
-        self.add_env_path("PATH", VCInstallDir + '\\Common7\\Tools\\bin')
+        self.add_env_path("PATH", MSVCDir + "\\BIN")
+        self.add_env_path("PATH", VCInstallDir + "\\Common7\\Tools")
+        self.add_env_path("PATH", VCInstallDir + "\\Common7\\Tools\\bin")
 
-        self.add_env_path("INCLUDE", MSVCDir + '\\INCLUDE')
-        self.add_env_path("INCLUDE", MSVCDir + '\\ATLMFC\\INCLUDE')
-        self.add_env_path("INCLUDE", MSVCDir + '\\PlatformSDK\\include')
-        self.add_env_path("INCLUDE", VCInstallDir + '\\SDK\\v1.1\\include')
+        self.add_env_path("INCLUDE", MSVCDir + "\\INCLUDE")
+        self.add_env_path("INCLUDE", MSVCDir + "\\ATLMFC\\INCLUDE")
+        self.add_env_path("INCLUDE", MSVCDir + "\\PlatformSDK\\include")
+        self.add_env_path("INCLUDE", VCInstallDir + "\\SDK\\v1.1\\include")
 
-        self.add_env_path("LIB", MSVCDir + '\\LIB')
-        self.add_env_path("LIB", MSVCDir + '\\ATLMFC\\LIB')
-        self.add_env_path("LIB", MSVCDir + '\\PlatformSDK\\lib')
-        self.add_env_path("LIB", VCInstallDir + '\\SDK\\v1.1\\lib')
+        self.add_env_path("LIB", MSVCDir + "\\LIB")
+        self.add_env_path("LIB", MSVCDir + "\\ATLMFC\\LIB")
+        self.add_env_path("LIB", MSVCDir + "\\PlatformSDK\\lib")
+        self.add_env_path("LIB", VCInstallDir + "\\SDK\\v1.1\\lib")
 
     @defer.inlineCallbacks
     def run(self):
-        command = [
-            "devenv.com",
-            self.projectfile
-        ]
+        command = ["devenv.com", self.projectfile]
         if self.mode == "rebuild":
             command.append("/Rebuild")
         elif self.mode == "clean":
@@ -319,9 +318,9 @@ class VC8(VC7):
 
     # Our ones
     arch = None
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 8'
+    default_installdir = "C:\\Program Files\\Microsoft Visual Studio 8"
 
-    renderables = ['arch']
+    renderables = ["arch"]
 
     def __init__(self, arch="x86", **kwargs):
         self.arch = arch
@@ -334,30 +333,30 @@ class VC8(VC7):
         VisualStudio.setupEnvironment(self)
 
         VSInstallDir = self.installdir
-        VCInstallDir = self.installdir + '\\VC'
+        VCInstallDir = self.installdir + "\\VC"
 
-        self.add_env_path("PATH", VSInstallDir + '\\Common7\\IDE')
+        self.add_env_path("PATH", VSInstallDir + "\\Common7\\IDE")
         if self.arch == "x64":
-            self.add_env_path("PATH", VCInstallDir + '\\BIN\\x86_amd64')
-        self.add_env_path("PATH", VCInstallDir + '\\BIN')
-        self.add_env_path("PATH", VSInstallDir + '\\Common7\\Tools')
-        self.add_env_path("PATH", VSInstallDir + '\\Common7\\Tools\\bin')
-        self.add_env_path("PATH", VCInstallDir + '\\PlatformSDK\\bin')
-        self.add_env_path("PATH", VSInstallDir + '\\SDK\\v2.0\\bin')
-        self.add_env_path("PATH", VCInstallDir + '\\VCPackages')
-        self.add_env_path("PATH", r'${PATH}')
+            self.add_env_path("PATH", VCInstallDir + "\\BIN\\x86_amd64")
+        self.add_env_path("PATH", VCInstallDir + "\\BIN")
+        self.add_env_path("PATH", VSInstallDir + "\\Common7\\Tools")
+        self.add_env_path("PATH", VSInstallDir + "\\Common7\\Tools\\bin")
+        self.add_env_path("PATH", VCInstallDir + "\\PlatformSDK\\bin")
+        self.add_env_path("PATH", VSInstallDir + "\\SDK\\v2.0\\bin")
+        self.add_env_path("PATH", VCInstallDir + "\\VCPackages")
+        self.add_env_path("PATH", r"${PATH}")
 
-        self.add_env_path("INCLUDE", VCInstallDir + '\\INCLUDE')
-        self.add_env_path("INCLUDE", VCInstallDir + '\\ATLMFC\\include')
-        self.add_env_path("INCLUDE", VCInstallDir + '\\PlatformSDK\\include')
+        self.add_env_path("INCLUDE", VCInstallDir + "\\INCLUDE")
+        self.add_env_path("INCLUDE", VCInstallDir + "\\ATLMFC\\include")
+        self.add_env_path("INCLUDE", VCInstallDir + "\\PlatformSDK\\include")
 
-        archsuffix = ''
+        archsuffix = ""
         if self.arch == "x64":
-            archsuffix = '\\amd64'
-        self.add_env_path("LIB", VCInstallDir + '\\LIB' + archsuffix)
-        self.add_env_path("LIB", VCInstallDir + '\\ATLMFC\\LIB' + archsuffix)
-        self.add_env_path("LIB", VCInstallDir + '\\PlatformSDK\\lib' + archsuffix)
-        self.add_env_path("LIB", VSInstallDir + '\\SDK\\v2.0\\lib' + archsuffix)
+            archsuffix = "\\amd64"
+        self.add_env_path("LIB", VCInstallDir + "\\LIB" + archsuffix)
+        self.add_env_path("LIB", VCInstallDir + "\\ATLMFC\\LIB" + archsuffix)
+        self.add_env_path("LIB", VCInstallDir + "\\PlatformSDK\\lib" + archsuffix)
+        self.add_env_path("LIB", VSInstallDir + "\\SDK\\v2.0\\lib" + archsuffix)
 
 
 # alias VC8 as VS2005
@@ -365,13 +364,9 @@ VS2005 = VC8
 
 
 class VCExpress9(VC8):
-
     @defer.inlineCallbacks
     def run(self):
-        command = [
-            "vcexpress",
-            self.projectfile
-        ]
+        command = ["vcexpress", self.projectfile]
         if self.mode == "rebuild":
             command.append("/Rebuild")
         elif self.mode == "clean":
@@ -393,7 +388,7 @@ class VCExpress9(VC8):
 
 # Add first support for VC9 (Same as VC8, with a different installdir)
 class VC9(VC8):
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 9.0'
+    default_installdir = "C:\\Program Files\\Microsoft Visual Studio 9.0"
 
 
 VS2008 = VC9
@@ -401,7 +396,7 @@ VS2008 = VC9
 
 # VC10 doesn't look like it needs extra stuff.
 class VC10(VC9):
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 10.0'
+    default_installdir = "C:\\Program Files\\Microsoft Visual Studio 10.0"
 
 
 VS2010 = VC10
@@ -409,7 +404,7 @@ VS2010 = VC10
 
 # VC11 doesn't look like it needs extra stuff.
 class VC11(VC10):
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 11.0'
+    default_installdir = "C:\\Program Files\\Microsoft Visual Studio 11.0"
 
 
 VS2012 = VC11
@@ -417,7 +412,7 @@ VS2012 = VC11
 
 # VC12 doesn't look like it needs extra stuff.
 class VC12(VC11):
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 12.0'
+    default_installdir = "C:\\Program Files\\Microsoft Visual Studio 12.0"
 
 
 VS2013 = VC12
@@ -425,7 +420,7 @@ VS2013 = VC12
 
 # VC14 doesn't look like it needs extra stuff.
 class VC14(VC12):
-    default_installdir = 'C:\\Program Files (x86)\\Microsoft Visual Studio 14.0'
+    default_installdir = "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0"
 
 
 VS2015 = VC14
@@ -447,11 +442,11 @@ def _msbuild_format_defines_parameter(defines):
 def _msbuild_format_target_parameter(mode, project):
     modestring = None
     if mode == "clean":
-        modestring = 'Clean'
+        modestring = "Clean"
     elif mode == "build":
-        modestring = 'Build'
+        modestring = "Build"
     elif mode == "rebuild":
-        modestring = 'Rebuild'
+        modestring = "Rebuild"
 
     parameter = ""
     if project is not None:
@@ -460,7 +455,7 @@ def _msbuild_format_target_parameter(mode, project):
         else:
             parameter = f' /t:"{project}:{modestring}"'
     elif modestring is not None:
-        parameter = f' /t:{modestring}'
+        parameter = f" /t:{modestring}"
 
     return parameter
 
@@ -469,8 +464,8 @@ class MsBuild4(VisualStudio):
     platform = None
     defines = None
     vcenv_bat = r"${VS110COMNTOOLS}..\..\VC\vcvarsall.bat"
-    renderables = ['platform']
-    description = 'building'
+    renderables = ["platform"]
+    description = "building"
 
     def __init__(self, platform, defines=None, **kwargs):
         self.platform = platform
@@ -479,19 +474,19 @@ class MsBuild4(VisualStudio):
 
     def setupEnvironment(self):
         super().setupEnvironment()
-        self.env['VCENV_BAT'] = self.vcenv_bat
+        self.env["VCENV_BAT"] = self.vcenv_bat
 
     def describe_project(self, done=False):
         project = self.project
         if project is None:
-            project = 'solution'
-        return f'{project} for {self.config}|{self.platform}'
+            project = "solution"
+        return f"{project} for {self.config}|{self.platform}"
 
     def getCurrentSummary(self):
-        return {'step': 'building ' + self.describe_project()}
+        return {"step": "building " + self.describe_project()}
 
     def getResultSummary(self):
-        return {'step': 'built ' + self.describe_project()}
+        return {"step": "built " + self.describe_project()}
 
     @defer.inlineCallbacks
     def run(self):
@@ -500,8 +495,10 @@ class MsBuild4(VisualStudio):
 
         yield self.updateSummary()
 
-        command = (f'"%VCENV_BAT%" x86 && msbuild "{self.projectfile}" '
-                   f'/p:Configuration="{self.config}" /p:Platform="{self.platform}" /maxcpucount')
+        command = (
+            f'"%VCENV_BAT%" x86 && msbuild "{self.projectfile}" '
+            f'/p:Configuration="{self.config}" /p:Platform="{self.platform}" /maxcpucount'
+        )
 
         command += _msbuild_format_target_parameter(self.mode, self.project)
         command += _msbuild_format_defines_parameter(self.defines)
@@ -527,7 +524,7 @@ class MsBuild141(VisualStudio):
     platform = None
     defines = None
     vcenv_bat = r"\VC\Auxiliary\Build\vcvarsall.bat"
-    renderables = ['platform']
+    renderables = ["platform"]
 
     def __init__(self, platform, defines=None, **kwargs):
         self.platform = platform
@@ -536,30 +533,30 @@ class MsBuild141(VisualStudio):
 
     def setupEnvironment(self):
         super().setupEnvironment()
-        self.env['VCENV_BAT'] = self.vcenv_bat
-        self.add_env_path("PATH",
-                   'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\')
-        self.add_env_path("PATH", r'${PATH}')
+        self.env["VCENV_BAT"] = self.vcenv_bat
+        self.add_env_path("PATH", "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\")
+        self.add_env_path("PATH", r"${PATH}")
 
     def describe_project(self, done=False):
         project = self.project
         if project is None:
-            project = 'solution'
-        return f'{project} for {self.config}|{self.platform}'
+            project = "solution"
+        return f"{project} for {self.config}|{self.platform}"
 
     @defer.inlineCallbacks
     def run(self):
         if self.platform is None:
-            config.error(
-                'platform is mandatory. Please specify a string such as "Win32"')
+            config.error('platform is mandatory. Please specify a string such as "Win32"')
 
-        self.description = 'building ' + self.describe_project()
-        self.descriptionDone = 'built ' + self.describe_project()
+        self.description = "building " + self.describe_project()
+        self.descriptionDone = "built " + self.describe_project()
         yield self.updateSummary()
 
-        command = ('FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\') '
-                   f' do "%%I\\%VCENV_BAT%" x86 && msbuild "{self.projectfile}" '
-                   f'/p:Configuration="{self.config}" /p:Platform="{self.platform}" /maxcpucount')
+        command = (
+            "FOR /F \"tokens=*\" %%I in ('vswhere.exe -property  installationPath') "
+            f' do "%%I\\%VCENV_BAT%" x86 && msbuild "{self.projectfile}" '
+            f'/p:Configuration="{self.config}" /p:Platform="{self.platform}" /maxcpucount'
+        )
 
         command += _msbuild_format_target_parameter(self.mode, self.project)
         command += _msbuild_format_defines_parameter(self.defines)

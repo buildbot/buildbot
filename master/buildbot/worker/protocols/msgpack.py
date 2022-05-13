@@ -41,7 +41,7 @@ class Listener(base.UpdateRegistrationListener):
         log.msg(f"worker '{workerName}' attaching")
 
 
-class BasicRemoteCommand():
+class BasicRemoteCommand:
     def __init__(self, worker_name, expected_keys, error_msg):
         self.worker_name = worker_name
         self.update_results = {}
@@ -59,22 +59,34 @@ class BasicRemoteCommand():
                     self.update_results[key] = value
 
     def remote_complete(self, args):
-        if 'rc' not in self.update_results:
-            self.d.errback(Exception(f"Worker {self.worker_name} reconfiguration or connection to "
-                                     f"master failed. {self.error_msg}. 'rc' did not arrive."))
+        if "rc" not in self.update_results:
+            self.d.errback(
+                Exception(
+                    f"Worker {self.worker_name} reconfiguration or connection to "
+                    f"master failed. {self.error_msg}. 'rc' did not arrive."
+                )
+            )
             return
 
-        if self.update_results['rc'] != 0:
-            self.d.errback(Exception(f"Worker {self.worker_name} reconfiguration or connection to "
-                                     f"master failed. {self.error_msg}. Error number: "
-                                     f"{self.update_results['rc']}"))
+        if self.update_results["rc"] != 0:
+            self.d.errback(
+                Exception(
+                    f"Worker {self.worker_name} reconfiguration or connection to "
+                    f"master failed. {self.error_msg}. Error number: "
+                    f"{self.update_results['rc']}"
+                )
+            )
             return
 
         for key in self.expected_keys:
             if key not in self.update_results:
-                self.d.errback(Exception(f"Worker {self.worker_name} reconfiguration or connection "
-                                         f"to master failed. {self.error_msg} "
-                                         f"Key '{key}' is missing."))
+                self.d.errback(
+                    Exception(
+                        f"Worker {self.worker_name} reconfiguration or connection "
+                        f"to master failed. {self.error_msg} "
+                        f"Key '{key}' is missing."
+                    )
+                )
                 return
 
         self.d.callback(None)
@@ -93,9 +105,12 @@ class Connection(base.Connection):
         self.worker = worker
         self.protocol = protocol
         self._keepalive_waiter = deferwaiter.DeferWaiter()
-        self._keepalive_action_handler = \
-            deferwaiter.RepeatedActionHandler(master.reactor, self._keepalive_waiter,
-                                              self.keepalive_interval, self._do_keepalive)
+        self._keepalive_action_handler = deferwaiter.RepeatedActionHandler(
+            master.reactor,
+            self._keepalive_waiter,
+            self.keepalive_interval,
+            self._do_keepalive,
+        )
 
     # methods called by the BuildbotWebSocketServerProtocol
 
@@ -135,14 +150,14 @@ class Connection(base.Connection):
     # methods to send messages to the worker
 
     def remoteKeepalive(self):
-        return self.protocol.get_message_result({'op': 'keepalive'})
+        return self.protocol.get_message_result({"op": "keepalive"})
 
     def remotePrint(self, message):
-        return self.protocol.get_message_result({'op': 'print', 'message': message})
+        return self.protocol.get_message_result({"op": "print", "message": message})
 
     @defer.inlineCallbacks
     def remoteGetWorkerInfo(self):
-        info = yield self.protocol.get_message_result({'op': 'get_worker_info'})
+        info = yield self.protocol.get_message_result({"op": "get_worker_info"})
         self.info = decode(info)
 
         worker_system = self.info.get("system", None)
@@ -163,76 +178,100 @@ class Connection(base.Connection):
 
     @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):
-        basedir = self.info['basedir']
+        basedir = self.info["basedir"]
         builder_names = [name for name, _ in builders]
-        self.builder_basedirs = {name: self.path_module.join(basedir, builddir)
-                                 for name, builddir in builders}
+        self.builder_basedirs = {
+            name: self.path_module.join(basedir, builddir) for name, builddir in builders
+        }
 
         wanted_dirs = {builddir for _, builddir in builders}
-        wanted_dirs.add('info')
+        wanted_dirs.add("info")
         dirs_to_mkdir = set(wanted_dirs)
-        command, command_id = \
-            self.create_remote_command(self.worker.workername, ['files'],
-                                       'Worker could not send a list of builder directories.')
+        command, command_id = self.create_remote_command(
+            self.worker.workername,
+            ["files"],
+            "Worker could not send a list of builder directories.",
+        )
 
-        yield self.protocol.get_message_result({'op': 'start_command',
-                                                'command_id': command_id,
-                                                'command_name': 'listdir',
-                                                'args': {'path': basedir}})
+        yield self.protocol.get_message_result(
+            {
+                "op": "start_command",
+                "command_id": command_id,
+                "command_name": "listdir",
+                "args": {"path": basedir},
+            }
+        )
 
         # wait until command is over to get the update request message with args['files']
         yield command.wait_until_complete()
-        files = command.update_results['files']
+        files = command.update_results["files"]
 
         paths_to_rmdir = []
 
         for dir in files:
             dirs_to_mkdir.discard(dir)
             if dir not in wanted_dirs:
-                if self.info['delete_leftover_dirs']:
+                if self.info["delete_leftover_dirs"]:
                     # send 'stat' start_command and wait for status information which comes from
                     # worker in a response message. Status information is saved in update_results
                     # dictionary with key 'stat'. 'stat' value is a tuple of 10 elements, where
                     # first element is File mode. It goes to S_ISDIR(mode) to check if path is
                     # a directory so that files are not deleted
                     path = self.path_module.join(basedir, dir)
-                    command, command_id = \
-                        self.create_remote_command(self.worker.workername, ['stat'],
-                                                   "Worker could not send status " +
-                                                   "information about its files.")
-                    yield self.protocol.get_message_result({'op': 'start_command',
-                                                            'command_id': command_id,
-                                                            'command_name': 'stat',
-                                                            'args': {'path': path}})
+                    command, command_id = self.create_remote_command(
+                        self.worker.workername,
+                        ["stat"],
+                        "Worker could not send status " + "information about its files.",
+                    )
+                    yield self.protocol.get_message_result(
+                        {
+                            "op": "start_command",
+                            "command_id": command_id,
+                            "command_name": "stat",
+                            "args": {"path": path},
+                        }
+                    )
                     yield command.wait_until_complete()
-                    mode = command.update_results['stat'][0]
+                    mode = command.update_results["stat"][0]
                     if stat.S_ISDIR(mode):
                         paths_to_rmdir.append(path)
 
         if paths_to_rmdir:
-            log.msg(f"Deleting directory '{paths_to_rmdir}' that is not being "
-                    "used by the buildmaster.")
+            log.msg(
+                f"Deleting directory '{paths_to_rmdir}' that is not being "
+                "used by the buildmaster."
+            )
 
             # remove leftover directories from worker
-            command, command_id = \
-                self.create_remote_command(self.worker.workername, [],
-                                           "Worker could not remove directories.")
-            yield self.protocol.get_message_result({'op': 'start_command',
-                                                    'command_id': command_id,
-                                                    'command_name': 'rmdir',
-                                                    'args': {'paths': paths_to_rmdir}})
+            command, command_id = self.create_remote_command(
+                self.worker.workername, [], "Worker could not remove directories."
+            )
+            yield self.protocol.get_message_result(
+                {
+                    "op": "start_command",
+                    "command_id": command_id,
+                    "command_name": "rmdir",
+                    "args": {"paths": paths_to_rmdir},
+                }
+            )
             yield command.wait_until_complete()
 
-        paths_to_mkdir = [self.path_module.join(basedir, dir)
-                          for dir in sorted(list(dirs_to_mkdir))]
+        paths_to_mkdir = [
+            self.path_module.join(basedir, dir) for dir in sorted(list(dirs_to_mkdir))
+        ]
         if paths_to_mkdir:
             # make wanted builder directories which do not exist in worker yet
-            command, command_id = self.create_remote_command(self.worker.workername, [],
-                                                             "Worker could not make directories.")
-            yield self.protocol.get_message_result({'op': 'start_command',
-                                                    'command_id': command_id,
-                                                    'command_name': 'mkdir',
-                                                    'args': {'paths': paths_to_mkdir}})
+            command, command_id = self.create_remote_command(
+                self.worker.workername, [], "Worker could not make directories."
+            )
+            yield self.protocol.get_message_result(
+                {
+                    "op": "start_command",
+                    "command_id": command_id,
+                    "command_name": "mkdir",
+                    "args": {"paths": paths_to_mkdir},
+                }
+            )
             yield command.wait_until_complete()
 
         self.builders = builder_names
@@ -241,70 +280,85 @@ class Connection(base.Connection):
     @defer.inlineCallbacks
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         if commandName == "mkdir":
-            if isinstance(args['dir'], list):
-                args['paths'] = [self.path_module.join(self.builder_basedirs[builderName], dir)
-                                 for dir in args['dir']]
+            if isinstance(args["dir"], list):
+                args["paths"] = [
+                    self.path_module.join(self.builder_basedirs[builderName], dir)
+                    for dir in args["dir"]
+                ]
             else:
-                args['paths'] = [self.path_module.join(self.builder_basedirs[builderName],
-                                                       args['dir'])]
-            del args['dir']
+                args["paths"] = [
+                    self.path_module.join(self.builder_basedirs[builderName], args["dir"])
+                ]
+            del args["dir"]
 
         if commandName == "rmdir":
-            if isinstance(args['dir'], list):
-                args['paths'] = [self.path_module.join(self.builder_basedirs[builderName], dir)
-                                 for dir in args['dir']]
+            if isinstance(args["dir"], list):
+                args["paths"] = [
+                    self.path_module.join(self.builder_basedirs[builderName], dir)
+                    for dir in args["dir"]
+                ]
             else:
-                args['paths'] = [self.path_module.join(self.builder_basedirs[builderName],
-                                                       args['dir'])]
-            del args['dir']
+                args["paths"] = [
+                    self.path_module.join(self.builder_basedirs[builderName], args["dir"])
+                ]
+            del args["dir"]
 
         if commandName == "cpdir":
-            args['from_path'] = self.path_module.join(self.builder_basedirs[builderName],
-                                                      args['fromdir'])
-            args['to_path'] = self.path_module.join(self.builder_basedirs[builderName],
-                                                    args['todir'])
-            del args['fromdir']
-            del args['todir']
+            args["from_path"] = self.path_module.join(
+                self.builder_basedirs[builderName], args["fromdir"]
+            )
+            args["to_path"] = self.path_module.join(
+                self.builder_basedirs[builderName], args["todir"]
+            )
+            del args["fromdir"]
+            del args["todir"]
 
         if commandName == "stat":
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
-                                                 args.get('workdir', ''), args['file'])
-            del args['file']
+            args["path"] = self.path_module.join(
+                self.builder_basedirs[builderName],
+                args.get("workdir", ""),
+                args["file"],
+            )
+            del args["file"]
 
         if commandName == "glob":
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['path'])
+            args["path"] = self.path_module.join(self.builder_basedirs[builderName], args["path"])
 
         if commandName == "listdir":
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['dir'])
-            del args['dir']
+            args["path"] = self.path_module.join(self.builder_basedirs[builderName], args["dir"])
+            del args["dir"]
 
         if commandName == "rmfile":
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['path'])
+            args["path"] = self.path_module.join(self.builder_basedirs[builderName], args["path"])
 
         if commandName == "shell":
-            args['workdir'] = self.path_module.join(self.builder_basedirs[builderName],
-                                                    args['workdir'])
+            args["workdir"] = self.path_module.join(
+                self.builder_basedirs[builderName], args["workdir"]
+            )
 
         if commandName == "uploadFile":
             commandName = "upload_file"
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
-                                                 args['workdir'],
-                                                 self.path_expanduser(args['workersrc'],
-                                                                      self.info['environ']))
+            args["path"] = self.path_module.join(
+                self.builder_basedirs[builderName],
+                args["workdir"],
+                self.path_expanduser(args["workersrc"], self.info["environ"]),
+            )
 
         if commandName == "uploadDirectory":
             commandName = "upload_directory"
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
-                                                 args['workdir'],
-                                                 self.path_expanduser(args['workersrc'],
-                                                                      self.info['environ']))
+            args["path"] = self.path_module.join(
+                self.builder_basedirs[builderName],
+                args["workdir"],
+                self.path_expanduser(args["workersrc"], self.info["environ"]),
+            )
 
         if commandName == "downloadFile":
             commandName = "download_file"
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
-                                                 args['workdir'],
-                                                 self.path_expanduser(args['workerdest'],
-                                                                      self.info['environ']))
+            args["path"] = self.path_module.join(
+                self.builder_basedirs[builderName],
+                args["workdir"],
+                self.path_expanduser(args["workerdest"], self.info["environ"]),
+            )
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
                 args["want_stdout"] = True
@@ -318,28 +372,39 @@ class Connection(base.Connection):
                 args["want_stderr"] = False
 
         self.protocol.command_id_to_command_map[commandId] = remoteCommand
-        if 'reader' in args:
-            self.protocol.command_id_to_reader_map[commandId] = args['reader']
-            del args['reader']
-        if 'writer' in args:
-            self.protocol.command_id_to_writer_map[commandId] = args['writer']
-            del args['writer']
-        yield self.protocol.get_message_result({'op': 'start_command', 'builder_name': builderName,
-                                               'command_id': commandId, 'command_name': commandName,
-                                               'args': args})
+        if "reader" in args:
+            self.protocol.command_id_to_reader_map[commandId] = args["reader"]
+            del args["reader"]
+        if "writer" in args:
+            self.protocol.command_id_to_writer_map[commandId] = args["writer"]
+            del args["writer"]
+        yield self.protocol.get_message_result(
+            {
+                "op": "start_command",
+                "builder_name": builderName,
+                "command_id": commandId,
+                "command_name": commandName,
+                "args": args,
+            }
+        )
 
     @defer.inlineCallbacks
     def remoteShutdown(self):
-        yield self.protocol.get_message_result({'op': 'shutdown'})
+        yield self.protocol.get_message_result({"op": "shutdown"})
 
     def remoteStartBuild(self, builderName):
         pass
 
     @defer.inlineCallbacks
     def remoteInterruptCommand(self, builderName, commandId, why):
-        yield self.protocol.get_message_result({'op': 'interrupt_command',
-                                               'builder_name': builderName, 'command_id': commandId,
-                                               'why': why})
+        yield self.protocol.get_message_result(
+            {
+                "op": "interrupt_command",
+                "builder_name": builderName,
+                "command_id": commandId,
+                "why": why,
+            }
+        )
 
     # perspective methods called by the worker
 

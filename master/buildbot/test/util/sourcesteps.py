@@ -53,10 +53,10 @@ class SourceStepMixin(TestBuildStepMixin):
 
         ss = self.sourcestamp = mock.Mock(name="sourcestamp")
         ss.ssid = 9123
-        ss.branch = args.get('branch', None)
-        ss.revision = args.get('revision', None)
-        ss.project = ''
-        ss.repository = ''
+        ss.branch = args.get("branch", None)
+        ss.revision = args.get("revision", None)
+        ss.project = ""
+        ss.repository = ""
         ss.patch = patch
         ss.patch_info = None
         ss.changes = []

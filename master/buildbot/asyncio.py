@@ -44,9 +44,12 @@ def as_future(d):
 
 
 if sys.version_info[:2] >= (3, 7):
+
     def make_handle(callback, args, loop, context):
         return events.Handle(callback, args, loop, context)
+
 else:
+
     def make_handle(callback, args, loop, context):
         # python 3.6 does not support async contextvars
         return events.Handle(callback, args, loop)

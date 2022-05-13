@@ -18,11 +18,11 @@ import os
 
 class FakePrivateTemporaryDirectory:
     def __init__(self, suffix=None, prefix=None, dir=None, mode=0o700):
-        dir = dir or '/'
-        prefix = prefix or ''
-        suffix = suffix or ''
+        dir = dir or "/"
+        prefix = prefix or ""
+        suffix = suffix or ""
 
-        self.name = os.path.join(dir, prefix + '@@@' + suffix)
+        self.name = os.path.join(dir, prefix + "@@@" + suffix)
         self.mode = mode
 
     def __enter__(self):

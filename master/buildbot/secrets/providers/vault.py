@@ -29,12 +29,14 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
     basic provider where each secret is stored in Vault KV secret engine
     """
 
-    name = 'SecretInVault'
+    name = "SecretInVault"
 
-    def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None,
-                    apiVersion=1):
-        warn_deprecated("3.4.0", "Use of HashiCorpVaultSecretProvider is deprecated and will be "
-                        "removed in future releases. Use HashiCorpVaultKvSecretProvider instead")
+    def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None, apiVersion=1):
+        warn_deprecated(
+            "3.4.0",
+            "Use of HashiCorpVaultSecretProvider is deprecated and will be "
+            "removed in future releases. Use HashiCorpVaultKvSecretProvider instead",
+        )
         if not isinstance(vaultServer, str):
             config.error(f"vaultServer must be a string while it is {type(vaultServer)}")
         if not isinstance(vaultToken, str):
@@ -43,8 +45,7 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
             config.error(f"apiVersion {apiVersion} is not supported")
 
     @defer.inlineCallbacks
-    def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None,
-                        apiVersion=1):
+    def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None, apiVersion=1):
         if secretsmount is None:
             self.secretsmount = "secret"
         else:
@@ -52,27 +53,28 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         self.vaultServer = vaultServer
         self.vaultToken = vaultToken
         self.apiVersion = apiVersion
-        if vaultServer.endswith('/'):
+        if vaultServer.endswith("/"):
             vaultServer = vaultServer[:-1]
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, self.vaultServer, headers={'X-Vault-Token': self.vaultToken})
+            self.master, self.vaultServer, headers={"X-Vault-Token": self.vaultToken}
+        )
 
     @defer.inlineCallbacks
     def get(self, entry):
         """
         get the value from vault secret backend
         """
-        parts = entry.rsplit('/', maxsplit=1)
+        parts = entry.rsplit("/", maxsplit=1)
         name = parts[0]
         if len(parts) > 1:
             key = parts[1]
         else:
-            key = 'value'
+            key = "value"
 
         if self.apiVersion == 1:
-            path = self.secretsmount + '/' + name
+            path = self.secretsmount + "/" + name
         else:
-            path = self.secretsmount + '/data/' + name
+            path = self.secretsmount + "/data/" + name
 
         # note that the HTTP path contains v1 for both versions of the key-value
         # secret engine. Different versions of the key-value engine are
@@ -81,15 +83,16 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         proj = yield self._http.get(f"/v1/{path}")
         code = yield proj.code
         if code != 200:
-            raise KeyError(f"The secret {entry} does not exist in Vault provider: request"
-                           f" return code: {code}.")
+            raise KeyError(
+                f"The secret {entry} does not exist in Vault provider: request"
+                f" return code: {code}."
+            )
         json = yield proj.json()
         if self.apiVersion == 1:
-            secrets = json.get('data', {})
+            secrets = json.get("data", {})
         else:
-            secrets = json.get('data', {}).get('data', {})
+            secrets = json.get("data", {}).get("data", {})
         try:
             return secrets[key]
         except KeyError as e:
-            raise KeyError(
-                f"The secret {entry} does not exist in Vault provider: {e}") from e
+            raise KeyError(f"The secret {entry} does not exist in Vault provider: {e}") from e

@@ -35,15 +35,18 @@ class TestException(Exception):
     pass
 
 
-class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
-                       unittest.TestCase, ReporterTestMixin):
-
+class TestReporterBase(
+    ConfigErrorsMixin,
+    TestReactorMixin,
+    LoggingMixin,
+    unittest.TestCase,
+    ReporterTestMixin,
+):
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.setUpLogging()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def setupNotifier(self, generators):
@@ -63,7 +66,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         formatter.format_message_for_build.return_value = {
             "body": "body",
             "type": "text",
-            "subject": "subject"
+            "subject": "subject",
         }
         formatter.want_properties = False
         formatter.want_steps = False
@@ -73,35 +76,36 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
         mn = yield self.setupNotifier(generators=[generator])
 
-        yield mn._got_event(('builds', 20, 'finished'), build)
+        yield mn._got_event(("builds", 20, "finished"), build)
         return (mn, build, formatter)
 
     def setup_mock_generator(self, events_filter):
         gen = mock.Mock()
         gen.wanted_event_keys = events_filter
-        gen.generate_name = lambda: '<name>'
+        gen.generate_name = lambda: "<name>"
         return gen
 
     def test_check_config_raises_error_when_generators_not_list(self):
-        with self.assertRaisesConfigError('generators argument must be a list'):
-            ReporterBase(generators='abc')
+        with self.assertRaisesConfigError("generators argument must be a list"):
+            ReporterBase(generators="abc")
 
     @defer.inlineCallbacks
     def test_buildMessage_nominal(self):
         mn, build, formatter = yield self.setupBuildMessage(mode=("failing",))
 
-        formatter.format_message_for_build.assert_called_with(self.master, build, is_buildset=False,
-                                                              mode=('failing',), users=['me@foo'])
+        formatter.format_message_for_build.assert_called_with(
+            self.master, build, is_buildset=False, mode=("failing",), users=["me@foo"]
+        )
 
         report = {
-            'body': 'body',
-            'subject': 'subject',
-            'type': 'text',
-            'results': FAILURE,
-            'builds': [build],
-            'users': ['me@foo'],
-            'patches': [],
-            'logs': []
+            "body": "body",
+            "subject": "subject",
+            "type": "text",
+            "results": FAILURE,
+            "builds": [build],
+            "users": ["me@foo"],
+            "patches": [],
+            "logs": [],
         }
 
         self.assertEqual(mn.sendMessage.call_count, 1)
@@ -109,49 +113,49 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
     @defer.inlineCallbacks
     def test_worker_missing_sends_message(self):
-        generator = WorkerMissingGenerator(workers=['myworker'])
+        generator = WorkerMissingGenerator(workers=["myworker"])
         mn = yield self.setupNotifier(generators=[generator])
 
         worker_dict = {
-            'name': 'myworker',
-            'notify': ["workeradmin@example.org"],
-            'workerinfo': {"admin": "myadmin"},
-            'last_connection': "yesterday"
+            "name": "myworker",
+            "notify": ["workeradmin@example.org"],
+            "workerinfo": {"admin": "myadmin"},
+            "last_connection": "yesterday",
         }
-        yield mn._got_event(('workers', 98, 'missing'), worker_dict)
+        yield mn._got_event(("workers", 98, "missing"), worker_dict)
 
         self.assertEqual(mn.sendMessage.call_count, 1)
 
     @defer.inlineCallbacks
     def test_generators_subscribes_events(self):
-        gen1 = self.setup_mock_generator([('fake1', None, None)])
+        gen1 = self.setup_mock_generator([("fake1", None, None)])
 
         yield self.setupNotifier(generators=[gen1])
         self.assertEqual(len(self.master.mq.qrefs), 1)
-        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+        self.assertEqual(self.master.mq.qrefs[0].filter, ("fake1", None, None))
 
     @defer.inlineCallbacks
     def test_generators_subscribes_equal_events_once(self):
-        gen1 = self.setup_mock_generator([('fake1', None, None)])
-        gen2 = self.setup_mock_generator([('fake1', None, None)])
+        gen1 = self.setup_mock_generator([("fake1", None, None)])
+        gen2 = self.setup_mock_generator([("fake1", None, None)])
 
         yield self.setupNotifier(generators=[gen1, gen2])
         self.assertEqual(len(self.master.mq.qrefs), 1)
-        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+        self.assertEqual(self.master.mq.qrefs[0].filter, ("fake1", None, None))
 
     @defer.inlineCallbacks
     def test_generators_subscribes_equal_different_events_once(self):
-        gen1 = self.setup_mock_generator([('fake1', None, None)])
-        gen2 = self.setup_mock_generator([('fake2', None, None)])
+        gen1 = self.setup_mock_generator([("fake1", None, None)])
+        gen2 = self.setup_mock_generator([("fake2", None, None)])
 
         yield self.setupNotifier(generators=[gen1, gen2])
         self.assertEqual(len(self.master.mq.qrefs), 2)
-        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
-        self.assertEqual(self.master.mq.qrefs[1].filter, ('fake2', None, None))
+        self.assertEqual(self.master.mq.qrefs[0].filter, ("fake1", None, None))
+        self.assertEqual(self.master.mq.qrefs[1].filter, ("fake2", None, None))
 
     @defer.inlineCallbacks
     def test_generators_unsubscribes_on_stop_service(self):
-        gen1 = self.setup_mock_generator([('fake1', None, None)])
+        gen1 = self.setup_mock_generator([("fake1", None, None)])
 
         notifier = yield self.setupNotifier(generators=[gen1])
         yield notifier.stopService()
@@ -159,20 +163,20 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
     @defer.inlineCallbacks
     def test_generators_resubscribes_on_reconfig(self):
-        gen1 = self.setup_mock_generator([('fake1', None, None)])
-        gen2 = self.setup_mock_generator([('fake2', None, None)])
+        gen1 = self.setup_mock_generator([("fake1", None, None)])
+        gen2 = self.setup_mock_generator([("fake2", None, None)])
 
         notifier = yield self.setupNotifier(generators=[gen1])
         self.assertEqual(len(self.master.mq.qrefs), 1)
-        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+        self.assertEqual(self.master.mq.qrefs[0].filter, ("fake1", None, None))
 
         yield notifier.reconfigService(generators=[gen2])
         self.assertEqual(len(self.master.mq.qrefs), 1)
-        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake2', None, None))
+        self.assertEqual(self.master.mq.qrefs[0].filter, ("fake2", None, None))
 
     @defer.inlineCallbacks
     def test_generator_throw_exception_on_generate(self):
-        gen = self.setup_mock_generator([('fake1', None, None)])
+        gen = self.setup_mock_generator([("fake1", None, None)])
 
         @defer.inlineCallbacks
         def generate_throw(*args, **kwargs):
@@ -182,7 +186,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
         notifier = yield self.setupNotifier(generators=[gen])
 
-        yield notifier._got_event(('fake1', None, None), None)
+        yield notifier._got_event(("fake1", None, None), None)
 
         self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
-        self.assertLogged('Got exception when handling reporter events')
+        self.assertLogged("Got exception when handling reporter events")

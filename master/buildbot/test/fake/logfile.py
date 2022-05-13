@@ -20,12 +20,11 @@ from buildbot.util import lineboundaries
 
 
 class FakeLogFile:
-
     def __init__(self, name):
         self.name = name
-        self.header = ''
-        self.stdout = ''
-        self.stderr = ''
+        self.header = ""
+        self.stdout = ""
+        self.stderr = ""
         self.lbfs = {}
         self.finished = False
         self._finish_waiters = []
@@ -42,32 +41,33 @@ class FakeLogFile:
         try:
             return self.lbfs[stream]
         except KeyError:
+
             def wholeLines(lines):
                 self.subPoint.deliver(stream, lines)
                 assert not self.finished
-            lbf = self.lbfs[stream] = \
-                lineboundaries.LineBoundaryFinder(wholeLines)
+
+            lbf = self.lbfs[stream] = lineboundaries.LineBoundaryFinder(wholeLines)
             return lbf
 
     def addHeader(self, text):
         if not isinstance(text, str):
-            text = text.decode('utf-8')
+            text = text.decode("utf-8")
         self.header += text
-        self._getLbf('h', 'headerReceived').append(text)
+        self._getLbf("h", "headerReceived").append(text)
         return defer.succeed(None)
 
     def addStdout(self, text):
         if not isinstance(text, str):
-            text = text.decode('utf-8')
+            text = text.decode("utf-8")
         self.stdout += text
-        self._getLbf('o', 'outReceived').append(text)
+        self._getLbf("o", "outReceived").append(text)
         return defer.succeed(None)
 
     def addStderr(self, text):
         if not isinstance(text, str):
-            text = text.decode('utf-8')
+            text = text.decode("utf-8")
         self.stderr += text
-        self._getLbf('e', 'errReceived').append(text)
+        self._getLbf("e", "errReceived").append(text)
         return defer.succeed(None)
 
     def isFinished(self):
@@ -105,7 +105,7 @@ class FakeLogFile:
         for d in self._finish_waiters:
             d.callback(None)
 
-    def fakeData(self, header='', stdout='', stderr=''):
+    def fakeData(self, header="", stdout="", stderr=""):
         if header:
             self.header += header
         if stdout:

@@ -29,13 +29,12 @@ from buildbot.steps.package import util as pkgutil
 
 
 class MaxQObserver(logobserver.LogLineObserver):
-
     def __init__(self):
         super().__init__()
         self.failures = 0
 
     def outLineReceived(self, line):
-        if line.startswith('TEST FAILURE:'):
+        if line.startswith("TEST FAILURE:"):
             self.failures += 1
 
 
@@ -65,26 +64,26 @@ class DebLintian(buildstep.ShellMixin, buildstep.BuildStep):
 
         if self.suppressTags:
             for tag in self.suppressTags:
-                self.command += ['--suppress-tags', tag]
+                self.command += ["--suppress-tags", tag]
 
         self.obs = pkgutil.WEObserver()
-        self.addLogObserver('stdio', self.obs)
+        self.addLogObserver("stdio", self.obs)
 
     @defer.inlineCallbacks
     def run(self):
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
         warnings = self.obs.warnings
         errors = self.obs.errors
 
         if warnings:
-            yield self.addCompleteLog(f'{len(warnings)} Warnings', "\n".join(warnings))
+            yield self.addCompleteLog(f"{len(warnings)} Warnings", "\n".join(warnings))
         if errors:
-            yield self.addCompleteLog(f'{len(errors)} Errors', "\n".join(errors))
+            yield self.addCompleteLog(f"{len(errors)} Errors", "\n".join(errors))
 
         if cmd.rc != 0 or errors:
             return FAILURE

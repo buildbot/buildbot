@@ -49,6 +49,7 @@ class GraphQLConnector(service.AsyncService):
     be transformed with as_deferred, and they should themselves transform normal data api results
     with as_future()
     """
+
     data = None
     asyncio_loop = None
 
@@ -59,7 +60,7 @@ class GraphQLConnector(service.AsyncService):
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if self.data is None:
             self.data = self.master.data
-        config = new_config.www.get('graphql')
+        config = new_config.www.get("graphql")
         self.enabled = False
         if config is None:
             return
@@ -164,7 +165,7 @@ class GraphQLConnector(service.AsyncService):
             for field, field_type in sorted(rtype.entityType.fields.items()):
                 # in graphql, we handle properties as queriable sub resources
                 # instead of hardcoded attributes like in rest api
-                if field == 'properties':
+                if field == "properties":
                     continue
                 field_type_graphql = field_type.getGraphQLInputType()
                 if field_type_graphql is None:
@@ -173,8 +174,7 @@ class GraphQLConnector(service.AsyncService):
                 for op in sorted(operators):
                     if op in ["in", "notin"]:
                         if field_type_graphql in ["String", "Int"]:
-                            query_fields.append(
-                                f"{field}__{op}: [{field_type_graphql}]")
+                            query_fields.append(f"{field}__{op}: [{field_type_graphql}]")
                     else:
                         query_fields.append(f"{field}__{op}: {field_type_graphql}")
 
@@ -197,9 +197,7 @@ class GraphQLConnector(service.AsyncService):
             field_type_graphql = field_type.toGraphQLTypeName()
             keyfields.append(f"{field}: {field_type_graphql}")
 
-            queries_schema += (
-                f"  {rtype.name}{format_query_fields(keyfields)}: {typename}\n"
-            )
+            queries_schema += f"  {rtype.name}{format_query_fields(keyfields)}: {typename}\n"
             return queries_schema
 
         operators = set(resultspec.Filter.singular_operators)

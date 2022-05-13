@@ -39,20 +39,20 @@ class TestStateMixin(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getState(self):
-        self.master.db.state.set_fake_state(self.object, fav_color=['red', 'purple'])
-        res = yield self.object.getState('fav_color')
+        self.master.db.state.set_fake_state(self.object, fav_color=["red", "purple"])
+        res = yield self.object.getState("fav_color")
 
-        self.assertEqual(res, ['red', 'purple'])
+        self.assertEqual(res, ["red", "purple"])
 
     @defer.inlineCallbacks
     def test_getState_default(self):
-        res = yield self.object.getState('fav_color', 'black')
+        res = yield self.object.getState("fav_color", "black")
 
-        self.assertEqual(res, 'black')
+        self.assertEqual(res, "black")
 
     def test_getState_KeyError(self):
-        self.master.db.state.set_fake_state(self.object, fav_color=['red', 'purple'])
-        d = self.object.getState('fav_book')
+        self.master.db.state.set_fake_state(self.object, fav_color=["red", "purple"])
+        d = self.object.getState("fav_book")
 
         def cb(_):
             self.fail("should not succeed")
@@ -65,15 +65,13 @@ class TestStateMixin(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_setState(self):
-        yield self.object.setState('y', 14)
+        yield self.object.setState("y", 14)
 
-        self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
-                                                y=14)
+        self.master.db.state.assertStateByClass("fake-name", "FakeObject", y=14)
 
     @defer.inlineCallbacks
     def test_setState_existing(self):
         self.master.db.state.set_fake_state(self.object, x=13)
-        yield self.object.setState('x', 14)
+        yield self.object.setState("x", 14)
 
-        self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
-                                                x=14)
+        self.master.db.state.assertStateByClass("fake-name", "FakeObject", x=14)

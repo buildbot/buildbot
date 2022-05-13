@@ -25,7 +25,7 @@ class FakeProtocolCommand(ProtocolCommandBase):
     debug = False
 
     def __init__(self, basedir):
-        self.unicode_encoding = 'utf-8'
+        self.unicode_encoding = "utf-8"
         self.updates = []
         self.worker_basedir = basedir
         self.basedir = basedir
@@ -48,7 +48,7 @@ class FakeProtocolCommand(ProtocolCommandBase):
 
     # Returns a Deferred
     def protocol_update_upload_file_write(self, writer, data):
-        return writer.callRemote('write', data)
+        return writer.callRemote("write", data)
 
     # Returns a Deferred
     def protocol_update_upload_directory(self, writer):
@@ -56,12 +56,12 @@ class FakeProtocolCommand(ProtocolCommandBase):
 
     # Returns a Deferred
     def protocol_update_upload_directory_write(self, writer, data):
-        return writer.callRemote('write', data)
+        return writer.callRemote("write", data)
 
     # Returns a Deferred
     def protocol_update_read_file_close(self, reader):
-        return reader.callRemote('close')
+        return reader.callRemote("close")
 
     # Returns a Deferred
     def protocol_update_read_file(self, reader, length):
-        return reader.callRemote('read', length)
+        return reader.callRemote("read", length)

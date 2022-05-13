@@ -49,7 +49,7 @@ class Log:
         If cfg is already a lambda or function, then we return that.
         """
         if isinstance(cfg, (bytes, str)):
-            return lambda s: s.decode(cfg, 'replace')
+            return lambda s: s.decode(cfg, "replace")
         return cfg
 
     @classmethod
@@ -76,7 +76,7 @@ class Log:
     def addRawLines(self, lines):
         # used by subclasses to add lines that are already appropriately
         # formatted for the log type, and newline-terminated
-        assert lines[-1] == '\n'
+        assert lines[-1] == "\n"
         assert not self.finished
         yield self.lock.run(lambda: self.master.data.updates.appendLog(self.logid, lines))
 
@@ -105,6 +105,7 @@ class Log:
         def fToRun():
             self.finished = True
             return self.master.data.updates.finishLog(self.logid)
+
         yield self.lock.run(fToRun)
         # notify subscribers *after* finishing the log
         self.subPoint.deliver(None, None)
@@ -125,13 +126,13 @@ class Log:
 
 
 class PlainLog(Log):
-
     def __init__(self, master, name, type, logid, decoder):
         super().__init__(master, name, type, logid, decoder)
 
         def wholeLines(lines):
             self.subPoint.deliver(None, lines)
             return self.addRawLines(lines)
+
         self.lbf = lineboundaries.LineBoundaryFinder(wholeLines)
 
     def addContent(self, text):
@@ -151,7 +152,7 @@ class TextLog(PlainLog):
     pass
 
 
-Log._byType['t'] = TextLog
+Log._byType["t"] = TextLog
 
 
 class HtmlLog(PlainLog):
@@ -159,12 +160,12 @@ class HtmlLog(PlainLog):
     pass
 
 
-Log._byType['h'] = HtmlLog
+Log._byType["h"] = HtmlLog
 
 
 class StreamLog(Log):
 
-    pat = re.compile('^', re.M)
+    pat = re.compile("^", re.M)
 
     def __init__(self, step, name, type, logid, decoder):
         super().__init__(step, name, type, logid, decoder)
@@ -174,30 +175,31 @@ class StreamLog(Log):
         try:
             return self.lbfs[stream]
         except KeyError:
+
             def wholeLines(lines):
                 # deliver the un-annotated version to subscribers
                 self.subPoint.deliver(stream, lines)
                 # strip the last character, as the regexp will add a
                 # prefix character after the trailing newline
                 return self.addRawLines(self.pat.sub(stream, lines)[:-1])
-            lbf = self.lbfs[stream] = \
-                lineboundaries.LineBoundaryFinder(wholeLines)
+
+            lbf = self.lbfs[stream] = lineboundaries.LineBoundaryFinder(wholeLines)
             return lbf
 
     def addStdout(self, text):
         if not isinstance(text, str):
             text = self.decoder(text)
-        return self._getLbf('o').append(text)
+        return self._getLbf("o").append(text)
 
     def addStderr(self, text):
         if not isinstance(text, str):
             text = self.decoder(text)
-        return self._getLbf('e').append(text)
+        return self._getLbf("e").append(text)
 
     def addHeader(self, text):
         if not isinstance(text, str):
             text = self.decoder(text)
-        return self._getLbf('h').append(text)
+        return self._getLbf("h").append(text)
 
     @defer.inlineCallbacks
     def finish(self):
@@ -206,4 +208,4 @@ class StreamLog(Log):
         yield super().finish()
 
 
-Log._byType['s'] = StreamLog
+Log._byType["s"] = StreamLog

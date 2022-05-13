@@ -13,35 +13,38 @@ from time import time
 
 from dateutil.relativedelta import relativedelta
 
-search_re = re.compile(r'^([^-]+)-([^-/]+)(/(.*))?$')
-only_int_re = re.compile(r'^\d+$')
-any_int_re = re.compile(r'^\d+')
-star_or_int_re = re.compile(r'^(\d+|\*)$')
+search_re = re.compile(r"^([^-]+)-([^-/]+)(/(.*))?$")
+only_int_re = re.compile(r"^\d+$")
+any_int_re = re.compile(r"^\d+")
+star_or_int_re = re.compile(r"^(\d+|\*)$")
 
-__all__ = ('croniter',)
+__all__ = ("croniter",)
 
 
 class croniter:
-    RANGES = (
-        (0, 59),
-        (0, 23),
-        (1, 31),
-        (1, 12),
-        (0, 6),
-        (0, 59)
-    )
-    DAYS = (
-        31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-    )
+    RANGES = ((0, 59), (0, 23), (1, 31), (1, 12), (0, 6), (0, 59))
+    DAYS = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
     ALPHACONV = (
         {},
         {},
         {},
-        {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
-         'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12},
-        {'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 0},
-        {}
+        {
+            "jan": 1,
+            "feb": 2,
+            "mar": 3,
+            "apr": 4,
+            "may": 5,
+            "jun": 6,
+            "jul": 7,
+            "aug": 8,
+            "sep": 9,
+            "oct": 10,
+            "nov": 11,
+            "dec": 12,
+        },
+        {"sun": 0, "mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 0},
+        {},
     )
 
     LOWMAP = (
@@ -53,8 +56,7 @@ class croniter:
         {},
     )
 
-    bad_length = 'Exactly 5 or 6 columns has to be specified for iterator' \
-                 'expression.'
+    bad_length = "Exactly 5 or 6 columns has to be specified for iterator" "expression."
 
     def __init__(self, expr_format, start_time=time()):
         if isinstance(start_time, datetime):
@@ -69,12 +71,12 @@ class croniter:
         expanded = []
 
         for i, expr in enumerate(self.exprs):
-            e_list = expr.split(',')
+            e_list = expr.split(",")
             res = []
 
             while e_list:
                 e = e_list.pop()
-                t = re.sub(r'^\*(/.+)$', fr'{self.RANGES[i][0]}-{self.RANGES[i][1]}\1', str(e))
+                t = re.sub(r"^\*(/.+)$", rf"{self.RANGES[i][0]}-{self.RANGES[i][1]}\1", str(e))
                 m = search_re.search(t)
 
                 if m:
@@ -86,8 +88,12 @@ class croniter:
                     if not any_int_re.search(high):
                         high = self.ALPHACONV[i][high.lower()]
 
-                    if (not low or not high or int(low) > int(high) or
-                            not only_int_re.search(str(step))):
+                    if (
+                        not low
+                        or not high
+                        or int(low) > int(high)
+                        or not only_int_re.search(str(step))
+                    ):
                         raise ValueError(f"[{expr_format}] is not acceptable")
 
                     for j in range(int(low), int(high) + 1):
@@ -105,15 +111,13 @@ class croniter:
                     if t in self.LOWMAP[i]:
                         t = self.LOWMAP[i][t]
 
-                    if t != '*' and (int(t) < self.RANGES[i][0] or
-                                     int(t) > self.RANGES[i][1]):
+                    if t != "*" and (int(t) < self.RANGES[i][0] or int(t) > self.RANGES[i][1]):
                         raise ValueError(f"[{expr_format}] is not acceptable, out of range")
 
                     res.append(t)
 
             res.sort()
-            expanded.append(
-                ['*'] if (len(res) == 1 and res[0] == '*') else res)
+            expanded.append(["*"] if (len(res) == 1 and res[0] == "*") else res)
         self.expanded = expanded
 
     def get_next(self, ret_type=float):
@@ -126,15 +130,14 @@ class croniter:
         expanded = self.expanded[:]
 
         if ret_type not in (float, datetime):
-            raise TypeError("Invalid ret_type, only 'float' or 'datetime' "
-                            "is acceptable.")
+            raise TypeError("Invalid ret_type, only 'float' or 'datetime' " "is acceptable.")
 
-        if expanded[2][0] != '*' and expanded[4][0] != '*':
+        if expanded[2][0] != "*" and expanded[4][0] != "*":
             bak = expanded[4]
-            expanded[4] = ['*']
+            expanded[4] = ["*"]
             t1 = self._calc(self.cur, expanded, is_prev)
             expanded[4] = bak
-            expanded[2] = ['*']
+            expanded[2] = ["*"]
 
             t2 = self._calc(self.cur, expanded, is_prev)
             if not is_prev:
@@ -166,7 +169,7 @@ class croniter:
         DAYS = self.DAYS
 
         def proc_month(d):
-            if expanded[3][0] != '*':
+            if expanded[3][0] != "*":
                 diff_month = nearest_diff_method(d.month, expanded[3], 12)
                 days = DAYS[month - 1]
                 if month == 2 and self.is_leap(year):
@@ -178,13 +181,14 @@ class croniter:
                     if is_prev:
                         d += relativedelta(months=diff_month)
                     else:
-                        d += relativedelta(months=diff_month, day=reset_day,
-                                           hour=0, minute=0, second=0)
+                        d += relativedelta(
+                            months=diff_month, day=reset_day, hour=0, minute=0, second=0
+                        )
                     return True, d
             return False, d
 
         def proc_day_of_month(d):
-            if expanded[2][0] != '*':
+            if expanded[2][0] != "*":
                 days = DAYS[month - 1]
                 if month == 2 and self.is_leap(year):
                     days += 1
@@ -195,26 +199,23 @@ class croniter:
                     if is_prev:
                         d += relativedelta(days=diff_day)
                     else:
-                        d += relativedelta(days=diff_day,
-                                           hour=0, minute=0, second=0)
+                        d += relativedelta(days=diff_day, hour=0, minute=0, second=0)
                     return True, d
             return False, d
 
         def proc_day_of_week(d):
-            if expanded[4][0] != '*':
-                diff_day_of_week = nearest_diff_method(
-                    d.isoweekday() % 7, expanded[4], 7)
+            if expanded[4][0] != "*":
+                diff_day_of_week = nearest_diff_method(d.isoweekday() % 7, expanded[4], 7)
                 if diff_day_of_week is not None and diff_day_of_week != 0:
                     if is_prev:
                         d += relativedelta(days=diff_day_of_week)
                     else:
-                        d += relativedelta(days=diff_day_of_week,
-                                           hour=0, minute=0, second=0)
+                        d += relativedelta(days=diff_day_of_week, hour=0, minute=0, second=0)
                     return True, d
             return False, d
 
         def proc_hour(d):
-            if expanded[1][0] != '*':
+            if expanded[1][0] != "*":
                 diff_hour = nearest_diff_method(d.hour, expanded[1], 24)
                 if diff_hour is not None and diff_hour != 0:
                     if is_prev:
@@ -225,7 +226,7 @@ class croniter:
             return False, d
 
         def proc_minute(d):
-            if expanded[0][0] != '*':
+            if expanded[0][0] != "*":
                 diff_min = nearest_diff_method(d.minute, expanded[0], 60)
                 if diff_min is not None and diff_min != 0:
                     if is_prev:
@@ -237,7 +238,7 @@ class croniter:
 
         def proc_second(d):
             if len(expanded) == 6:
-                if expanded[5][0] != '*':
+                if expanded[5][0] != "*":
                     diff_sec = nearest_diff_method(d.second, expanded[5], 60)
                     if diff_sec is not None and diff_sec != 0:
                         d += relativedelta(seconds=diff_sec)
@@ -247,19 +248,23 @@ class croniter:
             return False, d
 
         if is_prev:
-            procs = [proc_second,
-                     proc_minute,
-                     proc_hour,
-                     proc_day_of_week,
-                     proc_day_of_month,
-                     proc_month]
+            procs = [
+                proc_second,
+                proc_minute,
+                proc_hour,
+                proc_day_of_week,
+                proc_day_of_month,
+                proc_month,
+            ]
         else:
-            procs = [proc_month,
-                     proc_day_of_month,
-                     proc_day_of_week,
-                     proc_hour,
-                     proc_minute,
-                     proc_second]
+            procs = [
+                proc_month,
+                proc_day_of_month,
+                proc_day_of_week,
+                proc_hour,
+                proc_minute,
+                proc_second,
+            ]
 
         while abs(year - current_year) <= 1:
             next = False
@@ -306,9 +311,9 @@ class croniter:
         return year % 400 == 0 or (year % 4 == 0 and year % 100 != 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     base = datetime(2010, 1, 25)
-    itr = croniter('0 0 1 * *', base)
+    itr = croniter("0 0 1 * *", base)
     n1 = itr.get_next(datetime)
     print(n1)

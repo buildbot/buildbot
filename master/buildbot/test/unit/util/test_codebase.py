@@ -25,19 +25,19 @@ from buildbot.util import state
 
 class FakeObject(codebase.AbsoluteSourceStampsMixin, state.StateMixin):
 
-    name = 'fake-name'
+    name = "fake-name"
 
     def __init__(self, master, codebases):
         self.master = master
         self.codebases = codebases
 
 
-class TestAbsoluteSourceStampsMixin(unittest.TestCase,
-                                    scheduler.SchedulerMixin,
-                                    TestReactorMixin):
+class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin, TestReactorMixin):
 
-    codebases = {'a': {'repository': '', 'branch': 'master'},
-                 'b': {'repository': '', 'branch': 'master'}}
+    codebases = {
+        "a": {"repository": "", "branch": "master"},
+        "b": {"repository": "", "branch": "master"},
+    }
 
     def setUp(self):
         self.setup_test_reactor()
@@ -52,60 +52,133 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_getCodebaseDict(self):
-        cbd = yield self.object.getCodebaseDict('a')
-        self.assertEqual(cbd, {'repository': '', 'branch': 'master'})
+        cbd = yield self.object.getCodebaseDict("a")
+        self.assertEqual(cbd, {"repository": "", "branch": "master"})
 
     @defer.inlineCallbacks
     def test_getCodebaseDict_not_found(self):
-        d = self.object.getCodebaseDict('c')
+        d = self.object.getCodebaseDict("c")
         yield self.assertFailure(d, KeyError)
 
     @defer.inlineCallbacks
     def test_getCodebaseDict_existing(self):
-        self.db.state.set_fake_state(self.object, lastCodebases={'a': {
-            'repository': 'A',
-            'revision': '1234:abc',
-            'branch': 'master',
-            'lastChange': 10
-        }})
-        cbd = yield self.object.getCodebaseDict('a')
-        self.assertEqual(cbd, {'repository': 'A', 'revision': '1234:abc',
-                               'branch': 'master', 'lastChange': 10})
-        cbd = yield self.object.getCodebaseDict('b')
-        self.assertEqual(cbd, {'repository': '', 'branch': 'master'})
+        self.db.state.set_fake_state(
+            self.object,
+            lastCodebases={
+                "a": {
+                    "repository": "A",
+                    "revision": "1234:abc",
+                    "branch": "master",
+                    "lastChange": 10,
+                }
+            },
+        )
+        cbd = yield self.object.getCodebaseDict("a")
+        self.assertEqual(
+            cbd,
+            {
+                "repository": "A",
+                "revision": "1234:abc",
+                "branch": "master",
+                "lastChange": 10,
+            },
+        )
+        cbd = yield self.object.getCodebaseDict("b")
+        self.assertEqual(cbd, {"repository": "", "branch": "master"})
 
     @defer.inlineCallbacks
     def test_recordChange(self):
-        yield self.object.recordChange(self.mkch(codebase='a', repository='A', revision='1234:abc',
-                                                 branch='master', number=10))
-        self.db.state.assertStateByClass('fake-name', 'FakeObject', lastCodebases={
-            'a': {'repository': 'A', 'revision': '1234:abc', 'branch': 'master', 'lastChange': 10}})
+        yield self.object.recordChange(
+            self.mkch(
+                codebase="a",
+                repository="A",
+                revision="1234:abc",
+                branch="master",
+                number=10,
+            )
+        )
+        self.db.state.assertStateByClass(
+            "fake-name",
+            "FakeObject",
+            lastCodebases={
+                "a": {
+                    "repository": "A",
+                    "revision": "1234:abc",
+                    "branch": "master",
+                    "lastChange": 10,
+                }
+            },
+        )
 
     @defer.inlineCallbacks
     def test_recordChange_older(self):
-        self.db.state.set_fake_state(self.object, lastCodebases={'a': {
-            'repository': 'A',
-            'revision': '2345:bcd',
-            'branch': 'master',
-            'lastChange': 20
-        }})
-        yield self.object.getCodebaseDict('a')
-        yield self.object.recordChange(self.mkch(codebase='a', repository='A', revision='1234:abc',
-                                                 branch='master', number=10))
-        self.db.state.assertStateByClass('fake-name', 'FakeObject', lastCodebases={
-            'a': {'repository': 'A', 'revision': '2345:bcd', 'branch': 'master', 'lastChange': 20}})
+        self.db.state.set_fake_state(
+            self.object,
+            lastCodebases={
+                "a": {
+                    "repository": "A",
+                    "revision": "2345:bcd",
+                    "branch": "master",
+                    "lastChange": 20,
+                }
+            },
+        )
+        yield self.object.getCodebaseDict("a")
+        yield self.object.recordChange(
+            self.mkch(
+                codebase="a",
+                repository="A",
+                revision="1234:abc",
+                branch="master",
+                number=10,
+            )
+        )
+        self.db.state.assertStateByClass(
+            "fake-name",
+            "FakeObject",
+            lastCodebases={
+                "a": {
+                    "repository": "A",
+                    "revision": "2345:bcd",
+                    "branch": "master",
+                    "lastChange": 20,
+                }
+            },
+        )
 
     @defer.inlineCallbacks
     def test_recordChange_newer(self):
-        self.db.state.set_fake_state(self.object, lastCodebases={'a': {
-            'repository': 'A',
-            'revision': '1234:abc',
-            'branch': 'master',
-            'lastChange': 10
-        }})
+        self.db.state.set_fake_state(
+            self.object,
+            lastCodebases={
+                "a": {
+                    "repository": "A",
+                    "revision": "1234:abc",
+                    "branch": "master",
+                    "lastChange": 10,
+                }
+            },
+        )
 
-        yield self.object.getCodebaseDict('a')
-        yield self.object.recordChange(self.mkch(codebase='a', repository='A', revision='2345:bcd',
-                                                 branch='master', number=20))
-        self.db.state.assertStateByClass('fake-name', 'FakeObject', lastCodebases={
-            'a': {'repository': 'A', 'revision': '2345:bcd', 'branch': 'master', 'lastChange': 20}})
+        yield self.object.getCodebaseDict("a")
+        yield self.object.recordChange(
+            self.mkch(
+                codebase="a",
+                repository="A",
+                revision="2345:bcd",
+                branch="master",
+                number=20,
+            )
+        )
+        self.db.state.assertStateByClass(
+            "fake-name",
+            "FakeObject",
+            lastCodebases={
+                "a": {
+                    "repository": "A",
+                    "revision": "2345:bcd",
+                    "branch": "master",
+                    "lastChange": 20,
+                }
+            },
+        )

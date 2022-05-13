@@ -25,18 +25,19 @@ from buildbot.process import results
 
 
 class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
-    name = 'GitDiffInfo'
-    description = 'running GitDiffInfo'
-    descriptionDone = 'GitDiffInfo'
+    name = "GitDiffInfo"
+    description = "running GitDiffInfo"
+    descriptionDone = "GitDiffInfo"
 
-    def __init__(self, compareToRef='master', dataName='diffinfo-master', **kwargs):
+    def __init__(self, compareToRef="master", dataName="diffinfo-master", **kwargs):
         try:
             from unidiff import PatchSet
+
             [PatchSet]  # silence pylint
         except ImportError:
-            config.error('unidiff package must be installed in order to use GitDiffInfo')
+            config.error("unidiff package must be installed in order to use GitDiffInfo")
 
-        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=["command"])
         super().__init__(**kwargs)
         self._compare_to_ref = compareToRef
         self._data_name = dataName
@@ -46,19 +47,19 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
         # TODO: build an intermediate class that would handle serialization. We want to output
         # as few data as possible, even if the json is not human-readable
         return {
-            'ss': hunk.source_start,
-            'sl': hunk.source_length,
-            'ts': hunk.target_start,
-            'tl': hunk.target_length,
+            "ss": hunk.source_start,
+            "sl": hunk.source_length,
+            "ts": hunk.target_start,
+            "tl": hunk.target_length,
         }
 
     def _convert_file(self, file):
         return {
-            'source_file': file.source_file,
-            'target_file': file.target_file,
-            'is_binary': file.is_binary_file,
-            'is_rename': file.is_rename,
-            'hunks': [self._convert_hunk(hunk) for hunk in file]
+            "source_file": file.source_file,
+            "target_file": file.target_file,
+            "is_binary": file.is_binary_file,
+            "is_rename": file.is_rename,
+            "hunks": [self._convert_hunk(hunk) for hunk in file],
         }
 
     def _convert_patchset(self, patchset):
@@ -66,9 +67,10 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        command = ['git', 'merge-base', 'HEAD', self._compare_to_ref]
-        cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName='stdio-merge-base',
-                                                collectStdout=True)
+        command = ["git", "merge-base", "HEAD", self._compare_to_ref]
+        cmd = yield self.makeRemoteShellCommand(
+            command=command, stdioLogName="stdio-merge-base", collectStdout=True
+        )
 
         yield self.runCommand(cmd)
         log = yield self.getLog("stdio-merge-base")
@@ -78,12 +80,12 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
             return cmd.results()
 
         commit = cmd.stdout.strip()
-        self.setProperty('diffinfo-merge-base-commit', commit, 'GitDiffInfo')
+        self.setProperty("diffinfo-merge-base-commit", commit, "GitDiffInfo")
 
-        self.addLogObserver('stdio-diff', self._observer)
+        self.addLogObserver("stdio-diff", self._observer)
 
-        command = ['git', 'diff', '--no-prefix', '-U0', commit, 'HEAD']
-        cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName='stdio-diff')
+        command = ["git", "diff", "--no-prefix", "-U0", commit, "HEAD"]
+        cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName="stdio-diff")
 
         yield self.runCommand(cmd)
 
@@ -91,9 +93,10 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
             return cmd.results()
 
         from unidiff import PatchSet
+
         patchset = PatchSet(self._observer.getStdout(), metadata_only=True)
 
-        data = json.dumps(self._convert_patchset(patchset)).encode('utf-8')
-        yield self.setBuildData(self._data_name, data, 'GitDiffInfo')
+        data = json.dumps(self._convert_patchset(patchset)).encode("utf-8")
+        yield self.setBuildData(self._data_name, data, "GitDiffInfo")
 
         return cmd.results()

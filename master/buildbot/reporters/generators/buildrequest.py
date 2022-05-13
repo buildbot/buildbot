@@ -31,33 +31,40 @@ from .utils import BuildStatusGeneratorMixin
 class BuildRequestGenerator(BuildStatusGeneratorMixin):
 
     wanted_event_keys = [
-        ('buildrequests', None, 'new'),
-        ('buildrequests', None, 'cancel')
+        ("buildrequests", None, "new"),
+        ("buildrequests", None, "cancel"),
     ]
 
-    compare_attrs = ['formatter']
+    compare_attrs = ["formatter"]
 
-    def __init__(self, tags=None, builders=None, schedulers=None, branches=None,
-                 add_patch=False, formatter=None):
+    def __init__(
+        self,
+        tags=None,
+        builders=None,
+        schedulers=None,
+        branches=None,
+        add_patch=False,
+        formatter=None,
+    ):
 
-        super().__init__('all', tags, builders, schedulers, branches, None, False, add_patch)
+        super().__init__("all", tags, builders, schedulers, branches, None, False, add_patch)
         self.formatter = formatter
         if self.formatter is None:
-            self.formatter = MessageFormatterRenderable('Build pending.')
+            self.formatter = MessageFormatterRenderable("Build pending.")
 
     @defer.inlineCallbacks
     def partial_build_dict(self, master, buildrequest):
-        brdict = yield master.db.buildrequests.getBuildRequest(buildrequest['buildrequestid'])
+        brdict = yield master.db.buildrequests.getBuildRequest(buildrequest["buildrequestid"])
         bdict = {}
 
         props = Properties()
         buildrequest = yield BuildRequest.fromBrdict(master, brdict)
-        builder = yield master.botmaster.getBuilderById(brdict['builderid'])
+        builder = yield master.botmaster.getBuilderById(brdict["builderid"])
 
         Build.setupPropertiesKnownBeforeBuildStarts(props, [buildrequest], builder)
         Build.setupBuildProperties(props, [buildrequest])
 
-        bdict['properties'] = props.asDict()
+        bdict["properties"] = props.asDict()
         yield utils.get_details_for_buildrequest(master, brdict, bdict)
         return bdict
 
@@ -65,9 +72,9 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     def generate(self, master, reporter, key, buildrequest):
         build = yield self.partial_build_dict(master, buildrequest)
         _, _, event = key
-        if event == 'cancel':
-            build['complete'] = True
-            build['results'] = CANCELLED
+        if event == "cancel":
+            build["complete"] = True
+            build["results"] = CANCELLED
 
         if not self.is_message_needed_by_props(build):
             return None
@@ -79,16 +86,17 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     def buildrequest_message(self, master, build):
         patches = self._get_patches_for_build(build)
         users = []
-        buildmsg = yield self.formatter.format_message_for_build(master, build, is_buildset=True,
-                                                                 mode=self.mode, users=users)
+        buildmsg = yield self.formatter.format_message_for_build(
+            master, build, is_buildset=True, mode=self.mode, users=users
+        )
 
         return {
-            'body': buildmsg['body'],
-            'subject': buildmsg['subject'],
-            'type': buildmsg['type'],
-            'results': build['results'],
-            'builds': [build],
-            'users': list(users),
-            'patches': patches,
-            'logs': []
+            "body": buildmsg["body"],
+            "subject": buildmsg["subject"],
+            "type": buildmsg["type"],
+            "results": build["results"],
+            "builds": [build],
+            "users": list(users),
+            "patches": patches,
+            "logs": [],
         }

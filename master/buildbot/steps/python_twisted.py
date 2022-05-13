@@ -49,12 +49,11 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
     warnings = 0
 
     def __init__(self, python=None, **kwargs):
-        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=["command"])
         super().__init__(**kwargs)
         self.python = python
         self.warningLines = []
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.addLogObserver("stdio", logobserver.LineConsumerLogObserver(self.logConsumer))
 
     @defer.inlineCallbacks
     def run(self):
@@ -77,10 +76,10 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
         cmd = yield self.makeRemoteShellCommand(command=command)
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
-        yield self.addCompleteLog('warnings', '\n'.join(self.warningLines))
+        yield self.addCompleteLog("warnings", "\n".join(self.warningLines))
         yield self.addCompleteLog("files", "\n".join(self.hlintFiles) + "\n")
 
         # warnings are in stdout, rc is always 0, unless the tools break
@@ -96,25 +95,26 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
     def logConsumer(self):
         while True:
             _, line = yield
-            if ':' in line:
+            if ":" in line:
                 self.warnings += 1
                 self.warningLines.append(line)
 
 
 class TrialTestCaseCounter(logobserver.LogLineObserver):
-    _line_re = re.compile(r'^(?:Doctest: )?([\w\.]+) \.\.\. \[([^\]]+)\]$')
+    _line_re = re.compile(r"^(?:Doctest: )?([\w\.]+) \.\.\. \[([^\]]+)\]$")
 
     def __init__(self):
         super().__init__()
         self.numTests = 0
         self.finished = False
-        self.counts = {'total': None,
-                       'failures': 0,
-                       'errors': 0,
-                       'skips': 0,
-                       'expectedFailures': 0,
-                       'unexpectedSuccesses': 0,
-                       }
+        self.counts = {
+            "total": None,
+            "failures": 0,
+            "errors": 0,
+            "skips": 0,
+            "expectedFailures": 0,
+            "unexpectedSuccesses": 0,
+        }
 
     def outLineReceived(self, line):
         # different versions of Twisted emit different per-test lines with
@@ -133,37 +133,35 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
             if m:
                 m.groups()
                 self.numTests += 1
-                self.step.setProgress('tests', self.numTests)
+                self.step.setProgress("tests", self.numTests)
 
-        out = re.search(r'Ran (\d+) tests', line)
+        out = re.search(r"Ran (\d+) tests", line)
         if out:
-            self.counts['total'] = int(out.group(1))
-        if (line.startswith("OK") or
-            line.startswith("FAILED ") or
-                line.startswith("PASSED")):
+            self.counts["total"] = int(out.group(1))
+        if line.startswith("OK") or line.startswith("FAILED ") or line.startswith("PASSED"):
             # the extra space on FAILED_ is to distinguish the overall
             # status from an individual test which failed. The lack of a
             # space on the OK is because it may be printed without any
             # additional text (if there are no skips,etc)
-            out = re.search(r'failures=(\d+)', line)
+            out = re.search(r"failures=(\d+)", line)
             if out:
-                self.counts['failures'] = int(out.group(1))
-            out = re.search(r'errors=(\d+)', line)
+                self.counts["failures"] = int(out.group(1))
+            out = re.search(r"errors=(\d+)", line)
             if out:
-                self.counts['errors'] = int(out.group(1))
-            out = re.search(r'skips=(\d+)', line)
+                self.counts["errors"] = int(out.group(1))
+            out = re.search(r"skips=(\d+)", line)
             if out:
-                self.counts['skips'] = int(out.group(1))
-            out = re.search(r'expectedFailures=(\d+)', line)
+                self.counts["skips"] = int(out.group(1))
+            out = re.search(r"expectedFailures=(\d+)", line)
             if out:
-                self.counts['expectedFailures'] = int(out.group(1))
-            out = re.search(r'unexpectedSuccesses=(\d+)', line)
+                self.counts["expectedFailures"] = int(out.group(1))
+            out = re.search(r"unexpectedSuccesses=(\d+)", line)
             if out:
-                self.counts['unexpectedSuccesses'] = int(out.group(1))
+                self.counts["unexpectedSuccesses"] = int(out.group(1))
             # successes= is a Twisted-2.0 addition, and is not currently used
-            out = re.search(r'successes=(\d+)', line)
+            out = re.search(r"successes=(\d+)", line)
             if out:
-                self.counts['successes'] = int(out.group(1))
+                self.counts["successes"] = int(out.group(1))
 
 
 UNSPECIFIED = ()  # since None is a valid choice
@@ -178,14 +176,14 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
     """
 
     name = "trial"
-    progressMetrics = ('output', 'tests', 'test.log')
+    progressMetrics = ("output", "tests", "test.log")
     # note: the slash only works on unix workers, of course, but we have
     # no way to know what the worker uses as a separator.
     # TODO: figure out something clever.
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()
 
-    renderables = ['tests', 'jobs']
+    renderables = ["tests", "jobs"]
     flunkOnFailure = True
     python = None
     trial = "trial"
@@ -200,17 +198,26 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
     randomly = False
     tests = None  # required
 
-    description = 'testing'
-    descriptionDone = 'tests'
+    description = "testing"
+    descriptionDone = "tests"
 
-    def __init__(self, reactor=UNSPECIFIED, python=None, trial=None,
-                 testpath=UNSPECIFIED,
-                 tests=None, testChanges=None,
-                 recurse=None, randomly=None,
-                 trialMode=None, trialArgs=None, jobs=None,
-                 **kwargs):
+    def __init__(
+        self,
+        reactor=UNSPECIFIED,
+        python=None,
+        trial=None,
+        testpath=UNSPECIFIED,
+        tests=None,
+        testChanges=None,
+        recurse=None,
+        randomly=None,
+        trialMode=None,
+        trialArgs=None,
+        jobs=None,
+        **kwargs,
+    ):
 
-        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=["command"])
         super().__init__(**kwargs)
 
         if python:
@@ -269,34 +276,34 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
 
         # this counter will feed Progress along the 'test cases' metric
         self.observer = TrialTestCaseCounter()
-        self.addLogObserver('stdio', self.observer)
+        self.addLogObserver("stdio", self.observer)
 
         # this observer consumes multiple lines in a go, so it can't be easily
         # handled in TrialTestCaseCounter.
-        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.addLogObserver("stdio", logobserver.LineConsumerLogObserver(self.logConsumer))
         self.problems = []
         self.warnings = {}
 
         # text used before commandComplete runs
-        self.text = 'running'
+        self.text = "running"
 
     def setup_python_path(self):
         if self.testpath is None:
             return
 
         # this bit produces a list, which can be used by buildbot_worker.runprocess.RunProcess
-        ppath = self.env.get('PYTHONPATH', self.testpath)
+        ppath = self.env.get("PYTHONPATH", self.testpath)
         if isinstance(ppath, str):
             ppath = [ppath]
         if self.testpath not in ppath:
             ppath.insert(0, self.testpath)
-        self.env['PYTHONPATH'] = ppath
+        self.env["PYTHONPATH"] = ppath
 
     @defer.inlineCallbacks
     def run(self):
         # choose progressMetrics and logfiles based on whether trial is being
         # run with multiple workers or not.
-        output_observer = logobserver.OutputProgressObserver('test.log')
+        output_observer = logobserver.OutputProgressObserver("test.log")
 
         # build up most of the command, then stash it until start()
         command = []
@@ -319,13 +326,13 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             # using -j/--jobs flag produces more than one test log.
             self.logfiles = {}
             for i in range(self.jobs):
-                self.logfiles[f'test.{i}.log'] = f'_trial_temp/{i}/test.log'
-                self.logfiles[f'err.{i}.log'] = f'_trial_temp/{i}/err.log'
-                self.logfiles[f'out.{i}.log'] = f'_trial_temp/{i}/out.log'
-                self.addLogObserver(f'test.{i}.log', output_observer)
+                self.logfiles[f"test.{i}.log"] = f"_trial_temp/{i}/test.log"
+                self.logfiles[f"err.{i}.log"] = f"_trial_temp/{i}/err.log"
+                self.logfiles[f"out.{i}.log"] = f"_trial_temp/{i}/out.log"
+                self.addLogObserver(f"test.{i}.log", output_observer)
         else:
             # this one just measures bytes of output in _trial_temp/test.log
-            self.addLogObserver('test.log', output_observer)
+            self.addLogObserver("test.log", output_observer)
 
         # now that self.build.allFiles() is nailed down, finish building the
         # command
@@ -341,13 +348,13 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         cmd = yield self.makeRemoteShellCommand(command=command)
         yield self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
+        stdio_log = yield self.getLog("stdio")
         yield stdio_log.finish()
 
         # figure out all status, then let the various hook functions return
         # different pieces of it
 
-        problems = '\n'.join(self.problems)
+        problems = "\n".join(self.problems)
         warnings = self.warnings
 
         if problems:
@@ -361,10 +368,10 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
 
     def build_results(self, cmd):
         counts = self.observer.counts
-        total = counts['total']
-        failures = counts['failures']
-        errors = counts['errors']
-        parsed = (total is not None)
+        total = counts["total"]
+        failures = counts["failures"]
+        errors = counts["errors"]
+        parsed = total is not None
 
         desc_parts = []
 
@@ -372,7 +379,11 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             if parsed:
                 results = SUCCESS
                 if total:
-                    desc_parts += [str(total), total == 1 and "test" or "tests", "passed"]
+                    desc_parts += [
+                        str(total),
+                        total == 1 and "test" or "tests",
+                        "passed",
+                    ]
                 else:
                     desc_parts += ["no tests", "run"]
             else:
@@ -384,25 +395,33 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             if parsed:
                 desc_parts += ["tests"]
                 if failures:
-                    desc_parts += [str(failures), failures == 1 and "failure" or "failures"]
+                    desc_parts += [
+                        str(failures),
+                        failures == 1 and "failure" or "failures",
+                    ]
                 if errors:
                     desc_parts += [str(errors), errors == 1 and "error" or "errors"]
             else:
                 desc_parts += ["tests", "failed"]
 
-        if counts['skips']:
-            desc_parts += [str(counts['skips']), counts['skips'] == 1 and "skip" or "skips"]
-        if counts['expectedFailures']:
-            desc_parts += [str(counts['expectedFailures']),
-                           "todo" if counts['expectedFailures'] == 1 else "todos"]
+        if counts["skips"]:
+            desc_parts += [
+                str(counts["skips"]),
+                counts["skips"] == 1 and "skip" or "skips",
+            ]
+        if counts["expectedFailures"]:
+            desc_parts += [
+                str(counts["expectedFailures"]),
+                "todo" if counts["expectedFailures"] == 1 else "todos",
+            ]
 
         if self.reactor:
-            desc_parts.append(self.rtext('({})'))
+            desc_parts.append(self.rtext("({})"))
 
         self.descriptionDone = util.join_list(desc_parts)
         return results
 
-    def rtext(self, fmt='{}'):
+    def rtext(self, fmt="{}"):
         if self.reactor:
             rtext = fmt.format(self.reactor)
             return rtext.replace("reactor", "")
@@ -415,8 +434,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
                 # no source
                 warning = line  # TODO: consider stripping basedir prefix here
                 self.warnings[warning] = self.warnings.get(warning, 0) + 1
-            elif (line.find(" DeprecationWarning: ") != -1 or
-                  line.find(" UserWarning: ") != -1):
+            elif line.find(" DeprecationWarning: ") != -1 or line.find(" UserWarning: ") != -1:
                 # next line is the source
                 warning = line + "\n" + (yield)[1] + "\n"
                 self.warnings[warning] = self.warnings.get(warning, 0) + 1
@@ -433,6 +451,6 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
 
 class RemovePYCs(shell.ShellCommand):
     name = "remove_pyc"
-    command = ['find', '.', '-name', "'*.pyc'", '-exec', 'rm', '{}', ';']
+    command = ["find", ".", "-name", "'*.pyc'", "-exec", "rm", "{}", ";"]
     description = "removing .pyc files"
     descriptionDone = "remove .pycs"

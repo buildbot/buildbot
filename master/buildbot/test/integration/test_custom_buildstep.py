@@ -25,7 +25,6 @@ from buildbot.test.util.integration import RunFakeMasterTestCase
 
 
 class TestLogObserver(logobserver.LogObserver):
-
     def __init__(self):
         self.observed = []
 
@@ -34,31 +33,29 @@ class TestLogObserver(logobserver.LogObserver):
 
 
 class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
-
     @defer.inlineCallbacks
     def run(self):
-        _log = yield self.addLog('xx')
-        output_str = '\N{CENT SIGN}'
+        _log = yield self.addLog("xx")
+        output_str = "\N{CENT SIGN}"
         yield _log.addStdout(output_str)
         yield _log.finish()
         return results.SUCCESS
 
 
 class BuildStepWithFailingLogObserver(buildstep.BuildStep):
-
     @defer.inlineCallbacks
     def run(self):
-        self.addLogObserver('xx', logobserver.LineConsumerLogObserver(self.log_consumer))
+        self.addLogObserver("xx", logobserver.LineConsumerLogObserver(self.log_consumer))
 
-        _log = yield self.addLog('xx')
-        yield _log.addStdout('line1\nline2\n')
+        _log = yield self.addLog("xx")
+        yield _log.addStdout("line1\nline2\n")
         yield _log.finish()
 
         return results.SUCCESS
 
     def log_consumer(self):
         _, _ = yield
-        raise RuntimeError('fail')
+        raise RuntimeError("fail")
 
 
 class FailingCustomStep(buildstep.BuildStep):
@@ -76,24 +73,24 @@ class FailingCustomStep(buildstep.BuildStep):
 
 
 class RunSteps(RunFakeMasterTestCase):
-
     @defer.inlineCallbacks
     def create_config_for_step(self, step):
         config_dict = {
-            'builders': [
-                BuilderConfig(name="builder",
-                              workernames=["worker1"],
-                              factory=BuildFactory([step])
-                              ),
+            "builders": [
+                BuilderConfig(
+                    name="builder",
+                    workernames=["worker1"],
+                    factory=BuildFactory([step]),
+                ),
             ],
-            'workers': [self.createLocalWorker('worker1')],
-            'protocols': {'null': {}},
+            "workers": [self.createLocalWorker("worker1")],
+            "protocols": {"null": {}},
             # Disable checks about missing scheduler.
-            'multiMaster': True,
+            "multiMaster": True,
         }
 
         yield self.setup_master(config_dict)
-        builder_id = yield self.master.data.updates.findBuilderId('builder')
+        builder_id = yield self.master.data.updates.findBuilderId("builder")
         return builder_id
 
     @defer.inlineCallbacks
@@ -113,14 +110,15 @@ class RunSteps(RunFakeMasterTestCase):
 
     @defer.inlineCallbacks
     def test_step_raising_connectionlost_in_start(self):
-        ''' Check whether we can recover from raising ConnectionLost from a step if the worker
-            did not actually disconnect
-        '''
+        """Check whether we can recover from raising ConnectionLost from a step if the worker
+        did not actually disconnect
+        """
         step = FailingCustomStep(exception=error.ConnectionLost)
         builder_id = yield self.create_config_for_step(step)
 
         yield self.do_test_build(builder_id)
         yield self.assertBuildResults(1, results.EXCEPTION)
+
     test_step_raising_connectionlost_in_start.skip = "Results in infinite loop"
 
     @defer.inlineCallbacks
@@ -135,10 +133,13 @@ class RunSteps(RunFakeMasterTestCase):
 
     @defer.inlineCallbacks
     def test_Latin1ProducingCustomBuildStep(self):
-        step = Latin1ProducingCustomBuildStep(logEncoding='latin-1')
+        step = Latin1ProducingCustomBuildStep(logEncoding="latin-1")
         builder_id = yield self.create_config_for_step(step)
 
         yield self.do_test_build(builder_id)
-        yield self.assertLogs(1, {
-            'xx': 'o\N{CENT SIGN}\n',
-        })
+        yield self.assertLogs(
+            1,
+            {
+                "xx": "o\N{CENT SIGN}\n",
+            },
+        )

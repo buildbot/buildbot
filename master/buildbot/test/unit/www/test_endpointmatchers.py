@@ -25,10 +25,9 @@ from buildbot.www.authz import endpointmatchers
 
 
 class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
-        self.master = self.make_master(url='h:/a/b/')
+        self.master = self.make_master(url="h:/a/b/")
         self.db = self.master.db
         self.matcher = self.makeMatcher()
         self.matcher.setAuthz(self.master.authz)
@@ -44,19 +43,19 @@ class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertTrue(match is None)
 
     def insertData(self):
-        self.db.insertTestData([
-            fakedb.SourceStamp(id=13, branch='secret'),
-            fakedb.Build(
-                id=15, buildrequestid=16, masterid=1, workerid=2, builderid=21),
-            fakedb.BuildRequest(id=16, buildsetid=17),
-            fakedb.Buildset(id=17),
-            fakedb.BuildsetSourceStamp(id=20, buildsetid=17, sourcestampid=13),
-            fakedb.Builder(id=21, name="builder"),
-        ])
+        self.db.insertTestData(
+            [
+                fakedb.SourceStamp(id=13, branch="secret"),
+                fakedb.Build(id=15, buildrequestid=16, masterid=1, workerid=2, builderid=21),
+                fakedb.BuildRequest(id=16, buildsetid=17),
+                fakedb.Buildset(id=17),
+                fakedb.BuildsetSourceStamp(id=20, buildsetid=17, sourcestampid=13),
+                fakedb.Builder(id=21, name="builder"),
+            ]
+        )
 
 
 class ValidEndpointMixin:
-
     @defer.inlineCallbacks
     def test_invalidPath(self):
         ret = yield self.matcher.match(("foo", "bar"))
@@ -64,7 +63,6 @@ class ValidEndpointMixin:
 
 
 class AnyEndpointMatcher(EndpointBase):
-
     def makeMatcher(self):
         return endpointmatchers.AnyEndpointMatcher(role="foo")
 
@@ -75,7 +73,6 @@ class AnyEndpointMatcher(EndpointBase):
 
 
 class AnyControlEndpointMatcher(EndpointBase):
-
     def makeMatcher(self):
         return endpointmatchers.AnyControlEndpointMatcher(role="foo")
 
@@ -96,7 +93,6 @@ class AnyControlEndpointMatcher(EndpointBase):
 
 
 class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
-
     def makeMatcher(self):
         return endpointmatchers.ViewBuildsEndpointMatcher(branch="secret", role="agent")
 
@@ -104,11 +100,11 @@ class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     def test_build(self):
         ret = yield self.matcher.match(("builds", "15"))
         self.assertMatch(ret)
+
     test_build.skip = "ViewBuildsEndpointMatcher is not implemented yet"
 
 
 class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
-
     def makeMatcher(self):
         return endpointmatchers.StopBuildEndpointMatcher(builder="builder", role="owner")
 
@@ -131,14 +127,14 @@ class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
 
 
 class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
-
     def makeMatcher(self):
         return endpointmatchers.ForceBuildEndpointMatcher(builder="builder", role="owner")
 
     def insertData(self):
         super().insertData()
         self.master.allSchedulers = lambda: [
-            ForceScheduler(name="sched1", builderNames=["builder"])]
+            ForceScheduler(name="sched1", builderNames=["builder"])
+        ]
 
     @defer.inlineCallbacks
     def test_build(self):
@@ -169,7 +165,6 @@ class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
 
 
 class EnableSchedulerEndpointMatcher(EndpointBase, ValidEndpointMixin):
-
     def makeMatcher(self):
         return endpointmatchers.EnableSchedulerEndpointMatcher(role="agent")
 

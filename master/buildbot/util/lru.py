@@ -30,8 +30,9 @@ class LRUCache:
     See buildbot manual for more information.
     """
 
-    __slots__ = ('max_size max_queue miss_fn queue cache weakrefs '
-                 'refcount hits refhits misses'.split())
+    __slots__ = (
+        "max_size max_queue miss_fn queue cache weakrefs " "refcount hits refhits misses".split()
+    )
     sentinel = object()
     QUEUE_SIZE_FACTOR = 10
 
@@ -121,8 +122,7 @@ class LRUCache:
             refcount.clear()
             queue_appendleft = queue.appendleft
             queue_appendleft(self.sentinel)
-            for k in filterfalse(refcount.__contains__,
-                                 iter(queue.pop, self.sentinel)):
+            for k in filterfalse(refcount.__contains__, iter(queue.pop, self.sentinel)):
                 queue_appendleft(k)
                 refcount[k] = 1
 
@@ -173,7 +173,7 @@ class AsyncLRUCache(LRUCache):
     multiple concurrent requests for the same key, only one fetch is performed.
     """
 
-    __slots__ = ['concurrent']
+    __slots__ = ["concurrent"]
 
     def __init__(self, miss_fn, max_size=50):
         super().__init__(miss_fn, max_size=max_size)

@@ -25,6 +25,7 @@ import os
 from twisted.application import internet
 from twisted.internet import defer
 from twisted.internet import reactor
+
 # We have to put it here, since we use it to provide feedback
 from twisted.python import log
 from twisted.python import runtime
@@ -44,7 +45,7 @@ class NoSuchMaildir(Exception):
 
 class MaildirService(service.BuildbotService):
     pollinterval = 10  # only used if we don't have DNotify
-    name = 'MaildirService'
+    name = "MaildirService"
 
     def __init__(self, basedir=None):
         super().__init__()
@@ -71,17 +72,16 @@ class MaildirService(service.BuildbotService):
             if dnotify:
                 # we must hold an fd open on the directory, so we can get
                 # notified when it changes.
-                self.dnotify = dnotify.DNotify(self.newdir,
-                                               self.dnotify_callback,
-                                               [dnotify.DNotify.DN_CREATE])
+                self.dnotify = dnotify.DNotify(
+                    self.newdir, self.dnotify_callback, [dnotify.DNotify.DN_CREATE]
+                )
         except (IOError, OverflowError):
             # IOError is probably linux<2.4.19, which doesn't support
             # dnotify. OverflowError will occur on some 64-bit machines
             # because of a python bug
             log.msg("DNotify failed, falling back to polling")
         if not self.dnotify:
-            self.timerService = internet.TimerService(
-                self.pollinterval, self.poll)
+            self.timerService = internet.TimerService(self.pollinterval, self.poll)
             yield self.timerService.setServiceParent(self)
         self.poll()
         yield super().startService()
@@ -135,17 +135,15 @@ class MaildirService(service.BuildbotService):
             # open the file before moving it, because I'm afraid that once
             # it's in cur/, someone might delete it at any moment
             path = os.path.join(self.newdir, filename)
-            f = open(path, "r", encoding='utf-8')
-            os.rename(os.path.join(self.newdir, filename),
-                      os.path.join(self.curdir, filename))
+            f = open(path, "r", encoding="utf-8")
+            os.rename(os.path.join(self.newdir, filename), os.path.join(self.curdir, filename))
         elif runtime.platformType == "win32":
             # do this backwards under windows, because you can't move a file
             # that somebody is holding open. This was causing a Permission
             # Denied error on bear's win32-twisted1.3 worker.
-            os.rename(os.path.join(self.newdir, filename),
-                      os.path.join(self.curdir, filename))
+            os.rename(os.path.join(self.newdir, filename), os.path.join(self.curdir, filename))
             path = os.path.join(self.curdir, filename)
-            f = open(path, "r", encoding='utf-8')  # noqa pylint: disable=consider-using-with
+            f = open(path, "r", encoding="utf-8")  # noqa pylint: disable=consider-using-with
 
         return f
 

@@ -25,23 +25,22 @@ from buildbot.util import bytes2unicode
 class Object(Row):
     table = "objects"
 
-    id_column = 'id'
+    id_column = "id"
 
-    def __init__(self, id=None, name='nam', class_name='cls'):
+    def __init__(self, id=None, name="nam", class_name="cls"):
         super().__init__(id=id, name=name, class_name=class_name)
 
 
 class ObjectState(Row):
     table = "object_state"
 
-    required_columns = ('objectid', )
+    required_columns = ("objectid",)
 
-    def __init__(self, objectid=None, name='nam', value_json='{}'):
+    def __init__(self, objectid=None, name="nam", value_json="{}"):
         super().__init__(objectid=objectid, name=name, value_json=value_json)
 
 
 class FakeStateComponent(FakeDBComponent):
-
     def setUp(self):
         self.objects = {}
         self.states = {}
@@ -101,8 +100,7 @@ class FakeStateComponent(FakeDBComponent):
         else:
             id = self.objects[state_key] = self._newId()
 
-        self.states[id] = dict((k, json.dumps(v))
-                               for k, v in kwargs.items())
+        self.states[id] = dict((k, json.dumps(v)) for k, v in kwargs.items())
         return id
 
     # assertions
@@ -115,13 +113,11 @@ class FakeStateComponent(FakeDBComponent):
             self.t.assertFalse(k in state, f"{k} in {state}")
         for k, v in kwargs.items():
             self.t.assertIn(k, state)
-            self.t.assertEqual(json.loads(state[k]), v,
-                               f"state is {repr(state)}")
+            self.t.assertEqual(json.loads(state[k]), v, f"state is {repr(state)}")
 
     def assertStateByClass(self, name, class_name, **kwargs):
         objectid = self.objects[(name, class_name)]
         state = self.states[objectid]
         for k, v in kwargs.items():
             self.t.assertIn(k, state)
-            self.t.assertEqual(json.loads(state[k]), v,
-                               f"state is {repr(state)}")
+            self.t.assertEqual(json.loads(state[k]), v, f"state is {repr(state)}")

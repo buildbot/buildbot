@@ -44,11 +44,11 @@ def get_python_module_contents(package_name):
         for dir_entry in dir_entries:
             filename = dir_entry.name
 
-            if filename.startswith('__'):
+            if filename.startswith("__"):
                 continue
-            next_package_name = '.'.join((package_name, filename.partition('.')[0]))
+            next_package_name = ".".join((package_name, filename.partition(".")[0]))
 
-            if dir_entry.is_file() and filename.endswith('.py'):
+            if dir_entry.is_file() and filename.endswith(".py"):
                 result.add(next_package_name)
 
             if dir_entry.is_dir():
@@ -63,164 +63,170 @@ def get_python_module_contents(package_name):
 class TestSetupPyEntryPoints(unittest.TestCase):
     def test_changes(self):
         known_not_exported = {
-            'buildbot.changes.gerritchangesource.GerritChangeSourceBase',
-            'buildbot.changes.base.ReconfigurablePollingChangeSource',
-            'buildbot.changes.base.PollingChangeSource',
-            'buildbot.changes.base.ChangeSource',
+            "buildbot.changes.gerritchangesource.GerritChangeSourceBase",
+            "buildbot.changes.base.ReconfigurablePollingChangeSource",
+            "buildbot.changes.base.PollingChangeSource",
+            "buildbot.changes.base.ChangeSource",
         }
-        self.verify_plugins_registered('changes', 'buildbot.changes', IChangeSource,
-                                       known_not_exported)
+        self.verify_plugins_registered(
+            "changes", "buildbot.changes", IChangeSource, known_not_exported
+        )
 
     def test_schedulers(self):
         known_not_exported = {
-            'buildbot.schedulers.basic.BaseBasicScheduler',
-            'buildbot.schedulers.timed.Timed',
-            'buildbot.schedulers.trysched.TryBase',
-            'buildbot.schedulers.base.BaseScheduler',
-            'buildbot.schedulers.timed.NightlyBase',
-            'buildbot.schedulers.basic.Scheduler',
+            "buildbot.schedulers.basic.BaseBasicScheduler",
+            "buildbot.schedulers.timed.Timed",
+            "buildbot.schedulers.trysched.TryBase",
+            "buildbot.schedulers.base.BaseScheduler",
+            "buildbot.schedulers.timed.NightlyBase",
+            "buildbot.schedulers.basic.Scheduler",
         }
-        self.verify_plugins_registered('schedulers', 'buildbot.schedulers', IScheduler,
-                                       known_not_exported)
+        self.verify_plugins_registered(
+            "schedulers", "buildbot.schedulers", IScheduler, known_not_exported
+        )
 
     def test_steps(self):
         known_not_exported = {
-            'buildbot.steps.download_secret_to_worker.RemoveWorkerFileSecret',
-            'buildbot.steps.source.base.Source',
-            'buildbot.steps.download_secret_to_worker.DownloadSecretsToWorker',
-            'buildbot.steps.shell.SetProperty',
-            'buildbot.steps.worker.WorkerBuildStep',
-            'buildbot.steps.vstudio.VisualStudio',
+            "buildbot.steps.download_secret_to_worker.RemoveWorkerFileSecret",
+            "buildbot.steps.source.base.Source",
+            "buildbot.steps.download_secret_to_worker.DownloadSecretsToWorker",
+            "buildbot.steps.shell.SetProperty",
+            "buildbot.steps.worker.WorkerBuildStep",
+            "buildbot.steps.vstudio.VisualStudio",
         }
-        self.verify_plugins_registered('steps', 'buildbot.steps', IBuildStep, known_not_exported)
+        self.verify_plugins_registered("steps", "buildbot.steps", IBuildStep, known_not_exported)
 
     def test_util(self):
         # work around Twisted bug 9384.
-        if pkg_resources.parse_version(twisted.__version__) < pkg_resources.parse_version("18.9.0"):
-            raise SkipTest('manhole.py can not be imported on old twisted and new python')
+        if pkg_resources.parse_version(twisted.__version__) < pkg_resources.parse_version(
+            "18.9.0"
+        ):
+            raise SkipTest("manhole.py can not be imported on old twisted and new python")
 
         known_not_exported = {
-            'buildbot.util._notifier.Notifier',
-            'buildbot.util.backoff.ExponentialBackoffEngineAsync',
-            'buildbot.util.backoff.ExponentialBackoffEngineSync',
-            'buildbot.util.backoff.BackoffTimeoutExceededError',
-            'buildbot.util.backoff.ExponentialBackoffEngine',
-            'buildbot.util.bbcollections.KeyedSets',
-            'buildbot.util.codebase.AbsoluteSourceStampsMixin',
-            'buildbot.util.config.ConfiguredMixin',
-            'buildbot.util.croniter.croniter',
-            'buildbot.util.debounce.Debouncer',
-            'buildbot.util.deferwaiter.DeferWaiter',
-            'buildbot.util.deferwaiter.RepeatedActionHandler',
-            'buildbot.util.git.GitMixin',
-            'buildbot.util.git.GitStepMixin',
-            'buildbot.util.giturlparse.GitUrl',
-            'buildbot.util.httpclientservice.HTTPClientService',
-            'buildbot.util.httpclientservice.TxRequestsResponseWrapper',
-            'buildbot.util.kubeclientservice.KubeClientService',
-            'buildbot.util.kubeclientservice.KubeConfigLoaderBase',
-            'buildbot.util.kubeclientservice.KubeError',
-            'buildbot.util.latent.CompatibleLatentWorkerMixin',
-            'buildbot.util.lineboundaries.LineBoundaryFinder',
-            'buildbot.util.lru.AsyncLRUCache',
-            'buildbot.util.lru.LRUCache',
-            'buildbot.util.maildir.MaildirService',
-            'buildbot.util.maildir.NoSuchMaildir',
-            'buildbot.util.netstrings.NetstringParser',
-            'buildbot.util.netstrings.NullAddress',
-            'buildbot.util.netstrings.NullTransport',
-            'buildbot.util.pathmatch.Matcher',
-            'buildbot.util.poll.Poller',
-            'buildbot.util.private_tempdir.PrivateTemporaryDirectory',
-            'buildbot.util.protocol.LineBuffer',
-            'buildbot.util.protocol.LineProcessProtocol',
-            'buildbot.util.pullrequest.PullRequestMixin',
-            'buildbot.util.queue.ConnectableThreadQueue',
-            'buildbot.util.queue.UndoableQueue',
-            'buildbot.util.raml.RamlLoader',
-            'buildbot.util.raml.RamlSpec',
-            'buildbot.util.runprocess.RunProcessPP',
-            'buildbot.util.runprocess.RunProcess',
-            'buildbot.util.sautils.InsertFromSelect',
-            'buildbot.util.service.AsyncMultiService',
-            'buildbot.util.service.AsyncService',
-            'buildbot.util.service.BuildbotService',
-            'buildbot.util.service.BuildbotServiceManager',
-            'buildbot.util.service.ClusteredBuildbotService',
-            'buildbot.util.service.MasterService',
-            'buildbot.util.service.ReconfigurableServiceMixin',
-            'buildbot.util.service.SharedService',
-            'buildbot.util.state.StateMixin',
-            'buildbot.util.subscription.Subscription',
-            'buildbot.util.subscription.SubscriptionPoint',
-            'buildbot.util.test_result_submitter.TestResultSubmitter',
+            "buildbot.util._notifier.Notifier",
+            "buildbot.util.backoff.ExponentialBackoffEngineAsync",
+            "buildbot.util.backoff.ExponentialBackoffEngineSync",
+            "buildbot.util.backoff.BackoffTimeoutExceededError",
+            "buildbot.util.backoff.ExponentialBackoffEngine",
+            "buildbot.util.bbcollections.KeyedSets",
+            "buildbot.util.codebase.AbsoluteSourceStampsMixin",
+            "buildbot.util.config.ConfiguredMixin",
+            "buildbot.util.croniter.croniter",
+            "buildbot.util.debounce.Debouncer",
+            "buildbot.util.deferwaiter.DeferWaiter",
+            "buildbot.util.deferwaiter.RepeatedActionHandler",
+            "buildbot.util.git.GitMixin",
+            "buildbot.util.git.GitStepMixin",
+            "buildbot.util.giturlparse.GitUrl",
+            "buildbot.util.httpclientservice.HTTPClientService",
+            "buildbot.util.httpclientservice.TxRequestsResponseWrapper",
+            "buildbot.util.kubeclientservice.KubeClientService",
+            "buildbot.util.kubeclientservice.KubeConfigLoaderBase",
+            "buildbot.util.kubeclientservice.KubeError",
+            "buildbot.util.latent.CompatibleLatentWorkerMixin",
+            "buildbot.util.lineboundaries.LineBoundaryFinder",
+            "buildbot.util.lru.AsyncLRUCache",
+            "buildbot.util.lru.LRUCache",
+            "buildbot.util.maildir.MaildirService",
+            "buildbot.util.maildir.NoSuchMaildir",
+            "buildbot.util.netstrings.NetstringParser",
+            "buildbot.util.netstrings.NullAddress",
+            "buildbot.util.netstrings.NullTransport",
+            "buildbot.util.pathmatch.Matcher",
+            "buildbot.util.poll.Poller",
+            "buildbot.util.private_tempdir.PrivateTemporaryDirectory",
+            "buildbot.util.protocol.LineBuffer",
+            "buildbot.util.protocol.LineProcessProtocol",
+            "buildbot.util.pullrequest.PullRequestMixin",
+            "buildbot.util.queue.ConnectableThreadQueue",
+            "buildbot.util.queue.UndoableQueue",
+            "buildbot.util.raml.RamlLoader",
+            "buildbot.util.raml.RamlSpec",
+            "buildbot.util.runprocess.RunProcessPP",
+            "buildbot.util.runprocess.RunProcess",
+            "buildbot.util.sautils.InsertFromSelect",
+            "buildbot.util.service.AsyncMultiService",
+            "buildbot.util.service.AsyncService",
+            "buildbot.util.service.BuildbotService",
+            "buildbot.util.service.BuildbotServiceManager",
+            "buildbot.util.service.ClusteredBuildbotService",
+            "buildbot.util.service.MasterService",
+            "buildbot.util.service.ReconfigurableServiceMixin",
+            "buildbot.util.service.SharedService",
+            "buildbot.util.state.StateMixin",
+            "buildbot.util.subscription.Subscription",
+            "buildbot.util.subscription.SubscriptionPoint",
+            "buildbot.util.test_result_submitter.TestResultSubmitter",
         }
-        self.verify_plugins_registered('util', 'buildbot.util', None, known_not_exported)
+        self.verify_plugins_registered("util", "buildbot.util", None, known_not_exported)
 
     def test_reporters(self):
         known_not_exported = {
-            'buildbot.reporters.base.ReporterBase',
-            'buildbot.reporters.generators.utils.BuildStatusGeneratorMixin',
-            'buildbot.reporters.gerrit.DEFAULT_REVIEW',
-            'buildbot.reporters.gerrit.DEFAULT_SUMMARY',
-            'buildbot.reporters.irc.IRCChannel',
-            'buildbot.reporters.irc.IRCContact',
-            'buildbot.reporters.irc.IrcStatusBot',
-            'buildbot.reporters.irc.IrcStatusFactory',
-            'buildbot.reporters.irc.UsageError',
-            'buildbot.reporters.mail.Domain',
-            'buildbot.reporters.message.MessageFormatterBase',
-            'buildbot.reporters.message.MessageFormatterBaseJinja',
-            'buildbot.reporters.telegram.TelegramChannel',
-            'buildbot.reporters.telegram.TelegramContact',
-            'buildbot.reporters.telegram.TelegramPollingBot',
-            'buildbot.reporters.telegram.TelegramStatusBot',
-            'buildbot.reporters.telegram.TelegramWebhookBot',
-            'buildbot.reporters.words.Channel',
-            'buildbot.reporters.words.Contact',
-            'buildbot.reporters.words.ForceOptions',
-            'buildbot.reporters.words.StatusBot',
-            'buildbot.reporters.words.ThrottledClientFactory',
-            'buildbot.reporters.words.UsageError',
-            'buildbot.reporters.words.WebhookResource',
+            "buildbot.reporters.base.ReporterBase",
+            "buildbot.reporters.generators.utils.BuildStatusGeneratorMixin",
+            "buildbot.reporters.gerrit.DEFAULT_REVIEW",
+            "buildbot.reporters.gerrit.DEFAULT_SUMMARY",
+            "buildbot.reporters.irc.IRCChannel",
+            "buildbot.reporters.irc.IRCContact",
+            "buildbot.reporters.irc.IrcStatusBot",
+            "buildbot.reporters.irc.IrcStatusFactory",
+            "buildbot.reporters.irc.UsageError",
+            "buildbot.reporters.mail.Domain",
+            "buildbot.reporters.message.MessageFormatterBase",
+            "buildbot.reporters.message.MessageFormatterBaseJinja",
+            "buildbot.reporters.telegram.TelegramChannel",
+            "buildbot.reporters.telegram.TelegramContact",
+            "buildbot.reporters.telegram.TelegramPollingBot",
+            "buildbot.reporters.telegram.TelegramStatusBot",
+            "buildbot.reporters.telegram.TelegramWebhookBot",
+            "buildbot.reporters.words.Channel",
+            "buildbot.reporters.words.Contact",
+            "buildbot.reporters.words.ForceOptions",
+            "buildbot.reporters.words.StatusBot",
+            "buildbot.reporters.words.ThrottledClientFactory",
+            "buildbot.reporters.words.UsageError",
+            "buildbot.reporters.words.WebhookResource",
         }
-        self.verify_plugins_registered('reporters', 'buildbot.reporters', None, known_not_exported)
+        self.verify_plugins_registered("reporters", "buildbot.reporters", None, known_not_exported)
 
     def test_secrets(self):
         known_not_exported = {
-            'buildbot.secrets.manager.SecretManager',
-            'buildbot.secrets.providers.base.SecretProviderBase',
-            'buildbot.secrets.secret.SecretDetails',
-            'buildbot.secrets.providers.vault_hvac.VaultAuthenticator',
+            "buildbot.secrets.manager.SecretManager",
+            "buildbot.secrets.providers.base.SecretProviderBase",
+            "buildbot.secrets.secret.SecretDetails",
+            "buildbot.secrets.providers.vault_hvac.VaultAuthenticator",
         }
-        self.verify_plugins_registered('secrets', 'buildbot.secrets', None, known_not_exported)
+        self.verify_plugins_registered("secrets", "buildbot.secrets", None, known_not_exported)
 
     def test_webhooks(self):
         # in the case of webhooks the entry points list modules, not classes, so
         # verify_plugins_registered won't work. For now let's ignore this edge case
-        get_plugins('webhooks', None, load_now=True)
+        get_plugins("webhooks", None, load_now=True)
 
     def test_workers(self):
         known_not_exported = {
-            'buildbot.worker.upcloud.UpcloudLatentWorker',
-            'buildbot.worker.base.AbstractWorker',
-            'buildbot.worker.latent.AbstractLatentWorker',
-            'buildbot.worker.latent.LocalLatentWorker',
-            'buildbot.worker.marathon.MarathonLatentWorker',
-            'buildbot.worker.docker.DockerBaseWorker',
+            "buildbot.worker.upcloud.UpcloudLatentWorker",
+            "buildbot.worker.base.AbstractWorker",
+            "buildbot.worker.latent.AbstractLatentWorker",
+            "buildbot.worker.latent.LocalLatentWorker",
+            "buildbot.worker.marathon.MarathonLatentWorker",
+            "buildbot.worker.docker.DockerBaseWorker",
         }
-        self.verify_plugins_registered('worker', 'buildbot.worker', IWorker, known_not_exported)
+        self.verify_plugins_registered("worker", "buildbot.worker", IWorker, known_not_exported)
 
-    def verify_plugins_registered(self, plugin_type, module_name, interface,
-                                  known_not_exported=None):
+    def verify_plugins_registered(
+        self, plugin_type, module_name, interface, known_not_exported=None
+    ):
         # This will verify whether we can load plugins, i.e. whether the entry points are valid.
         plugins = get_plugins(plugin_type, interface, load_now=True)
 
         # Now verify that are no unregistered plugins left.
         existing_classes = self.get_existing_classes(module_name, interface)
 
-        exported_classes = {f'{plugins._get_entry(name)._entry.module_name}.{name}'
-                            for name in plugins.names}
+        exported_classes = {
+            f"{plugins._get_entry(name)._entry.module_name}.{name}" for name in plugins.names
+        }
         if known_not_exported is None:
             known_not_exported = set()
 
@@ -244,10 +250,10 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             for existing_module in existing_modules:
                 module = importlib.import_module(existing_module)
                 for name, obj in inspect.getmembers(module):
-                    if name.startswith('_'):
+                    if name.startswith("_"):
                         continue
                     if inspect.isclass(obj) and obj.__module__ == existing_module:
                         if interface is not None and not self.class_provides_iface(interface, obj):
                             continue
-                        existing_classes.add(f'{existing_module}.{name}')
+                        existing_classes.add(f"{existing_module}.{name}")
         return existing_classes

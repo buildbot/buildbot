@@ -25,7 +25,7 @@ class SourceCommandTestMixin(command.CommandTestMixin):
     Support for testing Source Commands; an extension of CommandTestMixin
     """
 
-    def make_command(self, cmdclass, args, makedirs=False, initial_sourcedata=''):
+    def make_command(self, cmdclass, args, makedirs=False, initial_sourcedata=""):
         """
         Same as the parent class method, but this also adds some source-specific
         patches:
@@ -47,11 +47,13 @@ class SourceCommandTestMixin(command.CommandTestMixin):
             if self.sourcedata is None:
                 raise IOError("File not found")
             return self.sourcedata
+
         cmd.readSourcedata = readSourcedata
 
         def writeSourcedata(res):
             self.sourcedata = cmd.sourcedata
             return res
+
         cmd.writeSourcedata = writeSourcedata
 
     def check_sourcedata(self, _, expected_sourcedata):

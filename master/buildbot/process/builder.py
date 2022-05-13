@@ -34,16 +34,15 @@ from buildbot.util import service as util_service
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
-    if 'workername' in breq.properties:
-        workername = breq.properties['workername']
+    if "workername" in breq.properties:
+        workername = breq.properties["workername"]
         if isinstance(workername, str):
             return workername == workerforbuilder.worker.workername
 
     return True
 
 
-class Builder(util_service.ReconfigurableServiceMixin,
-              service.MultiService):
+class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
 
     # reconfigure builders before workers
     reconfig_priority = 196
@@ -98,15 +97,14 @@ class Builder(util_service.ReconfigurableServiceMixin,
         builderid = yield self.getBuilderId()
 
         if self._has_updated_config_info(old_config, builder_config):
-            yield self.master.data.updates.updateBuilderInfo(builderid,
-                                                             builder_config.description,
-                                                             builder_config.tags)
+            yield self.master.data.updates.updateBuilderInfo(
+                builderid, builder_config.description, builder_config.tags
+            )
 
         # if we have any workers attached which are no longer configured,
         # drop them.
         new_workernames = set(builder_config.workernames)
-        self.workers = [w for w in self.workers
-                        if w.worker.workername in new_workernames]
+        self.workers = [w for w in self.workers if w.worker.workername in new_workernames]
 
     def _has_updated_config_info(self, old_config, new_config):
         if old_config is None:
@@ -138,6 +136,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         def keep(builderid):
             self._builderid = builderid
             return builderid
+
         return d
 
     @defer.inlineCallbacks
@@ -149,11 +148,13 @@ class Builder(util_service.ReconfigurableServiceMixin,
         """
         bldrid = yield self.getBuilderId()
         unclaimed = yield self.master.data.get(
-            ('builders', bldrid, 'buildrequests'),
-            [resultspec.Filter('claimed', 'eq', [False])],
-            order=['submitted_at'], limit=1)
+            ("builders", bldrid, "buildrequests"),
+            [resultspec.Filter("claimed", "eq", [False])],
+            order=["submitted_at"],
+            limit=1,
+        )
         if unclaimed:
-            return unclaimed[0]['submitted_at']
+            return unclaimed[0]["submitted_at"]
         return None
 
     @defer.inlineCallbacks
@@ -165,11 +166,13 @@ class Builder(util_service.ReconfigurableServiceMixin,
         """
         bldrid = yield self.getBuilderId()
         completed = yield self.master.data.get(
-            ('builders', bldrid, 'buildrequests'),
-            [resultspec.Filter('complete', 'eq', [True])],
-            order=['-complete_at'], limit=1)
+            ("builders", bldrid, "buildrequests"),
+            [resultspec.Filter("complete", "eq", [True])],
+            order=["-complete_at"],
+            limit=1,
+        )
         if completed:
-            return completed[0]['complete_at']
+            return completed[0]["complete_at"]
         else:
             return None
 
@@ -235,7 +238,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             # already log.err'ed by WorkerForBuilder._attachFailure
             # TODO: remove from self.workers (except that detached() should get
             #       run first, right?)
-            log.err(e, 'worker failed to attach')
+            log.err(e, "worker failed to attach")
             return None
 
     def _find_wfb_by_worker(self, worker):
@@ -248,9 +251,11 @@ class Builder(util_service.ReconfigurableServiceMixin,
         """This is called when the connection to the bot is lost."""
         wfb = self._find_wfb_by_worker(worker)
         if wfb is None:
-            log.msg(f"WEIRD: Builder.detached({worker}) ({worker.workername})"
-                    f" not in attaching_workers({self.attaching_workers})"
-                    f" or workers({self.workers})")
+            log.msg(
+                f"WEIRD: Builder.detached({worker}) ({worker.workername})"
+                f" not in attaching_workers({self.attaching_workers})"
+                f" or workers({self.workers})"
+            )
             return
 
         if wfb in self.attaching_workers:
@@ -279,8 +284,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
             if props is not None:
                 return props
             props = Properties()
-            Build.setupPropertiesKnownBeforeBuildStarts(props, [buildrequest],
-                                                        self, workerforbuilder)
+            Build.setupPropertiesKnownBeforeBuildStarts(
+                props, [buildrequest], self, workerforbuilder
+            )
             return props
 
         if worker.builds_may_be_incompatible:
@@ -306,8 +312,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 return can_start
 
         if callable(self.config.canStartBuild):
-            can_start = yield self.config.canStartBuild(self, workerforbuilder,
-                                                        buildrequest)
+            can_start = yield self.config.canStartBuild(self, workerforbuilder, buildrequest)
         return can_start
 
     @defer.inlineCallbacks
@@ -321,7 +326,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         props.build = build
 
         Build.setupPropertiesKnownBeforeBuildStarts(
-            props, build.requests, build.builder, workerforbuilder)
+            props, build.requests, build.builder, workerforbuilder
+        )
 
         log.msg(f"starting build {build} using worker {workerforbuilder}")
 
@@ -349,8 +355,11 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # http://trac.buildbot.net/ticket/2428).
         d = defer.maybeDeferred(build.startBuild, workerforbuilder)
         # this shouldn't happen. if it does, the worker will be wedged
-        d.addErrback(log.err, 'from a running build; this is a '
-                     'serious error - please file a bug at http://buildbot.net')
+        d.addErrback(
+            log.err,
+            "from a running build; this is a "
+            "serious error - please file a bug at http://buildbot.net",
+        )
 
         return True
 
@@ -358,15 +367,15 @@ class Builder(util_service.ReconfigurableServiceMixin,
         props.setProperty("buildername", self.name, "Builder")
         if self.config.properties:
             for propertyname in self.config.properties:
-                props.setProperty(propertyname,
-                                  self.config.properties[propertyname],
-                                  "Builder")
+                props.setProperty(propertyname, self.config.properties[propertyname], "Builder")
         if self.config.defaultProperties:
             for propertyname in self.config.defaultProperties:
                 if propertyname not in props:
-                    props.setProperty(propertyname,
-                                      self.config.defaultProperties[propertyname],
-                                      "Builder")
+                    props.setProperty(
+                        propertyname,
+                        self.config.defaultProperties[propertyname],
+                        "Builder",
+                    )
 
     def buildFinished(self, build, wfb):
         """This is called when the Build has finished (either success or
@@ -382,17 +391,18 @@ class Builder(util_service.ReconfigurableServiceMixin,
         self.building.remove(build)
         if results == RETRY:
             d = self._resubmit_buildreqs(build)
-            d.addErrback(log.err, 'while resubmitting a build request')
+            d.addErrback(log.err, "while resubmitting a build request")
         else:
             complete_at_epoch = self.master.reactor.seconds()
             complete_at = epoch2datetime(complete_at_epoch)
             brids = [br.id for br in build.requests]
 
             d = self.master.data.updates.completeBuildRequests(
-                brids, results, complete_at=complete_at)
+                brids, results, complete_at=complete_at
+            )
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
-            d.addErrback(log.err, 'while marking build requests as completed')
+            d.addErrback(log.err, "while marking build requests as completed")
 
         if wfb.worker:
             wfb.worker.releaseLocks()
@@ -405,6 +415,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         def notify(_):
             pass  # XXX method does not exist
             # self._msg_buildrequests_unclaimed(build.requests)
+
         return d
 
     # Build Creation

@@ -38,7 +38,7 @@ class FakeConnection:
         if self._next_command_number in self._commands_numbers_to_interrupt:
             self._waiting_for_interrupt = True
 
-            yield self.step.interrupt('interrupt reason')
+            yield self.step.interrupt("interrupt reason")
 
             if self._waiting_for_interrupt:
                 raise RuntimeError("Interrupted step, but command was not interrupted")

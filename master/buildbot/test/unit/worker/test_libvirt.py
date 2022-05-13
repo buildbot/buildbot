@@ -38,8 +38,13 @@ from buildbot.worker import libvirt as libvirtworker
 # threadpool and access it through a class instance
 class TestThreadWithQueue(libvirtworker.ThreadWithQueue):
     def __init__(self, pool, uri):
-        super().__init__(pool, uri, connect_backoff_start_seconds=0, connect_backoff_multiplier=0,
-                         connect_backoff_max_wait_seconds=0)
+        super().__init__(
+            pool,
+            uri,
+            connect_backoff_start_seconds=0,
+            connect_backoff_multiplier=0,
+            connect_backoff_max_wait_seconds=0,
+        )
 
     def libvirt_open(self):
         return self.pool.case.libvirt_open(self.uri)
@@ -74,7 +79,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
 
     def libvirt_open(self, uri):
         if uri not in self.connections:
-            raise Exception('Could not find test connection')
+            raise Exception("Could not find test connection")
         return self.connections[uri]
 
     def add_fake_conn(self, uri):
@@ -96,33 +101,43 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
     def test_constructor_nolibvirt(self):
         self.patch(libvirtworker, "libvirt", None)
         with self.assertRaises(config.ConfigErrors):
-            self.create_worker('bot', 'pass', None, 'path', 'path')
+            self.create_worker("bot", "pass", None, "path", "path")
 
     def test_deprecated_connection(self):
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='connection argument has been deprecated'):
-            self.create_worker('bot', 'pass', libvirtworker.Connection('test'), 'path', 'path')
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            message_pattern="connection argument has been deprecated",
+        ):
+            self.create_worker("bot", "pass", libvirtworker.Connection("test"), "path", "path")
 
     def test_deprecated_connection_and_uri(self):
         with self.assertRaises(config.ConfigErrors):
-            with assertProducesWarnings(DeprecatedApiWarning,
-                                        message_pattern='connection argument has been deprecated'):
-                self.create_worker('bot', 'pass', libvirtworker.Connection('test'), 'path', 'path',
-                                   uri='custom')
+            with assertProducesWarnings(
+                DeprecatedApiWarning,
+                message_pattern="connection argument has been deprecated",
+            ):
+                self.create_worker(
+                    "bot",
+                    "pass",
+                    libvirtworker.Connection("test"),
+                    "path",
+                    "path",
+                    uri="custom",
+                )
 
     @defer.inlineCallbacks
     def test_get_domain_id(self):
-        conn = self.add_fake_conn('fake:///conn')
-        conn.fake_add('bot', 14)
+        conn = self.add_fake_conn("fake:///conn")
+        conn.fake_add("bot", 14)
 
-        bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o', uri='fake:///conn')
+        bs = self.create_worker("bot", "pass", hd_image="p", base_image="o", uri="fake:///conn")
 
         id = yield bs._get_domain_id()
         self.assertEqual(id, 14)
 
     @defer.inlineCallbacks
     def test_prepare_base_image_none(self):
-        bs = self.create_worker('bot', 'pass', hd_image='p', base_image=None)
+        bs = self.create_worker("bot", "pass", hd_image="p", base_image=None)
         yield bs._prepare_base_image()
 
         self.assert_all_commands_ran()
@@ -133,18 +148,16 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
             ExpectMasterShell(["qemu-img", "create", "-b", "o", "-f", "qcow2", "p"])
         )
 
-        bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
+        bs = self.create_worker("bot", "pass", hd_image="p", base_image="o")
         yield bs._prepare_base_image()
 
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_prepare_base_image_full(self):
-        self.expect_commands(
-            ExpectMasterShell(["cp", "o", "p"])
-        )
+        self.expect_commands(ExpectMasterShell(["cp", "o", "p"]))
 
-        bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
+        bs = self.create_worker("bot", "pass", hd_image="p", base_image="o")
         bs.cheap_copy = False
         yield bs._prepare_base_image()
 
@@ -152,12 +165,9 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
 
     @defer.inlineCallbacks
     def test_prepare_base_image_fail(self):
-        self.expect_commands(
-            ExpectMasterShell(["cp", "o", "p"])
-            .exit(1)
-        )
+        self.expect_commands(ExpectMasterShell(["cp", "o", "p"]).exit(1))
 
-        bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
+        bs = self.create_worker("bot", "pass", hd_image="p", base_image="o")
         bs.cheap_copy = False
         with self.assertRaises(LatentWorkerFailedToSubstantiate):
             yield bs._prepare_base_image()
@@ -165,135 +175,150 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
-    def _test_stop_instance(self, graceful, fast, expected_destroy,
-                            expected_shutdown, shutdown_side_effect=None):
+    def _test_stop_instance(
+        self,
+        graceful,
+        fast,
+        expected_destroy,
+        expected_shutdown,
+        shutdown_side_effect=None,
+    ):
         domain = mock.Mock()
         domain.ID.side_effect = lambda: 14
         domain.shutdown.side_effect = shutdown_side_effect
 
-        conn = self.add_fake_conn('fake:///conn')
-        conn.fake_add_domain('name', domain)
+        conn = self.add_fake_conn("fake:///conn")
+        conn.fake_add_domain("name", domain)
 
-        bs = self.create_worker('name', 'p', hd_image='p', base_image='o',
-                                uri='fake:///conn', xml='<xml/>')
+        bs = self.create_worker(
+            "name", "p", hd_image="p", base_image="o", uri="fake:///conn", xml="<xml/>"
+        )
         bs.graceful_shutdown = graceful
-        with mock.patch('os.remove') as remove_mock:
+        with mock.patch("os.remove") as remove_mock:
             yield bs.stop_instance(fast=fast)
 
         self.assertEqual(int(expected_destroy), domain.destroy.call_count)
         self.assertEqual(int(expected_shutdown), domain.shutdown.call_count)
-        remove_mock.assert_called_once_with('p')
+        remove_mock.assert_called_once_with("p")
 
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_stop_instance_destroy(self):
-        yield self._test_stop_instance(graceful=False,
-                                       fast=False,
-                                       expected_destroy=True,
-                                       expected_shutdown=False)
+        yield self._test_stop_instance(
+            graceful=False, fast=False, expected_destroy=True, expected_shutdown=False
+        )
 
     @defer.inlineCallbacks
     def test_stop_instance_shutdown(self):
-        yield self._test_stop_instance(graceful=True,
-                                       fast=False,
-                                       expected_destroy=False,
-                                       expected_shutdown=True)
+        yield self._test_stop_instance(
+            graceful=True, fast=False, expected_destroy=False, expected_shutdown=True
+        )
 
     @defer.inlineCallbacks
     def test_stop_instance_shutdown_fails(self):
-        yield self._test_stop_instance(graceful=True,
-                                       fast=False,
-                                       expected_destroy=True,
-                                       expected_shutdown=True,
-                                       shutdown_side_effect=TestException)
+        yield self._test_stop_instance(
+            graceful=True,
+            fast=False,
+            expected_destroy=True,
+            expected_shutdown=True,
+            shutdown_side_effect=TestException,
+        )
 
     @defer.inlineCallbacks
     def test_start_instance_connection_fails(self):
-        bs = self.create_worker('b', 'p', hd_image='p', base_image='o', uri='unknown')
+        bs = self.create_worker("b", "p", hd_image="p", base_image="o", uri="unknown")
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
         self.patch(bs, "_prepare_base_image", prep)
 
-        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'Did not receive connection'):
+        with self.assertRaisesRegex(
+            LatentWorkerFailedToSubstantiate, "Did not receive connection"
+        ):
             yield bs.start_instance(mock.Mock())
 
         self.assertFalse(prep.called)
 
     @defer.inlineCallbacks
     def test_start_instance_already_active(self):
-        conn = self.add_fake_conn('fake:///conn')
-        conn.fake_add('bot', 14)
+        conn = self.add_fake_conn("fake:///conn")
+        conn.fake_add("bot", 14)
 
-        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn',
-                                xml='<xml/>')
+        bs = self.create_worker(
+            "bot", "p", hd_image="p", base_image="o", uri="fake:///conn", xml="<xml/>"
+        )
 
         prep = mock.Mock()
         self.patch(bs, "_prepare_base_image", prep)
 
-        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'it\'s already active'):
+        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, "it's already active"):
             yield bs.start_instance(mock.Mock())
 
         self.assertFalse(prep.called)
 
     @defer.inlineCallbacks
     def test_start_instance_domain_id_error(self):
-        conn = self.add_fake_conn('fake:///conn')
-        domain = conn.fake_add('bot', 14)
+        conn = self.add_fake_conn("fake:///conn")
+        domain = conn.fake_add("bot", 14)
         domain.ID = self.raise_libvirt_error
 
-        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn',
-                                xml='<xml/>')
+        bs = self.create_worker(
+            "bot", "p", hd_image="p", base_image="o", uri="fake:///conn", xml="<xml/>"
+        )
 
         prep = mock.Mock()
         self.patch(bs, "_prepare_base_image", prep)
 
-        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'while retrieving domain ID'):
+        with self.assertRaisesRegex(
+            LatentWorkerFailedToSubstantiate, "while retrieving domain ID"
+        ):
             yield bs.start_instance(mock.Mock())
 
         self.assertFalse(prep.called)
 
     @defer.inlineCallbacks
     def test_start_instance_connection_create_fails(self):
-        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', xml='<xml/>',
-                                uri='fake:///conn')
+        bs = self.create_worker(
+            "bot", "p", hd_image="p", base_image="o", xml="<xml/>", uri="fake:///conn"
+        )
 
-        conn = self.add_fake_conn('fake:///conn')
+        conn = self.add_fake_conn("fake:///conn")
         conn.createXML = lambda _, __: self.raise_libvirt_error()
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
         self.patch(bs, "_prepare_base_image", prep)
 
-        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'error while starting VM'):
+        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, "error while starting VM"):
             yield bs.start_instance(mock.Mock())
 
         self.assertTrue(prep.called)
 
     @defer.inlineCallbacks
     def test_start_instance_domain_create_fails(self):
-        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn')
+        bs = self.create_worker("bot", "p", hd_image="p", base_image="o", uri="fake:///conn")
 
-        conn = self.add_fake_conn('fake:///conn')
-        domain = conn.fake_add('bot', -1)
+        conn = self.add_fake_conn("fake:///conn")
+        domain = conn.fake_add("bot", -1)
         domain.create = self.raise_libvirt_error
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
         self.patch(bs, "_prepare_base_image", prep)
 
-        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'error while starting VM'):
+        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, "error while starting VM"):
             yield bs.start_instance(mock.Mock())
 
         self.assertTrue(prep.called)
 
     @defer.inlineCallbacks
     def test_start_instance_xml(self):
-        self.add_fake_conn('fake:///conn')
+        self.add_fake_conn("fake:///conn")
 
-        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn',
-                                xml='<xml/>')
+        bs = self.create_worker(
+            "bot", "p", hd_image="p", base_image="o", uri="fake:///conn", xml="<xml/>"
+        )
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
@@ -303,17 +328,20 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
 
         self.assertEqual(started, True)
 
-    @parameterized.expand([
-        ('set_fqdn', {'masterFQDN': 'somefqdn'}, 'somefqdn'),
-        ('auto_fqdn', {}, socket.getfqdn()),
-    ])
+    @parameterized.expand(
+        [
+            ("set_fqdn", {"masterFQDN": "somefqdn"}, "somefqdn"),
+            ("auto_fqdn", {}, socket.getfqdn()),
+        ]
+    )
     @defer.inlineCallbacks
     def test_start_instance_existing_domain(self, name, kwargs, expect_fqdn):
-        conn = self.add_fake_conn('fake:///conn')
-        domain = conn.fake_add('bot', -1)
+        conn = self.add_fake_conn("fake:///conn")
+        domain = conn.fake_add("bot", -1)
 
-        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn',
-                                **kwargs)
+        bs = self.create_worker(
+            "bot", "p", hd_image="p", base_image="o", uri="fake:///conn", **kwargs
+        )
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
@@ -322,9 +350,14 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         started = yield bs.start_instance(mock.Mock())
 
         self.assertEqual(started, True)
-        self.assertEqual(domain.metadata, {
-            'buildbot': (libvirtfake.VIR_DOMAIN_METADATA_ELEMENT,
-                         'http://buildbot.net/',
-                         f'<auth username="bot" password="p" master="{expect_fqdn}"/>',
-                         libvirtfake.VIR_DOMAIN_AFFECT_CONFIG)
-        })
+        self.assertEqual(
+            domain.metadata,
+            {
+                "buildbot": (
+                    libvirtfake.VIR_DOMAIN_METADATA_ELEMENT,
+                    "http://buildbot.net/",
+                    f'<auth username="bot" password="p" master="{expect_fqdn}"/>',
+                    libvirtfake.VIR_DOMAIN_AFFECT_CONFIG,
+                )
+            },
+        )

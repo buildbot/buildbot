@@ -22,23 +22,21 @@ from buildbot.test.util import db
 
 
 class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         # as we will open the db twice, we can't use in memory sqlite
-        yield self.setUpRealDatabase(table_names=['objects', 'object_state'], sqlite_memory=False)
+        yield self.setUpRealDatabase(table_names=["objects", "object_state"], sqlite_memory=False)
         yield threads.deferToThread(self.createDbConfig)
 
     def createDbConfig(self):
-        self.dbConfig = dbconfig.DbConfig(
-            {"db_url": self.db_url}, self.basedir)
+        self.dbConfig = dbconfig.DbConfig({"db_url": self.db_url}, self.basedir)
 
     def tearDown(self):
         return self.tearDownRealDatabase()
 
     def test_basic(self):
         def thd():
-            workersInDB = ['foo', 'bar']
+            workersInDB = ["foo", "bar"]
             self.dbConfig.set("workers", workersInDB)
             workers = self.dbConfig.get("workers")
             self.assertEqual(workers, workersInDB)
@@ -74,7 +72,6 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
 
 
 class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         # as we will open the db twice, we can't use in memory sqlite

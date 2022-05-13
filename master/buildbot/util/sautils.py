@@ -29,8 +29,7 @@ from sqlalchemy.sql.expression import Executable
 
 
 class InsertFromSelect(Executable, ClauseElement):
-    _execution_options = \
-        Executable._execution_options.union({'autocommit': True})
+    _execution_options = Executable._execution_options.union({"autocommit": True})
 
     def __init__(self, table, select):
         self.table = table
@@ -39,18 +38,22 @@ class InsertFromSelect(Executable, ClauseElement):
 
 @compiler.compiles(InsertFromSelect)
 def _visit_insert_from_select(element, compiler, **kw):
-    return (f"INSERT INTO {compiler.process(element.table, asfrom=True)} "
-            f"{compiler.process(element.select)}")
+    return (
+        f"INSERT INTO {compiler.process(element.table, asfrom=True)} "
+        f"{compiler.process(element.select)}"
+    )
 
 
 def sa_version():
-    if hasattr(sa, '__version__'):
+    if hasattr(sa, "__version__"):
+
         def tryint(s):
             try:
                 return int(s)
             except (ValueError, TypeError):
                 return -1
-        return tuple(map(tryint, sa.__version__.split('.')))
+
+        return tuple(map(tryint, sa.__version__.split(".")))
     return (0, 0, 0)  # "it's old"
 
 
@@ -58,25 +61,25 @@ def Table(*args, **kwargs):
     """Wrap table creation to add any necessary dialect-specific options"""
     # work around the case where a database was created for us with
     # a non-utf8 character set (mysql's default)
-    kwargs['mysql_character_set'] = 'utf8'
+    kwargs["mysql_character_set"] = "utf8"
     return sa.Table(*args, **kwargs)
 
 
 @contextmanager
 def withoutSqliteForeignKeys(engine, connection=None):
     conn = connection
-    if engine.dialect.name == 'sqlite':
+    if engine.dialect.name == "sqlite":
         if conn is None:
             conn = engine.connect()
         # This context is not re-entrant. Ensure it.
-        assert not getattr(engine, 'fk_disabled', False)
+        assert not getattr(engine, "fk_disabled", False)
         engine.fk_disabled = True
-        conn.execute('pragma foreign_keys=OFF')
+        conn.execute("pragma foreign_keys=OFF")
     try:
         yield
     finally:
-        if engine.dialect.name == 'sqlite':
+        if engine.dialect.name == "sqlite":
             engine.fk_disabled = False
-            conn.execute('pragma foreign_keys=ON')
+            conn.execute("pragma foreign_keys=ON")
             if connection is None:
                 conn.close()

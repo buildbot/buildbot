@@ -50,6 +50,7 @@ class ControllableBuildStep(BuildStep):
     """
     A latent worker that can be controlled by tests.
     """
+
     name = "controllableStep"
 
     def __init__(self, controller, **kwargs):

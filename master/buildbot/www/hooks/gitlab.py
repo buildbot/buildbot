@@ -26,14 +26,12 @@ from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
 
-_HEADER_EVENT = b'X-Gitlab-Event'
-_HEADER_GITLAB_TOKEN = b'X-Gitlab-Token'
+_HEADER_EVENT = b"X-Gitlab-Event"
+_HEADER_GITLAB_TOKEN = b"X-Gitlab-Token"
 
 
 class GitLabHandler(BaseHookHandler):
-
-    def _process_change(self, payload, user, repo, repo_url, event,
-                        codebase=None):
+    def _process_change(self, payload, user, repo, repo_url, event, codebase=None):
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -43,9 +41,9 @@ class GitLabHandler(BaseHookHandler):
                 Hook.
         """
         changes = []
-        refname = payload['ref']
+        refname = payload["ref"]
         # project name from http headers is empty for me, so get it from repository/name
-        project = payload['repository']['name']
+        project = payload["repository"]["name"]
 
         # We only care about regular heads or tags
         match = re.match(r"^refs/(heads|tags)/(.+)$", refname)
@@ -54,41 +52,41 @@ class GitLabHandler(BaseHookHandler):
             return changes
 
         branch = match.group(2)
-        if payload.get('deleted'):
+        if payload.get("deleted"):
             log.msg(f"Branch `{branch}' deleted, ignoring")
             return changes
 
-        for commit in payload['commits']:
-            if not commit.get('distinct', True):
+        for commit in payload["commits"]:
+            if not commit.get("distinct", True):
                 log.msg(f"Commit `{commit['id']}` is a non-distinct commit, ignoring...")
                 continue
 
             files = []
-            for kind in ('added', 'modified', 'removed'):
+            for kind in ("added", "modified", "removed"):
                 files.extend(commit.get(kind, []))
 
-            when_timestamp = dateparse(commit['timestamp'])
+            when_timestamp = dateparse(commit["timestamp"])
 
             log.msg(f"New revision: {commit['id'][:8]}")
 
             change = {
-                'author': f"{commit['author']['name']} <{commit['author']['email']}>",
-                'files': files,
-                'comments': commit['message'],
-                'revision': commit['id'],
-                'when_timestamp': when_timestamp,
-                'branch': branch,
-                'revlink': commit['url'],
-                'repository': repo_url,
-                'project': project,
-                'category': event,
-                'properties': {
-                    'event': event,
+                "author": f"{commit['author']['name']} <{commit['author']['email']}>",
+                "files": files,
+                "comments": commit["message"],
+                "revision": commit["id"],
+                "when_timestamp": when_timestamp,
+                "branch": branch,
+                "revlink": commit["url"],
+                "repository": repo_url,
+                "project": project,
+                "category": event,
+                "properties": {
+                    "event": event,
                 },
             }
 
             if codebase is not None:
-                change['codebase'] = codebase
+                change["codebase"] = codebase
 
             changes.append(change)
 
@@ -103,52 +101,57 @@ class GitLabHandler(BaseHookHandler):
                 Python Object that represents the JSON sent by GitLab Service
                 Hook.
         """
-        attrs = payload['object_attributes']
-        commit = attrs['last_commit']
-        when_timestamp = dateparse(commit['timestamp'])
+        attrs = payload["object_attributes"]
+        commit = attrs["last_commit"]
+        when_timestamp = dateparse(commit["timestamp"])
         # @todo provide and document a way to choose between http and ssh url
-        repo_url = attrs['target']['git_http_url']
+        repo_url = attrs["target"]["git_http_url"]
         # project name from http headers is empty for me, so get it from
         # object_attributes/target/name
-        project = attrs['target']['name']
+        project = attrs["target"]["name"]
 
         # Filter out uninteresting events
-        state = attrs['state']
-        if re.match('^(closed|merged|approved)$', state):
+        state = attrs["state"]
+        if re.match("^(closed|merged|approved)$", state):
             log.msg(f"GitLab MR#{attrs['iid']}: Ignoring because state is {state}")
             return []
-        action = attrs['action']
-        if not re.match('^(open|reopen)$', action) and \
-                not (action == "update" and "oldrev" in attrs):
-            log.msg(f"GitLab MR#{attrs['iid']}: Ignoring because action {action} was not open or "
-                    "reopen or an update that added code")
+        action = attrs["action"]
+        if not re.match("^(open|reopen)$", action) and not (
+            action == "update" and "oldrev" in attrs
+        ):
+            log.msg(
+                f"GitLab MR#{attrs['iid']}: Ignoring because action {action} was not open or "
+                "reopen or an update that added code"
+            )
             return []
 
-        changes = [{
-            'author': f"{commit['author']['name']} <{commit['author']['email']}>",
-            'files': [],  # @todo use rest API
-            'comments': f"MR#{attrs['iid']}: {attrs['title']}\n\n{attrs['description']}",
-            'revision': commit['id'],
-            'when_timestamp': when_timestamp,
-            'branch': attrs['target_branch'],
-            'repository': repo_url,
-            'project': project,
-            'category': event,
-            'revlink': attrs['url'],
-            'properties': {
-                'source_branch': attrs['source_branch'],
-                'source_project_id': attrs['source_project_id'],
-                'source_repository': attrs['source']['git_http_url'],
-                'source_git_ssh_url': attrs['source']['git_ssh_url'],
-                'target_branch': attrs['target_branch'],
-                'target_project_id': attrs['target_project_id'],
-                'target_repository': attrs['target']['git_http_url'],
-                'target_git_ssh_url': attrs['target']['git_ssh_url'],
-                'event': event,
-            },
-        }]
+        changes = [
+            {
+                "author": f"{commit['author']['name']} <{commit['author']['email']}>",
+                "files": [],  # @todo use rest API
+                "comments": f"MR#{attrs['iid']}: {attrs['title']}\n\n{attrs['description']}",
+                "revision": commit["id"],
+                "when_timestamp": when_timestamp,
+                "branch": attrs["target_branch"],
+                "repository": repo_url,
+                "project": project,
+                "category": event,
+                "revlink": attrs["url"],
+                "properties": {
+                    "source_branch": attrs["source_branch"],
+                    "source_project_id": attrs["source_project_id"],
+                    "source_repository": attrs["source"]["git_http_url"],
+                    "source_git_ssh_url": attrs["source"]["git_ssh_url"],
+                    "target_branch": attrs["target_branch"],
+                    "target_project_id": attrs["target_project_id"],
+                    "target_repository": attrs["target"]["git_http_url"],
+                    "target_git_ssh_url": attrs["target"]["git_ssh_url"],
+                    "event": event,
+                },
+            }
+        ]
         if codebase is not None:
-            changes[0]['codebase'] = codebase
+            changes[0]["codebase"] = codebase
         return changes
 
     @inlineCallbacks
@@ -160,7 +163,7 @@ class GitLabHandler(BaseHookHandler):
             request
                 the http request object
         """
-        expected_secret = isinstance(self.options, dict) and self.options.get('secret')
+        expected_secret = isinstance(self.options, dict) and self.options.get("secret")
         if expected_secret:
             received_secret = request.getHeader(_HEADER_GITLAB_TOKEN)
             received_secret = bytes2unicode(received_secret)
@@ -180,23 +183,23 @@ class GitLabHandler(BaseHookHandler):
         event_type = bytes2unicode(event_type)
         # newer version of gitlab have a object_kind parameter,
         # which allows not to use the http header
-        event_type = payload.get('object_kind', event_type)
-        codebase = request.args.get(b'codebase', [None])[0]
+        event_type = payload.get("object_kind", event_type)
+        codebase = request.args.get(b"codebase", [None])[0]
         codebase = bytes2unicode(codebase)
         if event_type in ("push", "tag_push", "Push Hook"):
-            user = payload['user_name']
-            repo = payload['repository']['name']
-            repo_url = payload['repository']['url']
+            user = payload["user_name"]
+            repo = payload["repository"]["name"]
+            repo_url = payload["repository"]["url"]
             changes = self._process_change(
-                payload, user, repo, repo_url, event_type, codebase=codebase)
-        elif event_type == 'merge_request':
-            changes = self._process_merge_request_change(
-                payload, event_type, codebase=codebase)
+                payload, user, repo, repo_url, event_type, codebase=codebase
+            )
+        elif event_type == "merge_request":
+            changes = self._process_merge_request_change(payload, event_type, codebase=codebase)
         else:
             changes = []
         if changes:
             log.msg(f"Received {len(changes)} changes from {event_type} gitlab event")
-        return (changes, 'git')
+        return (changes, "git")
 
 
 gitlab = GitLabHandler

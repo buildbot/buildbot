@@ -15,7 +15,6 @@
 
 
 class Domain:
-
     def __init__(self, name, conn, libvirt_id):
         self.conn = conn
         self._name = name
@@ -44,7 +43,6 @@ class Domain:
 
 
 class Connection:
-
     def __init__(self, uri):
         self.uri = uri
         self.domains = {}
@@ -82,7 +80,7 @@ class Connection:
 
 
 def open(uri):
-    raise NotImplementedError('this must be patched in tests')
+    raise NotImplementedError("this must be patched in tests")
 
 
 VIR_DOMAIN_AFFECT_CONFIG = 2

@@ -24,7 +24,6 @@ from buildbot.util import maildir
 
 
 class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
-
     def setUp(self):
         self.maildir = os.path.abspath("maildir")
         self.newdir = os.path.join(self.maildir, "new")
@@ -60,6 +59,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         def messageReceived(filename):
             messagesReceived.append(filename)
             return defer.succeed(None)
+
         self.svc.messageReceived = messageReceived
         yield self.svc.startService()
 
@@ -67,24 +67,28 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
 
         tmpfile = os.path.join(self.tmpdir, "newmsg")
         newfile = os.path.join(self.newdir, "newmsg")
-        with open(tmpfile, "w", encoding='utf-8'):
+        with open(tmpfile, "w", encoding="utf-8"):
             pass
         os.rename(tmpfile, newfile)
 
         # TODO: can we wait for a dnotify somehow, if enabled?
         yield self.svc.poll()
 
-        self.assertEqual(messagesReceived, ['newmsg'])
+        self.assertEqual(messagesReceived, ["newmsg"])
 
     def test_moveToCurDir(self):
         self.svc = maildir.MaildirService(self.maildir)
         tmpfile = os.path.join(self.tmpdir, "newmsg")
         newfile = os.path.join(self.newdir, "newmsg")
-        with open(tmpfile, "w", encoding='utf-8'):
+        with open(tmpfile, "w", encoding="utf-8"):
             pass
         os.rename(tmpfile, newfile)
         f = self.svc.moveToCurDir("newmsg")
         f.close()
-        self.assertEqual([os.path.exists(os.path.join(d, "newmsg"))
-                          for d in (self.newdir, self.curdir, self.tmpdir)],
-                         [False, True, False])
+        self.assertEqual(
+            [
+                os.path.exists(os.path.join(d, "newmsg"))
+                for d in (self.newdir, self.curdir, self.tmpdir)
+            ],
+            [False, True, False],
+        )

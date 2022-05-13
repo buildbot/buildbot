@@ -32,16 +32,24 @@ from buildbot.steps.source.base import Source
 
 class Mercurial(Source):
 
-    """ Class for Mercurial with all the smarts """
+    """Class for Mercurial with all the smarts"""
+
     name = "hg"
 
     renderables = ["repourl"]
-    possible_methods = (None, 'clean', 'fresh', 'clobber')
-    possible_branchTypes = ('inrepo', 'dirname')
+    possible_methods = (None, "clean", "fresh", "clobber")
+    possible_branchTypes = ("inrepo", "dirname")
 
-    def __init__(self, repourl=None, mode='incremental',
-                 method=None, defaultBranch=None, branchType='dirname',
-                 clobberOnBranchChange=True, **kwargs):
+    def __init__(
+        self,
+        repourl=None,
+        mode="incremental",
+        method=None,
+        defaultBranch=None,
+        branchType="dirname",
+        clobberOnBranchChange=True,
+        **kwargs,
+    ):
         """
         @type  repourl: string
         @param repourl: the URL which points at the Mercurial repository.
@@ -79,12 +87,14 @@ class Mercurial(Source):
         super().__init__(**kwargs)
 
         errors = []
-        if not self._hasAttrGroupMember('mode', self.mode):
+        if not self._hasAttrGroupMember("mode", self.mode):
             errors.append(f"mode {self.mode} is not one of {self._listAttrGroupMembers('mode')}")
         if self.method not in self.possible_methods:
             errors.append(f"method {self.method} is not one of {self.possible_methods}")
         if self.branchType not in self.possible_branchTypes:
-            errors.append(f"branchType {self.branchType} is not one of {self.possible_branchTypes}")
+            errors.append(
+                f"branchType {self.branchType} is not one of {self.possible_branchTypes}"
+            )
 
         if repourl is None:
             errors.append("you must provide a repourl")
@@ -106,14 +116,14 @@ class Mercurial(Source):
         # FIXME: this does not do anything
         yield self.sourcedirIsPatched()
 
-        if self.branchType == 'dirname':
-            self.repourl = self.repourl + (branch or '')
+        if self.branchType == "dirname":
+            self.repourl = self.repourl + (branch or "")
             self.branch = self.defaultBranch
             self.update_branch = branch
-        elif self.branchType == 'inrepo':
-            self.update_branch = (branch or 'default')
+        elif self.branchType == "inrepo":
+            self.update_branch = branch or "default"
 
-        yield self._getAttrGroupMember('mode', self.mode)()
+        yield self._getAttrGroupMember("mode", self.mode)()
 
         if patch:
             yield self.patch(patch)
@@ -123,7 +133,7 @@ class Mercurial(Source):
 
     @defer.inlineCallbacks
     def mode_full(self):
-        if self.method == 'clobber':
+        if self.method == "clobber":
             yield self.clobber()
             return
 
@@ -131,9 +141,9 @@ class Mercurial(Source):
         if not updatable:
             yield self._clone()
             yield self._update()
-        elif self.method == 'clean':
+        elif self.method == "clean":
             yield self.clean()
-        elif self.method == 'fresh':
+        elif self.method == "fresh":
             yield self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
@@ -154,14 +164,15 @@ class Mercurial(Source):
 
     @defer.inlineCallbacks
     def clean(self):
-        command = ['--config', 'extensions.purge=', 'purge']
+        command = ["--config", "extensions.purge=", "purge"]
         yield self._dovccmd(command)
         yield self._pullUpdate()
 
     @defer.inlineCallbacks
     def _clobber(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron})
+        cmd = remotecommand.RemoteCommand(
+            "rmdir", {"dir": self.workdir, "logEnviron": self.logEnviron}
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -173,40 +184,42 @@ class Mercurial(Source):
 
     @defer.inlineCallbacks
     def fresh(self):
-        command = ['--config', 'extensions.purge=', 'purge', '--all']
+        command = ["--config", "extensions.purge=", "purge", "--all"]
         yield self._dovccmd(command)
         yield self._pullUpdate()
 
     @defer.inlineCallbacks
     def parseGotRevision(self):
-        stdout = yield self._dovccmd(['parents', '--template', '{node}\\n'], collectStdout=True)
+        stdout = yield self._dovccmd(["parents", "--template", "{node}\\n"], collectStdout=True)
 
         revision = stdout.strip()
         if len(revision) != 40:
             raise ValueError("Incorrect revision id")
         log.msg(f"Got Mercurial revision {revision}")
-        self.updateSourceProperty('got_revision', revision)
+        self.updateSourceProperty("got_revision", revision)
 
     @defer.inlineCallbacks
     def _checkBranchChange(self):
         current_branch = yield self._getCurrentBranch()
-        msg = (f"Working dir is on in-repo branch '{current_branch}' and build needs "
-               f"'{self.update_branch}'.")
+        msg = (
+            f"Working dir is on in-repo branch '{current_branch}' and build needs "
+            f"'{self.update_branch}'."
+        )
         if current_branch != self.update_branch and self.clobberOnBranchChange:
-            msg += ' Clobbering.'
+            msg += " Clobbering."
             log.msg(msg)
             yield self.clobber()
             return
-        msg += ' Updating.'
+        msg += " Updating."
         log.msg(msg)
         yield self._removeAddedFilesAndUpdate(None)
 
     def getHgPullCommand(self):
-        command = ['pull', self.repourl]
+        command = ["pull", self.repourl]
         if self.revision:
-            command.extend(['--rev', self.revision])
-        elif self.branchType == 'inrepo':
-            command.extend(['--rev', self.update_branch])
+            command.extend(["--rev", self.revision])
+        elif self.branchType == "inrepo":
+            command.extend(["--rev", self.update_branch])
         return command
 
     @defer.inlineCallbacks
@@ -216,20 +229,29 @@ class Mercurial(Source):
         yield self._checkBranchChange()
 
     @defer.inlineCallbacks
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
-                 abandonOnFailure=True):
+    def _dovccmd(
+        self,
+        command,
+        collectStdout=False,
+        initialStdin=None,
+        decodeRC=None,
+        abandonOnFailure=True,
+    ):
         if not command:
             raise ValueError("No command specified")
 
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
-        cmd = remotecommand.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               collectStdout=collectStdout,
-                                               initialStdin=initialStdin,
-                                               decodeRC=decodeRC)
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir,
+            ["hg", "--verbose"] + command,
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+            collectStdout=collectStdout,
+            initialStdin=initialStdin,
+            decodeRC=decodeRC,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -248,46 +270,54 @@ class Mercurial(Source):
         # order, and just pay attention to the last one. See ticket #103 for
         # more details.
         if len(changes) > 1:
-            log.msg("Mercurial.computeSourceRevision: warning: "
-                    f"there are {len(changes)} changes here, assuming the last one is "
-                    "the most recent")
+            log.msg(
+                "Mercurial.computeSourceRevision: warning: "
+                f"there are {len(changes)} changes here, assuming the last one is "
+                "the most recent"
+            )
         return changes[-1].revision
 
     @defer.inlineCallbacks
     def _getCurrentBranch(self):
-        if self.branchType == 'dirname':
+        if self.branchType == "dirname":
             return self.branch
-        stdout = yield self._dovccmd(['identify', '--branch'], collectStdout=True)
+        stdout = yield self._dovccmd(["identify", "--branch"], collectStdout=True)
         return stdout.strip()
 
     def _getMethod(self):
-        if self.method is not None and self.mode != 'incremental':
+        if self.method is not None and self.mode != "incremental":
             return self.method
-        elif self.mode == 'incremental':
+        elif self.mode == "incremental":
             return None
-        elif self.method is None and self.mode == 'full':
-            return 'fresh'
+        elif self.method is None and self.mode == "full":
+            return "fresh"
         return None
 
     def _sourcedirIsUpdatable(self):
-        return self.pathExists(self.build.path_module.join(self.workdir, '.hg'))
+        return self.pathExists(self.build.path_module.join(self.workdir, ".hg"))
 
     @defer.inlineCallbacks
     def _removeAddedFilesAndUpdate(self, _):
-        command = ['locate', 'set:added()']
-        stdout = yield self._dovccmd(command, collectStdout=True, decodeRC={0: SUCCESS, 1: SUCCESS})
+        command = ["locate", "set:added()"]
+        stdout = yield self._dovccmd(
+            command, collectStdout=True, decodeRC={0: SUCCESS, 1: SUCCESS}
+        )
 
         files = []
         for filename in stdout.splitlines():
-            filename = self.workdir + '/' + filename
+            filename = self.workdir + "/" + filename
             files.append(filename)
         if files:
-            if self.workerVersionIsOlderThan('rmdir', '2.14'):
+            if self.workerVersionIsOlderThan("rmdir", "2.14"):
                 yield self.removeFiles(files)
             else:
-                cmd = remotecommand.RemoteCommand('rmdir', {'dir': files,
-                                                            'logEnviron':
-                                                            self.logEnviron, })
+                cmd = remotecommand.RemoteCommand(
+                    "rmdir",
+                    {
+                        "dir": files,
+                        "logEnviron": self.logEnviron,
+                    },
+                )
                 cmd.useLog(self.stdio_log, False)
                 yield self.runCommand(cmd)
 
@@ -296,8 +326,13 @@ class Mercurial(Source):
     @defer.inlineCallbacks
     def removeFiles(self, files):
         for filename in files:
-            cmd = remotecommand.RemoteCommand('rmdir', {'dir': filename,
-                                                        'logEnviron': self.logEnviron, })
+            cmd = remotecommand.RemoteCommand(
+                "rmdir",
+                {
+                    "dir": filename,
+                    "logEnviron": self.logEnviron,
+                },
+            )
             cmd.useLog(self.stdio_log, False)
             yield self.runCommand(cmd)
             if cmd.rc != 0:
@@ -306,20 +341,22 @@ class Mercurial(Source):
 
     @defer.inlineCallbacks
     def _update(self):
-        command = ['update', '--clean']
+        command = ["update", "--clean"]
         if self.revision:
-            command += ['--rev', self.revision]
-        elif self.branchType == 'inrepo':
-            command += ['--rev', self.update_branch]
+            command += ["--rev", self.revision]
+        elif self.branchType == "inrepo":
+            command += ["--rev", self.update_branch]
         yield self._dovccmd(command)
 
     def _clone(self):
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
-        d = self._dovccmd(['clone', '--noupdate', self.repourl, '.'],
-                          abandonOnFailure=abandonOnFailure)
+        d = self._dovccmd(
+            ["clone", "--noupdate", self.repourl, "."],
+            abandonOnFailure=abandonOnFailure,
+        )
 
         def _retry(res):
             if self.stopped or res == 0:
@@ -340,14 +377,16 @@ class Mercurial(Source):
         return d
 
     def checkHg(self):
-        d = self._dovccmd(['--version'])
+        d = self._dovccmd(["--version"])
 
         @d.addCallback
         def check(res):
             return res == 0
+
         return d
 
     def applyPatch(self, patch):
-        d = self._dovccmd(['import', '--no-commit', '-p', str(patch[0]), '-'],
-                          initialStdin=patch[1])
+        d = self._dovccmd(
+            ["import", "--no-commit", "-p", str(patch[0]), "-"], initialStdin=patch[1]
+        )
         return d

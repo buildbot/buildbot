@@ -21,7 +21,6 @@ from buildbot.util import Notifier
 
 
 class SubscriptionPoint:
-
     def __init__(self, name):
         self.name = name
         self.subscriptions = set()
@@ -67,10 +66,13 @@ class SubscriptionPoint:
         self.subscriptions.remove(subscription)
 
     def _notify_delivery_exception(self, e, sub):
-        log.err(e, f'while invoking callback {sub.callback} to {self}')
+        log.err(e, f"while invoking callback {sub.callback} to {self}")
         if self._got_exceptions is None:
-            log.err(e, 'exceptions have already been collected. '
-                    'This is serious error, please submit a bug report')
+            log.err(
+                e,
+                "exceptions have already been collected. "
+                "This is serious error, please submit a bug report",
+            )
             return
         self._got_exceptions.append(e)
 
@@ -81,7 +83,6 @@ class SubscriptionPoint:
 
 
 class Subscription:
-
     def __init__(self, subpt, callback):
         self.subpt = subpt
         self.callback = callback

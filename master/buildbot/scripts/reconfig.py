@@ -29,7 +29,6 @@ from buildbot.util import rewrap
 
 
 class Reconfigurator:
-
     @defer.inlineCallbacks
     def run(self, basedir, quiet, timeout=None):
         # Returns "Microsoft" for Vista and "Windows" for other versions
@@ -37,7 +36,7 @@ class Reconfigurator:
             print("Reconfig (through SIGHUP) is not supported on Windows.")
             return None
 
-        with open(os.path.join(basedir, "twistd.pid"), "rt", encoding='utf-8') as f:
+        with open(os.path.join(basedir, "twistd.pid"), "rt", encoding="utf-8") as f:
             self.pid = int(f.read().strip())
         if quiet:
             os.kill(self.pid, signal.SIGHUP)
@@ -60,10 +59,14 @@ class Reconfigurator:
         except BuildmasterTimeoutError:
             print("Never saw reconfiguration finish.")
         except ReconfigError:
-            print(rewrap("""\
+            print(
+                rewrap(
+                    """\
                 Reconfiguration failed. Please inspect the master.cfg file for
                 errors, correct them, then try 'buildbot reconfig' again.
-                """))
+                """
+                )
+            )
         except IOError:
             # we were probably unable to open the file in the first place
             self.sighup()
@@ -82,15 +85,15 @@ class Reconfigurator:
 
 @in_reactor
 def reconfig(config):
-    basedir = config['basedir']
-    quiet = config['quiet']
+    basedir = config["basedir"]
+    quiet = config["quiet"]
 
-    timeout = config.get('progress_timeout', None)
+    timeout = config.get("progress_timeout", None)
     if timeout is not None:
         try:
             timeout = float(timeout)
         except ValueError:
-            print('Progress timeout must be a number')
+            print("Progress timeout must be a number")
             return 1
 
     r = Reconfigurator()

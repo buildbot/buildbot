@@ -19,4 +19,4 @@ try:
 except ImportError:
     from twisted.trial.unittest import TestCase as SynchronousTestCase
 
-__all__ = ['SynchronousTestCase']
+__all__ = ["SynchronousTestCase"]

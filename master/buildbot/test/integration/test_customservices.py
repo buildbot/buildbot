@@ -25,7 +25,6 @@ from buildbot.test.util.integration import RunFakeMasterTestCase
 
 
 class CustomServiceMaster(RunFakeMasterTestCase):
-
     def setUp(self):
         super().setUp()
         self.num_reconfig = 0
@@ -38,9 +37,8 @@ class CustomServiceMaster(RunFakeMasterTestCase):
         from buildbot.util.service import BuildbotService
 
         class MyShellCommand(ShellCommand):
-
             def getResultSummary(self):
-                service = self.master.service_manager.namedServices['myService']
+                service = self.master.service_manager.namedServices["myService"]
                 return dict(step=f"num reconfig: {service.num_reconfig}")
 
         class MyService(BuildbotService):
@@ -51,33 +49,37 @@ class CustomServiceMaster(RunFakeMasterTestCase):
                 return defer.succeed(None)
 
         config_dict = {
-            'builders': [
-                BuilderConfig(name="builder", workernames=["worker1"],
-                              factory=BuildFactory([MyShellCommand(command='echo hei')])),
+            "builders": [
+                BuilderConfig(
+                    name="builder",
+                    workernames=["worker1"],
+                    factory=BuildFactory([MyShellCommand(command="echo hei")]),
+                ),
             ],
-            'workers': [self.createLocalWorker('worker1')],
-            'protocols': {'null': {}},
+            "workers": [self.createLocalWorker("worker1")],
+            "protocols": {"null": {}},
             # Disable checks about missing scheduler.
-            'multiMaster': True,
-            'db_url': 'sqlite://',  # we need to make sure reconfiguration uses the same URL
-            'services': [MyService(num_reconfig=self.num_reconfig)]
+            "multiMaster": True,
+            "db_url": "sqlite://",  # we need to make sure reconfiguration uses the same URL
+            "services": [MyService(num_reconfig=self.num_reconfig)],
         }
 
         if self.num_reconfig == 3:
-            config_dict['services'].append(MyService(name="myService2",
-                                                     num_reconfig=self.num_reconfig))
+            config_dict["services"].append(
+                MyService(name="myService2", num_reconfig=self.num_reconfig)
+            )
         return config_dict
 
     @defer.inlineCallbacks
     def test_custom_service(self):
         yield self.setup_master(self.create_master_config())
 
-        yield self.do_test_build_by_name('builder')
+        yield self.do_test_build_by_name("builder")
 
-        self.assertStepStateString(1, 'worker worker1 ready')
-        self.assertStepStateString(2, 'num reconfig: 1')
+        self.assertStepStateString(1, "worker worker1 ready")
+        self.assertStepStateString(2, "num reconfig: 1")
 
-        myService = self.master.service_manager.namedServices['myService']
+        myService = self.master.service_manager.namedServices["myService"]
         self.assertEqual(myService.num_reconfig, 1)
         self.assertTrue(myService.running)
 
@@ -85,15 +87,15 @@ class CustomServiceMaster(RunFakeMasterTestCase):
         # are reconfigured as expected
         yield self.reconfig_master(self.create_master_config())
 
-        yield self.do_test_build_by_name('builder')
+        yield self.do_test_build_by_name("builder")
 
         self.assertEqual(myService.num_reconfig, 2)
-        self.assertStepStateString(1, 'worker worker1 ready')
-        self.assertStepStateString(2, 'num reconfig: 1')
+        self.assertStepStateString(1, "worker worker1 ready")
+        self.assertStepStateString(2, "num reconfig: 1")
 
         yield self.reconfig_master(self.create_master_config())
 
-        myService2 = self.master.service_manager.namedServices['myService2']
+        myService2 = self.master.service_manager.namedServices["myService2"]
 
         self.assertTrue(myService2.running)
         self.assertEqual(myService2.num_reconfig, 3)
@@ -102,7 +104,7 @@ class CustomServiceMaster(RunFakeMasterTestCase):
         yield self.reconfig_master(self.create_master_config())
 
         # second service removed
-        self.assertNotIn('myService2', self.master.service_manager.namedServices)
+        self.assertNotIn("myService2", self.master.service_manager.namedServices)
         self.assertFalse(myService2.running)
         self.assertEqual(myService2.num_reconfig, 3)
         self.assertEqual(myService.num_reconfig, 4)

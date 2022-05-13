@@ -25,24 +25,24 @@ from buildbot.scripts import base
 
 
 def stop(config, signame="TERM", wait=None):
-    basedir = config['basedir']
-    quiet = config['quiet']
+    basedir = config["basedir"]
+    quiet = config["quiet"]
 
     if wait is None:
-        wait = not config['no-wait']
+        wait = not config["no-wait"]
 
-    if config['clean']:
-        signame = 'USR1'
+    if config["clean"]:
+        signame = "USR1"
 
-    if not base.isBuildmasterDir(config['basedir']):
+    if not base.isBuildmasterDir(config["basedir"]):
         return 1
 
-    pidfile = os.path.join(basedir, 'twistd.pid')
+    pidfile = os.path.join(basedir, "twistd.pid")
     try:
-        with open(pidfile, "rt", encoding='utf-8') as f:
+        with open(pidfile, "rt", encoding="utf-8") as f:
             pid = int(f.read().strip())
     except Exception:
-        if not config['quiet']:
+        if not config["quiet"]:
             print("buildmaster not running")
         return 0
 
@@ -53,7 +53,7 @@ def stop(config, signame="TERM", wait=None):
         if e.errno != errno.ESRCH and platformType != "win32":
             raise
 
-        if not config['quiet']:
+        if not config["quiet"]:
             print("buildmaster not running")
         try:
             os.unlink(pidfile)
@@ -71,7 +71,7 @@ def stop(config, signame="TERM", wait=None):
     # poll once per second until twistd.pid goes away, up to 10 seconds,
     # unless we're doing a clean stop, in which case wait forever
     count = 0
-    while count < 10 or config['clean']:
+    while count < 10 or config["clean"]:
         try:
             os.kill(pid, 0)
         except OSError:

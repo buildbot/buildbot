@@ -31,28 +31,36 @@ from buildbot.util import httpclientservice
 from .utils import merge_reports_prop
 from .utils import merge_reports_prop_take_first
 
-ENCODING = 'utf8'
+ENCODING = "utf8"
 
-VALID_PARAMS = {"sound", "callback", "timestamp", "url",
-                "url_title", "device", "retry", "expire", "html"}
-
-PRIORITIES = {
-    CANCELLED: 'cancelled',
-    EXCEPTION: 'exception',
-    FAILURE: 'failing',
-    SUCCESS: 'passing',
-    WARNINGS: 'warnings'
+VALID_PARAMS = {
+    "sound",
+    "callback",
+    "timestamp",
+    "url",
+    "url_title",
+    "device",
+    "retry",
+    "expire",
+    "html",
 }
 
-DEFAULT_MSG_TEMPLATE = \
-    ('The Buildbot has detected a <a href="{{ build_url }}">{{ status_detected }}</a>' +
-     'of <i>{{ buildername }}</i> while building {{ projects }} on {{ workername }}.')
+PRIORITIES = {
+    CANCELLED: "cancelled",
+    EXCEPTION: "exception",
+    FAILURE: "failing",
+    SUCCESS: "passing",
+    WARNINGS: "warnings",
+}
+
+DEFAULT_MSG_TEMPLATE = (
+    'The Buildbot has detected a <a href="{{ build_url }}">{{ status_detected }}</a>'
+    + "of <i>{{ buildername }}</i> while building {{ projects }} on {{ workername }}."
+)
 
 
 class PushoverNotifier(ReporterBase):
-
-    def checkConfig(self, user_key, api_token, priorities=None, otherParams=None,
-                    generators=None):
+    def checkConfig(self, user_key, api_token, priorities=None, otherParams=None, generators=None):
 
         if generators is None:
             generators = self._create_default_generators()
@@ -62,12 +70,15 @@ class PushoverNotifier(ReporterBase):
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
         if otherParams is not None and set(otherParams.keys()) - VALID_PARAMS:
-            config.error("otherParams can be only 'sound', 'callback', 'timestamp', "
-                         "'url', 'url_title', 'device', 'retry', 'expire', or 'html'")
+            config.error(
+                "otherParams can be only 'sound', 'callback', 'timestamp', "
+                "'url', 'url_title', 'device', 'retry', 'expire', or 'html'"
+            )
 
     @defer.inlineCallbacks
-    def reconfigService(self, user_key, api_token, priorities=None, otherParams=None,
-                        generators=None):
+    def reconfigService(
+        self, user_key, api_token, priorities=None, otherParams=None, generators=None
+    ):
         user_key, api_token = yield self.renderSecrets(user_key, api_token)
 
         if generators is None:
@@ -85,28 +96,26 @@ class PushoverNotifier(ReporterBase):
         else:
             self.otherParams = otherParams
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, 'https://api.pushover.net')
+            self.master, "https://api.pushover.net"
+        )
 
     def _create_default_generators(self):
-        formatter = MessageFormatter(template_type='html', template=DEFAULT_MSG_TEMPLATE)
+        formatter = MessageFormatter(template_type="html", template=DEFAULT_MSG_TEMPLATE)
         return [BuildStatusGenerator(message_formatter=formatter)]
 
     def sendMessage(self, reports):
-        body = merge_reports_prop(reports, 'body')
-        subject = merge_reports_prop_take_first(reports, 'subject')
-        type = merge_reports_prop_take_first(reports, 'type')
-        results = merge_reports_prop(reports, 'results')
-        worker = merge_reports_prop_take_first(reports, 'worker')
+        body = merge_reports_prop(reports, "body")
+        subject = merge_reports_prop_take_first(reports, "subject")
+        type = merge_reports_prop_take_first(reports, "type")
+        results = merge_reports_prop(reports, "results")
+        worker = merge_reports_prop_take_first(reports, "worker")
 
-        msg = {
-            'message': body,
-            'title': subject
-        }
-        if type == 'html':
-            msg['html'] = '1'
+        msg = {"message": body, "title": subject}
+        if type == "html":
+            msg["html"] = "1"
         try:
-            priority_name = PRIORITIES[results] if worker is None else 'worker_missing'
-            msg['priority'] = self.priorities[priority_name]
+            priority_name = PRIORITIES[results] if worker is None else "worker_missing"
+            msg["priority"] = self.priorities[priority_name]
         except KeyError:
             pass
         return self.sendNotification(msg)
@@ -115,4 +124,4 @@ class PushoverNotifier(ReporterBase):
         twlog.msg("sending pushover notification")
         params.update(dict(user=self.user_key, token=self.api_token))
         params.update(self.otherParams)
-        return self._http.post('/1/messages.json', params=params)
+        return self._http.post("/1/messages.json", params=params)

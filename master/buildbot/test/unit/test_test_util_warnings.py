@@ -33,7 +33,6 @@ class OtherWarning(Warning):
 
 
 class TestWarningsFilter(unittest.TestCase):
-
     def test_warnigs_caught(self):
         # Assertion is correct.
         with assertProducesWarning(SomeWarning):
@@ -50,12 +49,14 @@ class TestWarningsFilter(unittest.TestCase):
         def f1():
             with assertProducesWarnings(SomeWarning, num_warnings=2):
                 pass
+
         with self.assertRaises(AssertionError):
             f1()
 
         def f2():
             with assertProducesWarnings(SomeWarning, num_warnings=2):
                 warnings.warn("1", SomeWarning)
+
         with self.assertRaises(AssertionError):
             f2()
 
@@ -64,6 +65,7 @@ class TestWarningsFilter(unittest.TestCase):
                 warnings.warn("1", SomeWarning)
                 warnings.warn("2", SomeWarning)
                 warnings.warn("3", SomeWarning)
+
         with self.assertRaises(AssertionError):
             f3()
 
@@ -83,8 +85,7 @@ class TestWarningsFilter(unittest.TestCase):
 
     def test_warnigs_caught_patterns_check(self):
         # Assertion is correct.
-        with assertProducesWarnings(SomeWarning,
-                                    messages_patterns=["1", "2", "3"]):
+        with assertProducesWarnings(SomeWarning, messages_patterns=["1", "2", "3"]):
             warnings.warn("log 1 message", SomeWarning)
             warnings.warn("log 2 message", SomeWarning)
             warnings.warn("log 3 message", SomeWarning)
@@ -92,8 +93,7 @@ class TestWarningsFilter(unittest.TestCase):
     def test_warnigs_caught_patterns_check_fails(self):
         def f1():
             # Assertion fails.
-            with assertProducesWarnings(SomeWarning,
-                                        messages_patterns=["1", "2"]):
+            with assertProducesWarnings(SomeWarning, messages_patterns=["1", "2"]):
                 warnings.warn("msg 1", SomeWarning)
 
         with self.assertRaises(AssertionError):
@@ -101,8 +101,7 @@ class TestWarningsFilter(unittest.TestCase):
 
         def f2():
             # Assertion fails.
-            with assertProducesWarnings(SomeWarning,
-                                        messages_patterns=["1", "2"]):
+            with assertProducesWarnings(SomeWarning, messages_patterns=["1", "2"]):
                 warnings.warn("msg 2", SomeWarning)
                 warnings.warn("msg 1", SomeWarning)
 
@@ -111,8 +110,7 @@ class TestWarningsFilter(unittest.TestCase):
 
         def f3():
             # Assertion fails.
-            with assertProducesWarnings(SomeWarning,
-                                        messages_patterns=["1", "2"]):
+            with assertProducesWarnings(SomeWarning, messages_patterns=["1", "2"]):
                 warnings.warn("msg 1", SomeWarning)
                 warnings.warn("msg 2", SomeWarning)
                 warnings.warn("msg 3", SomeWarning)
@@ -130,8 +128,7 @@ class TestWarningsFilter(unittest.TestCase):
 
     def test_warnigs_filter(self):
         with ignoreWarning(OtherWarning):
-            with assertProducesWarnings(SomeWarning,
-                                        messages_patterns=["1", "2", "3"]):
+            with assertProducesWarnings(SomeWarning, messages_patterns=["1", "2", "3"]):
                 warnings.warn("other", OtherWarning)
                 warnings.warn("log 1 message", SomeWarning)
                 warnings.warn("other", OtherWarning)
@@ -141,10 +138,8 @@ class TestWarningsFilter(unittest.TestCase):
                 warnings.warn("other", OtherWarning)
 
     def test_nested_filters(self):
-        with assertProducesWarnings(SomeWarning,
-                                    messages_patterns=["some 1"]):
-            with assertProducesWarnings(OtherWarning,
-                                        messages_patterns=["other 1"]):
+        with assertProducesWarnings(SomeWarning, messages_patterns=["some 1"]):
+            with assertProducesWarnings(OtherWarning, messages_patterns=["other 1"]):
                 warnings.warn("other 1", OtherWarning)
                 warnings.warn("some 1", SomeWarning)
 

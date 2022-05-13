@@ -29,11 +29,11 @@ RC_SUCCESS = 0
 
 
 def getSshArgsForKeys(keyPath, knownHostsPath):
-    args = ['-o', 'BatchMode=yes']
+    args = ["-o", "BatchMode=yes"]
     if keyPath is not None:
-        args += ['-i', keyPath]
+        args += ["-i", keyPath]
     if knownHostsPath is not None:
-        args += ['-o', f'UserKnownHostsFile={knownHostsPath}']
+        args += ["-o", f"UserKnownHostsFile={knownHostsPath}"]
     return args
 
 
@@ -44,25 +44,24 @@ def escapeShellArgIfNeeded(arg):
 
 
 def getSshCommand(keyPath, knownHostsPath):
-    command = ['ssh'] + getSshArgsForKeys(keyPath, knownHostsPath)
+    command = ["ssh"] + getSshArgsForKeys(keyPath, knownHostsPath)
     command = [escapeShellArgIfNeeded(arg) for arg in command]
-    return ' '.join(command)
+    return " ".join(command)
 
 
 class GitMixin:
-
     def setupGit(self, logname=None):
         if logname is None:
-            logname = 'GitMixin'
+            logname = "GitMixin"
 
         if self.sshHostKey is not None and self.sshPrivateKey is None:
-            config.error(f'{logname}: sshPrivateKey must be provided in order use sshHostKey')
+            config.error(f"{logname}: sshPrivateKey must be provided in order use sshHostKey")
 
         if self.sshKnownHosts is not None and self.sshPrivateKey is None:
-            config.error(f'{logname}: sshPrivateKey must be provided in order use sshKnownHosts')
+            config.error(f"{logname}: sshPrivateKey must be provided in order use sshKnownHosts")
 
         if self.sshHostKey is not None and self.sshKnownHosts is not None:
-            config.error(f'{logname}: only one of sshKnownHosts and sshHostKey can be provided')
+            config.error(f"{logname}: only one of sshKnownHosts and sshHostKey can be provided")
 
         self.gitInstalled = False
         self.supportsBranch = False
@@ -96,21 +95,20 @@ class GitMixin:
         if version >= parse_version("2.27.0"):
             self.supportsFilters = True
 
-    def adjustCommandParamsForSshPrivateKey(self, command, env,
-                                            keyPath, sshWrapperPath=None,
-                                            knownHostsPath=None):
+    def adjustCommandParamsForSshPrivateKey(
+        self, command, env, keyPath, sshWrapperPath=None, knownHostsPath=None
+    ):
         ssh_command = getSshCommand(keyPath, knownHostsPath)
 
         if self.supportsSshPrivateKeyAsConfigOption:
-            command.append('-c')
-            command.append(f'core.sshCommand={ssh_command}')
+            command.append("-c")
+            command.append(f"core.sshCommand={ssh_command}")
         elif self.supportsSshPrivateKeyAsEnvOption:
-            env['GIT_SSH_COMMAND'] = ssh_command
+            env["GIT_SSH_COMMAND"] = ssh_command
         else:
             if sshWrapperPath is None:
-                raise Exception('Only SSH wrapper script is supported but path '
-                                'not given')
-            env['GIT_SSH'] = sshWrapperPath
+                raise Exception("Only SSH wrapper script is supported but path " "not given")
+            env["GIT_SSH"] = sshWrapperPath
 
 
 def getSshWrapperScriptContents(keyPath, knownHostsPath=None):
@@ -121,15 +119,14 @@ def getSshWrapperScriptContents(keyPath, knownHostsPath=None):
 
 
 def getSshKnownHostsContents(hostKey):
-    host_name = '*'
-    return f'{host_name} {hostKey}'
+    host_name = "*"
+    return f"{host_name} {hostKey}"
 
 
 class GitStepMixin(GitMixin):
-
     def setupGitStep(self):
         self.didDownloadSshPrivateKey = False
-        self.setupGit(logname='Git')
+        self.setupGit(logname="Git")
 
         if not self.repourl:
             config.error("Git: must provide repourl.")
@@ -138,9 +135,7 @@ class GitStepMixin(GitMixin):
         if not command or self.sshPrivateKey is None:
             return False
 
-        gitCommandsThatNeedSshKey = [
-            'clone', 'submodule', 'fetch', 'push'
-        ]
+        gitCommandsThatNeedSshKey = ["clone", "submodule", "fetch", "push"]
         if command[0] in gitCommandsThatNeedSshKey:
             return True
         return False
@@ -160,25 +155,26 @@ class GitStepMixin(GitMixin):
         path_module = self.build.path_module
 
         workerbuilddir = bytes2unicode(self.build.builder.config.workerbuilddir)
-        workdir = self._getSshDataWorkDir().rstrip('/\\')
+        workdir = self._getSshDataWorkDir().rstrip("/\\")
 
         if path_module.isabs(workdir):
             parent_path = path_module.dirname(workdir)
         else:
-            parent_path = path_module.join(self.worker.worker_basedir,
-                                           path_module.dirname(workdir))
+            parent_path = path_module.join(
+                self.worker.worker_basedir, path_module.dirname(workdir)
+            )
 
-        basename = f'.{workerbuilddir}.{path_module.basename(workdir)}.buildbot'
+        basename = f".{workerbuilddir}.{path_module.basename(workdir)}.buildbot"
         return path_module.join(parent_path, basename)
 
     def _getSshPrivateKeyPath(self, ssh_data_path):
-        return self.build.path_module.join(ssh_data_path, 'ssh-key')
+        return self.build.path_module.join(ssh_data_path, "ssh-key")
 
     def _getSshHostKeyPath(self, ssh_data_path):
-        return self.build.path_module.join(ssh_data_path, 'ssh-known-hosts')
+        return self.build.path_module.join(ssh_data_path, "ssh-known-hosts")
 
     def _getSshWrapperScriptPath(self, ssh_data_path):
-        return self.build.path_module.join(ssh_data_path, 'ssh-wrapper.sh')
+        return self.build.path_module.join(ssh_data_path, "ssh-wrapper.sh")
 
     def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
 
@@ -189,19 +185,19 @@ class GitStepMixin(GitMixin):
         if self.sshHostKey is not None or self.sshKnownHosts is not None:
             host_key_path = self._getSshHostKeyPath(ssh_data_path)
 
-        self.adjustCommandParamsForSshPrivateKey(full_command, full_env,
-                                                 key_path, ssh_wrapper_path,
-                                                 host_key_path)
+        self.adjustCommandParamsForSshPrivateKey(
+            full_command, full_env, key_path, ssh_wrapper_path, host_key_path
+        )
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
-        full_command = ['git']
+        full_command = ["git"]
         full_env = self.env.copy() if self.env else {}
 
         if self.config is not None:
             for name, value in self.config.items():
-                full_command.append('-c')
-                full_command.append(f'{name}={value}')
+                full_command.append("-c")
+                full_command.append(f"{name}={value}")
 
         if self._isSshPrivateKeyNeededForGitCommand(command):
             self._adjustCommandParamsForSshPrivateKey(full_command, full_env)
@@ -228,19 +224,22 @@ class GitStepMixin(GitMixin):
                 log.msg(
                     "NOTE: worker does not allow master to specify "
                     "interruptSignal. This may leave a stale lockfile around "
-                    "if the command is interrupted/times out\n")
+                    "if the command is interrupted/times out\n"
+                )
             else:
-                interruptSignal = 'TERM'
+                interruptSignal = "TERM"
 
-        cmd = remotecommand.RemoteShellCommand(self.workdir,
-                                               full_command,
-                                               env=full_env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               sigtermTime=sigtermTime,
-                                               interruptSignal=interruptSignal,
-                                               collectStdout=collectStdout,
-                                               initialStdin=initialStdin)
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir,
+            full_command,
+            env=full_env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+            sigtermTime=sigtermTime,
+            interruptSignal=interruptSignal,
+            collectStdout=collectStdout,
+            initialStdin=initialStdin,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -253,7 +252,7 @@ class GitStepMixin(GitMixin):
 
     @defer.inlineCallbacks
     def checkFeatureSupport(self):
-        stdout = yield self._dovccmd(['--version'], collectStdout=True)
+        stdout = yield self._dovccmd(["--version"], collectStdout=True)
 
         self.parseGitFeatures(stdout)
 
@@ -278,9 +277,9 @@ class GitStepMixin(GitMixin):
         yield self.runMkdir(ssh_data_path)
 
         private_key_path = self._getSshPrivateKeyPath(ssh_data_path)
-        yield self.downloadFileContentToWorker(private_key_path,
-                                               private_key,
-                                               workdir=workdir, mode=0o400)
+        yield self.downloadFileContentToWorker(
+            private_key_path, private_key, workdir=workdir, mode=0o400
+        )
 
         known_hosts_path = None
         if self.sshHostKey is not None or self.sshKnownHosts is not None:
@@ -288,17 +287,17 @@ class GitStepMixin(GitMixin):
 
             if self.sshHostKey is not None:
                 known_hosts_contents = getSshKnownHostsContents(host_key)
-            yield self.downloadFileContentToWorker(known_hosts_path,
-                                                   known_hosts_contents,
-                                                   workdir=workdir, mode=0o400)
+            yield self.downloadFileContentToWorker(
+                known_hosts_path, known_hosts_contents, workdir=workdir, mode=0o400
+            )
 
         if not self.supportsSshPrivateKeyAsEnvOption:
             script_path = self._getSshWrapperScriptPath(ssh_data_path)
             script_contents = getSshWrapperScriptContents(private_key_path, known_hosts_path)
 
-            yield self.downloadFileContentToWorker(script_path,
-                                                   script_contents,
-                                                   workdir=workdir, mode=0o700)
+            yield self.downloadFileContentToWorker(
+                script_path, script_contents, workdir=workdir, mode=0o700
+            )
 
         self.didDownloadSshPrivateKey = True
         return RC_SUCCESS

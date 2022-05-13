@@ -22,6 +22,7 @@ def patch():
     (used for debugging only)
     """
     from twisted.application.service import Service
+
     old_startService = Service.startService
     old_stopService = Service.stopService
 
@@ -32,5 +33,6 @@ def patch():
     def stopService(self):
         assert self.running, f"{repr(self)} already stopped"
         return old_stopService(self)
+
     Service.startService = startService
     Service.stopService = stopService

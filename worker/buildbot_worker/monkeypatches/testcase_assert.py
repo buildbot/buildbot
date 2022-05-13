@@ -21,8 +21,7 @@ import re
 import unittest
 
 
-def _assertRaisesRegexp(self, expected_exception, expected_regexp,
-                        callable_obj, *args, **kwds):
+def _assertRaisesRegexp(self, expected_exception, expected_regexp, callable_obj, *args, **kwds):
     """
     Asserts that the message in a raised exception matches a regexp.
 
@@ -43,8 +42,7 @@ def _assertRaisesRegexp(self, expected_exception, expected_regexp,
         expected_regexp = re.compile(expected_regexp)
 
     if not expected_regexp.search(str(exception)):
-        self.fail('"{0}" does not match "{1}"'.format(
-                  expected_regexp.pattern, str(exception)))
+        self.fail('"{0}" does not match "{1}"'.format(expected_regexp.pattern, str(exception)))
 
 
 def patch():

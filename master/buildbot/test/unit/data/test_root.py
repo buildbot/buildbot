@@ -29,7 +29,7 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.master.data.rootLinks = [
-            {'name': 'abc'},
+            {"name": "abc"},
         ]
 
     def tearDown(self):
@@ -37,14 +37,17 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get(self):
-        rootlinks = yield self.callGet(('',))
+        rootlinks = yield self.callGet(("",))
 
         for rootlink in rootlinks:
             self.validateData(rootlink)
 
-        self.assertEqual(rootlinks, [
-            {'name': 'abc'},
-        ])
+        self.assertEqual(
+            rootlinks,
+            [
+                {"name": "abc"},
+            ],
+        )
 
 
 class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -65,32 +68,50 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get(self):
-        specs = yield self.callGet(('application.spec',))
+        specs = yield self.callGet(("application.spec",))
 
         for s in specs:
             self.validateData(s)
 
         for s in specs:
             # only test an endpoint that is reasonably stable
-            if s['path'] != "master":
+            if s["path"] != "master":
                 continue
-            self.assertEqual(s,
-                             {'path': 'master',
-                              'type': 'master',
-                              'type_spec': {'fields': [{'name': 'active',
-                                                        'type': 'boolean',
-                                                        'type_spec': {'name': 'boolean'}},
-                                                       {'name': 'masterid',
-                                                        'type': 'integer',
-                                                        'type_spec': {'name': 'integer'}},
-                                                       {'name': 'link',
-                                                        'type': 'link',
-                                                        'type_spec': {'name': 'link'}},
-                                                       {'name': 'name',
-                                                        'type': 'string',
-                                                        'type_spec': {'name': 'string'}},
-                                                       {'name': 'last_active',
-                                                        'type': 'datetime',
-                                                        'type_spec': {'name': 'datetime'}}],
-                                            'type': 'master'},
-                              'plural': 'masters'})
+            self.assertEqual(
+                s,
+                {
+                    "path": "master",
+                    "type": "master",
+                    "type_spec": {
+                        "fields": [
+                            {
+                                "name": "active",
+                                "type": "boolean",
+                                "type_spec": {"name": "boolean"},
+                            },
+                            {
+                                "name": "masterid",
+                                "type": "integer",
+                                "type_spec": {"name": "integer"},
+                            },
+                            {
+                                "name": "link",
+                                "type": "link",
+                                "type_spec": {"name": "link"},
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "type_spec": {"name": "string"},
+                            },
+                            {
+                                "name": "last_active",
+                                "type": "datetime",
+                                "type_spec": {"name": "datetime"},
+                            },
+                        ],
+                        "type": "master",
+                    },
+                    "plural": "masters",
+                },
+            )

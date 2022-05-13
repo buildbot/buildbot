@@ -25,19 +25,30 @@ RESERVED_UNDERSCORE_NAMES = ["__Janitor"]
 
 
 class BuilderConfig(util_config.ConfiguredMixin):
-
-    def __init__(self, name=None, workername=None, workernames=None,
-                 builddir=None, workerbuilddir=None, factory=None,
-                 tags=None,
-                 nextWorker=None, nextBuild=None, locks=None, env=None,
-                 properties=None, collapseRequests=None, description=None,
-                 canStartBuild=None, defaultProperties=None
-                 ):
+    def __init__(
+        self,
+        name=None,
+        workername=None,
+        workernames=None,
+        builddir=None,
+        workerbuilddir=None,
+        factory=None,
+        tags=None,
+        nextWorker=None,
+        nextBuild=None,
+        locks=None,
+        env=None,
+        properties=None,
+        collapseRequests=None,
+        description=None,
+        canStartBuild=None,
+        defaultProperties=None,
+    ):
         # name is required, and can't start with '_'
         if not name or type(name) not in (bytes, str):
             error("builder's name is required")
-            name = '<unknown>'
-        elif name[0] == '_' and name not in RESERVED_UNDERSCORE_NAMES:
+            name = "<unknown>"
+        elif name[0] == "_" and name not in RESERVED_UNDERSCORE_NAMES:
             error(f"builder names must not start with an underscore: '{name}'")
         try:
             self.name = bytes2unicode(name, encoding="ascii")
@@ -48,6 +59,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
         if factory is None:
             error(f"builder '{name}' has no factory")
         from buildbot.process.factory import BuildFactory
+
         if factory is not None and not isinstance(factory, BuildFactory):
             error(f"builder '{name}'s factory is not a BuildFactory instance")
         self.factory = factory
@@ -64,7 +76,9 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         if workername:
             if not isinstance(workername, str):
-                error(f"builder '{name}': workername must be a string but it is {repr(workername)}")
+                error(
+                    f"builder '{name}': workername must be a string but it is {repr(workername)}"
+                )
             workernames = workernames + [workername]
         if not workernames:
             error(f"builder '{name}': at least one workername is required")
@@ -100,13 +114,13 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         self.nextWorker = nextWorker
         if nextWorker and not callable(nextWorker):
-            error('nextWorker must be a callable')
+            error("nextWorker must be a callable")
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
-            error('nextBuild must be a callable')
+            error("nextBuild must be a callable")
         self.canStartBuild = canStartBuild
         if canStartBuild and not callable(canStartBuild):
-            error('canStartBuild must be a callable')
+            error("canStartBuild must be a callable")
 
         self.locks = locks or []
         self.env = env or {}
@@ -115,13 +129,19 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         self.properties = properties or {}
         for property_name in self.properties:
-            check_param_length(property_name, f'Builder {self.name} property',
-                               Model.property_name_length)
+            check_param_length(
+                property_name,
+                f"Builder {self.name} property",
+                Model.property_name_length,
+            )
 
         self.defaultProperties = defaultProperties or {}
         for property_name in self.defaultProperties:
-            check_param_length(property_name, f'Builder {self.name} default property',
-                               Model.property_name_length)
+            check_param_length(
+                property_name,
+                f"Builder {self.name} default property",
+                Model.property_name_length,
+            )
 
         self.collapseRequests = collapseRequests
 
@@ -131,28 +151,28 @@ class BuilderConfig(util_config.ConfiguredMixin):
         # note: this method will disappear eventually - put your smarts in the
         # constructor!
         rv = {
-            'name': self.name,
-            'workernames': self.workernames,
-            'factory': self.factory,
-            'builddir': self.builddir,
-            'workerbuilddir': self.workerbuilddir,
+            "name": self.name,
+            "workernames": self.workernames,
+            "factory": self.factory,
+            "builddir": self.builddir,
+            "workerbuilddir": self.workerbuilddir,
         }
         if self.tags:
-            rv['tags'] = self.tags
+            rv["tags"] = self.tags
         if self.nextWorker:
-            rv['nextWorker'] = self.nextWorker
+            rv["nextWorker"] = self.nextWorker
         if self.nextBuild:
-            rv['nextBuild'] = self.nextBuild
+            rv["nextBuild"] = self.nextBuild
         if self.locks:
-            rv['locks'] = self.locks
+            rv["locks"] = self.locks
         if self.env:
-            rv['env'] = self.env
+            rv["env"] = self.env
         if self.properties:
-            rv['properties'] = self.properties
+            rv["properties"] = self.properties
         if self.defaultProperties:
-            rv['defaultProperties'] = self.defaultProperties
+            rv["defaultProperties"] = self.defaultProperties
         if self.collapseRequests is not None:
-            rv['collapseRequests'] = self.collapseRequests
+            rv["collapseRequests"] = self.collapseRequests
         if self.description:
-            rv['description'] = self.description
+            rv["description"] = self.description
         return rv

@@ -25,7 +25,6 @@ from buildbot.util import service
 
 
 class DeferredStartStop(service.AsyncService):
-
     def startService(self):
         self.d = defer.Deferred()
         return self.d
@@ -36,7 +35,6 @@ class DeferredStartStop(service.AsyncService):
 
 
 class AsyncMultiService(unittest.TestCase):
-
     def setUp(self):
         self.svc = service.AsyncMultiService()
 
@@ -67,7 +65,7 @@ class AsyncMultiService(unittest.TestCase):
 
         d = self.svc.startService()
         self.assertFalse(d.called)
-        child.d.errback(RuntimeError('oh noes'))
+        child.d.errback(RuntimeError("oh noes"))
         self.assertTrue(d.called)
 
         @d.addErrback
@@ -76,7 +74,7 @@ class AsyncMultiService(unittest.TestCase):
 
         d = self.svc.stopService()
         self.assertFalse(d.called)
-        child.d.errback(RuntimeError('oh noes'))
+        child.d.errback(RuntimeError("oh noes"))
         self.assertTrue(d.called)
 
         @d.addErrback
@@ -95,7 +93,7 @@ class AsyncMultiService(unittest.TestCase):
 
 
 class ClusteredBuildbotService(unittest.TestCase):
-    SVC_NAME = 'myName'
+    SVC_NAME = "myName"
     SVC_ID = 20
 
     class DummyService(service.ClusteredBuildbotService):
@@ -144,22 +142,22 @@ class ClusteredBuildbotService(unittest.TestCase):
         svc.deactivate = self.makeMock(deactivate)
 
     def test_name_PreservesUnicodePromotion(self):
-        svc = self.makeService(name='n')
+        svc = self.makeService(name="n")
 
         self.assertIsInstance(svc.name, str)
-        self.assertEqual(svc.name, 'n')
+        self.assertEqual(svc.name, "n")
 
     def test_name_GetsUnicodePromotion(self):
-        svc = self.makeService(name='n')
+        svc = self.makeService(name="n")
 
         self.assertIsInstance(svc.name, str)
-        self.assertEqual(svc.name, 'n')
+        self.assertEqual(svc.name, "n")
 
     def test_compare(self):
-        a = self.makeService(name='a', serviceid=20)
-        b1 = self.makeService(name='b', serviceid=21)
-        b2 = self.makeService(name='b', serviceid=21)  # same args as 'b1'
-        b3 = self.makeService(name='b', serviceid=20)  # same id as 'a'
+        a = self.makeService(name="a", serviceid=20)
+        b1 = self.makeService(name="b", serviceid=21)
+        b2 = self.makeService(name="b", serviceid=21)  # same args as 'b1'
+        b3 = self.makeService(name="b", serviceid=20)  # same id as 'a'
 
         self.assertTrue(a == a)  # pylint: disable=comparison-with-itself
         self.assertTrue(a != b1)
@@ -240,8 +238,7 @@ class ClusteredBuildbotService(unittest.TestCase):
             self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC)
 
         self.assertEqual(1, self.svc._getServiceId.call_count)
-        self.assertEqual(
-            1 + NUMBER_OF_POLLS, self.svc._claimService.call_count)
+        self.assertEqual(1 + NUMBER_OF_POLLS, self.svc._claimService.call_count)
 
     def test_start_ClaimSucceeds(self):
         self.setServiceClaimable(self.svc, defer.succeed(True))
@@ -539,7 +536,6 @@ class ClusteredBuildbotService(unittest.TestCase):
 
 
 class MyService(service.BuildbotService):
-
     def checkConfig(self, foo, a=None):
         if a is None:
             config.error("a must be specified")
@@ -565,7 +561,6 @@ def makeFakeMaster():
 
 
 class BuildbotService(unittest.TestCase):
-
     def setUp(self):
         self.master = makeFakeMaster()
 
@@ -581,17 +576,20 @@ class BuildbotService(unittest.TestCase):
     @defer.inlineCallbacks
     def testNominal(self):
         yield self.prepareService()
-        self.assertEqual(
-            self.master.namedServices["basic"].config, ((1,), dict(a=2)))
+        self.assertEqual(self.master.namedServices["basic"].config, ((1,), dict(a=2)))
 
     @defer.inlineCallbacks
     def testConfigDict(self):
         serv = yield self.prepareService()
-        self.assertEqual(serv.getConfigDict(), {
-            'args': (1,),
-            'class': 'buildbot.test.unit.util.test_service.MyService',
-            'kwargs': {'a': 2},
-            'name': 'basic'})
+        self.assertEqual(
+            serv.getConfigDict(),
+            {
+                "args": (1,),
+                "class": "buildbot.test.unit.util.test_service.MyService",
+                "kwargs": {"a": 2},
+                "name": "basic",
+            },
+        )
 
     def testNoName(self):
         with self.assertRaises(ValueError):
@@ -603,7 +601,6 @@ class BuildbotService(unittest.TestCase):
 
 
 class BuildbotServiceManager(unittest.TestCase):
-
     def setUp(self):
         self.master = makeFakeMaster()
 
@@ -621,8 +618,7 @@ class BuildbotServiceManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testNominal(self):
         yield self.prepareService()
-        self.assertEqual(
-            self.manager.namedServices["basic"].config, ((1,), dict(a=2)))
+        self.assertEqual(self.manager.namedServices["basic"].config, ((1,), dict(a=2)))
 
     @defer.inlineCallbacks
     def testReconfigNoChange(self):
@@ -675,7 +671,7 @@ class BuildbotServiceManager(unittest.TestCase):
 
         # reconfigure with the new service
         serv2 = MyService(1, a=4, name="basic2")
-        self.master.config.services['basic2'] = serv2
+        self.master.config.services["basic2"] = serv2
 
         # the second service is not there yet
         self.assertIdentical(self.manager.namedServices.get("basic2"), None)
@@ -709,36 +705,44 @@ class BuildbotServiceManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testConfigDict(self):
         yield self.prepareService()
-        self.assertEqual(self.manager.getConfigDict(), {
-            'childs': [{
-                'args': (1,),
-                'class': 'buildbot.test.unit.util.test_service.MyService',
-                'kwargs': {'a': 2},
-                'name': 'basic'}],
-            'name': 'services'})
+        self.assertEqual(
+            self.manager.getConfigDict(),
+            {
+                "childs": [
+                    {
+                        "args": (1,),
+                        "class": "buildbot.test.unit.util.test_service.MyService",
+                        "kwargs": {"a": 2},
+                        "name": "basic",
+                    }
+                ],
+                "name": "services",
+            },
+        )
 
     @defer.inlineCallbacks
     def testRenderSecrets(self):
         yield self.prepareService()
-        service = self.manager.namedServices['basic']
-        test = yield service.renderSecrets(Interpolate('test_string'))
-        self.assertEqual(test, 'test_string')
+        service = self.manager.namedServices["basic"]
+        test = yield service.renderSecrets(Interpolate("test_string"))
+        self.assertEqual(test, "test_string")
 
     @defer.inlineCallbacks
     def testRenderSecrets2Args(self):
         yield self.prepareService()
-        service = self.manager.namedServices['basic']
-        test, test2 = yield service.renderSecrets(Interpolate('test_string'),
-                                                  'ok_for_non_renderable')
-        self.assertEqual(test, 'test_string')
-        self.assertEqual(test2, 'ok_for_non_renderable')
+        service = self.manager.namedServices["basic"]
+        test, test2 = yield service.renderSecrets(
+            Interpolate("test_string"), "ok_for_non_renderable"
+        )
+        self.assertEqual(test, "test_string")
+        self.assertEqual(test2, "ok_for_non_renderable")
 
     @defer.inlineCallbacks
     def testRenderSecretsWithTuple(self):
         yield self.prepareService()
-        service = self.manager.namedServices['basic']
-        test = yield service.renderSecrets(('user', Interpolate('test_string')))
-        self.assertEqual(test, ('user', 'test_string'))
+        service = self.manager.namedServices["basic"]
+        test = yield service.renderSecrets(("user", Interpolate("test_string")))
+        self.assertEqual(test, ("user", "test_string"))
 
 
 class UnderTestSharedService(service.SharedService):

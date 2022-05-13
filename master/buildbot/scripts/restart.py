@@ -20,8 +20,8 @@ from buildbot.scripts import stop
 
 
 def restart(config):
-    basedir = config['basedir']
-    quiet = config['quiet']
+    basedir = config["basedir"]
+    quiet = config["quiet"]
 
     if not base.isBuildmasterDir(basedir):
         return 1

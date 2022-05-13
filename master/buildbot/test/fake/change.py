@@ -20,11 +20,11 @@ from buildbot.test.fake.state import State
 
 class Change(State):
 
-    project = ''
-    repository = ''
-    branch = ''
-    category = ''
-    codebase = ''
+    project = ""
+    repository = ""
+    branch = ""
+    category = ""
+    codebase = ""
     properties = {}
 
     def __init__(self, **kw):

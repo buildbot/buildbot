@@ -53,8 +53,9 @@ def _recordWarnings(category, output):
 
 
 @contextlib.contextmanager
-def assertProducesWarnings(filter_category, num_warnings=None,
-                           messages_patterns=None, message_pattern=None):
+def assertProducesWarnings(
+    filter_category, num_warnings=None, messages_patterns=None, message_pattern=None
+):
     if messages_patterns is not None:
         assert message_pattern is None
         assert num_warnings is None
@@ -69,11 +70,12 @@ def assertProducesWarnings(filter_category, num_warnings=None,
     if num_warnings is None:
         num_warnings = 1
 
-    warns_str = '\n'.join(map(str, warns))
-    assert len(warns) == num_warnings, \
-        "Number of occurred warnings is not correct. " \
-        f"Expected {num_warnings} warnings, received {len(warns)}:\n" \
+    warns_str = "\n".join(map(str, warns))
+    assert len(warns) == num_warnings, (
+        "Number of occurred warnings is not correct. "
+        f"Expected {num_warnings} warnings, received {len(warns)}:\n"
         f"{warns_str}"
+    )
 
     if messages_patterns is None and message_pattern is not None:
         messages_patterns = [message_pattern] * num_warnings
@@ -81,20 +83,20 @@ def assertProducesWarnings(filter_category, num_warnings=None,
     if messages_patterns is not None:
         for w, pattern in zip(warns, messages_patterns):
             # TODO: Maybe don't use regexp, but use simple substring check?
-            warns_str = '\n'.join(map(str, warns))
-            assert re.search(pattern, str(w.message)), \
-                "Warning pattern doesn't match. Expected pattern:\n" \
-                f"{pattern}\n" \
-                "Received message:\n" \
-                f"{w.message}\n" \
-                "All gathered warnings:\n" \
+            warns_str = "\n".join(map(str, warns))
+            assert re.search(pattern, str(w.message)), (
+                "Warning pattern doesn't match. Expected pattern:\n"
+                f"{pattern}\n"
+                "Received message:\n"
+                f"{w.message}\n"
+                "All gathered warnings:\n"
                 f"{warns_str}"
+            )
 
 
 @contextlib.contextmanager
 def assertProducesWarning(filter_category, message_pattern=None):
-    with assertProducesWarnings(filter_category, num_warnings=1,
-                                message_pattern=message_pattern):
+    with assertProducesWarnings(filter_category, num_warnings=1, message_pattern=message_pattern):
         yield
 
 

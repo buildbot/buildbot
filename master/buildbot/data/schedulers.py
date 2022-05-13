@@ -23,18 +23,16 @@ from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 
 
 class Db2DataMixin:
-
     @defer.inlineCallbacks
     def db2data(self, dbdict):
         master = None
-        if dbdict['masterid'] is not None:
-            master = yield self.master.data.get(
-                ('masters', dbdict['masterid']))
+        if dbdict["masterid"] is not None:
+            master = yield self.master.data.get(("masters", dbdict["masterid"]))
         data = {
-            'schedulerid': dbdict['id'],
-            'name': dbdict['name'],
-            'enabled': dbdict['enabled'],
-            'master': master,
+            "schedulerid": dbdict["id"],
+            "name": dbdict["name"],
+            "enabled": dbdict["enabled"],
+            "master": master,
         }
         return data
 
@@ -49,18 +47,17 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        dbdict = yield self.master.db.schedulers.getScheduler(
-            kwargs['schedulerid'])
-        if 'masterid' in kwargs:
-            if dbdict['masterid'] != kwargs['masterid']:
+        dbdict = yield self.master.db.schedulers.getScheduler(kwargs["schedulerid"])
+        if "masterid" in kwargs:
+            if dbdict["masterid"] != kwargs["masterid"]:
                 return None
         return (yield self.db2data(dbdict)) if dbdict else None
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
-        if action == 'enable':
-            schedulerid = kwargs['schedulerid']
-            v = args['enabled']
+        if action == "enable":
+            schedulerid = kwargs["schedulerid"]
+            v = args["enabled"]
             yield self.master.data.updates.schedulerEnable(schedulerid, v)
         return None
 
@@ -72,15 +69,16 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
         /schedulers
         /masters/n:masterid/schedulers
     """
-    rootLinkName = 'schedulers'
+    rootLinkName = "schedulers"
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        schedulers = yield self.master.db.schedulers.getSchedulers(
-            masterid=kwargs.get('masterid'))
+        schedulers = yield self.master.db.schedulers.getSchedulers(masterid=kwargs.get("masterid"))
         schdicts = yield defer.DeferredList(
             [self.db2data(schdict) for schdict in schedulers],
-            consumeErrors=True, fireOnOneErrback=True)
+            consumeErrors=True,
+            fireOnOneErrback=True,
+        )
         return [r for (s, r) in schdicts]
 
 
@@ -89,7 +87,7 @@ class Scheduler(base.ResourceType):
     name = "scheduler"
     plural = "schedulers"
     endpoints = [SchedulerEndpoint, SchedulersEndpoint]
-    keyField = 'schedulerid'
+    keyField = "schedulerid"
     eventPathPatterns = """
         /schedulers/:schedulerid
     """
@@ -99,18 +97,19 @@ class Scheduler(base.ResourceType):
         name = types.String()
         enabled = types.Boolean()
         master = types.NoneOk(masters.Master.entityType)
-    entityType = EntityType(name, 'Scheduler')
+
+    entityType = EntityType(name, "Scheduler")
 
     @defer.inlineCallbacks
     def generateEvent(self, schedulerid, event):
-        scheduler = yield self.master.data.get(('schedulers', str(schedulerid)))
+        scheduler = yield self.master.data.get(("schedulers", str(schedulerid)))
         self.produceEvent(scheduler, event)
 
     @base.updateMethod
     @defer.inlineCallbacks
     def schedulerEnable(self, schedulerid, v):
         yield self.master.db.schedulers.enable(schedulerid, v)
-        yield self.generateEvent(schedulerid, 'updated')
+        yield self.generateEvent(schedulerid, "updated")
         return None
 
     @base.updateMethod
@@ -119,8 +118,7 @@ class Scheduler(base.ResourceType):
 
     @base.updateMethod
     def trySetSchedulerMaster(self, schedulerid, masterid):
-        d = self.master.db.schedulers.setSchedulerMaster(
-            schedulerid, masterid)
+        d = self.master.db.schedulers.setSchedulerMaster(schedulerid, masterid)
 
         # set is successful: deferred result is True
         d.addCallback(lambda _: True)
@@ -138,7 +136,6 @@ class Scheduler(base.ResourceType):
 
     @defer.inlineCallbacks
     def _masterDeactivated(self, masterid):
-        schedulers = yield self.master.db.schedulers.getSchedulers(
-            masterid=masterid)
+        schedulers = yield self.master.db.schedulers.getSchedulers(masterid=masterid)
         for sch in schedulers:
-            yield self.master.db.schedulers.setSchedulerMaster(sch['id'], None)
+            yield self.master.db.schedulers.setSchedulerMaster(sch["id"], None)

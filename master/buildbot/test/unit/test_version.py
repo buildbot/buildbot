@@ -45,7 +45,7 @@ class VersioningUtilsTests(unittest.SynchronousTestCase):
         self.assertEqual(version, "2017.12.30")
 
     def test_getVersionFromArchiveIdtag(self):
-        version = self.m.getVersionFromArchiveId('1514808197  (HEAD -> master, tag: v1.0.0)')
+        version = self.m.getVersionFromArchiveId("1514808197  (HEAD -> master, tag: v1.0.0)")
         self.assertEqual(version, "1.0.0")
 
 

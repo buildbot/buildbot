@@ -21,7 +21,6 @@ from buildbot.data.resultspec import ResultSpec
 
 
 class Db2DataMixin:
-
     def _generate_filtered_properties(self, props, filters):
         """
         This method returns Build's properties according to property filters.
@@ -36,38 +35,41 @@ class Db2DataMixin:
         """
         # by default none properties are returned
         if props and filters:
-            return (props
-                    if '*' in filters
-                    else dict(((k, v) for k, v in props.items() if k in filters)))
+            return (
+                props
+                if "*" in filters
+                else dict(((k, v) for k, v in props.items() if k in filters))
+            )
         return None
 
     def db2data(self, dbdict):
         data = {
-            'buildid': dbdict['id'],
-            'number': dbdict['number'],
-            'builderid': dbdict['builderid'],
-            'buildrequestid': dbdict['buildrequestid'],
-            'workerid': dbdict['workerid'],
-            'masterid': dbdict['masterid'],
-            'started_at': dbdict['started_at'],
-            'complete_at': dbdict['complete_at'],
-            'complete': dbdict['complete_at'] is not None,
-            'state_string': dbdict['state_string'],
-            'results': dbdict['results'],
-            'properties': {}
+            "buildid": dbdict["id"],
+            "number": dbdict["number"],
+            "builderid": dbdict["builderid"],
+            "buildrequestid": dbdict["buildrequestid"],
+            "workerid": dbdict["workerid"],
+            "masterid": dbdict["masterid"],
+            "started_at": dbdict["started_at"],
+            "complete_at": dbdict["complete_at"],
+            "complete": dbdict["complete_at"] is not None,
+            "state_string": dbdict["state_string"],
+            "results": dbdict["results"],
+            "properties": {},
         }
         return defer.succeed(data)
+
     fieldMapping = {
-        'buildid': 'builds.id',
-        'number': 'builds.number',
-        'builderid': 'builds.builderid',
-        'buildrequestid': 'builds.buildrequestid',
-        'workerid': 'builds.workerid',
-        'masterid': 'builds.masterid',
-        'started_at': 'builds.started_at',
-        'complete_at': 'builds.complete_at',
-        'state_string': 'builds.state_string',
-        'results': 'builds.results',
+        "buildid": "builds.id",
+        "number": "builds.number",
+        "builderid": "builds.builderid",
+        "buildrequestid": "builds.buildrequestid",
+        "workerid": "builds.workerid",
+        "masterid": "builds.masterid",
+        "started_at": "builds.started_at",
+        "complete_at": "builds.complete_at",
+        "state_string": "builds.state_string",
+        "results": "builds.results",
     }
 
 
@@ -82,50 +84,49 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        if 'buildid' in kwargs:
-            dbdict = yield self.master.db.builds.getBuild(kwargs['buildid'])
+        if "buildid" in kwargs:
+            dbdict = yield self.master.db.builds.getBuild(kwargs["buildid"])
         else:
             bldr = yield self.getBuilderId(kwargs)
             if bldr is None:
                 return None
-            num = kwargs['number']
+            num = kwargs["number"]
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
 
         data = yield self.db2data(dbdict) if dbdict else None
         # In some cases, data could be None
         if data:
-            filters = resultSpec.popProperties() if hasattr(
-                resultSpec, 'popProperties') else []
+            filters = resultSpec.popProperties() if hasattr(resultSpec, "popProperties") else []
             # Avoid to request DB for Build's properties if not specified
             if filters:
                 try:
-                    props = yield self.master.db.builds.getBuildProperties(data['buildid'])
+                    props = yield self.master.db.builds.getBuildProperties(data["buildid"])
                 except (KeyError, TypeError):
                     props = {}
-                filtered_properties = self._generate_filtered_properties(
-                    props, filters)
+                filtered_properties = self._generate_filtered_properties(props, filters)
                 if filtered_properties:
-                    data['properties'] = filtered_properties
+                    data["properties"] = filtered_properties
         return data
 
     @defer.inlineCallbacks
     def actionStop(self, args, kwargs):
-        buildid = kwargs.get('buildid')
+        buildid = kwargs.get("buildid")
         if buildid is None:
-            bldr = kwargs['builderid']
-            num = kwargs['number']
+            bldr = kwargs["builderid"]
+            num = kwargs["number"]
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
-            buildid = dbdict['id']
-        self.master.mq.produce(("control", "builds",
-                                str(buildid), 'stop'),
-                               dict(reason=kwargs.get('reason', args.get('reason', 'no reason'))))
+            buildid = dbdict["id"]
+        self.master.mq.produce(
+            ("control", "builds", str(buildid), "stop"),
+            dict(reason=kwargs.get("reason", args.get("reason", "no reason"))),
+        )
 
     @defer.inlineCallbacks
     def actionRebuild(self, args, kwargs):
         # we use the self.get and not self.data.get to be able to support all
         # the pathPatterns of this endpoint
         build = yield self.get(ResultSpec(), kwargs)
-        buildrequest = yield self.master.data.get(('buildrequests', build['buildrequestid']))
+        buildrequest = yield self.master.data.get(("buildrequests", build["buildrequestid"]))
         res = yield self.master.data.updates.rebuildBuildrequest(buildrequest)
         return res
 
@@ -141,18 +142,18 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         /changes/n:changeid/builds
         /workers/n:workerid/builds
     """
-    rootLinkName = 'builds'
+    rootLinkName = "builds"
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        changeid = kwargs.get('changeid')
+        changeid = kwargs.get("changeid")
         if changeid is not None:
             builds = yield self.master.db.builds.getBuildsForChange(changeid)
         else:
             # following returns None if no filter
             # true or false, if there is a complete filter
             builderid = None
-            if 'builderid' in kwargs or 'buildername' in kwargs:
+            if "builderid" in kwargs or "buildername" in kwargs:
                 builderid = yield self.getBuilderId(kwargs)
                 if builderid is None:
                     return []
@@ -161,10 +162,11 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             resultSpec.fieldMapping = self.fieldMapping
             builds = yield self.master.db.builds.getBuilds(
                 builderid=builderid,
-                buildrequestid=kwargs.get('buildrequestid', buildrequestid),
-                workerid=kwargs.get('workerid'),
+                buildrequestid=kwargs.get("buildrequestid", buildrequestid),
+                workerid=kwargs.get("workerid"),
                 complete=complete,
-                resultSpec=resultSpec)
+                resultSpec=resultSpec,
+            )
 
         # returns properties' list
         filters = resultSpec.popProperties()
@@ -172,9 +174,9 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         buildscol = []
         for b in builds:
             data = yield self.db2data(b)
-            if kwargs.get('graphql'):
+            if kwargs.get("graphql"):
                 # let the graphql engine manage the properties
-                del data['properties']
+                del data["properties"]
             else:
                 # Avoid to request DB for Build's properties if not specified
                 if filters:
@@ -213,12 +215,13 @@ class Build(base.ResourceType):
         results = types.NoneOk(types.Integer())
         state_string = types.String()
         properties = types.NoneOk(types.SourcedProperties())
-    entityType = EntityType(name, 'Build')
+
+    entityType = EntityType(name, "Build")
 
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):
         # get the build and munge the result for the notification
-        build = yield self.master.data.get(('builds', str(_id)))
+        build = yield self.master.data.get(("builds", str(_id)))
         self.produceEvent(build, event)
 
     @base.updateMethod
@@ -229,7 +232,8 @@ class Build(base.ResourceType):
             buildrequestid=buildrequestid,
             workerid=workerid,
             masterid=self.master.masterid,
-            state_string='created')
+            state_string="created",
+        )
         return res
 
     @base.updateMethod
@@ -240,14 +244,14 @@ class Build(base.ResourceType):
     @defer.inlineCallbacks
     def setBuildStateString(self, buildid, state_string):
         res = yield self.master.db.builds.setBuildStateString(
-            buildid=buildid, state_string=state_string)
+            buildid=buildid, state_string=state_string
+        )
         yield self.generateEvent(buildid, "update")
         return res
 
     @base.updateMethod
     @defer.inlineCallbacks
     def finishBuild(self, buildid, results):
-        res = yield self.master.db.builds.finishBuild(
-            buildid=buildid, results=results)
+        res = yield self.master.db.builds.finishBuild(buildid=buildid, results=results)
         yield self.generateEvent(buildid, "finished")
         return res

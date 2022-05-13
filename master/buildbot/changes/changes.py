@@ -48,39 +48,53 @@ class Change:
         @returns: L{Change} via Deferred
         """
         cache = master.caches.get_cache("Changes", cls._make_ch)
-        return cache.get(chdict['changeid'], chdict=chdict, master=master)
+        return cache.get(chdict["changeid"], chdict=chdict, master=master)
 
     @classmethod
     def _make_ch(cls, changeid, master, chdict):
         change = cls(None, None, None, _fromChdict=True)
-        change.who = chdict['author']
-        change.committer = chdict['committer']
-        change.comments = chdict['comments']
-        change.revision = chdict['revision']
-        change.branch = chdict['branch']
-        change.category = chdict['category']
-        change.revlink = chdict['revlink']
-        change.repository = chdict['repository']
-        change.codebase = chdict['codebase']
-        change.project = chdict['project']
-        change.number = chdict['changeid']
+        change.who = chdict["author"]
+        change.committer = chdict["committer"]
+        change.comments = chdict["comments"]
+        change.revision = chdict["revision"]
+        change.branch = chdict["branch"]
+        change.category = chdict["category"]
+        change.revlink = chdict["revlink"]
+        change.repository = chdict["repository"]
+        change.codebase = chdict["codebase"]
+        change.project = chdict["project"]
+        change.number = chdict["changeid"]
 
-        when = chdict['when_timestamp']
+        when = chdict["when_timestamp"]
         if when:
             when = datetime2epoch(when)
         change.when = when
 
-        change.files = sorted(chdict['files'])
+        change.files = sorted(chdict["files"])
 
         change.properties = Properties()
-        for n, (v, s) in chdict['properties'].items():
+        for n, (v, s) in chdict["properties"].items():
             change.properties.setProperty(n, v, s)
 
         return defer.succeed(change)
 
-    def __init__(self, who, files, comments, committer=None, revision=None, when=None,
-                 branch=None, category=None, revlink='', properties=None,
-                 repository='', codebase='', project='', _fromChdict=False):
+    def __init__(
+        self,
+        who,
+        files,
+        comments,
+        committer=None,
+        revision=None,
+        when=None,
+        branch=None,
+        category=None,
+        revlink="",
+        properties=None,
+        repository="",
+        codebase="",
+        project="",
+        _fromChdict=False,
+    ):
         if properties is None:
             properties = {}
         # skip all this madness if we're being built from the database
@@ -103,8 +117,7 @@ class Change:
         elif when > now:
             # this happens when the committing system has an incorrect clock, for example.
             # handle it gracefully
-            log.msg(
-                "received a Change with when > now; assuming the change happened now")
+            log.msg("received a Change with when > now; assuming the change happened now")
             self.when = now
         else:
             self.when = when
@@ -123,18 +136,28 @@ class Change:
     def __setstate__(self, dict):
         self.__dict__ = dict
         # Older Changes won't have a 'properties' attribute in them
-        if not hasattr(self, 'properties'):
+        if not hasattr(self, "properties"):
             self.properties = Properties()
-        if not hasattr(self, 'revlink'):
+        if not hasattr(self, "revlink"):
             self.revlink = ""
 
     def __str__(self):
-        return ("Change(revision=%r, who=%r, committer=%r, branch=%r, comments=%r, " +
-                "when=%r, category=%r, project=%r, repository=%r, " +
-                "codebase=%r)") % (
-            self.revision, self.who, self.committer, self.branch, self.comments,
-            self.when, self.category, self.project, self.repository,
-            self.codebase)
+        return (
+            "Change(revision=%r, who=%r, committer=%r, branch=%r, comments=%r, "
+            + "when=%r, category=%r, project=%r, repository=%r, "
+            + "codebase=%r)"
+        ) % (
+            self.revision,
+            self.who,
+            self.committer,
+            self.branch,
+            self.comments,
+            self.when,
+            self.category,
+            self.project,
+            self.repository,
+            self.codebase,
+        )
 
     def __eq__(self, other):
         return self.number == other.number
@@ -170,32 +193,32 @@ class Change:
         data += "Properties: \n"
         for prop in self.properties.asList():
             data += f"  {prop[0]}: {prop[1]}"
-        data += '\n\n'
+        data += "\n\n"
         return data
 
     def asDict(self):
-        '''returns a dictionary with suitable info for html/mail rendering'''
+        """returns a dictionary with suitable info for html/mail rendering"""
         files = [dict(name=f) for f in self.files]
-        files.sort(key=lambda a: a['name'])
+        files.sort(key=lambda a: a["name"])
 
         result = {
             # Constant
-            'number': self.number,
-            'branch': self.branch,
-            'category': self.category,
-            'who': self.getShortAuthor(),
-            'committer': self.committer,
-            'comments': self.comments,
-            'revision': self.revision,
-            'rev': self.revision,
-            'when': self.when,
-            'at': self.getTime(),
-            'files': files,
-            'revlink': getattr(self, 'revlink', None),
-            'properties': self.properties.asList(),
-            'repository': getattr(self, 'repository', None),
-            'codebase': getattr(self, 'codebase', ''),
-            'project': getattr(self, 'project', None)
+            "number": self.number,
+            "branch": self.branch,
+            "category": self.category,
+            "who": self.getShortAuthor(),
+            "committer": self.committer,
+            "comments": self.comments,
+            "revision": self.revision,
+            "rev": self.revision,
+            "when": self.when,
+            "at": self.getTime(),
+            "files": files,
+            "revlink": getattr(self, "revlink", None),
+            "properties": self.properties.asList(),
+            "repository": getattr(self, "repository", None),
+            "codebase": getattr(self, "codebase", ""),
+            "project": getattr(self, "project", None),
         }
         return result
 
@@ -205,8 +228,7 @@ class Change:
     def getTime(self):
         if not self.when:
             return "?"
-        return time.strftime("%a %d %b %Y %H:%M:%S",
-                             time.localtime(self.when))
+        return time.strftime("%a %d %b %Y %H:%M:%S", time.localtime(self.when))
 
     def getTimes(self):
         return (self.when, None)

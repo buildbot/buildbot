@@ -25,12 +25,12 @@ from buildbot.util import asyncSleep
 class InterruptCommand(RunMasterBase):
     """Make sure we can interrupt a command"""
 
-    @flaky(bugNumber=4404, onPlatform='win32')
+    @flaky(bugNumber=4404, onPlatform="win32")
     @defer.inlineCallbacks
     def test_interrupt(self):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True)
-        self.assertEqual(build['steps'][-1]['results'], CANCELLED)
+        self.assertEqual(build["steps"][-1]["results"], CANCELLED)
 
 
 class InterruptCommandPb(InterruptCommand):
@@ -61,16 +61,10 @@ def masterConfig():
             res = yield d
             return res
 
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c["schedulers"] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
     f = util.BuildFactory()
     f.addStep(SleepAndInterrupt())
-    c['builders'] = [
-        util.BuilderConfig(name="testy",
-                           workernames=["local1"],
-                           factory=f)]
+    c["builders"] = [util.BuilderConfig(name="testy", workernames=["local1"], factory=f)]
 
     return c

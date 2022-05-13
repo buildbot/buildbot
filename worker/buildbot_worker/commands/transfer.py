@@ -27,22 +27,21 @@ from buildbot_worker.commands.base import Command
 
 
 class TransferCommand(Command):
-
     def finished(self, res):
         if self.debug:
-            log.msg('finished: stderr={0!r}, rc={1!r}'.format(self.stderr, self.rc))
+            log.msg("finished: stderr={0!r}, rc={1!r}".format(self.stderr, self.rc))
 
         # don't use self.sendStatus here, since we may no longer be running
         # if we have been interrupted
-        upd = {'rc': self.rc}
+        upd = {"rc": self.rc}
         if self.stderr:
-            upd['stderr'] = self.stderr
+            upd["stderr"] = self.stderr
         self.protocol_command.send_update(upd)
         return res
 
     def interrupt(self):
         if self.debug:
-            log.msg('interrupted')
+            log.msg("interrupted")
         if self.interrupted:
             return
         self.rc = 1
@@ -63,23 +62,24 @@ class WorkerFileUploadCommand(TransferCommand):
         - ['blocksize']: max size for each data block
         - ['keepstamp']: whether to preserve file modified and accessed times
     """
+
     debug = False
 
-    requiredArgs = ['path', 'writer', 'blocksize']
+    requiredArgs = ["path", "writer", "blocksize"]
 
     def setup(self, args):
-        self.path = args['path']
-        self.writer = args['writer']
-        self.remaining = args['maxsize']
-        self.blocksize = args['blocksize']
-        self.keepstamp = args.get('keepstamp', False)
+        self.path = args["path"]
+        self.writer = args["writer"]
+        self.remaining = args["maxsize"]
+        self.blocksize = args["blocksize"]
+        self.keepstamp = args.get("keepstamp", False)
         self.stderr = None
         self.rc = 0
         self.fp = None
 
     def start(self):
         if self.debug:
-            log.msg('WorkerFileUploadCommand started')
+            log.msg("WorkerFileUploadCommand started")
 
         access_time = None
         modified_time = None
@@ -88,7 +88,7 @@ class WorkerFileUploadCommand(TransferCommand):
                 access_time = os.path.getatime(self.path)
                 modified_time = os.path.getmtime(self.path)
 
-            self.fp = open(self.path, 'rb')
+            self.fp = open(self.path, "rb")
             if self.debug:
                 log.msg("Opened '{0}' for upload".format(self.path))
         except Exception:
@@ -98,7 +98,7 @@ class WorkerFileUploadCommand(TransferCommand):
             if self.debug:
                 log.msg("Cannot open file '{0}' for upload".format(self.path))
 
-        self.sendStatus({'header': "sending {0}\n".format(self.path)})
+        self.sendStatus({"header": "sending {0}\n".format(self.path)})
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -111,9 +111,9 @@ class WorkerFileUploadCommand(TransferCommand):
             yield self.protocol_command.protocol_update_upload_file_close(self.writer)
 
             if self.keepstamp:
-                yield self.protocol_command.protocol_update_upload_file_utime(self.writer,
-                                                                              access_time,
-                                                                              modified_time)
+                yield self.protocol_command.protocol_update_upload_file_utime(
+                    self.writer, access_time, modified_time
+                )
 
         def _close_err(f):
             self.rc = 1
@@ -126,6 +126,7 @@ class WorkerFileUploadCommand(TransferCommand):
             def eb(f2):
                 log.msg("ignoring error from remote close():")
                 log.err(f2)
+
             d1.addErrback(eb)
             d1.addBoth(lambda _: f)  # always return _loop failure
             return d1
@@ -145,6 +146,7 @@ class WorkerFileUploadCommand(TransferCommand):
 
         def _err(why):
             fire_when_done.errback(why)
+
         d.addCallbacks(_done, _err)
         return None
 
@@ -153,7 +155,7 @@ class WorkerFileUploadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('WorkerFileUploadCommand._writeBlock(): end')
+                log.msg("WorkerFileUploadCommand._writeBlock(): end")
             return True
 
         length = self.blocksize
@@ -162,16 +164,17 @@ class WorkerFileUploadCommand(TransferCommand):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = 'Maximum filesize reached, truncating file \'{0}\''.format(
-                    self.path)
+                self.stderr = "Maximum filesize reached, truncating file '{0}'".format(self.path)
                 self.rc = 1
-            data = ''
+            data = ""
         else:
             data = self.fp.read(length)
 
         if self.debug:
-            log.msg('WorkerFileUploadCommand._writeBlock(): ' +
-                    'allowed={0} readlen={1}'.format(length, len(data)))
+            log.msg(
+                "WorkerFileUploadCommand._writeBlock(): "
+                + "allowed={0} readlen={1}".format(length, len(data))
+            )
         if not data:
             log.msg("EOF: callRemote(close)")
             return True
@@ -189,20 +192,20 @@ class WorkerFileUploadCommand(TransferCommand):
 
 class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
     debug = False
-    requiredArgs = ['path', 'writer', 'blocksize']
+    requiredArgs = ["path", "writer", "blocksize"]
 
     def setup(self, args):
-        self.path = args['path']
-        self.writer = args['writer']
-        self.remaining = args['maxsize']
-        self.blocksize = args['blocksize']
-        self.compress = args['compress']
+        self.path = args["path"]
+        self.writer = args["writer"]
+        self.remaining = args["maxsize"]
+        self.blocksize = args["blocksize"]
+        self.compress = args["compress"]
         self.stderr = None
         self.rc = 0
 
     def start(self):
         if self.debug:
-            log.msg('WorkerDirectoryUploadCommand started')
+            log.msg("WorkerDirectoryUploadCommand started")
 
         if self.debug:
             log.msg("path: {0!r}".format(self.path))
@@ -211,23 +214,23 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         fd, self.tarname = tempfile.mkstemp()
         self.fp = os.fdopen(fd, "rb+")
 
-        if self.compress == 'bz2':
-            mode = 'w|bz2'
-        elif self.compress == 'gz':
-            mode = 'w|gz'
+        if self.compress == "bz2":
+            mode = "w|bz2"
+        elif self.compress == "gz":
+            mode = "w|gz"
         else:
-            mode = 'w'
+            mode = "w"
         # TODO: Use 'with' when depending on Python 2.7
         # Not possible with older versions:
         # exceptions.AttributeError: 'TarFile' object has no attribute '__exit__'
         archive = tarfile.open(mode=mode, fileobj=self.fp)
-        archive.add(self.path, '')
+        archive.add(self.path, "")
         archive.close()
 
         # Transfer it
         self.fp.seek(0)
 
-        self.sendStatus({'header': "sending {0}\n".format(self.path)})
+        self.sendStatus({"header": "sending {0}\n".format(self.path)})
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -238,9 +241,11 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
             def unpack_err(f):
                 self.rc = 1
                 return f
+
             d1.addErrback(unpack_err)
             d1.addCallback(lambda ignored: res)
             return d1
+
         d.addCallback(unpack)
         d.addBoth(self.finished)
         return d
@@ -267,29 +272,30 @@ class WorkerFileDownloadCommand(TransferCommand):
         - ['blocksize']: max size for each data block
         - ['mode']:      access mode for the new file
     """
+
     debug = False
-    requiredArgs = ['path', 'reader', 'blocksize']
+    requiredArgs = ["path", "reader", "blocksize"]
 
     def setup(self, args):
-        self.path = args['path']
-        self.reader = args['reader']
-        self.bytes_remaining = args['maxsize']
-        self.blocksize = args['blocksize']
-        self.mode = args['mode']
+        self.path = args["path"]
+        self.reader = args["reader"]
+        self.bytes_remaining = args["maxsize"]
+        self.blocksize = args["blocksize"]
+        self.mode = args["mode"]
         self.stderr = None
         self.rc = 0
         self.fp = None
 
     def start(self):
         if self.debug:
-            log.msg('WorkerFileDownloadCommand starting')
+            log.msg("WorkerFileDownloadCommand starting")
 
         dirname = os.path.dirname(self.path)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
         try:
-            self.fp = open(self.path, 'wb')
+            self.fp = open(self.path, "wb")
             if self.debug:
                 log.msg("Opened '{0}' for download".format(self.path))
             if self.mode is not None:
@@ -317,9 +323,10 @@ class WorkerFileDownloadCommand(TransferCommand):
         def _close(res):
             # close the file, but pass through any errors from _loop
             d1 = self.protocol_command.protocol_update_read_file_close(self.reader)
-            d1.addErrback(log.err, 'while trying to close reader')
+            d1.addErrback(log.err, "while trying to close reader")
             d1.addCallback(lambda ignored: res)
             return d1
+
         d.addBoth(_close)
         d.addBoth(self.finished)
         return d
@@ -335,6 +342,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         def _err(why):
             fire_when_done.errback(why)
+
         d.addCallbacks(_done, _err)
         return None
 
@@ -343,7 +351,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('WorkerFileDownloadCommand._readBlock(): end')
+                log.msg("WorkerFileDownloadCommand._readBlock(): end")
             return True
 
         length = self.blocksize
@@ -352,8 +360,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = "Maximum filesize reached, truncating file '{0}'".format(
-                    self.path)
+                self.stderr = "Maximum filesize reached, truncating file '{0}'".format(self.path)
                 self.rc = 1
             return True
         else:
@@ -363,8 +370,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
     def _writeData(self, data):
         if self.debug:
-            log.msg('WorkerFileDownloadCommand._readBlock(): readlen=%d' %
-                    len(data))
+            log.msg("WorkerFileDownloadCommand._readBlock(): readlen=%d" % len(data))
         if not data:
             return True
 

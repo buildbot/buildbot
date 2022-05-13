@@ -32,15 +32,14 @@ from buildbot.steps.source.base import Source
 
 class Darcs(Source):
 
-    """ Class for Darcs with all smarts """
+    """Class for Darcs with all smarts"""
 
-    name = 'darcs'
+    name = "darcs"
 
-    renderables = ['repourl']
-    possible_methods = ('clobber', 'copy')
+    renderables = ["repourl"]
+    possible_methods = ("clobber", "copy")
 
-    def __init__(self, repourl=None, mode='incremental',
-                 method=None, **kwargs):
+    def __init__(self, repourl=None, mode="incremental", method=None, **kwargs):
 
         self.repourl = repourl
         self.method = method
@@ -48,14 +47,14 @@ class Darcs(Source):
         super().__init__(**kwargs)
         errors = []
 
-        if not self._hasAttrGroupMember('mode', self.mode):
+        if not self._hasAttrGroupMember("mode", self.mode):
             errors.append(f"mode {self.mode} is not one of {self._listAttrGroupMembers('mode')}")
-        if self.mode == 'incremental' and self.method:
+        if self.mode == "incremental" and self.method:
             errors.append("Incremental mode does not require method")
 
-        if self.mode == 'full':
+        if self.mode == "full":
             if self.method is None:
-                self.method = 'copy'
+                self.method = "copy"
             elif self.method not in self.possible_methods:
                 errors.append(f"Invalid method for mode == {self.mode}")
 
@@ -79,7 +78,7 @@ class Darcs(Source):
         if patched:
             yield self.copy()
 
-        yield self._getAttrGroupMember('mode', self.mode)()
+        yield self._getAttrGroupMember("mode", self.mode)()
 
         if patch:
             yield self.patch(patch)
@@ -88,20 +87,23 @@ class Darcs(Source):
 
     @defer.inlineCallbacks
     def checkDarcs(self):
-        cmd = remotecommand.RemoteShellCommand(self.workdir, ['darcs', '--version'],
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout)
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir,
+            ["darcs", "--version"],
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
         return cmd.rc == 0
 
     @defer.inlineCallbacks
     def mode_full(self):
-        if self.method == 'clobber':
+        if self.method == "clobber":
             yield self.clobber()
             return
-        elif self.method == 'copy':
+        elif self.method == "copy":
             yield self.copy()
             return
 
@@ -111,29 +113,38 @@ class Darcs(Source):
         if not updatable:
             yield self._checkout()
         else:
-            command = ['darcs', 'pull', '--all', '--verbose']
+            command = ["darcs", "pull", "--all", "--verbose"]
             yield self._dovccmd(command)
 
     @defer.inlineCallbacks
     def copy(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron,
-                                                    'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand(
+            "rmdir",
+            {
+                "dir": self.workdir,
+                "logEnviron": self.logEnviron,
+                "timeout": self.timeout,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
-        self.workdir = 'source'
+        self.workdir = "source"
         yield self.mode_incremental()
 
-        cmd = remotecommand.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir': 'build',
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand(
+            "cpdir",
+            {
+                "fromdir": "source",
+                "todir": "build",
+                "logEnviron": self.logEnviron,
+                "timeout": self.timeout,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
-        self.workdir = 'build'
+        self.workdir = "build"
 
     @defer.inlineCallbacks
     def clobber(self):
@@ -142,22 +153,21 @@ class Darcs(Source):
 
     @defer.inlineCallbacks
     def _clone(self, abandonOnFailure=False):
-        command = ['darcs', 'get', '--verbose',
-                   '--lazy', '--repo-name', self.workdir]
+        command = ["darcs", "get", "--verbose", "--lazy", "--repo-name", self.workdir]
 
         if self.revision:
-            yield self.downloadFileContentToWorker('.darcs-context', self.revision)
-            command.append('--context')
-            command.append('.darcs-context')
+            yield self.downloadFileContentToWorker(".darcs-context", self.revision)
+            command.append("--context")
+            command.append(".darcs-context")
 
         command.append(self.repourl)
-        yield self._dovccmd(command, abandonOnFailure=abandonOnFailure, wkdir='.')
+        yield self._dovccmd(command, abandonOnFailure=abandonOnFailure, wkdir=".")
 
     @defer.inlineCallbacks
     def _checkout(self):
 
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
 
@@ -179,25 +189,35 @@ class Darcs(Source):
 
     @defer.inlineCallbacks
     def parseGotRevision(self):
-        revision = yield self._dovccmd(['darcs', 'changes', '--max-count=1'], collectStdout=True)
-        self.updateSourceProperty('got_revision', revision)
+        revision = yield self._dovccmd(["darcs", "changes", "--max-count=1"], collectStdout=True)
+        self.updateSourceProperty("got_revision", revision)
 
     @defer.inlineCallbacks
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
-                 abandonOnFailure=True, wkdir=None):
+    def _dovccmd(
+        self,
+        command,
+        collectStdout=False,
+        initialStdin=None,
+        decodeRC=None,
+        abandonOnFailure=True,
+        wkdir=None,
+    ):
         if not command:
             raise ValueError("No command specified")
 
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
         workdir = wkdir or self.workdir
-        cmd = remotecommand.RemoteShellCommand(workdir, command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               collectStdout=collectStdout,
-                                               initialStdin=initialStdin,
-                                               decodeRC=decodeRC)
+        cmd = remotecommand.RemoteShellCommand(
+            workdir,
+            command,
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+            collectStdout=collectStdout,
+            initialStdin=initialStdin,
+            decodeRC=decodeRC,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -209,4 +229,4 @@ class Darcs(Source):
         return cmd.rc
 
     def _sourcedirIsUpdatable(self):
-        return self.pathExists(self.build.path_module.join(self.workdir, '_darcs'))
+        return self.pathExists(self.build.path_module.join(self.workdir, "_darcs"))

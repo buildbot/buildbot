@@ -25,7 +25,6 @@ from buildbot.test.util.integration import RunMasterBase
 # This integration test creates a master and worker environment,
 # and makes sure the composite step mixin is working.
 class CompositeStepMixinMaster(RunMasterBase):
-
     @defer.inlineCallbacks
     def test_compositemixin_rmdir_list(self):
         yield self.do_compositemixin_test(is_list_mkdir=False, is_list_rmdir=True)
@@ -36,21 +35,22 @@ class CompositeStepMixinMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def do_compositemixin_test(self, is_list_mkdir, is_list_rmdir):
-        yield self.setupConfig(masterConfig(is_list_mkdir=is_list_mkdir,
-                                            is_list_rmdir=is_list_rmdir))
+        yield self.setupConfig(
+            masterConfig(is_list_mkdir=is_list_mkdir, is_list_rmdir=is_list_rmdir)
+        )
 
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none"
-                      )
-        build = yield self.doForceBuild(wantSteps=True, useChange=change,
-                                        wantLogs=True)
-        self.assertEqual(build['buildid'], 1)
-        self.assertEqual(build['results'], results.SUCCESS)
+        change = dict(
+            branch="master",
+            files=["foo.c"],
+            author="me@foo.com",
+            committer="me@foo.com",
+            comments="good stuff",
+            revision="HEAD",
+            project="none",
+        )
+        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        self.assertEqual(build["buildid"], 1)
+        self.assertEqual(build["results"], results.SUCCESS)
 
 
 class CompositeStepMixinMasterPb(CompositeStepMixinMaster):
@@ -66,7 +66,6 @@ class CompositeStepMixinMasterMsgPack(CompositeStepMixinMaster):
 
 
 class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
-
     def __init__(self, is_list_mkdir, is_list_rmdir):
         super().__init__()
         self.logEnviron = False
@@ -75,11 +74,11 @@ class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
 
     @defer.inlineCallbacks
     def run(self):
-        contents = yield self.runGlob('*')
+        contents = yield self.runGlob("*")
         if contents != []:
             return results.FAILURE
 
-        paths = ['composite_mixin_test_1', 'composite_mixin_test_2']
+        paths = ["composite_mixin_test_1", "composite_mixin_test_2"]
         for path in paths:
             has_path = yield self.pathExists(path)
 
@@ -97,7 +96,7 @@ class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
             if not has_path:
                 return results.FAILURE
 
-        contents = yield self.runGlob('*')
+        contents = yield self.runGlob("*")
         contents.sort()
 
         for i, path in enumerate(paths):
@@ -110,7 +109,7 @@ class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
             for path in paths:
                 yield self.runRmdir(path)
 
-        for path in (paths):
+        for path in paths:
             has_path = yield self.pathExists(path)
             if has_path:
                 return results.FAILURE
@@ -125,16 +124,9 @@ def masterConfig(is_list_mkdir=True, is_list_rmdir=True):
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import schedulers
 
-    c['schedulers'] = [
-        schedulers.AnyBranchScheduler(
-            name="sched",
-            builderNames=["testy"])]
+    c["schedulers"] = [schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"])]
 
     f = BuildFactory()
-    f.addStep(TestCompositeMixinStep(is_list_mkdir=is_list_mkdir,
-                                     is_list_rmdir=is_list_rmdir))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
+    f.addStep(TestCompositeMixinStep(is_list_mkdir=is_list_mkdir, is_list_rmdir=is_list_rmdir))
+    c["builders"] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
     return c

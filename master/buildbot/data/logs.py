@@ -22,16 +22,15 @@ from buildbot.util import identifiers
 
 
 class EndpointMixin:
-
     def db2data(self, dbdict):
         data = {
-            'logid': dbdict['id'],
-            'name': dbdict['name'],
-            'slug': dbdict['slug'],
-            'stepid': dbdict['stepid'],
-            'complete': dbdict['complete'],
-            'num_lines': dbdict['num_lines'],
-            'type': dbdict['type'],
+            "logid": dbdict["id"],
+            "name": dbdict["name"],
+            "slug": dbdict["slug"],
+            "stepid": dbdict["stepid"],
+            "complete": dbdict["complete"],
+            "num_lines": dbdict["num_lines"],
+            "type": dbdict["type"],
         }
         return defer.succeed(data)
 
@@ -52,16 +51,15 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        if 'logid' in kwargs:
-            dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
+        if "logid" in kwargs:
+            dbdict = yield self.master.db.logs.getLog(kwargs["logid"])
             return (yield self.db2data(dbdict)) if dbdict else None
 
         stepid = yield self.getStepid(kwargs)
         if stepid is None:
             return None
 
-        dbdict = yield self.master.db.logs.getLogBySlug(stepid,
-                                                        kwargs.get('log_slug'))
+        dbdict = yield self.master.db.logs.getLogBySlug(stepid, kwargs.get("log_slug"))
         return (yield self.db2data(dbdict)) if dbdict else None
 
 
@@ -111,12 +109,12 @@ class Log(base.ResourceType):
         num_lines = types.Integer()
         type = types.Identifier(1)
 
-    entityType = EntityType(name, 'Log')
+    entityType = EntityType(name, "Log")
 
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):
         # get the build and munge the result for the notification
-        build = yield self.master.data.get(('logs', str(_id)))
+        build = yield self.master.data.get(("logs", str(_id)))
         self.produceEvent(build, event)
 
     @base.updateMethod
@@ -126,7 +124,8 @@ class Log(base.ResourceType):
         while True:
             try:
                 logid = yield self.master.db.logs.addLog(
-                    stepid=stepid, name=name, slug=slug, type=type)
+                    stepid=stepid, name=name, slug=slug, type=type
+                )
             except KeyError:
                 slug = identifiers.incrementIdentifier(50, slug)
                 continue

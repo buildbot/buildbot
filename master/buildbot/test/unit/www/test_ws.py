@@ -30,9 +30,7 @@ from buildbot.www import ws
 class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor(use_asyncio=True)
-        self.master = master = self.make_master(
-            url="h:/a/b/", wantMq=True, wantGraphql=True
-        )
+        self.master = master = self.make_master(url="h:/a/b/", wantMq=True, wantGraphql=True)
         self.skip_graphql = False
         if not self.master.graphql.enabled:
             self.skip_graphql = True
@@ -99,9 +97,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def test_too_many_arguments_graphql(self):
         self.proto.is_graphql = True
-        self.proto.onMessage(
-            json.dumps(dict(id=1, type="connection_init", foo="bar")), False
-        )
+        self.proto.onMessage(json.dumps(dict(id=1, type="connection_init", foo="bar")), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {
@@ -153,9 +149,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.proto.onMessage(
             json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False
         )
-        self.assert_called_with_json(
-            self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 1}
-        )
+        self.assert_called_with_json(self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 1})
         self.master.mq.verifyMessages = False
         self.master.mq.callConsumer(("builds", "1", "new"), {"buildid": 1})
         self.assert_called_with_json(
@@ -163,9 +157,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     def test_startConsumingBadPath(self):
-        self.proto.onMessage(
-            json.dumps(dict(cmd="startConsuming", path={}, _id=1)), False
-        )
+        self.proto.onMessage(json.dumps(dict(cmd="startConsuming", path={}, _id=1)), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {"_id": 1, "code": 400, "error": "invalid path format '{}'"},
@@ -184,15 +176,11 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.proto.onMessage(
             json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False
         )
-        self.assert_called_with_json(
-            self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 1}
-        )
+        self.assert_called_with_json(self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 1})
         self.proto.onMessage(
             json.dumps(dict(cmd="stopConsuming", path="builds/*/*", _id=2)), False
         )
-        self.assert_called_with_json(
-            self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 2}
-        )
+        self.assert_called_with_json(self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 2})
 
     # graphql
     def test_connection_init(self):
@@ -204,9 +192,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         if self.skip_graphql:
             raise SkipTest("graphql-core not installed")
         yield self.proto.onMessage(
-            json.dumps(
-                dict(type="start", payload=dict(query="{builders{name}}"), id=1)
-            ),
+            json.dumps(dict(type="start", payload=dict(query="{builders{name}}"), id=1)),
             False,
         )
         self.assertEqual(len(self.proto.graphql_subs), 1)
@@ -255,9 +241,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         if self.skip_graphql:
             raise SkipTest("graphql-core not installed")
         yield self.proto.onMessage(
-            json.dumps(
-                dict(type="start", payload=dict(query="{builders{not_existing}}"), id=1)
-            ),
+            json.dumps(dict(type="start", payload=dict(query="{builders{not_existing}}"), id=1)),
             False,
         )
         self.assert_called_with_json(

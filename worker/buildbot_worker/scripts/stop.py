@@ -77,8 +77,8 @@ def stopWorker(basedir, quiet, signame="TERM"):
 
 
 def stop(config, signame="TERM"):
-    quiet = config['quiet']
-    basedir = config['basedir']
+    quiet = config["quiet"]
+    basedir = config["basedir"]
 
     if not base.isWorkerDir(basedir):
         return 1

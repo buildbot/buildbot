@@ -20,43 +20,58 @@ from buildbot.test.fakedb.row import Row
 
 
 class TestName(Row):
-    table = 'test_names'
+    table = "test_names"
 
-    id_column = 'id'
-    foreignKeys = ('builderid',)
-    required_columns = ('builderid', 'name')
+    id_column = "id"
+    foreignKeys = ("builderid",)
+    required_columns = ("builderid", "name")
 
-    def __init__(self, id=None, builderid=None, name='nam'):
+    def __init__(self, id=None, builderid=None, name="nam"):
         super().__init__(id=id, builderid=builderid, name=name)
 
 
 class TestCodePath(Row):
-    table = 'test_code_paths'
+    table = "test_code_paths"
 
-    id_column = 'id'
-    foreignKeys = ('builderid',)
-    required_columns = ('builderid', 'path')
+    id_column = "id"
+    foreignKeys = ("builderid",)
+    required_columns = ("builderid", "path")
 
-    def __init__(self, id=None, builderid=None, path='path/to/file'):
+    def __init__(self, id=None, builderid=None, path="path/to/file"):
         super().__init__(id=id, builderid=builderid, path=path)
 
 
 class TestResult(Row):
-    table = 'test_results'
+    table = "test_results"
 
-    id_column = 'id'
-    foreignKeys = ('builderid', 'test_result_setid', 'test_nameid', 'test_code_pathid')
-    required_columns = ('builderid', 'test_result_setid', 'value')
+    id_column = "id"
+    foreignKeys = ("builderid", "test_result_setid", "test_nameid", "test_code_pathid")
+    required_columns = ("builderid", "test_result_setid", "value")
 
-    def __init__(self, id=None, builderid=None, test_result_setid=None, test_nameid=None,
-                 test_code_pathid=None, line=None, duration_ns=None, value=None):
-        super().__init__(id=id, builderid=builderid, test_result_setid=test_result_setid,
-                         test_nameid=test_nameid, test_code_pathid=test_code_pathid,
-                         line=line, duration_ns=duration_ns, value=value)
+    def __init__(
+        self,
+        id=None,
+        builderid=None,
+        test_result_setid=None,
+        test_nameid=None,
+        test_code_pathid=None,
+        line=None,
+        duration_ns=None,
+        value=None,
+    ):
+        super().__init__(
+            id=id,
+            builderid=builderid,
+            test_result_setid=test_result_setid,
+            test_nameid=test_nameid,
+            test_code_pathid=test_code_pathid,
+            line=line,
+            duration_ns=duration_ns,
+            value=value,
+        )
 
 
 class FakeTestResultsComponent(FakeDBComponent):
-
     def setUp(self):
         self.results = {}
         self.code_paths = {}
@@ -90,17 +105,14 @@ class FakeTestResultsComponent(FakeDBComponent):
                 continue
 
             id = Row.nextId()
-            self.code_paths[id] = {
-                'builderid': builderid,
-                'path': path
-            }
+            self.code_paths[id] = {"builderid": builderid, "path": path}
             path_to_id[path] = id
 
         return path_to_id
 
     def _get_code_path_id(self, builderid, path):
         for id, path_dict in self.code_paths.items():
-            if path_dict['builderid'] == builderid and path_dict['path'] == path:
+            if path_dict["builderid"] == builderid and path_dict["path"] == path:
                 return id
         return None
 
@@ -114,17 +126,14 @@ class FakeTestResultsComponent(FakeDBComponent):
                 continue
 
             id = Row.nextId()
-            self.names[id] = {
-                'builderid': builderid,
-                'name': name
-            }
+            self.names[id] = {"builderid": builderid, "name": name}
             name_to_id[name] = id
 
         return name_to_id
 
     def _get_name_id(self, builderid, name):
         for id, name_dict in self.names.items():
-            if name_dict['builderid'] == builderid and name_dict['name'] == name:
+            if name_dict["builderid"] == builderid and name_dict["name"] == name:
                 return id
         return None
 
@@ -133,40 +142,42 @@ class FakeTestResultsComponent(FakeDBComponent):
         insert_code_paths = set()
         insert_names = set()
         for result_value in result_values:
-            if 'value' not in result_value:
-                raise KeyError('Each of result_values must contain \'value\' key')
+            if "value" not in result_value:
+                raise KeyError("Each of result_values must contain 'value' key")
 
-            if 'test_name' not in result_value and 'test_code_path' not in result_value:
-                raise KeyError('Each of result_values must contain at least one of '
-                               '\'test_name\' or \'test_code_path\' keys')
+            if "test_name" not in result_value and "test_code_path" not in result_value:
+                raise KeyError(
+                    "Each of result_values must contain at least one of "
+                    "'test_name' or 'test_code_path' keys"
+                )
 
-            if 'test_name' in result_value:
-                insert_names.add(result_value['test_name'])
-            if 'test_code_path' in result_value:
-                insert_code_paths.add(result_value['test_code_path'])
+            if "test_name" in result_value:
+                insert_names.add(result_value["test_name"])
+            if "test_code_path" in result_value:
+                insert_code_paths.add(result_value["test_code_path"])
 
         code_path_to_id = yield self._add_code_paths(builderid, insert_code_paths)
         name_to_id = yield self._add_names(builderid, insert_names)
 
         for result_value in result_values:
             insert_value = {
-                'value': result_value['value'],
-                'builderid': builderid,
-                'test_result_setid': test_result_setid,
-                'test_nameid': None,
-                'test_code_pathid': None,
-                'duration_ns': None,
-                'line': None,
+                "value": result_value["value"],
+                "builderid": builderid,
+                "test_result_setid": test_result_setid,
+                "test_nameid": None,
+                "test_code_pathid": None,
+                "duration_ns": None,
+                "line": None,
             }
 
-            if 'test_name' in result_value:
-                insert_value['test_nameid'] = name_to_id[result_value['test_name']]
-            if 'test_code_path' in result_value:
-                insert_value['test_code_pathid'] = code_path_to_id[result_value['test_code_path']]
-            if 'line' in result_value:
-                insert_value['line'] = result_value['line']
-            if 'duration_ns' in result_value:
-                insert_value['duration_ns'] = result_value['duration_ns']
+            if "test_name" in result_value:
+                insert_value["test_nameid"] = name_to_id[result_value["test_name"]]
+            if "test_code_path" in result_value:
+                insert_value["test_code_pathid"] = code_path_to_id[result_value["test_code_path"]]
+            if "line" in result_value:
+                insert_value["line"] = result_value["line"]
+            if "duration_ns" in result_value:
+                insert_value["duration_ns"] = result_value["duration_ns"]
 
             self.results[Row.nextId()] = insert_value
 
@@ -174,11 +185,11 @@ class FakeTestResultsComponent(FakeDBComponent):
     def getTestNames(self, builderid, name_prefix=None, result_spec=None):
         ret = []
         for _, row in sorted(self.names.items()):
-            if row['builderid'] != builderid:
+            if row["builderid"] != builderid:
                 continue
-            if name_prefix is not None and not row['name'].startswith(name_prefix):
+            if name_prefix is not None and not row["name"].startswith(name_prefix):
                 continue
-            ret.append(row['name'])
+            ret.append(row["name"])
 
         if result_spec is not None:
             ret = self.applyResultSpec(ret, result_spec)
@@ -189,11 +200,11 @@ class FakeTestResultsComponent(FakeDBComponent):
     def getTestCodePaths(self, builderid, path_prefix=None, result_spec=None):
         ret = []
         for _, row in sorted(self.code_paths.items()):
-            if row['builderid'] != builderid:
+            if row["builderid"] != builderid:
                 continue
-            if path_prefix is not None and not row['path'].startswith(path_prefix):
+            if path_prefix is not None and not row["path"].startswith(path_prefix):
                 continue
-            ret.append(row['path'])
+            ret.append(row["path"])
 
         if result_spec is not None:
             ret = self.applyResultSpec(ret, result_spec)
@@ -202,19 +213,19 @@ class FakeTestResultsComponent(FakeDBComponent):
 
     def _fill_extra_data(self, id, row):
         row = row.copy()
-        row['id'] = id
+        row["id"] = id
 
-        if row['test_nameid'] is not None:
-            row['test_name'] = self.names[row['test_nameid']]['name']
+        if row["test_nameid"] is not None:
+            row["test_name"] = self.names[row["test_nameid"]]["name"]
         else:
-            row['test_name'] = None
-        del row['test_nameid']
+            row["test_name"] = None
+        del row["test_nameid"]
 
-        if row['test_code_pathid'] is not None:
-            row['test_code_path'] = self.code_paths[row['test_code_pathid']]['path']
+        if row["test_code_pathid"] is not None:
+            row["test_code_path"] = self.code_paths[row["test_code_pathid"]]["path"]
         else:
-            row['test_code_path'] = None
-        del row['test_code_pathid']
+            row["test_code_path"] = None
+        del row["test_code_pathid"]
 
         return row
 
@@ -228,9 +239,9 @@ class FakeTestResultsComponent(FakeDBComponent):
     def getTestResults(self, builderid, test_result_setid, result_spec=None):
         ret = []
         for id, row in sorted(self.results.items()):
-            if row['builderid'] != builderid:
+            if row["builderid"] != builderid:
                 continue
-            if row['test_result_setid'] != test_result_setid:
+            if row["test_result_setid"] != test_result_setid:
                 continue
             ret.append(self._fill_extra_data(id, row))
 

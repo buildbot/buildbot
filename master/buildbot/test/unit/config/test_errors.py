@@ -22,19 +22,18 @@ from buildbot.config.errors import error
 
 
 class ConfigErrorsTest(unittest.TestCase):
-
     def test_constr(self):
-        ex = ConfigErrors(['a', 'b'])
-        self.assertEqual(ex.errors, ['a', 'b'])
+        ex = ConfigErrors(["a", "b"])
+        self.assertEqual(ex.errors, ["a", "b"])
 
     def test_addError(self):
-        ex = ConfigErrors(['a'])
-        ex.addError('c')
-        self.assertEqual(ex.errors, ['a', 'c'])
+        ex = ConfigErrors(["a"])
+        ex.addError("c")
+        self.assertEqual(ex.errors, ["a", "c"])
 
     def test_nonempty(self):
         empty = ConfigErrors()
-        full = ConfigErrors(['a'])
+        full = ConfigErrors(["a"])
         self.assertTrue(not empty)
         self.assertFalse(not full)
 
@@ -59,5 +58,5 @@ class ConfigErrorsTest(unittest.TestCase):
         self.assertEqual(str(ex), "a\nb")
 
         ex = ConfigErrors(["a"])
-        ex.addError('c')
+        ex.addError("c")
         self.assertEqual(str(ex), "a\nc")

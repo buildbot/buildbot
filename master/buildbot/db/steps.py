@@ -32,16 +32,16 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def getStep(self, stepid=None, buildid=None, number=None, name=None):
         tbl = self.db.model.steps
         if stepid is not None:
-            wc = (tbl.c.id == stepid)
+            wc = tbl.c.id == stepid
         else:
             if buildid is None:
-                raise RuntimeError('must supply either stepid or buildid')
+                raise RuntimeError("must supply either stepid or buildid")
             if number is not None:
-                wc = (tbl.c.number == number)
+                wc = tbl.c.number == number
             elif name is not None:
-                wc = (tbl.c.name == name)
+                wc = tbl.c.name == name
             else:
-                raise RuntimeError('must supply either number or name')
+                raise RuntimeError("must supply either number or name")
             wc = wc & (tbl.c.buildid == buildid)
 
         def thd(conn):
@@ -54,6 +54,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 rv = self._stepdictFromRow(row)
             res.close()
             return rv
+
         return (yield self.db.pool.do(thd))
 
     # returns a Deferred that returns a value
@@ -65,6 +66,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             q = q.order_by(tbl.c.number)
             res = conn.execute(q)
             return [self._stepdictFromRow(row) for row in res.fetchall()]
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
@@ -72,18 +74,24 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.steps
             # get the highest current number
-            r = conn.execute(sa.select([sa.func.max(tbl.c.number)],
-                                       whereclause=(tbl.c.buildid == buildid)))
+            r = conn.execute(
+                sa.select([sa.func.max(tbl.c.number)], whereclause=(tbl.c.buildid == buildid))
+            )
             number = r.scalar()
             number = 0 if number is None else number + 1
 
             # note that there is no chance for a race condition here,
             # since only one master is inserting steps.  If there is a
             # conflict, then the name is likely already taken.
-            insert_row = dict(buildid=buildid, number=number,
-                              started_at=None, complete_at=None,
-                              state_string=state_string,
-                              urls_json='[]', name=name)
+            insert_row = dict(
+                buildid=buildid,
+                number=number,
+                started_at=None,
+                complete_at=None,
+                state_string=state_string,
+                urls_json="[]",
+                name=name,
+            )
             try:
                 r = conn.execute(self.db.model.steps.insert(), insert_row)
                 got_id = r.inserted_primary_key[0]
@@ -96,20 +104,20 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # we didn't get an id, so calculate a unique name and use that
             # instead.  Because names are truncated at the right to fit in a
             # 50-character identifier, this isn't a simple query.
-            res = conn.execute(sa.select([tbl.c.name],
-                                         whereclause=((tbl.c.buildid == buildid))))
+            res = conn.execute(sa.select([tbl.c.name], whereclause=((tbl.c.buildid == buildid))))
             names = {row[0] for row in res}
             num = 1
             while True:
-                numstr = f'_{num}'
-                newname = name[:50 - len(numstr)] + numstr
+                numstr = f"_{num}"
+                newname = name[: 50 - len(numstr)] + numstr
                 if newname not in names:
                     break
                 num += 1
-            insert_row['name'] = newname
+            insert_row["name"] = newname
             r = conn.execute(self.db.model.steps.insert(), insert_row)
             got_id = r.inserted_primary_key[0]
             return (got_id, number, newname)
+
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
@@ -120,6 +128,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q, started_at=started_at)
+
         yield self.db.pool.do(thd)
 
     # returns a Deferred that returns None
@@ -128,6 +137,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q, state_string=state_string)
+
         return self.db.pool.do(thd)
 
     def addURL(self, stepid, name, url, _racehook=None):
@@ -145,9 +155,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
 
             tbl = self.db.model.steps
-            wc = (tbl.c.id == stepid)
-            q = sa.select([tbl.c.urls_json],
-                          whereclause=wc)
+            wc = tbl.c.id == stepid
+            q = sa.select([tbl.c.urls_json], whereclause=wc)
             res = conn.execute(q)
             row = res.fetchone()
             if _racehook is not None:
@@ -168,10 +177,13 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
-            conn.execute(q,
-                         complete_at=int(self.master.reactor.seconds()),
-                         results=results,
-                         hidden=1 if hidden else 0)
+            conn.execute(
+                q,
+                complete_at=int(self.master.reactor.seconds()),
+                results=results,
+                hidden=1 if hidden else 0,
+            )
+
         return self.db.pool.do(thd)
 
     def _stepdictFromRow(self, row):
@@ -185,4 +197,5 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             state_string=row.state_string,
             results=row.results,
             urls=json.loads(row.urls_json),
-            hidden=bool(row.hidden))
+            hidden=bool(row.hidden),
+        )

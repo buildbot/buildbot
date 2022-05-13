@@ -43,28 +43,24 @@ from buildbot.test.util import logging
 
 @implementer(IConfigLoader)
 class FailingLoader:
-
     def loadConfig(self):
-        config.error('oh noes')
+        config.error("oh noes")
 
 
 @implementer(IConfigLoader)
 class DefaultLoader:
-
     def loadConfig(self):
         return MasterConfig()
 
 
 class InitTests(unittest.SynchronousTestCase):
-
     def test_configfile_configloader_conflict(self):
         """
         If both configfile and config_loader are specified, a configuration
         error is raised.
         """
         with self.assertRaises(config.ConfigErrors):
-            master.BuildMaster(".", "master.cfg",
-                               reactor=reactor, config_loader=DefaultLoader())
+            master.BuildMaster(".", "master.cfg", reactor=reactor, config_loader=DefaultLoader())
 
     def test_configfile_default(self):
         """
@@ -75,35 +71,34 @@ class InitTests(unittest.SynchronousTestCase):
         self.assertEqual(m.config_loader, FileLoader(".", "master.cfg"))
 
 
-class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
-                         TestReactorMixin, unittest.TestCase):
-
+class StartupAndReconfig(
+    dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin, unittest.TestCase
+):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.setUpLogging()
-        self.basedir = os.path.abspath('basedir')
+        self.basedir = os.path.abspath("basedir")
         yield self.setUpDirs(self.basedir)
 
         # don't create child services
-        self.patch(master.BuildMaster, 'create_child_services',
-                   lambda self: None)
+        self.patch(master.BuildMaster, "create_child_services", lambda self: None)
 
         # patch out a few other annoying things the master likes to do
-        self.patch(monkeypatches, 'patch_all', lambda: None)
-        self.patch(signal, 'signal', lambda sig, hdlr: None)
+        self.patch(monkeypatches, "patch_all", lambda: None)
+        self.patch(signal, "signal", lambda sig, hdlr: None)
 
         master.BuildMaster.masterHeartbeatService = mock.Mock()
         self.master = master.BuildMaster(
-            self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
+            self.basedir, reactor=self.reactor, config_loader=DefaultLoader()
+        )
         self.master.sendBuildbotNetUsageData = mock.Mock()
         self.master.botmaster = FakeBotMaster()
         self.db = self.master.db = fakedb.FakeDBConnector(self)
         yield self.db.setServiceParent(self.master)
         self.mq = self.master.mq = fakemq.FakeMQConnector(self)
         yield self.mq.setServiceParent(self.master)
-        self.data = self.master.data = fakedata.FakeDataConnector(
-            self.master, self)
+        self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
         yield self.data.setServiceParent(self.master)
 
     def tearDown(self):
@@ -125,6 +120,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
         def db_setup():
             log.msg("GOT HERE")
             raise exceptions.DatabaseNotReadyError()
+
         self.db.setup = db_setup
 
         yield self.master.startService()
@@ -137,6 +133,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
     def test_startup_error(self):
         def db_setup():
             raise RuntimeError("oh noes")
+
         self.db.setup = db_setup
 
         yield self.master.startService()
@@ -183,18 +180,17 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
     @defer.inlineCallbacks
     def test_reconfig(self):
         self.master.reconfigServiceWithBuildbotConfig = mock.Mock(
-            side_effect=lambda n: defer.succeed(None))
+            side_effect=lambda n: defer.succeed(None)
+        )
         self.master.masterHeartbeatService = mock.Mock()
         yield self.master.startService()
         yield self.master.reconfig()
         yield self.master.stopService()
-        self.master.reconfigServiceWithBuildbotConfig.assert_called_with(
-            mock.ANY)
+        self.master.reconfigServiceWithBuildbotConfig.assert_called_with(mock.ANY)
 
     @defer.inlineCallbacks
     def test_reconfig_bad_config(self):
-        self.master.reconfigService = mock.Mock(
-            side_effect=lambda n: defer.succeed(None))
+        self.master.reconfigService = mock.Mock(side_effect=lambda n: defer.succeed(None))
 
         self.master.masterHeartbeatService = mock.Mock()
         yield self.master.startService()
@@ -214,11 +210,11 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
     @defer.inlineCallbacks
     def test_reconfigService_db_url_changed(self):
         old = self.master.config = MasterConfig()
-        old.db['db_url'] = 'aaaa'
+        old.db["db_url"] = "aaaa"
         yield self.master.reconfigServiceWithBuildbotConfig(old)
 
         new = MasterConfig()
-        new.db['db_url'] = 'bbbb'
+        new.db["db_url"] = "bbbb"
 
         with self.assertRaises(config.ConfigErrors):
             self.master.reconfigServiceWithBuildbotConfig(new)

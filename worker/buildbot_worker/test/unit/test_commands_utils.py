@@ -29,61 +29,69 @@ from buildbot_worker.commands import utils
 
 
 class GetCommand(unittest.TestCase):
-
     def setUp(self):
         # monkey-patch 'which' to return something appropriate
         self.which_results = {}
 
         def which(arg):
             return self.which_results.get(arg, [])
-        self.patch(twisted.python.procutils, 'which', which)
+
+        self.patch(twisted.python.procutils, "which", which)
         # note that utils.py currently imports which by name, so we
         # patch it there, too
-        self.patch(utils, 'which', which)
+        self.patch(utils, "which", which)
 
     def set_which_results(self, results):
         self.which_results = results
 
     def test_getCommand_empty(self):
-        self.set_which_results({
-            'xeyes': [],
-        })
+        self.set_which_results(
+            {
+                "xeyes": [],
+            }
+        )
         with self.assertRaises(RuntimeError):
-            utils.getCommand('xeyes')
+            utils.getCommand("xeyes")
 
     def test_getCommand_single(self):
-        self.set_which_results({
-            'xeyes': ['/usr/bin/xeyes'],
-        })
-        self.assertEqual(utils.getCommand('xeyes'), '/usr/bin/xeyes')
+        self.set_which_results(
+            {
+                "xeyes": ["/usr/bin/xeyes"],
+            }
+        )
+        self.assertEqual(utils.getCommand("xeyes"), "/usr/bin/xeyes")
 
     def test_getCommand_multi(self):
-        self.set_which_results({
-            'xeyes': ['/usr/bin/xeyes', '/usr/X11/bin/xeyes'],
-        })
-        self.assertEqual(utils.getCommand('xeyes'), '/usr/bin/xeyes')
+        self.set_which_results(
+            {
+                "xeyes": ["/usr/bin/xeyes", "/usr/X11/bin/xeyes"],
+            }
+        )
+        self.assertEqual(utils.getCommand("xeyes"), "/usr/bin/xeyes")
 
     def test_getCommand_single_exe(self):
-        self.set_which_results({
-            'xeyes': ['/usr/bin/xeyes'],
-            # it should not select this option, since only one matched
-            # to begin with
-            'xeyes.exe': [r'c:\program files\xeyes.exe'],
-        })
-        self.assertEqual(utils.getCommand('xeyes'), '/usr/bin/xeyes')
+        self.set_which_results(
+            {
+                "xeyes": ["/usr/bin/xeyes"],
+                # it should not select this option, since only one matched
+                # to begin with
+                "xeyes.exe": [r"c:\program files\xeyes.exe"],
+            }
+        )
+        self.assertEqual(utils.getCommand("xeyes"), "/usr/bin/xeyes")
 
     def test_getCommand_multi_exe(self):
-        self.set_which_results({
-            'xeyes': [r'c:\program files\xeyes.com', r'c:\program files\xeyes.exe'],
-            'xeyes.exe': [r'c:\program files\xeyes.exe'],
-        })
+        self.set_which_results(
+            {
+                "xeyes": [r"c:\program files\xeyes.com", r"c:\program files\xeyes.exe"],
+                "xeyes.exe": [r"c:\program files\xeyes.exe"],
+            }
+        )
         # this one will work out differently depending on platform..
-        if runtime.platformType == 'win32':
-            self.assertEqual(
-                utils.getCommand('xeyes'), r'c:\program files\xeyes.exe')
+        if runtime.platformType == "win32":
+            self.assertEqual(utils.getCommand("xeyes"), r"c:\program files\xeyes.exe")
         else:
-            self.assertEqual(
-                utils.getCommand('xeyes'), r'c:\program files\xeyes.com')
+            self.assertEqual(utils.getCommand("xeyes"), r"c:\program files\xeyes.com")
 
 
 class RmdirRecursive(unittest.TestCase):
@@ -92,7 +100,7 @@ class RmdirRecursive(unittest.TestCase):
     # rmdir its test directory very well, either..
 
     def setUp(self):
-        self.target = 'testdir'
+        self.target = "testdir"
         try:
             if os.path.exists(self.target):
                 shutil.rmtree(self.target)
@@ -117,8 +125,7 @@ class RmdirRecursive(unittest.TestCase):
             if os.path.exists(self.target):
                 shutil.rmtree(self.target)
         except Exception:
-            print(
-                "\n(target directory was not removed by test, and cleanup failed too)\n")
+            print("\n(target directory was not removed by test, and cleanup failed too)\n")
             raise
 
     def test_rmdirRecursive_easy(self):
@@ -128,7 +135,7 @@ class RmdirRecursive(unittest.TestCase):
     def test_rmdirRecursive_symlink(self):
         # this was intended as a regression test for #792, but doesn't seem
         # to trigger it.  It can't hurt to check it, all the same.
-        if runtime.platformType == 'win32':
+        if runtime.platformType == "win32":
             raise unittest.SkipTest("no symlinks on this platform")
         os.mkdir("noperms")
         with open("noperms/x", "w"):

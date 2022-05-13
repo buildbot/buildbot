@@ -20,7 +20,7 @@ from buildbot.util import service
 
 
 class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    name = 'debug_services'
+    name = "debug_services"
 
     def __init__(self):
         super().__init__()

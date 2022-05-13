@@ -60,20 +60,19 @@ class NeedsReconfigResource(resource.Resource):
 
 
 class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = self.make_master(url='h:/a/b/')
+        self.master = self.make_master(url="h:/a/b/")
         self.svc = self.master.www = service.WWWService()
         yield self.svc.setServiceParent(self.master)
 
     def makeConfig(self, **kwargs):
-        w = dict(port=None, auth=auth.NoAuth(), logfileName='l')
+        w = dict(port=None, auth=auth.NoAuth(), logfileName="l")
         w.update(kwargs)
         new_config = mock.Mock()
         new_config.www = w
-        new_config.buildbotURL = 'h:/'
+        new_config.buildbotURL = "h:/"
         self.master.config = new_config
         return new_config
 
@@ -87,7 +86,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigService_reconfigResources(self):
         new_config = self.makeConfig(port=8080)
-        self.patch(rest, 'RestRootResource', NeedsReconfigResource)
+        self.patch(rest, "RestRootResource", NeedsReconfigResource)
         NeedsReconfigResource.reconfigs = 0
 
         # first time, reconfigResource gets called along with setupSite
@@ -148,29 +147,28 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         # root
         root = site.resource
         req = mock.Mock()
-        self.assertIsInstance(root.getChildWithDefault(b'api', req),
-                              rest.RestRootResource)
+        self.assertIsInstance(root.getChildWithDefault(b"api", req), rest.RestRootResource)
 
     def test_setupSiteWithProtectedHook(self):
         checker = InMemoryUsernamePasswordDatabaseDontUse()
         checker.addUser("guest", "password")
 
-        self.svc.setupSite(self.makeConfig(
-            change_hook_dialects={'base': True},
-            change_hook_auth=[checker]))
+        self.svc.setupSite(
+            self.makeConfig(change_hook_dialects={"base": True}, change_hook_auth=[checker])
+        )
         site = self.svc.site
 
         # check that it has the right kind of resources attached to its
         # root
         root = site.resource
         req = mock.Mock()
-        self.assertIsInstance(root.getChildWithDefault(b'change_hook', req),
-                              HTTPAuthSessionWrapper)
+        self.assertIsInstance(
+            root.getChildWithDefault(b"change_hook", req), HTTPAuthSessionWrapper
+        )
 
     @defer.inlineCallbacks
     def test_setupSiteWithHook(self):
-        new_config = self.makeConfig(
-            change_hook_dialects={'base': True})
+        new_config = self.makeConfig(change_hook_dialects={"base": True})
         self.svc.setupSite(new_config)
         site = self.svc.site
 
@@ -178,9 +176,8 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         # root
         root = site.resource
         req = mock.Mock()
-        ep = root.getChildWithDefault(b'change_hook', req)
-        self.assertIsInstance(ep,
-                              change_hook.ChangeHookResource)
+        ep = root.getChildWithDefault(b"change_hook", req)
+        self.assertIsInstance(ep, change_hook.ChangeHookResource)
 
         # not yet configured
         self.assertEqual(ep.dialects, {})
@@ -188,10 +185,10 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         # now configured
-        self.assertEqual(ep.dialects, {'base': True})
+        self.assertEqual(ep.dialects, {"base": True})
 
-        rsrc = self.svc.site.resource.getChildWithDefault(b'change_hook', mock.Mock())
-        path = b'/change_hook/base'
+        rsrc = self.svc.site.resource.getChildWithDefault(b"change_hook", mock.Mock())
+        path = b"/change_hook/base"
         request = test_hooks_base._prepare_request({})
         self.master.data.updates.addChange = mock.Mock()
         yield self.render_resource(rsrc, path, request=request)
@@ -200,69 +197,69 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_setupSiteWithHookAndAuth(self):
         fn = self.mktemp()
-        with open(fn, 'w', encoding='utf-8') as f:
+        with open(fn, "w", encoding="utf-8") as f:
             f.write("user:pass")
         new_config = self.makeConfig(
             port=8080,
             plugins={},
-            change_hook_dialects={'base': True},
-            change_hook_auth=[strcred.makeChecker("file:" + fn)])
+            change_hook_dialects={"base": True},
+            change_hook_auth=[strcred.makeChecker("file:" + fn)],
+        )
         self.svc.setupSite(new_config)
 
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
-        rsrc = self.svc.site.resource.getChildWithDefault(b'', mock.Mock())
+        rsrc = self.svc.site.resource.getChildWithDefault(b"", mock.Mock())
 
-        res = yield self.render_resource(rsrc, b'')
+        res = yield self.render_resource(rsrc, b"")
         self.assertIn(b'{"type": "file"}', res)
 
-        rsrc = self.svc.site.resource.getChildWithDefault(
-            b'change_hook', mock.Mock())
-        res = yield self.render_resource(rsrc, b'/change_hook/base')
+        rsrc = self.svc.site.resource.getChildWithDefault(b"change_hook", mock.Mock())
+        res = yield self.render_resource(rsrc, b"/change_hook/base")
         # as UnauthorizedResource is in private namespace, we cannot use
         # assertIsInstance :-(
-        self.assertIn('UnauthorizedResource', repr(res))
+        self.assertIn("UnauthorizedResource", repr(res))
 
 
 class TestBuildbotSite(unittest.SynchronousTestCase):
-    SECRET = 'secret'
+    SECRET = "secret"
 
     def setUp(self):
         self.site = service.BuildbotSite(None, "logs", 0, 0)
         self.site.setSessionSecret(self.SECRET)
 
     def test_getSession_from_bad_jwt(self):
-        """ if the cookie is bad (maybe from previous version of buildbot),
-            then we should raise KeyError for consumption by caller,
-            and log the JWT error
+        """if the cookie is bad (maybe from previous version of buildbot),
+        then we should raise KeyError for consumption by caller,
+        and log the JWT error
         """
         with self.assertRaises(KeyError):
             self.site.getSession("xxx")
         self.flushLoggedErrors(jwt.exceptions.DecodeError)
 
     def test_getSession_from_correct_jwt(self):
-        payload = {'user_info': {'some': 'payload'}}
+        payload = {"user_info": {"some": "payload"}}
         uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
         session = self.site.getSession(uid)
-        self.assertEqual(session.user_info, {'some': 'payload'})
+        self.assertEqual(session.user_info, {"some": "payload"})
 
     def test_getSession_from_expired_jwt(self):
         # expired one week ago
         exp = datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
         exp = calendar.timegm(datetime.datetime.timetuple(exp))
-        payload = {'user_info': {'some': 'payload'}, 'exp': exp}
+        payload = {"user_info": {"some": "payload"}, "exp": exp}
         uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
         with self.assertRaises(KeyError):
             self.site.getSession(uid)
 
     def test_getSession_with_no_user_info(self):
-        payload = {'foo': 'bar'}
+        payload = {"foo": "bar"}
         uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
         with self.assertRaises(KeyError):
             self.site.getSession(uid)
 
     def test_makeSession(self):
         session = self.site.makeSession()
-        self.assertEqual(session.user_info, {'anonymous': True})
+        self.assertEqual(session.user_info, {"anonymous": True})
 
     def test_updateSession(self):
         session = self.site.makeSession()
@@ -271,11 +268,10 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         session.updateSession(request)
         self.assertEqual(len(request.cookies), 1)
         _, value = request.cookies[0].split(b";")[0].split(b"=")
-        decoded = jwt.decode(value, self.SECRET,
-                             algorithms=[service.SESSION_SECRET_ALGORITHM])
-        self.assertEqual(decoded['user_info'], {'anonymous': True})
-        self.assertIn('exp', decoded)
+        decoded = jwt.decode(value, self.SECRET, algorithms=[service.SESSION_SECRET_ALGORITHM])
+        self.assertEqual(decoded["user_info"], {"anonymous": True})
+        self.assertIn("exp", decoded)
 
     def test_absentServerHeader(self):
         request = Request(FakeChannel(), False)
-        self.assertEqual(request.responseHeaders.hasHeader('Server'), False)
+        self.assertEqual(request.responseHeaders.hasHeader("Server"), False)

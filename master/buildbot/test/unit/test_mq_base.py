@@ -24,40 +24,39 @@ from buildbot.mq import base
 
 
 class QueueRef(unittest.TestCase):
-
     def test_success(self):
-        cb = mock.Mock(name='cb')
+        cb = mock.Mock(name="cb")
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke("rk", "d")
 
-        cb.assert_called_with('rk', 'd')
+        cb.assert_called_with("rk", "d")
 
     def test_success_deferred(self):
-        cb = mock.Mock(name='cb')
+        cb = mock.Mock(name="cb")
         cb.return_value = defer.succeed(None)
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke("rk", "d")
 
-        cb.assert_called_with('rk', 'd')
+        cb.assert_called_with("rk", "d")
 
     def test_exception(self):
-        cb = mock.Mock(name='cb')
-        cb.side_effect = RuntimeError('oh noes!')
+        cb = mock.Mock(name="cb")
+        cb.side_effect = RuntimeError("oh noes!")
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke("rk", "d")
 
-        cb.assert_called_with('rk', 'd')
+        cb.assert_called_with("rk", "d")
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_failure(self):
-        cb = mock.Mock(name='cb')
-        cb.return_value = defer.fail(failure.Failure(RuntimeError('oh noes!')))
+        cb = mock.Mock(name="cb")
+        cb.return_value = defer.fail(failure.Failure(RuntimeError("oh noes!")))
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke("rk", "d")
 
-        cb.assert_called_with('rk', 'd')
+        cb.assert_called_with("rk", "d")
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)

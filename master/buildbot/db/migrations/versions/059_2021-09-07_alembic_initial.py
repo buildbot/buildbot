@@ -9,7 +9,7 @@ of the database.
 """
 
 # revision identifiers, used by Alembic.
-revision = '059'
+revision = "059"
 down_revision = None
 branch_labels = None
 depends_on = None

@@ -1,4 +1,3 @@
-
 from buildbot.secrets.providers.base import SecretProviderBase
 
 

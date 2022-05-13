@@ -64,25 +64,27 @@ class KubeConfigLoaderBase(BuildbotService):
 
 
 class KubeHardcodedConfig(KubeConfigLoaderBase):
-    def reconfigService(self,
-                        master_url=None,
-                        bearerToken=None,
-                        basicAuth=None,
-                        headers=None,
-                        cert=None,
-                        verify=None,
-                        namespace="default"):
-        self.config = {'master_url': master_url, 'namespace': namespace, 'headers': {}}
+    def reconfigService(
+        self,
+        master_url=None,
+        bearerToken=None,
+        basicAuth=None,
+        headers=None,
+        cert=None,
+        verify=None,
+        namespace="default",
+    ):
+        self.config = {"master_url": master_url, "namespace": namespace, "headers": {}}
         if headers is not None:
-            self.config['headers'] = headers
+            self.config["headers"] = headers
         if basicAuth and bearerToken:
             raise Exception("set one of basicAuth and bearerToken, not both")
         self.basicAuth = basicAuth
         self.bearerToken = bearerToken
         if cert is not None:
-            self.config['cert'] = cert
+            self.config["cert"] = cert
         if verify is not None:
-            self.config['verify'] = verify
+            self.config["verify"] = verify
 
     checkConfig = reconfigService
 
@@ -90,7 +92,7 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
     def getAuthorization(self):
         if self.basicAuth is not None:
             basicAuth = yield self.renderSecrets(self.basicAuth)
-            authstring = f"{basicAuth['user']}:{basicAuth['password']}".encode('utf-8')
+            authstring = f"{basicAuth['user']}:{basicAuth['password']}".encode("utf-8")
             encoded = base64.b64encode(authstring)
             return f"Basic {encoded}"
 
@@ -105,13 +107,14 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
 
 
 class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
-    """ We use kubectl proxy to connect to kube master.
+    """We use kubectl proxy to connect to kube master.
     Parsing the config and setting up SSL is complex.
     So for now, we use kubectl proxy to load the config and connect to master.
     This will run the kube proxy as a subprocess, and return configuration with
     http://localhost:PORT
     """
-    kube_ctl_proxy_cmd = ['kubectl', 'proxy']  # for tests override
+
+    kube_ctl_proxy_cmd = ["kubectl", "proxy"]  # for tests override
 
     class LocalPP(LineProcessProtocol):
         def __init__(self):
@@ -155,7 +158,8 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
             self.pp,
             self.kube_ctl_proxy_cmd[0],
             self.kube_ctl_proxy_cmd + ["-p", str(self.proxy_port)],
-            env=None)
+            env=None,
+        )
         self.kube_proxy_output = yield self.pp.got_output_deferred
 
     def stopService(self):
@@ -163,17 +167,17 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
 
     def getConfig(self):
         return {
-            'master_url': f"http://localhost:{self.proxy_port}",
-            'namespace': self.namespace
+            "master_url": f"http://localhost:{self.proxy_port}",
+            "namespace": self.namespace,
         }
 
 
 class KubeInClusterConfigLoader(KubeConfigLoaderBase):
-    kube_dir = '/var/run/secrets/kubernetes.io/serviceaccount/'
+    kube_dir = "/var/run/secrets/kubernetes.io/serviceaccount/"
 
-    kube_namespace_file = os.path.join(kube_dir, 'namespace')
-    kube_token_file = os.path.join(kube_dir, 'token')
-    kube_cert_file = os.path.join(kube_dir, 'ca.crt')
+    kube_namespace_file = os.path.join(kube_dir, "namespace")
+    kube_token_file = os.path.join(kube_dir, "token")
+    kube_cert_file = os.path.join(kube_dir, "ca.crt")
 
     def checkConfig(self):
         if not os.path.exists(self.kube_dir):
@@ -181,16 +185,13 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
     def reconfigService(self):
         self.config = {}
-        self.config['master_url'] = os.environ['KUBERNETES_PORT'].replace(
-            'tcp', 'https')
-        self.config['verify'] = self.kube_cert_file
+        self.config["master_url"] = os.environ["KUBERNETES_PORT"].replace("tcp", "https")
+        self.config["verify"] = self.kube_cert_file
         with open(self.kube_token_file, encoding="utf-8") as token_content:
             token = token_content.read().strip()
-            self.config['headers'] = {
-                'Authorization': f'Bearer {token}'.format(token)
-            }
+            self.config["headers"] = {"Authorization": f"Bearer {token}".format(token)}
         with open(self.kube_namespace_file, encoding="utf-8") as namespace_content:
-            self.config['namespace'] = namespace_content.read().strip()
+            self.config["namespace"] = namespace_content.read().strip()
 
     def getConfig(self):
         return self.config
@@ -198,35 +199,35 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
 class KubeError(RuntimeError):
     def __init__(self, response_json):
-        super().__init__(response_json['message'])
+        super().__init__(response_json["message"])
         self.json = response_json
-        self.reason = response_json.get('reason')
+        self.reason = response_json.get("reason")
 
 
 class KubeClientService(HTTPClientService):
     def __init__(self, kube_config=None):
         self.config = kube_config
-        super().__init__('')
+        super().__init__("")
         self._namespace = None
         kube_config.setServiceParent(self)
 
     @defer.inlineCallbacks
     def _prepareRequest(self, ep, kwargs):
         config = self.config.getConfig()
-        self._base_url = config['master_url']
+        self._base_url = config["master_url"]
         url, req_kwargs = super()._prepareRequest(ep, kwargs)
 
-        if 'headers' not in req_kwargs:
-            req_kwargs['headers'] = {}
-        if 'headers' in config:
-            req_kwargs['headers'].update(config['headers'])
+        if "headers" not in req_kwargs:
+            req_kwargs["headers"] = {}
+        if "headers" in config:
+            req_kwargs["headers"].update(config["headers"])
 
         auth = yield self.config.getAuthorization()
         if auth is not None:
-            req_kwargs['headers']['Authorization'] = auth
+            req_kwargs["headers"]["Authorization"] = auth
 
         # warning: this only works with txrequests! not treq
-        for arg in ['cert', 'verify']:
+        for arg in ["cert", "verify"]:
             if arg in config:
                 req_kwargs[arg] = config[arg]
 
@@ -234,7 +235,7 @@ class KubeClientService(HTTPClientService):
 
     @defer.inlineCallbacks
     def createPod(self, namespace, spec):
-        url = f'/api/v1/namespaces/{namespace}/pods'
+        url = f"/api/v1/namespaces/{namespace}/pods"
         res = yield self.post(url, json=spec)
         res_json = yield res.json()
         if res.code not in (200, 201, 202):
@@ -243,8 +244,8 @@ class KubeClientService(HTTPClientService):
 
     @defer.inlineCallbacks
     def deletePod(self, namespace, name, graceperiod=0):
-        url = f'/api/v1/namespaces/{namespace}/pods/{name}'
-        res = yield self.delete(url, params={'graceperiod': graceperiod})
+        url = f"/api/v1/namespaces/{namespace}/pods/{name}"
+        res = yield self.delete(url, params={"graceperiod": graceperiod})
         res_json = yield res.json()
         if res.code != 200:
             raise KubeError(res_json)
@@ -253,7 +254,7 @@ class KubeClientService(HTTPClientService):
     @defer.inlineCallbacks
     def waitForPodDeletion(self, namespace, name, timeout):
         t1 = time.time()
-        url = f'/api/v1/namespaces/{namespace}/pods/{name}/status'
+        url = f"/api/v1/namespaces/{namespace}/pods/{name}/status"
         while True:
             if time.time() - t1 > timeout:
                 raise TimeoutError(f"Did not see pod {name} terminate after {timeout}s")
@@ -269,5 +270,5 @@ class KubeClientService(HTTPClientService):
     @property
     def namespace(self):
         if self._namespace is None:
-            self._namespace = self.config.getConfig()['namespace']
+            self._namespace = self.config.getConfig()["namespace"]
         return self._namespace

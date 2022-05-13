@@ -43,17 +43,22 @@ class ZulipStatusPush(ReporterBase):
         self.verify = verify
         yield super().reconfigService(generators=[BuildStartEndStatusGenerator()])
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, endpoint,
-            debug=self.debug, verify=self.verify)
+            self.master, endpoint, debug=self.debug, verify=self.verify
+        )
         self.token = token
         self.stream = stream
 
     @defer.inlineCallbacks
     def sendMessage(self, reports):
-        build = reports[0]['builds'][0]
+        build = reports[0]["builds"][0]
         event = ("new", "finished")[0 if build["complete"] is False else 1]
-        jsondata = dict(event=event, buildid=build["buildid"], buildername=build["builder"]["name"],
-                        url=build["url"], project=build["properties"]["project"][0])
+        jsondata = dict(
+            event=event,
+            buildid=build["buildid"],
+            buildername=build["builder"]["name"],
+            url=build["url"],
+            project=build["properties"]["project"][0],
+        )
         if event == "new":
             jsondata["timestamp"] = int(build["started_at"].timestamp())
         elif event == "finished":
@@ -66,5 +71,8 @@ class ZulipStatusPush(ReporterBase):
         response = yield self._http.post(url, json=jsondata)
         if response.code != 200:
             content = yield response.content()
-            log.error("{code}: Error pushing build status to Zulip: {content}", code=response.code,
-                      content=content)
+            log.error(
+                "{code}: Error pushing build status to Zulip: {content}",
+                code=response.code,
+                content=content,
+            )

@@ -28,8 +28,7 @@ def isWorkerDir(dir):
         with open(buildbot_tac) as f:
             contents = f.read()
     except IOError as exception:
-        print_error("error reading '{0}': {1}".format(
-                    buildbot_tac, exception.strerror))
+        print_error("error reading '{0}': {1}".format(buildbot_tac, exception.strerror))
         return False
 
     if "Application('buildbot-worker')" not in contents:

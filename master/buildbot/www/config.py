@@ -36,20 +36,19 @@ class IndexResource(resource.Resource):
     def __init__(self, master, staticdir):
         super().__init__(master)
         loader = jinja2.FileSystemLoader(staticdir)
-        self.jinja = jinja2.Environment(
-            loader=loader, undefined=jinja2.StrictUndefined)
+        self.jinja = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
 
     def reconfigResource(self, new_config):
         self.config = new_config.www
 
         versions = self.getEnvironmentVersions()
-        vs = self.config.get('versions')
+        vs = self.config.get("versions")
         if isinstance(vs, list):
             versions += vs
-        self.config['versions'] = versions
+        self.config["versions"] = versions
 
         self.custom_templates = {}
-        template_dir = self.config.pop('custom_templates_dir', None)
+        template_dir = self.config.pop("custom_templates_dir", None)
         if template_dir is not None:
             template_dir = os.path.join(self.master.basedir, template_dir)
             self.custom_templates = self.parseCustomTemplateDir(template_dir)
@@ -62,6 +61,7 @@ class IndexResource(resource.Resource):
         allowed_ext = [".html"]
         try:
             import pypugjs  # pylint: disable=import-outside-toplevel
+
             allowed_ext.append(".jade")
         except ImportError:  # pragma: no cover
             log.msg(f"pypugjs not installed. Ignoring .jade files from {template_dir}")
@@ -72,23 +72,21 @@ class IndexResource(resource.Resource):
             else:
                 # template_name is a url, so we really want '/'
                 # root is a os.path, though
-                template_name = posixpath.join(
-                    os.path.basename(root), "views", "%s.html")
+                template_name = posixpath.join(os.path.basename(root), "views", "%s.html")
             for f in files:
                 fn = os.path.join(root, f)
                 basename, ext = os.path.splitext(f)
                 if ext not in allowed_ext:
                     continue
                 if ext == ".html":
-                    with open(fn, encoding='utf-8') as f:
+                    with open(fn, encoding="utf-8") as f:
                         html = f.read().strip()
                 elif ext == ".jade":
-                    with open(fn, encoding='utf-8') as f:
+                    with open(fn, encoding="utf-8") as f:
                         jade = f.read()
                         parser = pypugjs.parser.Parser(jade)
                         block = parser.parse()
-                        compiler = pypugjs.ext.html.Compiler(
-                            block, pretty=False)
+                        compiler = pypugjs.ext.html.Compiler(block, pretty=False)
                         html = compiler.compile()
                 res[template_name % (basename,)] = html
 
@@ -96,31 +94,35 @@ class IndexResource(resource.Resource):
 
     @staticmethod
     def getEnvironmentVersions():
-        import sys   # pylint: disable=import-outside-toplevel
-        import twisted   # pylint: disable=import-outside-toplevel
-        from buildbot import version as bbversion   # pylint: disable=import-outside-toplevel
+        import sys  # pylint: disable=import-outside-toplevel
+        import twisted  # pylint: disable=import-outside-toplevel
+        from buildbot import (
+            version as bbversion,
+        )  # pylint: disable=import-outside-toplevel
 
-        pyversion = '.'.join(map(str, sys.version_info[:3]))
+        pyversion = ".".join(map(str, sys.version_info[:3]))
 
-        tx_version_info = (twisted.version.major,
-                           twisted.version.minor,
-                           twisted.version.micro)
-        txversion = '.'.join(map(str, tx_version_info))
+        tx_version_info = (
+            twisted.version.major,
+            twisted.version.minor,
+            twisted.version.micro,
+        )
+        txversion = ".".join(map(str, tx_version_info))
 
         return [
-            ('Python', pyversion),
-            ('Buildbot', bbversion),
-            ('Twisted', txversion),
+            ("Python", pyversion),
+            ("Buildbot", bbversion),
+            ("Twisted", txversion),
         ]
 
     @defer.inlineCallbacks
     def renderIndex(self, request):
         config = {}
-        request.setHeader(b"content-type", b'text/html')
+        request.setHeader(b"content-type", b"text/html")
         request.setHeader(b"Cache-Control", b"public,max-age=0")
 
         try:
-            yield self.config['auth'].maybeAutoLogin(request)
+            yield self.config["auth"].maybeAutoLogin(request)
         except Error as e:
             config["on_load_warning"] = e.message
 
@@ -128,14 +130,14 @@ class IndexResource(resource.Resource):
         config.update({"user": user_info})
 
         config.update(self.config)
-        config['buildbotURL'] = self.master.config.buildbotURL
-        config['title'] = self.master.config.title
-        config['titleURL'] = self.master.config.titleURL
-        config['multiMaster'] = self.master.config.multiMaster
+        config["buildbotURL"] = self.master.config.buildbotURL
+        config["title"] = self.master.config.title
+        config["titleURL"] = self.master.config.titleURL
+        config["multiMaster"] = self.master.config.multiMaster
 
         # delete things that may contain secrets
-        if 'change_hook_dialects' in config:
-            del config['change_hook_dialects']
+        if "change_hook_dialects" in config:
+            del config["change_hook_dialects"]
 
         def toJson(obj):
             try:
@@ -149,11 +151,13 @@ class IndexResource(resource.Resource):
             obj = obj.__class__.__module__ + "." + obj.__class__.__name__
             return repr(obj) + " not yet IConfigured"
 
-        tpl = self.jinja.get_template('index.html')
+        tpl = self.jinja.get_template("index.html")
         # we use Jinja in order to render some server side dynamic stuff
         # For example, custom_templates javascript is generated by the
         # layout.jade jinja template
-        tpl = tpl.render(configjson=json.dumps(config, default=toJson),
-                         custom_templates=self.custom_templates,
-                         config=self.config)
-        return unicode2bytes(tpl, encoding='ascii')
+        tpl = tpl.render(
+            configjson=json.dumps(config, default=toJson),
+            custom_templates=self.custom_templates,
+            config=self.config,
+        )
+        return unicode2bytes(tpl, encoding="ascii")

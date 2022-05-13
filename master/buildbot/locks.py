@@ -38,6 +38,7 @@ class BaseLock:
     in the queue behind exclusive waiters cannot acquire the lock. This ensures
     that exclusive waiters are not starved.
     """
+
     description = "<BaseLock>"
 
     def __init__(self, name, maxCount=1):
@@ -82,7 +83,7 @@ class BaseLock:
         return None
 
     def isAvailable(self, requester, access):
-        """ Return a boolean whether the lock is available for claiming """
+        """Return a boolean whether the lock is available for claiming"""
         debuglog(f"{self} isAvailable({requester}, {access}): self.owners={repr(self.owners)}")
         num_excl, num_counting = self._claimed_excl, self._claimed_counting
 
@@ -95,23 +96,26 @@ class BaseLock:
 
         ahead = self.waiting[:w_index]
 
-        if access.mode == 'counting':
+        if access.mode == "counting":
             # Wants counting access
-            return not num_excl \
-                and num_counting + len(ahead) + access.count <= self.maxCount \
-                and all(w[1].mode == 'counting' for w in ahead)
+            return (
+                not num_excl
+                and num_counting + len(ahead) + access.count <= self.maxCount
+                and all(w[1].mode == "counting" for w in ahead)
+            )
         # else Wants exclusive access
         return not num_excl and not num_counting and not ahead
 
     def _addOwner(self, owner, access):
         self.owners.append((owner, access))
-        if access.mode == 'counting':
+        if access.mode == "counting":
             self._claimed_counting += access.count
         else:
             self._claimed_excl += 1
 
-        assert (self._claimed_excl and not self._claimed_counting) \
-            or (not self._claimed_excl and self._claimed_excl <= self.maxCount)
+        assert (self._claimed_excl and not self._claimed_counting) or (
+            not self._claimed_excl and self._claimed_excl <= self.maxCount
+        )
 
     def _removeOwner(self, owner, access):
         # returns True if owner removed, False if the lock has been already
@@ -121,22 +125,22 @@ class BaseLock:
             return False
 
         self.owners.remove(entry)
-        if access.mode == 'counting':
+        if access.mode == "counting":
             self._claimed_counting -= access.count
         else:
             self._claimed_excl -= 1
         return True
 
     def claim(self, owner, access):
-        """ Claim the lock (lock must be available) """
+        """Claim the lock (lock must be available)"""
         debuglog(f"{self} claim({owner}, {access.mode})")
         assert owner is not None
         assert self.isAvailable(owner, access), "ask for isAvailable() first"
 
         assert isinstance(access, LockAccess)
-        assert access.mode in ['counting', 'exclusive']
+        assert access.mode in ["counting", "exclusive"]
         assert isinstance(access.count, int)
-        if access.mode == 'exclusive':
+        if access.mode == "exclusive":
             assert access.count == 1
         else:
             assert access.count >= 0
@@ -154,7 +158,7 @@ class BaseLock:
         return self.release_subs.subscribe(callback)
 
     def release(self, owner, access):
-        """ Release the lock """
+        """Release the lock"""
         assert isinstance(access, LockAccess)
 
         if not access.count:
@@ -176,7 +180,7 @@ class BaseLock:
         # awakened.
         num_excl, num_counting = self._claimed_excl, self._claimed_counting
         for i, (w_owner, w_access, d) in enumerate(self.waiting):
-            if w_access.mode == 'counting':
+            if w_access.mode == "counting":
                 if num_excl > 0 or num_counting >= self.maxCount:
                     break
                 num_counting = num_counting + w_access.count
@@ -215,17 +219,19 @@ class BaseLock:
         w_index = self._find_waiting(owner)
         if w_index is not None:
             _, _, old_d = self.waiting[w_index]
-            assert old_d is None, "waitUntilMaybeAvailable() must not be called again before the " \
-                                  "previous deferred fired"
+            assert old_d is None, (
+                "waitUntilMaybeAvailable() must not be called again before the "
+                "previous deferred fired"
+            )
             self.waiting[w_index] = (owner, access, d)
         else:
             self.waiting.append((owner, access, d))
         return d
 
     def stopWaitingUntilAvailable(self, owner, access, d):
-        """ Stop waiting for lock to become available. `d` must be the result of a previous call
-            to `waitUntilMaybeAvailable()`. If `d` has not been woken up already by calling its
-            callback, it will be done as part of this function
+        """Stop waiting for lock to become available. `d` must be the result of a previous call
+        to `waitUntilMaybeAvailable()`. If `d` has not been woken up already by calling its
+        callback, it will be done as part of this function
         """
         debuglog(f"{self} stopWaitingUntilAvailable({owner})")
         assert isinstance(access, LockAccess)
@@ -234,7 +240,9 @@ class BaseLock:
         assert w_index is not None, "The owner was not waiting for the lock"
         _, _, old_d = self.waiting[w_index]
         if old_d is not None:
-            assert d is old_d, "The supplied deferred must be a result of waitUntilMaybeAvailable()"
+            assert (
+                d is old_d
+            ), "The supplied deferred must be a result of waitUntilMaybeAvailable()"
             del self.waiting[w_index]
             d.callback(None)
         else:
@@ -249,7 +257,6 @@ class BaseLock:
 
 
 class RealMasterLock(BaseLock, service.SharedService):
-
     def __init__(self, name):
         # the caller will want to call updateFromLockId after initialization
         super().__init__(name, 0)
@@ -272,7 +279,6 @@ class RealMasterLock(BaseLock, service.SharedService):
 
 
 class RealWorkerLock(service.SharedService):
-
     def __init__(self, name):
         super().__init__()
 
@@ -289,20 +295,21 @@ class RealWorkerLock(service.SharedService):
 
     def getLockForWorker(self, workername):
         if workername not in self.locks:
-            maxCount = self.maxCountForWorker.get(workername,
-                                                  self.maxCount)
+            maxCount = self.maxCountForWorker.get(workername, self.maxCount)
             lock = self.locks[workername] = BaseLock(self.lockName, maxCount)
             self._updateDescriptionForLock(lock, workername)
             self.locks[workername] = lock
         return self.locks[workername]
 
     def _updateDescription(self):
-        self.description = \
+        self.description = (
             f"<WorkerLock({self.lockName}, {self.maxCount}, {self.maxCountForWorker})>"
+        )
 
     def _updateDescriptionForLock(self, lock, workername):
-        lock.description = \
+        lock.description = (
             f"<WorkerLock({lock.lockName}, {lock.maxCount})[{workername}] {id(lock)}>"
+        )
 
     def updateFromLockId(self, lockid, config_version):
         assert self.lockName == lockid.name
@@ -323,7 +330,7 @@ class RealWorkerLock(service.SharedService):
 
 class LockAccess(util.ComparableMixin):
 
-    """ I am an object representing a way to access a lock.
+    """I am an object representing a way to access a lock.
 
     @param lockid: LockId instance that should be accessed.
     @type  lockid: A MasterLock or WorkerLock instance.
@@ -336,7 +343,7 @@ class LockAccess(util.ComparableMixin):
                   compatibility
     """
 
-    compare_attrs = ('lockid', 'mode', 'count')
+    compare_attrs = ("lockid", "mode", "count")
 
     def __init__(self, lockid, mode, count=1):
         self.lockid = lockid
@@ -344,9 +351,9 @@ class LockAccess(util.ComparableMixin):
         self.count = count
 
         assert isinstance(lockid, (MasterLock, WorkerLock))
-        assert mode in ['counting', 'exclusive']
+        assert mode in ["counting", "exclusive"]
         assert isinstance(count, int)
-        if mode == 'exclusive':
+        if mode == "exclusive":
             assert count == 1
         else:
             assert count >= 0
@@ -354,7 +361,7 @@ class LockAccess(util.ComparableMixin):
 
 class BaseLockId(util.ComparableMixin):
 
-    """ Abstract base class for LockId classes.
+    """Abstract base class for LockId classes.
 
     Sets up the 'access()' function for the LockId's available to the user
     (MasterLock and WorkerLock classes).
@@ -366,17 +373,17 @@ class BaseLockId(util.ComparableMixin):
     """
 
     def access(self, mode, count=1):
-        """ Express how the lock should be accessed """
-        assert mode in ['counting', 'exclusive']
+        """Express how the lock should be accessed"""
+        assert mode in ["counting", "exclusive"]
         assert isinstance(count, int)
         assert count >= 0
         return LockAccess(self, mode, count)
 
     def defaultAccess(self):
-        """ For buildbot 0.7.7 compatibility: When user doesn't specify an access
-            mode, this one is chosen.
+        """For buildbot 0.7.7 compatibility: When user doesn't specify an access
+        mode, this one is chosen.
         """
-        return self.access('counting')
+        return self.access("counting")
 
 
 # master.cfg should only reference the following MasterLock and WorkerLock
@@ -396,7 +403,7 @@ class MasterLock(BaseLockId):
     workers, for example to limit the load on a common SVN repository.
     """
 
-    compare_attrs = ('name', 'maxCount')
+    compare_attrs = ("name", "maxCount")
     lockClass = RealMasterLock
 
     def __init__(self, name, maxCount=1):
@@ -425,7 +432,7 @@ class WorkerLock(BaseLockId):
 
     """
 
-    compare_attrs = ('name', 'maxCount', '_maxCountForWorkerList')
+    compare_attrs = ("name", "maxCount", "_maxCountForWorkerList")
     lockClass = RealWorkerLock
 
     def __init__(self, name, maxCount=1, maxCountForWorker=None):
@@ -436,5 +443,4 @@ class WorkerLock(BaseLockId):
         self.maxCountForWorker = maxCountForWorker
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
-        self._maxCountForWorkerList = tuple(
-            sorted(self.maxCountForWorker.items()))
+        self._maxCountForWorkerList = tuple(sorted(self.maxCountForWorker.items()))

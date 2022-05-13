@@ -22,12 +22,13 @@ from collections import namedtuple
 # that are described in the unit tests.
 
 _giturlmatcher = re.compile(
-    r'(?P<proto>(https?://|ssh://|git://|))'
-    r'((?P<user>.*)@)?'
-    r'(?P<domain>[^\/:]+)(:((?P<port>[0-9]+)/)?|/)'
-    r'((?P<owner>.+)/)?(?P<repo>[^/]+?)(\.git)?$')
+    r"(?P<proto>(https?://|ssh://|git://|))"
+    r"((?P<user>.*)@)?"
+    r"(?P<domain>[^\/:]+)(:((?P<port>[0-9]+)/)?|/)"
+    r"((?P<owner>.+)/)?(?P<repo>[^/]+?)(\.git)?$"
+)
 
-GitUrl = namedtuple('GitUrl', ['proto', 'user', 'domain', 'port', 'owner', 'repo'])
+GitUrl = namedtuple("GitUrl", ["proto", "user", "domain", "port", "owner", "repo"])
 
 
 def giturlparse(url):
@@ -42,6 +43,12 @@ def giturlparse(url):
     if proto:
         proto = proto[:-3]
     else:
-        proto = 'ssh'  # implicit proto is ssh
-    return GitUrl(proto, res.group('user'), res.group("domain"),
-                  port, res.group('owner'), res.group('repo'))
+        proto = "ssh"  # implicit proto is ssh
+    return GitUrl(
+        proto,
+        res.group("user"),
+        res.group("domain"),
+        port,
+        res.group("owner"),
+        res.group("repo"),
+    )
