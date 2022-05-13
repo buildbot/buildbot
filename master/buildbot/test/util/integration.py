@@ -229,8 +229,10 @@ class RunMasterBase(unittest.TestCase):
                 protocol = 'msgpack_experimental_v3'
                 dispatcher = list(m.msgmanager.dispatchers.values())[0]
 
-                if sandboxed_worker_path is not None and worker_python_version == '2.7':
-                    raise SkipTest('MessagePack protocol is not supported on python 2.7 worker')
+                unsupported_python_versions = ['2.7', '3.4', '3.5']
+                if sandboxed_worker_path is not None and \
+                        worker_python_version in unsupported_python_versions:
+                    raise SkipTest('MessagePack protocol requires worker python >= 3.6')
 
                 # We currently don't handle connection closing cleanly.
                 dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)

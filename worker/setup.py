@@ -145,7 +145,6 @@ if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
 twisted_ver = ">= 17.9.0"
-autobahn_ver = ">= 0.16.0"
 
 if setuptools is not None:
     setup_args['install_requires'] = [
@@ -153,10 +152,10 @@ if setuptools is not None:
         'future',
     ]
 
-    if sys.version_info.major >= 3:
-        # Message pack is only supported on Python 3
+    if sys.version_info >= (3, 6):
+        # Message pack is only supported on Python 3.6 and newer
         setup_args['install_requires'] += [
-            'autobahn ' + autobahn_ver,
+            'autobahn >= 0.16.0',
             'msgpack >= 0.6.0',
         ]
 
