@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import datetime
 import time
 
 import mock
@@ -30,12 +29,6 @@ from buildbot.test.util import scheduler
 
 
 class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
-
-    try:
-        datetime.datetime.fromtimestamp(1)
-    except OSError:
-        skip = ("Python 3.6 bug on Windows: "
-                "https://bugs.python.org/issue29097")
 
     OBJECTID = 132
     SCHEDULERID = 32
