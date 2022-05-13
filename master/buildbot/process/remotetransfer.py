@@ -42,7 +42,7 @@ class FileWriter(base.FileWriterImpl):
 
         self.destfile = destfile
         self.mode = mode
-        fd, self.tmpname = tempfile.mkstemp(dir=dirname)
+        fd, self.tmpname = tempfile.mkstemp(dir=dirname, prefix='buildbot-transfer-')
         self.fp = os.fdopen(fd, 'wb')
         self.remaining = maxsize
 
@@ -104,7 +104,7 @@ class DirectoryWriter(FileWriter):
         self.destroot = destroot
         self.compress = compress
 
-        self.fd, self.tarname = tempfile.mkstemp()
+        self.fd, self.tarname = tempfile.mkstemp(prefix='buildbot-transfer-')
         os.close(self.fd)
 
         super().__init__(self.tarname, maxsize, mode)

@@ -208,7 +208,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
             log.msg("path: {0!r}".format(self.path))
 
         # Create temporary archive
-        fd, self.tarname = tempfile.mkstemp()
+        fd, self.tarname = tempfile.mkstemp(prefix='buildbot-transfer-')
         self.fp = os.fdopen(fd, "rb+")
 
         if self.compress == 'bz2':
