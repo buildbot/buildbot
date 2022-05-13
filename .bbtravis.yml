@@ -35,9 +35,12 @@ matrix:
       env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
     # add js tests in separate job. Start it early because it is quite long
-    - env: TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=2G
-    - env: TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=2G
-    - env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes NUM_CPU=4 MEMORY_SIZE=4G
+    - python: "3.8"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=2G
+    - python: "3.8"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=2G
+    - python: "3.8"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes NUM_CPU=4 MEMORY_SIZE=4G
 
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
