@@ -83,11 +83,8 @@ matrix:
     # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest DB_TYPE=mysql
-
-    # innodb tests takes 20min probably because of docker aufs.
-    # travis images provides much faster innodb so we keep these test there until we implement ramfs based
-    # mysql installation
-    # - env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
+    - python: "3.8"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
 
     # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
     # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
