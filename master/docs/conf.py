@@ -39,7 +39,7 @@ except pkg_resources.ResolutionError as e:
                        "Please install documentation dependencies with `pip "
                        "install buildbot[docs]`") from e
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.0'
+needs_sphinx = '4.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -49,7 +49,7 @@ extensions = [
     'sphinx.ext.extlinks',
     'bbdocs.ext',
     'bbdocs.api_index',
-    'sphinxcontrib.jinja',
+    'sphinx_jinja',
     'sphinx_rtd_theme',
 ]
 todo_include_todos = True
