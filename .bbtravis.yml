@@ -35,6 +35,7 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
+  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
 
   # Configuration when SQLite database is persistent between running tests
   # (by default in other tests in-memory SQLite database is used which is
