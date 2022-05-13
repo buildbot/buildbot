@@ -22,6 +22,7 @@ from twisted.internet import defer
 from buildbot.process.properties import Interpolate
 from buildbot.secrets.providers.vault import HashiCorpVaultSecretProvider
 from buildbot.steps.shell import ShellCommand
+from buildbot.test.util.decorators import skipUnlessPlatformIs
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.warnings import DeprecatedApiWarning
@@ -30,6 +31,9 @@ from buildbot.warnings import DeprecatedApiWarning
 # with one builders and a shellcommand step
 
 
+# Test needs to be explicitly disabled on Windows, as docker may be present there, but not able
+# to properly launch images.
+@skipUnlessPlatformIs('posix')
 class SecretsConfig(RunMasterBase):
     def setUp(self):
         try:

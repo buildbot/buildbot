@@ -1,4 +1,4 @@
-attrs==21.2.0
+attrs==21.4.0
 autobahn==22.3.2;  python_version >= "3.7"
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
 Automat==20.2.0
@@ -14,7 +14,7 @@ incremental==17.5.0;  python_version < "3.0"  # pyup: ignore
 # pin mock, because 4.x no longer supports Python 3.5
 mock==3.0.5  # pyup: ignore
 parameterized==0.8.1
-pbr==5.6.0
+pbr==5.8.1
 # pin PyHamcrest, because 2.x no longer supports Python 2.7
 PyHamcrest==1.9.0  # pyup: ignore
 psutil==5.9.0
