@@ -63,7 +63,7 @@ class TestFileWriter(unittest.TestCase):
         absdir = os.path.dirname(os.path.abspath(os.path.join("dir", "file")))
         mockedExists.assert_called_once_with(absdir)
         mockedMakedirs.assert_called_once_with(absdir)
-        mockedMkstemp.assert_called_once_with(dir=absdir)
+        mockedMkstemp.assert_called_once_with(dir=absdir, prefix='buildbot-transfer-')
         mockedFdopen.assert_called_once_with(7, 'wb')
 
 
