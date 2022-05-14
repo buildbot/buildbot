@@ -90,3 +90,31 @@ jobs:
       - run: coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
 
       - run: codecov
+
+  win:
+    name: Win / python ${{ matrix.python-version }}
+    runs-on: windows-2019
+
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9"]
+
+    steps:
+      - uses: "actions/checkout@v2"
+      - uses: "actions/setup-python@v2"
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: "Install dependencies"
+        run: |
+          python -c "import sys; print(sys.prefix)"
+          python -c "import sys; print(sys.exec_prefix)"
+          python -c "import sys; print(sys.executable)"
+          python -V -V
+          python -m pip install -U pip setuptools
+          python -m pip install -r requirements-ci.txt
+          python -m pip list
+          # Check that pywin32 is properly installed
+          python -c "import win32api"
+
+      - name: "Run tests for ${{ matrix.python-version }}"
+        run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
