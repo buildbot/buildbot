@@ -3702,6 +3702,29 @@ class TestGitCommit(TestBuildStepMixin, config.ConfigErrorsMixin,
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
+    def test_commit_noverify(self):
+        self.setup_step(
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
+                           no_verify=True))
+        self.expect_commands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            .stdout('git version 1.7.5')
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'symbolic-ref', 'HEAD'])
+            .stdout('refs/head/myBranch')
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'add', 'file1.txt', 'file2.txt'])
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'commit', '-m', 'my commit', '-m', '42', '--no-verify'])
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
     def test_commit_empty_disallow(self):
         self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
