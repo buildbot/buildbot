@@ -796,6 +796,216 @@ gitJsonPayloadMR_open_forked = b"""
 }
 """  # noqa pylint: disable=line-too-long
 
+# == Merge requests from a fork of the project
+# (Captured more accurately than above test data) captured from gitlab/v4 rest api
+gitJsonPayloadMR_commented = b"""
+{
+  "object_kind": "note",
+  "event_type": "note",
+  "user": {
+    "id": 343,
+    "name": "Name Surname",
+    "username": "rollo",
+    "avatar_url": "null",
+    "email": "[REDACTED]"
+  },
+  "project_id": 926,
+  "project": {
+    "id": 926,
+    "name": "awesome_project",
+    "description": "",
+    "web_url": "https://gitlab.example.com/mmusterman/awesome_project",
+    "avatar_url": null,
+    "git_ssh_url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+    "git_http_url": "https://gitlab.example.com/mmusterman/awesome_project.git",
+    "namespace" : "mmusterman",
+    "visibility_level": 0,
+    "path_with_namespace": "awesome_project",
+    "default_branch": "master",
+    "ci_config_path": null,
+    "homepage": "https://gitlab.example.com/mmusterman/awesome_project",
+    "url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+    "ssh_url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+    "http_url": "https://gitlab.example.com/mmusterman/awesome_project.git"
+  },
+  "object_attributes": {
+    "attachment": null,
+    "author_id": 343,
+    "change_position": {
+      "base_sha": null,
+      "start_sha": null,
+      "head_sha": null,
+      "old_path": null,
+      "new_path": null,
+      "position_type": "text",
+      "old_line": null,
+      "new_line": null,
+      "line_range": null
+    },
+    "commit_id": null,
+    "created_at": "2022-02-04 09:13:56 UTC",
+    "discussion_id": "0a307b85835ac7c3e2c1b4e6283d7baf42df0f8e",
+    "id": 83474,
+    "line_code": "762ab21851f67780cfb68832884fa1f859ccd00e_761_762",
+    "note": "036 #BB",
+    "noteable_id": 4085,
+    "noteable_type": "MergeRequest",
+    "original_position": {
+      "base_sha": "7e2c01527d87c36cf4f9e78dd9fc6aa4f602c365",
+      "start_sha": "7e2c01527d87c36cf4f9e78dd9fc6aa4f602c365",
+      "head_sha": "b91a85e84404932476f76ccbf0f42c963005501b",
+      "old_path": "run/exp.fun_R2B4",
+      "new_path": "run/exp.fun_R2B4",
+      "position_type": "text",
+      "old_line": null,
+      "new_line": 762,
+      "line_range": {
+        "start": {
+          "line_code": "762abg1851f67780cfb68832884fa1f859ccd00e_761_762",
+          "type": "new",
+          "old_line": null,
+          "new_line": 762
+        },
+        "end": {
+          "line_code": "762abg1851f67780cfb68832884fa1f859ccd00e_761_762",
+          "type": "new",
+          "old_line": null,
+          "new_line": 762
+        }
+      }
+    },
+    "position": {
+      "base_sha": "7e2c01527d87c36cf4f9e78dd9fc6aa4f602c365",
+      "start_sha": "7e2c01527d87c36cf4f9e78dd9fc6aa4f602c365",
+      "head_sha": "d1ce5517d3745dbd68e1eeb45f42380d76d0c490",
+      "old_path": "run/exp.esm_R2B4",
+      "new_path": "run/exp.esm_R2B4",
+      "position_type": "text",
+      "old_line": null,
+      "new_line": 762,
+      "line_range": {
+        "start": {
+          "line_code": "762ab21851f67780cfb68832884fa1f859ccd00e_761_762",
+          "type": "new",
+          "old_line": null,
+          "new_line": 762
+        },
+        "end": {
+          "line_code": "762ab21851f67780cfb68832884fa1f859ccd00e_761_762",
+          "type": "new",
+          "old_line": null,
+          "new_line": 762
+        }
+      }
+    },
+    "project_id": 926,
+    "resolved_at": null,
+    "resolved_by_id": null,
+    "resolved_by_push": null,
+    "st_diff": null,
+    "system": false,
+    "type": "DiffNote",
+    "updated_at": "2022-02-04 09:13:56 UTC",
+    "updated_by_id": null,
+    "description": "036 #BB",
+    "url": "https://gitlab.example.com/mmusterman/awesome_project_id/-/merge_requests/7#note_83474"
+  },
+  "repository": {
+    "name": "awesome_project",
+    "url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+    "description": "",
+    "homepage": "https://gitlab.example.com/mmusterman/awesome_project"
+  },
+  "merge_request": {
+    "assignee_id": 343,
+    "author_id": 343,
+    "created_at": "2022-01-28 09:17:41 UTC",
+    "description": "Some tests got disabled in the last merge. I will try to re-activate all infrastructure-related tests",
+    "head_pipeline_id": 14675,
+    "id": 4085,
+    "iid": 7,
+    "last_edited_at": "2022-02-01 15:10:38 UTC",
+    "last_edited_by_id": 343,
+    "merge_commit_sha": null,
+    "merge_error": null,
+    "merge_params": {
+      "force_remove_source_branch": "1"
+    },
+    "merge_status": "can_be_merged",
+    "merge_user_id": null,
+    "merge_when_pipeline_succeeds": false,
+    "milestone_id": null,
+    "source_branch": "fix-missing-tests",
+    "source_project_id": 926,
+    "state_id": 1,
+    "target_branch": "master",
+    "target_project_id": 926,
+    "time_estimate": 0,
+    "title": "Draft: Fix missing tests: pio",
+    "updated_at": "2022-02-04 09:13:17 UTC",
+    "updated_by_id": 343,
+    "url": "https://gitlab.example.com/mmusterman/awesome_project/-/merge_requests/7",
+    "source": {
+      "id": 926,
+      "name": "awesome_project",
+      "description": "",
+      "web_url": "https://gitlab.example.com/mmusterman/awesome_project",
+      "avatar_url": null,
+      "git_ssh_url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "git_http_url": "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "namespace": "mmusterman",
+      "visibility_level": 0,
+      "path_with_namespace": "awesome_project",
+      "default_branch": "master",
+      "ci_config_path": null,
+      "homepage": "https://gitlab.example.com/mmusterman/awesome_project",
+      "url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "ssh_url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "http_url": "https://gitlab.example.com/mmusterman/awesome_project.git"
+    },
+    "target": {
+      "id": 926,
+      "name": "awesome_project",
+      "description": "",
+      "web_url": "https://gitlab.example.com/mmusterman/awesome_project",
+      "avatar_url": null,
+      "git_ssh_url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "git_http_url": "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "namespace": "mmusterman",
+      "visibility_level": 0,
+      "path_with_namespace": "awesome_project",
+      "default_branch": "master",
+      "ci_config_path": null,
+      "homepage": "https://gitlab.example.com/mmusterman/awesome_project",
+      "url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "ssh_url": "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "http_url": "https://gitlab.example.com/mmusterman/awesome_project.git"
+    },
+    "last_commit": {
+      "id": "d1ce5517d3745dbd68e1eeb45f42380d76d0c490",
+      "message": "adopt radiation changes for ruby0 runs in bb",
+      "title": "adopt radiation changes for ruby0 runs in bb",
+      "timestamp": "2022-01-28T10:13:12+01:00",
+      "url": "https://gitlab.example.com/mmusterman/awesome_project/-/commit/d1ce5517d3745dbd68e1eeb45f42380d76d0c490",
+      "author": {
+        "name": "Name Surname",
+        "email": "surname@example.com"
+      }
+    },
+    "work_in_progress": true,
+    "total_time_spent": 0,
+    "time_change": 0,
+    "human_total_time_spent": null,
+    "human_time_change": null,
+    "human_time_estimate": null,
+    "assignee_ids": [
+      343
+    ],
+    "state": "opened"
+  }
+}
+"""  # noqa pylint: disable=line-too-long
+
 
 def FakeRequestMR(content):
     request = FakeRequest(content=content)
@@ -846,6 +1056,31 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
         self.assertEqual(change['properties']["source_branch"], 'ms-viewport')
         self.assertEqual(change['properties']["target_branch"], 'master')
         self.assertEqual(change["category"], "merge_request")
+        self.assertEqual(change.get("project"), project)
+
+    def check_changes_mr_event_by_comment(self, r, project='awesome_project',
+            codebase=None,
+            timestamp=1526309644,
+            source_repo=None,
+            repo='https://gitlab.example.com/mmusterman/awesome_project.git',
+            source_branch='ms-viewport',
+            target_branch='master'):
+
+        self.maxDiff = None
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
+        change = self.changeHook.master.data.updates.changesAdded[0]
+
+        self.assertEqual(change["repository"], repo)
+        if source_repo is None:
+            source_repo = repo
+
+        self.assertEqual(change['properties']["source_repository"], source_repo)
+        self.assertEqual(change['properties']["target_repository"], repo)
+        self.assertEqual(change["when_timestamp"], timestamp)
+        self.assertEqual(change["branch"], target_branch)
+        self.assertEqual(change['properties']["source_branch"], source_branch)
+        self.assertEqual(change['properties']["target_branch"], target_branch)
+        self.assertEqual(change["category"], "note")
         self.assertEqual(change.get("project"), project)
 
     def check_changes_push_event(self, r, project='diaspora', codebase=None):
@@ -998,6 +1233,17 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                 source_repo="https://gitlab.example.com/build/awesome_project.git")
         change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change["category"], "merge_request")
+
+    @defer.inlineCallbacks
+    def testGitWithChange_WithMR_commented(self):
+        self.request = FakeRequestMR(content=gitJsonPayloadMR_commented)
+        res = yield self.request.test_render(self.changeHook)
+        self.check_changes_mr_event_by_comment(
+                res, codebase="MyCodebase", timestamp=1643361192,
+                project="awesome_project",
+                source_repo="https://gitlab.example.com/mmusterman/awesome_project.git",
+                source_branch="fix-missing-tests",
+                )
 
 
 class TestChangeHookConfiguredWithSecret(unittest.TestCase, TestReactorMixin):
