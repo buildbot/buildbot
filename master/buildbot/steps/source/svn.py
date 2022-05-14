@@ -160,8 +160,8 @@ class SVN(Source):
             checkout_dir = self.build.path_module.join(
                 checkout_dir, self.codebase)
         # temporarily set workdir = checkout_dir and do an incremental checkout
+        old_workdir = self.workdir
         try:
-            old_workdir = self.workdir
             self.workdir = checkout_dir
             yield self.mode_incremental()
         finally:
