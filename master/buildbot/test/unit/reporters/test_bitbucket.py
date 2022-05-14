@@ -47,7 +47,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
-            _BASE_URL,
+            _BASE_URL, auth=None,
             debug=None, verify=None)
         self.oauthhttp = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
@@ -229,7 +229,7 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
-            _BASE_URL,
+            _BASE_URL, auth=None,
             debug=None, verify=None)
         self.oauthhttp = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
@@ -290,6 +290,13 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
         build['complete'] = True
         build['results'] = SUCCESS
         yield self.bsp._got_event(('builds', 20, 'finished'), build)
+
+
+class TestBitbucketStatusPushConfig(ConfigErrorsMixin, unittest.TestCase):
+    def test_auth_error(self):
+        with self.assertRaisesConfigError(
+                "Either App Passwords or OAuth can be specified, not both"):
+            BitbucketStatusPush(oauth_key='abc', oauth_secret='abc1', auth=('user', 'pass'))
 
 
 class TestBitbucketStatusPushRepoParsing(TestReactorMixin, unittest.TestCase):
