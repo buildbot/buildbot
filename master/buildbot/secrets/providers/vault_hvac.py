@@ -145,18 +145,16 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
 
     def thd_hvac_get(self, path):
         """
-        query secret from Vault and try to re-authenticate in case Unauthorized
-        exception when active token reaches its TTL
+        query secret from Vault and re-authenticate if not authenticated
         """
 
         # no need to "try" import, it was already handled by reconfigService()
         import hvac
 
-        try:
-            response = self.thd_hvac_wrap_read(path=path)
-        except (hvac.exceptions.Unauthorized, hvac.exceptions.InvalidRequest):
+        if not self.client.is_authenticated():
             self.authenticator.authenticate(self.client)
-            response = self.thd_hvac_wrap_read(path=path)
+
+        response = self.thd_hvac_wrap_read(path=path)
 
         return response
 
