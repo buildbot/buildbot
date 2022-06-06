@@ -1,5 +1,5 @@
 attrs==21.4.0
-autobahn==22.3.2;  python_version >= "3.7"
+autobahn==22.5.1;  python_version >= "3.7"
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
 Automat==20.2.0
 cffi==1.15.0;  python_version >= "3.6"
