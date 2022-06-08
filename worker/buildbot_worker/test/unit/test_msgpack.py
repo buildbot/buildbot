@@ -384,7 +384,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         workdir = os.path.join('basedir', 'test_basedir')
         self.patch_runprocess(
             Expect(['echo'], workdir)
-            .update('hdr', 'headers')
+            .update('header', 'headers')
             .update('stdout', 'hello\n')
             .update('rc', 0)
             .exit(0)
@@ -401,7 +401,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'args': [['hdr', 'headers']],
+                'args': [['header', 'headers']],
                 'command_id': '123',
                 'seq_number': 0
             }, {
@@ -466,7 +466,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         workdir = os.path.join('basedir', 'test_basedir')
         self.patch_runprocess(
             Expect(['sleep', '10'], workdir)
-            .update('hdr', 'headers')
+            .update('header', 'headers')
             .update('wait', True)
         )
 
@@ -488,7 +488,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'seq_number': 0,
                 'command_id': '123',
-                'args': [['hdr', 'headers']]
+                'args': [['header', 'headers']]
             }, {
                 'op': 'response',
                 'seq_number': 1,
@@ -508,7 +508,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'seq_number': 1,
                 'command_id': '123',
-                'args': [['hdr', 'killing']],
+                'args': [['header', 'killing']],
             }, {
                 'op': 'update',
                 'seq_number': 2,

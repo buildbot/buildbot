@@ -189,6 +189,6 @@ class FakeRunProcess(object):
             self.run_deferred.callback(self._exp.result[1])
 
     def kill(self, reason):
-        self.send_update([('hdr', 'killing')])
+        self.send_update([('header', 'killing')])
         self.send_update([('rc', -1)])
         self.run_deferred.callback(-1)
