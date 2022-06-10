@@ -9,29 +9,29 @@ Automat==20.2.0
 Babel==2.9.1
 backports.functools-lru-cache==1.6.4
 boto==2.49.0
-boto3==1.19.7
-botocore==1.22.7
-cffi==1.15.0
-click==8.0.3
+boto3==1.18.44
+botocore==1.21.44
+cffi==1.14.6
+click==8.0.1
 configparser==5.0.2
 constantly==15.1.0
 cookies==2.2.1
-cryptography==35.0.0
+cryptography==3.4.8
 decorator==5.1.0
 dicttoxml==1.7.4
-docker==5.0.3
-docutils==0.18
-flake8==4.0.1
+docker==5.0.2
+docutils==0.17.1
+flake8==3.9.2
 funcsigs==1.0.2
 future==0.18.2
 graphql-core==3.1.6
-hvac==0.11.2
+hvac==0.11.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.2.0
 incremental==17.5.0
 ipaddress==1.0.23
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
-Jinja2==3.0.2
+Jinja2==3.0.1
 jmespath==0.10.0
 jsonref==0.2
 lazy-object-proxy==1.4.1  # pyup: ignore (required by astroid)
@@ -41,31 +41,31 @@ markdown2==2.4.1
 MarkupSafe==2.0.1
 mccabe==0.6.1
 mock==4.0.3
-moto==2.2.12
+moto==2.2.7
 olefile==0.46
-packaging==21.2
+packaging==21.0
 parameterized==0.8.1
 pathlib2==2.3.6
 pbr==5.6.0
 pep8==1.7.1
-Pillow==8.4.0
-pyaml==21.10.1
-ruamel.yaml==0.17.17
+Pillow==8.3.2
+pyaml==21.8.3
+ruamel.yaml==0.17.16
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-pycodestyle==2.8.0
+pycodestyle==2.7.0
 pycparser==2.20
-pyenchant==3.2.2
-pyflakes==2.4.0
+pyenchant==3.2.1
+pyflakes==2.3.1
 pypugjs==5.9.9
-PyJWT==2.3.0
+PyJWT==2.1.0
 pylint==2.6.0;
-pyOpenSSL==21.0.0
-pyparsing==3.0.4
+pyOpenSSL==20.0.1
+pyparsing==2.4.7
 python-dateutil==2.8.2
 python-subunit==1.4.0
-pytz==2021.3
-PyYAML==6.0
+pytz==2021.1
+PyYAML==5.4.1
 requests==2.26.0
 s3transfer==0.5.0
 scandir==1.10.0
@@ -74,7 +74,7 @@ setuptools-trial==0.6.0
 singledispatch==3.7.0
 six==1.16.0
 snowballstemmer==2.1.0
-SQLAlchemy==1.4.26
+SQLAlchemy==1.4.23
 sqlparse==0.4.2
 termcolor==1.1.0
 toml==0.10.2
@@ -85,14 +85,14 @@ txaio==21.2.1
 txrequests==0.9.6
 unidiff==0.7.0
 webcolors==1.11.1
-Werkzeug==2.0.2
-wrapt==1.13.3
+Werkzeug==2.0.1
+wrapt==1.12.1
 xmltodict==0.12.0
 zope.interface==5.4.0
-coverage==6.1.1
+coverage==5.5
 codecov==2.1.12
 -e master
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==3.4.0
+buildbot-www==3.3.0
