@@ -14,23 +14,23 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-from twisted.python import log
+import StringIO
 
 from buildbot.process import buildstep
-from buildbot.process import properties
-from buildbot.process import remotecommand
-from buildbot.process.results import FAILURE
-from buildbot.steps.worker import CompositeStepMixin
-from buildbot.util import bytes2unicode
+from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.status.builder import FAILURE
+from buildbot.status.builder import SKIPPED
+from buildbot.steps.slave import CompositeStepMixin
+from buildbot.steps.transfer import _FileReader
+from twisted.python import log
 
 
-class Source(buildstep.BuildStep, CompositeStepMixin):
+class Source(LoggingBuildStep, CompositeStepMixin):
 
-    """This is a base class to generate a source tree in the worker.
+    """This is a base class to generate a source tree in the buildslave.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
-    run_vc(). The class as a whole builds up the self.args dictionary, then
+    startVC(). The class as a whole builds up the self.args dictionary, then
     starts a RemoteCommand with those arguments.
     """
 
@@ -44,6 +44,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
     # if the checkout fails, there's no point in doing anything else
     haltOnFailure = True
     flunkOnFailure = True
+    notReally = False
 
     branch = None  # the default branch, should be set in __init__
 
@@ -71,7 +72,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
 
         The source stamp helps avoid a race condition in which someone
         commits a change after the master has decided to start a build
-        but before the worker finishes checking out the sources. At best
+        but before the slave finishes checking out the sources. At best
         this results in a build which contains more changes than the
         buildmaster thinks it has (possibly resulting in the wrong
         person taking the blame for any problems that result), at worst
@@ -81,7 +82,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         @type logEnviron: boolean
         @param logEnviron: If this option is true (the default), then the
                            step's logfile will describe the environment
-                           variables on the worker. In situations where the
+                           variables on the slave. In situations where the
                            environment is not relevant and is long, it may
                            be easier to set logEnviron=False.
 
@@ -107,10 +108,9 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         if not descriptionSuffix and codebase:
             descriptionSuffix = [codebase]
 
-        super().__init__(description=description,
-                         descriptionDone=descriptionDone,
-                         descriptionSuffix=descriptionSuffix,
-                         **kwargs)
+        LoggingBuildStep.__init__(self, description=description,
+            descriptionDone=descriptionDone, descriptionSuffix=descriptionSuffix,
+            **kwargs)
 
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
@@ -119,9 +119,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
 
         self.codebase = codebase
         if self.codebase:
-            self.name = properties.Interpolate(
-                "%(kw:name)s-%(kw:codebase)s",
-                name=self.name, codebase=self.codebase)
+            self.name = ' '.join((self.name, self.codebase))
 
         self.alwaysUseLatest = alwaysUseLatest
 
@@ -129,35 +127,6 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         self.env = env
         self.timeout = timeout
         self.retry = retry
-
-    def _hasAttrGroupMember(self, attrGroup, attr):
-        """
-        The hasattr equivalent for attribute groups: returns whether the given
-        member is in the attribute group.
-        """
-        method_name = f'{attrGroup}_{attr}'
-        return hasattr(self, method_name)
-
-    def _getAttrGroupMember(self, attrGroup, attr):
-        """
-        The getattr equivalent for attribute groups: gets and returns the
-        attribute group member.
-        """
-        method_name = f'{attrGroup}_{attr}'
-        return getattr(self, method_name)
-
-    def _listAttrGroupMembers(self, attrGroup):
-        """
-        Returns a list of all members in the attribute group.
-        """
-        from inspect import getmembers, ismethod
-        methods = getmembers(self, ismethod)
-        group_prefix = attrGroup + '_'
-        group_len = len(group_prefix)
-        group_members = [method[0][group_len:]
-                         for method in methods
-                         if method[0].startswith(group_prefix)]
-        return group_members
 
     def updateSourceProperty(self, name, value, source=''):
         """
@@ -170,14 +139,29 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
 
         if self.codebase != '':
             assert not isinstance(self.getProperty(name, None), str), \
-                f"Sourcestep {self.name} has a codebase, other sourcesteps don't"
+                "Sourcestep %s has a codebase, other sourcesteps don't" \
+                % self.name
             property_dict = self.getProperty(name, {})
             property_dict[self.codebase] = value
-            super().setProperty(name, property_dict, source)
+            LoggingBuildStep.setProperty(self, name, property_dict, source)
         else:
             assert not isinstance(self.getProperty(name, None), dict), \
-                f"Sourcestep {self.name} does not have a codebase, other sourcesteps do"
-            super().setProperty(name, value, source)
+                "Sourcestep %s does not have a codebase, other sourcesteps do" \
+                % self.name
+            LoggingBuildStep.setProperty(self, name, value, source)
+
+    def setStepStatus(self, step_status):
+        LoggingBuildStep.setStepStatus(self, step_status)
+
+    def setDefaultWorkdir(self, workdir):
+        self.workdir = self.workdir or workdir
+
+    def describe(self, done=False):
+        desc = self.descriptionDone if done else self.description
+        if self.descriptionSuffix:
+            desc = desc[:]
+            desc.extend(self.descriptionSuffix)
+        return desc
 
     def computeSourceRevision(self, changes):
         """Each subclass must implement this method to do something more
@@ -189,63 +173,82 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         self.checkoutDelay value."""
         return None
 
-    @defer.inlineCallbacks
     def applyPatch(self, patch):
-        patch_command = ['patch', f'-p{patch[0]}', '--remove-empty-files',
+        patch_command = ['patch', '-p%s' % patch[0], '--remove-empty-files',
                          '--force', '--forward', '-i', '.buildbot-diff']
-        cmd = remotecommand.RemoteShellCommand(self.workdir,
-                                               patch_command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron)
+        cmd = buildstep.RemoteShellCommand(self.workdir,
+                                           patch_command,
+                                           env=self.env,
+                                           logEnviron=self.logEnviron)
 
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
-        if cmd.didFail():
-            raise buildstep.BuildStepFailed()
-        return cmd.rc
+        d = self.runCommand(cmd)
 
-    @defer.inlineCallbacks
-    def patch(self, patch):
+        def evaluateCommand(_):
+            if cmd.didFail():
+                raise buildstep.BuildStepFailed()
+            return cmd.rc
+
+        d.addCallback(evaluateCommand)
+        return d
+
+    def patch(self, _, patch):
         diff = patch[1]
         root = None
         if len(patch) >= 3:
             root = patch[2]
 
-        if root:
-            workdir_root = self.build.path_module.join(self.workdir, root)
-            workdir_root_abspath = self.build.path_module.abspath(workdir_root)
-            workdir_abspath = self.build.path_module.abspath(self.workdir)
+        if (root and
+            self.build.path_module.abspath(self.build.path_module.join(self.workdir, root)
+                                           ).startswith(self.build.path_module.abspath(self.workdir))):
+            self.workdir = self.build.path_module.join(self.workdir, root)
 
-            if workdir_root_abspath.startswith(workdir_abspath):
-                self.workdir = workdir_root
+        def _downloadFile(buf, filename):
+            filereader = _FileReader(StringIO.StringIO(buf))
+            args = {
+                'slavedest': filename,
+                'maxsize': None,
+                'reader': filereader,
+                'blocksize': 16 * 1024,
+                'workdir': self.workdir,
+                'mode': None
+            }
+            cmd = buildstep.RemoteCommand('downloadFile', args)
+            cmd.useLog(self.stdio_log, False)
+            log.msg("Downloading file: %s" % (filename))
+            d = self.runCommand(cmd)
 
-        yield self.downloadFileContentToWorker('.buildbot-diff', diff)
-        yield self.downloadFileContentToWorker('.buildbot-patched', 'patched\n')
-        yield self.applyPatch(patch)
-        cmd = remotecommand.RemoteCommand('rmdir',
-                                          {'dir': self.build.path_module.join(self.workdir,
-                                                                              ".buildbot-diff"),
-                                           'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+            def evaluateCommand(_):
+                if cmd.didFail():
+                    raise buildstep.BuildStepFailed()
+                return cmd.rc
 
-        if cmd.didFail():
-            raise buildstep.BuildStepFailed()
-        return cmd.rc
+            d.addCallback(evaluateCommand)
+            return d
 
-    def sourcedirIsPatched(self):
-        d = self.pathExists(
-            self.build.path_module.join(self.workdir, '.buildbot-patched'))
+        d = _downloadFile(diff, ".buildbot-diff")
+        d.addCallback(lambda _: _downloadFile("patched\n", ".buildbot-patched"))
+        d.addCallback(lambda _: self.applyPatch(patch))
+
+        def removePatch(_):
+            return self.runRmdir(self.build.path_module.join(self.workdir, ".buildbot-diff"),
+                                 evaluateCommand=lambda cmd: cmd.rc)
+
+        d.addCallback(removePatch)
         return d
 
-    @defer.inlineCallbacks
-    def run(self):
-        if getattr(self, 'startVC', None) is not None:
-            msg = 'Old-style source steps are no longer supported. Please convert your custom ' \
-                  'source step to new style (replace startVC with run_vc and convert all used ' \
-                  'old style APIs to new style). Please consider contributing the source step to ' \
-                  'upstream BuildBot so that such migrations can be avoided in the future.'
-            raise NotImplementedError(msg)
+    def sourcedirIsPatched(self):
+        d = self.pathExists(self.build.path_module.join(self.workdir, '.buildbot-patched'))
+        return d
+
+    def start(self):
+        if self.notReally:
+            log.msg("faking %s checkout/update" % self.name)
+            self.step_status.setText(["fake", self.name, "successful"])
+            self.addCompleteLog("log",
+                                "Faked %s checkout/update 'successful'\n"
+                                % self.name)
+            return SKIPPED
 
         if not self.alwaysUseLatest:
             # what source stamp would this step like to use?
@@ -270,13 +273,14 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
                 # root is optional.
                 patch = s.patch
                 if patch:
-                    yield self.addCompleteLog("patch", bytes2unicode(patch[1], errors='ignore'))
+                    self.addCompleteLog("patch", patch[1])
             else:
-                log.msg(f"No sourcestamp found in build for codebase '{self.codebase}'")
-                self.descriptionDone = f"Codebase {self.codebase} not in build"
-                yield self.addCompleteLog("log",
-                                          "No sourcestamp found in build for "
-                                          f"codebase '{self.codebase}'")
+                log.msg("No sourcestamp found in build for codebase '%s'" % self.codebase)
+                self.step_status.setText(["Codebase", '%s' % self.codebase, "not", "in", "build"])
+                self.addCompleteLog("log",
+                                    "No sourcestamp found in build for codebase '%s'"
+                                    % self.codebase)
+                self.finished(FAILURE)
                 return FAILURE
 
         else:
@@ -284,5 +288,4 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
             branch = self.branch
             patch = None
 
-        res = yield self.run_vc(branch, revision, patch)
-        return res
+        self.startVC(branch, revision, patch)
