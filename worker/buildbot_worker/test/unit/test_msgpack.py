@@ -435,6 +435,52 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ])
 
     @defer.inlineCallbacks
+    def test_start_command_shell_success_updates_single(self):
+        self.setup_with_worker_for_builder()
+
+        # patch runprocess to handle the 'echo', below
+        workdir = os.path.join('basedir', 'test_basedir')
+        self.patch_runprocess(
+            Expect(['echo'], workdir)
+            .updates([('header', 'headers'), ('stdout', 'hello\n'), ('rc', 0)])
+            .exit(0)
+            )
+
+        yield self.send_message({
+            'op': 'start_command',
+            'seq_number': 1,
+            'command_id': '123',
+            'command_name': 'shell',
+            'args': {'command': ['echo'], 'workdir': workdir}
+        })
+
+        self.assert_sent_messages([
+            {
+                'op': 'update',
+                'args': [['stdout', 'hello\n'], ['rc', 0]],
+                'command_id': '123',
+                'seq_number': 0
+            }, {
+                'op': 'update',
+                'args': [['elapsed', 0]],
+                'command_id': '123',
+                'seq_number': 1
+            }, {
+                'op': 'update',
+                'args': [['header', 'headers\n']],
+                'command_id': '123',
+                'seq_number': 2
+            }, {
+                'op': 'complete',
+                'args': None,
+                'command_id': '123',
+                'seq_number': 3
+            }, {
+                'op': 'response', 'seq_number': 1, 'result': None
+            }
+        ])
+
+    @defer.inlineCallbacks
     def test_call_shutdown_success(self):
         # shutdown stops reactor, we can not test it so we just mock
         self.protocol.factory.buildbot_bot.remote_shutdown = mock.Mock()

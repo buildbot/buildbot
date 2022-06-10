@@ -108,9 +108,9 @@ class LBF(unittest.TestCase):
             result = [e for e in result if e is not None]
             res = ''.join(result)
 
-            log.msg(f'feeding {repr(a)}, {repr(b)} gives {repr(res)}')
+            log.msg('feeding {}, {} gives {}'.format(repr(a), repr(b), repr(res)))
             self.assertEqual(res, 'a\nb\nc\nd\n\ne\n')
-            result.clear()
+            del result[:]
 
     def test_split_terminal_control(self):
         """terminal control characters are converted"""
