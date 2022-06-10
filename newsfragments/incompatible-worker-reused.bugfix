@@ -1,0 +1,1 @@
+Latent workers don't reuse the started worker when it's incompatible with the requested build.

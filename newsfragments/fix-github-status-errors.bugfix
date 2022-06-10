@@ -1,0 +1,1 @@
+Fixed :py:class:`~GitHubStatusPush` logging an error when triggered by the NightlyScheduler
