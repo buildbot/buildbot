@@ -299,6 +299,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         if not self._image_exists(docker_client, image):
             msg = f'Image "{image}" not found on docker host.'
             log.msg(msg)
+            docker_client.close()
             raise LatentWorkerCannotSubstantiate(msg)
 
         volumes, binds = self._thd_parse_volumes(volumes)
@@ -319,6 +320,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
 
         if instance.get('Id') is None:
             log.msg('Failed to create the container')
+            docker_client.close()
             raise LatentWorkerFailedToSubstantiate(
                 'Failed to start container'
             )
@@ -331,6 +333,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         try:
             docker_client.start(instance)
         except docker.errors.APIError as e:
+            docker_client.close()
             # The following was noticed in certain usage of Docker on Windows
             if 'The container operating system does not match the host operating system' in str(e):
                 msg = f'Image used for build is wrong: {str(e)}'
@@ -346,6 +349,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                 if self.conn:
                     break
             del logs
+        docker_client.close()
         return [instance['Id'], image]
 
     def stop_instance(self, fast=False):
@@ -374,3 +378,4 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                 docker_client.remove_image(image=instance['image'])
             except docker.errors.APIError as e:
                 log.msg('Error while removing the image: %s', e)
+        docker_client.close()
