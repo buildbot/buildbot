@@ -48,7 +48,7 @@ class TailProcess(protocol.ProcessProtocol):
         self.lw.dataReceived(data)
 
     def errReceived(self, data):
-        self.lw.print_output(f"ERR: '{data}'")
+        self.lw.print_output("ERR: '{}'".format(data))
 
 
 class LineOnlyLongLineReceiver(protocol.Protocol):
@@ -152,14 +152,13 @@ class LogWatcher(LineOnlyLongLineReceiver):
 
     def create_logfile(self, path):  # pragma: no cover
         if not os.path.exists(path):
-            with open(path, 'a', encoding='utf-8'):
-                pass
+            open(path, 'a').close()
 
     def print_output(self, output):  # pragma: no cover
         print(output)
 
     def lineLengthExceeded(self, line):
-        msg = f'Got an a very long line in the log (length {len(line)} bytes), ignoring'
+        msg = 'Got an a very long line in the log (length {} bytes), ignoring'.format(len(line))
         self.print_output(msg)
 
     def lineReceived(self, line):
@@ -184,8 +183,7 @@ class LogWatcher(LineOnlyLongLineReceiver):
 
         if b"message from master: attached" in line:
             return self.finished("worker")
-        if b"configuration update aborted" in line or \
-                b'configuration update partially applied' in line:
+        if b"reconfig aborted" in line or b'reconfig partially applied' in line:
             return self.finished(Failure(ReconfigError()))
         if b"Server Shut Down" in line:
             return self.finished(Failure(ReconfigError()))

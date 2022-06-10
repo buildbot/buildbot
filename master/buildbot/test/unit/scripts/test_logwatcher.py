@@ -24,8 +24,8 @@ from buildbot.scripts.logwatcher import BuildmasterStartupError
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import ReconfigError
-from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
 
 
@@ -50,7 +50,7 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
         self.setUpDirs('workdir')
         self.addCleanup(self.tearDownDirs)
 
-        self.setup_test_reactor()
+        self.setUpTestReactor()
         self.spawned_process = mock.Mock()
         self.reactor.spawnProcess = mock.Mock(return_value=self.spawned_process)
 
@@ -131,8 +131,8 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
     @defer.inlineCallbacks
     def test_matches_lines(self):
         lines_and_expected = [
-            (b'configuration update aborted without making any changes', ReconfigError()),
-            (b'WARNING: configuration update partially applied; master may malfunction',
+            (b'reconfig aborted without making any changes', ReconfigError()),
+            (b'WARNING: reconfig partially applied; master may malfunction',
              ReconfigError()),
             (b'Server Shut Down', ReconfigError()),
             (b'BuildMaster startup failed', BuildmasterStartupError()),

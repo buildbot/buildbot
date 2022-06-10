@@ -20,12 +20,13 @@ from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
+from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.process.results import FAILURE
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import bytes2unicode
 
 
-class Source(buildstep.BuildStep, CompositeStepMixin):
+class Source(LoggingBuildStep, CompositeStepMixin):
 
     """This is a base class to generate a source tree in the worker.
     Each version control system has a specialized subclass, and is expected
@@ -135,7 +136,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         The hasattr equivalent for attribute groups: returns whether the given
         member is in the attribute group.
         """
-        method_name = f'{attrGroup}_{attr}'
+        method_name = '{}_{}'.format(attrGroup, attr)
         return hasattr(self, method_name)
 
     def _getAttrGroupMember(self, attrGroup, attr):
@@ -143,7 +144,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         The getattr equivalent for attribute groups: gets and returns the
         attribute group member.
         """
-        method_name = f'{attrGroup}_{attr}'
+        method_name = '{}_{}'.format(attrGroup, attr)
         return getattr(self, method_name)
 
     def _listAttrGroupMembers(self, attrGroup):
@@ -170,13 +171,13 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
 
         if self.codebase != '':
             assert not isinstance(self.getProperty(name, None), str), \
-                f"Sourcestep {self.name} has a codebase, other sourcesteps don't"
+                "Sourcestep {} has a codebase, other sourcesteps don't".format(self.name)
             property_dict = self.getProperty(name, {})
             property_dict[self.codebase] = value
             super().setProperty(name, property_dict, source)
         else:
             assert not isinstance(self.getProperty(name, None), dict), \
-                f"Sourcestep {self.name} does not have a codebase, other sourcesteps do"
+                "Sourcestep {} does not have a codebase, other sourcesteps do".format(self.name)
             super().setProperty(name, value, source)
 
     def computeSourceRevision(self, changes):
@@ -191,7 +192,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
 
     @defer.inlineCallbacks
     def applyPatch(self, patch):
-        patch_command = ['patch', f'-p{patch[0]}', '--remove-empty-files',
+        patch_command = ['patch', '-p{}'.format(patch[0]), '--remove-empty-files',
                          '--force', '--forward', '-i', '.buildbot-diff']
         cmd = remotecommand.RemoteShellCommand(self.workdir,
                                                patch_command,
@@ -270,13 +271,13 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
                 # root is optional.
                 patch = s.patch
                 if patch:
-                    yield self.addCompleteLog("patch", bytes2unicode(patch[1], errors='ignore'))
+                    yield self.addCompleteLog("patch", bytes2unicode(patch[1]))
             else:
-                log.msg(f"No sourcestamp found in build for codebase '{self.codebase}'")
-                self.descriptionDone = f"Codebase {self.codebase} not in build"
+                log.msg("No sourcestamp found in build for codebase '{}'".format(self.codebase))
+                self.descriptionDone = "Codebase {} not in build".format(self.codebase)
                 yield self.addCompleteLog("log",
-                                          "No sourcestamp found in build for "
-                                          f"codebase '{self.codebase}'")
+                                          "No sourcestamp found in build for codebase '{}'".format(
+                                               self.codebase))
                 return FAILURE
 
         else:

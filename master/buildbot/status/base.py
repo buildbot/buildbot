@@ -13,17 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.client_compat import PBListener
+from buildbot.status.base_compat import StatusReceiver
+from buildbot.status.base_compat import StatusReceiverBase
+from buildbot.status.base_compat import StatusReceiverMultiService
+from buildbot.status.base_compat import StatusReceiverPerspective
+from buildbot.status.base_compat import StatusReceiverService
 from buildbot.warnings import warn_deprecated
 
 # This file is here to allow few remaining users of status within Buildbot to use it
 # without triggering deprecation warnings
 
 _hush_pyflakes = [
-    PBListener
+    StatusReceiverMultiService,
+    StatusReceiverBase,
+    StatusReceiverService,
+    StatusReceiver,
+    StatusReceiverPerspective,
 ]
 
 warn_deprecated(
     '0.9.0',
-    'buildbot.status.client has been deprecated, consume the buildbot.data APIs'
+    'buildbot.status.base has been deprecated, consume the buildbot.data APIs'
 )
