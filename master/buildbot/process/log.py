@@ -129,20 +129,24 @@ class PlainLog(Log):
     def __init__(self, master, name, type, logid, decoder):
         super().__init__(master, name, type, logid, decoder)
 
-        def wholeLines(lines):
-            self.subPoint.deliver(None, lines)
-            return self.addRawLines(lines)
-        self.lbf = lineboundaries.LineBoundaryFinder(wholeLines)
+        self.lbf = lineboundaries.LineBoundaryFinder()
 
     def addContent(self, text):
         if not isinstance(text, str):
             text = self.decoder(text)
         # add some text in the log's default stream
-        return self.lbf.append(text)
+        lines = self.lbf.append(text)
+        if lines is None:
+            return defer.succeed(None)
+        self.subPoint.deliver(None, lines)
+        return self.addRawLines(lines)
 
     @defer.inlineCallbacks
     def finish(self):
-        yield self.lbf.flush()
+        lines = self.lbf.flush()
+        if lines is not None:
+            self.subPoint.deliver(None, lines)
+            yield self.addRawLines(lines)
         yield super().finish()
 
 
@@ -174,35 +178,44 @@ class StreamLog(Log):
         try:
             return self.lbfs[stream]
         except KeyError:
-            def wholeLines(lines):
-                # deliver the un-annotated version to subscribers
-                self.subPoint.deliver(stream, lines)
-                # strip the last character, as the regexp will add a
-                # prefix character after the trailing newline
-                return self.addRawLines(self.pat.sub(stream, lines)[:-1])
-            lbf = self.lbfs[stream] = \
-                lineboundaries.LineBoundaryFinder(wholeLines)
+            lbf = self.lbfs[stream] = lineboundaries.LineBoundaryFinder()
             return lbf
+
+    def _on_whole_lines(self, stream, lines):
+        # deliver the un-annotated version to subscribers
+        self.subPoint.deliver(stream, lines)
+        # strip the last character, as the regexp will add a
+        # prefix character after the trailing newline
+        return self.addRawLines(self.pat.sub(stream, lines)[:-1])
+
+    def split_lines(self, stream, text):
+        lbf = self._getLbf(stream)
+        lines = lbf.append(text)
+        if lines is None:
+            return defer.succeed(None)
+        return self._on_whole_lines(stream, lines)
 
     def addStdout(self, text):
         if not isinstance(text, str):
             text = self.decoder(text)
-        return self._getLbf('o').append(text)
+        return self.split_lines('o', text)
 
     def addStderr(self, text):
         if not isinstance(text, str):
             text = self.decoder(text)
-        return self._getLbf('e').append(text)
+        return self.split_lines('e', text)
 
     def addHeader(self, text):
         if not isinstance(text, str):
             text = self.decoder(text)
-        return self._getLbf('h').append(text)
+        return self.split_lines('h', text)
 
     @defer.inlineCallbacks
     def finish(self):
-        for lbf in self.lbfs.values():
-            yield lbf.flush()
+        for stream, lbf in self.lbfs.items():
+            lines = lbf.flush()
+            if lines is not None:
+                self._on_whole_lines(stream, lines)
         yield super().finish()
 
 

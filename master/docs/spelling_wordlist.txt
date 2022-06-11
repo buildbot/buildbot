@@ -818,6 +818,7 @@ Subqueries
 subquery
 subshell
 substrings
+substring
 subunit
 successCb
 sucessful
