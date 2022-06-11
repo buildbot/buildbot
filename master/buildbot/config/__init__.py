@@ -13,7 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.status.client_compat import PBListener
+from buildbot.warnings import warn_deprecated
 
-from .builder import BuilderConfig  # noqa pylint: disable=unused-import
-from .errors import ConfigErrors  # noqa pylint: disable=unused-import
-from .errors import error  # noqa pylint: disable=unused-import
+# This file is here to allow few remaining users of status within Buildbot to use it
+# without triggering deprecation warnings
+
+_hush_pyflakes = [
+    PBListener
+]
+
+warn_deprecated(
+    '0.9.0',
+    'buildbot.status.client has been deprecated, consume the buildbot.data APIs'
+)

@@ -71,6 +71,7 @@ class FakeBuilder:
             self.master = master
             self.botmaster = master.botmaster
         self.name = buildername
+        self.status = mock.Mock()
 
 
 class FakeLogRotation:

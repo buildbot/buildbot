@@ -12,24 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-#
+
 # code inspired/copied from contrib/github_buildbot
 #  and inspired from code from the Chromium project
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
 
-
-import json
-
-from buildbot.util import bytes2unicode
+from buildbot.util import json
 
 
-class BaseHookHandler:
-    def __init__(self, master, options):
-        self.master = master
-        self.options = options
-
-    def getChanges(self, request):
+def getChanges(request, options=None):
         """
         Consumes a naive build notification (the default for now)
         basically, set POST variables to match commit object parameters:
@@ -41,52 +33,46 @@ class BaseHookHandler:
         def firstOrNothing(value):
             """
             Small helper function to return the first value (if value is a list)
-            or return the whole thing otherwise.
-
-            Make sure to properly decode bytes to unicode strings.
+            or return the whole thing otherwise
             """
-            if isinstance(value, type([])):
-                value = value[0]
-            return bytes2unicode(value)
+            if (isinstance(value, type([]))):
+                return value[0]
+            else:
+                return value
 
         args = request.args
+
         # first, convert files, links and properties
         files = None
-        if args.get(b'files'):
-            files = json.loads(firstOrNothing(args.get(b'files')))
+        if args.get('files'):
+            files = json.loads(args.get('files')[0])
         else:
             files = []
 
         properties = None
-        if args.get(b'properties'):
-            properties = json.loads(firstOrNothing(args.get(b'properties')))
+        if args.get('properties'):
+            properties = json.loads(args.get('properties')[0])
         else:
             properties = {}
 
-        revision = firstOrNothing(args.get(b'revision'))
-        when = firstOrNothing(args.get(b'when_timestamp'))
-        if when is None:
-            when = firstOrNothing(args.get(b'when'))
+        revision = firstOrNothing(args.get('revision'))
+        when = firstOrNothing(args.get('when'))
         if when is not None:
             when = float(when)
-        author = firstOrNothing(args.get(b'author'))
+        author = firstOrNothing(args.get('author'))
         if not author:
-            author = firstOrNothing(args.get(b'who'))
-        committer = firstOrNothing(args.get(b'committer'))
-        comments = firstOrNothing(args.get(b'comments'))
-        branch = firstOrNothing(args.get(b'branch'))
-        category = firstOrNothing(args.get(b'category'))
-        revlink = firstOrNothing(args.get(b'revlink'))
-        repository = firstOrNothing(args.get(b'repository')) or ''
-        project = firstOrNothing(args.get(b'project')) or ''
-        codebase = firstOrNothing(args.get(b'codebase'))
+            author = firstOrNothing(args.get('who'))
+        comments = firstOrNothing(args.get('comments')).decode('utf-8')
+        isdir = firstOrNothing(args.get('isdir', 0))
+        branch = firstOrNothing(args.get('branch'))
+        category = firstOrNothing(args.get('category'))
+        revlink = firstOrNothing(args.get('revlink'))
+        repository = firstOrNothing(args.get('repository'))
+        project = firstOrNothing(args.get('project'))
 
-        chdict = dict(author=author, committer=committer, files=files, comments=comments,
-                      revision=revision, when_timestamp=when,
+        chdict = dict(author=author, files=files, comments=comments,
+                      isdir=isdir, revision=revision, when=when,
                       branch=branch, category=category, revlink=revlink,
                       properties=properties, repository=repository,
-                      project=project, codebase=codebase)
+                      project=project)
         return ([chdict], None)
-
-
-base = BaseHookHandler  # alternate name for buildbot plugin
