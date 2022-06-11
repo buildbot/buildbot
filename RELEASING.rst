@@ -10,9 +10,7 @@ Step 1: Verify that external dependants can be built
 Verify that the following resources can be built from the latest master.
 This can be checked by looking into the dashboards (maintainer access may be needed).
 
- - Docker Hub (buildbot-master) (https://hub.docker.com/repository/docker/buildbot/buildbot-master/general)
-
- - Docker Hub (buildbot-worker) (https://hub.docker.com/repository/docker/buildbot/buildbot-worker/general)
+ - Docker Hub (https://hub.docker.com/repository/docker/buildbot/buildbot-master/general)
 
  - Read the Docs (https://readthedocs.org/projects/buildbot/builds/)
 
@@ -30,12 +28,9 @@ This collects the release notes using the `towncrier` tool and then commits the 
 This step is done as a PR so that CI can check for spelling errors and similar issues.
 Local checks are insufficient as spelling check in particular depends on what dictionaries are installed.
 
-It's best to run `make docs-release` afterwards and check `master/docs/_build/html/relnotes/index.html` file for obvious rendering errors.
+It's best to run `make docs` afterwards and check `master/docs/_build/html/relnotes/index.html` file for obvious rendering errors.
 This will have much faster turnaround compared to if the error is noticed after the CI runs.
 If any errors are found, just amend the commit created by `make release_notes`.
-
-Certain file names are not properly supported by the `towncrier` tool and it ignores them.
-Check `master/buildbot/newsfragments` directory for any forgotten release notes
 
 Step 3: Merge the release notes PR
 ----------------------------------

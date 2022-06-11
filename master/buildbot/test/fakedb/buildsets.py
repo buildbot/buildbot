@@ -28,46 +28,37 @@ from buildbot.util import epoch2datetime
 class Buildset(Row):
     table = "buildsets"
 
-    defaults = dict(
-        id=None,
-        external_idstring='extid',
-        reason='because',
-        submitted_at=12345678,
-        complete=0,
-        complete_at=None,
-        results=-1,
-        parent_buildid=None,
-        parent_relationship=None,
-    )
-
     id_column = 'id'
+
+    def __init__(self, id=None, external_idstring='extid', reason='because',
+                 submitted_at=12345678, complete=0, complete_at=None, results=-1,
+                 parent_buildid=None, parent_relationship=None):
+        super().__init__(id=id, external_idstring=external_idstring, reason=reason,
+                         submitted_at=submitted_at, complete=complete, complete_at=complete_at,
+                         results=results, parent_buildid=parent_buildid,
+                         parent_relationship=parent_relationship)
 
 
 class BuildsetProperty(Row):
     table = "buildset_properties"
 
-    defaults = dict(
-        buildsetid=None,
-        property_name='prop',
-        property_value='[22, "fakedb"]',
-    )
-
     foreignKeys = ('buildsetid',)
     required_columns = ('buildsetid', )
+
+    def __init__(self, buildsetid=None, property_name='prop', property_value='[22, "fakedb"]'):
+        super().__init__(buildsetid=buildsetid, property_name=property_name,
+                         property_value=property_value)
 
 
 class BuildsetSourceStamp(Row):
     table = "buildset_sourcestamps"
 
-    defaults = dict(
-        id=None,
-        buildsetid=None,
-        sourcestampid=None,
-    )
-
     foreignKeys = ('buildsetid', 'sourcestampid')
     required_columns = ('buildsetid', 'sourcestampid', )
     id_column = 'id'
+
+    def __init__(self, id=None, buildsetid=None, sourcestampid=None):
+        super().__init__(id=id, buildsetid=buildsetid, sourcestampid=sourcestampid)
 
 
 class FakeBuildsetsComponent(FakeDBComponent):
@@ -110,7 +101,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
                     parent_buildid=None, parent_relationship=None):
         # We've gotten this wrong a couple times.
         assert isinstance(
-            waited_for, bool), 'waited_for should be boolean: %r' % waited_for
+            waited_for, bool), f'waited_for should be boolean: {repr(waited_for)}'
 
         # calculate submitted at
         if submitted_at is not None:
@@ -171,13 +162,15 @@ class FakeBuildsetsComponent(FakeDBComponent):
         for bs in self.buildsets.values():
             if complete is not None:
                 if complete and bs['complete']:
-                    rv.append(self._row2dict(bs))
+                    rv.append(bs)
                 elif not complete and not bs['complete']:
-                    rv.append(self._row2dict(bs))
+                    rv.append(bs)
             else:
-                rv.append(self._row2dict(bs))
+                rv.append(bs)
         if resultSpec is not None:
             rv = self.applyResultSpec(rv, resultSpec)
+
+        rv = [self._row2dict(bs) for bs in rv]
         return defer.succeed(rv)
 
     @defer.inlineCallbacks

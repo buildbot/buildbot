@@ -17,8 +17,9 @@
 import re
 
 from twisted.internet import defer
+from twisted.logger import Logger
 
-from buildbot.util.logger import Logger
+from buildbot.warnings import warn_deprecated
 
 log = Logger()
 
@@ -35,12 +36,14 @@ class LineBoundaryFinder:
     # and ugly \b+ (use of backspace to implement progress bar)
     newline_re = re.compile(r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)')
 
-    def __init__(self, callback):
+    def __init__(self, callback=None):
+        if callback is not None:
+            warn_deprecated('3.6.0', f'{self.__class__.__name__} does not accept callback anymore')
         self.partialLine = None
         self.callback = callback
         self.warned = False
 
-    def append(self, text):
+    def adjust_line(self, text):
         if self.partialLine:
             if len(self.partialLine) > self.MAX_LINELENGTH:
                 if not self.warned:
@@ -57,7 +60,8 @@ class LineBoundaryFinder:
                     ret.append(text[:self.MAX_LINELENGTH])
                     text = text[self.MAX_LINELENGTH:]
                 ret.append(text)
-                return self.callback("\n".join(ret) + "\n")
+                result = ("\n".join(ret) + "\n")
+                return result
             text = self.partialLine + text
             self.partialLine = None
         text = self.newline_re.sub('\n', text)
@@ -69,11 +73,22 @@ class LineBoundaryFinder:
                     text, self.partialLine = text[:i], text[i:]
                 else:
                     self.partialLine = text
-                    return defer.succeed(None)
-            return self.callback(text)
-        return defer.succeed(None)
+                    return None
+            return text
+        return None
+
+    def append(self, text):
+        lines = self.adjust_line(text)
+        if self.callback is None:
+            return lines
+
+        if lines is None:
+            return defer.succeed(None)
+        return self.callback(lines)
 
     def flush(self):
-        if self.partialLine:
+        if self.partialLine is not None:
             return self.append('\n')
-        return defer.succeed(None)
+        if self.callback is not None:
+            return defer.succeed(None)
+        return None

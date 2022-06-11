@@ -58,10 +58,9 @@ class SVN(Source):
         super().__init__(**kwargs)
         errors = []
         if not self._hasAttrGroupMember('mode', self.mode):
-            errors.append("mode {} is not one of {}".format(self.mode,
-                                                            self._listAttrGroupMembers('mode')))
+            errors.append(f"mode {self.mode} is not one of {self._listAttrGroupMembers('mode')}")
         if self.method not in self.possible_methods:
-            errors.append("method {} is not one of {}".format(self.method, self.possible_methods))
+            errors.append(f"method {self.method} is not one of {self.possible_methods}")
 
         if repourl is None:
             errors.append("you must provide repourl")
@@ -161,8 +160,8 @@ class SVN(Source):
             checkout_dir = self.build.path_module.join(
                 checkout_dir, self.codebase)
         # temporarily set workdir = checkout_dir and do an incremental checkout
+        old_workdir = self.workdir
         try:
-            old_workdir = self.workdir
             self.workdir = checkout_dir
             yield self.mode_incremental()
         finally:
@@ -219,7 +218,7 @@ class SVN(Source):
         yield self.runCommand(cmd)
 
         if cmd.didFail() and abandonOnFailure:
-            log.msg("Source step failed while running command {}".format(cmd))
+            log.msg(f"Source step failed while running command {cmd}")
             raise buildstep.BuildStepFailed()
         if collectStdout and collectStderr:
             return (cmd.stdout, cmd.stderr)
@@ -306,7 +305,7 @@ class SVN(Source):
                 log.msg(msg)
                 raise buildstep.BuildStepFailed() from e
 
-        yield self.stdio_log.addHeader("Got SVN revision {}".format(revision))
+        yield self.stdio_log.addHeader(f"Got SVN revision {revision}")
         self.updateSourceProperty('got_revision', revision)
 
         return cmd.rc
@@ -402,9 +401,9 @@ class SVN(Source):
                 host = host[:-1]
             authority = host.lower()
             if userinfo:
-                authority = "{}@{}".format(userinfo, authority)
+                authority = f"{userinfo}@{authority}"
             if port and port != default_port.get(scheme, None):
-                authority = "{}:{}".format(authority, port)
+                authority = f"{authority}:{port}"
 
         if scheme in relative_schemes:
             last_path = path
@@ -439,8 +438,7 @@ class SVN(Source):
                 return
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
+                log.msg(f"Checkout failed, trying {repeats} more times after {delay} seconds")
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self.runRmdir(self.workdir, timeout=self.timeout))

@@ -16,17 +16,19 @@
 import os
 import pprint
 import re
+import types
 
-from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import runtime
+from twisted.internet import defer
 
+from buildbot import config
+from buildbot import interfaces
+from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
-from buildbot.process.buildstep import BuildStep
-from buildbot.util import deferwaiter
 
 
 class MasterShellCommand(BuildStep):
@@ -40,57 +42,49 @@ class MasterShellCommand(BuildStep):
     description = 'Running'
     descriptionDone = 'Ran'
     descriptionSuffix = None
-    renderables = ['command', 'env']
+    renderables = [
+        'command', 'env', 'path',
+        'description', 'descriptionDone', 'descriptionSuffix',
+    ]
     haltOnFailure = True
     flunkOnFailure = True
 
-    def __init__(self, command, **kwargs):
-        self.env = kwargs.pop('env', None)
-        self.usePTY = kwargs.pop('usePTY', 0)
-        self.interruptSignal = kwargs.pop('interruptSignal', 'KILL')
-        self.logEnviron = kwargs.pop('logEnviron', True)
-
-        super().__init__(**kwargs)
+    def __init__(self, command,
+                 env=None, path=None, usePTY=0, interruptSignal="KILL",
+                 **kwargs):
+        BuildStep.__init__(self, **kwargs)
 
         self.command = command
-        self.masterWorkdir = self.workdir
-        self._deferwaiter = deferwaiter.DeferWaiter()
-        self._status_object = None
+        self.env = env
+        self.path = path
+        self.usePTY = usePTY
+        self.interruptSignal = interruptSignal
 
     class LocalPP(ProcessProtocol):
 
         def __init__(self, step):
             self.step = step
-            self._finish_d = defer.Deferred()
-            self.step._deferwaiter.add(self._finish_d)
 
         def outReceived(self, data):
-            self.step._deferwaiter.add(self.step.stdio_log.addStdout(data))
+            self.step.stdio_log.addStdout(data)
 
         def errReceived(self, data):
-            self.step._deferwaiter.add(self.step.stdio_log.addStderr(data))
+            self.step.stdio_log.addStderr(data)
 
         def processEnded(self, status_object):
             if status_object.value.exitCode is not None:
-                msg = "exit status {}\n".format(status_object.value.exitCode)
-                self.step._deferwaiter.add(self.step.stdio_log.addHeader(msg))
-
+                self.step.stdio_log.addHeader("exit status %d\n" % status_object.value.exitCode)
             if status_object.value.signal is not None:
-                msg = "signal {}\n".format(status_object.value.signal)
-                self.step._deferwaiter.add(self.step.stdio_log.addHeader(msg))
+                self.step.stdio_log.addHeader("signal %s\n" % status_object.value.signal)
+            self.step.processEnded(status_object)
 
-            self.step._status_object = status_object
-            self._finish_d.callback(None)
-
-    @defer.inlineCallbacks
-    def run(self):
+    def start(self):
         # render properties
         command = self.command
         # set up argv
-        if isinstance(command, (str, bytes)):
+        if type(command) in types.StringTypes:
             if runtime.platformType == 'win32':
-                # allow %COMSPEC% to have args
-                argv = os.environ['COMSPEC'].split()
+                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
                 if '/c' not in argv:
                     argv += ['/c']
                 argv += [command]
@@ -100,30 +94,35 @@ class MasterShellCommand(BuildStep):
                 argv = ['/bin/sh', '-c', command]
         else:
             if runtime.platformType == 'win32':
-                # allow %COMSPEC% to have args
-                argv = os.environ['COMSPEC'].split()
+                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
                 if '/c' not in argv:
                     argv += ['/c']
                 argv += list(command)
             else:
                 argv = command
 
-        self.stdio_log = yield self.addLog("stdio")
-
-        if isinstance(command, (str, bytes)):
-            yield self.stdio_log.addHeader(command.strip() + "\n\n")
+        if self.path is not None:
+            path = os.path.join(os.getcwd(), self.path)
         else:
-            yield self.stdio_log.addHeader(" ".join(command) + "\n\n")
-        yield self.stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
-        yield self.stdio_log.addHeader(" in dir {}\n".format(os.getcwd()))
-        yield self.stdio_log.addHeader(" argv: {}\n".format(argv))
+            path = os.getcwd()
+
+        self.stdio_log = stdio_log = self.addLog("stdio")
+
+        if type(command) in types.StringTypes:
+            stdio_log.addHeader(command.strip() + "\n\n")
+        else:
+            stdio_log.addHeader(" ".join(command) + "\n\n")
+        stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
+        stdio_log.addHeader(" in dir %s\n" % (path,))
+        stdio_log.addHeader(" argv: %s\n" % (argv,))
+        self.step_status.setText(self.describe())
 
         if self.env is None:
             env = os.environ
         else:
             assert isinstance(self.env, dict)
             env = self.env
-            for key, v in self.env.items():
+            for key, v in self.env.iteritems():
                 if isinstance(v, list):
                     # Need to do os.pathsep translation.  We could either do that
                     # by replacing all incoming ':'s with os.pathsep, or by
@@ -138,34 +137,39 @@ class MasterShellCommand(BuildStep):
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}
-            for key, v in env.items():
+            for key, v in env.iteritems():
                 if v is not None:
-                    if not isinstance(v, (str, bytes)):
-                        raise RuntimeError(("'env' values must be strings or "
-                                            "lists; key '{}' is incorrect").format(key))
+                    if not isinstance(v, basestring):
+                        raise RuntimeError("'env' values must be strings or "
+                                           "lists; key '%s' is incorrect" % (key,))
                     newenv[key] = p.sub(subst, env[key])
             env = newenv
-
-        if self.logEnviron:
-            yield self.stdio_log.addHeader(" env: %r\n" % (env,))
+        stdio_log.addHeader(" env: %r\n" % (env,))
 
         # TODO add a timeout?
         self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
-                                            path=self.masterWorkdir, usePTY=self.usePTY, env=env)
+                                            path=path, usePTY=self.usePTY, env=env)
+        # (the LocalPP object will call processEnded for us)
 
-        # self._deferwaiter will yield only after LocalPP finishes
-
-        yield self._deferwaiter.wait()
-
-        status_value = self._status_object.value
-        if status_value.signal is not None:
-            self.descriptionDone = ["killed ({})".format(status_value.signal)]
-            return FAILURE
-        elif status_value.exitCode != 0:
-            self.descriptionDone = ["failed ({})".format(status_value.exitCode)]
-            return FAILURE
+    def processEnded(self, status_object):
+        if status_object.value.signal is not None:
+            self.descriptionDone = ["killed (%s)" % status_object.value.signal]
+            self.step_status.setText(self.describe(done=True))
+            self.finished(FAILURE)
+        elif status_object.value.exitCode != 0:
+            self.descriptionDone = ["failed (%d)" % status_object.value.exitCode]
+            self.step_status.setText(self.describe(done=True))
+            self.finished(FAILURE)
         else:
-            return SUCCESS
+            self.step_status.setText(self.describe(done=True))
+            self.finished(SUCCESS)
+
+    def describe(self, done=False):
+        desc = self.descriptionDone if done else self.description
+        if self.descriptionSuffix:
+            desc = desc[:]
+            desc.extend(self.descriptionSuffix)
+        return desc
 
     def interrupt(self, reason):
         try:
@@ -174,60 +178,44 @@ class MasterShellCommand(BuildStep):
             pass
         except error.ProcessExitedAlready:
             pass
-        super().interrupt(reason)
+        BuildStep.interrupt(self, reason)
 
 
 class SetProperty(BuildStep):
     name = 'SetProperty'
     description = ['Setting']
     descriptionDone = ['Set']
-    renderables = ['property', 'value']
+    renderables = ['value']
 
     def __init__(self, property, value, **kwargs):
-        super().__init__(**kwargs)
+        BuildStep.__init__(self, **kwargs)
         self.property = property
         self.value = value
 
-    def run(self):
+    def start(self):
         properties = self.build.getProperties()
-        properties.setProperty(
-            self.property, self.value, self.name, runtime=True)
-        return defer.succeed(SUCCESS)
+        properties.setProperty(self.property, self.value, self.name, runtime=True)
+        self.step_status.setText(self.describe(done=True))
+        self.finished(SUCCESS)
 
 
-class SetProperties(BuildStep):
-    name = 'SetProperties'
-    description = ['Setting Properties..']
-    descriptionDone = ['Properties Set']
-    renderables = ['properties']
+class SetSlaveInfo(BuildStep):
+    name = 'SetSlaveInfo'
+    description = ['Setting']
+    descriptionDone = ['Set']
 
-    def __init__(self, properties=None, **kwargs):
-        super().__init__(**kwargs)
-        self.properties = properties
+    def start(self):
+        update = self.getSlaveInfoUpdate()
 
-    def run(self):
-        if self.properties is None:
-            return defer.succeed(SUCCESS)
-        for k, v in self.properties.items():
-            self.setProperty(k, v, self.name, runtime=True)
-        return defer.succeed(SUCCESS)
+        if update and isinstance(update, dict):
+            self.build.slavebuilder.slave.updateSlaveInfo(**update)
 
+        self.step_status.setText(self.describe(done=True))
+        self.finished(SUCCESS)
 
-class Assert(BuildStep):
-    name = 'Assert'
-    description = ['Checking..']
-    descriptionDone = ["checked"]
-    renderables = ['check']
-
-    def __init__(self, check, **kwargs):
-        super().__init__(**kwargs)
-        self.check = check
-        self.descriptionDone = ["checked {}".format(repr(self.check))]
-
-    def run(self):
-        if self.check:
-            return defer.succeed(SUCCESS)
-        return defer.succeed(FAILURE)
+    def getSlaveInfoUpdate(self):
+        # should subclass; return a dictionary to update info with
+        return {}
 
 
 class LogRenderable(BuildStep):
@@ -237,11 +225,142 @@ class LogRenderable(BuildStep):
     renderables = ['content']
 
     def __init__(self, content, **kwargs):
-        super().__init__(**kwargs)
+        BuildStep.__init__(self, **kwargs)
         self.content = content
+
+    def start(self):
+        content = pprint.pformat(self.content)
+        self.addCompleteLog(name='Output', text=content)
+        self.step_status.setText(self.describe(done=True))
+        self.finished(SUCCESS)
+
+
+class _HandleRelatedBuilds(BuildStep):
+    def __init__(self, builderNames=None, isRelevant=None, preProcess=None,
+                 **kwargs):
+        BuildStep.__init__(self, **kwargs)
+
+        self._builder_names = builderNames
+
+        if isRelevant is None:
+            config.error('You must provide a function to check '
+                         'if a build is relevant')
+        if not callable(isRelevant):
+            config.error('isRelevant must be a callable')
+
+        if preProcess is None:
+            preProcess = lambda x: x
+
+        if not callable(preProcess):
+            config.error('preProcess must be callable')
+
+        self._is_relevant = isRelevant
+        self._pre_process = preProcess
+
+    def get_candidates(self, builder_names):
+        _hush_pyflakes = [builder_names]
+        del _hush_pyflakes
+        raise NotImplementedError
+
+    def handle_candidate(self, control):
+        _hush_pyflakes = [control]
+        del _hush_pyflakes
+        raise NotImplementedError
 
     @defer.inlineCallbacks
     def run(self):
-        content = pprint.pformat(self.content)
-        yield self.addCompleteLog(name='Output', text=content)
-        return SUCCESS
+        all_names = self.master.botmaster.builderNames[:]
+
+        if self._builder_names is None:
+            builder_names = all_names
+        else:
+            builder_names = [name for name in self._builder_names in all_names]
+
+        ours = self._pre_process(self.build.sources)
+
+        candidates = yield self.get_candidates(builder_names)
+
+        for control, theirs in candidates:
+            if self._is_relevant(ours, theirs):
+                self.handle_candidate(control)
+
+        # This step can never fail
+        defer.returnValue(SUCCESS)
+
+
+class CancelRelatedBuilds(_HandleRelatedBuilds):
+    name = 'CancelRelatedBuilds'
+    description = ['Checking']
+    descriptionDone = ['Checked']
+
+    def __init__(self, builderNames=None, isRelevant=None, preProcess=None,
+                 **kwargs):
+        _HandleRelatedBuilds.__init__(self, builderNames, isRelevant,
+                                      preProcess)
+
+    @defer.inlineCallbacks
+    def get_candidates(self, builder_names):
+        result = []
+
+        master_control = interfaces.IControl(self.master)
+
+        for name in builder_names:
+            builder_control = master_control.getBuilder(name)
+
+            pending = yield builder_control.getPendingBuildRequestControls()
+
+            # How can it even return None?
+            if pending is None:
+                continue
+
+            for buildrequest in pending:
+                result.append((buildrequest,
+                               [buildrequest.original_request.source]))
+
+        defer.returnValue(result)
+
+    def handle_candidate(self, control):
+        control.cancel()
+
+
+class StopRelatedBuilds(_HandleRelatedBuilds):
+    name = 'StopRelatedBuilds'
+    description = ['Checking']
+    descriptionDone = ['Checked']
+
+    def __init__(self, builderNames=None, isRelevant=None, preProcess=None,
+                 reason=None, **kwargs):
+        _HandleRelatedBuilds.__init__(self, builderNames, isRelevant,
+                                      preProcess)
+
+        if reason is None:
+            reason = 'Stopped by StopRelatedBuilds'
+
+        self._reason = reason
+
+    @defer.inlineCallbacks
+    def get_candidates(self, builder_names):
+        result = []
+
+        master_status = self.master.status
+        master_control = interfaces.IControl(self.master)
+
+        for name in builder_names:
+            builder_status = master_status.getBuilder(name)
+
+            state, current_builds = builder_status.getState()
+
+            if not current_builds:
+                continue
+
+            builder_control = master_control.getBuilder(name)
+
+            for build in current_builds:
+                source_stamps = yield build.getSourceStamps()
+                result.append((builder_control.getBuild(build.getNumber()),
+                               source_stamps))
+
+        defer.returnValue(result)
+
+    def handle_candidate(self, control):
+        control.stopBuild(self._reason)

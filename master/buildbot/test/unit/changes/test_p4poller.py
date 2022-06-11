@@ -26,11 +26,11 @@ from twisted.trial import unittest
 from buildbot.changes.p4poller import P4PollerError
 from buildbot.changes.p4poller import P4Source
 from buildbot.changes.p4poller import get_simple_split
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.runprocess import ExpectMasterShell
+from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import config
-from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.runprocess import ExpectMaster
-from buildbot.test.util.runprocess import MasterRunProcessMixin
 from buildbot.util import datetime2epoch
 
 first_p4changes = \
@@ -116,7 +116,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         yield self.setUpChangeSource()
 
@@ -125,7 +125,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     def add_p4_describe_result(self, number, result):
         self.expect_commands(
-            ExpectMaster(['p4', 'describe', '-s', str(number)])
+            ExpectMasterShell(['p4', 'describe', '-s', str(number)])
             .stdout(result)
         )
 
@@ -134,10 +134,9 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
         when = datetime.datetime.strptime(timestring, datefmt)
         return when
 
-    # tests
-
+    @defer.inlineCallbacks
     def test_describe(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
@@ -159,16 +158,16 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
     @defer.inlineCallbacks
     def do_test_poll_successful(self, **kwargs):
         encoding = kwargs.get('encoding', 'utf8')
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1),
                      **kwargs))
         self.expect_commands(
-            ExpectMaster(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
+            ExpectMasterShell(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
             .stdout(first_p4changes),
 
-            ExpectMaster(['p4', 'changes', '//depot/myproject/...@2,#head'])
+            ExpectMasterShell(['p4', 'changes', '//depot/myproject/...@2,#head'])
             .stdout(second_p4changes),
         )
         encoded_p4change = p4change.copy()
@@ -256,12 +255,12 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_poll_failed_changes(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
         self.expect_commands(
-            ExpectMaster(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
+            ExpectMasterShell(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
             .stdout(b'Perforce client error:\n...')
         )
 
@@ -273,12 +272,12 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_poll_failed_describe(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
         self.expect_commands(
-            ExpectMaster(['p4', 'changes', '//depot/myproject/...@3,#head'])
+            ExpectMasterShell(['p4', 'changes', '//depot/myproject/...@3,#head'])
             .stdout(second_p4changes),
         )
         self.add_p4_describe_result(2, p4change[2])
@@ -297,12 +296,12 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_poll_unicode_error(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
         self.expect_commands(
-            ExpectMaster(['p4', 'changes', '//depot/myproject/...@3,#head'])
+            ExpectMasterShell(['p4', 'changes', '//depot/myproject/...@3,#head'])
             .stdout(second_p4changes),
         )
         # Add a character which cannot be decoded with utf-8
@@ -320,14 +319,14 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_poll_unicode_error2(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1),
                      encoding='ascii'))
         # Trying to decode a certain character with ascii codec should fail.
         self.expect_commands(
-            ExpectMaster(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
+            ExpectMasterShell(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
             .stdout(fourth_p4changes),
         )
 
@@ -336,13 +335,13 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_acquire_ticket_auth(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user='buildbot_user', p4passwd='pass',
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1),
                      use_tickets=True))
         self.expect_commands(
-            ExpectMaster(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
+            ExpectMasterShell(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
             .stdout(first_p4changes)
         )
 
@@ -364,13 +363,13 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_acquire_ticket_auth_fail(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None, p4passwd='pass',
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1),
                      use_tickets=True))
         self.expect_commands(
-            ExpectMaster(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
+            ExpectMasterShell(['p4', 'changes', '-m', '1', '//depot/myproject/...'])
             .stdout(first_p4changes)
         )
 
@@ -393,12 +392,12 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
     @defer.inlineCallbacks
     def test_poll_split_file(self):
         """Make sure split file works on branch only changes"""
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=get_simple_split))
         self.expect_commands(
-            ExpectMaster(['p4', 'changes', '//depot/myproject/...@51,#head'])
+            ExpectMasterShell(['p4', 'changes', '//depot/myproject/...@51,#head'])
             .stdout(third_p4changes),
         )
         self.add_p4_describe_result(5, p4change[5])
@@ -457,13 +456,13 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
     @defer.inlineCallbacks
     def test_server_tz(self):
         """Verify that the server_tz parameter is handled correctly"""
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=get_simple_split,
                      server_tz="Europe/Berlin"))
         self.expect_commands(
-            ExpectMaster(['p4', 'changes', '//depot/myproject/...@51,#head'])
+            ExpectMasterShell(['p4', 'changes', '//depot/myproject/...@51,#head'])
             .stdout(third_p4changes),
         )
         self.add_p4_describe_result(5, p4change[5])

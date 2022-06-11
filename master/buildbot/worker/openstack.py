@@ -224,8 +224,8 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
             snap = nova.volume_snapshots.get(source_uuid)
             return snap.size
         else:
-            unknown_source = ("The source type '{}' for UUID '{}' is unknown".format(source_type,
-                                                                                     source_uuid))
+            unknown_source = (f"The source type '{source_type}' for UUID '{source_uuid}' is "
+                              "unknown")
             raise ValueError(unknown_source)
         return None
 
@@ -305,33 +305,29 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
                     instance=instance)
             raise LatentWorkerFailedToSubstantiate(instance.id, BUILD) from e
         self.instance = instance
-        log.msg('{} {} starting instance {} (image {})'.format(self.__class__.__name__,
-                                                               self.workername, instance.id,
-                                                               image_uuid))
+        log.msg(f'{self.__class__.__name__} {self.workername} starting instance {instance.id} '
+                f'(image {image_uuid})')
         duration = 0
         interval = self._poll_resolution
         while instance.status.startswith(BUILD):
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
-                log.msg(('{} {} has waited {} minutes for instance {}'
-                         ).format(self.__class__.__name__, self.workername, duration // 60,
-                                  instance.id))
+                log.msg(f'{self.__class__.__name__} {self.workername} has waited {duration // 60} '
+                        f'minutes for instance {instance.id}')
             try:
                 instance = self.novaclient.servers.get(instance.id)
             except NotFound as e:
-                log.msg('{} {} instance {} ({}) went missing'.format(self.__class__.__name__,
-                                                                     self.workername,
-                                                                     instance.id, instance.name))
+                log.msg(f'{self.__class__.__name__} {self.workername} instance {instance.id} '
+                        f'({instance.name}) went missing')
                 raise LatentWorkerFailedToSubstantiate(instance.id, instance.status) from e
         if instance.status == ACTIVE:
             minutes = duration // 60
             seconds = duration % 60
-            log.msg('{} {} instance {} ({}) started in about {} minutes {} seconds'.format(
-                    self.__class__.__name__, self.workername, instance.id, instance.name, minutes,
-                    seconds))
+            log.msg(f'{self.__class__.__name__} {self.workername} instance {instance.id} '
+                    f'({instance.name}) started in about {minutes} minutes {seconds} seconds')
             return [instance.id, image_uuid,
-                    '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
+                    f'{minutes // 60:02d}:{minutes % 60:02d}:{seconds:02d}']
         else:
             self.failed_to_start(instance.id, instance.status)
 
@@ -352,13 +348,10 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
                 instances = [self.novaclient.servers.get(instance_param.id)]
         except NotFound:
             # If can't find the instance, then it's already gone.
-            log.msg('{} {} instance {} ({}) already terminated'.format(self.__class__.__name__,
-                                                                       self.workername,
-                                                                       instance_param.id,
-                                                                       instance_param.name))
+            log.msg(f'{self.__class__.__name__} {self.workername} instance {instance_param.id} '
+                    f'({instance_param.name}) already terminated')
         for instance in instances:
             if instance.status not in (DELETED, UNKNOWN):
                 instance.delete()
-                log.msg('{} {} terminating instance {} ({})'.format(self.__class__.__name__,
-                                                                    self.workername, instance.id,
-                                                                    instance.name))
+                log.msg(f'{self.__class__.__name__} {self.workername} terminating instance '
+                        f'{instance.id} ({instance.name})')

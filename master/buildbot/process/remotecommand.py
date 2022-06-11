@@ -63,6 +63,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.ignore_updates = ignore_updates
         self.decodeRC = decodeRC
         self.conn = None
+        self._is_conn_test_fake = False
         self.worker = None
         self.step = None
         self.builder_name = None
@@ -75,7 +76,18 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.loglock = defer.DeferredLock()
 
     def __repr__(self):
-        return "<RemoteCommand '{}' at {}>".format(self.remote_command, id(self))
+        return f"<RemoteCommand '{self.remote_command}' at {id(self)}>"
+
+    @classmethod
+    def generate_new_command_id(cls):
+        cmd_id = cls._commandCounter
+        cls._commandCounter += 1
+        return f"{cmd_id}"
+
+    @classmethod
+    def get_last_generated_command_id(cls):
+        cmd_id = cls._commandCounter - 1
+        return f"{cmd_id}"
 
     def run(self, step, conn, builder_name):
         self.active = True
@@ -83,12 +95,12 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.conn = conn
         self.builder_name = builder_name
 
-        # generate a new command id
-        cmd_id = RemoteCommand._commandCounter
-        RemoteCommand._commandCounter += 1
-        self.commandID = "%d" % cmd_id
+        # This probably could be solved in a cleaner way.
+        self._is_conn_test_fake = hasattr(self.conn, 'is_fake_test_connection')
 
-        log.msg("{}: RemoteCommand.run [{}]".format(self, self.commandID))
+        self.commandID = RemoteCommand.generate_new_command_id()
+
+        log.msg(f"{self}: RemoteCommand.run [{self.commandID}]")
         self.deferred = defer.Deferred()
 
         d = defer.maybeDeferred(self._start)
@@ -133,14 +145,20 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @defer.inlineCallbacks
     def _finished(self, failure=None):
+        # Finished may be called concurrently by a message from worker and interruption due to
+        # lost connection.
+        if not self.active:
+            return
         self.active = False
+
         # the rc is send asynchronously and there is a chance it is still in the callback queue
         # when finished is received, we have to workaround in the master because worker might be
         # older
-        timeout = 10
-        while self.rc is None and timeout > 0:
-            yield util.asyncSleep(.1)
-            timeout -= 1
+        if not self._is_conn_test_fake:
+            timeout = 10
+            while self.rc is None and timeout > 0:
+                yield util.asyncSleep(.1)
+                timeout -= 1
 
         try:
             yield self.remoteComplete(failure)
@@ -152,16 +170,19 @@ class RemoteCommand(base.RemoteCommandImpl):
     @defer.inlineCallbacks
     def interrupt(self, why):
         log.msg("RemoteCommand.interrupt", self, why)
+
+        if self.conn and isinstance(why, Failure) and why.check(error.ConnectionLost):
+            # Note that we may be in the process of interruption and waiting for the worker to
+            # return the final results when the connection is disconnected.
+            log.msg("RemoteCommand.interrupt: lost worker")
+            self.conn = None
+            self._finished(why)
+            return
         if not self.active or self.interrupted:
             log.msg(" but this RemoteCommand is already inactive")
             return
         if not self.conn:
             log.msg(" but our .conn went away")
-            return
-        if isinstance(why, Failure) and why.check(error.ConnectionLost):
-            log.msg("RemoteCommand.disconnect: lost worker")
-            self.conn = None
-            self._finished(why)
             return
 
         self.interrupted = True
@@ -254,7 +275,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         if logname in self.logs:
             yield self.logs[logname].addStdout(data)
         else:
-            log.msg("{}.addToLog: no such log {}".format(self, logname))
+            log.msg(f"{self}.addToLog: no such log {logname}")
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     @defer.inlineCallbacks
@@ -266,7 +287,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
         if self.debug:
             for k, v in update.items():
-                log.msg("Update[{}]: {}".format(k, v))
+                log.msg(f"Update[{k}]: {v}")
         if "stdout" in update:
             # 'stdout': data
             yield self.addStdout(cleanup(update['stdout']))
@@ -282,8 +303,8 @@ class RemoteCommand(base.RemoteCommandImpl):
             yield self.addToLog(logname, cleanup(data))
         if "rc" in update:
             rc = self.rc = update['rc']
-            log.msg("{} rc={}".format(self, rc))
-            yield self.addHeader("program finished with exit code %d\n" % rc)
+            log.msg(f"{self} rc={rc}")
+            yield self.addHeader(f"program finished with exit code {rc}\n")
         if "elapsed" in update:
             self._remoteElapsed = update['elapsed']
 
@@ -304,18 +325,21 @@ class RemoteCommand(base.RemoteCommandImpl):
         for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:
-                    loog = yield self._unwrap(loog)
-                    yield loog.addHeader("\nremoteFailed: {}".format(maybeFailure))
+                    yield loog.addHeader(f"\nremoteFailed: {maybeFailure}")
                 else:
-                    log.msg("closing log {}".format(loog))
-                loog.finish()
+                    log.msg(f"closing log {loog}")
+                yield loog.finish()
         if maybeFailure:
+            # Message Pack protocol can not send an exception object back to the master, so
+            # exception information is sent as a string
+            if isinstance(maybeFailure, str):
+                raise RemoteException(maybeFailure)
+
             # workaround http://twistedmatrix.com/trac/ticket/5507
             # CopiedFailure cannot be raised back, this make debug difficult
             if isinstance(maybeFailure, pb.CopiedFailure):
-                maybeFailure.value = RemoteException("{}: {}\n{}".format(maybeFailure.type,
-                                                                         maybeFailure.value,
-                                                                         maybeFailure.traceback))
+                maybeFailure.value = RemoteException(f"{maybeFailure.type}: {maybeFailure.value}"
+                                                     f"\n{maybeFailure.traceback}")
                 maybeFailure.type = RemoteException
             maybeFailure.raiseException()
 
@@ -402,9 +426,9 @@ class RemoteShellCommand(RemoteCommand):
                 self.args['dir'] = self.args['workdir']
             if self.step.workerVersionIsOlderThan("shell", "2.16"):
                 self.args.pop('sigtermTime', None)
-        what = "command '{}' in dir '{}'".format(self.fake_command, self.args['workdir'])
+        what = f"command '{self.fake_command}' in dir '{self.args['workdir']}'"
         log.msg(what)
         return super()._start()
 
     def __repr__(self):
-        return "<RemoteShellCommand '{}'>".format(repr(self.fake_command))
+        return f"<RemoteShellCommand '{repr(self.fake_command)}'>"

@@ -49,13 +49,12 @@ class BitbucketServerEventHandler(PullRequestMixin):
         payload = self._get_payload(request)
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
-        log.msg("Processing event {header}: {event}"
-                .format(header=_HEADER_EVENT, event=event_type))
+        log.msg(f"Processing event {_HEADER_EVENT}: {event_type}")
         event_type = event_type.replace(":", "_")
-        handler = getattr(self, 'handle_{}'.format(event_type), None)
+        handler = getattr(self, f'handle_{event_type}', None)
 
         if handler is None:
-            raise ValueError('Unknown event: {}'.format(event_type))
+            raise ValueError(f'Unknown event: {event_type}')
 
         return handler(payload)
 
@@ -67,10 +66,9 @@ class BitbucketServerEventHandler(PullRequestMixin):
         if content_type.startswith('application/json'):
             payload = json.loads(content)
         else:
-            raise ValueError('Unknown content type: {}'
-                             .format(content_type))
+            raise ValueError(f'Unknown content type: {content_type}')
 
-        log.msg("Payload: {}".format(payload))
+        log.msg(f"Payload: {payload}")
 
         return payload
 
@@ -106,11 +104,10 @@ class BitbucketServerEventHandler(PullRequestMixin):
 
             change = {
                 'revision': commit_hash,
-                'revlink': '{}commits/{}'.format(repo_url, commit_hash),
+                'revlink': f'{repo_url}commits/{commit_hash}',
                 'repository': repo_url,
-                'author': '{} <{}>'.format(payload['actor']['displayName'],
-                                           payload['actor']['username']),
-                'comments': 'Bitbucket Server commit {}'.format(commit_hash),
+                'author': f"{payload['actor']['displayName']} <{payload['actor']['username']}>",
+                'comments': f'Bitbucket Server commit {commit_hash}',
                 'branch': branch,
                 'project': project,
                 'category': category
@@ -160,9 +157,8 @@ class BitbucketServerEventHandler(PullRequestMixin):
             'revision': payload['pullrequest']['fromRef']['commit']['hash'],
             'revlink': revlink,
             'repository': repo_url,
-            'author': '{} <{}>'.format(payload['actor']['displayName'],
-                                       payload['actor']['username']),
-            'comments': 'Bitbucket Server Pull Request #{}'.format(pr_number),
+            'author': f"{payload['actor']['displayName']} <{payload['actor']['username']}>",
+            'comments': f'Bitbucket Server Pull Request #{pr_number}',
             'branch': refname,
             'project': payload['repository']['project']['name'],
             'category': category,

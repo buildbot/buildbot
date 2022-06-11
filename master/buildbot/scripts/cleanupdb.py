@@ -29,7 +29,7 @@ from buildbot.util import in_reactor
 @defer.inlineCallbacks
 def doCleanupDatabase(config, master_cfg):
     if not config['quiet']:
-        print("cleaning database ({})".format(master_cfg.db['db_url']))
+        print(f"cleaning database ({master_cfg.db['db_url']})")
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
@@ -44,7 +44,7 @@ def doCleanupDatabase(config, master_cfg):
         i += 1
         if not config['quiet'] and percent != i * 100 / len(res):
             percent = i * 100 / len(res)
-            print(" {0}%  {1} saved".format(percent, saved))
+            print(f" {percent}%  {saved} saved")
             saved = 0
             sys.stdout.flush()
 
@@ -89,11 +89,11 @@ def _cleanupDatabase(config, _noMonkey=False):
     os.chdir(config['basedir'])
 
     with base.captureErrors((SyntaxError, ImportError),
-                            "Unable to load 'buildbot.tac' from '{}':".format(config['basedir'])):
+                            f"Unable to load 'buildbot.tac' from '{config['basedir']}':"):
         configFile = base.getConfigFileFromTac(config['basedir'])
 
     with base.captureErrors(config_module.ConfigErrors,
-                            "Unable to load '{}' from '{}':".format(configFile, config['basedir'])):
+                            f"Unable to load '{configFile}' from '{config['basedir']}':"):
         master_cfg = base.loadConfig(config, configFile)
 
     if not master_cfg:

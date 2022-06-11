@@ -19,10 +19,10 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import hgpoller
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.runprocess import ExpectMasterShell
+from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.runprocess import ExpectMaster
-from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 LINESEP_BYTES = os.linesep.encode("ascii")
@@ -39,8 +39,9 @@ class TestHgPollerBase(MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
+        yield self.setUpChangeSource()
 
         # To test that environment variables get propagated to subprocesses
         # (See #2116)
@@ -63,7 +64,12 @@ class TestHgPollerBase(MasterRunProcessMixin,
         yield self.poller.setServiceParent(self.master)
         self.poller._isRepositoryReady = _isRepositoryReady
 
-        yield self.master.db.setup()
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+        yield self.tearDownChangeSource()
 
     @defer.inlineCallbacks
     def check_current_rev(self, wished, branch='default'):
@@ -77,14 +83,14 @@ class TestHgPollerBranches(TestHgPollerBase):
     @defer.inlineCallbacks
     def test_poll_initial(self):
         self.expect_commands(
-            ExpectMaster(['hg', 'pull', '-b', 'one', '-b', 'two', 'ssh://example.com/foo/baz'])
+            ExpectMasterShell(['hg', 'pull', '-b', 'one', '-b', 'two', 'ssh://example.com/foo/baz'])
             .workdir('/some/dir'),
 
-            ExpectMaster(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
             .stdout(b"73591"),
 
-            ExpectMaster(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
             .stdout(b"22341"),
         )
@@ -104,17 +110,17 @@ class TestHgPollerBranches(TestHgPollerBase):
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
         self.expect_commands(
-            ExpectMaster(['hg', 'pull', '-b', 'one', '-b', 'two', 'ssh://example.com/foo/baz'])
+            ExpectMasterShell(['hg', 'pull', '-b', 'one', '-b', 'two', 'ssh://example.com/foo/baz'])
             .workdir('/some/dir'),
 
-            ExpectMaster(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
             .workdir('/some/dir').stdout(b'6' + LINESEP_BYTES),
 
-            ExpectMaster(['hg', 'log', '-r', '4::6', '--template={rev}:{node}\\n'])
+            ExpectMasterShell(['hg', 'log', '-r', '4::6', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
             .stdout(LINESEP_BYTES.join([b'4:1aaa5', b'6:784bd'])),
 
-            ExpectMaster(['hg', 'log', '-r', '784bd',
+            ExpectMasterShell(['hg', 'log', '-r', '784bd',
                           '--template={date|hgdate}' + os.linesep +
                           '{author}' + os.linesep +
                           "{files % '{file}" +
@@ -127,7 +133,7 @@ class TestHgPollerBranches(TestHgPollerBase):
                                         b'Comment',
                                         b''])),
 
-            ExpectMaster(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
             .workdir('/some/dir').stdout(b'3' + LINESEP_BYTES),
         )
 
@@ -150,13 +156,13 @@ class TestHgPollerBookmarks(TestHgPollerBase):
     @defer.inlineCallbacks
     def test_poll_initial(self):
         self.expect_commands(
-            ExpectMaster(['hg', 'pull', '-B', 'one', '-B', 'two', 'ssh://example.com/foo/baz'])
+            ExpectMasterShell(['hg', 'pull', '-B', 'one', '-B', 'two', 'ssh://example.com/foo/baz'])
             .workdir('/some/dir'),
 
-            ExpectMaster(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
             .workdir('/some/dir').stdout(b"73591"),
 
-            ExpectMaster(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
             .workdir('/some/dir').stdout(b"22341"),
         )
 
@@ -175,17 +181,17 @@ class TestHgPollerBookmarks(TestHgPollerBase):
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
         self.expect_commands(
-            ExpectMaster(['hg', 'pull', '-B', 'one', '-B', 'two', 'ssh://example.com/foo/baz'])
+            ExpectMasterShell(['hg', 'pull', '-B', 'one', '-B', 'two', 'ssh://example.com/foo/baz'])
             .workdir('/some/dir'),
 
-            ExpectMaster(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
             .workdir('/some/dir').stdout(b'6' + LINESEP_BYTES),
 
-            ExpectMaster(['hg', 'log', '-r', '4::6', '--template={rev}:{node}\\n'])
+            ExpectMasterShell(['hg', 'log', '-r', '4::6', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
             .stdout(LINESEP_BYTES.join([b'4:1aaa5', b'6:784bd', ])),
 
-            ExpectMaster(['hg', 'log', '-r', '784bd',
+            ExpectMasterShell(['hg', 'log', '-r', '784bd',
                           '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep +
                           "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}'])
             .workdir('/some/dir')
@@ -195,7 +201,7 @@ class TestHgPollerBookmarks(TestHgPollerBase):
                                         b'Comment',
                                         b''])),
 
-            ExpectMaster(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
             .workdir('/some/dir').stdout(b'3' + LINESEP_BYTES),
         )
 
@@ -254,12 +260,12 @@ class TestHgPoller(TestHgPollerBase):
         expected_env = {ENVIRON_2116_KEY: 'TRUE'}
         self.add_run_process_expect_env(expected_env)
         self.expect_commands(
-            ExpectMaster(['hg', 'init', '/some/dir']),
+            ExpectMasterShell(['hg', 'init', '/some/dir']),
 
-            ExpectMaster(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
+            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
             .workdir('/some/dir'),
 
-            ExpectMaster(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
             .stdout(b"73591"),
         )
@@ -278,10 +284,10 @@ class TestHgPoller(TestHgPollerBase):
         # climb (good enough for now, ideally it should even go to the common
         # ancestor)
         self.expect_commands(
-            ExpectMaster(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
+            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
             .workdir('/some/dir'),
 
-            ExpectMaster(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
             .stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES)
         )
@@ -296,18 +302,18 @@ class TestHgPoller(TestHgPollerBase):
     def test_poll_regular(self):
         # normal operation. There's a previous revision, we get a new one.
         self.expect_commands(
-            ExpectMaster(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
+            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
             .workdir('/some/dir'),
 
-            ExpectMaster(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
             .stdout(b'5' + LINESEP_BYTES),
 
-            ExpectMaster(['hg', 'log', '-r', '4::5', '--template={rev}:{node}\\n'])
+            ExpectMasterShell(['hg', 'log', '-r', '4::5', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
             .stdout(LINESEP_BYTES.join([b'4:1aaa5', b'5:784bd'])),
 
-            ExpectMaster(['hg', 'log', '-r', '784bd',
+            ExpectMasterShell(['hg', 'log', '-r', '784bd',
                           '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep +
                           "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}'])
             .workdir('/some/dir')
@@ -332,21 +338,21 @@ class TestHgPoller(TestHgPollerBase):
     def test_poll_force_push(self):
         #  There's a previous revision, but not linked with new rev
         self.expect_commands(
-            ExpectMaster(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
+            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
             .workdir('/some/dir'),
 
-            ExpectMaster(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
+            ExpectMasterShell(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
             .workdir('/some/dir').stdout(b'5' + LINESEP_BYTES),
 
-            ExpectMaster(['hg', 'log', '-r', '4::5', '--template={rev}:{node}\\n'])
+            ExpectMasterShell(['hg', 'log', '-r', '4::5', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
             .stdout(b""),
 
-            ExpectMaster(['hg', 'log', '-r', '5', '--template={rev}:{node}\\n'])
+            ExpectMasterShell(['hg', 'log', '-r', '5', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
             .stdout(LINESEP_BYTES.join([b'5:784bd'])),
 
-            ExpectMaster(['hg', 'log', '-r', '784bd',
+            ExpectMasterShell(['hg', 'log', '-r', '784bd',
                           '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep +
                           "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}'])
             .workdir('/some/dir')

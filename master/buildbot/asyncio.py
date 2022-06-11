@@ -16,7 +16,6 @@
 
 import asyncio
 import inspect
-import sys
 from asyncio import base_events
 from asyncio import events
 
@@ -27,7 +26,7 @@ def deferred_await(self):
     # if a deferred is awaited from a asyncio loop context, we must return
     # the future wrapper, but if it is awaited from normal twisted loop
     # we must return self.
-    if isinstance(asyncio.get_event_loop(), TwistedLoop):
+    if isinstance(asyncio.get_event_loop(), AsyncIOLoopWithTwisted):
         return self.asFuture(asyncio.get_event_loop())
     return self
 
@@ -39,16 +38,11 @@ def as_deferred(f):
     return asyncio.get_event_loop().as_deferred(f)
 
 
-if sys.version_info[:2] >= (3, 7):
-    def make_handle(callback, args, loop, context):
-        return events.Handle(callback, args, loop, context)
-else:
-    def make_handle(callback, args, loop, context):
-        # python 3.6 does not support async contextvars
-        return events.Handle(callback, args, loop)
+def as_future(d):
+    return d.asFuture(asyncio.get_event_loop())
 
 
-class TwistedLoop(base_events.BaseEventLoop):
+class AsyncIOLoopWithTwisted(base_events.BaseEventLoop):
     """
     Minimal asyncio loop for Buildbot asyncio only dependencies
     as of now, only graphql is needing asyncio loop
@@ -75,13 +69,13 @@ class TwistedLoop(base_events.BaseEventLoop):
         return self._running
 
     def call_soon(self, callback, *args, context=None):
-        handle = make_handle(callback, args, self, context)
+        handle = events.Handle(callback, args, self, context)
 
         self._reactor.callLater(0, handle._run)
         return handle
 
     def call_soon_threadsafe(self, callback, *args, context=None):
-        handle = make_handle(callback, args, self, context)
+        handle = events.Handle(callback, args, self, context)
 
         self._reactor.callFromThread(handle._run)
         return handle
@@ -91,12 +85,11 @@ class TwistedLoop(base_events.BaseEventLoop):
         return self._reactor.seconds()
 
     def call_at(self, when, callback, *args, context=None):
-        handle = make_handle(callback, args, self, context)
+        handle = events.Handle(callback, args, self, context)
 
         # Twisted timers are relatives, contrary to asyncio.
         delay = when - self.time()
-        if delay < 0:
-            delay = 0
+        delay = max(delay, 0)
         self._reactor.callLater(delay, handle._run)
         return handle
 

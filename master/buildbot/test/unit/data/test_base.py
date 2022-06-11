@@ -19,14 +19,14 @@ from twisted.trial import unittest
 
 from buildbot.data import base
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class ResourceType(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     def makeResourceTypeSubclass(self, **attributes):
         attributes.setdefault('name', 'thing')

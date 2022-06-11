@@ -37,7 +37,7 @@ class Reconfigurator:
             print("Reconfig (through SIGHUP) is not supported on Windows.")
             return None
 
-        with open(os.path.join(basedir, "twistd.pid"), "rt") as f:
+        with open(os.path.join(basedir, "twistd.pid"), "rt", encoding='utf-8') as f:
             self.pid = int(f.read().strip())
         if quiet:
             os.kill(self.pid, signal.SIGHUP)
@@ -68,14 +68,14 @@ class Reconfigurator:
             # we were probably unable to open the file in the first place
             self.sighup()
         except Exception as e:
-            print("Error while following twistd.log: {}".format(e))
+            print(f"Error while following twistd.log: {e}")
 
         return 1
 
     def sighup(self):
         if self.sent_signal:
             return
-        print("sending SIGHUP to process %d" % self.pid)
+        print(f"sending SIGHUP to process {self.pid}")
         self.sent_signal = True
         os.kill(self.pid, signal.SIGHUP)
 

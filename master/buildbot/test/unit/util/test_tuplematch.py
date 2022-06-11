@@ -25,7 +25,6 @@ class MatchTuple(tuplematching.TupleMatchingMixin, unittest.TestCase):
 
     def do_test_match(self, routingKey, shouldMatch, filter):
         result = tuplematch.matchTuple(routingKey, filter)
-        msg = '{} {} {}'.format(repr(routingKey),
-                                'should match' if shouldMatch else "shouldn't match",
-                                repr(filter))
+        should_match_string = 'should match' if shouldMatch else "shouldn't match"
+        msg = f"{repr(routingKey)} {should_match_string} {repr(filter)}"
         self.assertEqual(shouldMatch, result, msg)

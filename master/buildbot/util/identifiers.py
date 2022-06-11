@@ -36,7 +36,7 @@ def isIdentifier(maxLength, obj):
 
 def forceIdentifier(maxLength, s):
     if not isinstance(s, str):
-        raise TypeError("%r cannot be coerced to an identifier" % (str,))
+        raise TypeError(f"{repr(str)} cannot be coerced to an identifier")
 
     # usually bytes2unicode can handle it
     s = util.bytes2unicode(s)
@@ -56,7 +56,7 @@ def incrementIdentifier(maxLength, ident):
     if mo:
         ident = ident[:mo.start(1) - 1]
         num = int(mo.group(1))
-    num = '_%d' % (num + 1)
+    num = f'_{num + 1}'
     if len(num) > maxLength:
         raise ValueError("cannot generate a larger identifier")
     ident = ident[:maxLength - len(num)] + num

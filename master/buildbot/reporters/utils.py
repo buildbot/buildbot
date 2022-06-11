@@ -40,8 +40,8 @@ def getPreviousBuild(master, build):
 
 
 @defer.inlineCallbacks
-def getDetailsForBuildset(master, bsid, wantProperties=False, wantSteps=False,
-                          wantPreviousBuild=False, wantLogs=False):
+def getDetailsForBuildset(master, bsid, want_properties=False, want_steps=False,
+                          want_previous_build=False, want_logs=False, want_logs_content=False):
     # Here we will do a bunch of data api calls on behalf of the reporters
     # We do try to make *some* calls in parallel with the help of gatherResults, but don't commit
     # to much in that. The idea is to do parallelism while keeping the code readable
@@ -59,16 +59,17 @@ def getDetailsForBuildset(master, bsid, wantProperties=False, wantSteps=False,
     builds = yield defer.gatherResults(dl)
     builds = flatten(builds, types=(list, UserList))
     if builds:
-        yield getDetailsForBuilds(master, buildset, builds, wantProperties=wantProperties,
-                                  wantSteps=wantSteps, wantPreviousBuild=wantPreviousBuild,
-                                  wantLogs=wantLogs)
+        yield getDetailsForBuilds(master, buildset, builds, want_properties=want_properties,
+                                  want_steps=want_steps, want_previous_build=want_previous_build,
+                                  want_logs=want_logs,
+                                  want_logs_content=want_logs_content)
 
     return dict(buildset=buildset, builds=builds)
 
 
 @defer.inlineCallbacks
-def getDetailsForBuild(master, build, wantProperties=False, wantSteps=False,
-                       wantPreviousBuild=False, wantLogs=False):
+def getDetailsForBuild(master, build, want_properties=False, want_steps=False,
+                       want_previous_build=False, want_logs=False, want_logs_content=False):
     buildrequest = yield master.data.get(("buildrequests", build['buildrequestid']))
     buildset = yield master.data.get(("buildsets", buildrequest['buildsetid']))
     build['buildrequest'], build['buildset'] = buildrequest, buildset
@@ -82,8 +83,10 @@ def getDetailsForBuild(master, build, wantProperties=False, wantSteps=False,
     build['parentbuilder'] = parentbuilder
 
     ret = yield getDetailsForBuilds(master, buildset, [build],
-                                    wantProperties=wantProperties, wantSteps=wantSteps,
-                                    wantPreviousBuild=wantPreviousBuild, wantLogs=wantLogs)
+                                    want_properties=want_properties, want_steps=want_steps,
+                                    want_previous_build=want_previous_build,
+                                    want_logs=want_logs,
+                                    want_logs_content=want_logs_content)
     return ret
 
 
@@ -102,8 +105,8 @@ def get_details_for_buildrequest(master, buildrequest, build):
 
 
 @defer.inlineCallbacks
-def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantSteps=False,
-                        wantPreviousBuild=False, wantLogs=False):
+def getDetailsForBuilds(master, buildset, builds, want_properties=False, want_steps=False,
+                        want_previous_build=False, want_logs=False, want_logs_content=False):
 
     builderids = {build['builderid'] for build in builds}
 
@@ -113,29 +116,38 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
     buildersbyid = {builder['builderid']: builder
                     for builder in builders}
 
-    if wantProperties:
+    if want_properties:
         buildproperties = yield defer.gatherResults(
             [master.data.get(("builds", build['buildid'], 'properties'))
              for build in builds])
     else:  # we still need a list for the big zip
         buildproperties = list(range(len(builds)))
 
-    if wantPreviousBuild:
+    if want_previous_build:
         prev_builds = yield defer.gatherResults(
             [getPreviousBuild(master, build) for build in builds])
     else:  # we still need a list for the big zip
         prev_builds = list(range(len(builds)))
 
-    if wantSteps:
+    if want_logs_content:
+        want_logs = True
+    if want_logs:
+        want_steps = True
+
+    if want_steps:  # pylint: disable=too-many-nested-blocks
         buildsteps = yield defer.gatherResults(
             [master.data.get(("builds", build['buildid'], 'steps'))
              for build in builds])
-        if wantLogs:
-            for s in flatten(buildsteps, types=(list, UserList)):
-                logs = yield master.data.get(("steps", s['stepid'], 'logs'))
-                s['logs'] = list(logs)
-                for l in s['logs']:
-                    l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+        if want_logs:
+            for build, build_steps in zip(builds, buildsteps):
+                for s in build_steps:
+                    logs = yield master.data.get(("steps", s['stepid'], 'logs'))
+                    s['logs'] = list(logs)
+                    for l in s['logs']:
+                        l['url'] = get_url_for_log(master, build['builderid'], build['number'],
+                                                   s['number'], l['slug'])
+                        if want_logs_content:
+                            l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
     else:  # we still need a list for the big zip
         buildsteps = list(range(len(builds)))
@@ -147,13 +159,13 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
         build['url'] = getURLForBuild(
             master, build['builderid'], build['number'])
 
-        if wantProperties:
+        if want_properties:
             build['properties'] = properties
 
-        if wantSteps:
+        if want_steps:
             build['steps'] = list(steps)
 
-        if wantPreviousBuild:
+        if want_previous_build:
             build['prev_build'] = prev
 
 
@@ -197,9 +209,8 @@ def getResponsibleUsersForBuild(master, buildid):
         else:
             blamelist.update(owner)
             log.msg(
-                "Warning: owner property is a list for buildid {}. ".format(buildid))
-            log.msg("Please report a bug: changes: {}. properties: {}".format(
-                changes, properties))
+                f"Warning: owner property is a list for buildid {buildid}. ")
+            log.msg(f"Please report a bug: changes: {changes}. properties: {properties}")
 
     # add owner from properties
     if 'owners' in properties:
@@ -212,14 +223,18 @@ def getResponsibleUsersForBuild(master, buildid):
 
 def getURLForBuild(master, builderid, build_number):
     prefix = master.config.buildbotURL
-    return prefix + "#builders/%d/builds/%d" % (
-        builderid,
-        build_number)
+    return prefix + f"#builders/{builderid}/builds/{build_number}"
 
 
 def getURLForBuildrequest(master, buildrequestid):
     prefix = master.config.buildbotURL
-    return "{}#buildrequests/{}".format(prefix, buildrequestid)
+    return f"{prefix}#buildrequests/{buildrequestid}"
+
+
+def get_url_for_log(master, builderid, build_number, step_number, log_slug):
+    prefix = master.config.buildbotURL
+    return f"{prefix}#builders/{builderid}/builds/{build_number}/" + \
+        f"steps/{step_number}/logs/{log_slug}"
 
 
 @renderer

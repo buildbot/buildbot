@@ -15,12 +15,12 @@
 
 
 from twisted.internet import defer
+from twisted.logger import Logger
 
 from buildbot import config
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.util import httpclientservice
-from buildbot.util.logger import Logger
 
 log = Logger()
 
@@ -60,9 +60,9 @@ class ZulipStatusPush(ReporterBase):
             jsondata["timestamp"] = int(build["complete_at"].timestamp())
             jsondata["results"] = build["results"]
         if self.stream is not None:
-            url = "/api/v1/external/buildbot?api_key={}&stream={}".format(self.token, self.stream)
+            url = f"/api/v1/external/buildbot?api_key={self.token}&stream={self.stream}"
         else:
-            url = "/api/v1/external/buildbot?api_key={}".format(self.token)
+            url = f"/api/v1/external/buildbot?api_key={self.token}"
         response = yield self._http.post(url, json=jsondata)
         if response.code != 200:
             content = yield response.content()

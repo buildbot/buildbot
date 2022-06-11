@@ -24,7 +24,8 @@ from contextlib import contextmanager
 from twisted.python import runtime
 from twisted.python import usage
 
-from buildbot import config as config_module
+from buildbot.config.errors import ConfigErrors
+from buildbot.config.master import FileLoader
 
 
 @contextmanager
@@ -49,22 +50,22 @@ def checkPidFile(pidfile):
     """
     if os.path.exists(pidfile):
         try:
-            with open(pidfile) as f:
+            with open(pidfile, encoding='utf-8') as f:
                 pid = int(f.read())
         except ValueError as e:
-            raise ValueError('Pidfile {} contains non-numeric value'.format(pidfile)) from e
+            raise ValueError(f'Pidfile {pidfile} contains non-numeric value') from e
         try:
             os.kill(pid, 0)
         except OSError as why:
             if why.errno == errno.ESRCH:
                 # The pid doesn't exist.
-                print('Removing stale pidfile {}'.format(pidfile))
+                print(f'Removing stale pidfile {pidfile}')
                 os.remove(pidfile)
             else:
-                raise OSError("Can't check status of PID {} from pidfile {}: {}".format(
-                    pid, pidfile, why)) from why
+                raise OSError(
+                    f"Can't check status of PID {pid} from pidfile {pidfile}: {why}") from why
         else:
-            raise BusyError("'{}' exists - is this master still running?".format(pidfile))
+            raise BusyError(f"'{pidfile}' exists - is this master still running?")
 
 
 def checkBasedir(config):
@@ -105,12 +106,11 @@ def checkBasedir(config):
 
 def loadConfig(config, configFileName='master.cfg'):
     if not config['quiet']:
-        print("checking {}".format(configFileName))
+        print(f"checking {configFileName}")
 
     try:
-        master_cfg = config_module.FileLoader(
-            config['basedir'], configFileName).loadConfig()
-    except config_module.ConfigErrors as e:
+        master_cfg = FileLoader(config['basedir'], configFileName).loadConfig()
+    except ConfigErrors as e:
         print("Errors loading configuration:")
 
         for msg in e.errors:
@@ -126,18 +126,18 @@ def loadConfig(config, configFileName='master.cfg'):
 
 def isBuildmasterDir(dir):
     def print_error(error_message):
-        print("{}\ninvalid buildmaster directory '{}'".format(error_message, dir))
+        print(f"{error_message}\ninvalid buildmaster directory '{dir}'")
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
-        with open(buildbot_tac) as f:
+        with open(buildbot_tac, encoding='utf-8') as f:
             contents = f.read()
     except IOError as exception:
-        print_error("error reading '{}': {}".format(buildbot_tac, exception.strerror))
+        print_error(f"error reading '{buildbot_tac}': {exception.strerror}")
         return False
 
     if "Application('buildmaster')" not in contents:
-        print_error("unexpected content in '{}'".format(buildbot_tac))
+        print_error(f"unexpected content in '{buildbot_tac}'")
         return False
 
     return True
@@ -150,8 +150,8 @@ def getConfigFromTac(basedir, quiet=False):
         # relocatable buildmasters
         tacGlobals = {'__file__': tacFile}
         try:
-            with open(tacFile) as f:
-                exec(f.read(), tacGlobals)
+            with open(tacFile, encoding='utf-8') as f:
+                exec(f.read(), tacGlobals)  # pylint: disable=exec-used
         except Exception:
             if not quiet:
                 traceback.print_exc()
@@ -194,9 +194,9 @@ class SubcommandOptions(usage.Options):
                 # pylint: disable=not-an-iterable
                 for optfile_name, option_name in self.buildbotOptions:
                     for i, val in enumerate(op):
-                        if (op[i][0] == option_name and
+                        if (val[0] == option_name and
                                 optfile_name in optfile):
-                            op[i] = list(op[i])
+                            op[i] = list(val)
                             op[i][2] = optfile[optfile_name]
         super().__init__(*args)
         if hasattr(cls, 'optParameters'):
@@ -245,16 +245,16 @@ class SubcommandOptions(usage.Options):
             if os.path.isdir(d):
                 if runtime.platformType != 'win32':
                     if os.stat(d)[stat.ST_UID] != os.getuid():
-                        print("skipping {} because you don't own it".format(d))
+                        print(f"skipping {d} because you don't own it")
                         continue  # security, skip other people's directories
                 optfile = os.path.join(d, "options")
                 if os.path.exists(optfile):
                     try:
-                        with open(optfile, "r") as f:
+                        with open(optfile, "r", encoding='utf-8') as f:
                             options = f.read()
-                        exec(options, localDict)
+                        exec(options, localDict)  # pylint: disable=exec-used
                     except Exception:
-                        print("error while reading {}".format(optfile))
+                        print(f"error while reading {optfile}")
                         raise
                     break
 

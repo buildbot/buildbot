@@ -298,8 +298,10 @@ class Tests(interfaces.InterfaceTests):
             return sch['id']
 
         schlist = yield self.db.schedulers.getSchedulers()
-        [validation.verifyDbDict(self, 'schedulerdict', sch)
-         for sch in schlist]
+
+        for sch in schlist:
+            validation.verifyDbDict(self, 'schedulerdict', sch)
+
         self.assertEqual(sorted(schlist, key=schKey), sorted([
             dict(id=24, name='schname', enabled=True, masterid=13),
             dict(id=25, name='schname2', enabled=True, masterid=None),
@@ -312,8 +314,10 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler25,
         ])
         schlist = yield self.db.schedulers.getSchedulers(masterid=13)
-        [validation.verifyDbDict(self, 'schedulerdict', sch)
-         for sch in schlist]
+
+        for sch in schlist:
+            validation.verifyDbDict(self, 'schedulerdict', sch)
+
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', enabled=True, masterid=13),
         ]))
@@ -325,8 +329,10 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler25
         ])
         schlist = yield self.db.schedulers.getSchedulers(active=True)
-        [validation.verifyDbDict(self, 'schedulerdict', sch)
-         for sch in schlist]
+
+        for sch in schlist:
+            validation.verifyDbDict(self, 'schedulerdict', sch)
+
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', enabled=True, masterid=13),
         ]))
@@ -339,16 +345,20 @@ class Tests(interfaces.InterfaceTests):
         ])
         schlist = yield self.db.schedulers.getSchedulers(
             active=True, masterid=13)
-        [validation.verifyDbDict(self, 'schedulerdict', sch)
-         for sch in schlist]
+
+        for sch in schlist:
+            validation.verifyDbDict(self, 'schedulerdict', sch)
+
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', enabled=True, masterid=13),
         ]))
 
         schlist = yield self.db.schedulers.getSchedulers(
             active=True, masterid=14)
-        [validation.verifyDbDict(self, 'schedulerdict', sch)
-         for sch in schlist]
+
+        for sch in schlist:
+            validation.verifyDbDict(self, 'schedulerdict', sch)
+
         self.assertEqual(sorted(schlist), [])
 
     @defer.inlineCallbacks
@@ -358,8 +368,10 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler25
         ])
         schlist = yield self.db.schedulers.getSchedulers(active=False)
-        [validation.verifyDbDict(self, 'schedulerdict', sch)
-         for sch in schlist]
+
+        for sch in schlist:
+            validation.verifyDbDict(self, 'schedulerdict', sch)
+
         self.assertEqual(sorted(schlist), sorted([
             dict(id=25, name='schname2', enabled=True, masterid=None),
         ]))
@@ -372,14 +384,18 @@ class Tests(interfaces.InterfaceTests):
         ])
         schlist = yield self.db.schedulers.getSchedulers(
             active=False, masterid=13)
-        [validation.verifyDbDict(self, 'schedulerdict', sch)
-         for sch in schlist]
+
+        for sch in schlist:
+            validation.verifyDbDict(self, 'schedulerdict', sch)
+
         self.assertEqual(sorted(schlist), [])
 
         schlist = yield self.db.schedulers.getSchedulers(
             active=False, masterid=14)
-        [validation.verifyDbDict(self, 'schedulerdict', sch)
-         for sch in schlist]
+
+        for sch in schlist:
+            validation.verifyDbDict(self, 'schedulerdict', sch)
+
         self.assertEqual(sorted(schlist), [])   # always returns [] by spec!
 
 

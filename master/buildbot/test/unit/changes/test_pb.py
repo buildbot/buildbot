@@ -21,9 +21,9 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.changes import pb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import pbmanager
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestPBChangeSource(changesource.ChangeSourceMixin,
@@ -40,7 +40,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpPBChangeSource()
         yield self.setUpChangeSource()
 
@@ -72,10 +72,11 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
         # but expect that it will NOT register
         return self._test_registration(None, **self.DEFAULT_CONFIG)
 
+    @defer.inlineCallbacks
     def test_registration_later_if_master_can_do_it(self):
         # get the changesource running but not active due to the other master
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
-        self.attachChangeSource(pb.PBChangeSource(**self.DEFAULT_CONFIG))
+        yield self.attachChangeSource(pb.PBChangeSource(**self.DEFAULT_CONFIG))
         self.startChangeSource()
         self.assertNotRegistered()
 
@@ -120,8 +121,9 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
             self.assertUnregistered(*exp_registration)
         self.assertEqual(self.changesource.registration, None)
 
+    @defer.inlineCallbacks
     def test_perspective(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             pb.PBChangeSource('alice', 'sekrit', port='8888'))
         persp = self.changesource.getPerspective(mock.Mock(), 'alice')
         self.assertIsInstance(persp, pb.ChangePerspective)
@@ -153,7 +155,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
     @defer.inlineCallbacks
     def test_reconfigService_no_change(self):
         config = mock.Mock()
-        self.attachChangeSource(pb.PBChangeSource(port='9876'))
+        yield self.attachChangeSource(pb.PBChangeSource(port='9876'))
 
         self.startChangeSource()
         yield self.changesource.reconfigServiceWithBuildbotConfig(config)
@@ -168,7 +170,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
     def test_reconfigService_default_changed(self):
         config = mock.Mock()
         config.protocols = {'pb': {'port': '9876'}}
-        self.attachChangeSource(pb.PBChangeSource())
+        yield self.attachChangeSource(pb.PBChangeSource())
 
         self.startChangeSource()
         yield self.changesource.reconfigServiceWithBuildbotConfig(config)
@@ -191,7 +193,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
         """reconfig one that's not active on this master"""
         config = mock.Mock()
         config.protocols = {'pb': {'port': '9876'}}
-        self.attachChangeSource(pb.PBChangeSource())
+        yield self.attachChangeSource(pb.PBChangeSource())
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         self.startChangeSource()
@@ -214,7 +216,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
 class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
 
     @defer.inlineCallbacks

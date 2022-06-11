@@ -22,8 +22,8 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.schedulers import basic
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class CommonStuffMixin:
@@ -50,8 +50,7 @@ class CommonStuffMixin:
                 builderNames=None, properties=None, **kw):
             self.assertEqual(external_idstring, None)
             self.assertEqual(reason, sched.reason)
-            self.events.append('B{}@{}'.format(repr(changeids).replace(' ', ''),
-                                               int(self.clock.seconds())))
+            self.events.append(f"B{repr(changeids).replace(' ', '')}@{int(self.clock.seconds())}")
             return defer.succeed(None)
         sched.addBuildsetForChanges = addBuildsetForChanges
 
@@ -89,13 +88,13 @@ class BaseBasicScheduler(CommonStuffMixin,
             self.timer_started = True
             return "xxx"
 
-        def getChangeClassificationsForTimer(self, schedulerid, timer_name):
+        def getChangeClassificationsForTimer(self, sched_id, timer_name):
             assert timer_name == "xxx"
-            assert schedulerid == BaseBasicScheduler.SCHEDULERID
-            return self.master.db.schedulers.getChangeClassifications(schedulerid)
+            assert sched_id == BaseBasicScheduler.SCHEDULERID
+            return self.master.db.schedulers.getChangeClassifications(sched_id)
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -356,7 +355,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         return ch
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -492,7 +491,7 @@ class AnyBranchScheduler(CommonStuffMixin,
     OBJECTID = 246
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

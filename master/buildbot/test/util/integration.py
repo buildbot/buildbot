@@ -17,6 +17,7 @@ import os
 import re
 import sys
 from io import StringIO
+from unittest.case import SkipTest
 
 import mock
 
@@ -26,7 +27,7 @@ from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 from zope.interface import implementer
 
-from buildbot.config import MasterConfig
+from buildbot.config.master import MasterConfig
 from buildbot.data import resultspec
 from buildbot.interfaces import IConfigLoader
 from buildbot.master import BuildMaster
@@ -34,8 +35,8 @@ from buildbot.plugins import worker
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.misc import DebugIntegrationLogsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.sandboxed_worker import SandboxedWorker
 from buildbot.worker.local import LocalWorker
 
@@ -88,7 +89,7 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
                             DebugIntegrationLogsMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setupDebugIntegrationLogs()
 
     def tearDown(self):
@@ -184,7 +185,7 @@ class RunMasterBase(unittest.TestCase):
         skip = "buildbot-worker package is not installed"
 
     @defer.inlineCallbacks
-    def setupConfig(self, config_dict, startWorker=True):
+    def setupConfig(self, config_dict, startWorker=True, **worker_kwargs):
         """
         Setup and start a master configured
         by the function configFunc defined in the test module.
@@ -199,6 +200,9 @@ class RunMasterBase(unittest.TestCase):
         if startWorker:
             if self.proto == 'pb':
                 proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
+                workerclass = worker.Worker
+            if self.proto == 'msgpack':
+                proto = {"msgpack_experimental_v3": {"port": 0}}
                 workerclass = worker.Worker
             elif self.proto == 'null':
                 proto = {"null": {}}
@@ -215,25 +219,38 @@ class RunMasterBase(unittest.TestCase):
         if not startWorker:
             return
 
-        if self.proto == 'pb':
-            # We find out the worker port automatically
-            workerPort = list(m.pbmanager.dispatchers.values())[
-                0].port.getHost().port
+        if self.proto in ('pb', 'msgpack'):
+            sandboxed_worker_path = os.environ.get("SANDBOXED_WORKER_PATH", None)
+            worker_python_version = os.environ.get("WORKER_PYTHON", None)
+            if self.proto == 'pb':
+                protocol = 'pb'
+                dispatcher = list(m.pbmanager.dispatchers.values())[0]
+            else:
+                protocol = 'msgpack_experimental_v3'
+                dispatcher = list(m.msgmanager.dispatchers.values())[0]
+
+                unsupported_python_versions = ['2.7', '3.4', '3.5']
+                if sandboxed_worker_path is not None and \
+                        worker_python_version in unsupported_python_versions:
+                    raise SkipTest('MessagePack protocol requires worker python >= 3.6')
+
+                # We currently don't handle connection closing cleanly.
+                dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)
+
+            workerPort = dispatcher.port.getHost().port
 
             # create a worker, and attach it to the master, it will be started, and stopped
             # along with the master
             worker_dir = FilePath(self.mktemp())
             worker_dir.createDirectory()
-            sandboxed_worker_path = os.environ.get(
-                "SANDBOXED_WORKER_PATH", None)
             if sandboxed_worker_path is None:
                 self.w = Worker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    False)
+                    False, protocol=protocol, **worker_kwargs)
             else:
                 self.w = SandboxedWorker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    sandboxed_worker_path)
+                    sandboxed_worker_path, protocol=protocol, **worker_kwargs)
                 self.addCleanup(self.w.shutdownWorker)
 
         elif self.proto == 'null':
@@ -246,7 +263,7 @@ class RunMasterBase(unittest.TestCase):
         def dump():
             if not self._passed:
                 dump = StringIO()
-                print(u"FAILED! dumping build db for debug", file=dump)
+                print("FAILED! dumping build db for debug", file=dump)
                 builds = yield self.master.data.get(("builds",))
                 for build in builds:
                     yield self.printBuild(build, dump, withLogs=True)
@@ -332,15 +349,15 @@ class RunMasterBase(unittest.TestCase):
     def printBuild(self, build, out=sys.stdout, withLogs=False):
         # helper for debugging: print a build
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
-        print(u"*** BUILD {} *** ==> {} ({})".format(build['buildid'], build['state_string'],
-                statusToString(build['results'])), file=out)
+        print(f"*** BUILD {build['buildid']} *** ==> {build['state_string']} "
+              f"({statusToString(build['results'])})", file=out)
         for step in build['steps']:
-            print(u"    *** STEP {} *** ==> {} ({})".format(step['name'], step['state_string'],
-                    statusToString(step['results'])), file=out)
+            print(f"    *** STEP {step['name']} *** ==> {step['state_string']} "
+                  f"({statusToString(step['results'])})", file=out)
             for url in step['urls']:
-                print(u"       url:{} ({})".format(url['name'], url['url']), file=out)
+                print(f"       url:{url['name']} ({url['url']})", file=out)
             for log in step['logs']:
-                print(u"        log:{} ({})".format(log['name'], log['num_lines']), file=out)
+                print(f"        log:{log['name']} ({log['num_lines']})", file=out)
                 if step['results'] != SUCCESS or withLogs:
                     self.printLog(log, out)
 
@@ -368,11 +385,12 @@ class RunMasterBase(unittest.TestCase):
                     if onlyStdout and line[0] != 'o':
                         continue
                     expectedLog = self._match_patterns_consume(line, expectedLog, is_regex=regex)
-
+        if expectedLog:
+            print(f"{expectedLog} not found in logs")
         return len(expectedLog) == 0
 
     def printLog(self, log, out):
-        print(u" " * 8 + "*********** LOG: {} *********".format(log['name']), file=out)
+        print(" " * 8 + f"*********** LOG: {log['name']} *********", file=out)
         if log['type'] == 's':
             for line in log['contents']['content'].splitlines():
                 linetype = line[0]
@@ -383,7 +401,7 @@ class RunMasterBase(unittest.TestCase):
                 if linetype == 'e':
                     # red
                     line = "\x1b[31m" + line + "\x1b[0m"
-                print(u" " * 8 + line)
+                print(" " * 8 + line)
         else:
-            print(u"" + log['contents']['content'], file=out)
-        print(u" " * 8 + "********************************", file=out)
+            print("" + log['contents']['content'], file=out)
+        print(" " * 8 + "********************************", file=out)

@@ -79,15 +79,15 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # Tracks config version for locks
         self.config_version = None
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        # find this builder in the config
+    def _find_builder_config_by_name(self, new_config):
         for builder_config in new_config.builders:
             if builder_config.name == self.name:
-                found_config = True
-                break
-        assert found_config, "no config found for builder '{}'".format(self.name)
+                return builder_config
+        raise AssertionError(f"no config found for builder '{self.name}'")
 
+    @defer.inlineCallbacks
+    def reconfigServiceWithBuildbotConfig(self, new_config):
+        builder_config = self._find_builder_config_by_name(new_config)
         old_config = self.config
         self.config = builder_config
         self.config_version = self.master.config_version
@@ -118,7 +118,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return False
 
     def __repr__(self):
-        return "<Builder '%r' at %d>" % (self.name, id(self))
+        return f"<Builder '{repr(self.name)}' at {id(self)}>"
 
     def getBuilderIdForName(self, name):
         # buildbot.config should ensure this is already unicode, but it doesn't
@@ -238,16 +238,19 @@ class Builder(util_service.ReconfigurableServiceMixin,
             log.err(e, 'worker failed to attach')
             return None
 
-    def detached(self, worker):
-        """This is called when the connection to the bot is lost."""
+    def _find_wfb_by_worker(self, worker):
         for wfb in self.attaching_workers + self.workers:
             if wfb.worker == worker:
-                break
-        else:
-            log.msg(("WEIRD: Builder.detached({}) ({})"
-                     " not in attaching_workers({})"
-                     " or workers({})").format(worker, worker.workername, self.attaching_workers,
-                                               self.workers))
+                return wfb
+        return None
+
+    def detached(self, worker):
+        """This is called when the connection to the bot is lost."""
+        wfb = self._find_wfb_by_worker(worker)
+        if wfb is None:
+            log.msg(f"WEIRD: Builder.detached({worker}) ({worker.workername})"
+                    f" not in attaching_workers({self.attaching_workers})"
+                    f" or workers({self.workers})")
             return
 
         if wfb in self.attaching_workers:
@@ -320,7 +323,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         Build.setupPropertiesKnownBeforeBuildStarts(
             props, build.requests, build.builder, workerforbuilder)
 
-        log.msg("starting build {} using worker {}".format(build, workerforbuilder))
+        log.msg(f"starting build {build} using worker {workerforbuilder}")
 
         # set up locks
         locks = yield build.render(self.config.locks)

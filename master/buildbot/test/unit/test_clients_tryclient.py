@@ -27,7 +27,7 @@ from buildbot.util import bytes2unicode
 class createJobfile(unittest.TestCase):
 
     def makeNetstring(self, *strings):
-        return ''.join(['{}:{},'.format(len(s), s) for s in strings])
+        return ''.join([f'{len(s)}:{s},' for s in strings])
 
     # versions 1-4 are deprecated and not produced by the try client
 
@@ -106,7 +106,7 @@ class createJobfile(unittest.TestCase):
         sse.override_baserev(b"23ae367063327b79234e081f396ecbc\n")
         self.assertEqual(sse.baserev, "23ae367063327b79234e081f396ecbc")
 
-    class RemoteTryPP_TestStream(object):
+    class RemoteTryPP_TestStream():
         def __init__(self):
             self.writes = []
             self.is_open = True

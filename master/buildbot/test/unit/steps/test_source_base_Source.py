@@ -20,9 +20,9 @@ from twisted.trial import unittest
 
 from buildbot.process import results
 from buildbot.steps.source import Source
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import sourcesteps
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class OldStyleSourceStep(Source):
@@ -35,11 +35,11 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
                  unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def setup_deferred_mock(self):
         m = mock.Mock()
@@ -52,7 +52,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         return wrapper
 
     def test_start_alwaysUseLatest_True(self):
-        step = self.setupStep(Source(alwaysUseLatest=True),
+        step = self.setup_step(Source(alwaysUseLatest=True),
                               {
                                   'branch': 'other-branch',
                                   'revision': 'revision',
@@ -67,7 +67,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.assertEqual(step.run_vc.mock.call_args, (('branch', None, None), {}))
 
     def test_start_alwaysUseLatest_False(self):
-        step = self.setupStep(Source(),
+        step = self.setup_step(Source(),
                               {
                                   'branch': 'other-branch',
                                   'revision': 'revision',
@@ -86,7 +86,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
             'branch': 'other-branch',
             'revision': 'revision',
         }
-        step = self.setupStep(Source(), args, patch=(1, b'patch\xf8'))
+        step = self.setup_step(Source(), args, patch=(1, b'patch\xf8'))
         step.branch = 'branch'
         step.run_vc = self.setup_deferred_mock()
 
@@ -96,7 +96,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
                          (('other-branch', 'revision', (1, b'patch\xf8')), {}))
 
     def test_start_alwaysUseLatest_False_no_branch(self):
-        step = self.setupStep(Source())
+        step = self.setup_step(Source())
         step.branch = 'branch'
         step.run_vc = self.setup_deferred_mock()
 
@@ -105,7 +105,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.assertEqual(step.run_vc.mock.call_args, (('branch', None, None), {}))
 
     def test_start_no_codebase(self):
-        step = self.setupStep(Source())
+        step = self.setup_step(Source())
         step.branch = 'branch'
         step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
@@ -121,7 +121,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_start_with_codebase(self):
-        step = self.setupStep(Source(codebase='codebase'))
+        step = self.setup_step(Source(codebase='codebase'))
         step.branch = 'branch'
         step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
@@ -139,7 +139,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_start_with_codebase_and_descriptionSuffix(self):
-        step = self.setupStep(Source(codebase='my-code',
+        step = self.setup_step(Source(codebase='my-code',
                                      descriptionSuffix='suffix'))
         step.branch = 'branch'
         step.run_vc = self.setup_deferred_mock()
@@ -157,23 +157,23 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
                          {'step': 'Codebase my-code not in build suffix (failure)'})
 
     def test_old_style_source_step_throws_exception(self):
-        step = self.setupStep(OldStyleSourceStep())
+        step = self.setup_step(OldStyleSourceStep())
 
         step.startStep(mock.Mock())
 
-        self.expectOutcome(result=results.EXCEPTION)
+        self.expect_outcome(result=results.EXCEPTION)
         self.flushLoggedErrors(NotImplementedError)
 
 
-class TestSourceDescription(steps.BuildStepMixin, TestReactorMixin,
+class TestSourceDescription(TestBuildStepMixin, TestReactorMixin,
                             unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_constructor_args_strings(self):
         step = Source(workdir='build',
@@ -206,11 +206,11 @@ class TestSourceAttrGroup(sourcesteps.SourceStepMixin, TestReactorMixin,
                           unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_attrgroup_hasattr(self):
         step = AttrGroup()

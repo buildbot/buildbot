@@ -26,9 +26,6 @@ class Row:
     Parent class for row classes, which are used to specify test data for
     database-related tests.
 
-    @cvar defaults: the column names and their default values
-    @type defaults: dictionary
-
     @cvar table: the table name
 
     @cvar id_column: specify a column that should be assigned an
@@ -58,19 +55,19 @@ class Row:
     _next_id = None
 
     def __init__(self, **kwargs):
-        self.values = self.defaults.copy()
-        self.values.update(kwargs)
+        if self.__init__.__func__ is Row.__init__:
+            raise Exception('Row.__init__ must be overridden to supply default values for columns')
+
+        self.values = kwargs.copy()
         if self.id_column:
             if self.values[self.id_column] is None:
                 self.values[self.id_column] = self.nextId()
         for col in self.required_columns:
-            assert col in kwargs, "{} not specified: {}".format(col, kwargs)
+            assert col in kwargs, f"{col} not specified: {kwargs}"
         for col in self.lists:
             setattr(self, col, [])
         for col in self.dicts:
             setattr(self, col, {})
-        for col in kwargs:
-            assert col in self.defaults, "{} is not a valid column".format(col)
         # cast to unicode
         for k, v in self.values.items():
             if isinstance(v, str):
@@ -103,30 +100,26 @@ class Row:
 
     def __lt__(self, other):
         if self.__class__ != other.__class__:
-            raise TypeError("Cannot compare {} and {}".format(
-                self.__class__, other.__class__))
+            raise TypeError(f"Cannot compare {self.__class__} and {other.__class__}")
         return self.values < other.values
 
     def __le__(self, other):
         if self.__class__ != other.__class__:
-            raise TypeError("Cannot compare {} and {}".format(
-                self.__class__, other.__class__))
+            raise TypeError(f"Cannot compare {self.__class__} and {other.__class__}")
         return self.values <= other.values
 
     def __gt__(self, other):
         if self.__class__ != other.__class__:
-            raise TypeError("Cannot compare {} and {}".format(
-                self.__class__, other.__class__))
+            raise TypeError(f"Cannot compare {self.__class__} and {other.__class__}")
         return self.values > other.values
 
     def __ge__(self, other):
         if self.__class__ != other.__class__:
-            raise TypeError("Cannot compare {} and {}".format(
-                self.__class__, other.__class__))
+            raise TypeError(f"Cannot compare {self.__class__} and {other.__class__}")
         return self.values >= other.values
 
     def __repr__(self):
-        return '{}(**{})'.format(self.__class__.__name__, repr(self.values))
+        return f'{self.__class__.__name__}(**{repr(self.values)})'
 
     @staticmethod
     def nextId():
@@ -166,7 +159,7 @@ class Row:
                 if key is not None:
                     val = yield accessors[foreign_key](key)
                     t.assertTrue(val is not None,
-                                 "foreign key {}:{} does not exit".format(foreign_key, repr(key)))
+                                 f"foreign key {foreign_key}:{repr(key)} does not exit")
             else:
                 raise ValueError(
                     "warning, unsupported foreign key", foreign_key, self.table)

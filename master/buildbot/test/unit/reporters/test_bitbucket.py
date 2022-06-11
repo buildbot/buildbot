@@ -26,9 +26,9 @@ from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
@@ -37,7 +37,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.setup_reporter_test()
         self.reporter_test_repo = 'https://example.org/user/repo'
@@ -47,7 +47,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
-            _BASE_URL,
+            _BASE_URL, auth=None,
             debug=None, verify=None)
         self.oauthhttp = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
@@ -219,7 +219,7 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.setup_reporter_test()
         self.reporter_test_repo = 'https://example.org/user/repo'
@@ -229,7 +229,7 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
-            _BASE_URL,
+            _BASE_URL, auth=None,
             debug=None, verify=None)
         self.oauthhttp = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
@@ -292,11 +292,18 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
         yield self.bsp._got_event(('builds', 20, 'finished'), build)
 
 
+class TestBitbucketStatusPushConfig(ConfigErrorsMixin, unittest.TestCase):
+    def test_auth_error(self):
+        with self.assertRaisesConfigError(
+                "Either App Passwords or OAuth can be specified, not both"):
+            BitbucketStatusPush(oauth_key='abc', oauth_secret='abc1', auth=('user', 'pass'))
+
+
 class TestBitbucketStatusPushRepoParsing(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 

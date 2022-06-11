@@ -845,26 +845,46 @@ This module makes it easy to manipulate identifiers.
 
 .. py:class:: LineBoundaryFinder
 
-    This class accepts a sequence of arbitrary strings and invokes a callback only with complete (newline-terminated) substrings.
-    It buffers any partial lines until a subsequent newline is seen.
+    This class accepts a sequence of arbitrary strings and computes newline-terminated substrings.
+    Input strings are accepted in append function, and newline-terminated substrings are returned.
+
+    Alternatively, a callback maybe provided into class constructor.
+    This callback is invoked with complete (newline-terminated) substrings.
+    This method of returning results is deprecated.
+
+    The class buffers any partial lines until a subsequent newline is seen.
     It considers any of ``\r``, ``\n``, and ``\r\n`` to be newlines.
     Because of the ambiguity of an append operation ending in the character ``\r`` (it may be a bare ``\r`` or half of ``\r\n``), the last line of such an append operation will be buffered until the next append or flush.
 
-    :param callback: asynchronous function to call with newline-terminated strings
+    :param callback: (optional and deprecated) asynchronous function to call with newline-terminated strings
 
     .. py:method:: append(text)
 
         :param text: text to append to the boundary finder
-        :returns: Deferred
+        :returns: Deferred (deprecated) or newline-terminated substring
 
         Add additional text to the boundary finder.
-        If the addition of this text completes at least one line, the callback will be invoked with as many complete lines as possible.
+        If the addition of this text completes at least one line, as many complete lines as possible are selected as a result.
+        If no lines are completed, the result will be ``None``.
+
+        If the class constructor did not receive ``callback`` argument, then result is returned.
+        Otherwise, if result is not ``None``, ``callback`` will be invoked with it.
+        Otherwise, ``defer.succeed(None)`` is returned.
+
 
     .. py:method:: flush()
 
-        :returns: Deferred
+        :returns: Deferred (deprecated), newline-terminated substring or None
 
-        Flush any remaining partial line by adding a newline and invoking the callback.
+        Flush any remaining partial line by adding a newline.
+
+        Function works differently depending on whether class constructor received ``callback`` argument.
+
+        If ``callback`` was not received, and  there was a remaining partial line, its result is returned.
+        Otherwise, ``None`` is returned.
+
+        If ``callback`` was received, and there was a remaining partial line, callback is invoked with it.
+        Otherwise, ``defer.succeed(None)`` is returned.
 
 :py:mod:`buildbot.util.service`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1034,6 +1054,12 @@ For example, a particular daily scheduler could be configured on multiple master
 
         This should *not* be overridden by subclasses, as they should rather override checkConfig.
 
+    .. py:method:: canReconfigWithSibling(self, sibling)
+        This method is used to check if we are able to call
+        :py:func:`reconfigServiceWithSibling` with the given sibling.
+        If it returns `False`, we stop the old service and start a new one,
+        instead of attempting a reconfig.
+
     .. py:method:: checkConfig(self, *args, **kwargs)
 
         Please override this method to check the parameters of your config.
@@ -1188,7 +1214,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: get(endpoint, params=None)
 
-        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
         :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
@@ -1196,7 +1222,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: delete(endpoint, params=None)
 
-        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
         :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
@@ -1204,7 +1230,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: post(endpoint, data=None, json=None, params=None)
 
-        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
         :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
         :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
         :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
@@ -1218,7 +1244,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: put(endpoint, data=None, json=None, params=None)
 
-        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
         :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
         :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
         :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)

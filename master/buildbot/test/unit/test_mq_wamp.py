@@ -26,7 +26,7 @@ from twisted.trial import unittest
 
 from buildbot.mq import wamp
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.wamp import connector
 
 
@@ -68,7 +68,7 @@ class FakeWampConnector:
         owntopic = self.topic.split(".")
         if len(topic) != len(owntopic):
             return False
-        for i, topic_item in enumerate(topic):
+        for i, _ in enumerate(topic):
             if owntopic[i] != "" and topic[i] != owntopic[i]:
                 return False
         return True
@@ -127,7 +127,7 @@ class WampMQ(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.master.wamp = FakeWampConnector()
         self.mq = wamp.WampMQ()
@@ -251,7 +251,7 @@ class WampMQReal(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         if "WAMP_ROUTER_URL" not in os.environ:
             raise unittest.SkipTest(self.HOW_TO_RUN)
         self.master = fakemaster.make_master(self)

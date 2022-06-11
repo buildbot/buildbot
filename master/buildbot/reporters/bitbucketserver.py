@@ -140,19 +140,14 @@ class BitbucketServerStatusPush(ReporterBase):
 
                 if res.code not in (HTTP_PROCESSED,):
                     content = yield res.content()
-                    log.msg("{code}: Unable to send Bitbucket Server status: "
-                        "{content}".format(code=res.code, content=content))
+                    log.msg(f"{res.code}: Unable to send Bitbucket Server status: "
+                            f"{content}")
                 elif self.verbose:
-                    log.msg('Status "{state}" sent for {sha}.'.format(
-                        state=state, sha=sha))
+                    log.msg(f'Status "{state}" sent for {sha}.')
             except Exception as e:
                 log.err(
                     e,
-                    'Failed to send status "{state}" for '
-                    '{repo} at {sha}'.format(
-                        state=state,
-                        repo=sourcestamp['repository'], sha=sha
-                    ))
+                    f"Failed to send status '{state}' for {sourcestamp['repository']} at {sha}")
 
 
 class BitbucketServerCoreAPIStatusPush(ReporterBase):
@@ -219,7 +214,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
 
         headers = {}
         if token:
-            headers["Authorization"] = "Bearer {}".format(token)
+            headers["Authorization"] = f"Bearer {token}"
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=auth, headers=headers, debug=debug,
             verify=verify)
@@ -250,9 +245,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         }
 
         if self.verbose:
-            log.msg("Sending payload: '{}' for {}/{} {}.".format(
-                payload, proj_key, repo_slug, sha
-            ))
+            log.msg(f"Sending payload: '{payload}' for {proj_key}/{repo_slug} {sha}.")
 
         _url = STATUS_CORE_API_URL.format(proj_key=proj_key, repo_slug=repo_slug,
                                           sha=sha)
@@ -294,12 +287,10 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         if self.status_name:
             status_name = yield props.render(self.status_name)
         else:
-            status_name = "{} #{}".format(props.getProperty("buildername"),
-                                   props.getProperty("buildnumber"))
+            status_name = f'{props.getProperty("buildername")} #{props.getProperty("buildnumber")}'
             if parent_name:
-                status_name = "{} #{} \u00BB {}".format(
-                    parent_name, build['parentbuild']['number'], status_name
-                )
+                status_name = \
+                    f"{parent_name} #{build['parentbuild']['number']} \u00BB {status_name}"
         if self.status_suffix:
             status_name = status_name + (yield props.render(self.status_suffix))
 
@@ -317,8 +308,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
                 repo = sourcestamp.get('repository')
 
                 if not sha:
-                    log.msg("Unable to get the commit hash for SSID: "
-                            "{}".format(ssid))
+                    log.msg(f"Unable to get the commit hash for SSID: {ssid}")
                     continue
 
                 ref = None
@@ -327,22 +317,21 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
                         if branch.startswith("refs/"):
                             ref = branch
                         else:
-                            ref = "refs/heads/{}".format(branch)
+                            ref = f"refs/heads/{branch}"
                 else:
                     ref = yield props.render(self.ref)
 
                 if not ref:
-                    log.msg("WARNING: Unable to resolve ref for SSID: {}. "
+                    log.msg(f"WARNING: Unable to resolve ref for SSID: {ssid}. "
                             "Build status will not be visible on Builds or "
-                            "PullRequest pages only for commits".format(ssid))
+                            "PullRequest pages only for commits")
 
                 r = re.search(r"^.*?/([^/]+)/([^/]+?)(?:\.git)?$", repo or "")
                 if r:
                     proj_key = r.group(1)
                     repo_slug = r.group(2)
                 else:
-                    log.msg("Unable to parse repository info from '{}' for "
-                            "SSID: {}".format(repo, ssid))
+                    log.msg(f"Unable to parse repository info from '{repo}' for SSID: {ssid}")
                     continue
 
                 res = yield self.createStatus(
@@ -363,19 +352,14 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
 
                 if res.code not in (HTTP_PROCESSED,):
                     content = yield res.content()
-                    log.msg("{}: Unable to send Bitbucket Server status for "
-                            "{}/{} {}: {}".format(res.code, proj_key, repo_slug,
-                                                  sha, content))
+                    log.msg(f"{res.code}: Unable to send Bitbucket Server status for "
+                            f"{proj_key}/{repo_slug} {sha}: {content}")
                 elif self.verbose:
-                    log.msg('Status "{}" sent for {}/{} {}'.format(
-                        state, proj_key, repo_slug, sha
-                    ))
+                    log.msg(f'Status "{state}" sent for {proj_key}/{repo_slug} {sha}')
             except Exception as e:
                 log.err(
                     e,
-                    'Failed to send status "{}" for {}/{} {}'.format(
-                        state, proj_key, repo_slug, sha
-                    ))
+                    f'Failed to send status "{state}" for {proj_key}/{repo_slug} {sha}')
 
 
 class BitbucketServerPRCommentPush(ReporterBase):
@@ -433,9 +417,8 @@ class BitbucketServerPRCommentPush(ReporterBase):
                 )
                 if res.code not in (HTTP_CREATED,):
                     content = yield res.content()
-                    log.msg("{code}: Unable to send a comment: "
-                        "{content}".format(code=res.code, content=content))
+                    log.msg(f"{res.code}: Unable to send a comment: {content}")
                 elif self.verbose:
-                    log.msg('Comment sent to {url}'.format(url=pr_url))
+                    log.msg(f'Comment sent to {pr_url}')
             except Exception as e:
-                log.err(e, 'Failed to send a comment to "{}"'.format(pr_url))
+                log.err(e, f'Failed to send a comment to "{pr_url}"')

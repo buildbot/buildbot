@@ -1,5 +1,5 @@
 class BuilderState {
-    constructor($stateProvider) {
+    constructor($stateProvider, config) {
 
         // Name of the state
         const name = 'builder';
@@ -7,7 +7,7 @@ class BuilderState {
         // Configuration
         const cfg = {
             tabid: 'builders',
-            pageTitle: _.template("Buildbot: builder <%= builder %>")
+            pageTitle: _.template(`${config.title}: builder <%= builder %>`)
         };
 
         // Register new state
@@ -25,4 +25,4 @@ class BuilderState {
 
 
 angular.module('app')
-.config(['$stateProvider', BuilderState]);
+.config(['$stateProvider', 'config', BuilderState]);

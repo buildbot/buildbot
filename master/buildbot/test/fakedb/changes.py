@@ -27,63 +27,51 @@ from buildbot.util import epoch2datetime
 class Change(Row):
     table = "changes"
 
-    defaults = dict(
-        changeid=None,
-        author='frank',
-        committer='steve',
-        comments='test change',
-        branch='master',
-        revision='abcd',
-        revlink='http://vc/abcd',
-        when_timestamp=1200000,
-        category='cat',
-        repository='repo',
-        codebase='',
-        project='proj',
-        sourcestampid=92,
-        parent_changeids=None,
-    )
-
     lists = ('files', 'uids')
     dicts = ('properties',)
     id_column = 'changeid'
+
+    def __init__(self, changeid=None, author='frank', committer='steve',
+                 comments='test change', branch='master', revision='abcd',
+                 revlink='http://vc/abcd', when_timestamp=1200000, category='cat',
+                 repository='repo', codebase='', project='proj', sourcestampid=92,
+                 parent_changeids=None):
+        super().__init__(changeid=changeid, author=author, committer=committer, comments=comments,
+                         branch=branch, revision=revision, revlink=revlink,
+                         when_timestamp=when_timestamp, category=category, repository=repository,
+                         codebase=codebase, project=project, sourcestampid=sourcestampid,
+                         parent_changeids=parent_changeids)
 
 
 class ChangeFile(Row):
     table = "change_files"
 
-    defaults = dict(
-        changeid=None,
-        filename=None,
-    )
-
     foreignKeys = ('changeid',)
     required_columns = ('changeid',)
+
+    def __init__(self, changeid=None, filename=None):
+        super().__init__(changeid=changeid, filename=filename)
 
 
 class ChangeProperty(Row):
     table = "change_properties"
 
-    defaults = dict(
-        changeid=None,
-        property_name=None,
-        property_value=None,
-    )
-
     foreignKeys = ('changeid',)
     required_columns = ('changeid',)
+
+    def __init__(self, changeid=None, property_name=None, property_value=None):
+        super().__init__(changeid=changeid, property_name=property_name,
+                         property_value=property_value)
 
 
 class ChangeUser(Row):
     table = "change_users"
 
-    defaults = dict(
-        changeid=None,
-        uid=None,
-    )
-
     foreignKeys = ('changeid',)
     required_columns = ('changeid',)
+
+    def __init__(self, changeid=None, uid=None):
+        super().__init__(changeid=changeid, uid=uid)
 
 
 class FakeChangesComponent(FakeDBComponent):
@@ -166,7 +154,7 @@ class FakeChangesComponent(FakeDBComponent):
 
     def getParentChangeIds(self, branch, repository, project, codebase):
         if self.changes:
-            for changeid, change in self.changes.items():
+            for change in self.changes.values():
                 if (change['branch'] == branch and
                         change['repository'] == repository and
                         change['project'] == project and

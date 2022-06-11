@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import copy
+import json
 
 from twisted.internet import defer
 from twisted.python import log
@@ -30,15 +31,21 @@ from buildbot.util import epoch2datetime
 class FixerMixin:
 
     @defer.inlineCallbacks
-    def _fixChange(self, change):
+    def _fixChange(self, change, is_graphql):
         # TODO: make these mods in the DB API
         if change:
             change = change.copy()
             change['when_timestamp'] = datetime2epoch(change['when_timestamp'])
-
-            sskey = ('sourcestamps', str(change['sourcestampid']))
-            change['sourcestamp'] = yield self.master.data.get(sskey)
-            del change['sourcestampid']
+            if is_graphql:
+                props = change['properties']
+                change['properties'] = [
+                    {'name': k, 'source': v[1], 'value': json.dumps(v[0])}
+                    for k, v in props.items()
+                ]
+            else:
+                sskey = ('sourcestamps', str(change['sourcestampid']))
+                change['sourcestamp'] = yield self.master.data.get(sskey)
+                del change['sourcestampid']
         return change
     fieldMapping = {
         'changeid': 'changes.changeid',
@@ -54,7 +61,7 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
 
     def get(self, resultSpec, kwargs):
         d = self.master.db.changes.getChange(kwargs['changeid'])
-        d.addCallback(self._fixChange)
+        d.addCallback(self._fixChange, is_graphql='graphql' in kwargs)
         return d
 
 
@@ -89,7 +96,7 @@ class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
                 changes = yield self.master.db.changes.getChanges(resultSpec=resultSpec)
         results = []
         for ch in changes:
-            results.append((yield self._fixChange(ch)))
+            results.append((yield self._fixChange(ch, is_graphql='graphql' in kwargs)))
         return results
 
 
@@ -101,6 +108,8 @@ class Change(base.ResourceType):
     eventPathPatterns = """
         /changes/:changeid
     """
+    keyField = "changeid"
+    subresources = ["Build", "Property"]
 
     class EntityType(types.Entity):
         changeid = types.Integer()
@@ -119,7 +128,7 @@ class Change(base.ResourceType):
         project = types.String()
         codebase = types.String()
         sourcestamp = sourcestamps.SourceStamp.entityType
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Change')
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -204,7 +213,7 @@ class Change(base.ResourceType):
         self.produceEvent(change, 'new')
 
         # log, being careful to handle funny characters
-        msg = "added change with revision {} to database".format(revision)
+        msg = f"added change with revision {revision} to database"
         log.msg(msg.encode('utf-8', 'replace'))
 
         return changeid

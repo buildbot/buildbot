@@ -25,14 +25,14 @@ from twisted.trial import unittest
 
 import buildbot_worker.bot
 from buildbot import config
-from buildbot import pbmanager
 from buildbot import worker
 from buildbot.process import botmaster
 from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker import manager as workermanager
+from buildbot.worker.protocols.manager.pb import PBManager
 
 PKI_DIR = util.sibpath(__file__, 'pki')
 
@@ -112,12 +112,12 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
                                              wantDb=True)
         # set the worker port to a loopback address with unspecified
         # port
-        self.pbmanager = self.master.pbmanager = pbmanager.PBManager()
+        self.pbmanager = self.master.pbmanager = PBManager()
         yield self.pbmanager.setServiceParent(self.master)
 
         # remove the fakeServiceParent from fake service hierarchy, and replace
@@ -160,8 +160,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def addMasterSideWorker(self,
-                            connection_string=r"tcp:{port}:interface=127.0.0.1".format(
-                                port=DEFAULT_PORT),
+                            connection_string=f"tcp:{DEFAULT_PORT}:interface=127.0.0.1",
                             name="testworker", password="pw",
                             update_port=True,
                             **kwargs):
@@ -200,7 +199,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         """Add a true Worker object to the services."""
         wdir = tempfile.mkdtemp()
         self.tmpdirs.add(wdir)
-        return TestingWorker(None, None, name, password, wdir, keepalive,
+        return TestingWorker(None, None, name, password, wdir, keepalive, protocol='pb',
                              connection_string=connection_string_tpl.format(port=self.port))
 
     @defer.inlineCallbacks
@@ -251,7 +250,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         yield self.addMasterSideWorker()
         worker = self.addWorker(password="pw2")
         yield worker.startService()
-        why, broker = yield worker.tests_login_failed
+        yield worker.tests_login_failed
         self.assertEqual(1, len(self.flushLoggedErrors(UnauthorizedLogin)))
 
         def could_not_connect():
@@ -264,7 +263,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         yield self.addMasterSideWorker(
             password='pw2',
             update_port=False,  # don't know why, but it'd fail
-            connection_string=r"tcp:{port}:interface=127.0.0.1".format(port=self.port))
+            connection_string=f"tcp:{self.port}:interface=127.0.0.1")
         timeout = reactor.callLater(10, could_not_connect)
         yield worker.tests_connected
 

@@ -25,15 +25,15 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters.pushover import PushoverNotifier
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import httpclientservice
 
 
 class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 

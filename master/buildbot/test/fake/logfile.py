@@ -30,7 +30,7 @@ class FakeLogFile:
         self.finished = False
         self._finish_waiters = []
         self._had_errors = False
-        self.subPoint = util.subscription.SubscriptionPoint("%r log" % (name,))
+        self.subPoint = util.subscription.SubscriptionPoint(f"{repr(name)} log")
 
     def getName(self):
         return self.name
@@ -38,36 +38,43 @@ class FakeLogFile:
     def subscribe(self, callback):
         return self.subPoint.subscribe(callback)
 
-    def _getLbf(self, stream, meth):
+    def _getLbf(self, stream):
         try:
             return self.lbfs[stream]
         except KeyError:
-            def wholeLines(lines):
-                self.subPoint.deliver(stream, lines)
-                assert not self.finished
-            lbf = self.lbfs[stream] = \
-                lineboundaries.LineBoundaryFinder(wholeLines)
+            lbf = self.lbfs[stream] = lineboundaries.LineBoundaryFinder()
             return lbf
+
+    def _on_whole_lines(self, stream, lines):
+        self.subPoint.deliver(stream, lines)
+        assert not self.finished
+
+    def _split_lines(self, stream, text):
+        lbf = self._getLbf(stream)
+        lines = lbf.append(text)
+        if lines is None:
+            return
+        self._on_whole_lines(stream, lines)
 
     def addHeader(self, text):
         if not isinstance(text, str):
             text = text.decode('utf-8')
         self.header += text
-        self._getLbf('h', 'headerReceived').append(text)
+        self._split_lines('h', text)
         return defer.succeed(None)
 
     def addStdout(self, text):
         if not isinstance(text, str):
             text = text.decode('utf-8')
         self.stdout += text
-        self._getLbf('o', 'outReceived').append(text)
+        self._split_lines('o', text)
         return defer.succeed(None)
 
     def addStderr(self, text):
         if not isinstance(text, str):
             text = text.decode('utf-8')
         self.stderr += text
-        self._getLbf('e', 'errReceived').append(text)
+        self._split_lines('e', text)
         return defer.succeed(None)
 
     def isFinished(self):
@@ -82,8 +89,10 @@ class FakeLogFile:
         return d
 
     def flushFakeLogfile(self):
-        for lbf in self.lbfs.values():
-            lbf.flush()
+        for stream, lbf in self.lbfs.items():
+            lines = lbf.flush()
+            if lines is not None:
+                self.subPoint.deliver(stream, lines)
 
     def had_errors(self):
         return self._had_errors

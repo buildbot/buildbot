@@ -88,7 +88,9 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get(self):
         sourcestamps = yield self.callGet(('sourcestamps',))
 
-        [self.validateData(m) for m in sourcestamps]
+        for m in sourcestamps:
+            self.validateData(m)
+
         self.assertEqual(sorted([m['ssid'] for m in sourcestamps]),
                          [13, 14])
 

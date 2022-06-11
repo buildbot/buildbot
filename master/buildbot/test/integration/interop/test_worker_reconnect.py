@@ -26,12 +26,13 @@ class DisconnectingStep(BuildStep):
 
     def run(self):
         self.disconnection_list.append(self)
+        assert self.worker.conn.get_peer().startswith("127.0.0.1:")
         if len(self.disconnection_list) < 2:
             self.worker.disconnect()
         return SUCCESS
 
 
-class WorkerReconnect(RunMasterBase):
+class WorkerReconnectPb(RunMasterBase):
     """integration test for testing worker disconnection and reconnection"""
     proto = "pb"
 
@@ -42,6 +43,10 @@ class WorkerReconnect(RunMasterBase):
         build = yield self.doForceBuild()
         self.assertEqual(build['buildid'], 2)
         self.assertEqual(len(DisconnectingStep.disconnection_list), 2)
+
+
+class WorkerReconnectMsgPack(WorkerReconnectPb):
+    proto = "msgpack"
 
 
 # master configuration

@@ -49,12 +49,12 @@ class Follower:
 
     def _failure(self, why):
         if why.check(BuildmasterTimeoutError):
-            print(rewrap("""\
-                The buildmaster took more than {0} seconds to start, so we were
+            print(rewrap(f"""\
+                The buildmaster took more than {self._timeout} seconds to start, so we were
                 unable to confirm that it started correctly.
                 Please 'tail twistd.log' and look for a line that says
                 'BuildMaster is running' to verify correct startup.
-                """.format(self._timeout)))
+                """))
         elif why.check(ReconfigError):
             print(rewrap("""\
                 The buildmaster appears to have encountered an error in the
@@ -122,8 +122,8 @@ def launch(config):
         protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
 
     if platformType == "win32":
-        with open("twistd.pid", "w") as pidfile:
-            pidfile.write("{0}".format(proc.pid))
+        with open("twistd.pid", "w", encoding='utf-8') as pidfile:
+            pidfile.write(f"{proc.pid}")
 
 
 def start(config):

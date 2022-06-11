@@ -29,14 +29,15 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
     def findMasterId(self, name):
         tbl = self.db.model.masters
+        name_hash = self.hashColumns(name)
         return self.findSomethingId(
             tbl=tbl,
-            whereclause=(tbl.c.name == name),
+            whereclause=(tbl.c.name_hash == name_hash),
             insert_values=dict(
                 name=name,
-                name_hash=self.hashColumns(name),
+                name_hash=name_hash,
                 active=0,  # initially inactive
-                last_active=self.master.reactor.seconds()
+                last_active=int(self.master.reactor.seconds())
             ))
 
     # returns a Deferred that returns a value
@@ -66,7 +67,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             q = tbl.update(whereclause=whereclause)
             q = q.values(active=1 if active else 0)
             if active:
-                q = q.values(last_active=self.master.reactor.seconds())
+                q = q.values(last_active=int(self.master.reactor.seconds()))
             conn.execute(q)
 
             # return True if there was a change in state

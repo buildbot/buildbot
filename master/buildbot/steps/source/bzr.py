@@ -53,8 +53,7 @@ class Bzr(Source):
             raise ValueError("you must provide defaultBranch with baseURL")
 
         if not self._hasAttrGroupMember('mode', self.mode):
-            raise ValueError("mode {} is not one of {}".format(self.mode,
-                                                               self._listAttrGroupMembers('mode')))
+            raise ValueError(f"mode {self.mode} is not one of {self._listAttrGroupMembers('mode')}")
 
         if self.mode == 'full':
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
@@ -183,8 +182,7 @@ class Bzr(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
+                log.msg(f"Checkout failed, trying {repeats} more times after {delay} seconds")
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._clobber())
@@ -215,7 +213,7 @@ class Bzr(Source):
         @d.addCallback
         def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
-                log.msg("Source step failed while running command {}".format(cmd))
+                log.msg(f"Source step failed while running command {cmd}")
                 raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
@@ -251,5 +249,5 @@ class Bzr(Source):
             log.msg("Invalid revision number")
             raise buildstep.BuildStepFailed() from e
 
-        log.msg("Got Git revision {}".format(revision))
+        log.msg(f"Got Git revision {revision}")
         self.updateSourceProperty('got_revision', revision)

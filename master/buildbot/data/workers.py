@@ -69,7 +69,7 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
         if action not in ("stop", "pause", "unpause", "kill"):
-            raise exceptions.InvalidControlException("action: {} is not supported".format(action))
+            raise exceptions.InvalidControlException(f"action: {action} is not supported")
 
         worker = yield self.get(None, kwargs)
         if worker is not None:
@@ -117,20 +117,21 @@ class Worker(base.ResourceType):
     name = "worker"
     plural = "workers"
     endpoints = [WorkerEndpoint, WorkersEndpoint]
-    keyFields = ['workerid']
+    keyField = 'workerid'
     eventPathPatterns = """
         /workers/:workerid
     """
+    subresources = ["Build"]
 
     class EntityType(types.Entity):
         workerid = types.Integer()
         name = types.String()
-        connected_to = types.List(of=MasterIdEntityType("master_id"))
-        configured_on = types.List(of=MasterBuilderEntityType("master_builder"))
+        connected_to = types.List(of=MasterIdEntityType("master_id", 'MasterId'))
+        configured_on = types.List(of=MasterBuilderEntityType("master_builder", 'MasterBuilder'))
         workerinfo = types.JsonObject()
         paused = types.Boolean()
         graceful = types.Boolean()
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Worker')
 
     @base.updateMethod
     # returns a Deferred that returns None
@@ -143,8 +144,7 @@ class Worker(base.ResourceType):
     @base.updateMethod
     def findWorkerId(self, name):
         if not identifiers.isIdentifier(50, name):
-            raise ValueError(
-                "Worker name %r is not a 50-character identifier" % (name,))
+            raise ValueError(f"Worker name {repr(name)} is not a 50-character identifier")
         return self.master.db.workers.findWorkerId(name)
 
     @base.updateMethod

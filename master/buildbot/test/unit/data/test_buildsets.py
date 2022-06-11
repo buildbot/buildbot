@@ -15,18 +15,16 @@
 
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implementer
 
-from buildbot import interfaces
 from buildbot.data import buildsets
 from buildbot.data import resultspec
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces as util_interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 A_TIMESTAMP = 1341700729
@@ -128,7 +126,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
                unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = buildsets.Buildset(self.master)
@@ -238,10 +236,6 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
                  sourcestamps=[ssmap[ssid] for ssid in sourcestampids]))
 
     def test_addBuildset_two_builderNames(self):
-        @implementer(interfaces.IScheduler)
-        class FakeSched:
-            name = 'fakesched'
-
         kwargs = dict(scheduler='fakesched', reason='because',
                       sourcestamps=[234], external_idstring='extid',
                       builderids=[42, 43], waited_for=True)
@@ -262,10 +256,6 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
                                         expectedReturn, expectedMessages, expectedBuildset)
 
     def test_addBuildset_no_builderNames(self):
-        @implementer(interfaces.IScheduler)
-        class FakeSched:
-            name = 'fakesched'
-
         kwargs = dict(scheduler='fakesched', reason='because',
                       sourcestamps=[234], external_idstring='extid', waited_for=False)
         expectedReturn = (200, {})

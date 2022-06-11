@@ -337,7 +337,7 @@ class IBuildStep(IPlugin):
 class IConfigured(Interface):
 
     def getConfigDict():
-        pass
+        return {}  # return something to silence warnings at call sites
 
 
 class IReportGenerator(Interface):

@@ -85,8 +85,7 @@ class P4(Source):
 
         if self.mode not in self.possible_modes and \
                 not interfaces.IRenderable.providedBy(self.mode):
-            config.error("mode {} is not an IRenderable, or one of {}".format(self.mode,
-                                                                              self.possible_modes))
+            config.error(f"mode {self.mode} is not an IRenderable, or one of {self.possible_modes}")
 
         if not p4viewspec and p4base is None:
             config.error("You must provide p4base or p4viewspec")
@@ -100,14 +99,13 @@ class P4(Source):
                 "p4viewspec must not be a string, and should be a sequence of 2 element sequences")
 
         if not interfaces.IRenderable.providedBy(p4base) and p4base and not p4base.startswith('/'):
-            config.error('p4base should start with // [p4base = {}]'.format(p4base))
+            config.error(f'p4base should start with // [p4base = {p4base}]')
 
         if not interfaces.IRenderable.providedBy(p4base) and p4base and p4base.endswith('/'):
-            config.error('p4base should not end with a trailing / [p4base = {}]'.format(p4base))
+            config.error(f'p4base should not end with a trailing / [p4base = {p4base}]')
 
         if not interfaces.IRenderable.providedBy(p4branch) and p4branch and p4branch.endswith('/'):
-            config.error('p4branch should not end with a trailing / [p4branch = {}]'.format(
-                    p4branch))
+            config.error(f'p4branch should not end with a trailing / [p4branch = {p4branch}]')
 
         if stream:
             if (p4extra_views or p4viewspec):
@@ -170,8 +168,8 @@ class P4(Source):
             if self.debug:
                 log.msg("P4: full() sync command based on :base:%s changeset:%d",
                         self._getP4BaseForLog(), int(self.revision))
-            yield self._dovccmd(['sync', '{}...@{}'.format(self._getP4BaseForCommand(),
-                                                           int(self.revision))], collectStdout=True)
+            yield self._dovccmd(['sync', f'{self._getP4BaseForCommand()}...@{int(self.revision)}'],
+                                collectStdout=True)
         else:
             if self.debug:
                 log.msg("P4: full() sync command based on :base:%s no revision",
@@ -193,7 +191,7 @@ class P4(Source):
         command = ['sync', ]
 
         if self.revision:
-            command.extend(['{}...@{}'.format(self._getP4BaseForCommand(), int(self.revision))])
+            command.extend([f'{self._getP4BaseForCommand()}...@{int(self.revision)}'])
 
         if self.debug:
             log.msg(
@@ -232,7 +230,7 @@ class P4(Source):
         command = self._buildVCCommand(command)
 
         if self.debug:
-            log.msg("P4:_dovccmd():workdir->{}".format(self.workdir))
+            log.msg(f"P4:_dovccmd():workdir->{self.workdir}")
 
         cmd = remotecommand.RemoteShellCommand(self.workdir, command,
                                                env=self.env,
@@ -242,13 +240,13 @@ class P4(Source):
                                                initialStdin=initialStdin,)
         cmd.useLog(self.stdio_log, False)
         if self.debug:
-            log.msg("Starting p4 command : p4 {}".format(" ".join(command)))
+            log.msg(f'Starting p4 command : p4 {" ".join(command)}')
 
         yield self.runCommand(cmd)
 
         if cmd.rc != 0:
             if self.debug:
-                log.msg("P4:_dovccmd():Source step failed while running command {}".format(cmd))
+                log.msg(f"P4:_dovccmd():Source step failed while running command {cmd}")
             raise buildstep.BuildStepFailed()
         if collectStdout:
             return cmd.stdout
@@ -268,33 +266,33 @@ class P4(Source):
         builddir = self.getProperty('builddir')
 
         if self.debug:
-            log.msg("P4:_createClientSpec() builddir:{}".format(builddir))
-            log.msg("P4:_createClientSpec() SELF.workdir:{}".format(self.workdir))
+            log.msg(f"P4:_createClientSpec() builddir:{builddir}")
+            log.msg(f"P4:_createClientSpec() SELF.workdir:{self.workdir}")
 
         prop_dict = self.getProperties().asDict()
         prop_dict['p4client'] = self.p4client
 
+        root = self.build.path_module.normpath(self.build.path_module.join(builddir, self.workdir))
         client_spec = ''
-        client_spec += "Client: {}\n\n".format(self.p4client)
-        client_spec += "Owner: {}\n\n".format(self.p4user)
-        client_spec += "Description:\n\tCreated by {}\n\n".format(self.p4user)
-        client_spec += "Root:\t{}\n\n".format(self.build.path_module.normpath(
-            self.build.path_module.join(builddir, self.workdir)))
-        client_spec += "Options:\t{}\n\n".format(self.p4client_spec_options)
+        client_spec += f"Client: {self.p4client}\n\n"
+        client_spec += f"Owner: {self.p4user}\n\n"
+        client_spec += f"Description:\n\tCreated by {self.p4user}\n\n"
+        client_spec += f"Root:\t{root}\n\n"
+        client_spec += f"Options:\t{self.p4client_spec_options}\n\n"
         if self.p4line_end:
-            client_spec += "LineEnd:\t{}\n\n".format(self.p4line_end)
+            client_spec += f"LineEnd:\t{self.p4line_end}\n\n"
         else:
             client_spec += "LineEnd:\tlocal\n\n"
 
         # Perforce generates the view for stream-associated workspaces
         if self.stream:
-            client_spec += "Stream:\t{}/{}\n".format(self.p4base, self.p4branch)
+            client_spec += f"Stream:\t{self.p4base}/{self.p4branch}\n"
         else:
             # Setup a view
             client_spec += "View:\n"
 
             def has_whitespace(*args):
-                return any([re.search(r'\s', i) for i in args if i is not None])
+                return any(re.search(r'\s', i) for i in args if i is not None)
 
             if self.p4viewspec:
                 # uses only p4viewspec array of tuples to build view
@@ -303,34 +301,32 @@ class P4(Source):
                 suffix = self.p4viewspec_suffix or ''
                 for k, v in self.p4viewspec:
                     if self.debug:
-                        log.msg('P4:_createClientSpec():key:{} value:{}'.format(k, v))
+                        log.msg(f'P4:_createClientSpec():key:{k} value:{v}')
 
                     qa = '"' if has_whitespace(k, suffix) else ''
                     qb = '"' if has_whitespace(self.p4client, v, suffix) else ''
-                    client_spec += '\t{}{}{}{} {}//{}/{}{}{}\n'.format(qa, k, suffix, qa, qb,
-                                                                       self.p4client, v, suffix, qb)
+                    client_spec += f'\t{qa}{k}{suffix}{qa} {qb}//{self.p4client}/{v}{suffix}{qb}\n'
             else:
                 # Uses p4base, p4branch, p4extra_views
 
                 qa = '"' if has_whitespace(self.p4base, self.p4branch) else ''
 
-                client_spec += "\t{}{}".format(qa, self.p4base)
+                client_spec += f"\t{qa}{self.p4base}"
 
                 if self.p4branch:
-                    client_spec += "/{}".format(self.p4branch)
+                    client_spec += f"/{self.p4branch}"
 
-                client_spec += "/...{} ".format(qa)
+                client_spec += f"/...{qa} "
 
                 qb = '"' if has_whitespace(self.p4client) else ''
-                client_spec += "{}//{}/...{}\n".format(qb, self.p4client, qb)
+                client_spec += f"{qb}//{self.p4client}/...{qb}\n"
 
                 if self.p4extra_views:
                     for k, v in self.p4extra_views:
                         qa = '"' if has_whitespace(k) else ''
                         qb = '"' if has_whitespace(k, self.p4client, v) else ''
 
-                        client_spec += "\t{}{}/...{} {}//{}/{}/...{}\n".format(qa, k, qa, qb,
-                                                                               self.p4client, v, qb)
+                        client_spec += f"\t{qa}{k}/...{qa} {qb}//{self.p4client}/{v}/...{qb}\n"
 
         if self.debug:
             log.msg(client_spec)
@@ -368,13 +364,13 @@ class P4(Source):
         try:
             int(revision)
         except ValueError as e:
-            msg = (("p4.parseGotRevision unable to parse output "
-                    "of 'p4 changes -m1 \"#have\"': '{}'").format(stdout))
+            msg = ("p4.parseGotRevision unable to parse output "
+                   f"of 'p4 changes -m1 \"#have\"': '{stdout}'")
             log.msg(msg)
             raise buildstep.BuildStepFailed() from e
 
         if self.debug:
-            log.msg("Got p4 revision {}".format(revision))
+            log.msg(f"Got p4 revision {revision}")
         self.updateSourceProperty('got_revision', revision)
 
     @defer.inlineCallbacks

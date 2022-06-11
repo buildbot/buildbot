@@ -23,10 +23,10 @@ from twisted.trial import unittest
 from buildbot.db import connector
 from buildbot.db import model
 from buildbot.scripts import create_master
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 
 
 def mkconfig(**kwargs):
@@ -88,7 +88,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                                 unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()
@@ -97,12 +97,12 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.tearDownDirs()
 
     def assertInTacFile(self, str):
-        with open(os.path.join('test', 'buildbot.tac'), 'rt') as f:
+        with open(os.path.join('test', 'buildbot.tac'), 'rt', encoding='utf-8') as f:
             content = f.read()
         self.assertIn(str, content)
 
     def assertNotInTacFile(self, str):
-        with open(os.path.join('test', 'buildbot.tac'), 'rt') as f:
+        with open(os.path.join('test', 'buildbot.tac'), 'rt', encoding='utf-8') as f:
             content = f.read()
         self.assertNotIn(str, content)
 
@@ -134,7 +134,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertFalse(os.path.exists(self.basedir))
         create_master.makeBasedir(mkconfig(basedir=self.basedir))
         self.assertTrue(os.path.exists(self.basedir))
-        self.assertInStdout('mkdir {}'.format(self.basedir))
+        self.assertInStdout(f'mkdir {self.basedir}')
 
     def test_makeBasedir_quiet(self):
         self.assertFalse(os.path.exists(self.basedir))
@@ -189,7 +189,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                                   **{'log-size': '3000'}))
 
     def test_makeTAC_existing_incorrect(self):
-        with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
+        with open(os.path.join('test', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write('WRONG')
         create_master.makeTAC(mkconfig(basedir='test'))
         self.assertInTacFile("WRONG")
@@ -198,7 +198,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertInStdout('not touching existing buildbot.tac')
 
     def test_makeTAC_existing_incorrect_quiet(self):
-        with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
+        with open(os.path.join('test', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write('WRONG')
         create_master.makeTAC(mkconfig(basedir='test', quiet=True))
         self.assertInTacFile("WRONG")
@@ -220,7 +220,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_makeSampleConfig_db(self):
         create_master.makeSampleConfig(mkconfig(basedir='test', db='XXYYZZ',
                                                 quiet=True))
-        with open(os.path.join('test', 'master.cfg.sample'), 'rt') as f:
+        with open(os.path.join('test', 'master.cfg.sample'), 'rt', encoding='utf-8') as f:
             self.assertIn("XXYYZZ", f.read())
         self.assertWasQuiet()
 

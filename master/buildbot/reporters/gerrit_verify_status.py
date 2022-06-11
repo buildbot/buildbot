@@ -15,6 +15,7 @@
 
 
 from twisted.internet import defer
+from twisted.logger import Logger
 from twisted.python import failure
 
 from buildbot.process.properties import Interpolate
@@ -30,7 +31,6 @@ from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import httpclientservice
-from buildbot.util.logger import Logger
 
 log = Logger()
 
@@ -177,11 +177,10 @@ class GerritVerifyStatusPush(ReporterBase):
         hours, remainder = divmod(duration.seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         if days:
-            return '{} day{} {}h {}m {}s'.format(days, "s" if days > 1 else "",
-                                                 hours, minutes, seconds)
+            return f'{days} day{"s" if days > 1 else ""} {hours}h {minutes}m {seconds}s'
         elif hours:
-            return '{}h {}m {}s'.format(hours, minutes, seconds)
-        return '{}m {}s'.format(minutes, seconds)
+            return f'{hours}h {minutes}m {seconds}s'
+        return f'{minutes}m {seconds}s'
 
     @staticmethod
     def getGerritChanges(props):

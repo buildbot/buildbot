@@ -49,7 +49,7 @@ def validateMasterOption(master):
     @raise usage.UsageError: on invalid master option
     """
     try:
-        hostname, port = master.split(":")
+        _, port = master.split(":")
         port = int(port)
     except (TypeError, ValueError) as e:
         raise usage.UsageError("master must have the form 'hostname:port'") from e
@@ -141,7 +141,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     To use a remote MySQL database instead, use something like:
 
       --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
-    The --db string is stored verbatim in the buildbot.tac file, and
+    The --db string is stored verbatim in the master.cfg.sample file, and
     evaluated at 'buildbot start' time to pass a DBConnector instance into
     the newly-created BuildMaster object.
     """)
@@ -164,7 +164,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
             # check if sqlalchemy will be able to parse specified URL
             sa.engine.url.make_url(self['db'])
         except sa.exc.ArgumentError as e:
-            raise usage.UsageError("could not parse database URL '{}'".format(self['db'])) from e
+            raise usage.UsageError(f"could not parse database URL '{self['db']}'") from e
 
 
 class StopOptions(base.BasedirMixin, base.SubcommandOptions):
@@ -285,14 +285,14 @@ class SendChangeOptions(base.SubcommandOptions):
         super().postOptions()
 
         if self.get("revision_file"):
-            with open(self["revision_file"], "r") as f:
+            with open(self["revision_file"], "r", encoding='utf-8') as f:
                 self['revision'] = f.read()
 
         if self.get('when'):
             try:
                 self['when'] = float(self['when'])
             except (TypeError, ValueError) as e:
-                raise usage.UsageError('invalid "when" value {}'.format(self['when'])) from e
+                raise usage.UsageError(f"invalid 'when' value {self['when']}") from e
         else:
             self['when'] = None
 
@@ -300,7 +300,7 @@ class SendChangeOptions(base.SubcommandOptions):
             if self['logfile'] == "-":
                 self['comments'] = sys.stdin.read()
             else:
-                with open(self['logfile'], "rt") as f:
+                with open(self['logfile'], "rt", encoding='utf-8') as f:
                     self['comments'] = f.read()
         if self.get('comments') is None:
             self['comments'] = ""
@@ -308,13 +308,13 @@ class SendChangeOptions(base.SubcommandOptions):
         # fix up the auth with a password if none was given
         auth = self.get('auth')
         if ':' not in auth:
-            pw = getpass.getpass("Enter password for '{}': ".format(auth))
-            auth = "{}:{}".format(auth, pw)
+            pw = getpass.getpass(f"Enter password for '{auth}': ")
+            auth = f"{auth}:{pw}"
         self['auth'] = tuple(auth.split(':', 1))
 
         vcs = ['cvs', 'svn', 'darcs', 'hg', 'bzr', 'git', 'mtn', 'p4']
         if self.get('vc') and self.get('vc') not in vcs:
-            raise usage.UsageError("vc must be one of {}".format(', '.join(vcs)))
+            raise usage.UsageError(f"vc must be one of {', '.join(vcs)}")
 
         validateMasterOption(self.get('master'))
 
@@ -587,8 +587,8 @@ class UserOptions(base.SubcommandOptions):
         for user in info:
             for attr_type in user:
                 if attr_type not in valid:
-                    raise usage.UsageError("Type not a valid attr_type, must be in: {}".format(
-                            ', '.join(valid)))
+                    raise usage.UsageError("Type not a valid attr_type, must be in: "
+                                           f"{', '.join(valid)}")
 
     def postOptions(self):
         super().postOptions()
@@ -600,8 +600,8 @@ class UserOptions(base.SubcommandOptions):
             raise usage.UsageError("you must specify an operation: add, "
                                    "remove, update, get")
         if op not in ['add', 'remove', 'update', 'get']:
-            raise usage.UsageError("bad op %r, use 'add', 'remove', 'update', "
-                                   "or 'get'" % op)
+            raise usage.UsageError(f"bad op {repr(op)}, use 'add', 'remove', 'update', "
+                                   "or 'get'")
 
         if not self.get('username') or not self.get('passwd'):
             raise usage.UsageError("A username and password must be given")
@@ -760,7 +760,7 @@ class Options(usage.Options):
     ]
 
     def opt_version(self):
-        print("Buildbot version: {}".format(buildbot.version))
+        print(f"Buildbot version: {buildbot.version}")
         super().opt_version()
 
     def opt_verbose(self):
@@ -778,7 +778,7 @@ def run():
     try:
         config.parseOptions(sys.argv[1:])
     except usage.error as e:
-        print("{}:  {}".format(sys.argv[0], e))
+        print(f"{sys.argv[0]}:  {e}")
         print()
 
         c = getattr(config, 'subOptions', config)

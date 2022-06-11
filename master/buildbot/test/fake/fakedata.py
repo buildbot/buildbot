@@ -21,7 +21,6 @@ from twisted.python import failure
 from buildbot.data import connector
 from buildbot.data import resultspec
 from buildbot.db.buildrequests import AlreadyClaimedError
-from buildbot.test.fake import endpoint
 from buildbot.test.util import validation
 from buildbot.util import service
 
@@ -69,7 +68,7 @@ class FakeUpdates(service.AsyncService):
             try:
                 json.dumps(propval)
             except (TypeError, ValueError):
-                self.testcase.fail("value for {} is not JSON-able".format(k))
+                self.testcase.fail(f"value for {k} is not JSON-able")
 
     # update methods
 
@@ -151,7 +150,7 @@ class FakeUpdates(service.AsyncService):
         self.testcase.assertIsInstance(sourcestamps, list)
         for ss in sourcestamps:
             if not isinstance(ss, int) and not isinstance(ss, dict):
-                self.testcase.fail("{} ({}) is not an integer or a dictionary".format(ss, type(ss)))
+                self.testcase.fail(f"{ss} ({type(ss)}) is not an integer or a dictionary")
             del ss  # since we use locals(), below
         self.testcase.assertIsInstance(reason, str)
         self.assertProperties(sourced=True, properties=properties)
@@ -305,7 +304,7 @@ class FakeUpdates(service.AsyncService):
         try:
             json.dumps(value)
         except (TypeError, ValueError):
-            self.testcase.fail("Value for {} is not JSON-able".format(name))
+            self.testcase.fail(f"Value for {name} is not JSON-able")
         validation.verifyType(self.testcase, 'source', source,
                               validation.StringValidator())
         return defer.succeed(None)
@@ -520,8 +519,8 @@ class FakeDataConnector(service.AsyncMultiService):
             raise TypeError('path must be a tuple')
         return self.realConnector.control(action, args, path)
 
-    def get_graphql_schema(self):
-        return endpoint.graphql_schema
-
     def resultspec_from_jsonapi(self, args, entityType, is_collection):
         return self.realConnector.resultspec_from_jsonapi(args, entityType, is_collection)
+
+    def getResourceTypeForGraphQlType(self, type):
+        return self.realConnector.getResourceTypeForGraphQlType(type)

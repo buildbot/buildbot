@@ -25,8 +25,8 @@ from buildbot.process.properties import Secret
 from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
 
 gitJsonPayloadSinglePullrequest = """
 {
@@ -180,7 +180,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
                                   unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
 
         fake_storage_service = FakeSecretStorage()
@@ -232,15 +232,14 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         yield self.newChangeSource('defunkt', 'defunkt')
         yield self.startChangeSource()
         self.assertEqual(
-            "GitHubPullrequestPoller watching the GitHub repository {}/{}".
-            format('defunkt', 'defunkt'), self.changesource.describe())
+            f"GitHubPullrequestPoller watching the GitHub repository {'defunkt'}/{'defunkt'}",
+            self.changesource.describe())
 
     @defer.inlineCallbacks
     def test_default_name(self):
         yield self.newChangeSource('defunkt', 'defunkt')
         yield self.startChangeSource()
-        self.assertEqual("GitHubPullrequestPoller:{}/{}".format(
-            'defunkt', 'defunkt'), self.changesource.name)
+        self.assertEqual(f"GitHubPullrequestPoller:{'defunkt'}/{'defunkt'}", self.changesource.name)
 
     @defer.inlineCallbacks
     def test_custom_name(self):
@@ -438,10 +437,9 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_wrongRepoLink(self):
-        yield self.assertFailure(
-            self.newChangeSource(
-                'defunkt', 'defunkt', token='1234', repository_type='defunkt'),
-            ConfigErrors)
+        with self.assertRaises(ConfigErrors):
+            yield self.newChangeSource('defunkt', 'defunkt', token='1234',
+                                       repository_type='defunkt')
 
     @defer.inlineCallbacks
     def test_magicLink(self):

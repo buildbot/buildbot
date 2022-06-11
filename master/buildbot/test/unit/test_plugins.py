@@ -39,14 +39,14 @@ class FakeEntry:
     An entry suitable for unit tests
     """
 
-    def __init__(self, name, project_name, version, fail_require, value, warnings=[]):
+    def __init__(self, name, project_name, version, fail_require, value, warnings=None):
         self._name = name
         self._dist = mock.Mock(spec_set=['project_name', 'version'])
         self._dist.project_name = project_name
         self._dist.version = version
         self._fail_require = fail_require
         self._value = value
-        self._warnings = warnings
+        self._warnings = [] if warnings is None else warnings
 
     @property
     def name(self):
@@ -79,8 +79,8 @@ class ITestInterface(IPlugin):
     """
     test interface
     """
-    def hello(name):
-        "Greets by :param:`name`"
+    def hello(self):
+        pass
 
 
 @implementer(ITestInterface)

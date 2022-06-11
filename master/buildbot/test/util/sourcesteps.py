@@ -16,37 +16,37 @@
 
 import mock
 
-from buildbot.test.util import steps
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class SourceStepMixin(steps.BuildStepMixin):
+class SourceStepMixin(TestBuildStepMixin):
 
     """
     Support for testing source steps.  Aside from the capabilities of
-    L{BuildStepMixin}, this adds:
+    L{TestBuildStepMixin}, this adds:
 
      - fake sourcestamps
 
     The following instance variables are available after C{setupSourceStep}, in
-    addition to those made available by L{BuildStepMixin}:
+    addition to those made available by L{TestBuildStepMixin}:
 
     @ivar sourcestamp: fake SourceStamp for the build
     """
 
     def setUpSourceStep(self):
-        return super().setUpBuildStep()
+        return super().setup_test_build_step()
 
     def tearDownSourceStep(self):
-        return super().tearDownBuildStep()
+        return super().tear_down_test_build_step()
 
     # utilities
 
-    def setupStep(self, step, args=None, patch=None, **kwargs):
+    def setup_step(self, step, args=None, patch=None, **kwargs):
         """
-        Set up C{step} for testing.  This calls L{BuildStepMixin}'s C{setupStep}
+        Set up C{step} for testing.  This calls L{TestBuildStepMixin}'s C{setup_step}
         and then does setup specific to a Source step.
         """
-        step = super().setupStep(step, **kwargs)
+        step = super().setup_step(step, **kwargs)
 
         if args is None:
             args = {}

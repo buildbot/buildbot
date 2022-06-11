@@ -17,7 +17,7 @@
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import ProgrammingError
 
-from buildbot.config import MasterConfig
+from buildbot.config.master import MasterConfig
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import state

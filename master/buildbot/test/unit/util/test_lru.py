@@ -74,7 +74,7 @@ class LRUCacheTest(unittest.TestCase):
         self.check_result(val, short('c'), 0, 3)
         val = self.lru.get('d')
         self.check_result(val, short('d'), 0, 4)
-        del(val)
+        del val
         gc.collect()
 
         # now try 'a' again - it should be a miss
@@ -95,14 +95,14 @@ class LRUCacheTest(unittest.TestCase):
         self.check_result(val, short('a'), 1, 1)
         val = yield self.lru.get('b')
         self.check_result(val, short('b'), 1, 2)
-        del(val)
+        del val
         gc.collect()
 
         # now try 'a' again - it should be a miss
         self.lru.miss_fn = long
         val = yield self.lru.get('a')
         self.check_result(val, long('a'), 1, 3)
-        del(val)
+        del val
         gc.collect()
 
         # ..and that expelled B
@@ -120,7 +120,7 @@ class LRUCacheTest(unittest.TestCase):
         self.check_result(val, short('a'), 0, 1)
         val = self.lru.get('b')
         self.check_result(val, None, 0, 2)
-        del(val)
+        del val
 
         # 'a' was not expelled since 'b' was None
         self.lru.miss_fn = long
@@ -203,7 +203,7 @@ class LRUCacheTest(unittest.TestCase):
     def test_fuzz(self):
         chars = list(string.ascii_lowercase * 40)
         random.shuffle(chars)
-        for i, c in enumerate(chars):
+        for c in chars:
             res = self.lru.get(c)
             self.check_result(res, short(c))
 
@@ -212,7 +212,7 @@ class LRUCacheTest(unittest.TestCase):
         for c in 'abc':
             res = self.lru.get(c)
             self.check_result(res, short(c))
-        del(res)
+        del res
 
         # reset the size to 1
         self.lru.set_max_size(1)
@@ -239,7 +239,7 @@ class LRUCacheTest(unittest.TestCase):
             return None
         self.lru.miss_fn = none_miss_fn
 
-        for i in range(2):
+        for _ in range(2):
             self.assertEqual(self.lru.get('a'), None)
 
         # check that the miss_fn was called twice
@@ -446,7 +446,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
     def test_fuzz(self):
         chars = list(string.ascii_lowercase * 40)
         random.shuffle(chars)
-        for i, c in enumerate(chars):
+        for c in chars:
             res = yield self.lru.get(c)
             self.check_result(res, short(c))
 
@@ -554,7 +554,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
             return defer.succeed(None)
         self.lru.miss_fn = none_miss_fn
 
-        for i in range(2):
+        for _ in range(2):
             self.assertEqual((yield self.lru.get('a')), None)
 
         # check that the miss_fn was called twice

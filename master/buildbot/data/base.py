@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import copy
+import functools
 import re
 from collections import UserList
 
@@ -26,9 +27,10 @@ class ResourceType:
     name = None
     plural = None
     endpoints = []
-    keyFields = []
+    keyField = None
     eventPathPatterns = ""
     entityType = None
+    subresources = []
 
     def __init__(self, master):
         self.master = master
@@ -47,6 +49,7 @@ class ResourceType:
             pathPatterns[i] = pp
         self.eventPaths = pathPatterns
 
+    @functools.lru_cache(1)
     def getEndpoints(self):
         endpoints = self.endpoints[:]
         for i, ep in enumerate(endpoints):
@@ -54,6 +57,20 @@ class ResourceType:
                 raise TypeError("Not an Endpoint subclass")
             endpoints[i] = ep(self, self.master)
         return endpoints
+
+    @functools.lru_cache(1)
+    def getDefaultEndpoint(self):
+        for ep in self.getEndpoints():
+            if not ep.isCollection:
+                return ep
+        return None
+
+    @functools.lru_cache(1)
+    def getCollectionEndpoint(self):
+        for ep in self.getEndpoints():
+            if ep.isCollection or ep.isPseudoCollection:
+                return ep
+        return None
 
     @staticmethod
     def sanitizeMessage(msg):
@@ -69,11 +86,24 @@ class ResourceType:
                 self.master.mq.produce(routingKey, msg)
 
 
+class SubResource:
+    def __init__(self, rtype):
+        self.rtype = rtype
+        self.endpoints = {}
+        for endpoint in rtype.endpoints:
+            if endpoint.isCollection:
+                self.endpoints[rtype.plural] = endpoint
+            else:
+                self.endpoints[rtype.name] = endpoint
+
+
 class Endpoint:
     pathPatterns = ""
     rootLinkName = None
     isCollection = False
+    isPseudoCollection = False
     isRaw = False
+    parentMapping = {}
 
     def __init__(self, rtype, master):
         self.rtype = rtype
@@ -86,8 +116,38 @@ class Endpoint:
         # we convert the action into a mixedCase method name
         action_method = getattr(self, "action" + action.capitalize(), None)
         if action_method is None:
-            raise exceptions.InvalidControlException("action: {} is not supported".format(action))
+            raise exceptions.InvalidControlException(f"action: {action} is not supported")
         return action_method(args, kwargs)
+
+    def get_kwargs_from_graphql_parent(self, parent, parent_type):
+        if parent_type not in self.parentMapping:
+            rtype = self.master.data.getResourceTypeForGraphQlType(parent_type)
+            if rtype.keyField in parent:
+                parentid = rtype.keyField
+            else:
+                raise NotImplementedError(
+                    "Collection endpoint should implement "
+                    "get_kwargs_from_graphql or parentMapping"
+                )
+        else:
+            parentid = self.parentMapping[parent_type]
+        ret = {'graphql': True}
+        ret[parentid] = parent[parentid]
+        return ret
+
+    def get_kwargs_from_graphql(self, parent, resolve_info, args):
+        if self.isCollection or self.isPseudoCollection:
+            if parent is not None:
+                return self.get_kwargs_from_graphql_parent(
+                    parent, resolve_info.parent_type.name
+                )
+            return {'graphql': True}
+        ret = {'graphql': True}
+        k = self.rtype.keyField
+        v = args.pop(k)
+        if v is not None:
+            ret[k] = v
+        return ret
 
     def __repr__(self):
         return "endpoint for " + ",".join(self.pathPatterns.split())
@@ -159,8 +219,8 @@ class ListResult(UserList):
         self.limit = limit
 
     def __repr__(self):
-        return "ListResult(%r, offset=%r, total=%r, limit=%r)" % \
-            (self.data, self.offset, self.total, self.limit)
+        return (f"ListResult({repr(self.data)}, offset={repr(self.offset)}, "
+                f"total={repr(self.total)}, limit={repr(self.limit)})")
 
     def __eq__(self, other):
         if isinstance(other, ListResult):
@@ -173,7 +233,7 @@ class ListResult(UserList):
             and (self.total is None or self.total == len(other))
 
     def __ne__(self, other):
-        return not (self == other)
+        return not self == other
 
 
 def updateMethod(func):

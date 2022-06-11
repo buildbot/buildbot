@@ -56,16 +56,14 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
         self.dist = dist
 
         self.base_rpmbuild = (
-            ('rpmbuild --define "_topdir {}" --define "_builddir {}"'
-             ' --define "_rpmdir {}" --define "_sourcedir {}"'
-             ' --define "_specdir {}" --define "_srcrpmdir {}"').format(topdir, builddir, rpmdir,
-                                                                        sourcedir, specdir,
-                                                                        srcrpmdir))
+            f'rpmbuild --define "_topdir {topdir}" --define "_builddir {builddir}"'
+            f' --define "_rpmdir {rpmdir}" --define "_sourcedir {sourcedir}"'
+            f' --define "_specdir {specdir}" --define "_srcrpmdir {srcrpmdir}"')
 
         if define is None:
             define = {}
         for k, v in define.items():
-            self.base_rpmbuild += " --define \"{} {}\"".format(k, v)
+            self.base_rpmbuild += f" --define \"{k} {v}\""
 
         self.specfile = specfile
         self.autoRelease = autoRelease
@@ -84,14 +82,14 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
         rpm_extras_dict['dist'] = self.dist
 
         if self.autoRelease:
-            relfile = '{}.release'.format(os.path.basename(self.specfile).split('.')[0])
+            relfile = f"{os.path.basename(self.specfile).split('.')[0]}.release"
             try:
-                with open(relfile, 'r') as rfile:
+                with open(relfile, 'r', encoding='utf-8') as rfile:
                     rel = int(rfile.readline().strip())
             except (IOError, TypeError, ValueError):
                 rel = 0
             rpm_extras_dict['_release'] = rel
-            with open(relfile, 'w') as rfile:
+            with open(relfile, 'w', encoding='utf-8') as rfile:
                 rfile.write(str(rel + 1))
 
         if self.vcsRevision:
@@ -105,10 +103,9 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
         # The unit tests expect a certain order, so we sort the dict to keep
         # format the same every time
         for k, v in sorted(rpm_extras_dict.items()):
-            self.rpmbuild = '{0} --define "{1} {2}"'.format(
-                self.rpmbuild, k, v)
+            self.rpmbuild = f'{self.rpmbuild} --define "{k} {v}"'
 
-        command = '{} -ba {}'.format(self.rpmbuild, self.specfile)
+        command = f'{self.rpmbuild} -ba {self.specfile}'
 
         cmd = yield self.makeRemoteShellCommand(command=command)
 
@@ -132,7 +129,7 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
         self.rpmerrors = []
 
         while True:
-            stream, line = yield
+            _, line = yield
             for pfx in rpm_prefixes:
                 if line.startswith(pfx):
                     self.rpmcmdlog.append(line)

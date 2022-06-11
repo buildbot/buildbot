@@ -72,7 +72,7 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
 
         yield self.runCommand(cmd)
         log = yield self.getLog("stdio-merge-base")
-        log.finish()
+        yield log.finish()
 
         if cmd.results() != results.SUCCESS:
             return cmd.results()

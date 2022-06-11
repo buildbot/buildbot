@@ -59,9 +59,7 @@ class KubeClientService(fakehttpclientservice.HTTPClientService):
 
     def waitForPodDeletion(self, namespace, name, timeout):
         if namespace + '/' + name in self.pods:
-            raise TimeoutError("Did not see pod {name} terminate after {timeout}s".format(
-                name=name, timeout=timeout
-            ))
+            raise TimeoutError(f"Did not see pod {name} terminate after {timeout}s")
         return {
             'kind': 'Status',
             'reason': 'NotFound'

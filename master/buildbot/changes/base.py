@@ -22,6 +22,7 @@ from buildbot import config
 from buildbot.interfaces import IChangeSource
 from buildbot.util import service
 from buildbot.util.poll import method as poll_method
+from buildbot.warnings import warn_deprecated
 
 
 @implementer(IChangeSource)
@@ -62,17 +63,15 @@ class ReconfigurablePollingChangeSource(ChangeSource):
                     pollRandomDelayMin=0, pollRandomDelayMax=0):
         super().checkConfig(name=name)
         if pollInterval < 0:
-            config.error("interval must be >= 0: {}".format(pollInterval))
+            config.error(f"interval must be >= 0: {pollInterval}")
         if pollRandomDelayMin < 0:
-            config.error("min random delay must be >= 0: {}".format(pollRandomDelayMin))
+            config.error(f"min random delay must be >= 0: {pollRandomDelayMin}")
         if pollRandomDelayMax < 0:
-            config.error("max random delay must be >= 0: {}".format(pollRandomDelayMax))
+            config.error(f"max random delay must be >= 0: {pollRandomDelayMax}")
         if pollRandomDelayMin > pollRandomDelayMax:
-            config.error("min random delay must be <= {}: {}".format(pollRandomDelayMax,
-                                                                     pollRandomDelayMin))
+            config.error(f"min random delay must be <= {pollRandomDelayMax}: {pollRandomDelayMin}")
         if pollRandomDelayMax >= pollInterval:
-            config.error("max random delay must be < {}: {}".format(pollInterval,
-                                                                    pollRandomDelayMax))
+            config.error(f"max random delay must be < {pollInterval}: {pollRandomDelayMax}")
 
     @defer.inlineCallbacks
     def reconfigService(self, name=None, pollInterval=60 * 10, pollAtLaunch=False,
@@ -98,7 +97,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
     @poll_method
     def doPoll(self):
         d = defer.maybeDeferred(self.poll)
-        d.addErrback(log.err, 'while polling for changes')
+        d.addErrback(log.err, f'{self}: while polling for changes')
         return d
 
     def force(self):
@@ -122,6 +121,10 @@ class PollingChangeSource(ReconfigurablePollingChangeSource):
                     pollRandomDelayMin=0, pollRandomDelayMax=0, **kwargs):
         super().checkConfig(name=name, pollInterval=60 * 10, pollAtLaunch=False,
                             pollRandomDelayMin=0, pollRandomDelayMax=0)
+
+        warn_deprecated('3.3.0', 'PollingChangeSource has been deprecated: ' +
+                        'please use ReconfigurablePollingChangeSource')
+
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
         self.pollRandomDelayMin = pollRandomDelayMin

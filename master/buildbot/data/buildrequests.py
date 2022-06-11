@@ -102,7 +102,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
         if action != "cancel":
-            raise ValueError("action: {} is not supported".format(action))
+            raise ValueError(f"action: {action} is not supported")
         brid = kwargs['buildrequestid']
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
@@ -133,6 +133,8 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         # references.
         yield self.master.data.updates.completeBuildRequests([brid],
                                                              results.CANCELLED)
+        brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
+        self.master.mq.produce(('buildrequests', str(brid), 'cancel'), brdict)
         return None
 
 
@@ -180,12 +182,14 @@ class BuildRequest(base.ResourceType):
     name = "buildrequest"
     plural = "buildrequests"
     endpoints = [BuildRequestEndpoint, BuildRequestsEndpoint]
-    keyFields = ['buildsetid', 'builderid', 'buildrequestid']
+    keyField = 'buildrequestid'
     eventPathPatterns = """
         /buildsets/:buildsetid/builders/:builderid/buildrequests/:buildrequestid
         /buildrequests/:buildrequestid
         /builders/:builderid/buildrequests/:buildrequestid
     """
+
+    subresources = ["Build"]
 
     class EntityType(types.Entity):
         buildrequestid = types.Integer()
@@ -201,7 +205,7 @@ class BuildRequest(base.ResourceType):
         complete_at = types.NoneOk(types.DateTime())
         waited_for = types.Boolean()
         properties = types.NoneOk(types.SourcedProperties())
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Buildrequest')
 
     @defer.inlineCallbacks
     def generateEvent(self, brids, event):

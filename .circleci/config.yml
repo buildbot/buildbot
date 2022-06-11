@@ -44,7 +44,7 @@ jobs:
             # Note that installing www/base depends on frontend_deps target being built, which is
             # a dependency of the tarballs target.
             pip install -e www/base
-            pyinstaller -F pyinstaller/buildbot-worker.spec
+            pyinstaller pyinstaller/buildbot-worker.spec
             # we test the new generated binary with the global virtualenv
             SANDBOXED_WORKER_PATH=`pwd`/dist/buildbot-worker trial --reporter=text --rterrors buildbot.test.integration.interop
       - persist_to_workspace:

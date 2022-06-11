@@ -1,0 +1,172 @@
+# to test a single testcase, add "focus: true" inside it, e.g:
+- # focus: true
+  query: |
+    {masters{name, builders(name:"runtests1"){name, builds(limit:1){number}}}}
+  expected:
+    masters:
+    - name: some:master
+      builders:
+      - name: runtests1
+        builds:
+        - number: 1
+- query: |
+    {masters{name, builders(name:"runtests1"){name, builds(limit:10){number}}}}
+  expected:
+    masters:
+    - name: some:master
+      builders:
+      - name: runtests1
+        builds:
+        - number: 1
+        - number: 2
+- query: |
+    {builders(name:"runtests2"){name, builds(limit:1){number}}}
+  expected:
+    builders:
+    - name: runtests2
+      builds:
+      - number: 1
+- query: |
+    {builders(name:"runtests3"){name, builds(limit:1){number}}}
+  expected:
+    builders:
+    - name: runtests3
+      builds: []
+- query: |
+    {buildrequests(limit:1){buildrequestid, builds(limit:1){number}}}
+  expected:
+    buildrequests:
+    - buildrequestid: 1
+      builds:
+      - number: 1
+- query: |
+    {changes{author, builds(limit:1){number}}}
+  expected:
+    changes:
+    - author: frank
+      builds:
+      - number: 1
+- query: |
+    {workers{name, builds(limit:1){number}}}
+  expected:
+    workers:
+    - name: example-worker
+      builds:
+      - number: 1
+- query: |
+    {builds(limit:1){number, steps(limit:1){name}}}
+  expected:
+    builds:
+    - number: 1
+      steps:
+      - name: step1
+- query: |
+    {
+      builds(limit:1){
+          number
+          steps(limit:1,offset:1){
+              name
+              logs {
+                  name
+                  num_lines
+              }
+          }
+      }
+    }
+  expected:
+    builds:
+    - number: 1
+      steps:
+      - name: step2
+        logs:
+        - name: stdio
+          num_lines: 20
+- query: |
+    {
+        build(buildid:1){
+            step(stepid:1){
+                log(logid:1){
+                    logchunks(offset:1, limit:2){
+                        content
+                    }
+                }
+            }
+        }
+    }
+  expected:
+    build:
+      step:
+        log:
+          logchunks:
+            content: "o line2\no line3\n"
+- query: |
+    {
+        logchunks(logid: 1, offset:1, limit:2){
+            content
+        }
+    }
+  expected:
+    logchunks:
+      content: "o line2\no line3\n"
+- query: |
+    {
+        sourcestamp(ssid: 1){
+            created_at
+        }
+    }
+  expected:
+    sourcestamp:
+      created_at: 89834834
+- query: |
+    {
+        sourcestamps {
+            changes {changeid}
+        }
+    }
+  expected:
+    sourcestamps:
+    - changes:
+      - changeid: 1
+- query: |
+    {builders(limit:1){name, forceschedulers{name}}}
+  expected:
+    builders:
+    - name: runtests1
+      forceschedulers:
+      - name: force
+- query: |-
+    {builders(limit:1){name, schedulers{name}}}
+  expected:
+    builders:
+    - name: runtests1
+      schedulers:
+      - name: custom
+      - name: all
+      - name: force
+- query: |
+    {builders(builderid:2){name, builderid, buildrequests{buildrequestid, builderid}}}
+  expected:
+    builders:
+    - name: runtests2
+      builderid: 2
+      buildrequests:
+      - buildrequestid: 3
+        builderid: 2
+- query: |
+    {builds(buildid:3){_properties(name__in: ["reason", "owner"]){name, value, source }}}
+  expected:
+    builds:
+    - _properties:
+      - name: reason
+        value: '"\"force build\""'
+        source: Force Build Form
+      - name: owner
+        value: '"\"some@example.com\""'
+        source: Force Build Form
+- query: |
+    {buildsets(bsid:3){_properties(name__in: ["reason", "owner"]){name, value }}}
+  expected:
+    buildsets:
+    - _properties:
+      - name: owner
+        value: '"some@example.com"'

@@ -20,6 +20,10 @@ from twisted.trial import unittest
 from buildbot.util import subscription
 
 
+class TestException(Exception):
+    pass
+
+
 class subscriptions(unittest.TestCase):
 
     def setUp(self):
@@ -85,6 +89,26 @@ class subscriptions(unittest.TestCase):
         self.assertIsInstance(exceptions[0], failure.Failure)
 
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+
+    def test_deferred_exception_after_pop_exceptions(self):
+        # waitForDeliveriesToFinish is forgotten to be called and exception happens after
+        # pop_exceptions.
+        d = defer.Deferred()
+
+        @defer.inlineCallbacks
+        def cb_deferred(*args, **kwargs):
+            yield d
+            raise TestException('msg')
+
+        self.subpt.subscribe(cb_deferred)
+        self.subpt.deliver()
+
+        exceptions = self.subpt.pop_exceptions()
+
+        d.callback(None)
+
+        self.assertEqual(len(exceptions), 0)
+        self.assertEqual(2, len(self.flushLoggedErrors(TestException)))
 
     def test_multiple_exceptions(self):
 

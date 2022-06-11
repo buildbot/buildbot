@@ -51,6 +51,7 @@ apimaster
 app
 appdata
 applicative
+approle
 apps
 araujo
 arg
@@ -85,6 +86,7 @@ attrs
 attributeerror
 aug
 auth
+authenticator
 authz
 autocommit
 autoconf
@@ -158,6 +160,7 @@ bruheim
 bsd
 bsid
 bsids
+bugfix
 buid
 buidlrequestcompletions
 buidlsets
@@ -377,6 +380,7 @@ de
 debian
 debounce
 debounced
+debouncer
 debouncing
 decoderc
 deepcopy
@@ -409,6 +413,7 @@ dirs
 dirwatcher
 disownserviceparent
 distutils
+distros
 dn
 dnotify
 doclobber
@@ -522,6 +527,7 @@ foobar
 foogit
 foreignkey
 formatargspec
+formatter
 formatinterval
 fp
 fqdn
@@ -617,6 +623,7 @@ gotchange
 gotperspective
 gotrootobject
 gpo
+gql
 gracefulshutdown
 graphql
 gravatar
@@ -652,6 +659,7 @@ html
 http
 httpclientservice
 https
+hvac
 ibuildrequestcontrol
 ibuildrequeststatus
 ibuildsetstatus
@@ -919,6 +927,8 @@ msc
 msdn
 msg
 msgbody
+msgmanager
+msgpack
 msys
 mtime
 mtn
@@ -1138,6 +1148,7 @@ refactor
 refcount
 refetch
 regex
+regen
 regexes
 regexp
 regexps
@@ -1224,6 +1235,7 @@ rstrip
 rtd
 rtype
 rtypes
+ruamel
 runcommand
 runinteraction
 runprocess
@@ -1395,6 +1407,7 @@ suboption
 suboptions
 subprocess
 subprocesses
+subprotocol
 subquery
 substring
 subunit
@@ -1421,6 +1434,7 @@ tac
 taichino
 tarball
 targetname
+taskkill
 tbl
 tcp
 tcpdump
@@ -1428,6 +1442,7 @@ teardown
 teardownbasedir
 tempfile
 terminateprocess
+testbuildstepmixin
 testcase
 testcases
 testchanges
@@ -1480,6 +1495,7 @@ trialargs
 trialmode
 triemstra
 triggerable
+ttl
 tue
 tues
 tuesday
@@ -1573,6 +1589,7 @@ uselog
 useprocgroup
 usepty
 usererrors
+userhome
 username
 usetestcasenames
 usetls
@@ -1662,6 +1679,7 @@ xhtml
 xml
 xxab
 xxx
+yaml
 yieldmetricsvalue
 za
 zadka

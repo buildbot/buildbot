@@ -21,12 +21,15 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.changes import changes
+from buildbot.changes import filter
 from buildbot.process import properties
 from buildbot.process.properties import Interpolate
 from buildbot.schedulers import base
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
@@ -37,7 +40,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     exp_bsid_brids = (123, {'b': 456})
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -53,7 +56,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             codebases = {'': {}}
 
         if isinstance(builderNames, list):
-            dbBuilder = list()
+            dbBuilder = []
             builderid = 0
             for builderName in builderNames:
                 builderid += 1
@@ -145,7 +148,10 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         self.assertEqual(sched.enabled, expectedValue)
 
     @defer.inlineCallbacks
-    def do_test_change_consumption(self, kwargs, expected_result):
+    def do_test_change_consumption(self, kwargs, expected_result, change_kwargs=None):
+        if change_kwargs is None:
+            change_kwargs = {}
+
         # (expected_result should be True (important), False (unimportant), or
         # None (ignore the change))
         sched = self.makeScheduler()
@@ -163,7 +169,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             return defer.succeed(chdict)
         self.db.changes.getChange = getChange
 
-        change = self.makeFakeChange()
+        change = self.makeFakeChange(**change_kwargs)
         change.number = 12934
 
         def fromChdict(cls, master, chdict):
@@ -195,7 +201,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     def test_change_consumption_defaults(self):
         # all changes are important by default
         return self.do_test_change_consumption(
-            dict(),
+            {},
             True)
 
     def test_change_consumption_fileIsImportant_True(self):
@@ -229,6 +235,63 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         return self.do_test_change_consumption(
             dict(change_filter=cf),
             None)
+
+    def test_change_consumption_change_filter_gerrit_ref_updates(self):
+        cf = mock.Mock()
+        cf.filter_change = lambda c: False
+        return self.do_test_change_consumption(
+            {'change_filter': cf},
+            None,
+            change_kwargs={'category': 'ref-updated', 'branch': 'master'})
+
+    def test_change_consumption_change_filter_gerrit_ref_updates_with_refs(self):
+        cf = mock.Mock()
+        cf.filter_change = lambda c: False
+        return self.do_test_change_consumption(
+            {'change_filter': cf},
+            None,
+            change_kwargs={'category': 'ref-updated', 'branch': 'refs/changes/123'})
+
+    def test_change_consumption_change_filter_gerrit_filters_branch_deprecated(self):
+        with assertProducesWarning(DeprecatedApiWarning,
+                                   "Change filters must not expect ref-updated events"):
+            cf = filter.ChangeFilter(branch='refs/heads/master')
+            return self.do_test_change_consumption(
+                {'change_filter': cf},
+                True,
+                change_kwargs={'category': 'ref-updated', 'branch': 'master'})
+
+    def test_change_consumption_change_filter_gerrit_filters_branch_re_deprecated(self):
+        with assertProducesWarning(DeprecatedApiWarning,
+                                   "Change filters must not expect ref-updated events"):
+            cf = filter.ChangeFilter(branch_re='refs/heads/master')
+            return self.do_test_change_consumption(
+                {'change_filter': cf},
+                True,
+                change_kwargs={'category': 'ref-updated', 'branch': 'master'})
+
+    def test_change_consumption_change_filter_gerrit_filters_branch_re_deprecated_no_match(self):
+        with assertProducesWarning(DeprecatedApiWarning,
+                                   "Change filters must not expect ref-updated events"):
+            cf = filter.ChangeFilter(branch_re='(refs/heads/other|master)')
+            return self.do_test_change_consumption(
+                {'change_filter': cf},
+                None,
+                change_kwargs={'category': 'ref-updated', 'branch': 'master'})
+
+    def test_change_consumption_change_filter_gerrit_filters_branch_new(self):
+        cf = filter.ChangeFilter(branch='master')
+        return self.do_test_change_consumption(
+            {'change_filter': cf},
+            True,
+            change_kwargs={'category': 'ref-updated', 'branch': 'master'})
+
+    def test_change_consumption_change_filter_gerrit_filters_branch_new_not_match(self):
+        cf = filter.ChangeFilter(branch='other')
+        return self.do_test_change_consumption(
+            {'change_filter': cf},
+            None,
+            change_kwargs={'category': 'ref-updated', 'branch': 'master'})
 
     def test_change_consumption_fileIsImportant_False_onlyImportant(self):
         return self.do_test_change_consumption(

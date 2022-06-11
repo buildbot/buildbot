@@ -148,7 +148,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
             if not dl:
                 log.msg("No running jobs, starting shutdown immediately")
             else:
-                log.msg("Waiting for %i build(s) to finish" % len(dl))
+                log.msg(f"Waiting for {len(dl)} build(s) to finish")
                 yield defer.DeferredList(dl)
 
             # Check that there really aren't any running builds
@@ -156,12 +156,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
             for builder in self.builders.values():
                 if builder.building:
                     num_builds = len(builder.building)
-                    log.msg("Builder %s has %i builds running" %
-                            (builder, num_builds))
+                    log.msg(f"Builder {builder} has {num_builds} builds running")
                     n += num_builds
             if n > 0:
-                log.msg(
-                    "Not shutting down, there are %i builds running" % n)
+                log.msg(f"Not shutting down, there are {n} builds running")
                 log.msg("Trying shutdown sequence again")
                 yield util.asyncSleep(1)
             else:
@@ -183,7 +181,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     @metrics.countMethod('BotMaster.workerLost()')
     def workerLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_workers", -1)
-        for name, b in self.builders.items():
+        for b in self.builders.values():
             if bot.workername in b.config.workernames:
                 b.detached(bot)
 
@@ -260,8 +258,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         removed_names, added_names = util.diffSets(old_set, new_set)
 
         if removed_names or added_names:
-            log.msg("adding %d new builders, removing %d" %
-                    (len(added_names), len(removed_names)))
+            log.msg(f"adding {len(added_names)} new builders, removing {len(removed_names)}")
 
             for n in removed_names:
                 builder = old_by_name[n]

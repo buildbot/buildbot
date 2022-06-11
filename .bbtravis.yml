@@ -4,7 +4,7 @@ language: python
 
 # Available Python versions:
 python:
-  - "3.8"
+  - "3.9"
 label_mapping:
   TWISTED: tw
   SQLALCHEMY: sqla
@@ -20,79 +20,79 @@ env:
   - NUM_CPU=700m
   - MEMORY_SIZE=1G
   - CHROME_BIN=/usr/bin/google-chrome
-  matrix:
-  # include "ci" string into the name of the status that is eventually submitted to Github, so
-  # that the codecov.io service would wait until this build is finished before creating report.
-  - TWISTED=latest SQLALCHEMY=latest TESTS=ci/coverage
-
-  # add js tests in separate job. Start it early because it is quite long
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=2G
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=2G
-  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes NUM_CPU=4 MEMORY_SIZE=4G
-
-  - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
-
-  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
-  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
-  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
-
-  # Configuration when SQLite database is persistent between running tests
-  # (by default in other tests in-memory SQLite database is used which is
-  # recreated for each test).
-  # Helps to detect issues with incorrect database setup/cleanup in tests.
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite DB_TYPE=sqlite
-  # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest DB_TYPE=mysql
-
-  # innodb tests takes 20min probably because of docker aufs.
-  # travis images provides much faster innodb so we keep these test there until we implement ramfs based
-  # mysql installation
-  # - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
-
-  # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
-  # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
-  #- TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest
-  #- TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
-
-  # Test different versions of SQLAlchemy
-  - TWISTED=17.9.0 SQLALCHEMY=1.2.0 TESTS=trial
-  - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
-
-  # Tests for the worker on old versions of twisted.
-  - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial_worker
-
+  matrix: []
 matrix:
   fast_finish: true
   include:
     # flake8, isort, pylint, docs first as they're more likely to find issues
-    - python: "3.8"
+    - python: "3.9"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
-    - python: "3.8"
+    - python: "3.9"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=isort
-    - python: "3.8"
+    - python: "3.9"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=pylint NUM_CPU=2 MEMORY_SIZE=4G
-    - python: "3.8"
+    - python: "3.9"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
-    - python: "3.6"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=ci/coverage
+    # add js tests in separate job. Start it early because it is quite long
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=2G
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=2G
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes NUM_CPU=4 MEMORY_SIZE=4G
+
+    # include "ci" string into the name of the status that is eventually submitted to Github, so
+    # that the codecov.io service would wait until this build is finished before creating report.
+    - python: "3.9"
+      env: TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
     - python: "3.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=ci/coverage
     - python: "3.8"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=ci/coverage
     - python: "3.9"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
     - python: "3.9"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=minimal_install
 
-    - python: "3.8"
+    # Worker-master interoperability tests
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.9
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
+    - python: "3.9"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
 
-    # keep worker supported on py2.7.
-    # Twisted 20.3.0 is last version which supports py2.7.
+    # Worker tests on python and twisted package combinations.
+    # We support worker on Python 2.7, on which Twisted 20.3.0 is the last version that works
+    - python: "3.9"
+      env: TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial_worker
     - python: "2.7"
       env: TWISTED=20.3.0 SQLALCHEMY=latest TESTS=trial_worker
+
+    # Configuration when SQLite database is persistent between running tests
+    # (by default in other tests in-memory SQLite database is used which is
+    # recreated for each test).
+    # Helps to detect issues with incorrect database setup/cleanup in tests.
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite DB_TYPE=sqlite
+    # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest DB_TYPE=mysql
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
+
+    # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
+    # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
+    #- env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest
+    #- env: TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
 
 # Dependencies installation commands
 install:

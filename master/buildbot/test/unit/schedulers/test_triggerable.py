@@ -20,9 +20,9 @@ from twisted.trial import unittest
 from buildbot.process import properties
 from buildbot.schedulers import triggerable
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
@@ -38,7 +38,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
     SCHEDULERID = 13
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         # Necessary to get an assertable submitted_at time.
         self.reactor.advance(946684799)
 
@@ -334,7 +334,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         sched = self.makeScheduler(overrideBuildsetMethods=True)
         set_props = properties.Properties()
         set_props.setProperty('reason', 'test1', 'test')
-        idsDeferred, d = sched.trigger(
+        idsDeferred, _ = sched.trigger(
             waited_for, sourcestamps=[], set_props=set_props)
         yield idsDeferred
 

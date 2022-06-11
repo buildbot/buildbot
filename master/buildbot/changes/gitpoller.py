@@ -37,7 +37,7 @@ class GitError(Exception):
     """Raised when git exits with code 128."""
 
 
-class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
+class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
@@ -49,11 +49,52 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
 
     secrets = ("sshPrivateKey", "sshHostKey", "sshKnownHosts")
 
-    def __init__(self, repourl, branches=None, branch=None, workdir=None, pollInterval=10 * 60,
-                 gitbin="git", usetimestamps=True, category=None, project=None, pollinterval=-2,
-                 fetch_refspec=None, encoding="utf-8", name=None, pollAtLaunch=False,
-                 buildPushesWithNoCommits=False, only_tags=False, sshPrivateKey=None,
-                 sshHostKey=None, sshKnownHosts=None, pollRandomDelayMin=0, pollRandomDelayMax=0):
+    def __init__(self, repourl, **kwargs):
+        name = kwargs.get("name", None)
+        if name is None:
+            kwargs["name"] = repourl
+        super().__init__(repourl, **kwargs)
+
+    def checkConfig(self, repourl, branches=None, branch=None, workdir=None,
+                    pollInterval=10 * 60, gitbin="git", usetimestamps=True, category=None,
+                    project=None, pollinterval=-2, fetch_refspec=None, encoding="utf-8",
+                    name=None, pollAtLaunch=False, buildPushesWithNoCommits=False,
+                    only_tags=False, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
+                    pollRandomDelayMin=0, pollRandomDelayMax=0):
+
+        # for backward compatibility; the parameter used to be spelled with 'i'
+        if pollinterval != -2:
+            pollInterval = pollinterval
+
+        if only_tags and (branch or branches):
+            config.error("GitPoller: can't specify only_tags and branch/branches")
+        if branch and branches:
+            config.error("GitPoller: can't specify both branch and branches")
+
+        self.sshPrivateKey = sshPrivateKey
+        self.sshHostKey = sshHostKey
+        self.sshKnownHosts = sshKnownHosts
+        self.setupGit(logname='GitPoller')  # check the configuration
+
+        if fetch_refspec is not None:
+            config.error("GitPoller: fetch_refspec is no longer supported. "
+                         "Instead, only the given branches are downloaded.")
+
+        if name is None:
+            name = repourl
+
+        super().checkConfig(name=name,
+                            pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
+                            pollRandomDelayMin=pollRandomDelayMin,
+                            pollRandomDelayMax=pollRandomDelayMax)
+
+    @defer.inlineCallbacks
+    def reconfigService(self, repourl, branches=None, branch=None, workdir=None,
+                        pollInterval=10 * 60, gitbin="git", usetimestamps=True, category=None,
+                        project=None, pollinterval=-2, fetch_refspec=None, encoding="utf-8",
+                        name=None, pollAtLaunch=False, buildPushesWithNoCommits=False,
+                        only_tags=False, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
+                        pollRandomDelayMin=0, pollRandomDelayMax=0):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -62,19 +103,10 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         if name is None:
             name = repourl
 
-        super().__init__(name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
-                         pollRandomDelayMin=pollRandomDelayMin,
-                         pollRandomDelayMax=pollRandomDelayMax, sshPrivateKey=sshPrivateKey,
-                         sshHostKey=sshHostKey, sshKnownHosts=sshKnownHosts)
-
         if project is None:
             project = ''
 
-        if only_tags and (branch or branches):
-            config.error("GitPoller: can't specify only_tags and branch/branches")
-        if branch and branches:
-            config.error("GitPoller: can't specify both branch and branches")
-        elif branch:
+        if branch:
             branches = [branch]
         elif not branches:
             if only_tags:
@@ -99,12 +131,19 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         self.sshKnownHosts = sshKnownHosts
         self.setupGit(logname='GitPoller')
 
-        if fetch_refspec is not None:
-            config.error("GitPoller: fetch_refspec is no longer supported. "
-                         "Instead, only the given branches are downloaded.")
-
         if self.workdir is None:
             self.workdir = 'gitpoller-work'
+
+        # make our workdir absolute, relative to the master's basedir
+
+        if not os.path.isabs(self.workdir):
+            self.workdir = os.path.join(self.master.basedir, self.workdir)
+            log.msg(f"gitpoller: using workdir '{self.workdir}'")
+
+        yield super().reconfigService(name=name,
+                                      pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
+                                      pollRandomDelayMin=pollRandomDelayMin,
+                                      pollRandomDelayMax=pollRandomDelayMax)
 
     @defer.inlineCallbacks
     def _checkGitFeatures(self):
@@ -120,11 +159,6 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
 
     @defer.inlineCallbacks
     def activate(self):
-        # make our workdir absolute, relative to the master's basedir
-        if not os.path.isabs(self.workdir):
-            self.workdir = os.path.join(self.master.basedir, self.workdir)
-            log.msg("gitpoller: using workdir '{}'".format(self.workdir))
-
         try:
             self.lastRev = yield self.getState('lastRev', {})
 
@@ -157,7 +191,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 if '\t' not in row:
                     # Not a useful line
                     continue
-                sha, ref = row.split("\t")
+                _, ref = row.split("\t")
                 branches.append(ref)
             return branches
         return d
@@ -175,7 +209,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
     def _trackerBranch(self, branch):
         # manually quote tilde for Python 3.7
         url = urlquote(self.repourl, '').replace('~', '%7E')
-        return "refs/buildbot/{}/{}".format(url, self._removeHeads(branch))
+        return f"refs/buildbot/{url}/{self._removeHeads(branch)}"
 
     def poll_should_exit(self):
         # A single gitpoller loop may take a while on a loaded master, which would block
@@ -208,19 +242,19 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             branches = sorted(list(set(branches) & set(remote_branches)))
 
         refspecs = [
-            '+{}:{}'.format(self._removeHeads(branch), self._trackerBranch(branch))
+            f'+{self._removeHeads(branch)}:{self._trackerBranch(branch)}'
             for branch in branches
         ]
 
         try:
-            yield self._dovccmd('fetch', [self.repourl] + refspecs,
+            yield self._dovccmd('fetch', ['--progress', self.repourl] + refspecs,
                                 path=self.workdir)
         except GitError as e:
             log.msg(e.args[0])
             return
 
         revs = {}
-        log.msg('gitpoller: processing changes from "{}"'.format(self.repourl))
+        log.msg(f'gitpoller: processing changes from "{self.repourl}"')
         for branch in branches:
             try:
                 if self.poll_should_exit():  # pragma: no cover
@@ -233,8 +267,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 revs[branch] = bytes2unicode(rev, self.encoding)
                 yield self._process_changes(revs[branch], branch)
             except Exception:
-                log.err(_why="trying to poll branch {} of {}".format(
-                        branch, self.repourl))
+                log.err(_why=f"trying to poll branch {branch} of {self.repourl}")
 
         self.lastRev = revs
         yield self.setState('lastRev', self.lastRev)
@@ -255,8 +288,8 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 try:
                     stamp = int(git_output)
                 except Exception as e:
-                    log.msg(('gitpoller: caught exception converting output \'{}\' to timestamp'
-                             ).format(git_output))
+                    log.msg(f'gitpoller: caught exception converting output \'{git_output}\' to '
+                            'timestamp')
                     raise e
                 return stamp
             return None
@@ -317,7 +350,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
 
         # get the change list
         revListArgs = (['--ignore-missing'] +
-                       ['--format=%H', '{}'.format(newRev)] +
+                       ['--format=%H', f'{newRev}'] +
                        ['^' + rev
                         for rev in sorted(self.lastRev.values())] +
                        ['--'])
@@ -334,20 +367,18 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 revList = [newRev]
                 if existingRev is None:
                     # This branch was completely unknown, rebuild
-                    log.msg('gitpoller: rebuilding {} for new branch "{}"'.format(
-                        newRev, branch))
+                    log.msg(f'gitpoller: rebuilding {newRev} for new branch "{branch}"')
                 else:
                     # This branch is known, but it now points to a different
                     # commit than last time we saw it, rebuild.
-                    log.msg('gitpoller: rebuilding {} for updated branch "{}"'.format(
-                        newRev, branch))
+                    log.msg(f'gitpoller: rebuilding {newRev} for updated branch "{branch}"')
 
         self.changeCount = len(revList)
         self.lastRev[branch] = newRev
 
         if self.changeCount:
-            log.msg('gitpoller: processing {} changes: {} from "{}" branch "{}"'.format(
-                    self.changeCount, revList, self.repourl, branch))
+            log.msg(f'gitpoller: processing {self.changeCount} changes: {revList} from '
+                    f'"{self.repourl}" branch "{branch}"')
 
         for rev in revList:
             dl = defer.DeferredList([
@@ -364,8 +395,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             failures = [r[1] for r in results if not r[0]]
             if failures:
                 for failure in failures:
-                    log.err(
-                        failure, "while processing changes for {} {}".format(newRev, branch))
+                    log.err(failure, f"while processing changes for {newRev} {branch}")
                 # just fail on the first error; they're probably all related!
                 failures[0].raiseException()
 
@@ -446,8 +476,8 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         stderr = bytes2unicode(stderr, self.encoding)
         if code != 0:
             if code == 128:
-                raise GitError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
-                               full_args, path, self.repourl, code, stderr))
-            raise EnvironmentError(('command {} in {} on repourl {} failed with exit code {}: {}'
-                                    ).format(full_args, path, self.repourl, code, stderr))
+                raise GitError(f'command {full_args} in {path} on repourl {self.repourl} failed '
+                               f'with exit code {code}: {stderr}')
+            raise EnvironmentError(f'command {full_args} in {path} on repourl {self.repourl} '
+                                   f'failed with exit code {code}: {stderr}')
         return stdout.strip()

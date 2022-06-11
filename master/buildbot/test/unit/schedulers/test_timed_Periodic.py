@@ -19,8 +19,8 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.schedulers import timed
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestException(Exception):
@@ -33,7 +33,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     SCHEDULERID = 3
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def makeScheduler(self, firstBuildDuration=0, firstBuildError=False, exp_branch=None, **kwargs):
@@ -49,10 +49,10 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                                                    properties=None, builderNames=None, **kw):
             self.assertIn('Periodic scheduler named', reason)
             # TODO: check branch
-            isFirst = (self.events == [])
+            isFirst = not self.events
             if self.reactor.seconds() == 0 and firstBuildError:
                 raise TestException()
-            self.events.append('B@%d' % self.reactor.seconds())
+            self.events.append(f'B@{int(self.reactor.seconds())}')
             if isFirst and firstBuildDuration:
                 d = defer.Deferred()
                 self.reactor.callLater(firstBuildDuration, d.callback, None)
@@ -163,7 +163,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         d = sched.deactivate()  # begin stopping the service
         d.addCallback(
-            lambda _: self.events.append('STOP@%d' % self.reactor.seconds()))
+            lambda _: self.events.append(f'STOP@{int(self.reactor.seconds())}'))
 
         # run the clock out
         while self.reactor.seconds() < 40:

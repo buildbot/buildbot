@@ -27,9 +27,9 @@ from twisted.protocols import basic
 from twisted.trial import unittest
 
 from buildbot.schedulers import trysched
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
@@ -37,7 +37,7 @@ class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     SCHEDULERID = 6
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -118,7 +118,7 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
 
         # create some new data to process
         jobdata = os.path.join(self.newdir, 'jobdata')
-        with open(jobdata, "w") as f:
+        with open(jobdata, "w", encoding='utf-8') as f:
             f.write('JOBDATA')
 
         # run it
@@ -131,7 +131,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     SCHEDULERID = 3
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
         self.jobdir = None
 
@@ -248,7 +248,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             sched.parseJob(StringIO('1:9,'))
 
     def makeNetstring(self, *strings):
-        return ''.join(['{}:{},'.format(len(s), s) for s in strings])
+        return ''.join([f'{len(s)}:{s},' for s in strings])
 
     def test_parseJob_v1(self):
         sched = trysched.Try_Jobdir(
@@ -684,7 +684,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin,
     SCHEDULERID = 6
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -823,7 +823,7 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin,
     SCHEDULERID = 5
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):

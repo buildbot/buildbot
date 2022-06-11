@@ -196,15 +196,14 @@ class GitHubStatusPush(ReporterBase):
             # the ones for which there is no revision
             if not sha:
                 log.msg(
-                    'Skipped status update for codebase {codebase}, '
-                    'context "{context}", issue {issue}.'.format(
-                        codebase=sourcestamp['codebase'], issue=issue, context=context))
+                    f"Skipped status update for codebase {sourcestamp['codebase']}, "
+                    f"context '{context}', issue {issue}.")
                 continue
 
             try:
                 if self.verbose:
-                    log.msg("Updating github status: repo_owner={}, repo_name={}".format(
-                            repo_owner, repo_name))
+                    log.msg(
+                        f"Updating github status: repo_owner={repo_owner}, repo_name={repo_name}")
 
                 response = yield self.createStatus(repo_user=repo_owner,
                                                    repo_name=repo_name,
@@ -224,10 +223,8 @@ class GitHubStatusPush(ReporterBase):
 
                 if self.verbose:
                     log.msg(
-                        'Updated status with "{state}" for {repo_owner}/{repo_name} '
-                        'at {sha}, context "{context}", issue {issue}.'.format(
-                            state=state, repo_owner=repo_owner, repo_name=repo_name,
-                            sha=sha, issue=issue, context=context))
+                        f'Updated status with "{state}" for {repo_owner}/{repo_name} '
+                        f'at {sha}, context "{context}", issue {issue}.')
             except Exception as e:
                 if response:
                     content = yield response.content()
@@ -236,12 +233,9 @@ class GitHubStatusPush(ReporterBase):
                     content = code = "n/a"
                 log.err(
                     e,
-                    'Failed to update "{state}" for {repo_owner}/{repo_name} '
-                    'at {sha}, context "{context}", issue {issue}. '
-                    'http {code}, {content}'.format(
-                        state=state, repo_owner=repo_owner, repo_name=repo_name,
-                        sha=sha, issue=issue, context=context,
-                        code=code, content=content))
+                    (f'Failed to update "{state}" for {repo_owner}/{repo_name} '
+                    f'at {sha}, context "{context}", issue {issue}. '
+                    f'http {code}, {content}'))
 
 
 class GitHubCommentPush(GitHubStatusPush):
@@ -286,8 +280,8 @@ class GitHubCommentPush(GitHubStatusPush):
         payload = {'body': description}
 
         if issue is None:
-            log.msg('Skipped status update for repo {} sha {} as issue is not specified'.format(
-                repo_name, sha))
+            log.msg(
+                f'Skipped status update for repo {repo_name} sha {sha} as issue is not specified')
             return None
 
         url = '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments'])

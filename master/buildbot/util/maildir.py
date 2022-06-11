@@ -66,7 +66,7 @@ class MaildirService(service.BuildbotService):
     @defer.inlineCallbacks
     def startService(self):
         if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
-            raise NoSuchMaildir("invalid maildir '{}'".format(self.basedir))
+            raise NoSuchMaildir(f"invalid maildir '{self.basedir}'")
         try:
             if dnotify:
                 # we must hold an fd open on the directory, so we can get
@@ -126,16 +126,16 @@ class MaildirService(service.BuildbotService):
                 try:
                     yield self.messageReceived(n)
                 except Exception:
-                    log.err(None, "while reading '{}' from maildir '{}':".format(n, self.basedir))
+                    log.err(None, f"while reading '{n}' from maildir '{self.basedir}':")
         except Exception:
-            log.err(None, "while polling maildir '{}':".format(self.basedir))
+            log.err(None, f"while polling maildir '{self.basedir}':")
 
     def moveToCurDir(self, filename):
         if runtime.platformType == "posix":
             # open the file before moving it, because I'm afraid that once
             # it's in cur/, someone might delete it at any moment
             path = os.path.join(self.newdir, filename)
-            f = open(path, "r")
+            f = open(path, "r", encoding='utf-8')
             os.rename(os.path.join(self.newdir, filename),
                       os.path.join(self.curdir, filename))
         elif runtime.platformType == "win32":
@@ -145,7 +145,7 @@ class MaildirService(service.BuildbotService):
             os.rename(os.path.join(self.newdir, filename),
                       os.path.join(self.curdir, filename))
             path = os.path.join(self.curdir, filename)
-            f = open(path, "r")
+            f = open(path, "r", encoding='utf-8')  # noqa pylint: disable=consider-using-with
 
         return f
 

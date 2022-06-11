@@ -36,7 +36,7 @@ def skip_for_dialect(dialect):
     def dec(fn):
         def wrap(self, *args, **kwargs):
             if self.db_engine.dialect.name == dialect:
-                raise unittest.SkipTest("Not supported on dialect '{}'".format(dialect))
+                raise unittest.SkipTest(f"Not supported on dialect '{dialect}'")
             return fn(self, *args, **kwargs)
         return wrap
     return dec
@@ -209,7 +209,7 @@ class RealDatabaseMixin:
 
         self.db_pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
 
-        log.msg("cleaning database {}".format(self.db_url))
+        log.msg(f"cleaning database {self.db_url}")
         yield self.db_pool.do(self.__thd_clean_database)
         yield self.db_pool.do(self.__thd_create_tables, table_names)
         return None
@@ -242,7 +242,7 @@ class RealDatabaseMixin:
                     try:
                         tbl.insert(bind=conn).execute(row.values)
                     except Exception:
-                        log.msg("while inserting {} - {}".format(row, row.values))
+                        log.msg(f"while inserting {row} - {row.values}")
                         raise
         yield self.db_pool.do(thd)
 

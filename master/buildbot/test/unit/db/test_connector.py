@@ -20,12 +20,12 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
+from buildbot.config.master import MasterConfig
 from buildbot.db import connector
 from buildbot.db import exceptions
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
@@ -37,7 +37,7 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpRealDatabase(table_names=[
             'changes', 'change_properties', 'change_files', 'patches',
             'sourcestamps', 'buildset_properties', 'buildsets',
@@ -45,7 +45,7 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
             'buildrequests', 'workers'])
 
         self.master = fakemaster.make_master(self)
-        self.master.config = config.MasterConfig()
+        self.master.config = MasterConfig()
         self.db = connector.DBConnector(os.path.abspath('basedir'))
         yield self.db.setServiceParent(self.master)
 

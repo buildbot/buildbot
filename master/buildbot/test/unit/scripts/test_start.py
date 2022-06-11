@@ -61,7 +61,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('basedir')
-        with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:
+        with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write(fake_master_tac)
         self.setUpStdoutAssertions()
 
@@ -78,8 +78,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         args = [
             '-c',
             'from buildbot.scripts.start import start; import sys; '
-            'sys.exit(start(%r))' % (
-                mkconfig(**config),),
+            f'sys.exit(start({repr(mkconfig(**config))}))',
         ]
         env = os.environ.copy()
         env['PYTHONPATH'] = os.pathsep.join(sys.path)

@@ -18,7 +18,7 @@ from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import asyncSleep
 from buildbot.util.deferwaiter import DeferWaiter
 from buildbot.util.deferwaiter import RepeatedActionHandler
@@ -90,6 +90,8 @@ class WaiterTests(unittest.TestCase):
         with self.assertRaises(defer.CancelledError):
             yield d1
 
+        self.flushLoggedErrors(defer.CancelledError)
+
     @defer.inlineCallbacks
     def test_cancel_called(self):
         w = DeferWaiter()
@@ -108,11 +110,13 @@ class WaiterTests(unittest.TestCase):
         with self.assertRaises(defer.CancelledError):
             yield d1
 
+        self.flushLoggedErrors(defer.CancelledError)
+
 
 class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def test_does_not_add_action_on_start(self):

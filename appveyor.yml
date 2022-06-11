@@ -1,13 +1,16 @@
 # AppVeyor CI
 # https://www.appveyor.com/docs
 
+image:
+  - Visual Studio 2019
+
 environment:
   matrix:
     # For Python versions available on AppVeyor, see
     # http://www.appveyor.com/docs/installed-software#python
-    - PYTHON: "C:\\Python36"
     - PYTHON: "C:\\Python37"
     - PYTHON: "C:\\Python38"
+    - PYTHON: "C:\\Python39"
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -15,22 +18,22 @@ install:
   - "python -c \"import sys; print(sys.exec_prefix)\""
   - "python -c \"import sys; print(sys.executable)\""
   - "python -V -V"
-  - "python -m pip install -U pip"
+  - "python -m pip install -U pip setuptools"
   - "python -m pip install -r requirements-ci.txt"
-  # Twisted requires pywin32 on Windows in order to spawn processes.
-  # for some reason it needs to be installed last or there will be dll loading issues
-  - "python -m pip install \"pywin32\""
   - "python -m pip list"
+  # Check that pywin32 is properly installed
   - "python -c \"import win32api\""
 
 build: false
 
 test_script:
+  # Note that Twisted Trial does not support multiple jobs on Windows
+  # The following error is printed: "Customizing childFDs is not supported on Windows."
   - "coverage run --rcfile=common/coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
   - ps: |
           echo $ENV:PYTHON
           if ($env:PYTHON -imatch 'C:\\Python27') {
-            iex 'pyinstaller -F pyinstaller/buildbot-worker.spec'
+            iex 'pyinstaller pyinstaller/buildbot-worker.spec'
             iex 'appveyor PushArtifact dist\\buildbot-worker.exe'
           }
 

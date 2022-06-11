@@ -31,8 +31,10 @@ class TryClientE2E(RunMasterBase):
         yield self.setupConfig(masterConfig())
 
         def trigger_callback():
+            port = self.master.pbmanager.dispatchers['tcp:0'].port.getHost().port
+
             def thd():
-                os.system("buildbot try --connect=pb --master=127.0.0.1:8030 -b testy "
+                os.system(f"buildbot try --connect=pb --master=127.0.0.1:{port} -b testy "
                           "--property=foo:bar --username=alice --passwd=pw1 --vc=none")
             reactor.callInThread(thd)
 
@@ -51,7 +53,7 @@ def masterConfig():
     c['schedulers'] = [
         schedulers.Try_Userpass(name="try",
                                 builderNames=["testy"],
-                                port=8030,
+                                port='tcp:0',
                                 userpass=[("alice", "pw1")])
     ]
     f = BuildFactory()

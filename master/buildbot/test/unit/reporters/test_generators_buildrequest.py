@@ -22,10 +22,11 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.builder import Builder
+from buildbot.process.results import CANCELLED
 from buildbot.reporters.generators.buildrequest import BuildRequestGenerator
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
@@ -35,7 +36,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
     all_messages = ('failing', 'passing', 'warnings', 'exception', 'cancelled')
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
@@ -83,6 +84,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield g.buildrequest_message(self.master, build)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=True,
                                                                 mode=self.all_messages,
                                                                 users=[])
 
@@ -134,6 +136,28 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
             'subject': 'start subject',
             'type': 'plain',
             'results': None,
+            'builds': [build],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_generate_cancel(self):
+        self.maxDiff = None
+        g = yield self.setup_generator(add_patch=True)
+        buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
+        build = yield g.partial_build_dict(self.master, buildrequest)
+        report = yield g.generate(self.master, None, ('buildrequests', 11, 'cancel'), buildrequest)
+
+        build['complete'] = True
+        build['results'] = CANCELLED
+
+        self.assertEqual(report, {
+            'body': 'start body',
+            'subject': 'start subject',
+            'type': 'plain',
+            'results': CANCELLED,
             'builds': [build],
             'users': [],
             'patches': [],

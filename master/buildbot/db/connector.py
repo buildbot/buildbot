@@ -117,8 +117,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
     def setup(self, check_version=True, verbose=True):
         db_url = self.configured_url = self.master.config.db['db_url']
 
-        log.msg("Setting up database with URL %r"
-                % util.stripUrlPassword(db_url))
+        log.msg(f"Setting up database with URL {repr(util.stripUrlPassword(db_url))}")
 
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(db_url,
@@ -132,7 +131,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
                 # Using in-memory database. Since it is reset after each process
                 # restart, `buildbot upgrade-master` cannot be used (data is not
                 # persistent). Upgrade model here to allow startup to continue.
-                self.model.upgrade()
+                yield self.model.upgrade()
             current = yield self.model.is_current()
             if not current:
                 for l in upgrade_message.format(basedir=self.master.basedir).split('\n'):

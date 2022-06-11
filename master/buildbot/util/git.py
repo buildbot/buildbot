@@ -33,14 +33,14 @@ def getSshArgsForKeys(keyPath, knownHostsPath):
     if keyPath is not None:
         args += ['-i', keyPath]
     if knownHostsPath is not None:
-        args += ['-o', 'UserKnownHostsFile={0}'.format(knownHostsPath)]
+        args += ['-o', f'UserKnownHostsFile={knownHostsPath}']
     return args
 
 
 def escapeShellArgIfNeeded(arg):
     if re.match(r"^[a-zA-Z0-9_-]+$", arg):
         return arg
-    return '"{0}"'.format(arg)
+    return f'"{arg}"'
 
 
 def getSshCommand(keyPath, knownHostsPath):
@@ -56,16 +56,13 @@ class GitMixin:
             logname = 'GitMixin'
 
         if self.sshHostKey is not None and self.sshPrivateKey is None:
-            config.error('{}: sshPrivateKey must be provided in order use sshHostKey'.format(
-                logname))
+            config.error(f'{logname}: sshPrivateKey must be provided in order use sshHostKey')
 
         if self.sshKnownHosts is not None and self.sshPrivateKey is None:
-            config.error('{}: sshPrivateKey must be provided in order use sshKnownHosts'.format(
-                logname))
+            config.error(f'{logname}: sshPrivateKey must be provided in order use sshKnownHosts')
 
         if self.sshHostKey is not None and self.sshKnownHosts is not None:
-            config.error('{}: only one of sshKnownHosts and sshHostKey can be provided'.format(
-                logname))
+            config.error(f'{logname}: only one of sshKnownHosts and sshHostKey can be provided')
 
         self.gitInstalled = False
         self.supportsBranch = False
@@ -74,27 +71,30 @@ class GitMixin:
         self.supportsSubmoduleCheckout = False
         self.supportsSshPrivateKeyAsEnvOption = False
         self.supportsSshPrivateKeyAsConfigOption = False
+        self.supportsFilters = False
 
     def parseGitFeatures(self, version_stdout):
         match = re.match(r"^git version (\d+(\.\d+)*)", version_stdout)
         if not match:
             return
 
-        version = match.group(1)
+        version = parse_version(match.group(1))
 
         self.gitInstalled = True
-        if parse_version(version) >= parse_version("1.6.5"):
+        if version >= parse_version("1.6.5"):
             self.supportsBranch = True
-        if parse_version(version) >= parse_version("1.7.2"):
+        if version >= parse_version("1.7.2"):
             self.supportsProgress = True
-        if parse_version(version) >= parse_version("1.7.6"):
+        if version >= parse_version("1.7.6"):
             self.supportsSubmoduleForce = True
-        if parse_version(version) >= parse_version("1.7.8"):
+        if version >= parse_version("1.7.8"):
             self.supportsSubmoduleCheckout = True
-        if parse_version(version) >= parse_version("2.3.0"):
+        if version >= parse_version("2.3.0"):
             self.supportsSshPrivateKeyAsEnvOption = True
-        if parse_version(version) >= parse_version("2.10.0"):
+        if version >= parse_version("2.10.0"):
             self.supportsSshPrivateKeyAsConfigOption = True
+        if version >= parse_version("2.27.0"):
+            self.supportsFilters = True
 
     def adjustCommandParamsForSshPrivateKey(self, command, env,
                                             keyPath, sshWrapperPath=None,
@@ -103,7 +103,7 @@ class GitMixin:
 
         if self.supportsSshPrivateKeyAsConfigOption:
             command.append('-c')
-            command.append('core.sshCommand={0}'.format(ssh_command))
+            command.append(f'core.sshCommand={ssh_command}')
         elif self.supportsSshPrivateKeyAsEnvOption:
             env['GIT_SSH_COMMAND'] = ssh_command
         else:
@@ -117,12 +117,12 @@ def getSshWrapperScriptContents(keyPath, knownHostsPath=None):
     ssh_command = getSshCommand(keyPath, knownHostsPath)
 
     # note that this works on windows if using git with MINGW embedded.
-    return '#!/bin/sh\n{0} "$@"\n'.format(ssh_command)
+    return f'#!/bin/sh\n{ssh_command} "$@"\n'
 
 
 def getSshKnownHostsContents(hostKey):
     host_name = '*'
-    return '{0} {1}'.format(host_name, hostKey)
+    return f'{host_name} {hostKey}'
 
 
 class GitStepMixin(GitMixin):
@@ -168,8 +168,7 @@ class GitStepMixin(GitMixin):
             parent_path = path_module.join(self.worker.worker_basedir,
                                            path_module.dirname(workdir))
 
-        basename = '.{0}.{1}.buildbot'.format(workerbuilddir,
-                                              path_module.basename(workdir))
+        basename = f'.{workerbuilddir}.{path_module.basename(workdir)}.buildbot'
         return path_module.join(parent_path, basename)
 
     def _getSshPrivateKeyPath(self, ssh_data_path):
@@ -202,7 +201,7 @@ class GitStepMixin(GitMixin):
         if self.config is not None:
             for name, value in self.config.items():
                 full_command.append('-c')
-                full_command.append('{}={}'.format(name, value))
+                full_command.append(f'{name}={value}')
 
         if self._isSshPrivateKeyNeededForGitCommand(command):
             self._adjustCommandParamsForSshPrivateKey(full_command, full_env)
@@ -246,7 +245,7 @@ class GitStepMixin(GitMixin):
         yield self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
-            log.msg("Source step failed while running command {}".format(cmd))
+            log.msg(f"Source step failed while running command {cmd}")
             raise buildstep.BuildStepFailed()
         if collectStdout:
             return cmd.stdout

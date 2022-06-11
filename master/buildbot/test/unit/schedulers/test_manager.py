@@ -80,14 +80,14 @@ class SchedulerManager(unittest.TestCase):
             assert self.objectid is not None
 
         def __repr__(self):
-            return "{}(attr={})".format(self.__class__.__name__, self.attr)
+            return f"{self.__class__.__name__}(attr={self.attr})"
 
     class ReconfigSched(Sched):
 
-        def reconfigServiceWithSibling(self, new_config):
+        def reconfigServiceWithSibling(self, sibling):
             self.reconfig_count += 1
-            self.attr = new_config.attr
-            return super().reconfigServiceWithSibling(new_config)
+            self.attr = sibling.attr
+            return super().reconfigServiceWithSibling(sibling)
 
     class ReconfigSched2(ReconfigSched):
         pass

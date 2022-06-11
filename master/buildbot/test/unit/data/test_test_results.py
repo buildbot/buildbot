@@ -20,9 +20,9 @@ from twisted.trial import unittest
 from buildbot.data import test_results
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestResultsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -74,7 +74,7 @@ class TestResultsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = test_results.TestResult(self.master)
 

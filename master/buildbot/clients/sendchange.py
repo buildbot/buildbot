@@ -45,9 +45,9 @@ class Sender:
         if codebase:
             change['codebase'] = codebase
 
-        for key in change:
-            if isinstance(change[key], bytes):
-                change[key] = change[key].decode(self.encoding, 'replace')
+        for key, value in change.items():
+            if isinstance(value, bytes):
+                change[key] = value.decode(self.encoding, 'replace')
         change['files'] = list(change['files'])
         for i, file in enumerate(change.get('files', [])):
             if isinstance(file, bytes):

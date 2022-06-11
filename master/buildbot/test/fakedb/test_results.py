@@ -22,48 +22,37 @@ from buildbot.test.fakedb.row import Row
 class TestName(Row):
     table = 'test_names'
 
-    defaults = {
-        'id': None,
-        'builderid': None,
-        'name': 'nam'
-    }
-
     id_column = 'id'
     foreignKeys = ('builderid',)
     required_columns = ('builderid', 'name')
+
+    def __init__(self, id=None, builderid=None, name='nam'):
+        super().__init__(id=id, builderid=builderid, name=name)
 
 
 class TestCodePath(Row):
     table = 'test_code_paths'
 
-    defaults = {
-        'id': None,
-        'builderid': None,
-        'path': 'path/to/file'
-    }
-
     id_column = 'id'
     foreignKeys = ('builderid',)
     required_columns = ('builderid', 'path')
+
+    def __init__(self, id=None, builderid=None, path='path/to/file'):
+        super().__init__(id=id, builderid=builderid, path=path)
 
 
 class TestResult(Row):
     table = 'test_results'
 
-    defaults = {
-        'id': None,
-        'builderid': None,
-        'test_result_setid': None,
-        'test_nameid': None,
-        'test_code_pathid': None,
-        'line': None,
-        'duration_ns': None,
-        'value': None
-    }
-
     id_column = 'id'
     foreignKeys = ('builderid', 'test_result_setid', 'test_nameid', 'test_code_pathid')
     required_columns = ('builderid', 'test_result_setid', 'value')
+
+    def __init__(self, id=None, builderid=None, test_result_setid=None, test_nameid=None,
+                 test_code_pathid=None, line=None, duration_ns=None, value=None):
+        super().__init__(id=id, builderid=builderid, test_result_setid=test_result_setid,
+                         test_nameid=test_nameid, test_code_pathid=test_code_pathid,
+                         line=line, duration_ns=duration_ns, value=value)
 
 
 class FakeTestResultsComponent(FakeDBComponent):
@@ -184,7 +173,7 @@ class FakeTestResultsComponent(FakeDBComponent):
     # returns a Deferred
     def getTestNames(self, builderid, name_prefix=None, result_spec=None):
         ret = []
-        for id, row in sorted(self.names.items()):
+        for _, row in sorted(self.names.items()):
             if row['builderid'] != builderid:
                 continue
             if name_prefix is not None and not row['name'].startswith(name_prefix):
@@ -199,7 +188,7 @@ class FakeTestResultsComponent(FakeDBComponent):
     # returns a Deferred
     def getTestCodePaths(self, builderid, path_prefix=None, result_spec=None):
         ret = []
-        for id, row in sorted(self.code_paths.items()):
+        for _, row in sorted(self.code_paths.items()):
             if row['builderid'] != builderid:
                 continue
             if path_prefix is not None and not row['path'].startswith(path_prefix):

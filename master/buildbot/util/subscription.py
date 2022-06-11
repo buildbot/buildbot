@@ -30,7 +30,7 @@ class SubscriptionPoint:
         self._got_exceptions = []
 
     def __str__(self):
-        return "<SubscriptionPoint '{}'>".format(self.name)
+        return f"<SubscriptionPoint '{self.name}'>"
 
     def subscribe(self, callback):
         sub = Subscription(self, callback)
@@ -60,14 +60,18 @@ class SubscriptionPoint:
 
     def pop_exceptions(self):
         exceptions = self._got_exceptions
-        self._got_exceptions = None
+        self._got_exceptions = None  # we no longer expect any exceptions
         return exceptions
 
     def _unsubscribe(self, subscription):
         self.subscriptions.remove(subscription)
 
     def _notify_delivery_exception(self, e, sub):
-        log.err(e, 'while invoking callback {} to {}'.format(sub.callback, self))
+        log.err(e, f'while invoking callback {sub.callback} to {self}')
+        if self._got_exceptions is None:
+            log.err(e, 'exceptions have already been collected. '
+                    'This is serious error, please submit a bug report')
+            return
         self._got_exceptions.append(e)
 
     def _notify_delivery_finished(self, _, d):

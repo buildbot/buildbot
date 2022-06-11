@@ -19,9 +19,9 @@ from twisted.trial import unittest
 from buildbot.reporters.zulip import ZulipStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
@@ -29,7 +29,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                           TestReactorMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(
             testcase=self, wantData=True, wantDb=True, wantMq=True)

@@ -20,6 +20,7 @@ from buildbot import interfaces
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter
+from buildbot.warnings import warn_deprecated
 
 from .utils import BuildStatusGeneratorMixin
 
@@ -35,8 +36,13 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
 
     def __init__(self, mode=("failing", "passing", "warnings"),
                  tags=None, builders=None, schedulers=None, branches=None,
-                 subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                 add_logs=False, add_patch=False, message_formatter=None):
+                 subject=None, add_logs=False, add_patch=False, message_formatter=None):
+        if subject is not None:
+            warn_deprecated('3.5.0', 'BuildSetStatusGenerator subject parameter has been ' +
+                            'deprecated: please configure subject in the message formatter')
+        else:
+            subject = "Buildbot %(result)s in %(title)s on %(builder)s"
+
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch)
         self.formatter = message_formatter
         if self.formatter is None:
@@ -46,10 +52,11 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
     def generate(self, master, reporter, key, message):
         bsid = message['bsid']
         res = yield utils.getDetailsForBuildset(master, bsid,
-                                                wantProperties=self.formatter.wantProperties,
-                                                wantSteps=self.formatter.wantSteps,
-                                                wantPreviousBuild=self._want_previous_build(),
-                                                wantLogs=self.formatter.wantLogs)
+                                                want_properties=self.formatter.want_properties,
+                                                want_steps=self.formatter.want_steps,
+                                                want_previous_build=self._want_previous_build(),
+                                                want_logs=self.formatter.want_logs,
+                                                want_logs_content=self.formatter.want_logs_content)
 
         builds = res['builds']
         buildset = res['buildset']
@@ -83,8 +90,8 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
             blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
             users.update(set(blamelist))
 
-            buildmsg = yield formatter.format_message_for_build(master, build, mode=self.mode,
-                                                                users=blamelist)
+            buildmsg = yield formatter.format_message_for_build(master, build, is_buildset=True,
+                                                                mode=self.mode, users=blamelist)
 
             msgtype, ok = self._merge_msgtype(msgtype, buildmsg['type'])
             if not ok:

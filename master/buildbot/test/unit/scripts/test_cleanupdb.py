@@ -23,11 +23,11 @@ from twisted.trial import unittest
 
 from buildbot.scripts import cleanupdb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.unit.db import test_logs
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
-from buildbot.test.util.misc import TestReactorMixin
 
 try:
     import lz4
@@ -60,10 +60,10 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                     TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.origcwd = os.getcwd()
         self.setUpDirs('basedir')
-        with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:
+        with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write(textwrap.dedent("""
                 from twisted.application import service
                 application = service.Application('buildmaster')
@@ -85,16 +85,15 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
     def createMasterCfg(self, extraconfig=""):
         os.chdir(self.origcwd)
-        with open(os.path.join('basedir', 'master.cfg'), 'wt') as f:
-            f.write(textwrap.dedent("""
+        with open(os.path.join('basedir', 'master.cfg'), 'wt', encoding='utf-8') as f:
+            f.write(textwrap.dedent(f"""
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
-                c['db_url'] = {dburl}
+                c['db_url'] = {repr(os.environ["BUILDBOT_TEST_DB_URL"])}
                 c['buildbotNetUsageData'] = None
                 c['multiMaster'] = True  # don't complain for no builders
                 {extraconfig}
-            """.format(dburl=repr(os.environ["BUILDBOT_TEST_DB_URL"]),
-                       extraconfig=extraconfig)))
+            """))
 
     @defer.inlineCallbacks
     def test_cleanup_not_basedir(self):
@@ -165,7 +164,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 lengths["lz4"] = 40
                 continue
             # create a master.cfg with different compression method
-            self.createMasterCfg("c['logCompressionMethod'] = '{}'".format(mode))
+            self.createMasterCfg(f"c['logCompressionMethod'] = '{mode}'")
             res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
             self.assertEqual(res, 0)
 

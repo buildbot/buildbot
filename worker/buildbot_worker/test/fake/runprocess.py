@@ -101,7 +101,7 @@ class FakeRunProcess(object):
                                   ).format(len(cls._expectations)))
         del cls._expectations
 
-    def __init__(self, builder, command, workdir, **kwargs):
+    def __init__(self, command, workdir, unicode_encoding, send_update, **kwargs):
         kwargs['command'] = command
         kwargs['workdir'] = workdir
 
@@ -142,7 +142,7 @@ class FakeRunProcess(object):
                 self._expectations[:] = []  # don't expect any more instances, since we're failing
                 raise AssertionError("\n".join(msg))
 
-        self._builder = builder
+        self.send_update = send_update
         self.stdout = ''
         self.stderr = ''
 
@@ -175,7 +175,7 @@ class FakeRunProcess(object):
                 continue  # don't send this update
             if not upd:
                 continue
-            self._builder.sendUpdate(upd)
+            self.send_update(upd)
 
         d = self.run_deferred = defer.Deferred()
 
@@ -191,6 +191,6 @@ class FakeRunProcess(object):
             self.run_deferred.callback(self._exp.result[1])
 
     def kill(self, reason):
-        self._builder.sendUpdate({'hdr': 'killing'})
-        self._builder.sendUpdate({'rc': -1})
+        self.send_update({'hdr': 'killing'})
+        self.send_update({'rc': -1})
         self.run_deferred.callback(-1)

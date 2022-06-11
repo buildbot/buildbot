@@ -18,16 +18,17 @@ from datetime import datetime
 
 from twisted.internet import defer
 from twisted.trial import unittest
-from twisted.web import client
 from twisted.web.error import Error
 
 from buildbot.changes.bitbucket import BitbucketPullrequestPoller
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.logging import LoggingMixin
 
 
 class SourceRest():
-    """https://bitbucket.org/!api/2.0/repositories/{owner}/{slug}"""
+    """https://api.bitbucket.org/2.0/repositories/{owner}/{slug}"""
     template = """\
 {
 
@@ -40,7 +41,7 @@ class SourceRest():
     "repository": {
         "links": {
             "self": {
-                "href": "https://bitbucket.org/!api/2.0/repositories/%(owner)s/%(slug)s"
+                "href": "https://api.bitbucket.org/2.0/repositories/%(owner)s/%(slug)s"
             }
         }
     },
@@ -64,7 +65,7 @@ class SourceRest():
         self.hash = hash
         self.date = date
 
-    def request(self):
+    def response(self):
         return self.template % {
             "owner": self.owner,
             "slug": self.slug,
@@ -73,7 +74,7 @@ class SourceRest():
             "date": self.date,
         }
 
-    def repo_request(self):
+    def repo_response(self):
         return self.repo_template % {
             "owner": self.owner,
             "slug": self.slug,
@@ -81,7 +82,7 @@ class SourceRest():
 
 
 class PullRequestRest():
-    """https://bitbucket.org/!api/2.0/repositories/{owner}/{slug}/pullrequests/{pull_request_id}"""
+    """https://api.bitbucket.org/2.0/repositories/{owner}/{slug}/pullrequests/{pull_request_id}"""
     template = """\
 {
 
@@ -92,7 +93,7 @@ class PullRequestRest():
             "hash": "%(hash)s",
             "links": {
                 "self": {
-                    "href": "https://bitbucket.org/!api/2.0/repositories/%(owner)s/%(slug)s/commit/%(hash)s"
+                    "href": "https://api.bitbucket.org/2.0/repositories/%(owner)s/%(slug)s/commit/%(hash)s"
                 }
             }
         }
@@ -123,7 +124,7 @@ class PullRequestRest():
         else:
             self.updated_on = self.created_on
 
-    def request(self):
+    def response(self):
         return self.template % {
             "description": self.description,
             "title": self.title,
@@ -139,13 +140,13 @@ class PullRequestRest():
 
 
 class PullRequestListRest():
-    """https://bitbucket.org/api/2.0/repositories/{owner}/{slug}/pullrequests"""
+    """https://api.bitbucket.org/2.0/repositories/{owner}/{slug}/pullrequests"""
     template = """\
         {
             "description": "%(description)s",
             "links": {
                 "self": {
-                    "href": "https://bitbucket.org/!api/2.0/repositories/%(owner)s/%(slug)s/pullrequests/%(id)d"
+                    "href": "https://api.bitbucket.org/2.0/repositories/%(owner)s/%(slug)s/pullrequests/%(id)d"
                 },
                 "html": {
                     "href": "https://bitbucket.org/%(owner)s/%(slug)s/pull-request/%(id)d"
@@ -160,14 +161,14 @@ class PullRequestListRest():
                     "hash": "%(short_hash)s",
                     "links": {
                         "self": {
-                            "href": "https://bitbucket.org/!api/2.0/repositories/%(src_owner)s/%(src_slug)s/commit/%(short_hash)s"
+                            "href": "https://api.bitbucket.org/2.0/repositories/%(src_owner)s/%(src_slug)s/commit/%(short_hash)s"
                         }
                     }
                 },
                 "repository": {
                     "links": {
                         "self": {
-                            "href": "https://bitbucket.org/!api/2.0/repositories/%(src_owner)s/%(src_slug)s"
+                            "href": "https://api.bitbucket.org/2.0/repositories/%(src_owner)s/%(src_slug)s"
                         }
                     }
                 },
@@ -192,9 +193,9 @@ class PullRequestListRest():
         self.src_by_url = {}
         for pr in prs:
             self.pr_by_id[pr.nr] = pr
-            self.src_by_url["{}/{}".format(pr.source.owner, pr.source.slug)] = pr.source
+            self.src_by_url[f"{pr.source.owner}/{pr.source.slug}"] = pr.source
 
-    def request(self):
+    def response(self):
 
         s = ""
         for pr in self.prs:
@@ -212,28 +213,25 @@ class PullRequestListRest():
                 "updated_on": pr.updated_on,
                 "id": pr.nr,
             }
-        return """\
-{
+        return f"""\
+{{
 
     "pagelen": 10,
-    "values": [%s
-    ],
+    "values": [{s}],
     "page": 1
 
-}
-""" % s
+}}
+"""
 
     def getPage(self, url, timeout=None, headers=None):
         list_url_re = re.compile(
-            r"https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
-                                                                                    self.slug))
+            f"https://api.bitbucket.org/2.0/repositories/{self.owner}/{self.slug}/pullrequests")
         pr_url_re = re.compile(
-            r"https://bitbucket.org/!api/2.0/repositories/{}/{}/pullrequests/(?P<id>\d+)".format(
-                    self.owner, self.slug))
+            fr"https://api.bitbucket.org/2.0/repositories/{self.owner}/{self.slug}/pullrequests/(?P<id>\d+)")  # noqa pylint: disable=line-too-long
         source_commit_url_re = re.compile(
-            r"https://bitbucket.org/!api/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)/commit/(?P<hash>\d+)")  # noqa pylint: disable=line-too-long
+            r"https://api.bitbucket.org/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)/commit/(?P<hash>\d+)")  # noqa pylint: disable=line-too-long
         source_url_re = re.compile(
-            r"https://bitbucket.org/!api/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)")
+            r"https://api.bitbucket.org/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)")
 
         if list_url_re.match(url):
             return defer.succeed(self.request())
@@ -244,67 +242,47 @@ class PullRequestListRest():
 
         m = source_commit_url_re.match(url)
         if m:
-            return self.src_by_url["{}/{}".format(m.group("src_owner"),
-                                                  m.group("src_slug"))].request()
+            return self.src_by_url[f'{m.group("src_owner")}/{m.group("src_slug")}'].request()
 
         m = source_url_re.match(url)
         if m:
-            return self.src_by_url["{}/{}".format(m.group("src_owner"),
-                                                  m.group("src_slug"))].repo_request()
+            return self.src_by_url[f'{m.group("src_owner")}/{m.group("src_slug")}'].repo_request()
 
         raise Error(code=404)
 
 
 class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
-                                     TestReactorMixin,
+                                     TestReactorMixin, LoggingMixin,
                                      unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
+        self.setUpLogging()
 
         # create pull requests
         self.date = "2013-10-15T20:38:20.001797+00:00"
-        self.date_epoch = datetime.strptime(self.date.split('.')[0],
+        self.date_epoch = datetime.strptime(self.date.split('.', maxsplit=1)[0],
                                             '%Y-%m-%dT%H:%M:%S')
-        src = SourceRest(
+        self.rest_src = SourceRest(
             owner="contributor",
             slug="slug",
             hash="1111111111111111111111111111111111111111",
             date=self.date,
         )
-        pr = PullRequestRest(
+        self.rest_pr = PullRequestRest(
             nr=1,
             title="title",
             description="description",
             display_name="contributor",
-            source=src,
+            source=self.rest_src,
             created_on=self.date,
         )
-        self.pr_list = PullRequestListRest(
+        self.rest_pr_list = PullRequestListRest(
             owner="owner",
             slug="slug",
-            prs=[pr],
+            prs=[self.rest_pr],
         )
-        # update
-        src = SourceRest(
-            owner="contributor",
-            slug="slug",
-            hash="2222222222222222222222222222222222222222",
-            date=self.date,
-        )
-        pr = PullRequestRest(
-            nr=1,
-            title="title",
-            description="description",
-            display_name="contributor",
-            source=src,
-            created_on=self.date,
-        )
-        self.pr_list2 = PullRequestListRest(
-            owner="owner",
-            slug="slug",
-            prs=[pr],
-        )
+
         return self.setUpChangeSource()
 
     def tearDown(self):
@@ -318,86 +296,89 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
         def fake(url, timeout=None, headers=None):
             self.getPage_got_url = url
             return defer.succeed(result)
-        self.patch(client, "getPage", fake)
+        self.patch(self.changesource, "getPage", fake)
 
     def _fakeGetPage403(self, expected_headers):
 
         def fail_unauthorized(url, timeout=None, headers=None):
             if headers != expected_headers:
                 raise Error(code=403)
-        self.patch(client, "getPage", fail_unauthorized)
+        self.patch(self.changesource, "getPage", fail_unauthorized)
 
     def _fakeGetPage404(self):
 
         def fail(url, timeout=None, headers=None):
             raise Error(code=404)
-        self.patch(client, "getPage", fail)
+        self.patch(self.changesource, "getPage", fail)
 
-    def attachDefaultChangeSource(self):
-        return self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug'))
+    @defer.inlineCallbacks
+    def _new_change_source(self, **kwargs):
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+            self.master, self, 'https://api.bitbucket.org/2.0', auth=None)
+
+        change_source = BitbucketPullrequestPoller(**kwargs)
+        yield self.attachChangeSource(change_source)
+        return change_source
 
     # tests
     @defer.inlineCallbacks
     def test_describe(self):
-        yield self.attachDefaultChangeSource()
+        yield self._new_change_source(owner='owner', slug='slug')
         assert re.search(r'owner/slug', self.changesource.describe())
 
     @defer.inlineCallbacks
     def test_poll_unknown_repo(self):
-        yield self.attachDefaultChangeSource()
         # Polling a non-existent repository should result in a 404
-        self._fakeGetPage404()
-        try:
-            yield self.changesource.poll()
-            self.fail(
-                'Polling a non-existent repository should result in a 404.')
-        except Exception as e:
-            self.assertEqual(str(e), '404 Not Found')
+        yield self._new_change_source(owner='owner', slug='slug')
 
-    @defer.inlineCallbacks
-    def test_poll_unauthorized_failure(self):
-        expected_headers = {b'Authorization': b'Basic dXNlcjoxMjM0'}
-        yield self.attachDefaultChangeSource()
-        # Polling without authorization should result in a 403
-        self._fakeGetPage403(expected_headers)
-        try:
-            yield self.changesource.poll()
-            self.fail('Polling without authorization should result in a 403.')
-        except Exception as e:
-            self.assertEqual(str(e), '403 Forbidden')
+        self._http.expect('get', '/repositories/owner/slug/pullrequests', content_json={}, code=404)
 
-    @defer.inlineCallbacks
-    def test_poll_authorized_success(self):
-        auth = ('user', '1234')
-        expected_headers = {b'Authorization': b'Basic dXNlcjoxMjM0'}
-        yield self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug',
-            auth=auth,
-        ))
-        # Polling with authorization should success
-        self._fakeGetPage403(expected_headers)
-        try:
-            yield self.changesource.poll()
-        except Exception as e:
-            self.assertNotEqual(str(e), '403 Forbidden')
+        yield self.changesource.poll()
+
+        self.assertLogged('error 404 while loading')
 
     @defer.inlineCallbacks
     def test_poll_no_pull_requests(self):
-        yield self.attachDefaultChangeSource()
-        rest = PullRequestListRest(owner="owner", slug="slug", prs=[])
-        self._fakeGetPage(rest.request())
+        yield self._new_change_source(owner='owner', slug='slug')
+
+        rest_pr_list = PullRequestListRest(
+            owner="owner",
+            slug="slug",
+            prs=[],
+        )
+
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=rest_pr_list.response())
+
         yield self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
     def test_poll_new_pull_requests(self):
-        yield self.attachDefaultChangeSource()
-        # patch client.getPage()
-        self.patch(client, "getPage", self.pr_list.getPage)
+        yield self._new_change_source(owner='owner', slug='slug')
+
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=self.rest_pr_list.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/owner/slug/pullrequests/1',
+            content=self.rest_pr.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/commit/111111111111',
+            content=self.rest_src.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug',
+            content=self.rest_src.repo_response())
 
         yield self.changesource.poll()
 
@@ -420,10 +401,32 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_no_updated_pull_request(self):
-        yield self.attachDefaultChangeSource()
+        yield self._new_change_source(owner='owner', slug='slug')
 
-        # patch client.getPage()
-        self.patch(client, "getPage", self.pr_list.getPage)
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=self.rest_pr_list.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/owner/slug/pullrequests/1',
+            content=self.rest_pr.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/commit/111111111111',
+            content=self.rest_src.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug',
+            content=self.rest_src.repo_response())
+
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=self.rest_pr_list.response())
 
         yield self.changesource.poll()
 
@@ -450,12 +453,71 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_updated_pull_request(self):
-        yield self.attachDefaultChangeSource()
-        # patch client.getPage()
-        self.patch(client, "getPage", self.pr_list.getPage)
+        yield self._new_change_source(owner='owner', slug='slug')
+
+        rest_src2 = SourceRest(
+            owner="contributor",
+            slug="slug",
+            hash="2222222222222222222222222222222222222222",
+            date=self.date,
+        )
+        rest_pr2 = PullRequestRest(
+            nr=1,
+            title="title",
+            description="description",
+            display_name="contributor",
+            source=rest_src2,
+            created_on=self.date,
+        )
+
+        rest_pr_list2 = PullRequestListRest(
+            owner="owner",
+            slug="slug",
+            prs=[rest_pr2],
+        )
+
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=self.rest_pr_list.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/owner/slug/pullrequests/1',
+            content=self.rest_pr.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/commit/111111111111',
+            content=self.rest_src.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug',
+            content=self.rest_src.repo_response())
+
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=rest_pr_list2.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/owner/slug/pullrequests/1',
+            content=rest_pr2.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/commit/222222222222',
+            content=rest_src2.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug',
+            content=rest_src2.repo_response())
 
         yield self.changesource.poll()
-
+        self.maxDiff = None
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'contributor',
             'committer': None,
@@ -473,7 +535,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'src': 'bitbucket',
             'when_timestamp': 1381869500,
         }])
-        self.patch(client, "getPage", self.pr_list2.getPage)
+
         yield self.changesource.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [
@@ -515,14 +577,18 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_pull_request_filter_False(self):
-        yield self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug',
-            pullrequest_filter=lambda x: False
-        ))
+        yield self._new_change_source(owner='owner', slug='slug',
+                                      pullrequest_filter=lambda x: False)
 
-        # patch client.getPage()
-        self.patch(client, "getPage", self.pr_list.getPage)
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=self.rest_pr_list.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/owner/slug/pullrequests/1',
+            content=self.rest_pr.response())
 
         yield self.changesource.poll()
 
@@ -530,14 +596,27 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_pull_request_filter_True(self):
-        yield self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug',
-            pullrequest_filter=lambda x: True
-        ))
+        yield self._new_change_source(owner='owner', slug='slug', pullrequest_filter=lambda x: True)
 
-        # patch client.getPage()
-        self.patch(client, "getPage", self.pr_list.getPage)
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=self.rest_pr_list.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/owner/slug/pullrequests/1',
+            content=self.rest_pr.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/commit/111111111111',
+            content=self.rest_src.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug',
+            content=self.rest_src.repo_response())
 
         yield self.changesource.poll()
 
@@ -560,13 +639,28 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_pull_request_not_useTimestamps(self):
-        yield self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug',
-            useTimestamps=False,
-        ))
+        yield self._new_change_source(owner='owner', slug='slug', useTimestamps=False)
 
-        self.patch(client, "getPage", self.pr_list.getPage)
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=self.rest_pr_list.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/owner/slug/pullrequests/1',
+            content=self.rest_pr.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/commit/111111111111',
+            content=self.rest_src.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug',
+            content=self.rest_src.repo_response())
+
         self.reactor.advance(1396825656)
 
         yield self.changesource.poll()
@@ -589,13 +683,28 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_poll_pull_request_properties(self):
-        yield self.attachChangeSource(BitbucketPullrequestPoller(
-            owner='owner',
-            slug='slug',
-            bitbucket_property_whitelist=["bitbucket.*"],
-        ))
+        yield self._new_change_source(owner='owner', slug='slug',
+                                      bitbucket_property_whitelist=["bitbucket.*"])
 
-        self.patch(client, "getPage", self.pr_list.getPage)
+        self._http.expect(
+            'get',
+            '/repositories/owner/slug/pullrequests',
+            content=self.rest_pr_list.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/owner/slug/pullrequests/1',
+            content=self.rest_pr.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/commit/111111111111',
+            content=self.rest_src.response())
+
+        self._http.expect(
+            'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug',
+            content=self.rest_src.repo_response())
 
         yield self.changesource.poll()
         self.assertEqual(self.master.data.updates.changesAdded, [{
@@ -614,15 +723,15 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                 'bitbucket.description': 'description',
                 'bitbucket.id': 1,
                 'bitbucket.links.html.href': 'https://bitbucket.org/owner/slug/pull-request/1',
-                'bitbucket.links.self.href': 'https://bitbucket.org/!api/2.0/'
+                'bitbucket.links.self.href': 'https://api.bitbucket.org/2.0/'
                                              'repositories/owner/slug/pullrequests/1',
                 'bitbucket.merge_commit': None,
                 'bitbucket.source.branch.name': 'default',
                 'bitbucket.source.commit.hash': '111111111111',
-                'bitbucket.source.commit.links.self.href': 'https://bitbucket.org/!api/2.0/'
+                'bitbucket.source.commit.links.self.href': 'https://api.bitbucket.org/2.0/'
                                                            'repositories/contributor/slug/'
                                                            'commit/111111111111',
-                'bitbucket.source.repository.links.self.href': 'https://bitbucket.org/!api/2.0/'
+                'bitbucket.source.repository.links.self.href': 'https://api.bitbucket.org/2.0/'
                                                                'repositories/contributor/slug',
                 'bitbucket.state': 'OPEN',
                 'bitbucket.title': 'title',

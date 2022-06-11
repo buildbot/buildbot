@@ -23,42 +23,32 @@ from buildbot.test.fakedb.row import Row
 class Builder(Row):
     table = "builders"
 
-    defaults = dict(
-        id=None,
-        name='some:builder',
-        name_hash=None,
-        description=None,
-    )
-
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
+
+    def __init__(self, id=None, name='some:builder', name_hash=None, description=None):
+        super().__init__(id=id, name=name, name_hash=name_hash, description=description)
 
 
 class BuilderMaster(Row):
     table = "builder_masters"
 
-    defaults = dict(
-        id=None,
-        builderid=None,
-        masterid=None
-    )
-
     id_column = 'id'
     required_columns = ('builderid', 'masterid')
+
+    def __init__(self, id=None, builderid=None, masterid=None):
+        super().__init__(id=id, builderid=builderid, masterid=masterid)
 
 
 class BuildersTags(Row):
     table = "builders_tags"
 
-    defaults = dict(
-        id=None,
-        builderid=None,
-        tagid=None,
-    )
-
     foreignKeys = ('builderid', 'tagid')
     required_columns = ('builderid', 'tagid', )
     id_column = 'id'
+
+    def __init__(self, id=None, builderid=None, tagid=None):
+        super().__init__(id=id, builderid=builderid, tagid=tagid)
 
 
 class FakeBuildersComponent(FakeDBComponent):
@@ -107,7 +97,7 @@ class FakeBuildersComponent(FakeDBComponent):
     def removeBuilderMaster(self, builderid=None, masterid=None):
         for id, tup in self.builder_masters.items():
             if tup == (builderid, masterid):
-                del self.builder_masters[id]
+                del self.builder_masters[id]  # noqa pylint: disable=unnecessary-dict-index-lookup
                 break
         return defer.succeed(None)
 
@@ -135,7 +125,7 @@ class FakeBuildersComponent(FakeDBComponent):
 
     def addTestBuilder(self, builderid, name=None):
         if name is None:
-            name = "SomeBuilder-%d" % builderid
+            name = f"SomeBuilder-{builderid}"
         self.db.insertTestData([
             Builder(id=builderid, name=name),
         ])

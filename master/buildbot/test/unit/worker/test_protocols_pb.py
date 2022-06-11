@@ -16,12 +16,13 @@
 import mock
 
 from twisted.internet import defer
+from twisted.internet.address import IPv4Address
 from twisted.spread import pb as twisted_pb
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import protocols as util_protocols
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.protocols import base
 from buildbot.worker.protocols import pb
 
@@ -29,24 +30,21 @@ from buildbot.worker.protocols import pb
 class TestListener(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
 
-    @defer.inlineCallbacks
     def makeListener(self):
-        listener = pb.Listener()
-        yield listener.setServiceParent(self.master)
+        listener = pb.Listener(self.master)
         return listener
 
-    @defer.inlineCallbacks
     def test_constructor(self):
-        listener = yield self.makeListener()
+        listener = pb.Listener(self.master)
         self.assertEqual(listener.master, self.master)
         self.assertEqual(listener._registrations, {})
 
     @defer.inlineCallbacks
     def test_updateRegistration_simple(self):
-        listener = yield self.makeListener()
+        listener = pb.Listener(self.master)
         reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.pbmanager._registrations,
                          [('tcp:1234', 'example', 'pass')])
@@ -55,7 +53,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateRegistration_pass_changed(self):
-        listener = yield self.makeListener()
+        listener = pb.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass1', 'tcp:1234')
         self.assertEqual(
@@ -65,7 +63,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateRegistration_port_changed(self):
-        listener = yield self.makeListener()
+        listener = pb.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass', 'tcp:4321')
         self.assertEqual(
@@ -74,15 +72,15 @@ class TestListener(TestReactorMixin, unittest.TestCase):
             self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
     @defer.inlineCallbacks
-    def test_getPerspective(self):
-        listener = yield self.makeListener()
+    def test_create_connection(self):
+        listener = pb.Listener(self.master)
         worker = mock.Mock()
         worker.workername = 'test'
         mind = mock.Mock()
 
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.master.workers.register(worker)
-        conn = yield listener._getPerspective(mind, worker.workername)
+        conn = yield listener._create_connection(mind, worker.workername)
 
         mind.broker.transport.setTcpKeepAlive.assert_called_with(1)
         self.assertIsInstance(conn, pb.Connection)
@@ -92,7 +90,7 @@ class TestConnectionApi(util_protocols.ConnectionInterfaceTest,
                         TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.conn = pb.Connection(self.master, mock.Mock(), mock.Mock())
 
@@ -100,7 +98,7 @@ class TestConnectionApi(util_protocols.ConnectionInterfaceTest,
 class TestConnection(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.mind = mock.Mock()
         self.worker = mock.Mock()
@@ -121,9 +119,10 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.assertEqual(att, conn)
 
         self.reactor.pump([10] * 361)
-        self.mind.callRemote.assert_has_calls([
-            mock.call('print', message="keepalive")
-        ])
+        expected_call = [
+            mock.call('print', message="keepalive"),
+        ]
+        self.assertEqual(self.mind.callRemote.call_args_list, expected_call)
 
         conn.detached(self.mind)
         yield conn.waitShutdown()
@@ -153,14 +152,14 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_remoteGetWorkerInfo_slave(self):
         def side_effect(*args, **kwargs):
-            if 'getWorkerInfo' in args:
+            if args[0] == 'getWorkerInfo':
                 return defer.fail(twisted_pb.RemoteError(
                     'twisted.spread.flavors.NoSuchMethod', None, None))
-            if 'getSlaveInfo' in args:
+            if args[0] == 'getSlaveInfo':
                 return defer.succeed({'info': 'test'})
-            if 'getCommands' in args:
+            if args[0] == 'getCommands':
                 return defer.succeed({'x': 1, 'y': 2})
-            if 'getVersion' in args:
+            if args[0] == 'getVersion':
                 return defer.succeed('TheVersion')
             return None
 
@@ -171,7 +170,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         r = {'info': 'test', 'worker_commands': {
             'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
-        calls = [
+        expected_calls = [
             mock.call('getWorkerInfo'),
             mock.call('print',
                       message='buildbot-slave detected, failing back to deprecated buildslave API. '
@@ -180,27 +179,25 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
             mock.call('getCommands'),
             mock.call('getVersion'),
         ]
-        self.mind.callRemote.assert_has_calls(calls)
+        self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
     @defer.inlineCallbacks
     def test_remoteGetWorkerInfo_slave_2_16(self):
         """In buildslave 2.16 all information about worker is retrieved in
         a single getSlaveInfo() call."""
         def side_effect(*args, **kwargs):
-            if 'getWorkerInfo' in args:
+            if args[0] == 'getWorkerInfo':
                 return defer.fail(twisted_pb.RemoteError(
                     'twisted.spread.flavors.NoSuchMethod', None, None))
-            if 'getSlaveInfo' in args:
+            if args[0] == 'getSlaveInfo':
                 return defer.succeed({
                     'info': 'test',
                     'slave_commands': {'x': 1, 'y': 2},
                     'version': 'TheVersion',
                 })
-            if 'getCommands' in args:
-                return defer.succeed({'x': 1, 'y': 2})
-            if 'getVersion' in args:
-                return defer.succeed('TheVersion')
-            return None
+            if args[0] == 'print':
+                return None
+            raise ValueError(f"Command unknown: {args}")
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
@@ -209,19 +206,19 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         r = {'info': 'test', 'worker_commands': {
             'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
-        calls = [
+        expected_calls = [
             mock.call('getWorkerInfo'),
             mock.call('print',
                       message='buildbot-slave detected, failing back to deprecated buildslave API. '
                               '(Ignoring missing getWorkerInfo method.)'),
             mock.call('getSlaveInfo'),
         ]
-        self.mind.callRemote.assert_has_calls(calls)
+        self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
     @defer.inlineCallbacks
     def test_remoteGetWorkerInfo_worker(self):
         def side_effect(*args, **kwargs):
-            if 'getWorkerInfo' in args:
+            if args[0] == 'getWorkerInfo':
                 return defer.succeed({
                     'info': 'test',
                     'worker_commands': {
@@ -229,14 +226,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
                     },
                     'version': 'TheVersion',
                 })
-            if 'getSlaveInfo' in args:
-                return defer.fail(twisted_pb.RemoteError(
-                    'twisted.spread.flavors.NoSuchMethod', None, None))
-            if 'getCommands' in args:
-                return defer.succeed({'x': 1, 'y': 2})
-            if 'getVersion' in args:
-                return defer.succeed('TheVersion')
-            return None
+            raise ValueError(f"Command unknown: {args}")
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
@@ -245,23 +235,25 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         r = {'info': 'test', 'worker_commands': {
             'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
-        calls = [mock.call('getWorkerInfo')]
-        self.mind.callRemote.assert_has_calls(calls)
+        expected_calls = [mock.call('getWorkerInfo')]
+        self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
     @defer.inlineCallbacks
     def test_remoteGetWorkerInfo_getWorkerInfo_fails(self):
         def side_effect(*args, **kwargs):
-            if 'getWorkerInfo' in args:
+            if args[0] == 'getWorkerInfo':
                 return defer.fail(twisted_pb.RemoteError(
                     'twisted.spread.flavors.NoSuchMethod', None, None))
-            if 'getSlaveInfo' in args:
+            if args[0] == 'getSlaveInfo':
                 return defer.fail(twisted_pb.RemoteError(
                     'twisted.spread.flavors.NoSuchMethod', None, None))
-            if 'getCommands' in args:
+            if args[0] == 'getCommands':
                 return defer.succeed({'x': 1, 'y': 2})
-            if 'getVersion' in args:
+            if args[0] == 'getVersion':
                 return defer.succeed('TheVersion')
-            return None
+            if args[0] == 'print':
+                return None
+            raise ValueError(f"Command unknown: {args}")
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
@@ -269,9 +261,16 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         r = {'worker_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
-        calls = [mock.call('getSlaveInfo'), mock.call(
-            'getCommands'), mock.call('getVersion')]
-        self.mind.callRemote.assert_has_calls(calls)
+        expected_calls = [
+            mock.call('getWorkerInfo'),
+            mock.call('print',
+                      message='buildbot-slave detected, failing back to deprecated buildslave API. '
+                              '(Ignoring missing getWorkerInfo method.)'),
+            mock.call('getSlaveInfo'),
+            mock.call('getCommands'),
+            mock.call('getVersion'),
+        ]
+        self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
     @defer.inlineCallbacks
     def test_remoteGetWorkerInfo_no_info(self):
@@ -289,7 +288,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         r = {}
         self.assertEqual(info, r)
-        calls = [
+        expected_calls = [
             mock.call('getWorkerInfo'),
             mock.call('print',
                       message='buildbot-slave detected, failing back to deprecated buildslave API. '
@@ -298,7 +297,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
             mock.call('getCommands'),
             mock.call('getVersion'),
         ]
-        self.mind.callRemote.assert_has_calls(calls)
+        self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
     @defer.inlineCallbacks
     def test_remoteSetBuilderList(self):
@@ -366,14 +365,17 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         self.mind.callRemote.assert_not_called()
         self.reactor.pump([10] * 361)
-        self.mind.callRemote.assert_has_calls([
-            mock.call('print', message="keepalive")
-        ])
+        expected_call = [
+            mock.call('print', message="keepalive"),
+        ]
+        self.assertEqual(self.mind.callRemote.call_args_list, expected_call)
+
         self.reactor.pump([10] * 361)
-        self.mind.callRemote.assert_has_calls([
+        expected_calls = [
             mock.call('print', message="keepalive"),
             mock.call('print', message="keepalive"),
-        ])
+        ]
+        self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
         conn.stopKeepaliveTimer()
         yield conn.waitShutdown()
@@ -390,6 +392,11 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         conn.perspective_keepalive()
 
         conn.worker.messageReceivedFromWorker.assert_called_with()
+
+    def test_get_peer(self):
+        conn = pb.Connection(self.master, self.worker, self.mind)
+        conn.mind.broker.transport.getPeer.return_value = IPv4Address("TCP", "ip", "port",)
+        self.assertEqual(conn.get_peer(), "ip:port")
 
 
 class Test_wrapRemoteException(unittest.TestCase):

@@ -95,7 +95,7 @@ class GitLabStatusPush(ReporterBase):
         :param branch: Branch name to create the status for.
         :param sha: Full sha to create the status for.
         :param state: one of the following 'pending', 'success', 'failed'
-                      or 'cancelled'.
+                      or 'canceled'.
         :param target_url: Target url to associate with this status.
         :param description: Short description of the status.
         :param context: Context of the result
@@ -113,8 +113,7 @@ class GitLabStatusPush(ReporterBase):
         if context is not None:
             payload['name'] = context
 
-        return self._http.post('/api/v4/projects/{}/statuses/{}'.format(project_id, sha),
-                json=payload)
+        return self._http.post(f'/api/v4/projects/{project_id}/statuses/{sha}', json=payload)
 
     @defer.inlineCallbacks
     def getProjectId(self, sourcestamp):
@@ -122,18 +121,17 @@ class GitLabStatusPush(ReporterBase):
         url = giturlparse(sourcestamp['repository'])
         if url is None:
             return None
-        project_full_name = "{}/{}".format(url.owner, url.repo)
+        project_full_name = f"{url.owner}/{url.repo}"
         # gitlab needs project name to be fully url quoted to get the project id
         project_full_name = urlquote_plus(project_full_name)
 
         if project_full_name not in self.project_ids:
-            response = yield self._http.get('/api/v4/projects/{}'.format(project_full_name))
+            response = yield self._http.get(f'/api/v4/projects/{project_full_name}')
             proj = yield response.json()
             if response.code not in (200, ):
                 log.msg(
                     'Unknown (or hidden) gitlab project'
-                    '{repo}: {message}'.format(
-                        repo=project_full_name, message=proj.get('message')))
+                    f'{project_full_name}: {proj.get("message")}')
                 return None
             self.project_ids[project_full_name] = proj['id']
 
@@ -157,10 +155,12 @@ class GitLabStatusPush(ReporterBase):
                 SKIPPED: 'success',
                 EXCEPTION: 'failed',
                 RETRY: 'pending',
-                CANCELLED: 'cancelled'
+                CANCELLED: 'canceled'
             }.get(build['results'], 'failed')
-        else:
+        elif build.get('started_at'):
             state = 'running'
+        else:
+            state = 'pending'
 
         context = yield props.render(self.context)
 
@@ -194,21 +194,14 @@ class GitLabStatusPush(ReporterBase):
                     message = yield res.json()
                     message = message.get('message', 'unspecified error')
                     log.msg(
-                        'Could not send status "{state}" for '
-                        '{repo} at {sha}: {message}'.format(
-                            state=state,
-                            repo=sourcestamp['repository'], sha=sha,
-                            message=message))
+                        f'Could not send status "{state}" for '
+                        f'{sourcestamp["repository"]} at {sha}: {message}')
                 elif self.verbose:
                     log.msg(
-                        'Status "{state}" sent for '
-                        '{repo} at {sha}.'.format(
-                            state=state, repo=sourcestamp['repository'], sha=sha))
+                        f'Status "{state}" sent for '
+                        f'{sourcestamp["repository"]} at {sha}.')
             except Exception as e:
                 log.err(
                     e,
-                    'Failed to send status "{state}" for '
-                    '{repo} at {sha}'.format(
-                        state=state,
-                        repo=sourcestamp['repository'], sha=sha
-                    ))
+                    (f'Failed to send status "{state}" for '
+                     f'{sourcestamp["repository"]} at {sha}'))

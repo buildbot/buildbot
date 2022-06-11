@@ -1,0 +1,26 @@
+codecov:
+  require_ci_to_pass: yes
+  notify:
+    # 2 ci/coverage build from Buildbot
+    # 6 Github Actions DB builds
+    # Note that currently Appveyor builds fail to upload
+    after_n_builds: 8
+    wait_for_ci: yes
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+parsers:
+  gcov:
+    branch_detection:
+      conditional: yes
+      loop: yes
+      method: no
+      macro: no
+
+comment:
+  layout: "reach,diff,flags,files,footer"
+  behavior: default
+  require_changes: no

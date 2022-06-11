@@ -14,5 +14,5 @@ outdatedBrowserRework({
         'IE': false
     },
     requireChromeOnAndroid: false,
-    isUnknownBrowserOK: false,
+    isUnknownBrowserOK: true,
 });

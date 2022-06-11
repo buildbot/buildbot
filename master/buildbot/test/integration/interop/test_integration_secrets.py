@@ -86,6 +86,10 @@ class SecretsConfigPB(SecretsConfig):
     proto = "pb"
 
 
+class SecretsConfigMsgPack(SecretsConfig):
+    proto = "msgpack"
+
+
 # master configuration
 def masterConfig(use_interpolation):
     c = {}

@@ -49,7 +49,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             if rows:
                 return rows[0].uid
 
-            _race_hook and _race_hook(conn)
+            if _race_hook is not None:
+                _race_hook(conn)
 
             # try to do both of these inserts in a transaction, so that both
             # the new user and the corresponding attributes appear at the same

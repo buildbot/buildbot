@@ -18,15 +18,18 @@ from fnmatch import fnmatch
 
 
 class PullRequestMixin:
+    external_property_whitelist = []
+    external_property_denylist = []
 
     def extractProperties(self, payload):
         def flatten(properties, base, info_dict):
             for k, v in info_dict.items():
                 name = ".".join([base, k])
+                if name in self.external_property_denylist:
+                    continue
                 if isinstance(v, dict):
                     flatten(properties, name, v)
-                elif any([fnmatch(name, expr)
-                          for expr in self.external_property_whitelist]):
+                elif any(fnmatch(name, expr) for expr in self.external_property_whitelist):
                     properties[name] = v
 
         properties = {}

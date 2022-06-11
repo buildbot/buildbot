@@ -69,6 +69,16 @@ class Tests(interfaces.InterfaceTests):
                               last_active=SOMETIME_DT))
 
     @defer.inlineCallbacks
+    def test_findMasterId_new_name_differs_only_by_case(self):
+        yield self.insertTestData([
+            fakedb.Master(id=7, name='some:master'),
+        ])
+        id = yield self.db.masters.findMasterId('some:Master')
+        masterdict = yield self.db.masters.getMaster(id)
+        self.assertEqual(masterdict, {'id': id, 'name': 'some:Master', 'active': False,
+                                      'last_active': SOMETIME_DT})
+
+    @defer.inlineCallbacks
     def test_findMasterId_exists(self):
         yield self.insertTestData([
             fakedb.Master(id=7, name='some:master'),

@@ -30,8 +30,7 @@ class _AssertRaisesConfigErrorContext:
             self.case.fail("ConfigErrors not raised")
 
         if not issubclass(exc_type, config.ConfigErrors):
-            self.case.fail("ConfigErrors not raised, instead got {0}".format(
-                exc_type.__name__))
+            self.case.fail(f"ConfigErrors not raised, instead got {exc_type.__name__}")
 
         self.case.assertConfigError(exc_value, self.substr_or_re)
         return True
@@ -41,18 +40,17 @@ class ConfigErrorsMixin:
 
     def assertConfigError(self, errors, substr_or_re):
         if len(errors.errors) > 1:
-            self.fail("too many errors: {}".format(errors.errors))
+            self.fail(f"too many errors: {errors.errors}")
         elif not errors.errors:
             self.fail("expected error did not occur")
         else:
             curr_error = errors.errors[0]
             if isinstance(substr_or_re, str):
                 if substr_or_re not in curr_error:
-                    self.fail("non-matching error: {}, expected: {}".format(curr_error,
-                                                                            substr_or_re))
+                    self.fail(f"non-matching error: {curr_error}, expected: {substr_or_re}")
             else:
                 if not substr_or_re.search(curr_error):
-                    self.fail("non-matching error: {}".format(curr_error))
+                    self.fail(f"non-matching error: {curr_error}")
 
     def assertRaisesConfigError(self, substr_or_re, fn=None):
         context = _AssertRaisesConfigErrorContext(substr_or_re, self)

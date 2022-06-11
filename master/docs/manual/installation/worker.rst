@@ -101,6 +101,11 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
 .. program:: buildbot-worker create-worker
 
+.. option:: --protocol
+
+    This is a string representing a protocol to be used when creating master-worker connection.
+    The default option is Perspective Broker (``pb``).
+
 .. option:: --no-logrotate
 
     This disables internal worker log management mechanism.
@@ -177,6 +182,11 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
     Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
     If set, unexpected directories in worker base directory will be removed.
     Otherwise, a warning will be displayed in :file:`twistd.log` so that you can manually remove them.
+
+.. option:: --proxy-connection-string
+
+    Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
+    If set, the worker connection will be tunneled through a HTTP proxy specified by the option value.
 
 .. _Other-Worker-Configuration:
 

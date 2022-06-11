@@ -38,8 +38,7 @@ class GenericLatentMachine(AbstractLatentMachine):
         for action, arg_name in [(start_action, 'start_action'),
                                  (stop_action, 'stop_action')]:
             if not IMachineAction.providedBy(action):
-                msg = "{} of {} does not implement required " \
-                      "interface".format(arg_name, self.name)
+                msg = f"{arg_name} of {self.name} does not implement required interface"
                 raise Exception(msg)
 
     @defer.inlineCallbacks
@@ -59,8 +58,8 @@ class GenericLatentMachine(AbstractLatentMachine):
 def runProcessLogFailures(reactor, args, expectedCode=0):
     code, stdout, stderr = yield runprocess.run_process(reactor, args)
     if code != expectedCode:
-        log.err(('Got unexpected return code when running {}: '
-                 'code: {}, stdout: {}, stderr: {}').format(args, code, stdout, stderr))
+        log.err(f'Got unexpected return code when running {args}: '
+                f'code: {code}, stdout: {stdout}, stderr: {stderr}')
         return False
     return True
 
@@ -118,7 +117,7 @@ class _SshActionMixin:
             known_hosts_path = os.path.join(temp_dir_path, 'ssh-known-hosts')
             misc.writeLocalFile(known_hosts_path, ssh_host_key_data)
 
-        defer.returnValue((key_path, known_hosts_path))
+        return (key_path, known_hosts_path)
 
     @defer.inlineCallbacks
     def perform(self, manager):
@@ -132,7 +131,7 @@ class _SshActionMixin:
                 ret = yield self._performImpl(manager, key_path, hosts_path)
         else:
             ret = yield self._performImpl(manager, None, None)
-        defer.returnValue(ret)
+        return ret
 
 
 @implementer(IMachineAction)

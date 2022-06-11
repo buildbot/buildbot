@@ -108,9 +108,8 @@ class EventResource(resource.Resource):
                     options[k] = options[k][1]
 
             try:
-                d = self.master.mq.startConsuming(
-                    consumer.onMessage,
-                    tuple([bytes2unicode(p) for p in path]))
+                d = self.master.mq.startConsuming(consumer.onMessage,
+                                                  tuple(bytes2unicode(p) for p in path))
 
                 @d.addCallback
                 def register(qref):

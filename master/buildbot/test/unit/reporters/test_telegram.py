@@ -31,8 +31,8 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.web import FakeRequest
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.unit.reporters.test_words import ContactMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 
@@ -70,13 +70,13 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         def send_message(self, chat, message, **kwargs):
             return {'message_id': 123}
 
-        def edit_message(bot, chat, msgid, message, **kwargs):
+        def edit_message(self, chat, msgid, message, **kwargs):
             return {'message_id': 123}
 
-        def delete_message(bot, chat, msgid):
+        def delete_message(self, chat, msgid):
             pass
 
-        def send_sticker(bot, chat, sticker, **kwargs):
+        def send_sticker(self, chat, sticker, **kwargs):
             pass
 
         def edit_keyboard(self, chat, msg, keyboard=None):
@@ -255,7 +255,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('list', 'all builders')
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
-            self.assertIn('`{}` ❌'.format(builder), self.sent[0][1])
+            self.assertIn(f'`{builder}` ❌', self.sent[0][1])
 
     @defer.inlineCallbacks
     def test_command_list_workers(self):
@@ -267,7 +267,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
-            self.assertIn('`{}` ❌'.format(worker), self.sent[0][1])
+            self.assertIn(f'`{worker}` ❌', self.sent[0][1])
 
     @defer.inlineCallbacks
     def test_command_list_workers_online(self):
@@ -554,7 +554,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
     PRIVATE = TestTelegramContact.PRIVATE
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
@@ -652,9 +652,9 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
     def test_send_message_long(self):
         bot = yield self.makeBot()
 
-        text1 = '\n'.join("{:039d}".format(i + 1) for i in range(102))
-        text2 = '\n'.join("{:039d}".format(i + 1) for i in range(102, 204))
-        text3 = '\n'.join("{:039d}".format(i + 1) for i in range(204, 250))
+        text1 = '\n'.join(f"{i + 1:039}" for i in range(102))
+        text2 = '\n'.join(f"{i + 1:039}" for i in range(102, 204))
+        text3 = '\n'.join(f"{i + 1:039}" for i in range(204, 250))
 
         bot.http_client.expect("post", "/sendMessage",
                                json={'chat_id': 1234, 'text': text1,
@@ -671,7 +671,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                                      'reply_markup': {'inline_keyboard': 'keyboard'}},
                                content_json={'ok': 1, 'result': {'message_id': 1003}})
 
-        text = '\n'.join("{:039d}".format(i + 1) for i in range(250))
+        text = '\n'.join(f"{i + 1:039}" for i in range(250))
         m = yield bot.send_message(1234, text,
                                    reply_markup={'inline_keyboard': 'keyboard'},
                                    reply_to_message_id=1000)
@@ -900,7 +900,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             else:
                 if self.__errs:
                     self.__errs -= 1
-                    raise RuntimeError("{}".format(self.__errs + 1))
+                    raise RuntimeError(f"{self.__errs + 1}")
                 self.succeeded = True
             return super().post(ep, **kwargs)
 

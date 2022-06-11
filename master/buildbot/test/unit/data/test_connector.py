@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-import textwrap
-
 import mock
 
 from twisted.internet import defer
@@ -28,13 +26,8 @@ from buildbot.data import exceptions
 from buildbot.data import resultspec
 from buildbot.data import types
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
-
-try:
-    import graphql
-except ImportError:
-    graphql = None
 
 
 class Tests(interfaces.InterfaceTests):
@@ -98,7 +91,7 @@ class Tests(interfaces.InterfaceTests):
 class TestFakeData(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
                                              wantDb=True)
         self.data = self.master.data
@@ -108,17 +101,18 @@ class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True)
         self.data = connector.DataConnector()
         yield self.data.setServiceParent(self.master)
 
 
 class DataConnector(TestReactorMixin, unittest.TestCase):
+    maxDiff = None
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         # don't load by default
         self.patch(connector.DataConnector, 'submodules', [])
@@ -162,10 +156,10 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         self.assertIsInstance(match[0], TestEndpoint)
         match = self.data.matcher[('tests',)]
         self.assertIsInstance(match[0], TestsEndpoint)
-        self.assertEqual(match[1], dict())
+        self.assertEqual(match[1], {})
         match = self.data.matcher[('test', 'foo')]
         self.assertIsInstance(match[0], TestsEndpointSubclass)
-        self.assertEqual(match[1], dict())
+        self.assertEqual(match[1], {})
 
         # and that it found the update method
         self.assertEqual(self.data.updates.testUpdate(), "testUpdate return")
@@ -227,49 +221,6 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         ep.control.assert_called_once_with('foo!', {'arg': 2},
                                            {'fooid': 10})
 
-    def test_get_graphql_schema(self):
-        if not graphql:
-            raise unittest.SkipTest('Test requires graphql')
-
-        # use the test module for basic graphQLSchema generation
-        mod = reflect.namedModule('buildbot.test.unit.data.test_connector')
-        self.data._scanModule(mod)
-        schema = self.data.get_graphql_schema()
-        self.assertEqual(schema, textwrap.dedent("""
-        # custom scalar types for buildbot data model
-        scalar Date   # stored as utc unix timestamp
-        scalar Binary # arbitrary data stored as base85
-        scalar JSON  # arbitrary json stored as string, mainly used for properties values
-        type Query {
-          tests(testid: Int,
-           testid__contains: Int,
-           testid__eq: Int,
-           testid__ge: Int,
-           testid__gt: Int,
-           testid__le: Int,
-           testid__lt: Int,
-           testid__ne: Int,
-           order: String,
-           limit: Int,
-           offset: Int): [Test]!
-          test(testid: Int): Test
-        }
-        type Test {
-          testid: Int!
-        }
-        """))
-        schema = graphql.build_schema(schema)
-
-    def test_get_fake_graphql_schema(self):
-        if not graphql:
-            raise unittest.SkipTest('Test requires graphql')
-
-        # use the test module for basic graphQLSchema generation
-        mod = reflect.namedModule('buildbot.test.fake.endpoint')
-        self.data._scanModule(mod)
-        schema = self.data.get_graphql_schema()
-        self.assertEqual(schema, mod.graphql_schema)
-        schema = graphql.build_schema(schema)
 
 # classes discovered by test_scanModule, above
 
@@ -300,31 +251,12 @@ class TestResourceType(base.ResourceType):
     plural = 'tests'
 
     endpoints = [TestsEndpoint, TestEndpoint, TestsEndpointSubclass]
-    keyFields = ('testid', )
+    keyField = 'testid'
 
     class EntityType(types.Entity):
         testid = types.Integer()
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Test')
 
     @base.updateMethod
     def testUpdate(self):
         return "testUpdate return"
-
-
-class DataConnectorGraphQL(TestReactorMixin, unittest.TestCase):
-
-    @defer.inlineCallbacks
-    def setUp(self):
-        self.setUpTestReactor()
-        self.master = fakemaster.make_master(self)
-        self.data = connector.DataConnector()
-        yield self.data.setServiceParent(self.master)
-
-    def test_get_graphql_schema(self):
-        if not graphql:
-            raise unittest.SkipTest('Test requires graphql')
-
-        schema = self.data.get_graphql_schema()
-        # graphql parses the schema and raise an error if it is incorrect
-        # or incoherent (e.g. missing type definition)
-        schema = graphql.build_schema(schema)

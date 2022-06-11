@@ -20,7 +20,7 @@ from twisted.python.failure import Failure
 from twisted.spread import pb
 
 from buildbot.config import BuilderConfig
-from buildbot.config import MasterConfig
+from buildbot.config.master import MasterConfig
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
@@ -186,7 +186,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         builder_id = yield self.master.data.updates.findBuilderId('testy')
 
         # Request two builds.
-        for i in range(2):
+        for _ in range(2):
             yield self.create_build_request([builder_id])
 
         # Check that both workers were requested to start.
@@ -205,7 +205,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller, builder_id = yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = yield self.create_build_request([builder_id])
+        _, brids = yield self.create_build_request([builder_id])
 
         unclaimed_build_requests = []
         yield self.master.mq.startConsuming(
@@ -234,7 +234,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller, builder_id = yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = yield self.create_build_request([builder_id])
+        _, brids = yield self.create_build_request([builder_id])
 
         unclaimed_build_requests = []
         yield self.master.mq.startConsuming(
@@ -285,7 +285,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
 
         yield controller.auto_stop(True)
         # Trigger a buildrequest
-        bsid, brids = yield self.create_build_request([builder_id])
+        yield self.create_build_request([builder_id])
 
         unclaimed_build_requests = []
         yield self.master.mq.startConsuming(
@@ -337,7 +337,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller, builder_ids = yield self.create_single_worker_two_builder_config()
 
         # Trigger a buildrequest
-        bsid, brids = yield self.create_build_request(builder_ids)
+        yield self.create_build_request(builder_ids)
 
         # The worker succeeds to substantiate.
         yield controller.start_instance(True)
@@ -642,7 +642,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller, builder_id = yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = yield self.create_build_request([builder_id])
+        _, brids = yield self.create_build_request([builder_id])
 
         unclaimed_build_requests = []
         yield self.master.mq.startConsuming(
@@ -672,7 +672,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller, builder_id = yield self.create_single_worker_config(
             controller_kwargs=dict(build_wait_timeout=1))
 
-        bsid, brids = yield self.create_build_request([builder_id])
+        yield self.create_build_request([builder_id])
 
         # sever connection just before ping()
         with patchForDelay(
@@ -707,7 +707,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller, builder_id = yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = yield self.create_build_request([builder_id])
+        _, brids = yield self.create_build_request([builder_id])
 
         unclaimed_build_requests = []
         yield self.master.mq.startConsuming(
@@ -757,7 +757,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller, builder_id = yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = yield self.create_build_request([builder_id])
+        _, brids = yield self.create_build_request([builder_id])
 
         unclaimed_build_requests = []
         yield self.master.mq.startConsuming(
@@ -1501,7 +1501,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
 
     @defer.inlineCallbacks
     def test_1worker_insubstantiated_after_start_failure(self):
-        machine_controller, worker_controller, step_controller, builder_id = \
+        machine_controller, worker_controller, _, builder_id = \
             yield self.create_single_worker_config()
 
         worker_controller.auto_connect_worker = False
@@ -1517,7 +1517,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
 
     @defer.inlineCallbacks
     def test_1worker_eats_exception_from_start_machine(self):
-        machine_controller, worker_controller, step_controller, builder_id = \
+        machine_controller, worker_controller, _, builder_id = \
             yield self.create_single_worker_config()
 
         worker_controller.auto_connect_worker = False
@@ -1615,7 +1615,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
 
     @defer.inlineCallbacks
     def test_2workers_insubstantiated_after_one_start_failure(self):
-        machine_controller, worker_controllers, step_controllers, builder_ids = \
+        machine_controller, worker_controllers, _, builder_ids = \
             yield self.create_two_worker_config()
 
         for wc in worker_controllers:

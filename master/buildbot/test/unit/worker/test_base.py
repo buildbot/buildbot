@@ -32,9 +32,9 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 from buildbot.test.util import logging
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
 
@@ -118,7 +118,7 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
 class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.wrk = ConcreteWorker('wrk', 'pa')
 
     @defer.inlineCallbacks
@@ -137,7 +137,7 @@ class FakeWorkerItfc(TestReactorMixin, unittest.TestCase,
                      WorkerInterfaceTests):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.wrk = worker.FakeWorker(self.master)
 
@@ -150,7 +150,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpLogging()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
@@ -635,6 +635,19 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(db_worker['workerinfo']['version'], 'TheVersion')
 
     @defer.inlineCallbacks
+    def test_double_attached(self):
+        worker = yield self.createWorker()
+        yield worker.startService()
+
+        conn = fakeprotocol.FakeConnection(worker)
+        yield worker.attached(conn)
+        conn = fakeprotocol.FakeConnection(worker)
+        with self.assertRaisesRegex(
+                AssertionError,
+                "bot: fake_peer connecting, but we are already connected to: fake_peer"):
+            yield worker.attached(conn)
+
+    @defer.inlineCallbacks
     def test_worker_shutdown(self):
         worker = yield self.createWorker(attached=True)
         yield worker.startService()
@@ -899,7 +912,7 @@ class TestAbstractLatentWorker(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
         yield self.master.workers.disownServiceParent()

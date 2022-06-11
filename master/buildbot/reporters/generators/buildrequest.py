@@ -20,6 +20,7 @@ from buildbot import interfaces
 from buildbot.process.build import Build
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.process.properties import Properties
+from buildbot.process.results import CANCELLED
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatterRenderable
 
@@ -30,7 +31,8 @@ from .utils import BuildStatusGeneratorMixin
 class BuildRequestGenerator(BuildStatusGeneratorMixin):
 
     wanted_event_keys = [
-        ('buildrequests', None, 'new')
+        ('buildrequests', None, 'new'),
+        ('buildrequests', None, 'cancel')
     ]
 
     compare_attrs = ['formatter']
@@ -46,7 +48,7 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     @defer.inlineCallbacks
     def partial_build_dict(self, master, buildrequest):
         brdict = yield master.db.buildrequests.getBuildRequest(buildrequest['buildrequestid'])
-        bdict = dict()
+        bdict = {}
 
         props = Properties()
         buildrequest = yield BuildRequest.fromBrdict(master, brdict)
@@ -62,6 +64,10 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     @defer.inlineCallbacks
     def generate(self, master, reporter, key, buildrequest):
         build = yield self.partial_build_dict(master, buildrequest)
+        _, _, event = key
+        if event == 'cancel':
+            build['complete'] = True
+            build['results'] = CANCELLED
 
         if not self.is_message_needed_by_props(build):
             return None
@@ -73,8 +79,8 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     def buildrequest_message(self, master, build):
         patches = self._get_patches_for_build(build)
         users = []
-        buildmsg = yield self.formatter.format_message_for_build(master, build, mode=self.mode,
-                                                                 users=users)
+        buildmsg = yield self.formatter.format_message_for_build(master, build, is_buildset=True,
+                                                                 mode=self.mode, users=users)
 
         return {
             'body': buildmsg['body'],

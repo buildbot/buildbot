@@ -21,7 +21,7 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.www import WwwTestMixin
 from buildbot.www import avatar
 from buildbot.www import ldapuserinfo
@@ -51,14 +51,14 @@ class FakeLdap:
 
 
 class CommonTestCase(unittest.TestCase):
-    if not ldap3:
-        skip = 'ldap3 is required for LdapUserInfo tests'
-
     """Common fixture for all ldapuserinfo tests
 
     we completely fake the ldap3 module, so no need to require
     it to run the unit tests
     """
+
+    if not ldap3:
+        skip = 'ldap3 is required for LdapUserInfo tests'
 
     def setUp(self):
         self.ldap = FakeLdap()
@@ -88,9 +88,9 @@ class CommonTestCase(unittest.TestCase):
         got = self.userInfoProvider.search.call_args_list
         self.assertEqual(len(exp), len(got))
         for i, val in enumerate(exp):
-            self.assertEqual(exp[i][0][0], got[i][0][1])
-            self.assertEqual(exp[i][0][1], got[i][0][2])
-            self.assertEqual(exp[i][0][2], got[i][1]['attributes'])
+            self.assertEqual(val[0][0], got[i][0][1])
+            self.assertEqual(val[0][1], got[i][0][2])
+            self.assertEqual(val[0][2], got[i][1]['attributes'])
 
 
 class LdapUserInfo(CommonTestCase):
@@ -167,7 +167,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
     @defer.inlineCallbacks
     def setUp(self):
         CommonTestCase.setUp(self)
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         master = self.make_master(
             url='http://a/b/',
@@ -192,7 +192,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
 
     @defer.inlineCallbacks
     def _getUserAvatar(self, mimeTypeAndData):
-        (mimeType, data) = mimeTypeAndData
+        _, data = mimeTypeAndData
         self.makeRawSearchSideEffect([
             [("cn", {"picture": [data]})]])
         res = yield self.render_resource(self.rsrc, b'/?email=me')

@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+import os
+
 from parameterized import parameterized
 
 import mock
@@ -22,17 +24,15 @@ from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.logging import LoggingMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.runprocess import RunProcess
 
 # windows returns rc 1, because exit status cannot indicate "signalled";
 # posix returns rc -1 for "signalled"
 FATAL_RC = -1
-EXPECTED_PWD = '/workdir'
 if runtime.platformType == 'win32':
     FATAL_RC = 1
-    EXPECTED_PWD = 'C:\\workdir'
 
 
 class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
@@ -40,12 +40,12 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
     FAKE_PID = 1234
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpLogging()
         self.process = None
         self.reactor.spawnProcess = self.fake_spawn_process
 
-    def fake_spawn_process(self, pp, command, args, env, workdir):
+    def fake_spawn_process(self, pp, command, args, env, workdir, usePTY=False):
         self.assertIsNone(self.process)
         self.pp = pp
         self.pp.transport = mock.Mock()
@@ -71,7 +71,8 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
     def test_no_output(self):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=False)
         self.assertEqual(self.process_spawned_args,
-                         ('cmd', ['cmd'], {'OS_ENV': 'value', 'PWD': EXPECTED_PWD}, '/workdir'))
+                         ('cmd', ['cmd'], {'OS_ENV': 'value', 'PWD': os.path.abspath('/workdir')},
+                          '/workdir'))
 
         self.pp.connectionMade()
         self.assertFalse(d.called)
@@ -86,7 +87,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         d = self.run_process(['cmd'], collect_stdout=False, collect_stderr=False,
                              env={'custom': 'custom-value'})
         self.assertEqual(self.process_spawned_args,
-                         ('cmd', ['cmd'], {'OS_ENV': 'value', 'PWD': EXPECTED_PWD,
+                         ('cmd', ['cmd'], {'OS_ENV': 'value', 'PWD': os.path.abspath('/workdir'),
                                            'custom': 'custom-value'}, '/workdir'))
 
         self.pp.connectionMade()
@@ -100,7 +101,8 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=False,
                              env={'OS_ENV': 'custom-value'})
         self.assertEqual(self.process_spawned_args,
-                         ('cmd', ['cmd'], {'OS_ENV': 'custom-value', 'PWD': EXPECTED_PWD},
+                         ('cmd', ['cmd'], {'OS_ENV': 'custom-value',
+                                           'PWD': os.path.abspath('/workdir')},
                           '/workdir'))
 
         self.pp.connectionMade()
@@ -114,7 +116,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=False,
                              env={'OS_ENV': None})
         self.assertEqual(self.process_spawned_args,
-                         ('cmd', ['cmd'], {'PWD': EXPECTED_PWD}, '/workdir'))
+                         ('cmd', ['cmd'], {'PWD': os.path.abspath('/workdir')}, '/workdir'))
 
         self.pp.connectionMade()
         self.end_process()

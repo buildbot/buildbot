@@ -105,7 +105,7 @@ class _NSNode:
     # pylint: disable=W0212
 
     def __init__(self):
-        self._children = dict()
+        self._children = {}
 
     def load(self):
         for child in self._children.values():
@@ -125,10 +125,10 @@ class _NSNode:
             if child is not None:
                 assert isinstance(child, _PluginEntry)
                 if child != entry:
-                    raise PluginDBError(('Duplicate entry point for "{}:{}".\n'
-                                         '  Previous definition {}\n'
-                                         '  This definition {}').format(child.group, child.name,
-                                                                        child.info, entry.info))
+                    raise PluginDBError(
+                        f'Duplicate entry point for "{child.group}:{child.name}".\n'
+                        f'  Previous definition {child.info}\n'
+                        f'  This definition {entry.info}')
             else:
                 self._children[key] = entry
         else:
@@ -141,7 +141,7 @@ class _NSNode:
     def __getattr__(self, name):
         child = self._children.get(name)
         if child is None:
-            raise PluginDBError('Unknown component name: {}'.format(name))
+            raise PluginDBError(f'Unknown component name: {name}')
 
         if isinstance(child, _PluginEntry):
             return child.value
@@ -165,10 +165,10 @@ class _NSNode:
 
         if isinstance(child, _PluginEntry):
             if not is_leaf:
-                raise PluginDBError('Excessive namespace specification: {}'.format(path[0]))
+                raise PluginDBError(f'Excessive namespace specification: {path[0]}')
             return child
         elif child is None:
-            raise PluginDBError('Unknown component name: {}'.format(name))
+            raise PluginDBError(f'Unknown component name: {name}')
         else:
             return child._get(path[0])
 
@@ -179,7 +179,7 @@ class _NSNode:
                 result.append((key, child.info))
             else:
                 result.extend([
-                    ('{}.{}'.format(key, name), value)
+                    (f'{key}.{name}', value)
                     for name, value in child.info_all().items()
                 ])
         return result
@@ -198,7 +198,7 @@ class _Plugins:
         if interface is not None:
             assert interface.isOrExtends(IPlugin)
 
-        self._group = '{}.{}'.format(_NAMESPACE_BASE, namespace)
+        self._group = f'{_NAMESPACE_BASE}.{namespace}'
 
         self._interface = interface
         self._check_extras = check_extras
@@ -211,22 +211,21 @@ class _Plugins:
             try:
                 entry.require()
             except Exception as e:
-                raise PluginDBError(('Requirements are not satisfied '
-                                     'for {}:{}: {}').format(
-                                         self._group, entry.name, str(e))) from e
+                raise PluginDBError('Requirements are not satisfied '
+                                    f'for {self._group}:{entry.name}: {str(e)}') from e
         try:
             result = entry.load()
         except Exception as e:
             # log full traceback of the bad entry to help support
             traceback.print_exc()
-            raise PluginDBError('Unable to load {}:{}: {}'.format(self._group, entry.name,
-                                                                  str(e))) from e
+            raise PluginDBError(f'Unable to load {self._group}:{entry.name}: {str(e)}') from e
         if self._interface:
             try:
                 verifyClass(self._interface, result)
             except Invalid as e:
-                raise PluginDBError('Plugin {}:{} does not implement {}: {}'.format(self._group,
-                        entry.name, self._interface.__name__, str(e))) from e
+                raise PluginDBError(
+                    f'Plugin {self._group}:{entry.name} does not implement '
+                    f'{self._interface.__name__}: {str(e)}') from e
         return result
 
     @property
@@ -288,7 +287,7 @@ class _PluginDB:
     """
 
     def __init__(self):
-        self._namespaces = dict()
+        self._namespaces = {}
 
     def add_namespace(self, namespace, interface=None, check_extras=True,
                       load_now=False):
@@ -319,7 +318,7 @@ class _PluginDB:
         """
         get information about all plugins in registered namespaces
         """
-        result = dict()
+        result = {}
         for name, namespace in self._namespaces.items():
             result[name] = namespace.info_all()
         return result

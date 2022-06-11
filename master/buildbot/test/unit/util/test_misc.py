@@ -17,7 +17,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import util
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import misc
 
 
@@ -86,7 +86,7 @@ class deferredLocked(unittest.TestCase):
 class TestCancelAfter(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.d = defer.Deferred()
 
     def test_succeeds(self):

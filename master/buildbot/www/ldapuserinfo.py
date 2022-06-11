@@ -24,6 +24,7 @@
 # `unicode` and `raw_*` attributes for `bytes`.
 
 
+import importlib
 from urllib.parse import urlparse
 
 from twisted.internet import threads
@@ -36,7 +37,6 @@ from buildbot.www import avatar
 try:
     import ldap3
 except ImportError:
-    import importlib
     ldap3 = None
 
 
@@ -114,7 +114,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                                   self.accountEmail, self.accountFullName] +
                               self.accountExtraFields)
             if len(res) != 1:
-                raise KeyError("ldap search \"{}\" returned {} results".format(pattern, len(res)))
+                raise KeyError(f"ldap search \"{pattern}\" returned {len(res)} results")
             dn, ldap_infos = res[0]['dn'], res[0]['attributes']
 
             def getFirstLdapInfo(x):

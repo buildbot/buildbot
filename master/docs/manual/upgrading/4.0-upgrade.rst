@@ -1,0 +1,34 @@
+.. _4.0_Upgrading:
+
+Upgrading to Buildbot 4.0 (not released)
+========================================
+
+Upgrading a Buildbot instance from 3.x to 4.0 may require some work to achieve.
+
+The recommended upgrade procedure is as follows:
+
+  - Upgrade to the last released BuildBot version in 3.x series.
+
+  - Remove usage of the deprecated APIs.
+    All usages of deprecated APIs threw a deprecation warning at the point of use.
+    If the code does not emit deprecation warnings, it's in a good shape in this regard.
+    You may need to run the master on a real workload in order to force all deprecated code paths to be exercised.
+
+  - Upgrade to the latest Buildbot 4.0.x release.
+
+  - (Optional) Upgrade to newest Buildbot 4.x.
+    The newest point release will contain bug fixes and functionality improvements.
+
+Build status generators
+-----------------------
+
+The ``subject`` argument of ``BuildStatusGenerator`` and ``BuildSetStatusGenerator`` has been removed.
+The equivalent is setting the ``subject`` argument of the message formatter.
+
+Message formatters
+------------------
+
+The ``wantLogs`` argument to message formatters has been removed.
+The equivalent is setting both ``want_logs`` and ``want_logs_content`` to the previous value of ``wantLogs``.
+
+The ``wantSteps`` and ``wantProperties`` arguments have been renamed to ``want_steps`` and ``want_properties`` respectively.

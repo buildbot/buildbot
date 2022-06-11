@@ -20,6 +20,7 @@ apiVersion
 app
 apparmor
 appart
+approle
 apps
 ar
 aren
@@ -31,10 +32,13 @@ AssertionFailed
 asymmetrics
 async
 Async
+asyncio
 Atlassian
 attrs
 auth
 Auth
+authenticator
+authenticators
 authorisation
 authUri
 authz
@@ -132,6 +136,7 @@ callee
 camelCase
 canAcquireLocks
 cancelled
+canceller
 cancelling
 candidated
 canonicalize
@@ -716,6 +721,7 @@ rmdir
 rmfile
 rmtree
 Robocopy
+roleId
 rootlink
 routingkeys
 rpmlint
@@ -736,6 +742,7 @@ schemas
 scp
 sdist
 searchable
+secretId
 secretsmount
 sed
 selectable
@@ -744,6 +751,7 @@ sendMessage
 serializable
 serviceid
 setDefaultWorkdir
+setuptools
 sha
 sherrif
 shouldn
@@ -810,6 +818,7 @@ Subqueries
 subquery
 subshell
 substrings
+substring
 subunit
 successCb
 sucessful
@@ -929,6 +938,7 @@ usr
 utf
 UTF
 util
+utime
 validator
 Validator
 validators
@@ -985,6 +995,7 @@ workdirs
 WorkerForBuilder
 workername
 workflow
+workspaces
 wouldn
 www
 xda

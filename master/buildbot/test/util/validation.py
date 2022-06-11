@@ -52,8 +52,7 @@ class InstanceValidator(Validator):
 
     def validate(self, name, object):
         if not isinstance(object, self.types):
-            yield "{} ({!r}) is not a {}".format(
-                name, object, self.name or repr(self.types))
+            yield f"{name} ({object!r}) is not a {self.name or repr(self.types)}"
 
 
 class IntValidator(InstanceValidator):
@@ -88,9 +87,9 @@ class DateTimeValidator(Validator):
 
     def validate(self, name, object):
         if not isinstance(object, datetime.datetime):
-            yield "{} - {!r} - is not a datetime".format(name, object)
+            yield f"{name} - {object!r} - is not a datetime"
         elif object.tzinfo != UTC:
-            yield "{} is not a UTC datetime".format(name)
+            yield f"{name} is not a UTC datetime"
 
 
 class IdentifierValidator(Validator):
@@ -106,14 +105,13 @@ class IdentifierValidator(Validator):
 
     def validate(self, name, object):
         if not isinstance(object, str):
-            yield "{} - {!r} - is not a unicode string".format(name, object)
+            yield f"{name} - {object!r} - is not a unicode string"
         elif not self.ident_re.match(object):
-            yield "{} - {!r} - is not an identifier".format(name, object)
+            yield f"{name} - {object!r} - is not an identifier"
         elif not object:
-            yield "{} - identifiers cannot be an empty string".format(name)
+            yield f"{name} - identifiers cannot be an empty string"
         elif len(object) > self.len:
-            yield "{} - {!r} - is longer than {} characters".format(
-                name, object, self.len)
+            yield f"{name} - {object!r} - is longer than {self.len} characters"
 
 # Miscellaneous
 
@@ -153,24 +151,20 @@ class DictValidator(Validator):
     def validate(self, name, object):
         # this uses isinstance, allowing dict subclasses as used by the DB API
         if not isinstance(object, dict):
-            yield "{} ({!r}) is not a dictionary (got type {})".format(
-                name, object, type(object))
+            yield f"{name} ({object!r}) is not a dictionary (got type {type(object)})"
             return
 
         gotNames = set(object.keys())
 
         unexpected = gotNames - self.expectedNames
         if unexpected:
-            yield "{} has unexpected keys {}".format(name,
-                                                 ", ".join([repr(n) for n in unexpected]))
+            yield f'{name} has unexpected keys {", ".join([repr(n) for n in unexpected])}'
 
         missing = self.expectedNames - self.optionalNames - gotNames
         if missing:
-            yield "{} is missing keys {}".format(name,
-                                             ", ".join([repr(n) for n in missing]))
-
+            yield f'{name} is missing keys {", ".join([repr(n) for n in missing])}'
         for k in gotNames & self.expectedNames:
-            for msg in self.keys[k].validate("{}[{!r}]".format(name, k), object[k]):
+            for msg in self.keys[k].validate(f"{name}[{k!r}]", object[k]):
                 yield msg
 
 
@@ -182,11 +176,11 @@ class SequenceValidator(Validator):
 
     def validate(self, name, object):
         if not isinstance(object, self.type):  # noqa pylint: disable=isinstance-second-argument-not-valid-type
-            yield "{} ({!r}) is not a {}".format(name, object, self.name)
+            yield f"{name} ({object!r}) is not a {self.name}"
             return
 
         for idx, elt in enumerate(object):
-            for msg in self.elementValidator.validate("{}[{}]".format(name, idx),
+            for msg in self.elementValidator.validate(f"{name}[{idx}]",
                                                       elt):
                 yield msg
 
@@ -214,21 +208,21 @@ class SourcedPropertiesValidator(Validator):
 
     def validate(self, name, object):
         if not isinstance(object, dict):
-            yield "{} is not sourced properties (not a dict)".format(name)
+            yield f"{name} is not sourced properties (not a dict)"
             return
         for k, v in object.items():
             if not isinstance(k, str):
-                yield "{} property name {!r} is not unicode".format(name, k)
+                yield f"{name} property name {k!r} is not unicode"
             if not isinstance(v, tuple) or len(v) != 2:
-                yield "{} property value for '{}' is not a 2-tuple".format(name, k)
+                yield f"{name} property value for '{k!r}' is not a 2-tuple"
                 return
             propval, propsrc = v
             if not isinstance(propsrc, str):
-                yield "{}[{}] source {!r} is not unicode".format(name, k, propsrc)
+                yield f"{name}[{k}] source {propsrc!r} is not unicode"
             try:
                 json.dumps(propval)
             except (TypeError, ValueError):
-                yield "{}[{!r}] value is not JSON-able".format(name, k)
+                yield f"{name}[{k!r}] value is not JSON-able"
 
 
 class JsonValidator(Validator):
@@ -239,7 +233,7 @@ class JsonValidator(Validator):
         try:
             json.dumps(object)
         except (TypeError, ValueError):
-            yield "{}[{!r}] value is not JSON-able".format(name, object)
+            yield f"{name}[{object!r}] value is not JSON-able"
 
 
 class PatchValidator(Validator):
@@ -271,7 +265,7 @@ class MessageValidator(Validator):
         try:
             routingKey, message = routingKey_message
         except (TypeError, ValueError) as e:
-            yield "{!r}: not a routing key and message: {}".format(routingKey_message, e)
+            yield f"{routingKey_message!r}: not a routing key and message: {e}"
         routingKeyBad = False
         for msg in self.routingKeyValidator.validate("routingKey", routingKey):
             yield msg
@@ -280,9 +274,9 @@ class MessageValidator(Validator):
         if not routingKeyBad:
             event = routingKey[-1]
             if event not in self.events:
-                yield "routing key event {!r} is not valid".format(event)
+                yield f"routing key event {event!r} is not valid"
 
-        for msg in self.messageValidator.validate("{} message".format(routingKey[0]),
+        for msg in self.messageValidator.validate(f"{routingKey[0]} message",
                                                   message):
             yield msg
 
@@ -299,13 +293,13 @@ class Selector(Validator):
         try:
             arg, object = arg_object
         except (TypeError, ValueError) as e:
-            yield "{!r}: not a not data options and data dict: {}".format(arg_object, e)
+            yield f"{arg_object!r}: not a not data options and data dict: {e}"
         for selector, validator in self.selectors:
             if selector is None or selector(arg):
                 for msg in validator.validate(name, object):
                     yield msg
                 return
-        yield "no match for selector argument {!r}".format(arg)
+        yield f"no match for selector argument {arg!r}"
 
 
 # Type definitions

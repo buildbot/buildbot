@@ -25,7 +25,7 @@ class Patch(base.ResourceType):
     name = "patch"
     plural = "patches"
     endpoints = []
-    keyFields = ['patchid']
+    keyField = 'patchid'
 
     class EntityType(types.Entity):
         patchid = types.Integer()
@@ -34,4 +34,4 @@ class Patch(base.ResourceType):
         subdir = types.String()
         author = types.String()
         comment = types.String()
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Patch')

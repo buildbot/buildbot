@@ -54,21 +54,21 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             formatted_results += "user(s) added:\n"
             for user in results:
                 if isinstance(user, str):
-                    formatted_results += "identifier: {}\n".format(user)
+                    formatted_results += f"identifier: {user}\n"
                 else:
-                    formatted_results += "uid: %d\n\n" % user
+                    formatted_results += f"uid: {user}\n\n"
         elif op == 'remove':
             # list of dictionaries
             formatted_results += "user(s) removed:\n"
             for user in results:
                 if user:
-                    formatted_results += "identifier: {}\n".format(user)
+                    formatted_results += f"identifier: {user}\n"
         elif op == 'update':
             # list, alternating ident, None
             formatted_results += "user(s) updated:\n"
             for user in results:
                 if user:
-                    formatted_results += "identifier: {}\n".format(user)
+                    formatted_results += f"identifier: {user}\n"
         elif op == 'get':
             # list of dictionaries
             formatted_results += "user(s) found:\n"
@@ -76,7 +76,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                 if user:
                     for key in sorted(user.keys()):
                         if key != 'bb_password':
-                            formatted_results += "{}: {}\n".format(key, user[key])
+                            formatted_results += f"{key}: {user[key]}\n"
                     formatted_results += "\n"
                 else:
                     formatted_results += "no match found\n"
@@ -125,12 +125,12 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                         yield self.master.db.users.removeUser(uid)
                         result = user
                     else:
-                        log.msg("Unable to find uid for identifier {}".format(user))
+                        log.msg(f"Unable to find uid for identifier {user}")
                 elif op == 'get':
                     if uid:
                         result = yield self.master.db.users.getUser(uid)
                     else:
-                        log.msg("Unable to find uid for identifier {}".format(user))
+                        log.msg(f"Unable to find uid for identifier {user}")
 
                 results.append(result)
         else:
@@ -152,7 +152,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                             bb_password=bb_password)
                         results.append(ident)
                     else:
-                        log.msg("Unable to find uid for identifier {}".format(user))
+                        log.msg(f"Unable to find uid for identifier {user}")
                 else:
                     # when adding, we update the user after the first attr
                     once_through = False
@@ -168,7 +168,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                                     attr_type=attr,
                                     attr_data=user[attr])
                             else:
-                                log.msg("Unable to find uid for identifier {}".format(user))
+                                log.msg(f"Unable to find uid for identifier {user}")
                         elif op == 'add':
                             result = yield self.master.db.users.findUserByAttr(
                                 identifier=ident,

@@ -152,9 +152,21 @@ if setuptools is not None:
         'future',
     ]
 
+    if sys.version_info >= (3, 6):
+        # Message pack is only supported on Python 3.6 and newer
+        setup_args['install_requires'] += [
+            'autobahn >= 0.16.0',
+            'msgpack >= 0.6.0',
+        ]
+
+    # buildbot_worker_windows_service needs pywin32
+    if sys.platform == "win32":
+        setup_args['install_requires'].append('pywin32')
+
     # Unit test hard dependencies.
     test_deps = [
         'mock',
+        'psutil',
     ]
 
     setup_args['tests_require'] = test_deps
@@ -165,7 +177,7 @@ if setuptools is not None:
             # spellcheck introduced in version 1.4.0
             'pylint>=1.4.0',
             'pyenchant',
-            'flake8~=2.6.0',
+            'flake8~=3.9.0',
         ] + test_deps,
     }
 

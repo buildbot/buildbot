@@ -99,13 +99,13 @@ def masterConfig(num_concurrent, extra_steps=None):
     if creds is not None:
         user, password = creds.split(":")
     else:
-        raise "Cannot run this test without credentials"
+        raise Exception("Cannot run this test without credentials")
     masterFQDN = os.environ.get('masterFQDN', 'localhost')
     c['workers'] = []
     for i in range(num_concurrent):
         upcloud_host_config = {
             "user_data":
-"""
+f"""
 #!/usr/bin/env bash
 groupadd -g 999 buildbot
 useradd -u 999 -g buildbot -s /bin/bash -d /buildworker -m buildbot
@@ -115,14 +115,14 @@ apt install -y git python3 python3-dev python3-pip sudo gnupg curl
 pip3 install buildbot-worker service_identity
 chown -R buildbot:buildbot /buildworker
 cat <<EOF >> /etc/hosts
-127.0.1.1    upcloud{}
+127.0.1.1    upcloud{i}
 EOF
 cat <<EOF >/etc/sudoers.d/buildbot
 buidbot ALL=(ALL) NOPASSWD:ALL
 EOF
-sudo -H -u buildbot bash -c "buildbot-worker create-worker /buildworker {} upcloud{} pass"
+sudo -H -u buildbot bash -c "buildbot-worker create-worker /buildworker {masterFQDN} upcloud{i} pass"
 sudo -H -u buildbot bash -c "buildbot-worker start /buildworker"
-""".format(i, masterFQDN, i)
+"""  # noqa pylint: disable=line-too-long
         }
         c['workers'].append(UpcloudLatentWorker('upcloud' + str(i), api_username=user,
                                                 api_password=password,

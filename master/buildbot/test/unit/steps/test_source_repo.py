@@ -20,11 +20,12 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import repo
-from buildbot.test.fake.remotecommand import Expect
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.unit.changes.test_gerritchangesource import TestGerritChangeSource
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectMkdir
+from buildbot.test.steps import ExpectRmdir
+from buildbot.test.steps import ExpectShell
+from buildbot.test.steps import ExpectStat
 from buildbot.test.util import sourcesteps
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class RepoURL(unittest.TestCase):
@@ -60,7 +61,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.shouldRetry = False
         self.logEnviron = True
         return self.setUpSourceStep()
@@ -76,15 +77,15 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
     def ExpectShell(self, **kw):
         if 'workdir' not in kw:
             kw['workdir'] = 'wkdir'
-        if 'logEnviron' not in kw:
-            kw['logEnviron'] = self.shouldLogEnviron()
+        if 'log_environ' not in kw:
+            kw['log_environ'] = self.shouldLogEnviron()
         return ExpectShell(**kw)
 
     def mySetupStep(self, **kwargs):
         if "repoDownloads" not in kwargs:
             kwargs.update(dict(repoDownloads=repo.RepoDownloadsFromProperties(["repo_download",
                                                                               "repo_download2"])))
-        self.setupStep(
+        self.setup_step(
             repo.Repo(manifestURL='git://myrepo.com/manifest.git',
                       manifestBranch="mb",
                       manifestFile="mf",
@@ -92,29 +93,25 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.build.allChanges = lambda x=None: []
 
     def myRunStep(self, result=SUCCESS, state_string=None):
-        self.expectOutcome(result=result, state_string=state_string)
-        return self.runStep()
+        self.expect_outcome(result=result, state_string=state_string)
+        return self.run_step()
 
     def expectClobber(self):
         # stat return 1 so we clobber
-        self.expectCommands(
-            Expect('stat', dict(file='wkdir/.repo',
-                                logEnviron=self.logEnviron))
-            + 1,
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=self.logEnviron))
-            + 0,
-            Expect('mkdir', dict(dir='wkdir',
-                                 logEnviron=self.logEnviron))
-            + 0,
+        self.expect_commands(
+            ExpectStat(file='wkdir/.repo', log_environ=self.logEnviron)
+            .exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=self.logEnviron)
+            .exit(0),
+            ExpectMkdir(dir='wkdir', log_environ=self.logEnviron)
+            .exit(0)
         )
 
     def expectnoClobber(self):
         # stat return 0, so nothing
-        self.expectCommands(
-            Expect('stat', dict(file='wkdir/.repo',
-                                logEnviron=self.logEnviron))
-            + 0,
+        self.expect_commands(
+            ExpectStat(file='wkdir/.repo', log_environ=self.logEnviron)
+            .exit(0)
         )
 
     def expectRepoSync(self, which_fail=-1, breakatfail=False, depth=0, initoptions=None,
@@ -138,7 +135,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                 command=['repo', 'manifest', '-r', '-o', 'manifest-original.xml'])
         ]
         for i, command in enumerate(commands):
-            self.expectCommands(command + (which_fail == i and 1 or 0))
+            self.expect_commands(command.exit((which_fail == i and 1 or 0)))
             if which_fail == i and breakatfail:
                 break
 
@@ -192,14 +189,12 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                          syncAllBranches=True)
         self.expectClobber()
         override_commands = [
-            Expect(
-                'stat', dict(file='wkdir/http://u.rl/test.manifest',
-                             logEnviron=False)),
-            self.ExpectShell(logEnviron=False, command=['wget',
+            ExpectStat(file='wkdir/http://u.rl/test.manifest', log_environ=False),
+            self.ExpectShell(log_environ=False, command=['wget',
                                                         'http://u.rl/test.manifest',
                                                         '-O', 'manifest_override.xml']),
             self.ExpectShell(
-                logEnviron=False, workdir='wkdir/.repo',
+                log_environ=False, workdir='wkdir/.repo',
                 command=['ln', '-sf', '../manifest_override.xml',
                          'manifest.xml'])
         ]
@@ -215,12 +210,11 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                          syncAllBranches=True)
         self.expectClobber()
         override_commands = [
-            Expect('stat', dict(file='wkdir/test.manifest',
-                                logEnviron=False)),
-            self.ExpectShell(logEnviron=False,
+            ExpectStat(file='wkdir/test.manifest', log_environ=False),
+            self.ExpectShell(log_environ=False,
                              command=[
                                  'cp', '-f', 'test.manifest', 'manifest_override.xml']),
-            self.ExpectShell(logEnviron=False,
+            self.ExpectShell(log_environ=False,
                              workdir='wkdir/.repo',
                              command=['ln', '-sf', '../manifest_override.xml',
                                       'manifest.xml'])
@@ -234,16 +228,16 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         """
         self.mySetupStep(tarball="/tarball.tar")
         self.expectClobber()
-        self.expectCommands(
-            self.ExpectShell(command=['tar', '-xvf', '/tarball.tar']) + 0)
+        self.expect_commands(
+            self.ExpectShell(command=['tar', '-xvf', '/tarball.tar'])
+            .exit(0))
         self.expectRepoSync()
-        self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.tar'])
-                            + Expect.log('stdio', stdout=str(10000))
-                            + 0)
-        self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '.'])
-                            + Expect.log(
-                                'stdio', stdout=str(10000 + 7 * 24 * 3600))
-                            + 0)
+        self.expect_commands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.tar'])
+                            .stdout(str(10000))
+                            .exit(0))
+        self.expect_commands(self.ExpectShell(command=['stat', '-c%Y', '.'])
+                            .stdout(str(10000 + 7 * 24 * 3600))
+                            .exit(0))
         return self.myRunStep()
 
     def test_create_tarball(self):
@@ -251,20 +245,21 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         """
         self.mySetupStep(tarball="/tarball.tgz")
         self.expectClobber()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(
-                command=['tar', '-z', '-xvf', '/tarball.tgz']) + 1,
-            self.ExpectShell(command=['rm', '-f', '/tarball.tgz']) + 1,
-            Expect('rmdir', dict(dir='wkdir/.repo',
-                                 logEnviron=False))
-            + 1)
+                command=['tar', '-z', '-xvf', '/tarball.tgz'])
+            .exit(1),
+            self.ExpectShell(command=['rm', '-f', '/tarball.tgz'])
+            .exit(1),
+            ExpectRmdir(dir='wkdir/.repo', log_environ=False)
+            .exit(1))
         self.expectRepoSync()
-        self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.tgz'])
-                            + Expect.log('stdio', stderr="file not found!")
-                            + 1,
+        self.expect_commands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.tgz'])
+                            .stderr("file not found!")
+                            .exit(1),
                             self.ExpectShell(command=['tar', '-z',
                                                       '-cvf', '/tarball.tgz', '.repo'])
-                            + 0)
+                            .exit(0))
         return self.myRunStep()
 
     def do_test_update_tarball(self, suffix, option):
@@ -272,19 +267,19 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         """
         self.mySetupStep(tarball="/tarball." + suffix)
         self.expectClobber()
-        self.expectCommands(
-            self.ExpectShell(command=['tar'] + option + ['-xvf', '/tarball.' + suffix]) + 0)
+        self.expect_commands(
+            self.ExpectShell(command=['tar'] + option + ['-xvf', '/tarball.' + suffix])
+            .exit(0))
         self.expectRepoSync()
-        self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
-                            + Expect.log('stdio', stdout=str(10000))
-                            + 0,
+        self.expect_commands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
+                            .stdout(str(10000))
+                            .exit(0),
                             self.ExpectShell(command=['stat', '-c%Y', '.'])
-                            + Expect.log(
-                                'stdio', stdout=str(10001 + 7 * 24 * 3600))
-                            + 0,
+                            .stdout(str(10001 + 7 * 24 * 3600))
+                            .exit(0),
                             self.ExpectShell(command=['tar'] + option +
                                              ['-cvf', '/tarball.' + suffix, '.repo'])
-                            + 0)
+                            .exit(0))
         return self.myRunStep()
 
     def test_update_tarball(self):
@@ -316,27 +311,25 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             option = []
         self.mySetupStep(tarball="/tarball." + suffix)
         self.expectClobber()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(
-                command=[
-                    'tar'] + option + ['-xvf', '/tarball.' + suffix]) + 1,
+                command=['tar'] + option + ['-xvf', '/tarball.' + suffix])
+            .exit(1),
             self.ExpectShell(
-                command=['rm', '-f', '/tarball.tar']) + 0,
-            Expect(
-                'rmdir', dict(dir='wkdir/.repo',
-                              logEnviron=False))
-            + 0)
+                command=['rm', '-f', '/tarball.tar'])
+            .exit(0),
+            ExpectRmdir(dir='wkdir/.repo', log_environ=False)
+            .exit(0))
         self.expectRepoSync()
-        self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
-                            + Expect.log('stdio', stdout=str(10000))
-                            + 0,
+        self.expect_commands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
+                            .stdout(str(10000))
+                            .exit(0),
                             self.ExpectShell(command=['stat', '-c%Y', '.'])
-                            + Expect.log(
-                                'stdio', stdout=str(10001 + 7 * 24 * 3600))
-                            + 0,
+                            .stdout(str(10001 + 7 * 24 * 3600))
+                            .exit(0),
                             self.ExpectShell(command=['tar'] + option +
                                              ['-cvf', '/tarball.' + suffix, '.repo'])
-                            + 0)
+                            .exit(0))
         return self.myRunStep()
 
     def test_update_tarball_fail2(self, suffix="tar", option=None):
@@ -348,24 +341,25 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.build.setProperty("repo_download",
                                "repo download test/bla 564/12", "test")
         self.expectClobber()
-        self.expectCommands(
-            self.ExpectShell(command=['tar'] + option + ['-xvf', '/tarball.' + suffix]) + 0)
+        self.expect_commands(
+            self.ExpectShell(command=['tar'] + option + ['-xvf', '/tarball.' + suffix])
+            .exit(0))
         self.expectRepoSync()
-        self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
-                            + Expect.log('stdio', stdout=str(10000))
-                            + 0,
+        self.expect_commands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
+                            .stdout(str(10000))
+                            .exit(0),
                             self.ExpectShell(command=['stat', '-c%Y', '.'])
-                            + Expect.log(
-                                'stdio', stdout=str(10001 + 7 * 24 * 3600))
-                            + 0,
+                            .stdout(str(10001 + 7 * 24 * 3600))
+                            .exit(0),
                             self.ExpectShell(command=['tar'] + option +
                                              ['-cvf', '/tarball.' + suffix, '.repo'])
-                            + 1,
+                            .exit(1),
                             self.ExpectShell(
-                                command=['rm', '-f', '/tarball.tar']) + 0,
+                                command=['rm', '-f', '/tarball.tar'])
+                            .exit(0),
                             self.ExpectShell(
                                 command=['repo', 'download', 'test/bla', '564/12'])
-                            + 0)
+                            .exit(0))
         return self.myRunStep()
 
     def test_repo_downloads(self):
@@ -375,14 +369,13 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                                "repo download test/bla 564/12", "test")
         self.expectnoClobber()
         self.expectRepoSync()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 0
-            + Expect.log(
-                'stdio', stderr="test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
-            + Expect.log('stdio', stderr="HEAD is now at 0123456789abcdef...\n"))
-        self.expectProperty(
+            .exit(0)
+            .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
+            .stderr("HEAD is now at 0123456789abcdef...\n"))
+        self.expect_property(
             "repo_downloaded", "564/12 0123456789abcdef ", "Source")
         return self.myRunStep()
 
@@ -395,13 +388,13 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                                "repo download test/bla2 565/12", "test")
         self.expectnoClobber()
         self.expectRepoSync()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 0,
+            .exit(0),
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla2', '565/12'])
-            + 0)
+            .exit(0))
         return self.myRunStep()
 
     def test_repo_download_manifest(self):
@@ -412,33 +405,33 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.build.setProperty("repo_download2",
                                "repo download manifest 565/12", "test")
         self.expectnoClobber()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(
                 command=['bash', '-c', self.step._getCleanupCommand()])
-            + 0,
+            .exit(0),
             self.ExpectShell(
                 command=['repo', 'init', '-u', 'git://myrepo.com/manifest.git',
                          '-b', 'mb', '-m', 'mf', '--depth', '0'])
-            + 0,
+            .exit(0),
             self.ExpectShell(
                 workdir='wkdir/.repo/manifests',
                 command=[
                     'git', 'fetch', 'git://myrepo.com/manifest.git',
                     'refs/changes/65/565/12'])
-            + 0,
+            .exit(0),
             self.ExpectShell(
                 workdir='wkdir/.repo/manifests',
                 command=['git', 'cherry-pick', 'FETCH_HEAD'])
-            + 0,
+            .exit(0),
             self.ExpectShell(command=['repo', 'sync', '--force-sync', '-c'])
-            + 0,
+            .exit(0),
             self.ExpectShell(
                 command=['repo', 'manifest', '-r', '-o', 'manifest-original.xml'])
-            + 0)
-        self.expectCommands(
+            .exit(0))
+        self.expect_commands(
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 0)
+            .exit(0))
         return self.myRunStep()
 
     def test_repo_downloads_mirror_sync(self):
@@ -450,20 +443,18 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                                "repo download test/bla 564/12", "test")
         self.expectnoClobber()
         self.expectRepoSync()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 1 +
-            Expect.log(
-                "stdio", stderr="fatal: Couldn't find remote ref \n"),
+            .exit(1)
+            .stderr("fatal: Couldn't find remote ref \n"),
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 1 +
-            Expect.log(
-                "stdio", stderr="fatal: Couldn't find remote ref \n"),
+            .exit(1)
+            .stderr("fatal: Couldn't find remote ref \n"),
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 0)
+            .exit(0))
         return self.myRunStep()
 
     def test_repo_downloads_change_missing(self):
@@ -476,17 +467,15 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                                "repo download test/bla 564/12", "test")
         self.expectnoClobber()
         self.expectRepoSync()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 1 +
-            Expect.log(
-                "stdio", stderr="fatal: Couldn't find remote ref \n"),
+            .exit(1)
+            .stderr("fatal: Couldn't find remote ref \n"),
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 1 +
-            Expect.log(
-                "stdio", stderr="fatal: Couldn't find remote ref \n"),
+            .exit(1)
+            .stderr("fatal: Couldn't find remote ref \n"),
         )
         return self.myRunStep(result=FAILURE,
                               state_string="repo: change test/bla 564/12 does not exist (failure)")
@@ -498,13 +487,14 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                                "repo download test/bla 564/12", "test")
         self.expectnoClobber()
         self.expectRepoSync()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 1 + Expect.log("stdio", stderr="patch \n"),
+            .exit(1)
+            .stderr("patch \n"),
             self.ExpectShell(
                 command=['repo', 'forall', '-c', 'git', 'diff', 'HEAD'])
-            + 0
+            .exit(0)
         )
         return self.myRunStep(result=FAILURE,
                               state_string="download failed: test/bla 564/12 (failure)")
@@ -516,14 +506,14 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                                "repo download test/bla 564/12", "test")
         self.expectnoClobber()
         self.expectRepoSync()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(
                 command=['repo', 'download', 'test/bla', '564/12'])
-            + 0 +
-            Expect.log("stdio", stderr="Automatic cherry-pick failed \n"),
+            .exit(0)
+            .stderr("Automatic cherry-pick failed \n"),
             self.ExpectShell(
                 command=['repo', 'forall', '-c', 'git', 'diff', 'HEAD'])
-            + 0
+            .exit(0)
         )
         return self.myRunStep(result=FAILURE,
                               state_string="download failed: test/bla 564/12 (failure)")
@@ -531,18 +521,28 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
     def test_repo_downloads_from_change_source(self):
         """basic repo download from change source, and check that repo_downloaded is updated"""
         self.mySetupStep(repoDownloads=repo.RepoDownloadsFromChangeSource())
-        chdict = TestGerritChangeSource.expected_change
-        change = Change(None, None, None, properties=chdict['properties'])
+        change = Change(None, None, None, properties={
+            'event.change.owner.email': 'dustin@mozilla.com',
+            'event.change.subject': 'fix 1234',
+            'event.change.project': 'pr',
+            'event.change.owner.name': 'Dustin',
+            'event.change.number': '4321',
+            'event.change.url': 'http://buildbot.net',
+            'event.change.branch': 'br',
+            'event.type': 'patchset-created',
+            'event.patchSet.revision': 'abcdef',
+            'event.patchSet.number': '12',
+            'event.source': 'GerritChangeSource'
+        })
         self.build.allChanges = lambda x=None: [change]
         self.expectnoClobber()
         self.expectRepoSync()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(command=['repo', 'download', 'pr', '4321/12'])
-            + 0
-            + Expect.log(
-                'stdio', stderr="test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
-            + Expect.log('stdio', stderr="HEAD is now at 0123456789abcdef...\n"))
-        self.expectProperty(
+            .exit(0)
+            .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
+            .stderr("HEAD is now at 0123456789abcdef...\n"))
+        self.expect_property(
             "repo_downloaded", "564/12 0123456789abcdef ", "Source")
         return self.myRunStep()
 
@@ -550,20 +550,30 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         """basic repo download from change source, and check that repo_downloaded is updated"""
         self.mySetupStep(
             repoDownloads=repo.RepoDownloadsFromChangeSource("mycodebase"))
-        chdict = TestGerritChangeSource.expected_change
-        change = Change(None, None, None, properties=chdict['properties'])
+        change = Change(None, None, None, properties={
+            'event.change.owner.email': 'dustin@mozilla.com',
+            'event.change.subject': 'fix 1234',
+            'event.change.project': 'pr',
+            'event.change.owner.name': 'Dustin',
+            'event.change.number': '4321',
+            'event.change.url': 'http://buildbot.net',
+            'event.change.branch': 'br',
+            'event.type': 'patchset-created',
+            'event.patchSet.revision': 'abcdef',
+            'event.patchSet.number': '12',
+            'event.source': 'GerritChangeSource'
+        })
         # getSourceStamp is faked by SourceStepMixin
         ss = self.build.getSourceStamp("")
         ss.changes = [change]
         self.expectnoClobber()
         self.expectRepoSync()
-        self.expectCommands(
+        self.expect_commands(
             self.ExpectShell(command=['repo', 'download', 'pr', '4321/12'])
-            + 0
-            + Expect.log(
-                'stdio', stderr="test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
-            + Expect.log('stdio', stderr="HEAD is now at 0123456789abcdef...\n"))
-        self.expectProperty(
+            .exit(0)
+            .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
+            .stderr("HEAD is now at 0123456789abcdef...\n"))
+        self.expect_property(
             "repo_downloaded", "564/12 0123456789abcdef ", "Source")
         return self.myRunStep()
 

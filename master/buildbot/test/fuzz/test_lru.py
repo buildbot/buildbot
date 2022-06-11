@@ -49,8 +49,8 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
     def tearDown(self):
         self.assertFalse(lru.inv_failed, "invariant failed; see logs")
         if hasattr(self, 'lru'):
-            log.msg("hits: %d; misses: %d; refhits: %d" % (self.lru.hits,
-                                                           self.lru.misses, self.lru.refhits))
+            log.msg(f"hits: {self.lru.hits}; misses: {self.lru.misses}; "
+                    f"refhits: {self.lru.refhits}")
 
     # tests
 
@@ -98,5 +98,4 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
             yield deferUntilLater(0.001)
 
         self.assertFalse(lru.inv_failed, "invariant failed; see logs")
-        log.msg("hits: %d; misses: %d; refhits: %d" % (self.lru.hits,
-                                                       self.lru.misses, self.lru.refhits))
+        log.msg(f"hits: {self.lru.hits}; misses: {self.lru.misses}; refhits: {self.lru.refhits}")

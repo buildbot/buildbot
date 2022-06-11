@@ -25,9 +25,9 @@ from buildbot.data import buildrequests
 from buildbot.data import resultspec
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import UTC
 from buildbot.util import epoch2datetime
 
@@ -144,7 +144,10 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testGetAll(self):
         buildrequests = yield self.callGet(('buildrequests',))
-        [self.validateData(br) for br in buildrequests]
+
+        for br in buildrequests:
+            self.validateData(br)
+
         self.assertEqual(sorted([br['buildrequestid'] for br in buildrequests]),
                          [44, 45, 46])
 
@@ -156,7 +159,10 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testGetBuilderid(self):
         buildrequests = yield self.callGet(('builders', 78, 'buildrequests'))
-        [self.validateData(br) for br in buildrequests]
+
+        for br in buildrequests:
+            self.validateData(br)
+
         self.assertEqual(
             sorted([br['buildrequestid'] for br in buildrequests]), [46])
 
@@ -257,7 +263,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         pass
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = buildrequests.BuildRequest(self.master)
@@ -274,10 +280,9 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
             except expectedException:
                 pass
             except Exception as e:
-                self.fail('{} exception should be raised, but got {}'.format(expectedException,
-                                                                             repr(e)))
+                self.fail(f'{expectedException} exception should be raised, but got {repr(e)}')
             else:
-                self.fail('{} exception should be raised'.format(expectedException))
+                self.fail(f'{expectedException} exception should be raised')
         else:
             res = yield method(*methodargs, **methodkwargs)
             self.assertEqual(res, expectedRes)
@@ -349,7 +354,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         yield self.doTestCallthrough('claimBuildRequests', claimBuildRequestsMock,
                                      self.rtype.claimBuildRequests,
                                      methodargs=[[]],
-                                     methodkwargs=dict(),
+                                     methodkwargs={},
                                      expectedRes=True,
                                      expectedException=None,
                                      expectedDbApiCalled=False)
@@ -407,7 +412,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
                                      unclaimBuildRequestsMock,
                                      self.rtype.unclaimBuildRequests,
                                      methodargs=[[44]],
-                                     methodkwargs=dict(),
+                                     methodkwargs={},
                                      expectedRes=None,
                                      expectedException=None)
         msg = {
@@ -439,7 +444,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
                                      unclaimBuildRequestsMock,
                                      self.rtype.unclaimBuildRequests,
                                      methodargs=[[]],
-                                     methodkwargs=dict(),
+                                     methodkwargs={},
                                      expectedRes=None,
                                      expectedException=None,
                                      expectedDbApiCalled=False)
@@ -482,7 +487,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
                                      completeBuildRequestsMock,
                                      self.rtype.completeBuildRequests,
                                      methodargs=[[], 0],
-                                     methodkwargs=dict(),
+                                     methodkwargs={},
                                      expectedRes=True,
                                      expectedException=None,
                                      expectedDbApiCalled=False)

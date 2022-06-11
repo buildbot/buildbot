@@ -13,26 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-import datetime
-
 from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.process import properties
 from buildbot.schedulers import timed
 from buildbot.test import fakedb
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
                          unittest.TestCase):
-
-    try:
-        datetime.datetime.fromtimestamp(1)
-    except OSError:
-        skip = ("Python 3.6 bug on Windows: "
-                "https://bugs.python.org/issue29097")
 
     SCHEDULERID = 327
     OBJECTID = 1327
@@ -49,7 +41,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
         return sched
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -254,7 +246,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched.activate()
 
-        (idsDeferred, d) = sched.trigger(False, [
+        _, d = sched.trigger(False, [
             dict(codebase='cb', revision='myrev', branch='br', project='p',
                  repository='r'),
         ], set_props=None)
@@ -278,7 +270,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched.activate()
 
-        (idsDeferre, d) = sched.trigger(False, [
+        _, d = sched.trigger(False, [
             dict(codebase='cb', revision='myrev', branch='br', project='p',
                  repository='r'),
         ], set_props=None)

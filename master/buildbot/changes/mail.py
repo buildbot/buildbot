@@ -50,34 +50,24 @@ class MaildirSource(MaildirService, util.ComparableMixin):
         self.category = category
         self.repository = repository
         if prefix and not prefix.endswith("/"):
-            log.msg(("MaildirSource: you probably want your prefix=('{}') to end with a slash"
-                     ).format(prefix))
+            log.msg(f"MaildirSource: you probably want your prefix=('{prefix}') to end with "
+                    "a slash")
 
     def describe(self):
-        return "{} watching maildir '{}'".format(self.__class__.__name__, self.basedir)
+        return f"{self.__class__.__name__} watching maildir '{self.basedir}'"
 
+    @defer.inlineCallbacks
     def messageReceived(self, filename):
-        d = defer.succeed(None)
+        with self.moveToCurDir(filename) as f:
+            chtuple = self.parse_file(f, self.prefix)
 
-        @d.addCallback
-        def parse_file(_):
-            with self.moveToCurDir(filename) as f:
-                parsedFile = self.parse_file(f, self.prefix)
-            return parsedFile
-
-        @d.addCallback
-        def add_change(chtuple):
-            src, chdict = None, None
-            if chtuple:
-                src, chdict = chtuple
-            if chdict:
-                return self.master.data.updates.addChange(src=str(src),
-                                                          **chdict)
-            else:
-                log.msg("no change found in maildir file '{}'".format(filename))
-            return None
-
-        return d
+        src, chdict = None, None
+        if chtuple:
+            src, chdict = chtuple
+        if chdict:
+            yield self.master.data.updates.addChange(src=str(src), **chdict)
+        else:
+            log.msg(f"no change found in maildir file '{filename}'")
 
     def parse_file(self, fd, prefix=None):
         m = message_from_file(fd)
@@ -101,7 +91,7 @@ class CVSMaildirSource(MaildirSource):
         # local username is enough to identify them (this assumes a one-server
         # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
         # model)
-        name, addr = parseaddr(m["from"])
+        _, addr = parseaddr(m["from"])
         if not addr:
             # no From means this message isn't from buildbot-cvs-mail
             return None
@@ -236,10 +226,10 @@ class CVSMaildirSource(MaildirSource):
                 raise ValueError(
                     'CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
         else:
-            raise ValueError('Expected cvsmode 1.11 or 1.12. got: {}'.format(cvsmode))
+            raise ValueError(f'Expected cvsmode 1.11 or 1.12. got: {cvsmode}')
 
-        log.msg("CVSMaildirSource processing filelist: {}".format(fileList))
-        while(fileList):
+        log.msg(f"CVSMaildirSource processing filelist: {fileList}")
+        while fileList:
             m = singleFileRE.match(fileList)
             if m:
                 curFile = path + '/' + m.group(1)
@@ -299,7 +289,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
         # local username is enough to identify them (this assumes a one-server
         # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
         # model)
-        name, addr = parseaddr(m["from"])
+        _, addr = parseaddr(m["from"])
         if not addr:
             return None  # no From means this message isn't from svn
         at = addr.find("@")
@@ -342,7 +332,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             # source server's expected TZ setting! messy.
 
             # this stanza ends with the "Log:"
-            if (line == "Log:\n"):
+            if line == "Log:\n":
                 break
 
         # commit message is terminated by the file-listing section
@@ -373,8 +363,8 @@ class SVNCommitEmailMaildirSource(MaildirSource):
                     if f.startswith(prefix):
                         f = f[len(prefix):]
                     else:
-                        log.msg(("ignored file from svn commit: prefix '{}' "
-                                 "does not match filename '{}'").format(prefix, f))
+                        log.msg(f"ignored file from svn commit: prefix '{prefix}' "
+                                f"does not match filename '{f}'")
                         continue
 
                 # TODO: figure out how new directories are described, set
@@ -450,20 +440,20 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
             d['comments'] += s + "\n"
 
         def gobble_removed(s):
-            d['files'].append('{} REMOVED'.format(s))
+            d['files'].append(f'{s} REMOVED')
 
         def gobble_added(s):
-            d['files'].append('{} ADDED'.format(s))
+            d['files'].append(f'{s} ADDED')
 
         def gobble_modified(s):
-            d['files'].append('{} MODIFIED'.format(s))
+            d['files'].append(f'{s} MODIFIED')
 
         def gobble_renamed(s):
             match = re.search(r"^(.+) => (.+)$", s)
             if match:
-                d['files'].append('{} RENAMED {}'.format(match.group(1), match.group(2)))
+                d['files'].append(f'{match.group(1)} RENAMED {match.group(2)}')
             else:
-                d['files'].append('{} RENAMED'.format(s))
+                d['files'].append(f'{s} RENAMED')
 
         lines = list(body_line_iterator(m, True))
         rev = None
@@ -511,7 +501,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         if self.branchMap and repository:
             if repository in self.branchMap:
                 branch = self.branchMap[repository]
-            elif ("lp:" + repository) in self.branchMap:
+            elif "lp:" + repository in self.branchMap:
                 branch = self.branchMap['lp:' + repository]
         if not branch:
             if self.defaultBranch:

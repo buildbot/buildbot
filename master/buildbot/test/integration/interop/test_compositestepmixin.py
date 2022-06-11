@@ -27,8 +27,17 @@ from buildbot.test.util.integration import RunMasterBase
 class CompositeStepMixinMaster(RunMasterBase):
 
     @defer.inlineCallbacks
+    def test_compositemixin_rmdir_list(self):
+        yield self.do_compositemixin_test(is_list_mkdir=False, is_list_rmdir=True)
+
+    @defer.inlineCallbacks
     def test_compositemixin(self):
-        yield self.setupConfig(masterConfig())
+        yield self.do_compositemixin_test(is_list_mkdir=False, is_list_rmdir=False)
+
+    @defer.inlineCallbacks
+    def do_compositemixin_test(self, is_list_mkdir, is_list_rmdir):
+        yield self.setupConfig(masterConfig(is_list_mkdir=is_list_mkdir,
+                                            is_list_rmdir=is_list_rmdir))
 
         change = dict(branch="master",
                       files=["foo.c"],
@@ -48,11 +57,21 @@ class CompositeStepMixinMasterPb(CompositeStepMixinMaster):
     proto = "pb"
 
 
+class CompositeStepMixinMasterMsgPack(CompositeStepMixinMaster):
+    proto = "msgpack"
+
+    @defer.inlineCallbacks
+    def test_compositemixin_mkdir_rmdir_lists(self):
+        yield self.do_compositemixin_test(is_list_mkdir=True, is_list_rmdir=True)
+
+
 class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, is_list_mkdir, is_list_rmdir):
+        super().__init__()
         self.logEnviron = False
+        self.is_list_mkdir = is_list_mkdir
+        self.is_list_rmdir = is_list_rmdir
 
     @defer.inlineCallbacks
     def run(self):
@@ -60,31 +79,47 @@ class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
         if contents != []:
             return results.FAILURE
 
-        hasPath = yield self.pathExists('composite_mixin_test')
-        if hasPath:
-            return results.FAILURE
+        paths = ['composite_mixin_test_1', 'composite_mixin_test_2']
+        for path in paths:
+            has_path = yield self.pathExists(path)
 
-        yield self.runMkdir('composite_mixin_test')
+            if has_path:
+                return results.FAILURE
 
-        hasPath = yield self.pathExists('composite_mixin_test')
-        if not hasPath:
-            return results.FAILURE
+        if self.is_list_mkdir:
+            yield self.runMkdir(paths)
+        else:
+            for path in paths:
+                yield self.runMkdir(path)
+
+        for path in paths:
+            has_path = yield self.pathExists(path)
+            if not has_path:
+                return results.FAILURE
 
         contents = yield self.runGlob('*')
-        if not contents[0].endswith('composite_mixin_test'):
-            return results.FAILURE
+        contents.sort()
 
-        yield self.runRmdir('composite_mixin_test')
+        for i, path in enumerate(paths):
+            if not contents[i].endswith(path):
+                return results.FAILURE
 
-        hasPath = yield self.pathExists('composite_mixin_test')
-        if hasPath:
-            return results.FAILURE
+        if self.is_list_rmdir:
+            yield self.runRmdir(paths)
+        else:
+            for path in paths:
+                yield self.runRmdir(path)
+
+        for path in (paths):
+            has_path = yield self.pathExists(path)
+            if has_path:
+                return results.FAILURE
 
         return results.SUCCESS
 
 
 # master configuration
-def masterConfig():
+def masterConfig(is_list_mkdir=True, is_list_rmdir=True):
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
@@ -96,7 +131,8 @@ def masterConfig():
             builderNames=["testy"])]
 
     f = BuildFactory()
-    f.addStep(TestCompositeMixinStep())
+    f.addStep(TestCompositeMixinStep(is_list_mkdir=is_list_mkdir,
+                                     is_list_rmdir=is_list_rmdir))
     c['builders'] = [
         BuilderConfig(name="testy",
                       workernames=["local1"],

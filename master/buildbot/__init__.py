@@ -39,10 +39,10 @@ def gitDescribeToPep440(version):
         if v.group('dev'):
             patch += 1
             dev = int(v.group('dev'))
-            return "{}.{}.{}-dev{}".format(major, minor, patch, dev)
+            return f"{major}.{minor}.{patch}-dev{dev}"
         if v.group('post'):
-            return "{}.{}.{}.post{}".format(major, minor, patch, v.group('post'))
-        return "{}.{}.{}".format(major, minor, patch)
+            return f"{major}.{minor}.{patch}.post{v.group('post')}"
+        return f"{major}.{minor}.{patch}"
 
     return v
 
@@ -50,7 +50,7 @@ def gitDescribeToPep440(version):
 def mTimeVersion(init_file):
     cwd = os.path.dirname(os.path.abspath(init_file))
     m = 0
-    for root, dirs, files in os.walk(cwd):
+    for root, _, files in os.walk(cwd):
         for f in files:
             m = max(os.path.getmtime(os.path.join(root, f)), m)
     d = datetime.datetime.utcfromtimestamp(m)
@@ -99,7 +99,7 @@ def getVersion(init_file):
     try:
         cwd = os.path.dirname(os.path.abspath(init_file))
         fn = os.path.join(cwd, 'VERSION')
-        with open(fn) as f:
+        with open(fn, encoding='utf-8') as f:
             return f.read().strip()
     except IOError:
         pass
@@ -109,7 +109,7 @@ def getVersion(init_file):
         return version
 
     try:
-        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
+        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)  # noqa pylint: disable=consider-using-with
         out = p.communicate()[0]
 
         if (not p.returncode) and out:

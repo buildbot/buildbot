@@ -29,8 +29,8 @@ class TestLogObserver(logobserver.LogObserver):
     def __init__(self):
         self.observed = []
 
-    def outReceived(self, txt):
-        self.observed.append(txt)
+    def outReceived(self, data):
+        self.observed.append(data)
 
 
 class Latin1ProducingCustomBuildStep(buildstep.BuildStep):

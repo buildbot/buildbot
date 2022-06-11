@@ -28,31 +28,31 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import shell
-from buildbot.test.fake.remotecommand import Expect
-from buildbot.test.fake.remotecommand import ExpectRemoteRef
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectRemoteRef
+from buildbot.test.steps import ExpectShell
+from buildbot.test.steps import ExpectUploadFile
+from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestShellCommandExecution(steps.BuildStepMixin,
+class TestShellCommandExecution(TestBuildStepMixin,
                                 configmixin.ConfigErrorsMixin,
                                 TestReactorMixin,
                                 unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_doStepIf_False(self):
-        self.setupStep(shell.ShellCommand(command="echo hello", doStepIf=False))
-        self.expectOutcome(result=SKIPPED,
+        self.setup_step(shell.ShellCommand(command="echo hello", doStepIf=False))
+        self.expect_outcome(result=SKIPPED,
                            state_string="'echo hello' (skipped)")
-        return self.runStep()
+        return self.run_step()
 
     def test_constructor_args_validity(self):
         # this checks that an exception is raised for invalid arguments
@@ -62,131 +62,130 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                                wrongArg1=1, wrongArg2='two')
 
     def test_run_simple(self):
-        self.setupStep(shell.ShellCommand(workdir='build', command="echo hello"))
-        self.expectCommands(
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello"))
+        self.expect_commands(
             ExpectShell(workdir='build', command='echo hello')
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string="'echo hello'")
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string="'echo hello'")
+        return self.run_step()
 
     def test_run_list(self):
-        self.setupStep(shell.ShellCommand(workdir='build',
+        self.setup_step(shell.ShellCommand(workdir='build',
                                           command=['trial', '-b', '-B', 'buildbot.test']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'])
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'trial -b ...'")
-        return self.runStep()
+        return self.run_step()
 
     def test_run_nested_description(self):
-        self.setupStep(shell.ShellCommand(
+        self.setup_step(shell.ShellCommand(
             workdir='build',
             command=properties.FlattenList(['trial', ['-b', '-B'], 'buildbot.test']),
             descriptionDone=properties.FlattenList(['test', ['done']]),
             descriptionSuffix=properties.FlattenList(['suff', ['ix']])))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'])
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string='test done suff ix')
-        return self.runStep()
+        return self.run_step()
 
     def test_run_nested_command(self):
-        self.setupStep(shell.ShellCommand(workdir='build',
+        self.setup_step(shell.ShellCommand(workdir='build',
                                           command=['trial', ['-b', '-B'], 'buildbot.test']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'])
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'trial -b ...'")
-        return self.runStep()
+        return self.run_step()
 
     def test_run_nested_deeply_command(self):
-        self.setupStep(shell.ShellCommand(workdir='build',
+        self.setup_step(shell.ShellCommand(workdir='build',
                                           command=[['trial', ['-b', ['-B']]], 'buildbot.test']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'])
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'trial -b ...'")
-        return self.runStep()
+        return self.run_step()
 
     def test_run_nested_empty_command(self):
-        self.setupStep(shell.ShellCommand(workdir='build',
+        self.setup_step(shell.ShellCommand(workdir='build',
                                           command=['trial', [], '-b', [], 'buildbot.test']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', 'buildbot.test'])
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="'trial -b ...'")
-        return self.runStep()
+        return self.run_step()
 
     def test_run_env(self):
-        self.setupStep(shell.ShellCommand(workdir='build', command="echo hello"),
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello"),
                        worker_env=dict(DEF='HERE'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build', command='echo hello',
                         env=dict(DEF='HERE'))
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
     def test_run_env_override(self):
-        self.setupStep(shell.ShellCommand(workdir='build', env={'ABC': '123'},
+        self.setup_step(shell.ShellCommand(workdir='build', env={'ABC': '123'},
                                           command="echo hello"),
                        worker_env=dict(ABC='XXX', DEF='HERE'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build', command='echo hello',
                         env=dict(ABC='123', DEF='HERE'))
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
     def test_run_usePTY(self):
-        self.setupStep(shell.ShellCommand(workdir='build', command="echo hello", usePTY=False))
-        self.expectCommands(
-            ExpectShell(workdir='build', command='echo hello',
-                        usePTY=False)
-            + 0
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello", usePTY=False))
+        self.expect_commands(
+            ExpectShell(workdir='build', command='echo hello', use_pty=False)
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
     def test_run_usePTY_old_worker(self):
-        self.setupStep(
+        self.setup_step(
             shell.ShellCommand(workdir='build', command="echo hello", usePTY=True),
             worker_version=dict(shell='1.1'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build', command='echo hello')
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
     def test_run_decodeRC(self, rc=1, results=WARNINGS, extra_text=" (warnings)"):
-        self.setupStep(shell.ShellCommand(workdir='build', command="echo hello",
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello",
                                           decodeRC={1: WARNINGS}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build', command='echo hello')
-            + rc
+            .exit(rc)
         )
-        self.expectOutcome(
+        self.expect_outcome(
             result=results, state_string="'echo hello'" + extra_text)
-        return self.runStep()
+        return self.run_step()
 
     def test_run_decodeRC_defaults(self):
         return self.test_run_decodeRC(2, FAILURE, extra_text=" (failure)")
@@ -201,196 +200,197 @@ class TestShellCommandExecution(steps.BuildStepMixin,
             shell.ShellCommand()
 
 
-class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TreeSize(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_run_success(self):
-        self.setupStep(shell.TreeSize())
-        self.expectCommands(
+        self.setup_step(shell.TreeSize())
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            + ExpectShell.log('stdio', stdout='9292    .\n')
-            + 0
+            .stdout('9292    .\n')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="treesize 9292 KiB")
-        self.expectProperty('tree-size-KiB', 9292)
-        return self.runStep()
+        self.expect_property('tree-size-KiB', 9292)
+        return self.run_step()
 
     def test_run_misparsed(self):
-        self.setupStep(shell.TreeSize())
-        self.expectCommands(
+        self.setup_step(shell.TreeSize())
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            + ExpectShell.log('stdio', stdout='abcdef\n')
-            + 0
+            .stdout('abcdef\n')
+            .exit(0)
         )
-        self.expectOutcome(result=WARNINGS,
+        self.expect_outcome(result=WARNINGS,
                            state_string="treesize unknown (warnings)")
-        return self.runStep()
+        return self.run_step()
 
     def test_run_failed(self):
-        self.setupStep(shell.TreeSize())
-        self.expectCommands(
+        self.setup_step(shell.TreeSize())
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            + ExpectShell.log('stdio', stderr='abcdef\n')
-            + 1
+            .stderr('abcdef\n')
+            .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="treesize unknown (failure)")
-        return self.runStep()
+        return self.run_step()
 
 
-class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
+class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_constructor_conflict(self):
         with self.assertRaises(config.ConfigErrors):
             shell.SetPropertyFromCommand(property='foo', extract_fn=lambda: None)
 
     def test_run_property(self):
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(property="res", command="cmd"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
-            + 0
+            .stdout('\n\nabcdef\n')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
-        self.expectProperty("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: " + repr('abcdef'))
-        return self.runStep()
+        self.expect_property("res", "abcdef")  # note: stripped
+        self.expect_log_file('property changes', r"res: " + repr('abcdef'))
+        return self.run_step()
 
     def test_renderable_workdir(self):
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(property="res", command="cmd",
                                          workdir=properties.Interpolate('wkdir')))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
-            + 0
+            .stdout('\n\nabcdef\n')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
-        self.expectProperty("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: " + repr('abcdef'))
-        return self.runStep()
+        self.expect_property("res", "abcdef")  # note: stripped
+        self.expect_log_file('property changes', r"res: " + repr('abcdef'))
+        return self.run_step()
 
     def test_run_property_no_strip(self):
-        self.setupStep(shell.SetPropertyFromCommand(property="res", command="cmd", strip=False))
-        self.expectCommands(
+        self.setup_step(shell.SetPropertyFromCommand(property="res", command="cmd", strip=False))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
-            + 0
+            .stdout('\n\nabcdef\n')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="property 'res' set")
-        self.expectProperty("res", "\n\nabcdef\n")
-        self.expectLogfile('property changes', r"res: " + repr('\n\nabcdef\n'))
-        return self.runStep()
+        self.expect_property("res", "\n\nabcdef\n")
+        self.expect_log_file('property changes', r"res: " + repr('\n\nabcdef\n'))
+        return self.run_step()
 
     def test_run_failure(self):
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(property="res", command="blarg"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="blarg")
-            + ExpectShell.log('stdio', stderr='cannot blarg: File not found')
-            + 1
+            .stderr('cannot blarg: File not found')
+            .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="'blarg' (failure)")
-        self.expectNoProperty("res")
-        return self.runStep()
+        self.expect_no_property("res")
+        return self.run_step()
 
     def test_run_extract_fn(self):
         def extract_fn(rc, stdout, stderr):
             self.assertEqual(
                 (rc, stdout, stderr), (0, 'startend\n', 'STARTEND\n'))
             return dict(a=1, b=2)
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout='start', stderr='START')
-            + ExpectShell.log('stdio', stdout='end')
-            + ExpectShell.log('stdio', stderr='END')
-            + 0
+            .stdout('start')
+            .stderr('START')
+            .stdout('end')
+            .stderr('END')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string="2 properties set")
-        self.expectLogfile('property changes', 'a: 1\nb: 2')
-        self.expectProperty("a", 1)
-        self.expectProperty("b", 2)
-        return self.runStep()
+        self.expect_log_file('property changes', 'a: 1\nb: 2')
+        self.expect_property("a", 1)
+        self.expect_property("b", 2)
+        return self.run_step()
 
     def test_run_extract_fn_cmdfail(self):
         def extract_fn(rc, stdout, stderr):
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
             return dict(a=1, b=2)
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + 3
+            .exit(3)
         )
         # note that extract_fn *is* called anyway
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="2 properties set (failure)")
-        self.expectLogfile('property changes', 'a: 1\nb: 2')
-        return self.runStep()
+        self.expect_log_file('property changes', 'a: 1\nb: 2')
+        return self.run_step()
 
     def test_run_extract_fn_cmdfail_empty(self):
         def extract_fn(rc, stdout, stderr):
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
-            return dict()
-        self.setupStep(
+            return {}
+        self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + 3
+            .exit(3)
         )
         # note that extract_fn *is* called anyway, but returns no properties
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string="'cmd' (failure)")
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_run_extract_fn_exception(self):
         def extract_fn(rc, stdout, stderr):
             raise RuntimeError("oh noes")
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + 0
+            .exit(0)
         )
         # note that extract_fn *is* called anyway, but returns no properties
-        self.expectOutcome(result=EXCEPTION,
+        self.expect_outcome(result=EXCEPTION,
                            state_string="'cmd' (exception)")
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_error_both_set(self):
@@ -411,39 +411,39 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             shell.SetPropertyFromCommand(command=["echo", "value"])
 
 
-class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_new_version_success(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd"))
-        self.expectCommands(
+        self.setup_step(shell.PerlModuleTest(command="cmd"))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     This junk ignored
                     Test Summary Report
                     Result: PASS
                     Tests: 10 Failed: 0
                     Tests: 10 Failed: 0
                     Files=93, Tests=20"""))
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='20 tests 20 passed')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='20 tests 20 passed')
+        return self.run_step()
 
     def test_new_version_warnings(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd",
+        self.setup_step(shell.PerlModuleTest(command="cmd",
                                             warningPattern='^OHNOES'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     This junk ignored
                     Test Summary Report
                     -------------------
@@ -453,24 +453,24 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     OHNOES 2
                     Files=93, Tests=20,  0 wallclock secs ...
                     Result: PASS"""))
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(
+        self.expect_outcome(
             result=WARNINGS,
             state_string='20 tests 20 passed 2 warnings (warnings)')
-        return self.runStep()
+        return self.run_step()
 
     def test_new_version_failed(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd"))
-        self.expectCommands(
+        self.setup_step(shell.PerlModuleTest(command="cmd"))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     foo.pl .. 1/4"""))
-            + ExpectShell.log('stdio', stderr=textwrap.dedent("""\
+            .stderr(textwrap.dedent("""\
                     # Failed test 2 in foo.pl at line 6
                     #  foo.pl line 6 is: ok(0);"""))
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     foo.pl .. Failed 1/4 subtests
 
                     Test Summary Report
@@ -480,42 +480,42 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     Files=1, Tests=4,  0 wallclock secs ( 0.06 usr  0.01 sys +  0.03 cusr
                     0.01 csys =  0.11 CPU)
                     Result: FAIL"""))
-            + ExpectShell.log('stdio', stderr=textwrap.dedent("""\
+            .stderr(textwrap.dedent("""\
                     Failed 1/1 test programs. 1/4 subtests failed."""))
-            + 1
+            .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string='4 tests 3 passed 1 failed (failure)')
-        return self.runStep()
+        return self.run_step()
 
     def test_old_version_success(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd"))
-        self.expectCommands(
+        self.setup_step(shell.PerlModuleTest(command="cmd"))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     This junk ignored
                     All tests successful
                     Files=10, Tests=20, 100 wall blah blah"""))
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS,
+        self.expect_outcome(result=SUCCESS,
                            state_string='20 tests 20 passed')
-        return self.runStep()
+        return self.run_step()
 
     def test_old_version_failed(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd"))
-        self.expectCommands(
+        self.setup_step(shell.PerlModuleTest(command="cmd"))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
-            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+            .stdout(textwrap.dedent("""\
                     This junk ignored
                     Failed 1/1 test programs, 3/20 subtests failed."""))
-            + 1
+            .exit(1)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string='20 tests 17 passed 3 failed (failure)')
-        return self.runStep()
+        return self.run_step()
 
 
 class SetPropertyDeprecation(unittest.TestCase):
@@ -538,178 +538,167 @@ class SetPropertyDeprecation(unittest.TestCase):
                          )
 
 
-class Configure(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class Configure(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_class_attrs(self):
         step = shell.Configure()
         self.assertEqual(step.command, ['./configure'])
 
     def test_run(self):
-        self.setupStep(shell.Configure())
+        self.setup_step(shell.Configure())
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=["./configure"])
-            + 0
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
 
-class WarningCountingShellCommand(steps.BuildStepMixin,
+class WarningCountingShellCommand(TestBuildStepMixin,
                                   configmixin.ConfigErrorsMixin,
                                   TestReactorMixin,
                                   unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_no_warnings(self):
-        self.setupStep(shell.WarningCountingShellCommand(workdir='w', command=['make']))
-        self.expectCommands(
+        self.setup_step(shell.WarningCountingShellCommand(workdir='w', command=['make']))
+        self.expect_commands(
             ExpectShell(workdir='w',
                         command=["make"])
-            + ExpectShell.log('stdio', stdout='blarg success!')
-            + 0
+            .stdout('blarg success!')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty("warnings-count", 0)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property("warnings-count", 0)
+        return self.run_step()
 
     def test_default_pattern(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make']))
-        self.expectCommands(
+        self.setup_step(shell.WarningCountingShellCommand(command=['make']))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            + ExpectShell.log('stdio',
-                              stdout='normal: foo\nwarning: blarg!\n'
-                                     'also normal\nWARNING: blarg!\n')
-            + 0
+            .stdout('normal: foo\nwarning: blarg!\n'
+                    'also normal\nWARNING: blarg!\n')
+            .exit(0)
         )
-        self.expectOutcome(result=WARNINGS)
-        self.expectProperty("warnings-count", 2)
-        self.expectLogfile("warnings (2)",
+        self.expect_outcome(result=WARNINGS)
+        self.expect_property("warnings-count", 2)
+        self.expect_log_file("warnings (2)",
                            "warning: blarg!\nWARNING: blarg!\n")
-        return self.runStep()
+        return self.run_step()
 
     def test_custom_pattern(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make'],
+        self.setup_step(shell.WarningCountingShellCommand(command=['make'],
                                                          warningPattern=r"scary:.*"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            + ExpectShell.log('stdio',
-                              stdout='scary: foo\nwarning: bar\nscary: bar')
-            + 0
+            .stdout('scary: foo\nwarning: bar\nscary: bar')
+            .exit(0)
         )
-        self.expectOutcome(result=WARNINGS)
-        self.expectProperty("warnings-count", 2)
-        self.expectLogfile("warnings (2)", "scary: foo\nscary: bar\n")
-        return self.runStep()
+        self.expect_outcome(result=WARNINGS)
+        self.expect_property("warnings-count", 2)
+        self.expect_log_file("warnings (2)", "scary: foo\nscary: bar\n")
+        return self.run_step()
 
     def test_maxWarnCount(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make'], maxWarnCount=9))
-        self.expectCommands(
+        self.setup_step(shell.WarningCountingShellCommand(command=['make'], maxWarnCount=9))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            + ExpectShell.log('stdio', stdout='warning: noo!\n' * 10)
-            + 0
+            .stdout('warning: noo!\n' * 10)
+            .exit(0)
         )
-        self.expectOutcome(result=FAILURE)
-        self.expectProperty("warnings-count", 10)
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        self.expect_property("warnings-count", 10)
+        return self.run_step()
 
     def test_fail_with_warnings(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make']))
-        self.expectCommands(
+        self.setup_step(shell.WarningCountingShellCommand(command=['make']))
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
-            + ExpectShell.log('stdio', stdout='warning: I might fail')
-            + 3
+            .stdout('warning: I might fail')
+            .exit(3)
         )
-        self.expectOutcome(result=FAILURE)
-        self.expectProperty("warnings-count", 1)
-        self.expectLogfile("warnings (1)", "warning: I might fail\n")
-        return self.runStep()
+        self.expect_outcome(result=FAILURE)
+        self.expect_property("warnings-count", 1)
+        self.expect_log_file("warnings (1)", "warning: I might fail\n")
+        return self.run_step()
 
     def test_warn_with_decoderc(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make'],
+        self.setup_step(shell.WarningCountingShellCommand(command=['make'],
                                                          decodeRC={3: WARNINGS}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=["make"],
                         )
-            + ExpectShell.log('stdio', stdout='I might fail with rc')
-            + 3
+            .stdout('I might fail with rc')
+            .exit(3)
         )
-        self.expectOutcome(result=WARNINGS)
-        self.expectProperty("warnings-count", 0)
-        return self.runStep()
+        self.expect_outcome(result=WARNINGS)
+        self.expect_property("warnings-count", 0)
+        return self.run_step()
 
     def do_test_suppressions(self, step, supps_file='', stdout='',
                              exp_warning_count=0, exp_warning_log='',
                              exp_exception=False, props=None):
-        self.setupStep(step)
+        self.setup_step(step)
 
         if props is not None:
             for key in props:
                 self.build.setProperty(key, props[key], "")
 
-        # Invoke the expected callbacks for the suppression file upload.  Note
-        # that this assumes all of the remote_* are synchronous, but can be
-        # easily adapted to suit if that changes (using inlineCallbacks)
-        def upload_behavior(command):
-            writer = command.args['writer']
-            writer.remote_write(supps_file)
-            writer.remote_close()
-            command.rc = 0
-
         if supps_file is not None:
-            self.expectCommands(
+            self.expect_commands(
                 # step will first get the remote suppressions file
-                Expect('uploadFile', dict(blocksize=32768, maxsize=None,
-                                          workersrc='supps', workdir='wkdir',
-                                          writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
-                + Expect.behavior(upload_behavior),
-
+                ExpectUploadFile(blocksize=32768, maxsize=None,
+                                 workersrc='supps', workdir='wkdir',
+                                 writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
+                .upload_string(supps_file)
+                .exit(0),
                 # and then run the command
                 ExpectShell(workdir='wkdir',
                             command=["make"])
-                + ExpectShell.log('stdio', stdout=stdout)
-                + 0
+                .stdout(stdout)
+                .exit(0)
             )
         else:
-            self.expectCommands(
+            self.expect_commands(
                 ExpectShell(workdir='wkdir',
                             command=["make"])
-                + ExpectShell.log('stdio', stdout=stdout)
-                + 0
+                .stdout(stdout)
+                .exit(0)
             )
         if exp_exception:
-            self.expectOutcome(result=EXCEPTION,
+            self.expect_outcome(result=EXCEPTION,
                                state_string="'make' (exception)")
         else:
             if exp_warning_count != 0:
-                self.expectOutcome(result=WARNINGS,
+                self.expect_outcome(result=WARNINGS,
                                    state_string="'make' (warnings)")
-                self.expectLogfile("warnings (%d)" % exp_warning_count,
+                self.expect_log_file(f"warnings ({exp_warning_count})",
                                    exp_warning_log)
             else:
-                self.expectOutcome(result=SUCCESS,
+                self.expect_outcome(result=SUCCESS,
                                    state_string="'make'")
-            self.expectProperty("warnings-count", exp_warning_count)
-        return self.runStep()
+            self.expect_property("warnings-count", exp_warning_count)
+        return self.run_step()
 
     def test_suppressions(self):
         step = shell.WarningCountingShellCommand(command=['make'], suppressionFile='supps')
@@ -911,19 +900,19 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
             shell.WarningCountingShellCommand()
 
 
-class Compile(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class Compile(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_class_args(self):
         # since this step is just a pre-configured WarningCountingShellCommand,
         # there' not much to test!
-        step = self.setupStep(shell.Compile())
+        step = self.setup_step(shell.Compile())
         self.assertEqual(step.name, "compile")
         self.assertTrue(step.haltOnFailure)
         self.assertTrue(step.flunkOnFailure)
@@ -932,19 +921,19 @@ class Compile(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(step.command, ["make", "all"])
 
 
-class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
+class Test(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
            TestReactorMixin,
            unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        self.setUpBuildStep()
+        self.setup_test_reactor()
+        self.setup_test_build_step()
 
     def tearDown(self):
-        self.tearDownBuildStep()
+        self.tear_down_test_build_step()
 
     def test_setTestResults(self):
-        step = self.setupStep(shell.Test())
+        step = self.setup_step(shell.Test())
         step.setTestResults(total=10, failed=3, passed=5, warnings=3)
         self.assertEqual(step.statistics, {
             'tests-total': 10,
@@ -962,13 +951,13 @@ class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         })
 
     def test_describe_not_done(self):
-        step = self.setupStep(shell.Test())
+        step = self.setup_step(shell.Test())
         step.results = SUCCESS
         step.rendered = True
         self.assertEqual(step.getResultSummary(), {'step': 'test'})
 
     def test_describe_done(self):
-        step = self.setupStep(shell.Test())
+        step = self.setup_step(shell.Test())
         step.rendered = True
         step.results = SUCCESS
         step.statistics['tests-total'] = 93
@@ -979,7 +968,7 @@ class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
                          {'step': '93 tests 20 passed 30 warnings 10 failed'})
 
     def test_describe_done_no_total(self):
-        step = self.setupStep(shell.Test())
+        step = self.setup_step(shell.Test())
         step.rendered = True
         step.results = SUCCESS
         step.statistics['tests-total'] = 0

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import json
+
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -41,8 +43,63 @@ class BuildPropertiesEndpoint(base.Endpoint):
     def get(self, resultSpec, kwargs):
         buildid = kwargs.get("buildid", None)
         if buildid is None:
+            # fixme: this cannot work...
             buildid = kwargs.get("build_number")
         return self.master.db.builds.getBuildProperties(buildid)
+
+
+class PropertiesListEndpoint(base.Endpoint):
+
+    isCollection = True
+    pathPatterns = """
+        /builds/n:buildid/property_list
+        /buildsets/n:bsid/properties_list
+        /changes/n:changeid/properties_list
+    """
+    buildFieldMapping = {
+        "name": "build_properties.name",
+        "source": "build_properties.source",
+        "value": "build_properties.value",
+    }
+    buildsetFieldMapping = {
+        "name": "buildset_properties.name",
+        "source": "buildset_properties.source",
+        "value": "buildset_properties.value",
+    }
+    changeFieldMapping = {
+        "name": "change_properties.name",
+        "source": "change_properties.source",
+        "value": "change_properties.value",
+    }
+
+    @defer.inlineCallbacks
+    def get(self, resultSpec, kwargs):
+        buildid = kwargs.get("buildid", None)
+        bsid = kwargs.get("bsid", None)
+        changeid = kwargs.get("changeid", None)
+        if buildid is not None:
+            if resultSpec is not None:
+                resultSpec.fieldMapping = self.buildFieldMapping
+            props = yield self.master.db.builds.getBuildProperties(buildid, resultSpec)
+        elif bsid is not None:
+            if resultSpec is not None:
+                resultSpec.fieldMapping = self.buildsetFieldMapping
+            props = yield self.master.db.buildsets.getBuildsetProperties(bsid)
+        elif changeid is not None:
+            if resultSpec is not None:
+                resultSpec.fieldMapping = self.buildsetFieldMapping
+            props = yield self.master.db.changes.getChangeProperties(changeid)
+        return [{'name': k, 'source': v[1], 'value': json.dumps(v[0])} for k, v in props.items()]
+
+
+class Property(base.ResourceType):
+
+    name = "_property"
+    plural = "_properties"
+    endpoints = [PropertiesListEndpoint]
+    keyField = "name"
+
+    entityType = types.PropertyEntityType(name, 'Property')
 
 
 class Properties(base.ResourceType):
@@ -50,7 +107,7 @@ class Properties(base.ResourceType):
     name = "property"
     plural = "properties"
     endpoints = [BuildsetPropertiesEndpoint, BuildPropertiesEndpoint]
-    keyFields = []
+    keyField = "name"
 
     entityType = types.SourcedProperties()
 

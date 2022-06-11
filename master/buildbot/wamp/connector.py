@@ -37,7 +37,6 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         # We must explicitly call both parent constructors.
         ApplicationSession.__init__(self)
         service.AsyncMultiService.__init__(self)
-        self.config = config
         self.leaving = False
         self.setServiceParent(config.extra['parent'])
 
@@ -47,7 +46,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         for handler in [self] + self.services:
             yield self.register(handler)
             yield self.subscribe(handler)
-        yield self.publish("org.buildbot.{}.connected".format(self.master.masterid))
+        yield self.publish(f"org.buildbot.{self.master.masterid}.connected")
         self.parent.service = self
         self.parent.serviceDeferred.callback(self)
 

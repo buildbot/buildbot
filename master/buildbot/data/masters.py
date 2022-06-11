@@ -87,13 +87,15 @@ class Master(base.ResourceType):
     eventPathPatterns = """
         /masters/:masterid
     """
+    keyField = "masterid"
+    subresources = ["Builder"]
 
     class EntityType(types.Entity):
         masterid = types.Integer()
         name = types.String()
         active = types.Boolean()
         last_active = types.DateTime()
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Master')
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -132,7 +134,7 @@ class Master(base.ResourceType):
 
     @defer.inlineCallbacks
     def _masterDeactivatedHousekeeping(self, masterid, name):
-        log.msg("doing housekeeping for master {} {}".format(masterid, name))
+        log.msg(f"doing housekeeping for master {masterid} {name}")
 
         # common code for deactivating a master
         yield self.master.data.rtypes.worker._masterDeactivated(

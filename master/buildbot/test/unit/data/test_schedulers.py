@@ -22,9 +22,9 @@ from twisted.trial import unittest
 from buildbot.data import schedulers
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 
@@ -61,7 +61,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         scheduler = yield self.callGet(('schedulers', 13))
 
         self.validateData(scheduler)
-        self.assertEqual(scheduler['master'], None),
+        self.assertEqual(scheduler['master'], None)
 
     @defer.inlineCallbacks
     def test_get_masterid_existing(self):
@@ -121,7 +121,9 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get(self):
         schedulers = yield self.callGet(('schedulers',))
 
-        [self.validateData(m) for m in schedulers]
+        for m in schedulers:
+            self.validateData(m)
+
         self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
                          [13, 14, 15, 16])
 
@@ -129,7 +131,9 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_masterid(self):
         schedulers = yield self.callGet(('masters', 33, 'schedulers'))
 
-        [self.validateData(m) for m in schedulers]
+        for m in schedulers:
+            self.validateData(m)
+
         self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
                          [15, 16])
 
@@ -144,7 +148,7 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
                 unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = schedulers.Scheduler(self.master)

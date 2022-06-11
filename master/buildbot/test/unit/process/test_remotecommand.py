@@ -19,7 +19,6 @@ from twisted.trial import unittest
 
 from buildbot.process import remotecommand
 from buildbot.test.fake import logfile
-from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.util import interfaces
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
@@ -63,16 +62,14 @@ class TestRemoteShellCommand(unittest.TestCase):
 # warning in future versions.
 
 
-class Tests(interfaces.InterfaceTests):
-
-    remoteCommandClass = None
+class Tests(interfaces.InterfaceTests, unittest.TestCase):
 
     def makeRemoteCommand(self, stdioLogName='stdio'):
-        return self.remoteCommandClass('ping', {'arg': 'val'},
-                                       stdioLogName=stdioLogName)
+        return remotecommand.RemoteCommand('ping', {'arg': 'val'},
+                                           stdioLogName=stdioLogName)
 
     def test_signature_RemoteCommand_constructor(self):
-        @self.assertArgSpecMatches(self.remoteCommandClass.__init__)
+        @self.assertArgSpecMatches(remotecommand.RemoteCommand.__init__)
         def __init__(self, remote_command, args, ignore_updates=False,
                      collectStdout=False, collectStderr=False,
                      decodeRC=None,
@@ -80,7 +77,7 @@ class Tests(interfaces.InterfaceTests):
             pass
 
     def test_signature_RemoteShellCommand_constructor(self):
-        @self.assertArgSpecMatches(self.remoteShellCommandClass.__init__)
+        @self.assertArgSpecMatches(remotecommand.RemoteShellCommand.__init__)
         def __init__(self, workdir, command, env=None, want_stdout=1,
                      want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles=None,
                      usePTY=None, logEnviron=True, collectStdout=False,
@@ -134,13 +131,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertIsInstance(cmd.active, bool)
 
     def test_RemoteShellCommand_constructor(self):
-        self.remoteShellCommandClass('wkdir', 'some-command')
-
-
-class TestRunCommand(unittest.TestCase, Tests):
-
-    remoteCommandClass = remotecommand.RemoteCommand
-    remoteShellCommandClass = remotecommand.RemoteShellCommand
+        remotecommand.RemoteShellCommand('wkdir', 'some-command')
 
     def test_notStdioLog(self):
         logname = 'notstdio'
@@ -172,12 +163,6 @@ class TestRunCommand(unittest.TestCase, Tests):
         cmd.run(step, conn, 'builder')
 
         self.assertEqual(cmd.args['usePTY'], 'slave-config')
-
-
-class TestFakeRunCommand(unittest.TestCase, Tests):
-
-    remoteCommandClass = fakeremotecommand.FakeRemoteCommand
-    remoteShellCommandClass = fakeremotecommand.FakeRemoteShellCommand
 
 
 class TestWorkerTransition(unittest.TestCase):

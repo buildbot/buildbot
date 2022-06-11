@@ -43,7 +43,7 @@ class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
         self.errors = 0
 
         while True:
-            stream, line = yield
+            _, line = yield
             if line.startswith("Error importing "):
                 self.import_errors += 1
             if line.find("Warning: ") != -1:
@@ -54,13 +54,13 @@ class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
     def getResultSummary(self):
         summary = ' '.join(self.descriptionDone)
         if self.import_errors:
-            summary += " ierr={}".format(self.import_errors)
+            summary += f" ierr={self.import_errors}"
         if self.warnings:
-            summary += " warn={}".format(self.warnings)
+            summary += f" warn={self.warnings}"
         if self.errors:
-            summary += " err={}".format(self.errors)
+            summary += f" err={self.errors}"
         if self.results != SUCCESS:
-            summary += ' ({})'.format(Results[self.results])
+            summary += f' ({Results[self.results]})'
         return {'step': summary}
 
     @defer.inlineCallbacks
@@ -153,10 +153,10 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
         summary = ' '.join(self.descriptionDone)
         for m in self._MESSAGES:
             if self.counts[m]:
-                summary += " {}={}".format(m, self.counts[m])
+                summary += f" {m}={self.counts[m]}"
 
         if self.results != SUCCESS:
-            summary += ' ({})'.format(Results[self.results])
+            summary += f' ({Results[self.results]})'
 
         return {'step': summary}
 
@@ -175,7 +175,7 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
             for m in self._MESSAGES:
                 if self.counts[m]:
                     yield self.addCompleteLog(m, "\n".join(self.summaries[m]))
-                self.setProperty("pyflakes-{}".format(m), self.counts[m], "pyflakes")
+                self.setProperty(f"pyflakes-{m}", self.counts[m], "pyflakes")
             self.setProperty("pyflakes-total", sum(self.counts.values()), "pyflakes")
 
         if cmd.didFail() or self._hasSyntaxError:
@@ -227,12 +227,12 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
 
     _flunkingIssues = ("F", "E")  # msg categories that cause FAILURE
 
-    _msgtypes_re_str = '(?P<errtype>[{}])'.format(''.join(list(_MESSAGES)))
-    _default_line_re = re.compile(r'^{}(\d+)?: *\d+(, *\d+)?:.+'.format(_msgtypes_re_str))
+    _msgtypes_re_str = f"(?P<errtype>[{''.join(list(_MESSAGES))}])"
+    _default_line_re = re.compile(fr'^{_msgtypes_re_str}(\d+)?: *\d+(, *\d+)?:.+')
     _default_2_0_0_line_re = \
-        re.compile(r'^(?P<path>[^:]+):(?P<line>\d+):\d+: *{}(\d+)?:.+'.format(_msgtypes_re_str))
+        re.compile(fr'^(?P<path>[^:]+):(?P<line>\d+):\d+: *{_msgtypes_re_str}(\d+)?:.+')
     _parseable_line_re = re.compile(
-        r'(?P<path>[^:]+):(?P<line>\d+): \[{}(\d+)?(\([a-z-]+\))?[,\]] .+'.format(_msgtypes_re_str))
+        fr'(?P<path>[^:]+):(?P<line>\d+): \[{_msgtypes_re_str}(\d+)?(\([a-z-]+\))?[,\]] .+')
 
     def __init__(self, store_results=True, **kwargs):
         kwargs = self.setupShellMixin(kwargs)
@@ -240,6 +240,11 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
         self._store_results = store_results
         self.counts = {}
         self.summaries = {}
+
+        for m in self._MESSAGES:
+            self.counts[m] = 0
+            self.summaries[m] = []
+
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
 
     # returns (message type, path, line) tuple if line has been matched, or None otherwise
@@ -267,10 +272,6 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
         return None
 
     def _log_consumer(self):
-        for m in self._MESSAGES:
-            self.counts[m] = 0
-            self.summaries[m] = []
-
         while True:
             stream, line = yield
             if stream == 'h':
@@ -294,10 +295,10 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
         summary = ' '.join(self.descriptionDone)
         for msg, fullmsg in sorted(self._MESSAGES.items()):
             if self.counts[msg]:
-                summary += " {}={}".format(fullmsg, self.counts[msg])
+                summary += f" {fullmsg}={self.counts[msg]}"
 
         if self.results != SUCCESS:
-            summary += ' ({})'.format(Results[self.results])
+            summary += f' ({Results[self.results]})'
 
         return {'step': summary}
 
@@ -312,7 +313,7 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
         for msg, fullmsg in sorted(self._MESSAGES.items()):
             if self.counts[msg]:
                 yield self.addCompleteLog(fullmsg, "\n".join(self.summaries[msg]))
-            self.setProperty("pylint-{}".format(fullmsg), self.counts[msg], 'Pylint')
+            self.setProperty(f"pylint-{fullmsg}", self.counts[msg], 'Pylint')
         self.setProperty("pylint-total", sum(self.counts.values()), 'Pylint')
 
         if cmd.rc & (self.RC_FATAL | self.RC_ERROR | self.RC_USAGE):
@@ -379,9 +380,9 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
                 command.extend(['-D', key])
             elif isinstance(defines[key], bool):
                 command.extend(['-D',
-                                '{}={}'.format(key, defines[key] and 1 or 0)])
+                                f'{key}={defines[key] and 1 or 0}'])
             else:
-                command.extend(['-D', '{}={}'.format(key, defines[key])])
+                command.extend(['-D', f'{key}={defines[key]}'])
 
         if mode == 'full':
             command.extend(['-E'])  # Don't use a saved environment
@@ -401,7 +402,7 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
         next_is_warning = False
 
         while True:
-            stream, line = yield
+            _, line = yield
             if line.startswith('build succeeded') or \
                line.startswith('no targets are out of date.'):
                 self.success = True
@@ -417,10 +418,10 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
                             self.warnings.append(line)
 
     def getResultSummary(self):
-        summary = '{} {} warnings'.format(self.name, len(self.warnings))
+        summary = f'{self.name} {len(self.warnings)} warnings'
 
         if self.results != SUCCESS:
-            summary += ' ({})'.format(Results[self.results])
+            summary += f' ({Results[self.results]})'
 
         return {'step': summary}
 

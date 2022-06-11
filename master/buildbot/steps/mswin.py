@@ -100,12 +100,12 @@ class Robocopy(ShellMixin, BuildStep):
 
         # If we have a "clean" return code, it's good.
         # Otherwise, look for errors first, warnings second.
-        if cmd.rc == 0 or cmd.rc == 1:
+        if cmd.rc in (0, 1):
             return SUCCESS
         for result in [FAILURE, WARNINGS]:
             for flag in self.return_flags[result]:
                 if (cmd.rc & flag) == flag:
                     return result
 
-        log.msg("Unknown return code for Robocopy: {}".format(cmd.rc))
+        log.msg(f"Unknown return code for Robocopy: {cmd.rc}")
         return EXCEPTION

@@ -69,13 +69,11 @@ def assertProducesWarnings(filter_category, num_warnings=None,
     if num_warnings is None:
         num_warnings = 1
 
+    warns_str = '\n'.join(map(str, warns))
     assert len(warns) == num_warnings, \
         "Number of occurred warnings is not correct. " \
-        "Expected {num} warnings, received {num_received}:\n" \
-        "{warns}".format(
-            num=num_warnings,
-            num_received=len(warns),
-            warns="\n".join(map(str, warns)))
+        f"Expected {num_warnings} warnings, received {len(warns)}:\n" \
+        f"{warns_str}"
 
     if messages_patterns is None and message_pattern is not None:
         messages_patterns = [message_pattern] * num_warnings
@@ -83,14 +81,14 @@ def assertProducesWarnings(filter_category, num_warnings=None,
     if messages_patterns is not None:
         for w, pattern in zip(warns, messages_patterns):
             # TODO: Maybe don't use regexp, but use simple substring check?
+            warns_str = '\n'.join(map(str, warns))
             assert re.search(pattern, str(w.message)), \
                 "Warning pattern doesn't match. Expected pattern:\n" \
-                "{pattern}\n" \
+                f"{pattern}\n" \
                 "Received message:\n" \
-                "{message}\n" \
+                f"{w.message}\n" \
                 "All gathered warnings:\n" \
-                "{warns}".format(pattern=pattern, message=w.message,
-                                 warns="\n".join(map(str, warns)))
+                f"{warns_str}"
 
 
 @contextlib.contextmanager

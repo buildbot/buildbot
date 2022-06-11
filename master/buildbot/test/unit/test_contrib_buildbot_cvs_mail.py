@@ -95,8 +95,8 @@ class _SubprocessProtocol(protocol.ProcessProtocol):
         self.deferred = deferred
         self.output = b''
 
-    def outReceived(self, s):
-        self.output += s
+    def outReceived(self, data):
+        self.output += data
     errReceived = outReceived
 
     def connectionMade(self):
@@ -122,7 +122,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
     buildbot_cvs_mail_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), '../../../contrib/buildbot_cvs_mail.py'))
     if not os.path.exists(buildbot_cvs_mail_path):
-        skip = ("'{}' does not exist (normal unless run from git)".format(buildbot_cvs_mail_path))
+        skip = (f"'{buildbot_cvs_mail_path}' does not exist (normal unless run from git)")
 
     def assertOutputOk(self, result, regexList):
         "assert that the output from getProcessOutputAndValueWithInput matches expectations"
@@ -179,7 +179,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = utils.getProcessOutputAndValue(executable, args)
 
         def check(result):
-            (stdout, stderr, code) = result
+            _, __, code = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d
@@ -195,7 +195,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = utils.getProcessOutputAndValue(executable, args)
 
         def check(result):
-            (stdout, stderr, code) = result
+            _, __, code = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d
@@ -211,7 +211,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = utils.getProcessOutputAndValue(executable, args)
 
         def check(result):
-            (stdout, stderr, code) = result
+            _, __, code = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d
@@ -226,7 +226,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = utils.getProcessOutputAndValue(executable, args)
 
         def check(result):
-            (stdout, stderr, code) = result
+            _, __, code = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d

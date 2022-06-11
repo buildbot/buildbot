@@ -19,14 +19,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.schedulers import timed
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.misc import TestReactorMixin
-
-try:
-    from multiprocessing import Process
-    assert Process
-except ImportError:
-    Process = None
 
 
 class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin,
@@ -38,7 +32,7 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin,
     SCHEDULERID = 33
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
@@ -54,8 +48,7 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin,
                 for t in (lastActuated, expected)]
             got_ep = yield sched.getNextBuildTime(lastActuated_ep)
             self.assertEqual(got_ep, expected_ep,
-                             "{} -> {} != {}".format(lastActuated, time.localtime(got_ep),
-                             expected))
+                             f"{lastActuated} -> {time.localtime(got_ep)} != {expected}")
 
     def test_getNextBuildTime_hourly(self):
         sched = self.makeScheduler(name='test', builderNames=['test'])

@@ -151,8 +151,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                                       complete=0, num_lines=0, type=type))
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
-                raise KeyError(
-                    "log with slug '%r' already exists in this step" % (slug,)) from e
+                raise KeyError(f"log with slug '{slug!r}' already exists in this step") from e
         return self.db.pool.do(thdAddLog)
 
     def thdCompressChunk(self, chunk):
@@ -230,7 +229,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         if i != -1:
             return content[:i], content[i + 1:]
 
-        log.msg('truncating long line for log %d' % logid)
+        log.msg(f'truncating long line for log {logid}')
 
         # first, truncate this down to something that decodes correctly
         truncline = content[:self.MAX_CHUNK_SIZE]

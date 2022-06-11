@@ -139,8 +139,8 @@ class Command(object):
 
     _reactor = reactor
 
-    def __init__(self, builder, stepId, args):
-        self.builder = builder
+    def __init__(self, protocol_command, stepId, args):
+        self.protocol_command = protocol_command
         self.stepId = stepId  # just for logging
         self.args = args
         self.startTime = None
@@ -182,7 +182,7 @@ class Command(object):
         if not self.running:
             log.msg("would sendStatus but not .running")
             return
-        self.builder.sendUpdate(status)
+        self.protocol_command.send_update(status)
 
     def doInterrupt(self):
         self.running = False

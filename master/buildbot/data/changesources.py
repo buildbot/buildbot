@@ -79,13 +79,13 @@ class ChangeSource(base.ResourceType):
     name = "changesource"
     plural = "changesources"
     endpoints = [ChangeSourceEndpoint, ChangeSourcesEndpoint]
-    keyFields = ['changesourceid']
+    keyField = 'changesourceid'
 
     class EntityType(types.Entity):
         changesourceid = types.Integer()
         name = types.String()
         master = types.NoneOk(masters.Master.entityType)
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Changesource')
 
     @base.updateMethod
     def findChangeSourceId(self, name):

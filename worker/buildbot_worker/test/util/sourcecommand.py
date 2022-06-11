@@ -16,7 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-from buildbot_worker import runprocess
 from buildbot_worker.test.util import command
 
 
@@ -54,30 +53,6 @@ class SourceCommandTestMixin(command.CommandTestMixin):
             self.sourcedata = cmd.sourcedata
             return res
         cmd.writeSourcedata = writeSourcedata
-
-        # patch out a bunch of actions with invocations of RunProcess that will
-        # end up being Expect-able by the tests.
-
-        def doClobber(_, dirname):
-            r = runprocess.RunProcess(self.builder,
-                                      ['clobber', dirname],
-                                      self.builder.basedir)
-            return r.start()
-        cmd.doClobber = doClobber
-
-        def doCopy(_):
-            r = runprocess.RunProcess(self.builder,
-                                      ['copy', cmd.srcdir, cmd.workdir],
-                                      self.builder.basedir)
-            return r.start()
-        cmd.doCopy = doCopy
-
-        def setFileContents(filename, contents):
-            r = runprocess.RunProcess(self.builder,
-                                      ['setFileContents', filename, contents],
-                                      self.builder.basedir)
-            return r.start()
-        cmd.setFileContents = setFileContents
 
     def check_sourcedata(self, _, expected_sourcedata):
         """

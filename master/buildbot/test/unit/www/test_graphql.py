@@ -20,9 +20,9 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.test.fake import endpoint
+from buildbot.data import connector
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
 from buildbot.www import graphql
 
@@ -34,13 +34,13 @@ except ImportError:
 
 class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     if not graphql_core:
-        skip = 'graphql is required for V3RootResource tests'
+        skip = "graphql is required for V3RootResource tests"
 
     def setUp(self):
-        self.setUpTestReactor()
-        self.master = self.make_master(url="http://server/path/")
+        self.patch(connector.DataConnector, 'submodules', [])
+        self.setup_test_reactor(use_asyncio=True)
+        self.master = self.make_master(url="http://server/path/", wantGraphql=True)
         self.master.config.www["graphql"] = {"debug": True}
-        self.master.data._scanModule(endpoint)
         self.rsrc = graphql.V3RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 
@@ -52,9 +52,13 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         content = json.dumps({"data": None, "errors": errors})
         self.assertRequest(content=unicode2bytes(content), responseCode=responseCode)
 
+    def assertResult(self, result):
+        content = json.dumps({"data": result, "errors": None})
+        self.assertRequest(content=unicode2bytes(content), responseCode=200)
+
     @defer.inlineCallbacks
     def test_failure(self):
-        self.rsrc.renderQuery = mock.Mock(
+        self.master.graphql.query = mock.Mock(
             return_value=defer.fail(RuntimeError("oh noes"))
         )
         yield self.render_resource(
@@ -74,10 +78,56 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def test_get_query(self):
         yield self.render_resource(
             self.rsrc,
-            b"/?query={tests{id}}",
+            b"/?query={tests{testid}}",
         )
-        # TODO verify results
-        self.assertRequest(responseCode=200)
+        self.assertResult(
+            {
+                "tests": [
+                    {"testid": 13},
+                    {"testid": 14},
+                    {"testid": 15},
+                    {"testid": 16},
+                    {"testid": 17},
+                    {"testid": 18},
+                    {"testid": 19},
+                    {"testid": 20},
+                ]
+            }
+        )
+
+    @defer.inlineCallbacks
+    def test_get_query_item(self):
+        yield self.render_resource(
+            self.rsrc,
+            b"/?query={test(testid:13){testid, info}}",
+        )
+        self.assertResult({"test": {"testid": 13, "info": "ok"}})
+
+    @defer.inlineCallbacks
+    def test_get_query_subresource(self):
+        yield self.render_resource(
+            self.rsrc,
+            b"/?query={test(testid:13){testid, info, steps { info }}}",
+        )
+        self.assertResult(
+            {
+                "test": {
+                    "testid": 13,
+                    "info": "ok",
+                    "steps": [{"info": "ok"}, {"info": "failed"}],
+                }
+            }
+        )
+
+    @defer.inlineCallbacks
+    def test_get_query_items_result_spec(self):
+        yield self.render_resource(
+            self.rsrc,
+            b"/?query={tests(testid__gt:18){testid, info}}",
+        )
+        self.assertResult(
+            {"tests": [{"testid": 19, "info": "todo"}, {"testid": 20, "info": "error"}]}
+        )
 
     @defer.inlineCallbacks
     def test_get_noquery(self):
@@ -85,7 +135,6 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.rsrc,
             b"/",
         )
-        # TODO verify results
         self.assertSimpleError("GET request must contain a 'query' parameter", 400)
 
     # https://graphql.org/learn/serving-over-http/#post-request
@@ -94,37 +143,59 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(
             self.rsrc,
             method=b"POST",
-            content=b"{tests{id}}",
-            content_type=b"application/graphql"
+            content=b"{tests{testid}}",
+            content_type=b"application/graphql",
         )
-        # TODO verify results
-        self.assertRequest(responseCode=200)
+        self.assertResult(
+            {
+                "tests": [
+                    {"testid": 13},
+                    {"testid": 14},
+                    {"testid": 15},
+                    {"testid": 16},
+                    {"testid": 17},
+                    {"testid": 18},
+                    {"testid": 19},
+                    {"testid": 20},
+                ]
+            }
+        )
 
     @defer.inlineCallbacks
     def test_post_query_json_content(self):
-        query = {
-            "query": "{tests{id}}"
-        }
+        query = {"query": "{tests{testid}}"}
         yield self.render_resource(
             self.rsrc,
             method=b"POST",
             content=json.dumps(query).encode(),
-            content_type=b"application/json"
+            content_type=b"application/json",
         )
-        # TODO verify results
-        self.assertRequest(responseCode=200)
+        self.assertResult(
+            {
+                "tests": [
+                    {"testid": 13},
+                    {"testid": 14},
+                    {"testid": 15},
+                    {"testid": 16},
+                    {"testid": 17},
+                    {"testid": 18},
+                    {"testid": 19},
+                    {"testid": 20},
+                ]
+            }
+        )
 
     @defer.inlineCallbacks
     def test_post_query_json_content_operationName(self):
         query = {
-            "query": "query foo {tests{id}} query bar {tests{name}}",
-            "operationName": "fsoo"
+            "query": "query foo {tests{testid}} query bar {tests{name}}",
+            "operationName": "fsoo",
         }
         yield self.render_resource(
             self.rsrc,
             method=b"POST",
             content=json.dumps(query).encode(),
-            content_type=b"application/json"
+            content_type=b"application/json",
         )
         self.assertSimpleError("json request unsupported fields: operationName", 400)
 
@@ -132,20 +203,14 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def test_post_query_json_badcontent_type(self):
 
         yield self.render_resource(
-            self.rsrc,
-            method=b"POST",
-            content=b"foo",
-            content_type=b"application/foo"
+            self.rsrc, method=b"POST", content=b"foo", content_type=b"application/foo"
         )
         self.assertSimpleError("unsupported content-type: application/foo", 400)
 
     @defer.inlineCallbacks
     def test_post_query_json_nocontent_type(self):
 
-        yield self.render_resource(
-            self.rsrc,
-            method=b"POST"
-        )
+        yield self.render_resource(self.rsrc, method=b"POST")
         self.assertSimpleError("no content-type", 400)
 
     @defer.inlineCallbacks
@@ -159,21 +224,19 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 {
                     "message": "Cannot query field 'notexistant' on type 'Query'.",
                     "locations": [{"line": 1, "column": 2}],
-                    "path": None,
                 }
             ],
-            400,
+            200,
         )
 
 
 class DisabledV3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     if not graphql_core:
-        skip = 'graphql is required for V3RootResource tests'
+        skip = "graphql is required for V3RootResource tests"
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = self.make_master(url="http://server/path/")
-        self.master.data._scanModule(endpoint)
         self.rsrc = graphql.V3RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 

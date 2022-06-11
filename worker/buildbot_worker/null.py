@@ -19,9 +19,27 @@ from __future__ import print_function
 from twisted.internet import defer
 
 from buildbot_worker.base import WorkerBase
+from buildbot_worker.pb import BotPbLike
+from buildbot_worker.pb import WorkerForBuilderPbLike
+
+
+class WorkerForBuilderNull(WorkerForBuilderPbLike):
+    pass
+
+
+class BotNull(BotPbLike):
+    WorkerForBuilder = WorkerForBuilderNull
 
 
 class LocalWorker(WorkerBase):
+    def __init__(self, name, basedir,
+                 umask=None,
+                 unicode_encoding=None,
+                 delete_leftover_dirs=False):
+
+        super().__init__(name, basedir, BotNull, umask=umask,
+                         unicode_encoding=unicode_encoding,
+                         delete_leftover_dirs=delete_leftover_dirs)
 
     @defer.inlineCallbacks
     def startService(self):

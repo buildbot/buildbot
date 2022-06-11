@@ -52,6 +52,7 @@ class ChangeSourceMixin:
         yield self.changesource.disownServiceParent()
         return
 
+    @defer.inlineCallbacks
     def attachChangeSource(self, cs):
         "Set up a change source for testing; sets its .master attribute"
         self.changesource = cs
@@ -60,14 +61,18 @@ class ChangeSourceMixin:
         try:
             self.changesource.master = self.master
         except AttributeError:
-            self.changesource.setServiceParent(self.master)
+            yield self.changesource.setServiceParent(self.master)
 
         # configure the service to let secret manager render the secrets
-        d = self.changesource.configureService()
-        d.addErrback(lambda _: None)
+        try:
+            yield self.changesource.configureService()
+        except NotImplementedError:  # non-reconfigurable change sources can't reconfig
+            pass
+
         # also, now that changesources are ClusteredServices, setting up
         # the clock here helps in the unit tests that check that behavior
         self.changesource.clock = task.Clock()
+        return cs
 
     def startChangeSource(self):
         "start the change source as a service"

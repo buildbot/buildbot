@@ -102,7 +102,7 @@ class ConnectableThreadQueue(threading.Thread):
         # returns True if termination has been requested
         try:
             while True:
-                result_d, next_operation, args, kwargs = self._queue.get(block=False)
+                result_d, next_operation, _, __ = self._queue.get(block=False)
                 if isinstance(next_operation, _TerminateRequest):
                     self._queue.task_done()
                     reactor.callFromThread(result_d.callback, None)
@@ -136,7 +136,7 @@ class ConnectableThreadQueue(threading.Thread):
 
                 except Exception as e:
                     self.connecting = False
-                    if self._handle_backoff('Exception received: {}'.format(e)):
+                    if self._handle_backoff(f'Exception received: {e}'):
                         break
                 continue
             try:

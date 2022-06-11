@@ -27,7 +27,7 @@ from buildbot.process import buildrequestdistributor
 from buildbot.process import factory
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
@@ -47,7 +47,7 @@ def nth_worker(n):
 class TestBRDBase(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.botmaster = mock.Mock(name='botmaster')
         self.botmaster.builders = {}
         self.builders = {}
@@ -80,7 +80,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
     def make_workers(self, worker_count):
         rows = self.base_rows[:]
         for i in range(worker_count):
-            self.addWorkers({'test-worker%d' % i: 1})
+            self.addWorkers({f'test-worker{i}': 1})
             rows.append(fakedb.Buildset(id=100 + i, reason='because'))
             rows.append(
                 fakedb.BuildsetSourceStamp(buildsetid=100 + i, sourcestampid=21))
@@ -189,7 +189,7 @@ class Test(TestBRDBase):
         # test 15 "parallel" invocations of maybeStartBuildsOn, with a
         # _sortBuilders that takes a while.  This is a regression test for bug
         # 1979.
-        builders = ['bldr%02d' % i for i in range(15)]
+        builders = [f'bldr{i:02}' for i in range(15)]
 
         def slow_sorter(master, bldrs):
             bldrs.sort(key=lambda b1: b1.name)
@@ -745,7 +745,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr = yield self.createBuilder('B', builderid=78,
                                              builder_config=builder_config)
         for i in range(4):
-            self.addWorkers({'test-worker%d' % i: 1})
+            self.addWorkers({f'test-worker{i}': 1})
 
         rows = [
             fakedb.SourceStamp(id=21),
@@ -760,7 +760,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             exp_builds = []
         else:
             exp_claims = [12]
-            exp_builds = [('test-worker%d' % exp_choice, [12])]
+            exp_builds = [(f'test-worker{exp_choice}', [12])]
 
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=exp_claims, exp_builds=exp_builds)
@@ -815,7 +815,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             worker = 3
             for choice in exp_choice:
                 exp_claims.append(choice)
-                exp_builds.append(('test-worker%d' % worker, [choice]))
+                exp_builds.append((f'test-worker{worker}', [choice]))
                 worker = worker - 1
 
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=sorted(exp_claims),

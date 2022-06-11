@@ -32,8 +32,8 @@ from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.mail import MailNotifier
 from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import ssl
@@ -43,7 +43,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
                        unittest.TestCase, ReporterTestMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
@@ -64,7 +64,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     def do_test_createEmail_cte(self, funnyChars, expEncoding):
         build = yield self.insert_build_finished(SUCCESS)
 
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
 
         msgdict = create_msgdict(funnyChars)
         mn = yield self.setupMailNotifier('from@example.org')
@@ -73,7 +73,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         cte_lines = [l for l in m.as_string().split("\n")
                      if l.startswith('Content-Transfer-Encoding:')]
         self.assertEqual(cte_lines,
-                         ['Content-Transfer-Encoding: {}'.format(expEncoding)],
+                         [f'Content-Transfer-Encoding: {expEncoding}'],
                          repr(m.as_string()))
 
     def test_createEmail_message_content_transfer_encoding_7bit(self):
@@ -138,7 +138,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_createEmail_extraHeaders_two_builds(self):
         build = yield self.insert_build_finished(SUCCESS)
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
 
         builds = [build, copy.deepcopy(build)]
         builds[1]['builder']['name'] = 'builder2'
@@ -190,9 +190,10 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             "type": "text",
             "subject": "subject"
         }
-        formatter.wantProperties = False
-        formatter.wantSteps = False
-        formatter.wantLogs = False
+        formatter.want_properties = False
+        formatter.want_steps = False
+        formatter.want_logs = False
+        formatter.want_logs_content = False
 
         generator = BuildStatusGenerator(message_formatter=formatter, **generator_kwargs)
 
@@ -215,8 +216,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     def test_buildMessage(self):
         mn, build, formatter = yield self.setupBuildMessage(mode=("passing",))
 
-        formatter.format_message_for_build.assert_called_with(self.master, build, mode=('passing',),
-                                                              users=['me@foo'])
+        formatter.format_message_for_build.assert_called_with(self.master, build, is_buildset=False,
+                                                              mode=('passing',), users=['me@foo'])
 
         mn.findInterrestedUsersEmails.assert_called_with(['me@foo'])
         mn.processRecipients.assert_called_with('<recipients>', '<email>')
@@ -329,9 +330,10 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             "type": "text",
             "subject": "subject"
         }
-        formatter.wantProperties = False
-        formatter.wantSteps = False
-        formatter.wantLogs = False
+        formatter.want_properties = False
+        formatter.want_steps = False
+        formatter.want_logs = False
+        formatter.want_logs_content = False
 
         generator = BuildStatusGenerator(message_formatter=formatter)
 
@@ -355,7 +357,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         fakereactor = Mock()
         self.patch(mail, 'reactor', fakereactor)
 
-        mn, build = yield self.do_test_sendMessage()
+        yield self.do_test_sendMessage()
 
         self.assertEqual(1, len(fakereactor.method_calls))
         self.assertIn(('connectTCP', ('localhost', 25, None), {}),
@@ -371,8 +373,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         """
         fakereactor = Mock()
         self.patch(mail, 'reactor', fakereactor)
-        mn, build = yield self.do_test_sendMessage(smtpUser=Interpolate("u$er"),
-                                                   smtpPassword=Interpolate("pa$$word"))
+        mn, _ = yield self.do_test_sendMessage(smtpUser=Interpolate("u$er"),
+                                               smtpPassword=Interpolate("pa$$word"))
 
         self.assertEqual(mn.smtpUser, "u$er")
         self.assertEqual(mn.smtpPassword, "pa$$word")
@@ -386,7 +388,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         fakereactor = Mock()
         self.patch(mail, 'reactor', fakereactor)
 
-        mn, build = yield self.do_test_sendMessage(useSmtps=True)
+        yield self.do_test_sendMessage(useSmtps=True)
 
         self.assertEqual(1, len(fakereactor.method_calls))
         self.assertIn(('connectSSL', ('localhost', 25, None, fakereactor.connectSSL.call_args[
@@ -394,7 +396,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
 
 def create_msgdict(funny_chars='\u00E5\u00E4\u00F6'):
-    unibody = 'Unicode body with non-ascii ({}).'.format(funny_chars)
+    unibody = f'Unicode body with non-ascii ({funny_chars}).'
     msg_dict = {
         "body": unibody,
         "subject": "testsubject",

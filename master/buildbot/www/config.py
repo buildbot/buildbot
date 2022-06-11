@@ -64,9 +64,9 @@ class IndexResource(resource.Resource):
             import pypugjs  # pylint: disable=import-outside-toplevel
             allowed_ext.append(".jade")
         except ImportError:  # pragma: no cover
-            log.msg("pypugjs not installed. Ignoring .jade files from {}".format(template_dir))
+            log.msg(f"pypugjs not installed. Ignoring .jade files from {template_dir}")
             pypugjs = None
-        for root, dirs, files in os.walk(template_dir):
+        for root, _, files in os.walk(template_dir):
             if root == template_dir:
                 template_name = posixpath.join("views", "%s.html")
             else:
@@ -80,10 +80,10 @@ class IndexResource(resource.Resource):
                 if ext not in allowed_ext:
                     continue
                 if ext == ".html":
-                    with open(fn) as f:
+                    with open(fn, encoding='utf-8') as f:
                         html = f.read().strip()
                 elif ext == ".jade":
-                    with open(fn) as f:
+                    with open(fn, encoding='utf-8') as f:
                         jade = f.read()
                         parser = pypugjs.parser.Parser(jade)
                         block = parser.parse()

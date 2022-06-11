@@ -22,22 +22,14 @@ from buildbot.test.fakedb.row import Row
 class BuildData(Row):
     table = 'build_data'
 
-    defaults = {
-        'id': None,
-        'buildid': None,
-        'name': None,
-        'value': None,
-        'length': None,
-        'source': None,
-    }
-
     id_column = 'id'
     foreignKeys = ('buildid',)
     required_columns = ('buildid', 'name', 'value', 'length', 'source')
     binary_columns = ('value',)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs, length=len(kwargs['value']))
+    def __init__(self, id=None, buildid=None, name=None, value=None, source=None):
+        super().__init__(id=id, buildid=buildid, name=name, value=value, source=source,
+                         length=len(value))
 
 
 class FakeBuildDataComponent(FakeDBComponent):

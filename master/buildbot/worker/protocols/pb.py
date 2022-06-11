@@ -20,68 +20,27 @@ from twisted.python import log
 from twisted.spread import pb
 
 from buildbot.pbutil import decode
-from buildbot.util import ComparableMixin
 from buildbot.util import deferwaiter
 from buildbot.worker.protocols import base
 
 
-class Listener(base.Listener):
+class Listener(base.UpdateRegistrationListener):
     name = "pbListener"
 
-    def __init__(self):
+    def __init__(self, master):
         super().__init__()
+        self.ConnectionClass = Connection
+        self.master = master
 
-        # username : (password, portstr, PBManager registration)
-        self._registrations = {}
+    def get_manager(self):
+        return self.master.pbmanager
 
-    @defer.inlineCallbacks
-    def updateRegistration(self, username, password, portStr):
-        # NOTE: this method is only present on the PB protocol; others do not
-        # use registrations
-        if username in self._registrations:
-            currentPassword, currentPortStr, currentReg = \
-                self._registrations[username]
-        else:
-            currentPassword, currentPortStr, currentReg = None, None, None
-
-        iseq = (ComparableMixin.isEquivalent(currentPassword, password) and
-                ComparableMixin.isEquivalent(currentPortStr, portStr))
-        if iseq:
-            return currentReg
-
-        if currentReg:
-            yield currentReg.unregister()
-            del self._registrations[username]
-        if portStr and password:
-            reg = yield self.master.pbmanager.register(portStr, username, password,
-                                                       self._getPerspective)
-            self._registrations[username] = (password, portStr, reg)
-            return reg
-        return currentReg
-
-    @defer.inlineCallbacks
-    def _getPerspective(self, mind, workerName):
-        workers = self.master.workers
-        log.msg("worker '{}' attaching from {}".format(workerName, mind.broker.transport.getPeer()))
-
-        # try to use TCP keepalives
+    def before_connection_setup(self, mind, workerName):
+        log.msg(f"worker '{workerName}' attaching from {mind.broker.transport.getPeer()}")
         try:
             mind.broker.transport.setTcpKeepAlive(1)
         except Exception:
             log.err("Can't set TcpKeepAlive")
-
-        worker = workers.getWorkerByName(workerName)
-        conn = Connection(self.master, worker, mind)
-
-        # inform the manager, logging any problems in the deferred
-        accepted = yield workers.newConnection(conn, workerName)
-
-        # return the Connection as the perspective
-        if accepted:
-            return conn
-        else:
-            # TODO: return something more useful
-            raise RuntimeError("rejecting duplicate worker")
 
 
 class ReferenceableProxy(pb.Referenceable):
@@ -295,7 +254,7 @@ class Connection(base.Connection, pb.Avatar):
 
             if d:
                 name = self.worker.workername
-                log.msg("Shutting down (old) worker: {}".format(name))
+                log.msg(f"Shutting down (old) worker: {name}")
                 # The remote shutdown call will not complete successfully since
                 # the buildbot process exits almost immediately after getting
                 # the shutdown request.
@@ -306,9 +265,9 @@ class Connection(base.Connection, pb.Avatar):
                 @d.addErrback
                 def _errback(why):
                     if why.check(pb.PBConnectionLost):
-                        log.msg("Lost connection to {}".format(name))
+                        log.msg(f"Lost connection to {name}")
                     else:
-                        log.err("Unexpected error when trying to shutdown {}".format(name))
+                        log.err(f"Unexpected error when trying to shutdown {name}")
                 return d
             log.err("Couldn't find remote builder to shut down worker")
             return defer.succeed(None)
@@ -331,3 +290,7 @@ class Connection(base.Connection, pb.Avatar):
     def perspective_shutdown(self):
         self.worker.messageReceivedFromWorker()
         self.worker.shutdownRequested()
+
+    def get_peer(self):
+        p = self.mind.broker.transport.getPeer()
+        return f"{p.host}:{p.port}"

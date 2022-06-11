@@ -101,7 +101,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             names = {row[0] for row in res}
             num = 1
             while True:
-                numstr = '_%d' % num
+                numstr = f'_{num}'
                 newname = name[:50 - len(numstr)] + numstr
                 if newname not in names:
                     break

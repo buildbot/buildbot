@@ -26,16 +26,18 @@ from buildbot.reporters import utils
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
                          unittest.TestCase, ReporterTestMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
@@ -43,7 +45,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def insert_build_finished_get_props(self, results, **kwargs):
         build = yield self.insert_build_finished(results, **kwargs)
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
     @defer.inlineCallbacks
@@ -88,6 +90,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, build)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=False,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {
@@ -107,6 +110,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, build, results=None)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=False,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {
@@ -121,24 +125,28 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         })
 
     @defer.inlineCallbacks
-    def test_build_message_no_result_default_subject(self):
-        subject = 'result: %(result)s builder: %(builder)s title: %(title)s'
+    def test_build_subject_deprecated(self):
+        with assertProducesWarning(DeprecatedApiWarning, "subject parameter"):
+            yield self.setup_generator(subject='subject')
+
+    @defer.inlineCallbacks
+    def test_build_message_no_result_formatter_no_subject(self):
         message = {
             "body": "body",
             "type": "text",
-            "subject": None,
+            "subject": None,  # deprecated unspecified subject
         }
 
-        g, build = yield self.setup_generator(results=None, subject=subject,
-                                              message=message, mode=("change",))
+        g, build = yield self.setup_generator(results=None, message=message, mode=("change",))
         report = yield self.build_message(g, build, results=None)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                is_buildset=False,
                                                                 mode=('change',), users=[])
 
         self.assertEqual(report, {
             'body': 'body',
-            'subject': 'result: not finished builder: Builder0 title: Buildbot',
+            'subject': 'Buildbot not finished in Buildbot on Builder0',
             'type': 'text',
             'results': None,
             'builds': [build],
@@ -231,7 +239,7 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
     all_messages = ('failing', 'passing', 'warnings', 'exception', 'cancelled')
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
@@ -239,7 +247,7 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def insert_build_finished_get_props(self, results, **kwargs):
         build = yield self.insert_build_finished(results, **kwargs)
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
     @parameterized.expand([
@@ -305,6 +313,7 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, build)
 
         g.start_formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                      is_buildset=False,
                                                                       mode=self.all_messages,
                                                                       users=[])
 
@@ -326,6 +335,7 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, build, results=None)
 
         g.start_formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                      is_buildset=False,
                                                                       mode=self.all_messages,
                                                                       users=[])
 

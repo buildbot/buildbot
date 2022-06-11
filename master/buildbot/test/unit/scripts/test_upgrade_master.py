@@ -22,16 +22,16 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config as config_module
+from buildbot.config import master as config_master
 from buildbot.db import connector
 from buildbot.db import masters
 from buildbot.db import model
 from buildbot.scripts import base
 from buildbot.scripts import upgrade_master
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 
 
 def mkconfig(**kwargs):
@@ -61,7 +61,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
         def loadConfig(config, configFileName='master.cfg'):
             self.calls.append('loadConfig')
-            return config_module.MasterConfig() if configOk else False
+            return config_master.MasterConfig() if configOk else False
         self.patch(base, 'loadConfig', loadConfig)
 
         def upgradeFiles(config):
@@ -69,7 +69,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.patch(upgrade_master, 'upgradeFiles', upgradeFiles)
 
         def upgradeDatabase(config, master_cfg):
-            self.assertIsInstance(master_cfg, config_module.MasterConfig)
+            self.assertIsInstance(master_cfg, config_master.MasterConfig)
             self.calls.append('upgradeDatabase')
         self.patch(upgrade_master, 'upgradeDatabase', upgradeDatabase)
 
@@ -112,7 +112,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                                  unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()
@@ -121,11 +121,11 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.tearDownDirs()
 
     def writeFile(self, path, contents):
-        with open(path, 'wt') as f:
+        with open(path, 'wt', encoding='utf-8') as f:
             f.write(contents)
 
     def readFile(self, path):
-        with open(path, 'rt') as f:
+        with open(path, 'rt', encoding='utf-8') as f:
             return f.read()
 
     # tests
@@ -172,7 +172,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         for f in [
                 'test/master.cfg.sample',
         ]:
-            self.assertTrue(os.path.exists(f), "{} not found".format(f))
+            self.assertTrue(os.path.exists(f), f"{f} not found")
         self.assertInStdout('upgrading basedir')
 
     def test_upgradeFiles_notice_about_unused_public_html(self):
@@ -193,7 +193,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                    'setAllMastersActiveLongTimeAgo', setAllMastersActiveLongTimeAgo)
         yield upgrade_master.upgradeDatabase(
             mkconfig(basedir='test', quiet=True),
-            config_module.MasterConfig())
+            config_master.MasterConfig())
         setup.asset_called_with(check_version=False, verbose=False)
         upgrade.assert_called_with()
         self.assertWasQuiet()
@@ -208,7 +208,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.patch(model.Model, 'upgrade', upgrade)
         ret = yield upgrade_master._upgradeMaster(
             mkconfig(basedir='test', quiet=True),
-            config_module.MasterConfig())
+            config_master.MasterConfig())
         self.assertEqual(ret, 1)
         self.assertIn("problem while upgrading!:\nTraceback (most recent call last):\n",
                       sys.stderr.getvalue())

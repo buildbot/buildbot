@@ -33,12 +33,12 @@ class SecretInPass(SecretProviderBase):
     name = "SecretInPass"
 
     def checkPassIsInPath(self):
-        if not any([(Path(p) / "pass").is_file() for p in os.environ["PATH"].split(":")]):
+        if not any((Path(p) / "pass").is_file() for p in os.environ["PATH"].split(":")):
             config.error("pass does not exist in PATH")
 
     def checkPassDirectoryIsAvailableAndReadable(self, dirname):
         if not os.access(dirname, os.F_OK):
-            config.error("directory {} does not exist".format(dirname))
+            config.error(f"directory {dirname} does not exist")
 
     def checkConfig(self, gpgPassphrase=None, dirname=None):
         self.checkPassIsInPath()
@@ -48,7 +48,7 @@ class SecretInPass(SecretProviderBase):
     def reconfigService(self, gpgPassphrase=None, dirname=None):
         self._env = {**os.environ}
         if gpgPassphrase:
-            self._env["PASSWORD_STORE_GPG_OPTS"] = "--passphrase {}".format(gpgPassphrase)
+            self._env["PASSWORD_STORE_GPG_OPTS"] = f"--passphrase {gpgPassphrase}"
         if dirname:
             self._env["PASSWORD_STORE_DIR"] = dirname
 

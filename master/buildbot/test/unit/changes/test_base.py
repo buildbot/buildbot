@@ -20,8 +20,10 @@ from twisted.trial import unittest
 
 from buildbot.changes import base
 from buildbot.config import ConfigErrors
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestChangeSource(changesource.ChangeSourceMixin,
@@ -34,7 +36,7 @@ class TestChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
 
     def tearDown(self):
@@ -47,7 +49,7 @@ class TestChangeSource(changesource.ChangeSourceMixin,
         cs.deactivate = mock.Mock(return_value=defer.succeed(None))
 
         # set the changesourceid, and claim the changesource on another master
-        self.attachChangeSource(cs)
+        yield self.attachChangeSource(cs)
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         yield cs.startService()
@@ -86,10 +88,13 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
 
-        self.attachChangeSource(self.Subclass(name="DummyCS"))
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern="use ReconfigurablePollingChangeSource"):
+            cs = self.Subclass(name="DummyCS")
+        yield self.attachChangeSource(cs)
 
     def tearDown(self):
         return self.tearDownChangeSource()
@@ -192,11 +197,11 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         yield self.setUpChangeSource()
 
-        self.attachChangeSource(self.Subclass(name="DummyCS"))
+        yield self.attachChangeSource(self.Subclass(name="DummyCS"))
 
     def tearDown(self):
         return self.tearDownChangeSource()

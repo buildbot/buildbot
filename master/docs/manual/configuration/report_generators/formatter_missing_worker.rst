@@ -9,7 +9,7 @@ This formatter is used to format messages in :ref:`Reportgen-WorkerMissingGenera
 
 It formats a message using the Jinja2_ templating language and picks the template either from a string or from a file.
 
-The constructor to that class takes the same arguments as MessageFormatter, minus ``wantLogs``, ``wantProperties``, ``wantSteps``.
+The constructor to that class takes the same arguments as MessageFormatter, minus ``wantLogs``, ``want_logs``, ``want_logs_content``, ``wantProperties``, ``want_properties``, ``wantSteps``, ``want_steps``.
 
 ``template``
     The content of the template used to generate the body of the mail as string.
@@ -41,10 +41,10 @@ The constructor to that class takes the same arguments as MessageFormatter, minu
 The default ``ctx`` for the missing worker email is made of:
 
 ``buildbot_title``
-    The Buildbot title as per ``c['title']`` from the ``master.cfg``
+    The title of the Buildbot instance as per ``c['title']`` from the ``master.cfg``
 
 ``buildbot_url``
-    The Buildbot title as per ``c['title']`` from the ``master.cfg``
+    The URL of the Buildbot instance as per ``c['buildbotURL']`` from the ``master.cfg``
 
 ``worker``
     The worker object as defined in the REST api plus two attributes:

@@ -95,7 +95,7 @@ class AvatarGitHub(AvatarBase):
             'Accept': 'application/vnd.github.v3+json',
         }
 
-        url = '/users/{}'.format(username)
+        url = f'/users/{username}'
         http = yield self._get_http_client()
         res = yield http.get(url, headers=headers)
         if res.code == 404:
@@ -105,7 +105,7 @@ class AvatarGitHub(AvatarBase):
             data = yield res.json()
             return data['avatar_url']
 
-        log.msg('Failed looking up user: response code {}'.format(res.code))
+        log.msg(f'Failed looking up user: response code {res.code}')
         return None
 
     @defer.inlineCallbacks
@@ -114,10 +114,8 @@ class AvatarGitHub(AvatarBase):
             'Accept': 'application/vnd.github.v3+json',
         }
 
-        query = '{} in:email'.format(email)
-        url = '/search/users?{}'.format(urlencode({
-            'q': query,
-        }))
+        query = f'{email} in:email'
+        url = f"/search/users?{urlencode({'q': query,})}"
         http = yield self._get_http_client()
         res = yield http.get(url, headers=headers)
         if 200 <= res.code < 300:
@@ -127,7 +125,7 @@ class AvatarGitHub(AvatarBase):
                 return None
             return data['items'][0]['avatar_url']
 
-        log.msg('Failed searching user by email: response code {}'.format(res.code))
+        log.msg(f'Failed searching user by email: response code {res.code}')
         return None
 
     @defer.inlineCallbacks
@@ -137,12 +135,12 @@ class AvatarGitHub(AvatarBase):
         }
 
         query = {
-            'q': 'author-email:{}'.format(email),
+            'q': f'author-email:{email}',
             'sort': 'committer-date',
             'per_page': '1',
         }
         sorted_query = sorted(query.items(), key=lambda x: x[0])
-        url = '/search/commits?{}'.format(urlencode(sorted_query))
+        url = f'/search/commits?{urlencode(sorted_query)}'
         http = yield self._get_http_client()
         res = yield http.get(url, headers=headers)
         if 200 <= res.code < 300:
@@ -156,7 +154,7 @@ class AvatarGitHub(AvatarBase):
                 return None
             return author['avatar_url']
 
-        log.msg('Failed searching user by commit: response code {}'.format(res.code))
+        log.msg(f'Failed searching user by commit: response code {res.code}')
         return None
 
     def _add_size_to_url(self, avatar, size):
@@ -164,7 +162,7 @@ class AvatarGitHub(AvatarBase):
         query = parts.query
         if query:
             query += '&'
-        query += 's={0}'.format(size)
+        query += f's={size}'
         return urlunparse((parts.scheme,
             parts.netloc, parts.path, parts.params,
             query, parts.fragment))

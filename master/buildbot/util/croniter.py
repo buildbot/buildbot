@@ -74,9 +74,7 @@ class croniter:
 
             while e_list:
                 e = e_list.pop()
-                t = re.sub(r'^\*(/.+)$', r'%d-%d\1' % (self.RANGES[i][0],
-                                                       self.RANGES[i][1]),
-                           str(e))
+                t = re.sub(r'^\*(/.+)$', fr'{self.RANGES[i][0]}-{self.RANGES[i][1]}\1', str(e))
                 m = search_re.search(t)
 
                 if m:
@@ -90,7 +88,7 @@ class croniter:
 
                     if (not low or not high or int(low) > int(high) or
                             not only_int_re.search(str(step))):
-                        raise ValueError("[{}] is not acceptable".format(expr_format))
+                        raise ValueError(f"[{expr_format}] is not acceptable")
 
                     for j in range(int(low), int(high) + 1):
                         if j % int(step) == 0:
@@ -109,7 +107,7 @@ class croniter:
 
                     if t != '*' and (int(t) < self.RANGES[i][0] or
                                      int(t) > self.RANGES[i][1]):
-                        raise ValueError("[{}] is not acceptable, out of range".format(expr_format))
+                        raise ValueError(f"[{expr_format}] is not acceptable, out of range")
 
                     res.append(t)
 
@@ -274,7 +272,7 @@ class croniter:
                 continue
             return mktime(dst.timetuple())
 
-        raise("failed to find prev date")
+        raise Exception("failed to find prev date")
 
     def _get_next_nearest(self, x, to_check):
         small = [item for item in to_check if item < x]
@@ -291,7 +289,7 @@ class croniter:
         return small[0]
 
     def _get_next_nearest_diff(self, x, to_check, range_val):
-        for i, d in enumerate(to_check):
+        for d in to_check:
             if d >= x:
                 return d - x
         return to_check[0] - x + range_val

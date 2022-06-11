@@ -23,13 +23,14 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.config.master import MasterConfig
 from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.worker import AbstractLatentWorker
@@ -79,7 +80,7 @@ class BuilderMixin:
 
         self.bldr.startService()
 
-        mastercfg = config.MasterConfig()
+        mastercfg = MasterConfig()
         mastercfg.builders = [self.builder_config]
         if not noReconfig:
             return self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
@@ -111,7 +112,7 @@ class FakeLatentWorker(AbstractLatentWorker):
 class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         # a collection of rows that would otherwise clutter up every test
         self.setUpBuilderMixin()
         self.base_rows = [
@@ -480,7 +481,7 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 class TestGetBuilderId(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpBuilderMixin()
 
     @defer.inlineCallbacks
@@ -505,7 +506,7 @@ class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -558,7 +559,7 @@ class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -600,7 +601,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
     """Tests that a reconfig properly updates all attributes"""
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpBuilderMixin()
 
     @defer.inlineCallbacks
@@ -610,7 +611,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         new_builder_config.description = "New"
         new_builder_config.tags = ["NewTag"]
 
-        mastercfg = config.MasterConfig()
+        mastercfg = MasterConfig()
         mastercfg.builders = [new_builder_config]
         yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
 
@@ -634,7 +635,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         new_builder_config.description = new_desc
         new_builder_config.tags = new_tags
 
-        mastercfg = config.MasterConfig()
+        mastercfg = MasterConfig()
         mastercfg.builders = [new_builder_config]
 
         builder_updates = []
@@ -649,7 +650,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         yield self.makeBuilder(description="Old", tags=["OldTag"])
         new_builder_config = config.BuilderConfig(**self.config_args)
 
-        mastercfg = config.MasterConfig()
+        mastercfg = MasterConfig()
         mastercfg.builders = [new_builder_config]
 
         builder_updates = []

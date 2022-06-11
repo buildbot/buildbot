@@ -26,7 +26,7 @@ from buildbot.util.git import getSshKnownHostsContents
 class TestEscapeShellArgIfNeeded(unittest.TestCase):
 
     def assert_escapes(self, arg):
-        escaped = '"{}"'.format(arg)
+        escaped = f'"{arg}"'
         self.assertEqual(escapeShellArgIfNeeded(arg), escaped)
 
     def assert_does_not_escape(self, arg):

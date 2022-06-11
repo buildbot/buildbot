@@ -49,7 +49,7 @@ class InfluxStorageService(StatsStorageBase):
 
     def thd_postStatsValue(self, post_data, series_name, context=None):
         if not self._inited:
-            log.err("Service {0} not initialized".format(self.name))
+            log.err(f"Service {self.name} not initialized")
             return
 
         data = {
@@ -58,9 +58,9 @@ class InfluxStorageService(StatsStorageBase):
         }
 
         log.msg("Sending data to InfluxDB")
-        log.msg("post_data: {0!r}".format(post_data))
+        log.msg(f"post_data: {post_data!r}")
         if context:
-            log.msg("context: {0!r}".format(context))
+            log.msg(f"context: {context!r}")
             data['tags'] = context
 
         self.client.write_points([data])

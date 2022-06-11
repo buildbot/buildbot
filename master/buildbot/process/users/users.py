@@ -53,7 +53,7 @@ def createUserObject(master, author, src=None):
     if src in srcs:
         usdict = dict(identifier=author, attr_type=src, attr_data=author)
     else:
-        log.msg("Unrecognized source argument: {}".format(src))
+        log.msg(f"Unrecognized source argument: {src}")
         return defer.succeed(None)
 
     return master.db.users.findUserByAttr(
@@ -131,4 +131,4 @@ def check_passwd(guess, passwd):
     m.update(unicode2bytes(guess) + unicode2bytes(salt))
     crypted_guess = bytes2unicode(salt) + m.hexdigest()
 
-    return (crypted_guess == bytes2unicode(passwd))
+    return crypted_guess == bytes2unicode(passwd)

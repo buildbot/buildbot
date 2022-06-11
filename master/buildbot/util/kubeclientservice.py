@@ -21,12 +21,12 @@ import time
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.error import ProcessExitedAlready
+from twisted.logger import Logger
 from twisted.python.failure import Failure
 
 from buildbot import config
 from buildbot.util import asyncSleep
 from buildbot.util.httpclientservice import HTTPClientService
-from buildbot.util.logger import Logger
 from buildbot.util.protocol import LineProcessProtocol
 from buildbot.util.service import BuildbotService
 
@@ -60,7 +60,7 @@ class KubeConfigLoaderBase(BuildbotService):
     def __str__(self):
         """return unique str for SharedService"""
         # hash is implemented from ComparableMixin
-        return "{}({})".format(self.__class__.__name__, hash(self))
+        return f"{self.__class__.__name__}({hash(self)})"
 
 
 class KubeHardcodedConfig(KubeConfigLoaderBase):
@@ -90,15 +90,15 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
     def getAuthorization(self):
         if self.basicAuth is not None:
             basicAuth = yield self.renderSecrets(self.basicAuth)
-            authstring = "{user}:{password}".format(**basicAuth).encode('utf-8')
+            authstring = f"{basicAuth['user']}:{basicAuth['password']}".encode('utf-8')
             encoded = base64.b64encode(authstring)
-            return defer.returnValue("Basic {0}".format(encoded))
+            return f"Basic {encoded}"
 
         if self.bearerToken is not None:
             bearerToken = yield self.renderSecrets(self.bearerToken)
-            return defer.returnValue("Bearer {0}".format(bearerToken))
+            return f"Bearer {bearerToken}"
 
-        return defer.returnValue(None)
+        return None
 
     def getConfig(self):
         return self.config
@@ -163,7 +163,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
 
     def getConfig(self):
         return {
-            'master_url': "http://localhost:{}".format(self.proxy_port),
+            'master_url': f"http://localhost:{self.proxy_port}",
             'namespace': self.namespace
         }
 
@@ -177,9 +177,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
     def checkConfig(self):
         if not os.path.exists(self.kube_dir):
-            config.error(
-                "Not in kubernetes cluster (kube_dir not found: {})".format(
-                    self.kube_dir))
+            config.error(f"Not in kubernetes cluster (kube_dir not found: {self.kube_dir})")
 
     def reconfigService(self):
         self.config = {}
@@ -189,7 +187,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
         with open(self.kube_token_file, encoding="utf-8") as token_content:
             token = token_content.read().strip()
             self.config['headers'] = {
-                'Authorization': 'Bearer {0}'.format(token)
+                'Authorization': f'Bearer {token}'.format(token)
             }
         with open(self.kube_namespace_file, encoding="utf-8") as namespace_content:
             self.config['namespace'] = namespace_content.read().strip()
@@ -232,37 +230,33 @@ class KubeClientService(HTTPClientService):
             if arg in config:
                 req_kwargs[arg] = config[arg]
 
-        return defer.returnValue((url, req_kwargs))
+        return (url, req_kwargs)
 
     @defer.inlineCallbacks
     def createPod(self, namespace, spec):
-        url = '/api/v1/namespaces/{namespace}/pods'.format(namespace=namespace)
+        url = f'/api/v1/namespaces/{namespace}/pods'
         res = yield self.post(url, json=spec)
         res_json = yield res.json()
         if res.code not in (200, 201, 202):
             raise KubeError(res_json)
-        defer.returnValue(res_json)
+        return res_json
 
     @defer.inlineCallbacks
     def deletePod(self, namespace, name, graceperiod=0):
-        url = '/api/v1/namespaces/{namespace}/pods/{name}'.format(
-            namespace=namespace, name=name)
+        url = f'/api/v1/namespaces/{namespace}/pods/{name}'
         res = yield self.delete(url, params={'graceperiod': graceperiod})
         res_json = yield res.json()
         if res.code != 200:
             raise KubeError(res_json)
-        defer.returnValue(res_json)
+        return res_json
 
     @defer.inlineCallbacks
     def waitForPodDeletion(self, namespace, name, timeout):
         t1 = time.time()
-        url = '/api/v1/namespaces/{namespace}/pods/{name}/status'.format(
-            namespace=namespace, name=name)
+        url = f'/api/v1/namespaces/{namespace}/pods/{name}/status'
         while True:
             if time.time() - t1 > timeout:
-                raise TimeoutError(
-                    "Did not see pod {name} terminate after {timeout}s".format(
-                        name=name, timeout=timeout))
+                raise TimeoutError(f"Did not see pod {name} terminate after {timeout}s")
             res = yield self.get(url)
             res_json = yield res.json()
             if res.code == 404:
@@ -270,7 +264,7 @@ class KubeClientService(HTTPClientService):
             if res.code != 200:
                 raise KubeError(res_json)
             yield asyncSleep(1)
-        defer.returnValue(res_json)
+        return res_json
 
     @property
     def namespace(self):

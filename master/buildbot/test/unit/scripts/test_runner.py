@@ -43,7 +43,7 @@ class OptionsMixin:
             msg = []
             for k in exp:
                 if opts[k] != exp[k]:
-                    msg.append(" {}: expected {}, got {}".format(k, repr(exp[k]), repr(opts[k])))
+                    msg.append(f" {k}: expected {repr(exp[k])}, got {repr(opts[k])}")
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 
@@ -93,7 +93,7 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
                         **{'no-logrotate': False, 'log-size': 10000000,
                            'log-count': 10})
         unk_keys = set(kwargs.keys()) - set(defaults.keys())
-        assert not unk_keys, "invalid keys {}".format(unk_keys)
+        assert not unk_keys, f"invalid keys {unk_keys}"
         opts = defaults.copy()
         opts.update(kwargs)
         return opts
@@ -223,7 +223,7 @@ class BaseTestSimpleOptions(OptionsMixin):
 
     def test_synopsis(self):
         opts = self.optionsClass()
-        self.assertIn('buildbot {}'.format(self.commandName), opts.getSynopsis())
+        self.assertIn(f'buildbot {self.commandName}', opts.getSynopsis())
 
     def test_defaults(self):
         opts = self.parse()
@@ -512,7 +512,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, exp)
 
     def test_revision_file(self):
-        with open('revfile', 'wt') as f:
+        with open('revfile', 'wt', encoding='utf-8') as f:
             f.write('my-rev')
         self.addCleanup(lambda: os.unlink('revfile'))
         opts = self.parse('--revision_file', 'revfile', *self.master_and_who)
@@ -528,7 +528,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, dict(comments='foo'))
 
     def test_logfile(self):
-        with open('comments', 'wt') as f:
+        with open('comments', 'wt', encoding='utf-8') as f:
             f.write('hi')
         self.addCleanup(lambda: os.unlink('comments'))
         opts = self.parse('--logfile', 'comments', *self.master_and_who)

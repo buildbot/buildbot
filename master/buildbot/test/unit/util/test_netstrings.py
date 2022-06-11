@@ -30,7 +30,10 @@ class NetstringParser(unittest.TestCase):
     def test_valid_netstrings_byte_by_byte(self):
         # (this is really testing twisted's support, but oh well)
         p = netstrings.NetstringParser()
-        [p.feed(c) for c in "5:hello,5:world,"]
+
+        for c in "5:hello,5:world,":
+            p.feed(c)
+
         self.assertEqual(p.strings, [b'hello', b'world'])
 
     def test_invalid_netstring(self):

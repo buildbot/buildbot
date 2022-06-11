@@ -13,19 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.process.builder import Builder
 from buildbot.process.properties import Interpolate
+from buildbot.process.results import CANCELLED
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.gitlab import HOSTED_BASE_URL
 from buildbot.reporters.gitlab import GitLabStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import logging
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
@@ -34,7 +38,7 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
 
         self.setup_reporter_test()
         # repository must be in the form http://gitlab/<owner>/<project>
@@ -51,8 +55,41 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
         self.sp = GitLabStatusPush(Interpolate('XXYYZZ'))
         yield self.sp.setServiceParent(self.master)
 
+        builder = mock.Mock(spec=Builder)
+        builder.master = self.master
+        builder.name = "Builder0"
+        builder.setupProperties = lambda props: props.setProperty(
+            "buildername", "Builder0", "Builder")
+        self.master.botmaster.getBuilderById = mock.Mock(return_value=builder)
+
     def tearDown(self):
         return self.master.stopService()
+
+    @defer.inlineCallbacks
+    def test_buildrequest(self):
+        buildrequest = yield self.insert_buildrequest_new()
+        self._http.expect(
+            'get',
+            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
+                "id": 1
+            })
+        self._http.expect(
+            'post',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
+            json={'state': 'pending',
+                  'target_url': 'http://localhost:8080/#buildrequests/11',
+                  'ref': 'master',
+                  'description': 'Build pending.', 'name': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
+            json={'state': 'canceled',
+                  'target_url': 'http://localhost:8080/#buildrequests/11',
+                  'ref': 'master',
+                  'description': 'Build pending.', 'name': 'buildbot/Builder0'})
+
+        yield self.sp._got_event(('buildrequests', 11, 'new'), buildrequest)
+        yield self.sp._got_event(('buildrequests', 11, 'cancel'), buildrequest)
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -84,12 +121,21 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build done.', 'name': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
+            json={'state': 'canceled',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'ref': 'master',
+                  'description': 'Build done.', 'name': 'buildbot/Builder0'})
 
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        build['results'] = CANCELLED
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks

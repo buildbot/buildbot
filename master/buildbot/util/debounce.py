@@ -59,8 +59,7 @@ class Debouncer:
             pass
 
     def __repr__(self):
-        return "<debounced %r, wait=%r, phase=%d>" % (self.function,
-                                                      self.wait, self.phase)
+        return f"<debounced {repr(self.function)}, wait={repr(self.wait)}, phase={self.phase}>"
 
     def invoke(self):
         self.phase = PH_RUNNING

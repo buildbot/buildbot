@@ -91,6 +91,24 @@ class Tests(interfaces.InterfaceTests):
                               masterids=[], description='a string which describe the builder'))
 
     @defer.inlineCallbacks
+    def test_update_builder_info_tags_case(self):
+        yield self.insertTestData([
+            fakedb.Builder(id=7, name='some:builder7'),
+        ])
+
+        yield self.db.builders.updateBuilderInfo(7, 'builder_desc', ['Cat', 'cat'])
+        builder_dict = yield self.db.builders.getBuilder(7)
+        validation.verifyDbDict(self, 'builderdict', builder_dict)
+        builder_dict['tags'].sort()  # order is unspecified
+        self.assertEqual(builder_dict, {
+            'id': 7,
+            'name': 'some:builder7',
+            'tags': ['Cat', 'cat'],
+            'masterids': [],
+            'description': 'builder_desc'
+        })
+
+    @defer.inlineCallbacks
     def test_findBuilderId_new(self):
         id = yield self.db.builders.findBuilderId('some:builder')
         builderdict = yield self.db.builders.getBuilder(id)

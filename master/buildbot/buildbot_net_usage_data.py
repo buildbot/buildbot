@@ -45,7 +45,7 @@ def linux_distribution():
     os_release = "/etc/os-release"
     meta_data = {'ID': "unknown_linux", 'VERSION_ID': "unknown_version"}
     if os.path.exists(os_release):
-        with open("/etc/os-release") as f:
+        with open("/etc/os-release", encoding='utf-8') as f:
             for line in f:
                 try:
                     k, v = line.strip().split("=")
@@ -59,16 +59,16 @@ def get_distro():
     system = platform.system()
     if system == "Linux":
         dist = linux_distribution()
-        return "{}:{}".format(dist[0], dist[1])
+        return f"{dist[0]}:{dist[1]}"
     elif system == "Windows":
         dist = platform.win32_ver()
-        return "{}:{}".format(dist[0], dist[1])
+        return f"{dist[0]}:{dist[1]}"
     elif system == "Java":
         dist = platform.java_ver()
-        return "{}:{}".format(dist[0], dist[1])
+        return f"{dist[0]}:{dist[1]}"
     elif system == "Darwin":
         dist = platform.mac_ver()
-        return "{}".format(dist[0])
+        return f"{dist[0]}"
     # else:
     return ":".join(platform.uname()[0:1])
 
@@ -185,7 +185,7 @@ def _sendWithUrlib(url, data):
         'Content-Length': clen
     })
     try:
-        f = urllib_request.urlopen(req)
+        f = urllib_request.urlopen(req)  # noqa pylint: disable=consider-using-with
     except urllib_error.URLError:
         return None
     res = f.read()
@@ -203,7 +203,7 @@ def _sendWithRequests(url, data):
 
 
 def _sendBuildbotNetUsageData(data):
-    log.msg("buildbotNetUsageData: sending {}".format(data))
+    log.msg(f"buildbotNetUsageData: sending {data}")
     # first try with requests, as this is the most stable http library
     res = _sendWithRequests(PHONE_HOME_URL, data)
     # then we try with stdlib, which not always work with https

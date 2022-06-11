@@ -44,20 +44,20 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
     # tests
 
     def do_test_stop(self, config, kill_sequence, is_running=True, **kwargs):
-        with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:
+        with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write("Application('buildmaster')")
         if is_running:
-            with open("basedir/twistd.pid", 'wt') as f:
+            with open("basedir/twistd.pid", 'wt', encoding='utf-8') as f:
                 f.write('1234')
 
         def sleep(t):
-            self.assertTrue(kill_sequence, "unexpected sleep: %d" % t)
+            self.assertTrue(kill_sequence, f"unexpected sleep: {t}")
             what, exp_t = kill_sequence.pop(0)
             self.assertEqual((what, exp_t), ('sleep', t))
         self.patch(time, 'sleep', sleep)
 
         def kill(pid, signal):
-            self.assertTrue(kill_sequence, "unexpected signal: %d" % signal)
+            self.assertTrue(kill_sequence, f"unexpected signal: {signal}")
             exp_sig, result = kill_sequence.pop(0)
             self.assertEqual((pid, signal), (1234, exp_sig))
             if isinstance(result, Exception):

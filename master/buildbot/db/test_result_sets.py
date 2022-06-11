@@ -101,8 +101,8 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
 
             res = conn.execute(q)
             if res.rowcount == 0:
-                raise TestResultSetAlreadyCompleted(('Test result set {} is already completed '
-                                                     'or does not exist').format(test_result_setid))
+                raise TestResultSetAlreadyCompleted(f'Test result set {test_result_setid} '
+                                                    f'is already completed or does not exist')
         yield self.db.pool.do(thd)
 
     def _thd_row2dict(self, conn, row):

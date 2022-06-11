@@ -16,13 +16,9 @@
 import copy
 import json
 import os
+from collections import OrderedDict
 
 import yaml
-
-try:
-    from collections import OrderedDict
-except ImportError:  # pragma: no cover
-    from ordereddict import OrderedDict
 
 
 # minimalistic raml loader. Support !include tags, and mapping as OrderedDict
@@ -32,7 +28,7 @@ class RamlLoader(yaml.SafeLoader):
 
 def construct_include(loader, node):
     path = os.path.join(os.path.dirname(loader.stream.name), node.value)
-    with open(path) as f:
+    with open(path, encoding='utf-8') as f:
         return yaml.load(f, Loader=RamlLoader)
 
 
@@ -60,10 +56,10 @@ class RamlSpec:
     def __init__(self):
         fn = os.path.join(os.path.dirname(__file__),
                           os.pardir, 'spec', 'api.raml')
-        with open(fn) as f:
+        with open(fn, encoding='utf-8') as f:
             self.api = yaml.load(f, Loader=RamlLoader)
 
-        with open(fn) as f:
+        with open(fn, encoding='utf-8') as f:
             self.rawraml = f.read()
 
         endpoints = {}
@@ -91,13 +87,13 @@ class RamlSpec:
 
                 for _is in v['is']:
                     if not isinstance(_is, dict):
-                        raise Exception('Unexpected "is" target {}: {}'.format(type(_is), _is))
+                        raise Exception(f'Unexpected "is" target {type(_is)}: {_is}')
 
                     if 'bbget' in _is:
                         try:
                             v['eptype'] = _is['bbget']['bbtype']
                         except TypeError as e:
-                            raise Exception('Unexpected "is" target {}'.format(_is['bbget'])) from e
+                            raise Exception(f"Unexpected 'is' target {_is['bbget']}") from e
 
                         self.endpoints_by_type.setdefault(v['eptype'], {})
                         self.endpoints_by_type[v['eptype']][base] = api

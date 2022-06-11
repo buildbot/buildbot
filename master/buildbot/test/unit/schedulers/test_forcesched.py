@@ -18,7 +18,7 @@ import json
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
+from buildbot.config.master import MasterConfig
 from buildbot.schedulers.forcesched import AnyPropertyParameter
 from buildbot.schedulers.forcesched import BaseParameter
 from buildbot.schedulers.forcesched import BooleanParameter
@@ -34,9 +34,9 @@ from buildbot.schedulers.forcesched import PatchParameter
 from buildbot.schedulers.forcesched import StringParameter
 from buildbot.schedulers.forcesched import UserNameParameter
 from buildbot.schedulers.forcesched import oneCodebase
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
@@ -47,7 +47,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
     maxDiff = None
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -62,7 +62,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
             self.OBJECTID, self.SCHEDULERID,
             overrideBuildsetMethods=True,
             createBuilderDB=True)
-        sched.master.config = config.MasterConfig()
+        sched.master.config = MasterConfig()
 
         self.assertEqual(sched.name, name)
 
@@ -171,7 +171,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
 
         res = yield sched.force('user', builderNames=['a'], branch='a', reason='because',
                                 revision='c', repository='d', project='p')
-        bsid, brids = res
+        _, brids = res
 
         # only one builder forced, so there should only be one brid
         self.assertEqual(len(brids), 1)
@@ -189,19 +189,6 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                                   'revision': 'c'}],
                 'waited_for': False}),
         ])
-        (bsid,
-         dict(reason="user wants it because",
-              brids=brids,
-              external_idstring=None,
-              properties=[('owner', ('user', 'Force Build Form')),
-                          ('reason', ('because', 'Force Build Form')),
-                          ('scheduler', ('testsched', 'Scheduler')),
-                          ],
-              sourcestampsetid=100),
-         {'':
-          dict(branch='a', revision='c', repository='d', codebase='',
-               project='p', sourcestampsetid=100)
-          })
 
     @defer.inlineCallbacks
     def test_force_allBuilders(self):
@@ -276,7 +263,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
         dictType = str(type({}))
         errMsg = ("ForceScheduler 'foo': 'codebases' should be a list "
                   "of strings or CodebaseParameter, "
-                  "not {}".format(dictType))
+                  f"not {dictType}")
         with self.assertRaisesConfigError(errMsg):
             ForceScheduler(name='foo', builderNames=['bar'],
                            codebases={'cb': {'branch': 'trunk'}})
@@ -284,14 +271,13 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
     @defer.inlineCallbacks
     def test_good_codebases(self):
         sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
-        res = yield sched.force('user', builderNames=['a'], reason='because',
-                                foo_branch='a', foo_revision='c', foo_repository='d',
-                                foo_project='p',
-                                bar_branch='a2', bar_revision='c2', bar_repository='d2',
-                                bar_project='p2'
-                                )
+        yield sched.force('user', builderNames=['a'], reason='because',
+                          foo_branch='a', foo_revision='c', foo_repository='d',
+                          foo_project='p',
+                          bar_branch='a2', bar_revision='c2', bar_repository='d2',
+                          bar_project='p2'
+                          )
 
-        bsid, brids = res
         expProperties = {
             'owner': ('user', 'Force Build Form'),
             'reason': ('because', 'Force Build Form'),
@@ -314,13 +300,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
     def test_codebase_with_patch(self):
         sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar',
                                                                        patch=PatchParameter())])
-        res = yield sched.force('user', builderNames=['a'], reason='because',
-                                foo_branch='a', foo_revision='c', foo_repository='d',
-                                foo_project='p',
-                                bar_branch='a2', bar_revision='c2', bar_repository='d2',
-                                bar_project='p2', bar_patch_body=b"xxx")
-
-        bsid, brids = res
+        yield sched.force('user', builderNames=['a'], reason='because',
+                          foo_branch='a', foo_revision='c', foo_repository='d',
+                          foo_project='p',
+                          bar_branch='a2', bar_revision='c2', bar_repository='d2',
+                          bar_project='p2', bar_patch_body=b"xxx")
         expProperties = {
             'owner': ('user', 'Force Build Form'),
             'reason': ('because', 'Force Build Form'),

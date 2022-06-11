@@ -169,4 +169,4 @@ finishrelease:
 
 pyinstaller: virtualenv
 	$(PIP) install pyinstaller
-	$(VENV_NAME)/bin/pyinstaller -F pyinstaller/buildbot-worker.spec
+	$(VENV_NAME)/bin/pyinstaller pyinstaller/buildbot-worker.spec

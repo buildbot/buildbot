@@ -19,9 +19,9 @@ from twisted.internet import defer
 from buildbot.data import base
 from buildbot.data import resultspec
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import pathmatch
 
 
@@ -36,7 +36,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
     resourceTypeClass = None
 
     def setUpEndpoint(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.db = self.master.db
@@ -56,7 +56,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
             if pp == '/':
                 continue
             if not pp.startswith('/') or pp.endswith('/'):
-                raise AssertionError("invalid pattern %r" % (pp,))
+                raise AssertionError(f"invalid pattern {repr(pp)}")
         pathPatterns = [tuple(pp.split('/')[1:])
                         for pp in pathPatterns]
         for pp in pathPatterns:

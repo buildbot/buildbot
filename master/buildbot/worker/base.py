@@ -25,9 +25,11 @@ from buildbot import config
 from buildbot.interfaces import IWorker
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
+from buildbot.status.worker_compat import WorkerStatus
 from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
 from buildbot.util import service
+from buildbot.util.eventual import eventually
 
 
 @implementer(IWorker)
@@ -98,7 +100,7 @@ class AbstractWorker(service.BuildbotService):
         self.manager = None
         self.workerid = None
 
-        self.info = Properties()
+        self.worker_status = WorkerStatus(name)
         self.worker_commands = None
         self.workerforbuilders = {}
         self.max_builds = max_builds
@@ -137,10 +139,10 @@ class AbstractWorker(service.BuildbotService):
         self.conn = None
 
         # during disconnection self.conn will be set to None before all disconnection notifications
-        # are delivered. During that period _pending_conn_shutdown_notifier will be set to
+        # are delivered. During that period _pending_disconnection_delivery_notifier will be set to
         # a notifier and allows interested users to wait until all disconnection notifications are
         # delivered.
-        self._pending_conn_shutdown_notifier = None
+        self._pending_disconnection_delivery_notifier = None
 
         self._old_builder_list = None
         self._configured_builderid_list = None
@@ -222,20 +224,21 @@ class AbstractWorker(service.BuildbotService):
         if not info:
             return
 
-        # set defaults
-        self.info.setProperty("version", "(unknown)", "Worker")
+        self.worker_status.setAdmin(info.get("admin"))
+        self.worker_status.setHost(info.get("host"))
+        self.worker_status.setAccessURI(info.get("access_uri", None))
+        self.worker_status.setVersion(info.get("version", "(unknown)"))
 
         # store everything as Properties
         for k, v in info.items():
             if k in ('environ', 'worker_commands'):
                 continue
-            self.info.setProperty(k, v, "Worker")
+            self.worker_status.info.setProperty(k, v, "Worker")
 
     @defer.inlineCallbacks
     def _getWorkerInfo(self):
         worker = yield self.master.data.get(
             ('workers', self.workerid))
-        self._paused = worker["paused"]
         self._applyWorkerInfo(worker['workerinfo'])
 
     def setServiceParent(self, parent):
@@ -278,7 +281,7 @@ class AbstractWorker(service.BuildbotService):
         # without disconnecting the worker, yet there's no reason to do that.
 
         assert self.name == name
-        self.password = yield self.renderSecrets(password)
+        self.password = password
 
         # adopt new instance's configuration parameters
         self.max_builds = max_builds
@@ -431,14 +434,15 @@ class AbstractWorker(service.BuildbotService):
         self.conn = conn
         self._old_builder_list = None  # clear builder list before proceed
 
+        self.worker_status.setConnected(True)
+
         self._applyWorkerInfo(conn.info)
         self.worker_commands = conn.info.get("worker_commands", {})
         self.worker_environ = conn.info.get("environ", {})
         self.worker_basedir = conn.info.get("basedir", None)
         self.worker_system = conn.info.get("system", None)
 
-        # The _detach_sub member is only ever used from tests.
-        self._detached_sub = self.conn.notifyOnDisconnect(self.detached)
+        self.conn.notifyOnDisconnect(self.detached)
 
         workerinfo = {
             'admin': conn.info.get('admin'),
@@ -469,6 +473,7 @@ class AbstractWorker(service.BuildbotService):
     def messageReceivedFromWorker(self):
         now = time.time()
         self.lastMessageReceived = now
+        self.worker_status.setLastMessageReceived(now)
 
     def setupProperties(self, props):
         for name in self.properties.properties:
@@ -480,24 +485,27 @@ class AbstractWorker(service.BuildbotService):
                     name, self.defaultProperties.getProperty(name), "Worker")
 
     @defer.inlineCallbacks
-    def _handle_conn_shutdown_notifier(self, conn):
-        self._pending_conn_shutdown_notifier = Notifier()
-        yield conn.waitShutdown()
-        self._pending_conn_shutdown_notifier.notify(None)
-        self._pending_conn_shutdown_notifier = None
+    def _handle_disconnection_delivery_notifier(self):
+        self._pending_disconnection_delivery_notifier = Notifier()
+        yield self.conn.waitForNotifyDisconnectedDelivered()
+        self._pending_disconnection_delivery_notifier.notify(None)
+        self._pending_disconnection_delivery_notifier = None
 
     @defer.inlineCallbacks
     def detached(self):
-        conn = self.conn
-        self.conn = None
-        self._handle_conn_shutdown_notifier(conn)
-
-        # Note that _pending_conn_shutdown_notifier will not be fired until detached()
-        # is complete.
+        # protect against race conditions in conn disconnect path and someone
+        # calling detached directly. At the moment the null worker does that.
+        if self.conn is None:
+            return
 
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
 
+        self._handle_disconnection_delivery_notifier()
+
+        yield self.conn.waitShutdown()
+        self.conn = None
         self._old_builder_list = []
+        self.worker_status.setConnected(False)
         log.msg("Worker.detached({})".format(self.name))
         self.releaseLocks()
         yield self.master.data.updates.workerDisconnected(
@@ -534,10 +542,15 @@ class AbstractWorker(service.BuildbotService):
     @defer.inlineCallbacks
     def _waitForCompleteShutdownImpl(self, conn):
         if conn:
-            yield conn.wait_shutdown_started()
-            yield conn.waitShutdown()
-        elif self._pending_conn_shutdown_notifier is not None:
-            yield self._pending_conn_shutdown_notifier.wait()
+            d = defer.Deferred()
+
+            def _disconnected():
+                eventually(d.callback, None)
+            conn.notifyOnDisconnect(_disconnected)
+            yield d
+            yield conn.waitForNotifyDisconnectedDelivered()
+        elif self._pending_disconnection_delivery_notifier is not None:
+            yield self._pending_disconnection_delivery_notifier.wait()
 
     @defer.inlineCallbacks
     def _disconnect(self, conn):
@@ -620,9 +633,9 @@ class AbstractWorker(service.BuildbotService):
         this worker will not start.
         """
 
-        # If we're waiting to shutdown gracefully, paused or quarantined then we shouldn't
+        # If we're waiting to shutdown gracefully or paused, then we shouldn't
         # accept any new jobs.
-        if self._graceful or self._paused or self.quarantine_timer:
+        if self._graceful or self._paused:
             return False
 
         if self.max_builds:
@@ -668,7 +681,6 @@ class AbstractWorker(service.BuildbotService):
     def unpause(self):
         """Restart running new builds on the worker."""
         self._paused = False
-        self.stopQuarantineTimer()
         self.botmaster.maybeStartBuildsForWorker(self.name)
         self.updateState()
 
@@ -682,6 +694,7 @@ class AbstractWorker(service.BuildbotService):
         if self.quarantine_timer:  # already in quarantine
             return
 
+        self.pause()
         self.quarantine_timer = self.master.reactor.callLater(
             self.quarantine_timeout, self.exitQuarantine)
         log.msg("{} has been put in quarantine for {}s".format(
@@ -693,14 +706,14 @@ class AbstractWorker(service.BuildbotService):
             self.quarantine_timeout = self.quarantine_max_timeout
 
     def exitQuarantine(self):
-        log.msg("{} has left quarantine".format(self.name))
         self.quarantine_timer = None
-        self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.unpause()
 
     def stopQuarantineTimer(self):
         if self.quarantine_timer is not None:
             self.quarantine_timer.cancel()
-            self.exitQuarantine()
+            self.quarantine_timer = None
+            self.unpause()
 
 
 class Worker(AbstractWorker):

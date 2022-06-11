@@ -135,8 +135,7 @@ class WsProtocolFactory(WebSocketServerFactory):
     def __init__(self, master):
         super().__init__()
         self.master = master
-        pingInterval = self.master.config.www.get('ws_ping_interval', 0)
-        self.setProtocolOptions(webStatus=False, autoPingInterval=pingInterval)
+        self.setProtocolOptions(webStatus=False)
 
     def buildProtocol(self, addr):
         p = WsProtocol(self.master)

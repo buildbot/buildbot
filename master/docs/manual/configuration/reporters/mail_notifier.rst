@@ -114,7 +114,7 @@ Another example of a function delivering a customized HTML email is given below:
         mode=('failing',),
         message_formatter=reporters.MessageFormatter(
             template=template, template_type='html',
-            wantProperties=True, wantSteps=True))
+            want_properties=True, want_steps=True))
 
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
                                 sendToInterestedUsers=False,

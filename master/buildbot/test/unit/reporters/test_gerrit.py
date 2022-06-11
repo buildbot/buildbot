@@ -36,7 +36,7 @@ from buildbot.reporters.gerrit import defaultReviewCB
 from buildbot.reporters.gerrit import defaultSummaryCB
 from buildbot.reporters.gerrit import makeReviewResult
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 warnings.filterwarnings('error', message='.*Gerrit status')
@@ -141,7 +141,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                            ReporterTestMixin):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
@@ -164,7 +164,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, finalResult):
         self.insertTestData(buildResults, finalResult)
-        res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True)
+        res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
         builds = res['builds']
         buildset = res['buildset']
 
@@ -180,9 +180,9 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
     def makeBuildInfo(self, buildResults, resultText, builds):
         info = []
         for i, buildResult in enumerate(buildResults):
-            info.append({'name': "Builder%d" % i, 'result': buildResults[i],
+            info.append({'name': f"Builder{i}", 'result': buildResult,
                          'resultText': resultText[i], 'text': 'buildText',
-                         'url': "http://localhost:8080/#builders/%d/builds/%d" % (79 + i, i),
+                         'url': f"http://localhost:8080/#builders/{79 + i}/builds/{i}",
                          'build': builds[i]})
         return info
 
@@ -341,7 +341,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def run_fake_single_build(self, gsp, buildResult, expWarning=False):
-        buildset, builds = yield self.setupBuildResults([buildResult], buildResult)
+        _, builds = yield self.setupBuildResults([buildResult], buildResult)
 
         yield gsp._got_event(('builds', builds[0]['buildid'], 'new'), builds[0])
         yield gsp._got_event(('builds', builds[0]['buildid'], 'finished'), builds[0])

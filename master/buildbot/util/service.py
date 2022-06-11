@@ -116,8 +116,8 @@ class AsyncMultiService(AsyncService, service.MultiService):
     def addService(self, service):
         if service.name is not None:
             if service.name in self.namedServices:
-                raise RuntimeError(("cannot have two services with same name"
-                                    " '{}'").format(service.name))
+                raise RuntimeError("cannot have two services with same name"
+                                   f" '{service.name}'")
             self.namedServices[service.name] = service
         self.services.append(service)
         if self.running:
@@ -188,7 +188,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
             self.name = bytes2unicode(name)
         self.checkConfig(*args, **kwargs)
         if self.name is None:
-            raise ValueError("{}: must pass a name to constructor".format(type(self)))
+            raise ValueError(f"{type(self)}: must pass a name to constructor")
         self._config_args = args
         self._config_kwargs = kwargs
         self.rendered = False
@@ -229,6 +229,9 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         d = yield self.reconfigService(*sibling._config_args,
                                        **kwargs)
         return d
+
+    def canReconfigWithSibling(self, sibling):
+        return reflect.qual(self.__class__) == reflect.qual(sibling.__class__)
 
     def configureService(self):
         # reconfigServiceWithSibling with self, means first configuration
@@ -352,7 +355,7 @@ class ClusteredBuildbotService(BuildbotService):
                 yield self.deactivate()
                 yield self._unclaimService()
             except Exception as e:
-                msg = "Caught exception while deactivating ClusteredService({})".format(self.name)
+                msg = f"Caught exception while deactivating ClusteredService({self.name})"
                 log.err(e, _why=msg)
 
         yield super().stopService()
@@ -394,8 +397,7 @@ class ClusteredBuildbotService(BuildbotService):
             try:
                 claimed = yield self._claimService()
             except Exception:
-                msg = ('WARNING: ClusteredService({}) got exception while trying to claim'
-                       ).format(self.name)
+                msg = f'WARNING: ClusteredService({self.name}) got exception while trying to claim'
                 log.err(_why=msg)
                 return
 
@@ -415,7 +417,7 @@ class ClusteredBuildbotService(BuildbotService):
                 yield self.activate()
             except Exception:
                 # this service is half-active, and noted as such in the db..
-                msg = 'WARNING: ClusteredService({}) is only partially active'.format(self.name)
+                msg = f'WARNING: ClusteredService({self.name}) is only partially active'
                 log.err(_why=msg)
             finally:
                 # cannot wait for its deactivation
@@ -429,7 +431,7 @@ class ClusteredBuildbotService(BuildbotService):
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to
             # fail
-            msg = 'WARNING: ClusteredService({}) failed during activity poll'.format(self.name)
+            msg = f'WARNING: ClusteredService({self.name}) failed during activity poll'
             log.err(_why=msg)
 
 
@@ -456,33 +458,27 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
         elif isinstance(new_config_attr, dict):
             new_by_name = new_config_attr
         else:
-            raise TypeError("config.{} should be a list or dictionary".format(self.config_attr))
+            raise TypeError(f"config.{self.config_attr} should be a list or dictionary")
         new_set = set(new_by_name)
 
         # calculate new childs, by name, and removed childs
         removed_names, added_names = util.diffSets(old_set, new_set)
 
-        # find any childs for which the fully qualified class name has
-        # changed, and treat those as an add and remove
-        # While we're at it find any service that don't know how to reconfig,
-        # and, if they have changed, add them to both removed and added, so that we
+        # find any children for which the old instance is not
+        # able to do a reconfig with the new sibling
+        # and add them to both removed and added, so that we
         # run the new version
         for n in old_set & new_set:
             old = old_by_name[n]
             new = new_by_name[n]
-            # detect changed class name
-            if reflect.qual(old.__class__) != reflect.qual(new.__class__):
+            # check if we are able to reconfig service
+            if not old.canReconfigWithSibling(new):
                 removed_names.add(n)
                 added_names.add(n)
-            # compare using ComparableMixin if they don't support reconfig
-            elif not hasattr(old, 'reconfigServiceWithBuildbotConfig'):
-                if not util.ComparableMixin.isEquivalent(old, new):
-                    removed_names.add(n)
-                    added_names.add(n)
 
         if removed_names or added_names:
-            log.msg("adding {} new {}, removing {}".format(len(added_names), self.config_attr,
-                                                           len(removed_names)))
+            log.msg(f"adding {len(added_names)} new {self.config_attr}, "
+                    f"removing {len(removed_names)}")
 
             for n in removed_names:
                 child = old_by_name[n]
@@ -499,8 +495,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 child = new_by_name[n]
                 # setup service's objectid
                 if hasattr(child, 'objectid'):
-                    class_name = '{}.{}'.format(child.__class__.__module__,
-                                                child.__class__.__name__)
+                    class_name = f'{child.__class__.__module__}.{child.__class__.__name__}'
                     objectid = yield self.master.db.state.getObjectId(
                         child.name, class_name)
                     child.objectid = objectid
@@ -519,8 +514,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
 
         for svc in reconfigurable_services:
             if not svc.name:
-                raise ValueError(
-                    "{}: child {} should have a defined name attribute".format(self, svc))
+                raise ValueError(f"{self}: child {svc} should have a defined name attribute")
             config_sibling = new_by_name.get(svc.name)
             try:
                 yield svc.reconfigServiceWithSibling(config_sibling)
@@ -532,3 +526,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 yield svc.disownServiceParent()
                 config_sibling.objectid = svc.objectid
                 yield config_sibling.setServiceParent(self)
+            except Exception as e:  # pragma: no cover
+                log.err(e, f'Got exception while reconfiguring {self} child service {svc.name}:\n'
+                        f'current config dict:\n{svc.getConfigDict()}\n'
+                        f'new config dict:\n{config_sibling.getConfigDict()}')
+                raise

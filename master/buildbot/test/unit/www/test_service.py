@@ -27,9 +27,9 @@ from twisted.trial import unittest
 from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
 from twisted.web.server import Request
 
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.unit.www import test_hooks_base
 from buildbot.test.util import www
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import auth
 from buildbot.www import change_hook
 from buildbot.www import resource
@@ -55,7 +55,7 @@ class NeedsReconfigResource(resource.Resource):
     needsReconfig = True
     reconfigs = 0
 
-    def reconfigResource(self, config):
+    def reconfigResource(self, new_config):
         NeedsReconfigResource.reconfigs += 1
 
 
@@ -63,7 +63,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = self.make_master(url='h:/a/b/')
         self.svc = self.master.www = service.WWWService()
         yield self.svc.setServiceParent(self.master)
@@ -200,7 +200,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_setupSiteWithHookAndAuth(self):
         fn = self.mktemp()
-        with open(fn, 'w') as f:
+        with open(fn, 'w', encoding='utf-8') as f:
             f.write("user:pass")
         new_config = self.makeConfig(
             port=8080,
@@ -270,7 +270,7 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         request.sitepath = [b"bb"]
         session.updateSession(request)
         self.assertEqual(len(request.cookies), 1)
-        name, value = request.cookies[0].split(b";")[0].split(b"=")
+        _, value = request.cookies[0].split(b";")[0].split(b"=")
         decoded = jwt.decode(value, self.SECRET,
                              algorithms=[service.SESSION_SECRET_ALGORITHM])
         self.assertEqual(decoded['user_info'], {'anonymous': True})

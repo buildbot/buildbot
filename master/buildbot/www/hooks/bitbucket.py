@@ -42,8 +42,7 @@ class BitBucketHandler(BaseHookHandler):
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
         payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
-        repo_url = '{}{}'.format(
-            payload['canon_url'], payload['repository']['absolute_url'])
+        repo_url = f"{payload['canon_url']}{payload['repository']['absolute_url']}"
         project = request.args.get(b'project', [b''])[0]
         project = bytes2unicode(project)
 
@@ -56,16 +55,16 @@ class BitBucketHandler(BaseHookHandler):
                 'revision': commit['raw_node'],
                 'when_timestamp': dateparse(commit['utctimestamp']),
                 'branch': commit['branch'],
-                'revlink': '{}commits/{}'.format(repo_url, commit['raw_node']),
+                'revlink': f"{repo_url}commits/{commit['raw_node']}",
                 'repository': repo_url,
                 'project': project,
                 'properties': {
                     'event': event_type,
                 },
             })
-            log.msg('New revision: {}'.format(commit['node']))
+            log.msg(f"New revision: {commit['node']}")
 
-        log.msg('Received {} changes from bitbucket'.format(len(changes)))
+        log.msg(f'Received {len(changes)} changes from bitbucket')
         return (changes, payload['repository']['scm'])
 
 

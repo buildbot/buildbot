@@ -26,7 +26,7 @@ from buildbot.worker import AbstractLatentWorker
 
 try:
     from buildbot_worker.bot import LocalWorker as RemoteWorker
-    from buildbot_worker.base import BotBase
+    from buildbot_worker.pb import BotPbLike
 except ImportError:
     RemoteWorker = None
 
@@ -164,7 +164,7 @@ class LatentController(SeverWorkerConnectionMixin):
         return self._started_kind
 
     def patchBot(self, case, remoteMethod, patch):
-        case.patch(BotBase, remoteMethod, patch)
+        case.patch(BotPbLike, remoteMethod, patch)
 
 
 class ControllableLatentWorker(AbstractLatentWorker):
@@ -192,7 +192,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     def _generate_random_password(self):
         self._random_password_id += 1
-        return 'password_{}'.format(self._random_password_id)
+        return f'password_{self._random_password_id}'
 
     @defer.inlineCallbacks
     def isCompatibleWithBuild(self, build_props):

@@ -28,10 +28,12 @@ describe('waterfall', function() {
     const createBuildAndWaitForFinish = async () => {
         await builder.go();
         const lastbuildid = await builder.getLastFinishedBuildNumber();
-        let force = await builder.goForce();
-        await force.clickStartButtonAndWaitRedirectToBuild();
-        await builder.go();
-        await builder.waitBuildFinished(lastbuildid + 1);
+        if (lastbuildid == 0) { /* we need at least one build */
+            let force = await builder.goForce();
+            await force.clickStartButtonAndWaitRedirectToBuild();
+            await builder.go();
+            await builder.waitBuildFinished(lastbuildid + 1);
+        }
     };
 
     it('can go to builder page via hyperlink', async () => {

@@ -17,10 +17,9 @@ from twisted.trial import unittest
 
 from buildbot.process import results
 from buildbot.steps import gitdiffinfo
-from buildbot.test.fake.remotecommand import Expect
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectShell
+from buildbot.test.steps import TestBuildStepMixin
 
 try:
     import unidiff
@@ -28,69 +27,69 @@ except ImportError:
     unidiff = None
 
 
-class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     if not unidiff:
         skip = 'unidiff is required for GitDiffInfo tests'
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_merge_base_failure(self):
-        self.setupStep(gitdiffinfo.GitDiffInfo())
-        self.expectCommands(
+        self.setup_step(gitdiffinfo.GitDiffInfo())
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
-            + Expect.log('stdio-merge-base', stderr='fatal: Not a valid object name')
-            + 128)
+            .log('stdio-merge-base', stderr='fatal: Not a valid object name')
+            .exit(128))
         self.expect_log_file_stderr('stdio-merge-base', 'fatal: Not a valid object name')
-        self.expectOutcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
-        return self.runStep()
+        self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
+        return self.run_step()
 
     def test_diff_failure(self):
-        self.setupStep(gitdiffinfo.GitDiffInfo())
-        self.expectCommands(
+        self.setup_step(gitdiffinfo.GitDiffInfo())
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
-            + Expect.log('stdio-merge-base', stdout='1234123412341234')
-            + 0,
+            .log('stdio-merge-base', stdout='1234123412341234')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'])
-            + Expect.log('stdio-diff', stderr='fatal: ambiguous argument')
-            + 1,
+            .log('stdio-diff', stderr='fatal: ambiguous argument')
+            .exit(1),
             )
-        self.expectLogfile('stdio-merge-base', '1234123412341234')
+        self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', 'fatal: ambiguous argument')
-        self.expectOutcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
-        return self.runStep()
+        self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
+        return self.run_step()
 
     def test_empty_diff(self):
-        self.setupStep(gitdiffinfo.GitDiffInfo())
-        self.expectCommands(
+        self.setup_step(gitdiffinfo.GitDiffInfo())
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
-            + Expect.log('stdio-merge-base', stdout='1234123412341234')
-            + 0,
+            .log('stdio-merge-base', stdout='1234123412341234')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'])
-            + Expect.log('stdio-diff', stdout='')
-            + 0,
+            .log('stdio-diff', stdout='')
+            .exit(0),
             )
-        self.expectLogfile('stdio-merge-base', '1234123412341234')
+        self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', '')
-        self.expectOutcome(result=results.SUCCESS, state_string="GitDiffInfo")
+        self.expect_outcome(result=results.SUCCESS, state_string="GitDiffInfo")
         self.expect_build_data('diffinfo-master', b'[]', 'GitDiffInfo')
-        return self.runStep()
+        return self.run_step()
 
     def test_complex_diff(self):
-        self.setupStep(gitdiffinfo.GitDiffInfo())
-        self.expectCommands(
+        self.setup_step(gitdiffinfo.GitDiffInfo())
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
-            + Expect.log('stdio-merge-base', stdout='1234123412341234')
-            + 0,
+            .log('stdio-merge-base', stdout='1234123412341234')
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'])
-            + Expect.log('stdio-diff', stdout='''\
+            .log('stdio-diff', stdout='''\
 diff --git file1 file1
 deleted file mode 100644
 index 42f90fd..0000000
@@ -122,10 +121,10 @@ index 0000000..632e269
 +line32
 +line33
 ''')
-            + 0,
+            .exit(0)
             )
-        self.expectLogfile('stdio-merge-base', '1234123412341234')
-        self.expectOutcome(result=results.SUCCESS, state_string="GitDiffInfo")
+        self.expect_log_file('stdio-merge-base', '1234123412341234')
+        self.expect_outcome(result=results.SUCCESS, state_string="GitDiffInfo")
 
         diff_info = (
             b'[{"source_file": "file1", "target_file": "/dev/null", ' +
@@ -139,4 +138,4 @@ index 0000000..632e269
             b'"is_binary": false, "is_rename": false, ' +
             b'"hunks": [{"ss": 0, "sl": 0, "ts": 1, "tl": 3}]}]')
         self.expect_build_data('diffinfo-master', diff_info, 'GitDiffInfo')
-        return self.runStep()
+        return self.run_step()

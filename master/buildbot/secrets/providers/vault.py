@@ -16,12 +16,12 @@
 vault based providers
 """
 
-
 from twisted.internet import defer
 
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.util import httpclientservice
+from buildbot.warnings import warn_deprecated
 
 
 class HashiCorpVaultSecretProvider(SecretProviderBase):
@@ -33,12 +33,14 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
 
     def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None,
                     apiVersion=1):
+        warn_deprecated("3.4.0", "Use of HashiCorpVaultSecretProvider is deprecated and will be "
+                        "removed in future releases. Use HashiCorpVaultKvSecretProvider instead")
         if not isinstance(vaultServer, str):
-            config.error("vaultServer must be a string while it is {}".format(type(vaultServer)))
+            config.error(f"vaultServer must be a string while it is {type(vaultServer)}")
         if not isinstance(vaultToken, str):
-            config.error("vaultToken must be a string while it is {}".format(type(vaultToken)))
+            config.error(f"vaultToken must be a string while it is {type(vaultToken)}")
         if apiVersion not in [1, 2]:
-            config.error("apiVersion {} is not supported".format(apiVersion))
+            config.error(f"apiVersion {apiVersion} is not supported")
 
     @defer.inlineCallbacks
     def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None,
@@ -79,8 +81,8 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         proj = yield self._http.get(f"/v1/{path}")
         code = yield proj.code
         if code != 200:
-            raise KeyError(("The secret {} does not exist in Vault provider: request"
-                           " return code: {}.").format(entry, code))
+            raise KeyError(f"The secret {entry} does not exist in Vault provider: request"
+                           f" return code: {code}.")
         json = yield proj.json()
         if self.apiVersion == 1:
             secrets = json.get('data', {})
@@ -90,4 +92,4 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
             return secrets[key]
         except KeyError as e:
             raise KeyError(
-                "The secret {} does not exist in Vault provider: {}".format(entry, e)) from e
+                f"The secret {entry} does not exist in Vault provider: {e}") from e

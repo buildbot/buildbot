@@ -23,9 +23,9 @@ from buildbot.data import builds
 from buildbot.data import resultspec
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 
@@ -48,6 +48,8 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          buildrequestid=82, number=4),
             fakedb.Build(id=15, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=5),
+            fakedb.BuildProperty(buildid=13, name='reason', value='"force build"',
+                                 source="Force Build Form"),
         ])
 
     def tearDown(self):
@@ -94,10 +96,10 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_properties_injection(self):
         resultSpec = resultspec.OptimisedResultSpec(
-            filters=[resultspec.Filter('property', 'eq', [False])])
-        build = yield self.callGet(('builders', 77, 'builds', 5), resultSpec=resultSpec)
+            properties=[resultspec.Property(b'property', 'eq', 'reason')])
+        build = yield self.callGet(('builders', 77, 'builds', 3), resultSpec=resultSpec)
         self.validateData(build)
-        self.assertIn('properties', build)
+        self.assertIn('reason', build['properties'])
 
     @defer.inlineCallbacks
     def test_action_stop(self):
@@ -147,6 +149,8 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          buildrequestid=83, number=5, complete_at=1),
             fakedb.Build(id=16, builderid=79, masterid=88, workerid=12,
                          buildrequestid=84, number=6, complete_at=1),
+            fakedb.BuildProperty(buildid=13, name='reason', value='"force build"',
+                                 source="Force Build Form"),
         ])
 
     def tearDown(self):
@@ -155,20 +159,29 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_all(self):
         builds = yield self.callGet(('builds',))
-        [self.validateData(build) for build in builds]
+
+        for build in builds:
+            self.validateData(build)
+
         self.assertEqual(sorted([b['number'] for b in builds]),
                          [3, 4, 5, 6])
 
     @defer.inlineCallbacks
     def test_get_builder(self):
         builds = yield self.callGet(('builders', 78, 'builds'))
-        [self.validateData(build) for build in builds]
+
+        for build in builds:
+            self.validateData(build)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [5])
 
     @defer.inlineCallbacks
     def test_get_buildername(self):
         builds = yield self.callGet(('builders', 'builder78', 'builds'))
-        [self.validateData(build) for build in builds]
+
+        for build in builds:
+            self.validateData(build)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [5])
 
     @defer.inlineCallbacks
@@ -179,7 +192,10 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_buildrequest(self):
         builds = yield self.callGet(('buildrequests', 82, 'builds'))
-        [self.validateData(build) for build in builds]
+
+        for build in builds:
+            self.validateData(build)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
@@ -192,7 +208,10 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('buildrequestid', 'eq', [82])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
-        [self.validateData(build) for build in builds]
+
+        for build in builds:
+            self.validateData(build)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
@@ -200,13 +219,19 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('buildrequestid', 'eq', ['82'])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
-        [self.validateData(build) for build in builds]
+
+        for build in builds:
+            self.validateData(build)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
     def test_get_worker(self):
         builds = yield self.callGet(('workers', 13, 'builds'))
-        [self.validateData(build) for build in builds]
+
+        for build in builds:
+            self.validateData(build)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
@@ -214,7 +239,10 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('complete', 'eq', [False])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
-        [self.validateData(build) for build in builds]
+
+        for build in builds:
+            self.validateData(build)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
@@ -222,24 +250,32 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('complete_at', 'eq', [None])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
-        [self.validateData(build) for build in builds]
+
+        for build in builds:
+            self.validateData(build)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
     def test_properties_injection(self):
         resultSpec = resultspec.OptimisedResultSpec(
-            filters=[resultspec.Filter('property', 'eq', [False])])
+            properties=[resultspec.Property(b'property', 'eq', 'reason')])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
-        for b in builds:
-            self.validateData(b)
-            self.assertIn('properties', b)
+
+        for build in builds:
+            self.validateData(build)
+
+        self.assertTrue(any(('reason' in b['properties']) for b in builds))
 
     @defer.inlineCallbacks
     def test_get_filter_eq(self):
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('builderid', 'eq', [78, 79])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
-        [self.validateData(b) for b in builds]
+
+        for b in builds:
+            self.validateData(b)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [5, 6])
 
     @defer.inlineCallbacks
@@ -247,7 +283,10 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('builderid', 'ne', [78, 79])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
-        [self.validateData(b) for b in builds]
+
+        for b in builds:
+            self.validateData(b)
+
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
 
@@ -266,7 +305,7 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
                        'properties': {}}
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = builds.Build(self.master)

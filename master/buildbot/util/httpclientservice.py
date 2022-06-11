@@ -17,6 +17,7 @@ import json as jsonmodule
 import textwrap
 
 from twisted.internet import defer
+from twisted.logger import Logger
 from twisted.web.client import Agent
 from twisted.web.client import HTTPConnectionPool
 from zope.interface import implementer
@@ -26,7 +27,6 @@ from buildbot.interfaces import IHttpResponse
 from buildbot.util import service
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
-from buildbot.util.logger import Logger
 
 try:
     import txrequests
@@ -115,9 +115,8 @@ class HTTPClientService(service.SharedService):
            if neither txrequests or treq is installed
         """
         if txrequests is None and treq is None:
-            config.error(("neither txrequests nor treq is installed, but {} is "
-                          "requiring it\n\n{}").format(from_module,
-                                                       HTTPClientService.TREQ_PROS_AND_CONS))
+            config.error(f"neither txrequests nor treq is installed, but {from_module} is "
+                         f"requiring it\n\n{HTTPClientService.TREQ_PROS_AND_CONS}")
 
     def startService(self):
         # treq only supports basicauth, so we force txrequests if the auth is
@@ -148,8 +147,11 @@ class HTTPClientService(service.SharedService):
         yield super().stopService()
 
     def _prepareRequest(self, ep, kwargs):
-        assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
-        url = self._base_url + ep
+        if ep.startswith('http://') or ep.startswith('https://'):
+            url = ep
+        else:
+            assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
+            url = self._base_url + ep
         if self._auth is not None and 'auth' not in kwargs:
             kwargs['auth'] = self._auth
         headers = kwargs.get('headers', {})

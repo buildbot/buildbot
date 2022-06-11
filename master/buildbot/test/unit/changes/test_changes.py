@@ -23,7 +23,7 @@ from twisted.trial import unittest
 from buildbot.changes import changes
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
 
 
 class Change(unittest.TestCase, TestReactorMixin):
@@ -45,7 +45,7 @@ class Change(unittest.TestCase, TestReactorMixin):
     ]
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True)
         self.change23 = changes.Change(**dict(  # using **dict(..) forces kwargs
             category='devel',
@@ -123,8 +123,7 @@ class Change(unittest.TestCase, TestReactorMixin):
         if not ok:
             def printable(c):
                 return pprint.pformat(c.__dict__)
-            self.fail("changes do not match; expected\n{}\ngot\n{}".format(printable(exp),
-                                                                           printable(got)))
+            self.fail(f"changes do not match; expected\n{printable(exp)}\ngot\n{printable(got)}")
 
     def test_str(self):
         string = str(self.change23)

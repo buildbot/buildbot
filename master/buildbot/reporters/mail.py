@@ -37,6 +37,8 @@ from buildbot.reporters.base import ENCODING
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.worker import WorkerMissingGenerator
+from buildbot.reporters.message import MessageFormatter
+from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import ssl
 from buildbot.util import unicode2bytes
 
@@ -65,7 +67,7 @@ except ImportError:
 #    Full Name <full.name@example.net>
 #    <full.name@example.net>
 VALID_EMAIL_ADDR = r"(?:\S+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+\.?)"
-VALID_EMAIL = re.compile(r"^(?:{0}|(.+\s+)?<{0}>\s*)$".format(VALID_EMAIL_ADDR))
+VALID_EMAIL = re.compile(fr"^(?:{VALID_EMAIL_ADDR}|(.+\s+)?<{VALID_EMAIL_ADDR}>\s*)$")
 VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 
 
@@ -109,8 +111,7 @@ class MailNotifier(ReporterBase):
         else:
             for r in extraRecipients:
                 if not isinstance(r, str) or not VALID_EMAIL.search(r):
-                    config.error(
-                        "extra recipient {} is not a valid email".format(r))
+                    config.error(f"extra recipient {r} is not a valid email")
 
         if lookup is not None:
             if not isinstance(lookup, str):
@@ -154,8 +155,12 @@ class MailNotifier(ReporterBase):
 
     def _create_default_generators(self):
         return [
-            BuildStatusGenerator(add_patch=True),
-            WorkerMissingGenerator(workers='all'),
+            BuildStatusGenerator(
+                add_patch=True,
+                message_formatter=MessageFormatter(template_type='html')),
+            WorkerMissingGenerator(
+                workers='all',
+                message_formatter=MessageFormatterMissingWorker(template_type='html')),
         ]
 
     def patch_to_attachment(self, patch, index):
@@ -177,8 +182,7 @@ class MailNotifier(ReporterBase):
         assert '\n' not in subject, \
             "Subject cannot contain newlines"
 
-        assert type in ('plain', 'html'), \
-            "'{}' message type must be 'plain' or 'html'.".format(type)
+        assert type in ('plain', 'html'), f"'{type}' message type must be 'plain' or 'html'."
 
         if patches or logs:
             m = MIMEMultipart()
@@ -187,7 +191,7 @@ class MailNotifier(ReporterBase):
         else:
             m = Message()
             m.set_payload(text, ENCODING)
-            m.set_type("text/{}".format(type))
+            m.set_type(f"text/{type}")
 
         m['Date'] = formatdate(localtime=True)
         m['Subject'] = subject
@@ -201,9 +205,9 @@ class MailNotifier(ReporterBase):
         if logs:
             for log in logs:
                 # Use distinct filenames for the e-mail summary
-                name = "{}.{}".format(log['stepname'], log['name'])
+                name = f"{log['stepname']}.{log['name']}"
                 if len(builds) > 1:
-                    filename = "{}.{}".format(log['buildername'], name)
+                    filename = f"{log['buildername']}.{name}"
                 else:
                     filename = name
 
@@ -288,7 +292,7 @@ class MailNotifier(ReporterBase):
                 if VALID_EMAIL.search(r):
                     recipients.add(r)
                 else:
-                    twlog.msg("INVALID EMAIL: {}".format(r))
+                    twlog.msg(f"INVALID EMAIL: {r}")
 
         return recipients
 
@@ -296,7 +300,7 @@ class MailNotifier(ReporterBase):
         r = parseaddr(addr)
         if not r[0]:
             return r[1]
-        return "\"{}\" <{}>".format(Header(r[0], 'utf-8').encode(), r[1])
+        return f"\"{Header(r[0], 'utf-8').encode()}\" <{r[1]}>"
 
     def processRecipients(self, blamelist, m):
         to_recipients = set(blamelist)
@@ -318,9 +322,9 @@ class MailNotifier(ReporterBase):
 
     def sendMail(self, m, recipients):
         s = m.as_string()
-        twlog.msg("sending mail ({} bytes) to".format(len(s)), recipients)
+        twlog.msg(f"sending mail ({len(s)} bytes) to", recipients)
         if self.dumpMailsToLog:  # pragma: no cover
-            twlog.msg("mail data:\n{0}".format(s))
+            twlog.msg(f"mail data:\n{s}")
 
         result = defer.Deferred()
 

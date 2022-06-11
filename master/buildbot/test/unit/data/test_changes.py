@@ -24,9 +24,9 @@ from buildbot.data import resultspec
 from buildbot.process.users import users
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 
@@ -179,7 +179,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     }
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = changes.Change(self.master)
@@ -309,7 +309,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.config = mock.Mock(name='master.config')
         self.master.config.preChangeGenerator = preChangeGenerator
         self.master.config.codebaseGenerator = \
-            lambda change: 'cb-{}'.format(change['category'])
+            lambda change: f"cb-{(change['category'])}"
         kwargs = dict(author='warner', committer='david', branch='warnerdb',
                       category='devel', comments='fix whitespace',
                       files=['master/buildbot/__init__.py'],
@@ -366,7 +366,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def test_addChange_repository_revision(self):
         self.master.config = mock.Mock(name='master.config')
-        self.master.config.revlink = lambda rev, repo: 'foo{}bar{}baz'.format(repo, rev)
+        self.master.config.revlink = lambda rev, repo: f'foo{repo}bar{rev}baz'
         # revlink is default here
         kwargs = dict(author='warner', committer='david', branch='warnerdb',
                       category='devel', comments='fix whitespace',

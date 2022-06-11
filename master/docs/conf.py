@@ -33,21 +33,13 @@ except ImportError:
 
 # -- General configuration -----------------------------------------------
 try:
-    import sphinxcontrib.blockdiag
-    assert sphinxcontrib.blockdiag
-except ImportError as e:
-    raise RuntimeError("sphinxcontrib.blockdiag is not installed. "
-                       "Please install documentation dependencies with "
-                       "`pip install buildbot[docs]`") from e
-
-try:
     pkg_resources.require('docutils>=0.8')
 except pkg_resources.ResolutionError as e:
     raise RuntimeError("docutils is not installed or has incompatible version. "
                        "Please install documentation dependencies with `pip "
                        "install buildbot[docs]`") from e
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.0'
+needs_sphinx = '4.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -57,8 +49,7 @@ extensions = [
     'sphinx.ext.extlinks',
     'bbdocs.ext',
     'bbdocs.api_index',
-    'sphinxcontrib.blockdiag',
-    'sphinxcontrib.jinja',
+    'sphinx_jinja',
     'sphinx_rtd_theme',
 ]
 todo_include_todos = True
@@ -76,8 +67,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Buildbot'
-copyright = u'Buildbot Team Members'
+project = 'Buildbot'
+copyright = 'Buildbot Team Members'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -90,15 +81,11 @@ if 'VERSION' in os.environ:
 else:
     gl = {'__file__': '../buildbot/__init__.py'}
     with open('../buildbot/__init__.py') as f:
-        exec(f.read(), gl)
+        exec(f.read(), gl)  # pylint: disable=exec-used
     version = gl['version']
 
 # The full version, including alpha/beta/rc tags.
 release = version
-
-# blocksiag/seqdiag
-blockdiag_html_image_format = 'svg'
-blocdiag_transparency = True
 
 # add a loud note about python 2
 rst_prolog = textwrap.dedent("""\
@@ -288,8 +275,7 @@ latex_elements['papersize'] = 'a4'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'Buildbot.tex', u'Buildbot Documentation',
-     u'Brian Warner', 'manual'),
+    ('index', 'Buildbot.tex', 'Buildbot Documentation', 'Brian Warner', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -324,8 +310,7 @@ latex_show_urls = 'inline'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'buildbot', u'Buildbot Documentation',
-     [u'Brian Warner'], 1)
+    ('index', 'buildbot', 'Buildbot Documentation', ['Brian Warner'], 1)
 ]
 
 jinja_contexts = {
@@ -341,17 +326,17 @@ for raml_typename, raml_type in sorted(raml_spec.types.items()):
         'type': raml_type,
     }
 
-    doc_path = 'developer/raml/{}.rst'.format(raml_typename)
+    doc_path = f'developer/raml/{raml_typename}.rst'
     if not os.path.exists(doc_path):
-        raise Exception('File {} for RAML type {} does not exist'.format(doc_path, raml_typename))
+        raise Exception(f'File {doc_path} for RAML type {raml_typename} does not exist')
 
 # Spell checker.
 try:
     import enchant  # noqa # pylint: disable=unused-import
 except ImportError as ex:
     print("enchant module import failed:\n"
-          "{0}\n"
-          "Spell checking disabled.".format(ex),
+          f"{ex}\n"
+          "Spell checking disabled.",
           file=sys.stderr)
 
 else:

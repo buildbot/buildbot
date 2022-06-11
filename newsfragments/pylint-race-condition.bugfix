@@ -1,0 +1,1 @@
+Fixed a race condition in PyLint step that may lead to step throwing exceptions.

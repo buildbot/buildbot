@@ -35,7 +35,7 @@ class Db2DataMixin:
 
         """
         # by default none properties are returned
-        if props and filters:  # pragma: no cover
+        if props and filters:
             return (props
                     if '*' in filters
                     else dict(((k, v) for k, v in props.items() if k in filters)))
@@ -97,7 +97,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             filters = resultSpec.popProperties() if hasattr(
                 resultSpec, 'popProperties') else []
             # Avoid to request DB for Build's properties if not specified
-            if filters:  # pragma: no cover
+            if filters:
                 try:
                     props = yield self.master.db.builds.getBuildProperties(data['buildid'])
                 except (KeyError, TypeError):
@@ -172,13 +172,16 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         buildscol = []
         for b in builds:
             data = yield self.db2data(b)
-            # Avoid to request DB for Build's properties if not specified
-            if filters:  # pragma: no cover
-                props = yield self.master.db.builds.getBuildProperties(b['id'])
-                filtered_properties = self._generate_filtered_properties(
-                    props, filters)
-                if filtered_properties:
-                    data['properties'] = filtered_properties
+            if kwargs.get('graphql'):
+                # let the graphql engine manage the properties
+                del data['properties']
+            else:
+                # Avoid to request DB for Build's properties if not specified
+                if filters:
+                    props = yield self.master.db.builds.getBuildProperties(data["buildid"])
+                    filtered_properties = self._generate_filtered_properties(props, filters)
+                    if filtered_properties:
+                        data["properties"] = filtered_properties
 
             buildscol.append(data)
         return buildscol
@@ -189,12 +192,13 @@ class Build(base.ResourceType):
     name = "build"
     plural = "builds"
     endpoints = [BuildEndpoint, BuildsEndpoint]
-    keyFields = ['builderid', 'buildid', 'workerid']
+    keyField = "buildid"
     eventPathPatterns = """
         /builders/:builderid/builds/:number
         /builds/:buildid
         /workers/:workerid/builds/:buildid
     """
+    subresources = ["Step", "Property"]
 
     class EntityType(types.Entity):
         buildid = types.Integer()
@@ -209,7 +213,7 @@ class Build(base.ResourceType):
         results = types.NoneOk(types.Integer())
         state_string = types.String()
         properties = types.NoneOk(types.SourcedProperties())
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Build')
 
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):

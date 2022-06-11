@@ -106,8 +106,7 @@ class LogFileWatcher(object):
         self.command = command
         self.name = name
         self.logfile = logfile
-        decoderFactory = getincrementaldecoder(
-            self.command.builder.unicode_encoding)
+        decoderFactory = getincrementaldecoder(self.command.unicode_encoding)
         self.logDecode = decoderFactory(errors='replace')
 
         log.msg("LogFileWatcher created to watch {0}".format(logfile))
@@ -162,7 +161,14 @@ class LogFileWatcher(object):
             if self.follow:
                 self.f.seek(s[2], 0)
             self.started = True
+
+        # Mac OS X and Linux differ in behaviour when reading from a file that has previously
+        # reached EOF. On Linux, any new data that has been appended to the file will be returned.
+        # On Mac OS X, the empty string will always be returned. Seeking to the current position
+        # in the file resets the EOF flag on Mac OS X and will allow future reads to work as
+        # intended.
         self.f.seek(self.f.tell(), 0)
+
         while True:
             data = self.f.read(10000)
             if not data:
@@ -194,8 +200,7 @@ class RunProcessPP(protocol.ProcessProtocol):
         self.pending_stdin = b""
         self.stdin_finished = False
         self.killed = False
-        decoderFactory = getincrementaldecoder(
-            self.command.builder.unicode_encoding)
+        decoderFactory = getincrementaldecoder(self.command.unicode_encoding)
         self.stdoutDecode = decoderFactory(errors='replace')
         self.stderrDecode = decoderFactory(errors='replace')
 
@@ -285,8 +290,7 @@ class RunProcess(object):
     # Then changes to the system clock during a run wouldn't effect the "elapsed
     # time" results.
 
-    def __init__(self, builder, command,
-                 workdir, environ=None,
+    def __init__(self, command, workdir, unicode_encoding, send_update, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, sigtermTime=None,
                  initialStdin=None, keepStdout=False, keepStderr=False,
@@ -308,7 +312,6 @@ class RunProcess(object):
         if logfiles is None:
             logfiles = {}
 
-        self.builder = builder
         if isinstance(command, list):
             def obfus(w):
                 if (isinstance(w, tuple) and len(w) == 3 and
@@ -331,9 +334,9 @@ class RunProcess(object):
             if isinstance(cmd, (tuple, list)):
                 for i, a in enumerate(cmd):
                     if isinstance(a, text_type):
-                        cmd[i] = a.encode(self.builder.unicode_encoding)
+                        cmd[i] = a.encode(unicode_encoding)
             elif isinstance(cmd, text_type):
-                cmd = cmd.encode(self.builder.unicode_encoding)
+                cmd = cmd.encode(unicode_encoding)
             return cmd
 
         self.command = to_bytes(util.Obfuscated.get_real(command))
@@ -344,6 +347,8 @@ class RunProcess(object):
         self.sendRC = sendRC
         self.logfiles = logfiles
         self.workdir = workdir
+        self.unicode_encoding = unicode_encoding
+        self.send_update = send_update
         self.process = None
         if not os.path.exists(workdir):
             os.makedirs(workdir)
@@ -439,7 +444,7 @@ class RunProcess(object):
         return "<{0} '{1}'>".format(self.__class__.__name__, self.fake_command)
 
     def sendStatus(self, status):
-        self.builder.sendUpdate(status)
+        self.send_update(status)
 
     def start(self):
         # return a Deferred which fires (with the exit code) when the command
@@ -469,7 +474,7 @@ class RunProcess(object):
         self.pp = RunProcessPP(self)
 
         self.using_comspec = False
-        self.command = unicode2bytes(self.command, encoding=self.builder.unicode_encoding)
+        self.command = unicode2bytes(self.command, encoding=self.unicode_encoding)
         if isinstance(self.command, bytes):
             if runtime.platformType == 'win32':
                 # allow %COMSPEC% to have args
@@ -491,7 +496,7 @@ class RunProcess(object):
             # handle path searching, etc.
             if (runtime.platformType == 'win32' and
                 not (bytes2unicode(self.command[0],
-                     self.builder.unicode_encoding).lower().endswith(".exe") and
+                     self.unicode_encoding).lower().endswith(".exe") and
                      os.path.isabs(self.command[0]))):
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
@@ -503,9 +508,9 @@ class RunProcess(object):
                 argv = self.command
             # Attempt to format this for use by a shell, although the process
             # isn't perfect
-            display = shell_quote(self.fake_command, self.builder.unicode_encoding)
+            display = shell_quote(self.fake_command, self.unicode_encoding)
 
-        display = bytes2unicode(display, self.builder.unicode_encoding)
+        display = bytes2unicode(display, self.unicode_encoding)
 
         # $PWD usually indicates the current directory; spawnProcess may not
         # update this value, though, so we set it explicitly here.  This causes
@@ -550,9 +555,9 @@ class RunProcess(object):
             env_names = sorted(self.environ.keys())
             for name in env_names:
                 msg += u"  {0}={1}\n".format(bytes2unicode(name,
-                                                           encoding=self.builder.unicode_encoding),
+                                                           encoding=self.unicode_encoding),
                                              bytes2unicode(self.environ[name],
-                                                           encoding=self.builder.unicode_encoding))
+                                                           encoding=self.unicode_encoding))
             log.msg(u" environment:\n{0}".format(pprint.pformat(self.environ)))
             self._addToBuffers(u'header', msg)
 
@@ -623,7 +628,7 @@ class RunProcess(object):
         # In PY3, it needs str which is unicode and its encoding can be specified.
         if PY3:
             tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
-                                    delete=False, encoding=self.builder.unicode_encoding)
+                                    delete=False, encoding=self.unicode_encoding)
         else:
             tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
                                     delete=False)
@@ -631,9 +636,9 @@ class RunProcess(object):
         # echo off hides this cheat from the log files.
         tf.write(u"@echo off\n")
         if isinstance(self.command, (string_types, bytes)):
-            tf.write(bytes2NativeString(self.command, self.builder.unicode_encoding))
+            tf.write(bytes2NativeString(self.command, self.unicode_encoding))
         else:
-            tf.write(win32_batch_quote(self.command, self.builder.unicode_encoding))
+            tf.write(win32_batch_quote(self.command, self.unicode_encoding))
         tf.close()
 
         argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
@@ -667,7 +672,7 @@ class RunProcess(object):
         for logname in msg:
             data = u""
             for m in msg[logname]:
-                m = bytes2unicode(m, self.builder.unicode_encoding)
+                m = bytes2unicode(m, self.unicode_encoding)
                 data += m
             if isinstance(logname, tuple) and logname[0] == 'log':
                 retval['log'] = (logname[1], data)
@@ -692,7 +697,6 @@ class RunProcess(object):
         """
         Send all the content in our buffers.
         """
-        msg = {}
         msg_size = 0
         lastlog = None
         logdata = []
@@ -711,12 +715,10 @@ class RunProcess(object):
             if lastlog is None:
                 lastlog = logname
             elif logname != lastlog:
-                self._sendMessage(msg)
-                msg = {}
+                self._sendMessage({lastlog: logdata})
                 msg_size = 0
-            lastlog = logname
-
-            logdata = msg.setdefault(logname, [])
+                lastlog = logname
+                logdata = []
 
             # Chunkify the log data to make sure we're not sending more than
             # CHUNK_LIMIT at a time
@@ -729,13 +731,12 @@ class RunProcess(object):
                     # We've gone beyond the chunk limit, so send out our
                     # message.  At worst this results in a message slightly
                     # larger than (2*CHUNK_LIMIT)-1
-                    self._sendMessage(msg)
-                    msg = {}
-                    logdata = msg.setdefault(logname, [])
+                    self._sendMessage({logname: logdata})
+                    logdata = []
                     msg_size = 0
         self.buflen = 0
         if logdata:
-            self._sendMessage(msg)
+            self._sendMessage({logname: logdata})
         if self.sendBuffersTimer:
             if self.sendBuffersTimer.active():
                 self.sendBuffersTimer.cancel()
@@ -895,18 +896,10 @@ class RunProcess(object):
                 log.msg("interruptSignal==None, only pretending to kill child")
             elif self.process.pid is not None:
                 if interruptSignal == "TERM":
-                    log.msg("using TASKKILL PID /T to kill pid {0}".format(
-                            self.process.pid))
-                    subprocess.check_call(
-                        "TASKKILL /PID {0} /T".format(self.process.pid))
-                    log.msg("taskkill'd pid {0}".format(self.process.pid))
+                    self._taskkill(self.process.pid, force=False)
                     hit = 1
                 elif interruptSignal == "KILL":
-                    log.msg("using TASKKILL PID /F /T to kill pid {0}".format(
-                            self.process.pid))
-                    subprocess.check_call(
-                        "TASKKILL /F /PID {0} /T".format(self.process.pid))
-                    log.msg("taskkill'd pid {0}".format(self.process.pid))
+                    self._taskkill(self.process.pid, force=True)
                     hit = 1
 
         # try signalling the process itself (works on Windows too, sorta)
@@ -926,6 +919,26 @@ class RunProcess(object):
                 # been called already or will be called shortly
 
         return hit
+
+    def _taskkill(self, pid, force):
+        try:
+            if force:
+                cmd = "TASKKILL /F /PID {0} /T".format(pid)
+            else:
+                cmd = "TASKKILL /PID {0} /T".format(pid)
+
+            log.msg("using {0} to kill pid {1}".format(cmd, pid))
+            subprocess.check_call(cmd)
+            log.msg("taskkill'd pid {0}".format(pid))
+
+        except subprocess.CalledProcessError as e:
+            # taskkill may return 128 as exit code when the child has already exited. We can't
+            # handle this race condition in any other way than just interpreting the kill action
+            # as successful
+            if e.returncode == 128:
+                log.msg("taskkill didn't find pid {0} to kill".format(pid))
+            else:
+                log.msg("taskkill failed to kill process {0}: {1}".format(pid, e))
 
     def kill(self, msg):
         # This may be called by the timeout, or when the user has decided to

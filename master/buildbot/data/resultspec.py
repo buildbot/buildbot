@@ -37,6 +37,8 @@ class FieldBase:
         'gt': lambda d, v: d > v[0],
         'ge': lambda d, v: d >= v[0],
         'contains': lambda d, v: v[0] in d,
+        'in': lambda d, v: d in v,
+        'notin': lambda d, v: d not in v,
     }
 
     singular_operators_sql = {
@@ -46,20 +48,26 @@ class FieldBase:
         'le': lambda d, v: d <= v[0],
         'gt': lambda d, v: d > v[0],
         'ge': lambda d, v: d >= v[0],
-        'contains': lambda d, v: d.contains(v[0])
+        'contains': lambda d, v: d.contains(v[0]),
         # only support string values, because currently there are no queries against lists in SQL
+        'in': lambda d, v: d.in_(v),
+        'notin': lambda d, v: d.notin_(v),
     }
 
     plural_operators = {
         'eq': lambda d, v: d in v,
         'ne': lambda d, v: d not in v,
         'contains': lambda d, v: len(set(v).intersection(set(d))) > 0,
+        'in': lambda d, v: d in v,
+        'notin': lambda d, v: d not in v,
     }
 
     plural_operators_sql = {
         'eq': lambda d, v: d.in_(v),
         'ne': lambda d, v: d.notin_(v),
         'contains': lambda d, vs: sa.or_(*[d.contains(v) for v in vs]),
+        'in': lambda d, v: d.in_(v),
+        'notin': lambda d, v: d.notin_(v),
         # sqlalchemy v0.8's or_ cannot take generator arguments, so this has to be manually expanded
         # only support string values, because currently there are no queries against lists in SQL
     }
@@ -91,8 +99,7 @@ class FieldBase:
         return (d for d in data if f(d[fld], v))
 
     def __repr__(self):
-        return "resultspec.{}('{}','{}',{})".format(self.__class__.__name__, self.field, self.op,
-                                                    self.values)
+        return f"resultspec.{self.__class__.__name__}('{self.field}','{self.op}',{self.values})"
 
     def __eq__(self, b):
         for i in self.__slots__:
@@ -101,7 +108,7 @@ class FieldBase:
         return True
 
     def __ne__(self, b):
-        return not (self == b)
+        return not self == b
 
 
 class Property(FieldBase):
@@ -144,14 +151,14 @@ class NoneComparator:
     def __ne__(self, other):
         return self.value != other.value
 
-    def __gt_(self, other):
+    def __gt__(self, other):
         if self.value is None and other.value is None:
             return False
         elif self.value is None:
             return False
         elif other.value is None:
             return True
-        return self.value < other.value
+        return self.value > other.value
 
 
 class ReverseComparator:
@@ -173,7 +180,7 @@ class ReverseComparator:
     def __ne__(self, other):
         return other.value != self.value
 
-    def __gt_(self, other):
+    def __gt__(self, other):
         return other.value > self.value
 
 
@@ -193,10 +200,9 @@ class ResultSpec:
         self.fieldMapping = {}
 
     def __repr__(self):
-        return ("ResultSpec(**{{'filters': {}, 'fields': {}, 'properties': {}, "
-                "'order': {}, 'limit': {}, 'offset': {}").format(
-                    self.filters, self.fields, self.properties, self.order,
-                    self.limit, self.offset) + "})"
+        return (f"ResultSpec(**{{'filters': {self.filters}, 'fields': {self.fields}, "
+                f"'properties': {self.properties}, 'order': {self.order}, 'limit': {self.limit}, "
+                f"'offset': {self.offset}" + "})")
 
     def __eq__(self, b):
         for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:
@@ -205,7 +211,7 @@ class ResultSpec:
         return True
 
     def __ne__(self, b):
-        return not (self == b)
+        return not self == b
 
     def popProperties(self):
         values = []
@@ -248,8 +254,8 @@ class ResultSpec:
             try:
                 return int(eqVals[0])
             except ValueError as e:
-                raise ValueError("Filter value for {} should be integer, but got: {}".format(
-                    field, eqVals[0])) from e
+                raise ValueError(
+                    f"Filter value for {field} should be integer, but got: {eqVals[0]}") from e
         return None
 
     def removePagination(self):
@@ -272,7 +278,7 @@ class ResultSpec:
         for col in query.inner_columns:
             if str(col) == mapped:
                 return col
-        raise KeyError("unable to find field {} in query".format(field))
+        raise KeyError(f"unable to find field {field} in query")
 
     def applyFilterToSQLQuery(self, query, f):
         field = f.field

@@ -25,16 +25,19 @@ from buildbot.process import logobserver
 
 
 class MockStateObserver(logobserver.LogLineObserver):
-    _line_re = re.compile(r'^.*State Changed: (.*)$')
+    """Supports reading state changes from Mock state.log from mock version
+    1.1.23."""
+
+    _line_re = re.compile(r'^.*(Start|Finish): (.*)$')
 
     def outLineReceived(self, line):
         m = self._line_re.search(line.strip())
         if m:
-            state = m.group(1)
-            if not state == 'end':
-                self.step.descriptionSuffix = ["[{}]".format(m.group(1))]
+            if m.group(1) == "Start":
+                self.step.descriptionSuffix = [f"[{m.group(2)}]"]
             else:
                 self.step.descriptionSuffix = None
+            self.step.updateSummary()
 
 
 class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
@@ -91,6 +94,10 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
 
         return cmd.results()
 
+    def getResultSummary(self):
+        self.descriptionSuffix = None
+        return super().getResultSummary()
+
 
 class MockBuildSRPM(Mock):
 
@@ -137,7 +144,7 @@ class MockBuildSRPM(Mock):
     def logConsumer(self):
         r = re.compile(r"Wrote: .*/([^/]*.src.rpm)")
         while True:
-            stream, line = yield
+            _, line = yield
             m = r.search(line)
             if m:
                 self.setProperty("srpm", m.group(1), 'MockBuildSRPM')

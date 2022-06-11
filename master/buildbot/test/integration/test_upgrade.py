@@ -16,13 +16,14 @@
 
 import locale
 import os
+import pprint
 import shutil
 import sqlite3
 import tarfile
 
-import migrate
-import migrate.versioning.api
-from sqlalchemy.engine import reflection
+import sqlalchemy as sa
+from alembic.autogenerate import compare_metadata
+from alembic.migration import MigrationContext
 from sqlalchemy.exc import DatabaseError
 
 from twisted.internet import defer
@@ -30,11 +31,12 @@ from twisted.python import util
 from twisted.trial import unittest
 
 from buildbot.db import connector
-from buildbot.db.model import EightUpgradeError
+from buildbot.db.model import UpgradeFromBefore0p9Error
+from buildbot.db.model import UpgradeFromBefore3p0Error
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
 from buildbot.test.util import querylog
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
@@ -69,15 +71,15 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
         if self.source_tarball:
             tarball = util.sibpath(__file__, self.source_tarball)
             if not os.path.exists(tarball):
-                raise unittest.SkipTest("'{}' not found (normal when not building from Git)".format(
-                        tarball))
+                raise unittest.SkipTest(
+                    f"'{tarball}' not found (normal when not building from Git)")
 
-            tf = tarfile.open(tarball)
-            prefixes = set()
-            for inf in tf:
-                tf.extract(inf)
-                prefixes.add(inf.name.split('/', 1)[0])
-            tf.close()
+            with tarfile.open(tarball) as tf:
+                prefixes = set()
+                for inf in tf:
+                    tf.extract(inf)
+                    prefixes.add(inf.name.split('/', 1)[0])
+
             # (note that tf.extractall isn't available in py2.4)
 
             # get the top-level dir from the tarball
@@ -109,25 +111,28 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     # save subclasses the trouble of calling our setUp and tearDown methods
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpUpgradeTest()
 
     def tearDown(self):
         return self.tearDownUpgradeTest()
 
+    @defer.inlineCallbacks
     def assertModelMatches(self):
         def comp(engine):
-            # use compare_model_to_db, which gets everything but foreign
-            # keys and indexes
-            diff = migrate.versioning.api.compare_model_to_db(
-                engine,
-                self.db.model.repo_path,
-                self.db.model.metadata)
+            # use compare_model_to_db, which gets everything but indexes
+            with engine.connect() as conn:
+                diff = compare_metadata(MigrationContext.configure(conn), self.db.model.metadata)
+
+            if engine.dialect.name == 'mysql':
+                # MySQL/MyISAM does not support foreign keys, which is expected.
+                diff = [d for d in diff if d[0] != 'add_fk']
+
             if diff:
                 return diff
 
             # check indexes manually
-            insp = reflection.Inspector.from_engine(engine)
+            insp = sa.inspect(engine)
             # unique, name, column_names
             diff = []
             for tbl in self.db.model.metadata.sorted_tables:
@@ -152,65 +157,63 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                     got_info = dict((idx['name'], idx) for idx in got)
                     exp_info = dict((idx['name'], idx) for idx in exp)
                     for name in got_names - exp_names:
-                        diff.append("got unexpected index {} on table {}: {}".format(name, tbl.name,
-                                repr(got_info[name])))
+                        diff.append(f"got unexpected index {name} on table {tbl.name}: "
+                                    f"{repr(got_info[name])}")
                     for name in exp_names - got_names:
-                        diff.append("missing index {} on table {}".format(name, tbl.name))
+                        diff.append(f"missing index {name} on table {tbl.name}")
                     for name in got_names & exp_names:
                         gi = dict(name=name,
                                   unique=got_info[name]['unique'] and 1 or 0,
                                   column_names=sorted(got_info[name]['column_names']))
                         ei = exp_info[name]
                         if gi != ei:
-                            diff.append(("index {} on table {} differs: got {}; exp {}"
-                                         ).format(name, tbl.name, gi, ei))
+                            diff.append(f"index {name} on table {tbl.name} differs: "
+                                        f"got {gi}; exp {ei}")
             if diff:
                 return "\n".join(diff)
             return None
 
-        d = self.db.pool.do_with_engine(comp)
-
-        # older sqlites cause failures in reflection, which manifest as a
-        # TypeError.  Reflection is only used for tests, so we can just skip
-        # this test on such platforms.  We still get the advantage of trying
-        # the upgrade, at any rate.
-        @d.addErrback
-        def catch_TypeError(f):
-            f.trap(TypeError)
+        try:
+            diff = yield self.db.pool.do_with_engine(comp)
+        except TypeError as e:
+            # older sqlites cause failures in reflection, which manifest as a
+            # TypeError.  Reflection is only used for tests, so we can just skip
+            # this test on such platforms.  We still get the advantage of trying
+            # the upgrade, at any rate.
             raise unittest.SkipTest("model comparison skipped: bugs in schema "
-                                    "reflection on this sqlite version")
+                                    "reflection on this sqlite version") from e
 
-        @d.addCallback
-        def check(diff):
-            if diff:
-                self.fail("\n" + str(diff))
-        return d
+        if diff:
+            self.fail("\n" + pprint.pformat(diff))
 
     def gotError(self, e):
-        e.trap(sqlite3.DatabaseError, DatabaseError)
-        if "file is encrypted or is not a database" in str(e):
-            self.flushLoggedErrors(sqlite3.DatabaseError)
-            self.flushLoggedErrors(DatabaseError)
-            raise unittest.SkipTest("sqlite dump not readable on this machine {}".format(str(e)))
-        return e
+        if isinstance(e, (sqlite3.DatabaseError, DatabaseError)):
+            if "file is encrypted or is not a database" in str(e):
+                self.flushLoggedErrors(sqlite3.DatabaseError)
+                self.flushLoggedErrors(DatabaseError)
+                raise unittest.SkipTest(f"sqlite dump not readable on this machine {str(e)}")
 
+    @defer.inlineCallbacks
     def do_test_upgrade(self, pre_callbacks=None):
         if pre_callbacks is None:
             pre_callbacks = []
-        d = defer.succeed(None)
+
         for cb in pre_callbacks:
-            d.addCallback(cb)
-        d.addCallback(lambda _: self.db.model.upgrade())
-        d.addErrback(self.gotError)
-        d.addCallback(lambda _: self.db.pool.do(self.verify_thd))
-        d.addCallback(lambda _: self.assertModelMatches())
-        return d
+            yield cb
+        try:
+            yield self.db.model.upgrade()
+        except Exception as e:
+            self.gotError(e)
+
+        yield self.db.pool.do(self.verify_thd)
+        yield self.assertModelMatches()
 
 
 class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
 
     use_real_db = True
 
+    @defer.inlineCallbacks
     def test_emptydb_modelmatches(self):
         os_encoding = locale.getpreferredencoding()
         try:
@@ -219,16 +222,15 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.
             raise unittest.SkipTest("Cannot encode weird unicode "
-                "on this platform with {}".format(os_encoding)) from e
+                f"on this platform with {os_encoding}") from e
 
-        d = self.db.model.upgrade()
-        d.addCallback(lambda r: self.assertModelMatches())
-        return d
+        yield self.db.model.upgrade()
+        yield self.assertModelMatches()
 
 
-class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
+class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
 
-    source_tarball = "v090b4.tgz"
+    source_tarball = "v2.10.5.tgz"
 
     def test_upgrade(self):
         return self.do_test_upgrade()
@@ -237,7 +239,7 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
         pass
 
     @defer.inlineCallbacks
-    def test_gotError(self):
+    def test_got_invalid_sqlite_file(self):
         def upgrade():
             return defer.fail(sqlite3.DatabaseError('file is encrypted or is not a database'))
         self.db.model.upgrade = upgrade
@@ -245,7 +247,7 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
             yield self.do_test_upgrade()
 
     @defer.inlineCallbacks
-    def test_gotError2(self):
+    def test_got_invalid_sqlite_file2(self):
         def upgrade():
             return defer.fail(DatabaseError('file is encrypted or is not a database', None, None))
         self.db.model.upgrade = upgrade
@@ -253,15 +255,33 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
             yield self.do_test_upgrade()
 
 
+class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v090b4.tgz"
+
+    def gotError(self, e):
+        self.flushLoggedErrors(UpgradeFromBefore3p0Error)
+
+    def test_upgrade(self):
+        return self.do_test_upgrade()
+
+    def verify_thd(self, conn):
+        r = conn.execute("select version from migrate_version limit 1")
+        version = r.scalar()
+        self.assertEqual(version, 44)
+
+    def assertModelMatches(self):
+        pass
+
+
 class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
 
     source_tarball = "v087p1.tgz"
 
     def gotError(self, e):
-        self.flushLoggedErrors(EightUpgradeError)
+        self.flushLoggedErrors(UpgradeFromBefore0p9Error)
 
     def verify_thd(self, conn):
-        "partially verify the contents of the db - run in a thread"
         r = conn.execute("select version from migrate_version limit 1")
         version = r.scalar()
         self.assertEqual(version, 22)

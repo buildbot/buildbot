@@ -19,56 +19,56 @@ from buildbot import config
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import maxq
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.util import steps
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectShell
+from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestShellCommandExecution(steps.BuildStepMixin, TestReactorMixin,
+class TestShellCommandExecution(TestBuildStepMixin, TestReactorMixin,
                                 unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
-        return self.setUpBuildStep()
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
 
     def tearDown(self):
-        return self.tearDownBuildStep()
+        return self.tear_down_test_build_step()
 
     def test_testdir_required(self):
         with self.assertRaises(config.ConfigErrors):
             maxq.MaxQ()
 
     def test_success(self):
-        self.setupStep(
+        self.setup_step(
             maxq.MaxQ(testdir='x'))
-        self.expectCommands(
-            ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"]) +
-            ExpectShell.log('stdio', stdout='no failures\n') +
-            0
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"])
+            .stdout('no failures\n')
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS, state_string='success')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS, state_string='success')
+        return self.run_step()
 
     def test_nonzero_rc_no_failures(self):
-        self.setupStep(
+        self.setup_step(
             maxq.MaxQ(testdir='x'))
-        self.expectCommands(
-            ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"]) +
-            ExpectShell.log('stdio', stdout='no failures\n') +
-            2
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"])
+            .stdout('no failures\n')
+            .exit(2)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string='1 maxq failures')
-        return self.runStep()
+        return self.run_step()
 
     def test_failures(self):
-        self.setupStep(
+        self.setup_step(
             maxq.MaxQ(testdir='x'))
-        self.expectCommands(
-            ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"]) +
-            ExpectShell.log('stdio', stdout='\nTEST FAILURE: foo\n' * 10) +
-            2
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"])
+            .stdout('\nTEST FAILURE: foo\n' * 10)
+            .exit(2)
         )
-        self.expectOutcome(result=FAILURE,
+        self.expect_outcome(result=FAILURE,
                            state_string='10 maxq failures')
-        return self.runStep()
+        return self.run_step()

@@ -73,12 +73,6 @@ class BuildbotWWWPkg(unittest.TestCase):
         check_call("pip install dist/*.whl", shell=True, cwd=self.path)
         self.check_correct_installation()
 
-    def test_egg(self):
-        self.run_setup("bdist_egg")
-        # egg installation is not supported by pip, so we use easy_install
-        check_call("easy_install dist/*.egg", shell=True, cwd=self.path)
-        self.check_correct_installation()
-
     def test_develop(self):
         self.run_setup("develop")
         self.check_correct_installation()

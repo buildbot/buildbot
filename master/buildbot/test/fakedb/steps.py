@@ -26,21 +26,16 @@ from buildbot.util import epoch2datetime
 class Step(Row):
     table = "steps"
 
-    defaults = dict(
-        id=None,
-        number=29,
-        name='step29',
-        buildid=None,
-        started_at=1304262222,
-        complete_at=None,
-        state_string='',
-        results=None,
-        urls_json='[]',
-        hidden=0)
-
     id_column = 'id'
     foreignKeys = ('buildid',)
     required_columns = ('buildid', )
+
+    def __init__(self, id=None, number=29, name='step29', buildid=None,
+                 started_at=1304262222, complete_at=None,
+                 state_string='', results=None, urls_json='[]', hidden=0):
+        super().__init__(id=id, number=number, name=name, buildid=buildid, started_at=started_at,
+                         complete_at=complete_at, state_string=state_string, results=results,
+                         urls_json=urls_json, hidden=hidden)
 
 
 class FakeStepsComponent(FakeDBComponent):
@@ -117,9 +112,9 @@ class FakeStepsComponent(FakeDBComponent):
             names = {r['name'] for r in build_steps}
             if name in names:
                 i = 1
-                while '{}_{}'.format(name, i) in names:
+                while f'{name}_{i}' in names:
                     i += 1
-                name = '{}_{}'.format(name, i)
+                name = f'{name}_{i}'
         else:
             number = 0
 

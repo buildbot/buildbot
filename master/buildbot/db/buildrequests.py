@@ -217,8 +217,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
-                    log.msg("tried to complete %d buildrequests, "
-                            "but only completed %d" % (len(batch), res.rowcount))
+                    log.msg(f"tried to complete {len(batch)} buildrequests, "
+                            f"but only completed {res.rowcount}")
                     transaction.rollback()
                     raise NotClaimedError
             transaction.commit()

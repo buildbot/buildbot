@@ -22,9 +22,9 @@ from buildbot.data import builders
 from buildbot.data import resultspec
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 
 
 class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -113,7 +113,9 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get(self):
         builders = yield self.callGet(('builders',))
 
-        [self.validateData(b) for b in builders]
+        for b in builders:
+            self.validateData(b)
+
         self.assertEqual(sorted([b['builderid'] for b in builders]),
                          [1, 2, 3, 4, 5])
 
@@ -121,7 +123,9 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_masterid(self):
         builders = yield self.callGet(('masters', 13, 'builders'))
 
-        [self.validateData(b) for b in builders]
+        for b in builders:
+            self.validateData(b)
+
         self.assertEqual(sorted([b['builderid'] for b in builders]),
                          [2])
 
@@ -138,7 +142,10 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         builders = yield self.callGet(('builders',))
 
         builders = resultSpec.apply(builders)
-        [self.validateData(b) for b in builders]
+
+        for b in builders:
+            self.validateData(b)
+
         self.assertEqual(sorted([b['builderid'] for b in builders]),
                          [3, 5])
 
@@ -149,7 +156,10 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         builders = yield self.callGet(('builders',))
 
         builders = resultSpec.apply(builders)
-        [self.validateData(b) for b in builders]
+
+        for b in builders:
+            self.validateData(b)
+
         self.assertEqual(sorted([b['builderid'] for b in builders]),
                          [3, 4, 5])
 
@@ -160,7 +170,10 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         builders = yield self.callGet(('builders',))
 
         builders = resultSpec.apply(builders)
-        [self.validateData(b) for b in builders]
+
+        for b in builders:
+            self.validateData(b)
+
         self.assertEqual(sorted([b['builderid'] for b in builders]),
                          [3, 5])
 
@@ -168,7 +181,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = builders.Builder(self.master)

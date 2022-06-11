@@ -49,8 +49,8 @@ class TryBase(base.BaseScheduler):
         if builderNames:
             for b in builderNames:
                 if b not in self.builderNames:
-                    log.msg("{} got with builder {}".format(self, b))
-                    log.msg(" but that wasn't in our list: {}".format(self.builderNames))
+                    log.msg(f"{self} got with builder {b}")
+                    log.msg(f" but that wasn't in our list: {self.builderNames}")
                     return []
         else:
             builderNames = self.builderNames
@@ -213,7 +213,7 @@ class Try_Jobdir(TryBase):
                 raise BadJobfile("unable to parse JSON") from e
             postprocess_parsed_job()
         else:
-            raise BadJobfile("unknown version '{}'".format(ver))
+            raise BadJobfile(f"unknown version '{ver}'")
         return parsed_job
 
     def handleJobFile(self, filename, f):
@@ -221,7 +221,7 @@ class Try_Jobdir(TryBase):
             parsed_job = self.parseJob(f)
             builderNames = parsed_job['builderNames']
         except BadJobfile:
-            log.msg("{} reports a bad jobfile in {}".format(self, filename))
+            log.msg(f"{self} reports a bad jobfile in {filename}")
             log.err()
             return defer.succeed(None)
 
@@ -253,7 +253,7 @@ class Try_Jobdir(TryBase):
                            repository=parsed_job['repository'])
         reason = "'try' job"
         if parsed_job['who']:
-            reason += " by user {}".format(bytes2unicode(parsed_job['who']))
+            reason += f" by user {bytes2unicode(parsed_job['who'])}"
         properties = parsed_job['properties']
         requested_props = Properties()
         requested_props.update(properties, "try build")
@@ -275,7 +275,7 @@ class RemoteBuildSetStatus(pb.Referenceable):
 
     @defer.inlineCallbacks
     def remote_getBuildRequests(self):
-        brids = dict()
+        brids = {}
         for builderid, brid in self.brids.items():
             builderDict = yield self.master.data.get(('builders', builderid))
             brids[builderDict['name']] = brid
@@ -400,7 +400,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
     @defer.inlineCallbacks
     def perspective_try(self, branch, revision, patch, repository, project,
                         builderNames, who="", comment="", properties=None):
-        log.msg("user {} requesting build on builders {}".format(self.username, builderNames))
+        log.msg(f"user {self.username} requesting build on builders {builderNames}")
         if properties is None:
             properties = {}
         # build the intersection of the request and our configured list
@@ -420,10 +420,10 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         reason = "'try' job"
 
         if who:
-            reason += " by user {}".format(bytes2unicode(who))
+            reason += f" by user {bytes2unicode(who)}"
 
         if comment:
-            reason += " ({})".format(bytes2unicode(comment))
+            reason += f" ({bytes2unicode(comment)})"
 
         sourcestamp = dict(
             branch=branch, revision=revision, repository=repository,

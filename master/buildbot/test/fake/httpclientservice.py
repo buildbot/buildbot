@@ -19,6 +19,7 @@ import json as jsonmodule
 import mock
 
 from twisted.internet import defer
+from twisted.logger import Logger
 from zope.interface import implementer
 
 from buildbot.interfaces import IHttpResponse
@@ -26,7 +27,6 @@ from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
-from buildbot.util.logger import Logger
 
 log = Logger()
 
@@ -87,9 +87,8 @@ class HTTPClientService(service.SharedService):
     @defer.inlineCallbacks
     def getService(cls, master, case, *args, **kwargs):
         def assertNotCalled(self, *_args, **_kwargs):
-            case.fail(("HTTPClientService called with *{!r}, **{!r} "
-                       "while should be called *{!r} **{!r}").format(
-                _args, _kwargs, args, kwargs))
+            case.fail(f"HTTPClientService called with *{_args!r}, **{_kwargs!r} "
+                      f"while should be called *{args!r} **{kwargs!r}")
         case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
 
         service = yield super().getService(master, *args, **kwargs)
@@ -115,11 +114,15 @@ class HTTPClientService(service.SharedService):
 
     def assertNoOutstanding(self):
         self.case.assertEqual(0, len(self._expected),
-                              "expected more http requests:\n {!r}".format(self._expected))
+                              f"expected more http requests:\n {self._expected!r}")
 
     def _doRequest(self, method, ep, params=None, headers=None, data=None, json=None, files=None,
             timeout=None):
-        assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
+        if ep.startswith('http://') or ep.startswith('https://'):
+            pass
+        else:
+            assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
+
         if not self.quiet:
             log.debug("{method} {ep} {params!r} <- {data!r}",
                       method=method, ep=ep, params=params, data=data or json)
@@ -130,10 +133,9 @@ class HTTPClientService(service.SharedService):
             files = dict((k, v.read()) for (k, v) in files.items())
         if not self._expected:
             raise AssertionError(
-                "Not expecting a request, while we got: "
-                "method={!r}, ep={!r}, params={!r}, headers={!r}, "
-                "data={!r}, json={!r}, files={!r}".format(
-                    method, ep, params, headers, data, json, files))
+                f"Not expecting a request, while we got: method={method!r}, ep={ep!r}, "
+                f"params={params!r}, headers={headers!r}, data={data!r}, json={json!r}, "
+                f"files={files!r}")
         expect = self._expected.pop(0)
         # pylint: disable=too-many-boolean-expressions
         if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
@@ -141,15 +143,12 @@ class HTTPClientService(service.SharedService):
                 expect['json'] != json or expect['files'] != files):
             raise AssertionError(
                 "expecting:\n"
-                "method={!r}, ep={!r}, params={!r}, headers={!r}, "
-                "data={!r}, json={!r}, files={!r}\n"
+                f"method={expect['method']!r}, ep={expect['ep']!r}, params={expect['params']!r}, "
+                f"headers={expect['headers']!r}, data={expect['data']!r}, json={expect['json']!r}, "
+                f"files={expect['files']!r}\n"
                 "got      :\n"
-                "method={!r}, ep={!r}, params={!r}, headers={!r}, "
-                "data={!r}, json={!r}, files={!r}".format(
-                    expect['method'], expect['ep'], expect['params'], expect['headers'],
-                    expect['data'], expect['json'], expect['files'],
-                    method, ep, params, headers, data, json, files,
-                ))
+                f"method={method!r}, ep={ep!r}, params={params!r}, headers={headers!r}, "
+                f"data={data!r}, json={json!r}, files={files!r}")
         if not self.quiet:
             log.debug("{method} {ep} -> {code} {content!r}",
                       method=method, ep=ep, code=expect['code'], content=expect['content'])

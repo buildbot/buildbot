@@ -20,9 +20,9 @@ from twisted.trial import unittest
 from buildbot.data import steps
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 TIME1 = 2001111
@@ -149,26 +149,35 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_buildid(self):
         steps = yield self.callGet(('builds', 30, 'steps'))
-        [self.validateData(step) for step in steps]
+
+        for step in steps:
+            self.validateData(step)
+
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
     @defer.inlineCallbacks
     def test_get_builder(self):
         steps = yield self.callGet(('builders', 77, 'builds', 7, 'steps'))
-        [self.validateData(step) for step in steps]
+
+        for step in steps:
+            self.validateData(step)
+
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
     @defer.inlineCallbacks
     def test_get_buildername(self):
         steps = yield self.callGet(('builders', 'builder77', 'builds', 7, 'steps'))
-        [self.validateData(step) for step in steps]
+
+        for step in steps:
+            self.validateData(step)
+
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
 
 class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = steps.Step(self.master)

@@ -16,13 +16,13 @@
 from datetime import datetime
 
 from twisted.internet import defer
+from twisted.logger import Logger
 
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import httpclientservice
-from buildbot.util.logger import Logger
 from buildbot.util.pullrequest import PullRequestMixin
 from buildbot.util.state import StateMixin
 
@@ -120,7 +120,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
     def describe(self):
         return ("GitHubPullrequestPoller watching the "
-                "GitHub repository {}/{}").format(self.owner, self.repo)
+                f"GitHub repository {self.owner}/{self.repo}")
 
     @defer.inlineCallbacks
     def _getPullInformation(self, pull_number):
@@ -131,16 +131,15 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
     @defer.inlineCallbacks
     def _getPulls(self):
-        log.debug(("GitHubPullrequestPoller: polling "
-                   "GitHub repository {}/{}, branches: {}").format(self.owner, self.repo,
-                                                                   self.branches))
+        log.debug("GitHubPullrequestPoller: polling "
+                  f"GitHub repository {self.owner}/{self.repo}, branches: {self.branches}")
         result = yield self._http.get('/'.join(
             ['/repos', self.owner, self.repo, 'pulls']))
         my_json = yield result.json()
         if result.code != 200:
             message = my_json.get('message', 'unknown')
-            log.error("GitHubPullrequestPoller error {0.code} '{1}' "
-                      "while loading {0.url}".format(result, message))
+            log.error(f"GitHubPullrequestPoller error {result.code} '{message}' "
+                      f"while loading {result.url}")
             return []
         return my_json
 
@@ -177,8 +176,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         # Get currently assigned revision of PR number
 
         result = yield self._getStateObjectId()
-        rev = yield self.master.db.state.getState(result, 'pull_request%d' %
-                                                  prnumber, None)
+        rev = yield self.master.db.state.getState(result, f'pull_request{prnumber}', None)
         return rev
 
     @defer.inlineCallbacks
@@ -186,13 +184,12 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         # Set the updated revision for PR number.
 
         result = yield self._getStateObjectId()
-        yield self.master.db.state.setState(result,
-                                            'pull_request%d' % prnumber, rev)
+        yield self.master.db.state.setState(result, f'pull_request{prnumber}', rev)
 
     @defer.inlineCallbacks
     def _getStateObjectId(self):
         # Return a deferred for object id in state db.
-        result = yield self.master.db.state.getObjectId('{}/{}'.format(self.owner, self.repo),
+        result = yield self.master.db.state.getObjectId(f'{self.owner}/{self.repo}',
                                                         self.db_class_name)
         return result
 
@@ -216,7 +213,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 pr = yield self._getPullInformation(prnumber)
                 title = pr['title']
                 if self.magic_link:
-                    branch = 'refs/pull/{:d}/merge'.format(prnumber)
+                    branch = f'refs/pull/{prnumber}/merge'
                     repo = pr['base']['repo'][self.repository_type]
                 else:
                     branch = pr['head']['ref']
@@ -241,10 +238,9 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 if failures:
                     for failure in failures:
                         log.error("while processing changes for "
-                                  "Pullrequest {} revision {}".format(
-                                      prnumber, revision))
-                        # Fail on the first error!
-                        failures[0].raiseException()
+                                  f"Pullrequest {prnumber} revision {revision}: {failure}")
+                    # Fail on the first error!
+                    failures[0].raiseException()
                 [authors, committers, files] = [r[1] for r in results]
 
                 author = authors[0][0] + " <" + authors[0][1] + ">"
@@ -257,9 +253,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     committer=committer,
                     revision=bytes2unicode(revision),
                     revlink=bytes2unicode(revlink),
-                    comments='GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.
-                    format(prnumber, commits, 's'
-                           if commits > 0 else '', title, comments),
+                    comments=f"GitHub Pull Request #{prnumber} "
+                             f"({commits} commit{'s' if commits > 0 else ''})\n{title}\n{comments}",
                     when_timestamp=datetime2epoch(updated),
                     branch=bytes2unicode(branch),
                     category=self.category,

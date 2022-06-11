@@ -56,7 +56,7 @@ def gitDescribeToPep440(version):
 def mTimeVersion(init_file):
     cwd = os.path.dirname(os.path.abspath(init_file))
     m = 0
-    for root, dirs, files in os.walk(cwd):
+    for root, _, files in os.walk(cwd):
         for f in files:
             m = max(os.path.getmtime(os.path.join(root, f)), m)
     d = datetime.datetime.utcfromtimestamp(m)

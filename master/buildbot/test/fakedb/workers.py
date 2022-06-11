@@ -26,42 +26,33 @@ from buildbot.test.util import validation
 class Worker(Row):
     table = "workers"
 
-    defaults = dict(
-        id=None,
-        name='some:worker',
-        info={"a": "b"},
-        paused=0,
-        graceful=0,
-    )
-
     id_column = 'id'
     required_columns = ('name', )
+
+    def __init__(self, id=None, name='some:worker', info=None, paused=0, graceful=0):
+        if info is None:
+            info = {"a": "b"}
+        super().__init__(id=id, name=name, info=info, paused=paused, graceful=graceful)
 
 
 class ConnectedWorker(Row):
     table = "connected_workers"
 
-    defaults = dict(
-        id=None,
-        masterid=None,
-        workerid=None,
-    )
-
     id_column = 'id'
     required_columns = ('masterid', 'workerid')
+
+    def __init__(self, id=None, masterid=None, workerid=None):
+        super().__init__(id=id, masterid=masterid, workerid=workerid)
 
 
 class ConfiguredWorker(Row):
     table = "configured_workers"
 
-    defaults = dict(
-        id=None,
-        buildermasterid=None,
-        workerid=None,
-    )
-
     id_column = 'id'
     required_columns = ('buildermasterid', 'workerid')
+
+    def __init__(self, id=None, buildermasterid=None, workerid=None):
+        super().__init__(id=id, buildermasterid=buildermasterid, workerid=workerid)
 
 
 class FakeWorkersComponent(FakeDBComponent):
@@ -184,9 +175,10 @@ class FakeWorkersComponent(FakeDBComponent):
                             self.db.builders.builder_masters.items()
                             if mid == masterid and builderid in builderids]
         if len(buildermasterids) != len(builderids):
-            raise ValueError(("Some builders are not configured for this master: "
-                              "builders: {}, master: {} buildermaster:{}"
-                              ).format(builderids, masterid, self.db.builders.builder_masters))
+            raise ValueError(f"Some builders are not configured for this master: "
+                             f"builders: {builderids}, master: {masterid} "
+                             f"buildermaster:{self.db.builders.builder_masters}"
+                             )
 
         allbuildermasterids = [_id for _id, (builderid, mid) in
                                self.db.builders.builder_masters.items() if mid == masterid]
@@ -202,7 +194,7 @@ class FakeWorkersComponent(FakeDBComponent):
         del_conn = dict(masterid=masterid, workerid=workerid)
         for id, conn in self.connected.items():
             if conn == del_conn:
-                del self.connected[id]
+                del self.connected[id]  # noqa pylint: disable=unnecessary-dict-index-lookup
                 break
         return defer.succeed(None)
 

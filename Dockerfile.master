@@ -14,12 +14,12 @@
 # which get installed in the final image.
 # This allows us to avoid installing build tools like gcc in the final image.
 
-FROM        debian:10 AS buildbot-build
+FROM        debian:11 AS buildbot-build
 MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
 # that everything is rebuilt
-ENV         security_updates_as_of 2021-04-28
+ENV         security_updates_as_of 2022-03-06
 
 RUN \
     apt-get update && \
@@ -54,6 +54,7 @@ RUN virtualenv --python=python3 /buildbot_venv && \
 
 RUN mkdir -p /wheels && \
     /buildbot_venv/bin/pip3 list --format freeze | grep -v '^buildbot' | grep -v '^pkg-resources' > /wheels/wheels.txt && \
+    cat /wheels/wheels.txt && \
     cd /wheels && \
     /buildbot_venv/bin/pip3 wheel -r wheels.txt && \
     rm /wheels/wheels.txt && \
@@ -66,12 +67,12 @@ RUN mkdir -p /wheels && \
 # Note that the UI and worker packages are the latest version published on pypi
 # This is to avoid pulling node inside this container
 
-FROM        debian:10-slim
+FROM        debian:11-slim
 MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
 # that everything is rebuilt
-ENV         security_updates_as_of 2021-04-28
+ENV         security_updates_as_of 2022-03-06
 
 RUN \
     apt-get update && \

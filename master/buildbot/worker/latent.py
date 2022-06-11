@@ -204,9 +204,8 @@ class AbstractLatentWorker(AbstractWorker):
                 if wfb.isBusy()}
 
     def failed_to_start(self, instance_id, instance_state):
-        log.msg('{} {} failed to start instance {} ({})'.format(self.__class__.__name__,
-                                                                self.workername, instance_id,
-                                                                instance_state))
+        log.msg(f'{self.__class__.__name__} {self.workername} failed to start instance '
+                f'{instance_id} ({instance_state})')
         raise LatentWorkerFailedToSubstantiate(instance_id, instance_state)
 
     def _log_start_stop_locked(self, action_str):
@@ -230,13 +229,12 @@ class AbstractLatentWorker(AbstractWorker):
         return self.state == States.SUBSTANTIATED and self.conn is not None
 
     def substantiate(self, wfb, build):
-        log.msg("substantiating worker {}".format(wfb))
+        log.msg(f"substantiating worker {wfb}")
 
         if self.state == States.SHUT_DOWN:
             return defer.succeed(False)
 
         if self.state == States.SUBSTANTIATED and self.conn is not None:
-            self._setBuildWaitTimer()
             return defer.succeed(True)
 
         if self.state in [States.SUBSTANTIATING,
@@ -301,7 +299,7 @@ class AbstractLatentWorker(AbstractWorker):
             if dont_wait_to_attach and \
                     self.state == States.SUBSTANTIATING_STARTING and \
                     self.conn is not None:
-                log.msg(r"Worker {} substantiated (already attached)".format(self.name))
+                log.msg(f"Worker {self.name} substantiated (already attached)")
                 self.state = States.SUBSTANTIATED
                 self._fireSubstantiationNotifier(True)
 
@@ -312,30 +310,30 @@ class AbstractLatentWorker(AbstractWorker):
 
     def _fireSubstantiationNotifier(self, result):
         if not self._substantiation_notifier:
-            log.msg("No substantiation deferred for {}".format(self.name))
+            log.msg(f"No substantiation deferred for {self.name}")
             return
 
         result_msg = 'success' if result is True else 'failure'
-        log.msg("Firing {} substantiation deferred with {}".format(self.name, result_msg))
+        log.msg(f"Firing {self.name} substantiation deferred with {result_msg}")
 
         self._substantiation_notifier.notify(result)
 
     @defer.inlineCallbacks
-    def attached(self, bot):
+    def attached(self, conn):
         if self.state != States.SUBSTANTIATING_STARTING and \
                 self.build_wait_timeout >= 0:
-            msg = ('Worker {} received connection while not trying to substantiate.'
-                   'Disconnecting.').format(self.name)
+            msg = (f'Worker {self.name} received connection while not trying to substantiate.'
+                   'Disconnecting.')
             log.msg(msg)
-            self._deferwaiter.add(self._disconnect(bot))
+            self._deferwaiter.add(self._disconnect(conn))
             raise RuntimeError(msg)
 
         try:
-            yield super().attached(bot)
+            yield super().attached(conn)
         except Exception:
             self._substantiation_failed(failure.Failure())
             return
-        log.msg(r"Worker {} substantiated \o/".format(self.name))
+        log.msg(f"Worker {self.name} substantiated \\o/")
 
         # only change state when we are actually substantiating. We could
         # end up at this point in different state than SUBSTANTIATING_STARTING
@@ -428,7 +426,7 @@ class AbstractLatentWorker(AbstractWorker):
         # after insubstantiation concludes. This parameter allows to go directly to the
         # SUBSTANTIATING state without going through NOT_SUBSTANTIATED state.
 
-        log.msg("insubstantiating worker {}".format(self))
+        log.msg(f"insubstantiating worker {self}")
 
         if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
             # there's another insubstantiation ongoing. We'll wait for it to finish by waiting

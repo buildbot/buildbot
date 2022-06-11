@@ -66,16 +66,16 @@ def _handleLegacyResult(result):
 
 def _old_add_label(label, value):
     if label == GERRIT_LABEL_VERIFIED:
-        return ["--verified %d" % int(value)]
+        return [f"--verified {int(value)}"]
     elif label == GERRIT_LABEL_REVIEWED:
-        return ["--code-review %d" % int(value)]
-    warnings.warn(('Gerrit older than 2.6 does not support custom labels. '
-                   'Setting {} is ignored.').format(label))
+        return [f"--code-review {int(value)}"]
+    warnings.warn('Gerrit older than 2.6 does not support custom labels. '
+                  f'Setting {label} is ignored.')
     return []
 
 
 def _new_add_label(label, value):
-    return ["--label {}={}".format(label, int(value))]
+    return [f"--label {label}={int(value)}"]
 
 
 def defaultReviewCB(builderName, build, result, master, arg):
@@ -83,8 +83,8 @@ def defaultReviewCB(builderName, build, result, master, arg):
         return makeReviewResult(None)
 
     message = "Buildbot finished compiling your patchset\n"
-    message += "on configuration: {}\n".format(builderName)
-    message += "The result is: {}\n".format(Results[result].upper())
+    message += f"on configuration: {builderName}\n"
+    message += f"The result is: {Results[result].upper()}\n"
 
     return makeReviewResult(message,
                             (GERRIT_LABEL_VERIFIED, result == SUCCESS or -1))
@@ -97,7 +97,7 @@ def defaultSummaryCB(buildInfoList, results, master, arg):
     msgs = []
 
     for buildInfo in buildInfoList:
-        msg = "Builder %(name)s %(resultText)s (%(text)s)" % buildInfo
+        msg = f"Builder {buildInfo['name']} {buildInfo['resultText']} ({buildInfo['text']})"
         link = buildInfo.get('url', None)
         if link:
             msg += " - " + link
@@ -214,9 +214,9 @@ class GerritStatusPush(service.BuildbotService):
         def errReceived(self, data):
             log.msg(b"gerriterr: " + data)
 
-        def processEnded(self, status_object):
-            if status_object.value.exitCode:
-                log.msg("gerrit version status: ERROR:", status_object)
+        def processEnded(self, reason):
+            if reason.value.exitCode:
+                log.msg("gerrit version status: ERROR:", reason)
                 return
             if self.gerrit_version:
                 self.func(self.gerrit_version)
@@ -253,9 +253,9 @@ class GerritStatusPush(service.BuildbotService):
         def errReceived(self, data):
             log.msg("gerriterr:", data)
 
-        def processEnded(self, status_object):
-            if status_object.value.exitCode:
-                log.msg("gerrit status: ERROR:", status_object)
+        def processEnded(self, reason):
+            if reason.value.exitCode:
+                log.msg("gerrit status: ERROR:", reason)
             else:
                 log.msg("gerrit status: OK")
 
@@ -293,7 +293,7 @@ class GerritStatusPush(service.BuildbotService):
         if key[0] == 'buildsets' and key[2] == 'complete':  # pragma: no cover
             yield self.buildsetComplete(key, msg)
             return
-        raise Exception('Invalid key for _got_event: {}'.format(key))  # pragma: no cover
+        raise Exception(f'Invalid key for _got_event: {key}')  # pragma: no cover
 
     @defer.inlineCallbacks
     def buildStarted(self, key, build):
@@ -322,8 +322,8 @@ class GerritStatusPush(service.BuildbotService):
         yield utils.getDetailsForBuilds(self.master,
                                         buildset,
                                         [build],
-                                        wantProperties=True,
-                                        wantSteps=self.wantSteps)
+                                        want_properties=True,
+                                        want_steps=self.wantSteps)
 
     def isBuildReported(self, build):
         return self.builders is None or build['builder']['name'] in self.builders
@@ -333,9 +333,9 @@ class GerritStatusPush(service.BuildbotService):
         if not self.summaryCB:
             return
         bsid = msg['bsid']
-        res = yield utils.getDetailsForBuildset(
-            self.master, bsid, wantProperties=True,
-            wantSteps=self.wantSteps, wantLogs=self.wantLogs)
+        res = yield utils.getDetailsForBuildset(self.master, bsid, want_properties=True,
+                                                want_steps=self.wantSteps, want_logs=self.wantLogs,
+                                                want_logs_content=self.wantLogs)
         builds = res['builds']
         buildset = res['buildset']
         self.sendBuildSetSummary(buildset, builds)
@@ -351,7 +351,7 @@ class GerritStatusPush(service.BuildbotService):
                     FAILURE: "failed",
                     WARNINGS: "completed with warnings",
                     EXCEPTION: "encountered an exception",
-                }.get(result, "completed with unknown result %d" % result)
+                }.get(result, f"completed with unknown result {result}")
 
                 return {'name': build['builder']['name'],
                         'result': result,
@@ -427,17 +427,18 @@ class GerritStatusPush(service.BuildbotService):
             return
 
         assert gerrit_version
-        command = self._gerritCmd("review", "--project {}".format(project))
+        command = self._gerritCmd("review", f"--project {project}")
 
         if gerrit_version >= parse_version("2.13"):
             command.append('--tag autogenerated:buildbot')
 
         if self._gerrit_notify is not None:
-            command.append('--notify {}'.format(str(self._gerrit_notify)))
+            command.append(f'--notify {str(self._gerrit_notify)}')
 
         message = result.get('message', None)
         if message:
-            command.append("--message '{}'".format(message.replace("'", "\"")))
+            message = message.replace("'", "\"")
+            command.append(f"--message '{message}'")
 
         labels = result.get('labels', None)
         if labels:

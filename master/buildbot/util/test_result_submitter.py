@@ -96,7 +96,7 @@ class TestResultSubmitter:
         if self._category == 'pass_only':
             self._initialize_pass_fail_recording(self._add_pass_fail_result_category_pass_only)
             return
-        if self._category == 'fail_only' or self._category == 'code_issue':
+        if self._category in ('fail_only', 'code_issue'):
             self._initialize_pass_fail_recording(self._add_pass_fail_result_category_fail_only)
             return
 

@@ -24,11 +24,11 @@ from twisted.trial import unittest
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source.p4 import P4
-from buildbot.test.fake.remotecommand import Expect
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.steps import ExpectRmdir
+from buildbot.test.steps import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.properties import ConstantRenderable
 
 _is_windows = (platform.system() == 'Windows')
@@ -38,16 +38,16 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
              unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         return self.setUpSourceStep()
 
     def tearDown(self):
         return self.tearDownSourceStep()
 
-    def setupStep(self, step, args=None, patch=None, **kwargs):
+    def setup_step(self, step, args=None, patch=None, **kwargs):
         if args is None:
             args = {}
-        step = super().setupStep(step, args={}, patch=None, **kwargs)
+        step = super().setup_step(step, args={}, patch=None, **kwargs)
         self.build.getSourceStamp().revision = args.get('revision', None)
 
         # builddir property used to create absolute path required in perforce
@@ -111,7 +111,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             P4(p4base='//depot', mode='invalid')
 
     def test_mode_incremental_p4base_with_revision(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'),
                        dict(revision='100',))
@@ -119,7 +119,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -127,7 +127,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -135,80 +135,78 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',  # defaults to this, only changes if it has a copy mode.
                         command=['p4', '-V'])  # expected remote command
-            + 0,  # expected exit status
+            .exit(0),  # expected exit status
 
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'client', '-i'],
-                        initialStdin=client_spec)
-            + 0,
+                        initial_stdin=client_spec)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'sync', '//depot...@100'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'changes', '-m1', '#have'])
-            + ExpectShell.log('stdio',
-                              stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
-            + 0,
+            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'P4')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'P4')
+        return self.run_step()
 
     def _incremental(self, client_stdin='', extra_args=None, workdir='wkdir', timeout=20 * 60):
         if extra_args is None:
             extra_args = []
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir=workdir,
                         command=['p4', '-V'])  # expected remote command
-            + 0,  # expected exit status
+            .exit(0),  # expected exit status
 
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'client', '-i'],
-                        initialStdin=client_stdin,)
-            + 0,
+                        initial_stdin=client_stdin,)
+            .exit(0),
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=(['p4', '-p', 'localhost:12000', '-u', 'user',
                                   '-P', ('obfuscated', 'pass', 'XXXXXX'), '-c', 'p4_client1']
                                  + extra_args + ['sync']))
-            + 0,
+            .exit(0),
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
                                  '-c', 'p4_client1', 'changes', '-m1', '#have'])
-            + ExpectShell.log('stdio',
-                              stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
-            + 0,
+            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'P4')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'P4')
+        return self.run_step()
 
     def test_mode_incremental_p4base(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -216,7 +214,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -224,18 +222,18 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4base_with_no_branch(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot/trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -243,7 +241,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -251,11 +249,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4base_with_p4extra_views(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4extra_views=[('-//depot/trunk/test', 'test'),
                                          ('-//depot/trunk/doc', 'doc'),
@@ -265,7 +263,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -273,7 +271,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -284,11 +282,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t-//depot/trunk/test/... //p4_client1/test/...
         \t-//depot/trunk/doc/... //p4_client1/doc/...
         \t"-//depot/trunk/white space/..." "//p4_client1/white space/..."
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4viewspec=[('//depot/trunk/', ''),
                                       ('//depot/white space/', 'white space/'),
                                       ('-//depot/white space/excluded/', 'white space/excluded/')],
@@ -297,7 +295,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -305,7 +303,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -315,11 +313,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/trunk/... //p4_client1/...
         \t"//depot/white space/..." "//p4_client1/white space/..."
         \t"-//depot/white space/excluded/..." "//p4_client1/white space/excluded/..."
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec_suffix(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4viewspec_suffix=None,
                           p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml'),
                                       ('//depot/white space/...',
@@ -331,7 +329,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -339,7 +337,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -349,11 +347,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/trunk/foo.xml //p4_client1/bar.xml
         \t"//depot/white space/..." "//p4_client1/white space/..."
         \t"-//depot/white space/excluded/..." "//p4_client1/white space/excluded/..."
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4client_spec_options(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4client_spec_options='rmdir compress',
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
@@ -361,7 +359,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -369,7 +367,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\trmdir compress
 
@@ -377,11 +375,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_parent_workdir(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass',
                           workdir='../another_wkdir'))
@@ -389,7 +387,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/another_wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\another_wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -397,7 +395,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -405,11 +403,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec, workdir='../another_wkdir')
 
     def test_mode_incremental_p4extra_args(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass',
                           p4extra_args=['-Zproxyload']))
@@ -417,7 +415,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -425,7 +423,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -433,11 +431,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec, extra_args=['-Zproxyload'])
 
     def test_mode_incremental_timeout(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass',
                           timeout=60 * 60))
@@ -445,7 +443,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -453,7 +451,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -461,11 +459,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec, timeout=60 * 60)
 
     def test_mode_incremental_stream(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass',
                           stream=True))
@@ -473,7 +471,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -481,14 +479,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         Stream:\t//depot/trunk
-        ''' % root_dir)
+        ''')
         self._incremental(client_stdin=client_spec)
 
     def _full(self, client_stdin='', p4client='p4_client1', p4user='user',
@@ -500,46 +498,45 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         else:
             expected_pass = 'pass'
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir=workdir,
                         command=['p4', '-V'])  # expected remote command
-            + 0,  # expected exit status
+            .exit(0),  # expected exit status
 
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass,
                                  '-c', p4client, 'client', '-i'],
-                        initialStdin=client_stdin)
-            + 0,
+                        initial_stdin=client_stdin)
+            .exit(0),
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass, '-c', p4client]
                         + extra_args
                         + ['sync', '#none'])
-            + 0,
+            .exit(0),
 
-            Expect('rmdir', {'dir': workdir, 'logEnviron': True})
-            + 0,
+            ExpectRmdir(dir=workdir, log_environ=True)
+            .exit(0),
 
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass, '-c', p4client]
                         + extra_args + ['sync'])
-            + 0,
+            .exit(0),
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass, '-c', p4client,
                                  'changes', '-m1', '#have'])
-            + ExpectShell.log('stdio',
-                              stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
-            + 0,
+            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'P4')
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property('got_revision', '100', 'P4')
+        return self.run_step()
 
     def test_mode_full_p4base(self):
-        self.setupStep(
+        self.setup_step(
             P4(p4port='localhost:12000',
                mode='full', p4base='//depot', p4branch='trunk',
                p4user='user', p4client='p4_client1', p4passwd='pass'))
@@ -547,7 +544,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -555,18 +552,18 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/trunk/... //p4_client1/...\n''' % root_dir)
+        \t//depot/trunk/... //p4_client1/...\n''')
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_p4base_not_obfuscated(self):
-        self.setupStep(
+        self.setup_step(
             P4(p4port='localhost:12000',
                mode='full', p4base='//depot', p4branch='trunk',
                p4user='user', p4client='p4_client1', p4passwd='pass'),
@@ -575,7 +572,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -583,25 +580,25 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/trunk/... //p4_client1/...\n''' % root_dir)
+        \t//depot/trunk/... //p4_client1/...\n''')
         self._full(client_stdin=client_stdin, obfuscated_pass=False)
 
     def test_mode_full_p4base_with_no_branch(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='full',
+        self.setup_step(P4(p4port='localhost:12000', mode='full',
                           p4base='//depot/trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -609,7 +606,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -617,11 +614,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_p4viewspec(self):
-        self.setupStep(
+        self.setup_step(
             P4(p4port='localhost:12000',
                mode='full',
                p4viewspec=[('//depot/main/', ''),
@@ -632,7 +629,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -640,7 +637,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -650,12 +647,12 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/main/... //p4_client1/...
         \t"//depot/main/white space/..." "//p4_client1/white space/..."
         \t"-//depot/main/white space/excluded/..." "//p4_client1/white space/excluded/..."
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_renderable_p4base(self):
         # Note that the config check skips checking p4base if it's a renderable
-        self.setupStep(
+        self.setup_step(
             P4(p4port='localhost:12000',
                mode='full', p4base=ConstantRenderable('//depot'),
                p4branch='release/1.0', p4user='user', p4client='p4_client2',
@@ -664,7 +661,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client2
 
         Owner: user
@@ -672,19 +669,19 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/release/1.0/... //p4_client2/...\n''' % root_dir)
+        \t//depot/release/1.0/... //p4_client2/...\n''')
         self._full(client_stdin=client_stdin, p4client='p4_client2')
 
     def test_mode_full_renderable_p4client(self):
         # Note that the config check skips checking p4base if it's a renderable
-        self.setupStep(
+        self.setup_step(
             P4(p4port='localhost:12000',
                mode='full', p4base='//depot', p4branch='trunk',
                p4user='user', p4client=ConstantRenderable('p4_client_render'),
@@ -693,7 +690,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client_render
 
         Owner: user
@@ -701,20 +698,20 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/trunk/... //p4_client_render/...\n''' % root_dir)
+        \t//depot/trunk/... //p4_client_render/...\n''')
 
         self._full(client_stdin=client_stdin, p4client='p4_client_render')
 
     def test_mode_full_renderable_p4branch(self):
         # Note that the config check skips checking p4base if it's a renderable
-        self.setupStep(
+        self.setup_step(
             P4(p4port='localhost:12000',
                mode='full', p4base='//depot',
                p4branch=ConstantRenderable('render_branch'),
@@ -723,7 +720,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -731,19 +728,19 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/render_branch/... //p4_client1/...\n''' % root_dir)
+        \t//depot/render_branch/... //p4_client1/...\n''')
 
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_renderable_p4viewspec(self):
-        self.setupStep(
+        self.setup_step(
             P4(p4port='localhost:12000',
                mode='full',
                p4viewspec=[(ConstantRenderable('//depot/render_trunk/'), '')],
@@ -753,7 +750,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
+        client_stdin = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: different_user
@@ -761,19 +758,19 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by different_user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/render_trunk/... //p4_client1/...\n''' % root_dir)
+        \t//depot/render_trunk/... //p4_client1/...\n''')
 
         self._full(client_stdin=client_stdin, p4user='different_user')
 
     def test_mode_full_p4viewspec_suffix(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='full',
+        self.setup_step(P4(p4port='localhost:12000', mode='full',
                           p4viewspec_suffix=None,
                           p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml'),
                                       ('//depot/trunk/white space/...',
@@ -785,7 +782,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -793,7 +790,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -803,11 +800,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/trunk/foo.xml //p4_client1/bar.xml
         \t"//depot/trunk/white space/..." "//p4_client1/white space/..."
         \t"-//depot/trunk/white space/excluded/..." "//p4_client1/white space/excluded/..."
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_p4client_spec_options(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='full',
+        self.setup_step(P4(p4port='localhost:12000', mode='full',
                           p4base='//depot', p4branch='trunk',
                           p4client_spec_options='rmdir compress',
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
@@ -815,7 +812,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -823,7 +820,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\trmdir compress
 
@@ -831,11 +828,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_parent_workdir(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='full',
+        self.setup_step(P4(p4port='localhost:12000', mode='full',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass',
                           workdir='../another_wkdir'))
@@ -843,7 +840,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/another_wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\another_wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -851,7 +848,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -859,11 +856,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec, workdir='../another_wkdir')
 
     def test_mode_full_p4extra_args(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='full',
+        self.setup_step(P4(p4port='localhost:12000', mode='full',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass',
                           p4extra_args=['-Zproxyload']))
@@ -871,7 +868,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -879,7 +876,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -887,11 +884,11 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec, extra_args=['-Zproxyload'])
 
     def test_mode_full_stream(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='full',
+        self.setup_step(P4(p4port='localhost:12000', mode='full',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass',
                           stream=True))
@@ -899,7 +896,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -907,18 +904,18 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         Stream:\t//depot/trunk
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_stream_renderable_p4base(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='full',
+        self.setup_step(P4(p4port='localhost:12000', mode='full',
                           p4base=ConstantRenderable('//depot'), p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass',
                           stream=True))
@@ -926,7 +923,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -934,18 +931,18 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         Stream:\t//depot/trunk
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_mode_full_stream_renderable_p4branch(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='full',
+        self.setup_step(P4(p4port='localhost:12000', mode='full',
                           p4base='//depot', p4branch=ConstantRenderable('render_branch'),
                           p4user='user', p4client='p4_client1', p4passwd='pass',
                           stream=True))
@@ -953,7 +950,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -961,32 +958,32 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         Stream:\t//depot/render_branch
-        ''' % root_dir)
+        ''')
         self._full(client_stdin=client_spec)
 
     def test_worker_connection_lost(self):
-        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+        self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'),
                        dict(revision='100',))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['p4', '-V'])
-            + ('err', error.ConnectionLost()),
+            .error(error.ConnectionLost())
         )
-        self.expectOutcome(result=RETRY, state_string="update (retry)")
-        return self.runStep()
+        self.expect_outcome(result=RETRY, state_string="update (retry)")
+        return self.run_step()
 
     def test_ticket_auth(self):
-        self.setupStep(P4(p4port='localhost:12000',
+        self.setup_step(P4(p4port='localhost:12000',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1',
                           p4passwd='pass', use_tickets=True))
@@ -994,7 +991,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
             root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_spec = textwrap.dedent('''\
+        client_spec = textwrap.dedent(f'''\
         Client: p4_client1
 
         Owner: user
@@ -1002,7 +999,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         Description:
         \tCreated by user
 
-        Root:\t%s
+        Root:\t{root_dir}
 
         Options:\tallwrite rmdir
 
@@ -1010,35 +1007,34 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        ''' % root_dir)
+        ''')
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=['p4', '-V'])
-            + 0,
+            .exit(0),
 
             # This is the extra step that gets run when using tickets,
             # and the password is not passed anymore after that.
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-c', 'p4_client1', 'login'],
-                        initialStdin='pass\n')
-            + 0,
+                        initial_stdin='pass\n')
+            .exit(0),
 
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-c', 'p4_client1', 'client', '-i'],
-                        initialStdin=client_spec)
-            + 0,
+                        initial_stdin=client_spec)
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=(['p4', '-p', 'localhost:12000', '-u', 'user',
                                   '-c', 'p4_client1', 'sync']))
-            + 0,
+            .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-c', 'p4_client1', 'changes', '-m1', '#have'])
-            + ExpectShell.log('stdio',
-                              stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
-            + 0,
+            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
+            .exit(0)
         )
-        self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()

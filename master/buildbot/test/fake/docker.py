@@ -20,9 +20,11 @@ version = "1.10.6"
 class Client:
     latest = None
     containerCreated = False
+    start_exception = None
 
     def __init__(self, base_url):
         Client.latest = self
+        self.base_url = base_url
         self.call_args_create_container = []
         self.call_args_create_host_config = []
         self.called_class_name = None
@@ -39,7 +41,8 @@ class Client:
         return self._images
 
     def start(self, container):
-        pass
+        if self.start_exception is not None:
+            raise self.start_exception  # pylint: disable=raising-bad-type
 
     def stop(self, id):
         pass
@@ -47,8 +50,12 @@ class Client:
     def wait(self, id):
         return 0
 
-    def build(self, fileobj, tag):
+    def build(self, fileobj, tag, pull, target):
         if fileobj.read() == b'BUG':
+            pass
+        elif pull != bool(pull):
+            pass
+        elif target != "":
             pass
         else:
             logs = []
@@ -108,6 +115,15 @@ class Client:
     def remove_container(self, id, **kwargs):
         del self._containers[id]
 
+    def close(self):
+        # dummy close, no connection to cleanup
+        pass
+
 
 class APIClient(Client):
     pass
+
+
+class errors:
+    class APIError(Exception):
+        pass

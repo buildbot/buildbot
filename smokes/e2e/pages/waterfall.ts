@@ -72,11 +72,17 @@ export class WaterfallPage extends BasePage {
                             "first tag close not clickable");
         await firstTag.click();
         expect(browser.getCurrentUrl()).toContain(firstTag.getText());
+        await bbrowser.wait(EC.elementToBeClickable(firstTag),
+                            "first tag close not clickable");
+
     }
 
     async goUrlAndCheckTag() {
         await bbrowser.get('#/waterfall?tags=runt');
         const selectedTag = element(by.className('label-success'));
         expect(await selectedTag.getText()).toContain('runt');
+        const firstTag = element.all(By.binding('tag')).first();
+        await bbrowser.wait(EC.elementToBeClickable(firstTag),
+                            "first tag close not clickable");
     }
 }

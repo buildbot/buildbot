@@ -53,7 +53,7 @@ In order to build a project, Buildbot only needs to know a source stamp set corr
 This source stamp set has a source stamp for each codebase comprising the project.
 In turn, each source stamp has enough information to identify a particular version of the code within the codebase.
 
-.. image:: _images/changes.*
+.. image:: ../_images/changes.*
    :alt: Source Stamp Sets
 
 .. _Concepts-Change-Source:

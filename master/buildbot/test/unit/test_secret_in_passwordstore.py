@@ -22,10 +22,10 @@ from twisted.trial import unittest
 
 from buildbot.secrets.providers.passwordstore import SecretInPass
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.runprocess import ExpectMasterShell
+from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.runprocess import ExpectMaster
-from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 
 class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixin,
@@ -33,7 +33,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.setup_master_run_process()
         self.master = fakemaster.make_master(self)
         with mock.patch.object(Path, "is_file", return_value=True):
@@ -82,7 +82,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
     @defer.inlineCallbacks
     def test_get_secret_in_pass(self):
         self.expect_commands(
-            ExpectMaster(['pass', 'secret'])
+            ExpectMasterShell(['pass', 'secret'])
             .stdout(b'value')
         )
 
@@ -94,7 +94,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
     @defer.inlineCallbacks
     def test_get_secret_in_pass_multiple_lines_unix(self):
         self.expect_commands(
-            ExpectMaster(['pass', 'secret'])
+            ExpectMasterShell(['pass', 'secret'])
             .stdout(b"value1\nvalue2\nvalue3")
         )
 
@@ -106,7 +106,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
     @defer.inlineCallbacks
     def test_get_secret_in_pass_multiple_lines_darwin(self):
         self.expect_commands(
-            ExpectMaster(['pass', 'secret'])
+            ExpectMasterShell(['pass', 'secret'])
             .stdout(b"value1\rvalue2\rvalue3")
         )
 
@@ -118,7 +118,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
     @defer.inlineCallbacks
     def test_get_secret_in_pass_multiple_lines_windows(self):
         self.expect_commands(
-            ExpectMaster(['pass', 'secret'])
+            ExpectMasterShell(['pass', 'secret'])
             .stdout(b"value1\r\nvalue2\r\nvalue3")
         )
 
@@ -130,7 +130,7 @@ class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixi
     @defer.inlineCallbacks
     def test_get_secret_in_pass_not_found(self):
         self.expect_commands(
-            ExpectMaster(['pass', 'secret'])
+            ExpectMasterShell(['pass', 'secret'])
             .stderr(b"Not found")
         )
 

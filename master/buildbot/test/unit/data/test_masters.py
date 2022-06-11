@@ -23,9 +23,9 @@ from buildbot.data import masters
 from buildbot.process.results import RETRY
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 SOMETIME = 1349016870
@@ -110,7 +110,9 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get(self):
         masters = yield self.callGet(('masters',))
 
-        [self.validateData(m) for m in masters]
+        for m in masters:
+            self.validateData(m)
+
         self.assertEqual(sorted([m['masterid'] for m in masters]),
                          [13, 14])
 
@@ -118,7 +120,9 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_builderid(self):
         masters = yield self.callGet(('builders', 22, 'masters'))
 
-        [self.validateData(m) for m in masters]
+        for m in masters:
+            self.validateData(m)
+
         self.assertEqual(sorted([m['masterid'] for m in masters]),
                          [13])
 
@@ -132,7 +136,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.setUpTestReactor()
+        self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = masters.Master(self.master)
@@ -271,7 +275,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         # mock out the _masterDeactivated methods this will call
         for rtype in 'builder', 'scheduler', 'changesource':
             rtype_obj = getattr(self.master.data.rtypes, rtype)
-            m = mock.Mock(name='{}._masterDeactivated'.format(rtype),
+            m = mock.Mock(name=f'{rtype}._masterDeactivated',
                           spec=rtype_obj._masterDeactivated)
             m.side_effect = lambda masterid: defer.succeed(None)
             rtype_obj._masterDeactivated = m

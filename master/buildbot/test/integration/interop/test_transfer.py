@@ -1,3 +1,4 @@
+
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -36,10 +37,10 @@ class TransferStepsMasterPb(RunMasterBase):
 
     def readMasterDirContents(self, top):
         contents = {}
-        for root, dirs, files in os.walk(top):
+        for root, _, files in os.walk(top):
             for name in files:
                 fn = os.path.join(root, name)
-                with open(fn) as f:
+                with open(fn, encoding='utf-8') as f:
                     contents[fn] = f.read()
         return contents
 
@@ -158,9 +159,9 @@ def masterConfig(bigfilename):
     f.addStep(steps.StringDownload("filecontent", workerdest="dir/file1.txt"))
     f.addStep(steps.StringDownload("filecontent2", workerdest="dir/file2.txt"))
     # create 8 MB file
-    with open(bigfilename, 'w') as o:
+    with open(bigfilename, 'w', encoding='utf-8') as o:
         buf = "xxxxxxxx" * 1024
-        for i in range(1000):
+        for _ in range(1000):
             o.write(buf)
     f.addStep(
         steps.FileDownload(

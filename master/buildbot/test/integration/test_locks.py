@@ -239,7 +239,7 @@ class TestReconfig(RunFakeMasterTestCase):
 
     def create_stepcontrollers(self, count, lock, mode):
         stepcontrollers = []
-        for i in range(count):
+        for _ in range(count):
             locks = [lock.access(mode)] if lock is not None else []
             stepcontrollers.append(BuildStepController(locks=locks))
         return stepcontrollers
@@ -248,7 +248,7 @@ class TestReconfig(RunFakeMasterTestCase):
         config_dict['builders'] = []
         for i, stepcontroller in enumerate(stepcontrollers):
             locks = [lock.access(mode)] if lock is not None else []
-            b = BuilderConfig(name='builder{}'.format(i),
+            b = BuilderConfig(name=f'builder{i}',
                               workernames=['worker1'],
                               factory=BuildFactory([stepcontroller.step]),
                               locks=locks)
@@ -276,7 +276,7 @@ class TestReconfig(RunFakeMasterTestCase):
         builder_ids = []
         for i in range(builder_count):
             builder_ids.append((
-                yield self.master.data.updates.findBuilderId('builder{}'.format(i))))
+                yield self.master.data.updates.findBuilderId(f'builder{i}')))
 
         return stepcontrollers, config_dict, lock, builder_ids
 
@@ -302,7 +302,7 @@ class TestReconfig(RunFakeMasterTestCase):
         builder_ids = []
         for i in range(builder_count):
             builder_ids.append((
-                yield self.master.data.updates.findBuilderId('builder{}'.format(i))))
+                yield self.master.data.updates.findBuilderId(f'builder{i}')))
 
         return stepcontrollers, config_dict, lock, builder_ids
 

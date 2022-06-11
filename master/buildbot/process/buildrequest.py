@@ -56,7 +56,7 @@ class BuildRequestCollapser:
 
     @defer.inlineCallbacks
     def collapse(self):
-        brids = set()
+        brids_to_collapse = set()
 
         for brid in self.brids:
             # Get the BuildRequest object
@@ -80,17 +80,16 @@ class BuildRequestCollapser:
 
                 canCollapse = yield collapseRequestsFn(self.master, bldr, br, unclaim_br)
                 if canCollapse is True:
-                    brids.add(unclaim_br['buildrequestid'])
+                    brids_to_collapse.add(unclaim_br['buildrequestid'])
 
-        brids = list(brids)
-        if brids:
-            # Claim the buildrequests
-            yield self.master.data.updates.claimBuildRequests(brids)
-            # complete the buildrequest with result SKIPPED.
-            yield self.master.data.updates.completeBuildRequests(brids,
-                                                                 SKIPPED)
+        collapsed_brids = []
+        for brid in brids_to_collapse:
+            claimed = yield self.master.data.updates.claimBuildRequests([brid])
+            if claimed:
+                yield self.master.data.updates.completeBuildRequests([brid], SKIPPED)
+                collapsed_brids.append(brid)
 
-        return brids
+        return collapsed_brids
 
 
 class TempSourceStamp:
@@ -255,22 +254,31 @@ class BuildRequest:
         return buildrequest
 
     @staticmethod
+    def filter_buildset_props_for_collapsing(bs_props):
+        return {name: value for name, (value, source) in bs_props.items()
+                if name != 'scheduler' and source == 'Scheduler'}
+
+    @staticmethod
     @defer.inlineCallbacks
-    def canBeCollapsed(master, br1, br2):
+    def canBeCollapsed(master, new_br, old_br):
         """
         Returns true if both buildrequest can be merged, via Deferred.
 
         This implements Buildbot's default collapse strategy.
         """
         # short-circuit: if these are for the same buildset, collapse away
-        if br1['buildsetid'] == br2['buildsetid']:
+        if new_br['buildsetid'] == old_br['buildsetid']:
             return True
 
-        # get the buidlsets for each buildrequest
-        selfBuildsets = yield master.data.get(
-            ('buildsets', str(br1['buildsetid'])))
-        otherBuildsets = yield master.data.get(
-            ('buildsets', str(br2['buildsetid'])))
+        # the new buildrequest must actually be newer than the old build request, otherwise we
+        # may end up with situations where two build requests submitted at the same time will
+        # cancel each other.
+        if new_br['buildrequestid'] < old_br['buildrequestid']:
+            return False
+
+        # get the buildsets for each buildrequest
+        selfBuildsets = yield master.data.get(('buildsets', str(new_br['buildsetid'])))
+        otherBuildsets = yield master.data.get(('buildsets', str(old_br['buildsetid'])))
 
         # extract sourcestamps, as dictionaries by codebase
         selfSources = dict((ss['codebase'], ss)
@@ -312,6 +320,15 @@ class BuildRequest:
             # else check revisions
             if selfSS['revision'] != otherSS['revision']:
                 return False
+
+        # don't collapse build requests if the properties injected by the scheduler differ
+        new_bs_props = yield master.data.get(('buildsets', str(new_br['buildsetid']), 'properties'))
+        old_bs_props = yield master.data.get(('buildsets', str(old_br['buildsetid']), 'properties'))
+
+        new_bs_props = BuildRequest.filter_buildset_props_for_collapsing(new_bs_props)
+        old_bs_props = BuildRequest.filter_buildset_props_for_collapsing(old_bs_props)
+        if new_bs_props != old_bs_props:
+            return False
 
         return True
 

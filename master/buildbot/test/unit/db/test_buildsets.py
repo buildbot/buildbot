@@ -81,7 +81,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addBuildset_getBuildset(self):
-        bsid, brids = yield self.db.buildsets.addBuildset(
+        bsid, _ = yield self.db.buildsets.addBuildset(
                 sourcestamps=[234], reason='because', properties={},
                 builderids=[1], external_idstring='extid', waited_for=False)
 
@@ -133,11 +133,11 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildsetProperties_empty(self):
         return self.do_test_getBuildsetProperties(91, [
             fakedb.Buildset(id=91, complete=0, results=-1, submitted_at=0),
-        ], dict())
+        ], {})
 
     def test_getBuildsetProperties_nosuch(self):
         "returns an empty dict even if no such buildset exists"
-        return self.do_test_getBuildsetProperties(91, [], dict())
+        return self.do_test_getBuildsetProperties(91, [], {})
 
     @defer.inlineCallbacks
     def test_getBuildset_incomplete_zero(self):

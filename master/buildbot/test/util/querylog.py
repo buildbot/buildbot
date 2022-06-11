@@ -39,15 +39,9 @@ class _QueryToTwistedHandler(logging.Handler):
             return
         if record.levelno == logging.DEBUG:
             if self._log_query_result:
-                log.msg("{name}:{thread}:result: {msg}".format(
-                    name=record.name,
-                    thread=record.threadName,
-                    msg=record.getMessage()))
+                log.msg(f"{record.name}:{record.threadName}:result: {record.getMessage()}")
         else:
-            log.msg("{name}:{thread}:query:  {msg}".format(
-                name=record.name,
-                thread=record.threadName,
-                msg=record.getMessage()))
+            log.msg(f"{record.name}:{record.threadName}:query:  {record.getMessage()}")
 
 
 def start_log_queries(log_query_result=False, record_mode=False):

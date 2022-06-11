@@ -33,14 +33,13 @@ class StatsService(service.BuildbotService):
     def checkConfig(self, storage_backends):
         for wfb in storage_backends:
             if not isinstance(wfb, StatsStorageBase):
-                raise TypeError("Invalid type of stats storage service {0!r}. "
-                                "Should be of type StatsStorageBase, "
-                                "is: {0!r}".format(type(StatsStorageBase)))
+                raise TypeError(f"Invalid type of stats storage service {type(StatsStorageBase)!r}."
+                                " Should be of type StatsStorageBase, "
+                                f"is: {type(StatsStorageBase)!r}")
 
     @defer.inlineCallbacks
     def reconfigService(self, storage_backends):
-        log.msg(
-            "Reconfiguring StatsService with config: {0!r}".format(storage_backends))
+        log.msg(f"Reconfiguring StatsService with config: {storage_backends!r}")
 
         self.checkConfig(storage_backends)
 
