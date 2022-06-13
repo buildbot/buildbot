@@ -1092,13 +1092,14 @@ Contents of the value corresponding to ``args`` key in the dictionary of ``updat
 
 The ``args`` key-value pair describes information that the request sends to master.
 The value is a list of lists.
-Each sub-list contains name-value pairs.
+Each sub-list contains a name-value pair and represents a single update.
 First element in a list represents the name of update (see below) and second element represents its value.
 Commands may have their own update names so only common ones are described here.
 
 ``stdout``
     Value is a standard output of a process as a string.
     Some of the commands that master requests worker to start, may initiate processes which output a result as a standard output and this result is saved in the value of ``stdout``.
+    The value is satisfies the requirements described in a section below.
 
 ``rc``
     Value is an integer.
@@ -1110,6 +1111,7 @@ Commands may have their own update names so only common ones are described here.
     Value is a string of a header.
     It represents additional information about how the command worked.
     For example, information may include the command name and arguments, working directory and environment or various errors or warnings of a process or other information that may be useful for debugging.
+    The value satisfies the requirements described in a section below.
 
 ``files``
     Value is a list of strings.
@@ -1121,6 +1123,7 @@ Commands may have their own update names so only common ones are described here.
 ``stderr``
     Value is a standard error of a process as a string.
     Some of the commands that master requests worker to start may initiate processes which can output a result as a standard error and this result is saved in the value of ``stderr``.
+    The value satisfies the requirements described in a section below.
 
 ``log``
     Value is a list where first element represents the name of the log and second element represents the contents of the file as a string.
@@ -1128,7 +1131,19 @@ Commands may have their own update names so only common ones are described here.
     This file is identified by the second member in workers tuple.
     The same value is sent by master as the key of dictionary represented by ``logfile`` key within ``args`` dictionary of ``StartCommand`` command.
     The string value of the message is the contents of a file that worker read.
+    The value satisfies the requirements described in a section below.
 
 ``elapsed``
     Value is an integer.
     It represents how much time has passed between the start of a command and the completion in seconds.
+
+Requirements for values of ``stdout``, ``stderr``, ``header`` and ``log``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Values of ``stdout``, ``header``, ``stderr``, ``log`` must be processed using the following algorithm:
+
+- Each value may contain one or more lines (characters with a terminating ``\n`` character).
+  Each line is not longer than internal ``maxsize`` value on worker side.
+  Longer lines are split into multiple lines where each except the last line contains exactly ``maxsize`` characters and the last line may contain less.
+
+- The lines are run through an internal worker cleanup regex.

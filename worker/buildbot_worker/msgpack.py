@@ -28,6 +28,7 @@ from twisted.python import log
 
 from buildbot_worker.base import ProtocolCommandBase
 from buildbot_worker.util import deferwaiter
+from buildbot_worker.util import lineboundaries
 
 
 class RemoteWorkerError(Exception):
@@ -65,6 +66,14 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
                                      on_command_complete, None, command, command_id, args)
         self.protocol = protocol
         self.command_id = command_id
+        self._lbfs = {}
+
+    def split_lines(self, stream, text):
+        try:
+            return self._lbfs[stream].append(text)
+        except KeyError:
+            lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder()
+            return lbf.append(text)
 
     def protocol_args_setup(self, command, args):
         if "want_stdout" in args:
@@ -87,18 +96,56 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
 
     # Returns a Deferred
     def protocol_update(self, data):
-        return self.protocol.get_message_result({'op': 'update', 'args': data,
-                                                 'command_id': self.command_id})
+        lines = []
+        for key, value in data:
+            if key in ['stdout', 'stderr', 'header']:
+                whole_line = self.split_lines(key, value)
+                if whole_line is not None:
+                    lines.append((key, whole_line))
+            elif key == 'log':
+                logname, data = value
+                whole_line = self.split_lines(logname, data)
+                value = (logname, whole_line)
+                if whole_line is not None:
+                    lines.append((key, value))
+            else:
+                lines.append((key, value))
+        if lines:
+            return self.protocol.get_message_result({'op': 'update', 'args': lines,
+                                                     'command_id': self.command_id})
+        return defer.succeed(None)
 
     def protocol_notify_on_disconnect(self):
         pass
 
-    # Returns a Deferred
+    def flush_command_output(self):
+        lines = []
+        for key, lbf in self._lbfs.items():
+            if key in ['stdout', 'stderr', 'header']:
+                whole_line = lbf.flush()
+                if whole_line is not None:
+                    lines.append((key, whole_line))
+            else:  # custom logfile
+                logname = key
+                whole_line = lbf.flush()
+                value = (logname, whole_line)
+                if whole_line is not None:
+                    lines.append((key, value))
+        d_update = defer.succeed(None)
+        if lines:
+            d_update = self.protocol.get_message_result({'op': 'update', 'args': lines,
+                                                         'command_id': self.command_id})
+        return d_update
+
+    @defer.inlineCallbacks
     def protocol_complete(self, failure):
+        d_update = self.flush_command_output()
         if failure is not None:
             failure = str(failure)
-        return self.protocol.get_message_result({'op': 'complete', 'args': failure,
-                                                 'command_id': self.command_id})
+        d_complete = self.protocol.get_message_result({'op': 'complete', 'args': failure,
+                                                       'command_id': self.command_id})
+        yield d_update
+        yield d_complete
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
