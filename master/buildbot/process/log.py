@@ -210,6 +210,21 @@ class StreamLog(Log):
             text = self.decoder(text)
         return self.split_lines('h', text)
 
+    def add_stdout_lines(self, text):
+        if not isinstance(text, str):
+            text = self.decoder(text)
+        return self._on_whole_lines('o', text)
+
+    def add_stderr_lines(self, text):
+        if not isinstance(text, str):
+            text = self.decoder(text)
+        return self._on_whole_lines('e', text)
+
+    def add_header_lines(self, text):
+        if not isinstance(text, str):
+            text = self.decoder(text)
+        return self._on_whole_lines('h', text)
+
     @defer.inlineCallbacks
     def finish(self):
         for stream, lbf in self.lbfs.items():

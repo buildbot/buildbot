@@ -25,6 +25,7 @@ from buildbot.process import metrics
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
+from buildbot.util import lineboundaries
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols import base
 
@@ -74,6 +75,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         # This is really only a problem with old-style steps, which do not
         # wait for the Deferred from one method before invoking the next.
         self.loglock = defer.DeferredLock()
+        self._line_boundary_finders = {}
 
     def __repr__(self):
         return f"<RemoteCommand '{self.remote_command}' at {id(self)}>"
@@ -201,10 +203,28 @@ class RemoteCommand(base.RemoteCommandImpl):
         try:
             for key, value in updates:
                 if self.active and not self.ignore_updates:
-                    self.remoteUpdate(key, value)
+                    if key in ['stdout', 'stderr', 'header']:
+                        whole_line = self.split_line(key, value)
+                        if whole_line is not None:
+                            self.remoteUpdate(key, whole_line, False)
+                    elif key == "log":
+                        logname, data = value
+                        whole_line = self.split_line(logname, data)
+                        value = (logname, whole_line)
+                        if whole_line is not None:
+                            self.remoteUpdate(key, value, False)
+                    else:
+                        self.remoteUpdate(key, value, False)
         except Exception:
             # log failure, terminate build, let worker retire the update
             self._finished(Failure())
+
+    def split_line(self, stream, text):
+        try:
+            return self._line_boundary_finders[stream].append(text)
+        except KeyError:
+            lbf = self._line_boundary_finders[stream] = lineboundaries.LineBoundaryFinder()
+            return lbf.append(text)
 
     def remote_update(self, updates):
         """
@@ -218,12 +238,24 @@ class RemoteCommand(base.RemoteCommandImpl):
         updates = decode(updates)
         self.worker.messageReceivedFromWorker()
         max_updatenum = 0
-        for (update, num) in updates:
+        for (update, num) in updates:  # noqa pylint: disable=too-many-nested-blocks
             # log.msg("update[%d]:" % num)
             try:
                 if self.active and not self.ignore_updates:
                     for key, value in update.items():
-                        self.remoteUpdate(key, value)
+                        if key in ['stdout', 'stderr', 'header']:
+                            whole_line = self.split_line(key, value)
+                            if whole_line is not None:
+                                self.remoteUpdate(key, whole_line, False)
+                        elif key == "log":
+                            logname, data = value
+                            whole_line = self.split_line(logname, data)
+                            value = (logname, whole_line)
+                            if whole_line is not None:
+                                self.remoteUpdate(key, value, False)
+                        else:
+                            self.remoteUpdate(key, value, False)
+
             except Exception:
                 # log failure, terminate build, let worker retire the update
                 self._finished(Failure())
@@ -259,6 +291,16 @@ class RemoteCommand(base.RemoteCommandImpl):
         return defer.succeed(None)
 
     @util.deferredLocked('loglock')
+    def add_stdout_lines(self, data, is_flushed):
+        if self.collectStdout:
+            if is_flushed:
+                data = data[:-1]
+            self.stdout += data
+        if self.stdioLogName is not None and self.stdioLogName in self.logs:
+            self.logs[self.stdioLogName].add_stdout_lines(data)
+        return defer.succeed(None)
+
+    @util.deferredLocked('loglock')
     def addStderr(self, data):
         if self.collectStderr:
             self.stderr += data
@@ -267,9 +309,25 @@ class RemoteCommand(base.RemoteCommandImpl):
         return defer.succeed(None)
 
     @util.deferredLocked('loglock')
+    def add_stderr_lines(self, data, is_flushed):
+        if self.collectStderr:
+            if is_flushed:
+                data = data[:-1]
+            self.stderr += data
+        if self.stdioLogName is not None and self.stdioLogName in self.logs:
+            self.logs[self.stdioLogName].add_stderr_lines(data)
+        return defer.succeed(None)
+
+    @util.deferredLocked('loglock')
     def addHeader(self, data):
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
             self.logs[self.stdioLogName].addHeader(data)
+        return defer.succeed(None)
+
+    @util.deferredLocked('loglock')
+    def add_header_lines(self, data):
+        if self.stdioLogName is not None and self.stdioLogName in self.logs:
+            self.logs[self.stdioLogName].add_header_lines(data)
         return defer.succeed(None)
 
     @util.deferredLocked('loglock')
@@ -284,13 +342,13 @@ class RemoteCommand(base.RemoteCommandImpl):
             self._closeWhenFinished[logname] = closeWhenFinished
 
         if logname in self.logs:
-            yield self.logs[logname].addStdout(data)
+            yield self.logs[logname].add_stdout_lines(data)
         else:
             log.msg(f"{self}.addToLog: no such log {logname}")
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     @defer.inlineCallbacks
-    def remoteUpdate(self, key, value):
+    def remoteUpdate(self, key, value, is_flushed):
         def cleanup(data):
             if self.step is None:
                 return data
@@ -299,18 +357,18 @@ class RemoteCommand(base.RemoteCommandImpl):
         if self.debug:
             log.msg(f"Update[{key}]: {value}")
         if key == "stdout":
-            yield self.addStdout(cleanup(value))
+            yield self.add_stdout_lines(cleanup(value), is_flushed)
         if key == "stderr":
-            yield self.addStderr(cleanup(value))
+            yield self.add_stderr_lines(cleanup(value), is_flushed)
         if key == "header":
-            yield self.addHeader(cleanup(value))
+            yield self.add_header_lines(cleanup(value))
         if key == "log":
             logname, data = value
             yield self.addToLog(logname, cleanup(data))
         if key == "rc":
             rc = self.rc = value
             log.msg(f"{self} rc={rc}")
-            yield self.addHeader(f"program finished with exit code {rc}\n")
+            yield self.add_header_lines(f"program finished with exit code {rc}\n")
         if key == "elapsed":
             self._remoteElapsed = value
 
@@ -326,6 +384,18 @@ class RemoteCommand(base.RemoteCommandImpl):
         if self._startTime and self._remoteElapsed:
             delta = (util.now() - self._startTime) - self._remoteElapsed
             metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
+
+        for key, lbf in self._line_boundary_finders.items():
+            if key in ['stdout', 'stderr', 'header']:
+                whole_line = lbf.flush()
+                if whole_line is not None:
+                    self.remoteUpdate(key, whole_line, True)
+            else:
+                logname = key
+                whole_line = lbf.flush()
+                value = (logname, whole_line)
+                if whole_line is not None:
+                    self.remoteUpdate("log", value, True)
 
         for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
