@@ -201,7 +201,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         try:
             for key, value in updates:
                 if self.active and not self.ignore_updates:
-                    self.remoteUpdate({key: value})
+                    self.remoteUpdate(key, value)
         except Exception:
             # log failure, terminate build, let worker retire the update
             self._finished(Failure())
@@ -222,7 +222,8 @@ class RemoteCommand(base.RemoteCommandImpl):
             # log.msg("update[%d]:" % num)
             try:
                 if self.active and not self.ignore_updates:
-                    self.remoteUpdate(update)
+                    for key, value in update.items():
+                        self.remoteUpdate(key, value)
             except Exception:
                 # log failure, terminate build, let worker retire the update
                 self._finished(Failure())
@@ -289,41 +290,35 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     @defer.inlineCallbacks
-    def remoteUpdate(self, update):
+    def remoteUpdate(self, key, value):
         def cleanup(data):
             if self.step is None:
                 return data
             return self.step.build.properties.cleanupTextFromSecrets(data)
 
         if self.debug:
-            for k, v in update.items():
-                log.msg(f"Update[{k}]: {v}")
-        if "stdout" in update:
-            # 'stdout': data
-            yield self.addStdout(cleanup(update['stdout']))
-        if "stderr" in update:
-            # 'stderr': data
-            yield self.addStderr(cleanup(update['stderr']))
-        if "header" in update:
-            # 'header': data
-            yield self.addHeader(cleanup(update['header']))
-        if "log" in update:
-            # 'log': (logname, data)
-            logname, data = update['log']
+            log.msg(f"Update[{key}]: {value}")
+        if key == "stdout":
+            yield self.addStdout(cleanup(value))
+        if key == "stderr":
+            yield self.addStderr(cleanup(value))
+        if key == "header":
+            yield self.addHeader(cleanup(value))
+        if key == "log":
+            logname, data = value
             yield self.addToLog(logname, cleanup(data))
-        if "rc" in update:
-            rc = self.rc = update['rc']
+        if key == "rc":
+            rc = self.rc = value
             log.msg(f"{self} rc={rc}")
             yield self.addHeader(f"program finished with exit code {rc}\n")
-        if "elapsed" in update:
-            self._remoteElapsed = update['elapsed']
+        if key == "elapsed":
+            self._remoteElapsed = value
 
         # TODO: these should be handled at the RemoteCommand level
-        for k in update:
-            if k not in ('stdout', 'stderr', 'header', 'rc'):
-                if k not in self.updates:
-                    self.updates[k] = []
-                self.updates[k].append(update[k])
+        if key not in ('stdout', 'stderr', 'header', 'rc'):
+            if key not in self.updates:
+                self.updates[key] = []
+            self.updates[key].append(value)
 
     @util.deferredLocked('loglock')
     @defer.inlineCallbacks

@@ -176,11 +176,11 @@ class Expect:
         Implement the given behavior.  Returns a Deferred.
         """
         if behavior == 'rc':
-            yield command.remoteUpdate({'rc': args[0]})
+            yield command.remoteUpdate('rc', args[0])
         elif behavior == 'err':
             raise args[0]
         elif behavior == 'update':
-            yield command.remoteUpdate({args[0]: args[1]})
+            yield command.remoteUpdate(args[0], args[1])
         elif behavior == 'log':
             name, streams = args
             for stream in streams:
