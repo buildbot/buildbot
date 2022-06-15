@@ -86,8 +86,8 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
             args['reader'] = None
 
     # Returns a Deferred
-    def protocol_update(self, updates):
-        return self.protocol.get_message_result({'op': 'update', 'args': updates,
+    def protocol_update(self, data):
+        return self.protocol.get_message_result({'op': 'update', 'args': data,
                                                  'command_id': self.command_id})
 
     def protocol_notify_on_disconnect(self):

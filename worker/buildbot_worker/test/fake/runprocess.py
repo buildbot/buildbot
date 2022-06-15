@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 from twisted.internet import defer
-from twisted.python import failure
 
 
 class Expect(object):
@@ -47,17 +46,6 @@ class Expect(object):
         self.result = None
         self.status_updates = []
 
-    def __add__(self, other):
-        if isinstance(other, dict):
-            self.status_updates.append(other)
-        elif isinstance(other, int):
-            self.result = ('c', other)
-        elif isinstance(other, failure.Failure):
-            self.result = ('e', other)
-        else:
-            raise ValueError("invalid expectation '{0!r}'".format(other))
-        return self
-
     def __str__(self):
         other_kwargs = self.kwargs.copy()
         del other_kwargs['command']
@@ -65,6 +53,18 @@ class Expect(object):
         return "Command: {0}\n  workdir: {1}\n  kwargs: {2}\n  result: {3}\n".format(
             self.kwargs['command'], self.kwargs['workdir'],
             other_kwargs, self.result)
+
+    def update(self, key, value):
+        self.status_updates.append((key, value))
+        return self
+
+    def exit(self, rc_code):
+        self.result = ('c', rc_code)
+        return self
+
+    def exception(self, error):
+        self.result = ('e', error)
+        return self
 
 
 class FakeRunProcess(object):
@@ -157,25 +157,23 @@ class FakeRunProcess(object):
         if keepStderr:
             self.stderr = ''
         finish_immediately = True
-
-        # send the updates, accounting for the stdio parameters
-        for upd in self._exp.status_updates:
-            if 'stdout' in upd:
+        for key, value in self._exp.status_updates:
+            if key == 'stdout':
                 if keepStdout:
-                    self.stdout += upd['stdout']
+                    self.stdout += value
                 if not sendStdout:
-                    del upd['stdout']
-            if 'stderr' in upd:
+                    continue  # don't send this update
+            if key == 'stderr':
                 if keepStderr:
-                    self.stderr += upd['stderr']
+                    self.stderr += value
                 if not sendStderr:
-                    del upd['stderr']
-            if 'wait' in upd:
+                    continue
+            if key == 'wait':
                 finish_immediately = False
-                continue  # don't send this update
-            if not upd:
                 continue
-            self.send_update(upd)
+            data = []
+            data.append((key, value))
+            self.send_update(data)
 
         d = self.run_deferred = defer.Deferred()
 
@@ -191,6 +189,6 @@ class FakeRunProcess(object):
             self.run_deferred.callback(self._exp.result[1])
 
     def kill(self, reason):
-        self.send_update({'hdr': 'killing'})
-        self.send_update({'rc': -1})
+        self.send_update([('hdr', 'killing')])
+        self.send_update([('rc', -1)])
         self.run_deferred.callback(-1)

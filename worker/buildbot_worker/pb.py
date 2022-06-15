@@ -118,8 +118,16 @@ class ProtocolCommandPb(ProtocolCommandBase):
             del args['workerdest']
 
     # Returns a Deferred
-    def protocol_update(self, updates):
-        return self.command_ref.callRemote("update", updates)
+    def protocol_update(self, data):
+        # data is a list of tuples
+        # first element of the tuple is dictionary key, second element is value
+        dl = []
+        for key, value in data:
+            update = [{key: value}, 0]
+            updates = [update]
+            d = self.command_ref.callRemote("update", updates)
+            dl.append(d)
+        return defer.DeferredList(dl, fireOnOneErrback=True, consumeErrors=True)
 
     def protocol_notify_on_disconnect(self):
         self.command_ref.notifyOnDisconnect(self.on_lost_remote_step)
@@ -555,7 +563,7 @@ class Worker(WorkerBase):
 
         if protocol == 'pb':
             bot_class = BotPb
-        elif protocol == 'msgpack_experimental_v3':
+        elif protocol == 'msgpack_experimental_v4':
             if sys.version_info < (3, 6):
                 raise NotImplementedError(
                     'Msgpack protocol is only supported on Python 3.6 and newer'
@@ -588,7 +596,7 @@ class Worker(WorkerBase):
         if protocol == 'pb':
             bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
             bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
-        elif protocol == 'msgpack_experimental_v3':
+        elif protocol == 'msgpack_experimental_v4':
             if connection_string is None:
                 ws_conn_string = "ws://{}:{}".format(buildmaster_host, port)
             else:

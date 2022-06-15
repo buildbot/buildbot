@@ -148,9 +148,9 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            {'header': 'sending {0}\n'.format(self.datafile)},
+            ('header', 'sending {0}\n'.format(self.datafile)),
             'write 64', 'write 64', 'write 52', 'close',
-            {'rc': 0}
+            ('rc', 0)
         ])
 
     @defer.inlineCallbacks
@@ -169,10 +169,10 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            {'header': 'sending {0}\n'.format(self.datafile)},
+            ('header', 'sending {0}\n'.format(self.datafile)),
             'write 64', 'write 36', 'close',
-            {'rc': 1,
-             'stderr': "Maximum filesize reached, truncating file '{0}'".format(self.datafile)}
+            ('rc', 1),
+            ('stderr', "Maximum filesize reached, truncating file '{0}'".format(self.datafile))
         ])
 
     @defer.inlineCallbacks
@@ -190,10 +190,10 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         df = self.datafile + "-nosuch"
         self.assertUpdates([
-            {'header': 'sending {0}\n'.format(df)},
+            ('header', 'sending {0}\n'.format(df)),
             'close',
-            {'rc': 1,
-             'stderr': "Cannot open file '{0}' for upload".format(df)}
+            ('rc', 1),
+            ('stderr', "Cannot open file '{0}' for upload".format(df))
         ])
 
     @defer.inlineCallbacks
@@ -213,9 +213,9 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
-            {'header': 'sending {0}\n'.format(self.datafile)},
+            ('header', 'sending {0}\n'.format(self.datafile)),
             'write 64', 'close',
-            {'rc': 1}
+            ('rc', 1)
         ])
 
     @defer.inlineCallbacks
@@ -245,8 +245,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield defer.DeferredList([d, interrupt_d])
 
         self.assertUpdates([
-            {'header': 'sending {0}\n'.format(self.datafile)},
-            'write(s)', 'close', {'rc': 1}
+            ('header', 'sending {0}\n'.format(self.datafile)), 'write(s)', 'close', ('rc', 1)
         ])
 
     @defer.inlineCallbacks
@@ -267,10 +266,10 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            {'header': 'sending {0}\n'.format(self.datafile)},
+            ('header', 'sending {0}\n'.format(self.datafile)),
             'write 64', 'write 64', 'write 52',
             'close', 'utime - {0}'.format(timestamp[0]),
-            {'rc': 0}
+            ('rc', 0)
         ])
 
 
@@ -313,9 +312,9 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            {'header': 'sending {0}\n'.format(self.datadir)},
+            ('header', 'sending {0}\n'.format(self.datadir)),
             'write(s)', 'unpack',  # note no 'close"
-            {'rc': 0}
+            ('rc', 0)
         ])
 
         f = io.BytesIO(self.fakemaster.data)
@@ -357,9 +356,9 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         yield self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
-            {'header': 'sending {0}\n'.format(self.datadir)},
+            ('header', 'sending {0}\n'.format(self.datadir)),
             'write(s)', 'unpack',
-            {'rc': 1}
+            ('rc', 1)
         ])
 
 
@@ -400,7 +399,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         self.assertUpdates([
             'read 32', 'read 32', 'read 32', 'close',
-            {'rc': 0}
+            ('rc', 0)
         ])
         datafile = os.path.join(self.basedir, 'data')
         self.assertTrue(os.path.exists(datafile))
@@ -428,7 +427,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         self.assertUpdates([
             'read(s)', 'close',
-            {'rc': 0}
+            ('rc', 0)
         ])
         datafile = os.path.join(self.basedir, 'workdir', 'subdir', 'data')
         self.assertTrue(os.path.exists(datafile))
@@ -454,9 +453,9 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         self.assertUpdates([
             'close',
-            {'rc': 1,
-             'stderr': "Cannot open file '{0}' for download".format(
-             os.path.join(self.basedir, 'dir'))}
+            ('rc', 1),
+            ('stderr', "Cannot open file '{0}' for download".format(
+             os.path.join(self.basedir, 'dir')))
         ])
 
     @defer.inlineCallbacks
@@ -475,9 +474,9 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         self.assertUpdates([
             'read(s)', 'close',
-            {'rc': 1,
-             'stderr': "Maximum filesize reached, truncating file '{0}'".format(
-             os.path.join(self.basedir, 'data'))}
+            ('rc', 1),
+            ('stderr', "Maximum filesize reached, truncating file '{0}'".format(
+             os.path.join(self.basedir, 'data')))
         ])
         datafile = os.path.join(self.basedir, 'data')
         self.assertTrue(os.path.exists(datafile))
@@ -513,5 +512,5 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         yield defer.DeferredList([d, interrupt_d])
 
         self.assertUpdates([
-            'read(s)', 'close', {'rc': 1}
+            'read(s)', 'close', ('rc', 1)
         ])

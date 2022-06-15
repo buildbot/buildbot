@@ -77,6 +77,27 @@ class FakeLogFile:
         self._split_lines('e', text)
         return defer.succeed(None)
 
+    def add_header_lines(self, text):
+        if not isinstance(text, str):
+            text = text.decode('utf-8')
+        self.header += text
+        self._on_whole_lines('h', text)
+        return defer.succeed(None)
+
+    def add_stdout_lines(self, text):
+        if not isinstance(text, str):
+            text = text.decode('utf-8')
+        self.stdout += text
+        self._on_whole_lines('o', text)
+        return defer.succeed(None)
+
+    def add_stderr_lines(self, text):
+        if not isinstance(text, str):
+            text = text.decode('utf-8')
+        self.stderr += text
+        self._on_whole_lines('e', text)
+        return defer.succeed(None)
+
     def isFinished(self):
         return self.finished
 

@@ -42,15 +42,17 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
 
         self.patch_runprocess(
             Expect(['echo', 'hello'], self.basedir_workdir)
-            + {'hdr': 'headers'} + {'stdout': 'hello\n'} + {'rc': 0}
-            + 0,
+            .update('hdr', 'headers')
+            .update('stdout', 'hello\n')
+            .update('rc', 0)
+            .exit(0)
         )
 
         yield self.run_command()
 
         # note that WorkerShellCommand does not add any extra updates of it own
         self.assertUpdates(
-            [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
+            [('hdr', 'headers'), ('stdout', 'hello\n'), ('rc', 0)],
             self.protocol_command.show())
 
     # TODO: test all functionality that WorkerShellCommand adds atop RunProcess

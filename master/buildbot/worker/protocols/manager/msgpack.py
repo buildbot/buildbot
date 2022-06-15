@@ -124,7 +124,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_update(msg['args'])
+            yield command.remote_update_msgpack(msg['args'])
         except Exception as e:
             is_exception = True
             result = str(e)

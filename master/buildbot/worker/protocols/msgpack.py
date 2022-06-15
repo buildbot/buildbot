@@ -42,6 +42,8 @@ class Listener(base.UpdateRegistrationListener):
 
 
 class BasicRemoteCommand():
+    # only has basic functions needed for remoteSetBuilderList in class Connection
+    # when waiting for update messages
     def __init__(self, worker_name, expected_keys, error_msg):
         self.worker_name = worker_name
         self.update_results = {}
@@ -52,11 +54,12 @@ class BasicRemoteCommand():
     def wait_until_complete(self):
         return self.d
 
-    def remote_update(self, args):
-        for element in args:
-            for key, value in element[0].items():
-                if key not in self.update_results:
-                    self.update_results[key] = value
+    def remote_update_msgpack(self, args):
+        # args is a list of tuples
+        # first element of the tuple is a key, second element is a value
+        for key, value in args:
+            if key not in self.update_results:
+                self.update_results[key] = value
 
     def remote_complete(self, args):
         if 'rc' not in self.update_results:

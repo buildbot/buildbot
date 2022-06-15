@@ -35,7 +35,10 @@ class DummyCommand(Command):
 
     def start(self):
         self.started = True
-        self.sendStatus(self.args)
+        data = []
+        for key, value in self.args.items():
+            data.append((key, value))
+        self.sendStatus(data)
         self.cmd_deferred = defer.Deferred()
         return self.cmd_deferred
 
@@ -100,7 +103,7 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
 
         def checkresult(_):
-            self.assertUpdates([{'stdout': 'yay'}], "updates processed")
+            self.assertUpdates([('stdout', 'yay')], "updates processed")
         d.addCallback(checkresult)
         return d
 
@@ -123,7 +126,7 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         d.addErrback(check)
 
         def checkresult(_):
-            self.assertUpdates([{}], "updates processed")
+            self.assertUpdates([], "updates processed")
         d.addCallback(checkresult)
         return d
 

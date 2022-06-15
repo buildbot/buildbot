@@ -412,8 +412,7 @@ class RunProcess(object):
         # and for .closeStdin to matter, we must use a pipe, not a PTY
         if runtime.platformType != "posix" or initialStdin is not None:
             if self.usePTY:
-                self.sendStatus(
-                    {'header': "WARNING: disabling usePTY for this command"})
+                self.sendStatus([('header', "WARNING: disabling usePTY for this command")])
             self.usePTY = False
 
         # use an explicit process group on POSIX, noting that usePTY always implies
@@ -687,7 +686,10 @@ class RunProcess(object):
         if not msg:
             return
         msg = self._collapseMsg(msg)
-        self.sendStatus(msg)
+        data = []
+        for key, value in msg.items():
+            data.append((key, value))
+        self.sendStatus(data)
 
     def _bufferTimeout(self):
         self.sendBuffersTimer = None
@@ -795,10 +797,9 @@ class RunProcess(object):
             rc = -1
         if self.sendRC:
             if sig is not None:
-                self.sendStatus(
-                    {'header': "process killed by signal {0}\n".format(sig)})
-            self.sendStatus({'rc': rc})
-        self.sendStatus({'header': "elapsedTime={0:0.6f}\n".format(self.elapsedTime)})
+                self.sendStatus([('header', "process killed by signal {0}\n".format(sig))])
+            self.sendStatus([('rc', rc)])
+        self.sendStatus([('header', "elapsedTime={0:0.6f}\n".format(self.elapsedTime))])
         self._cancelTimers()
         d = self.deferred
         self.deferred = None
@@ -947,7 +948,7 @@ class RunProcess(object):
         self._cancelTimers()
         msg += ", attempting to kill"
         log.msg(msg)
-        self.sendStatus({'header': "\n" + msg + "\n"})
+        self.sendStatus([('header', "\n" + msg + "\n")])
 
         # let the PP know that we are killing it, so that it can ensure that
         # the exit status comes out right
@@ -967,10 +968,9 @@ class RunProcess(object):
                 " finish anyway")
         self.killTimer = None
         signalName = "SIG" + self.interruptSignal
-        self.sendStatus({'header': signalName + " failed to kill process\n"})
+        self.sendStatus([('header', signalName + " failed to kill process\n")])
         if self.sendRC:
-            self.sendStatus({'header': "using fake rc=-1\n"})
-            self.sendStatus({'rc': -1})
+            self.sendStatus([('header', "using fake rc=-1\n"), ('rc', -1)])
         self.failed(RuntimeError(signalName + " failed to kill process"))
 
     def _cancelTimers(self):

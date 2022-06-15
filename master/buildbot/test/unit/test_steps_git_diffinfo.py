@@ -44,7 +44,7 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .log('stdio-merge-base', stderr='fatal: Not a valid object name')
             .exit(128))
-        self.expect_log_file_stderr('stdio-merge-base', 'fatal: Not a valid object name')
+        self.expect_log_file_stderr('stdio-merge-base', 'fatal: Not a valid object name\n')
         self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
         return self.run_step()
 
@@ -60,7 +60,7 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1),
             )
         self.expect_log_file('stdio-merge-base', '1234123412341234')
-        self.expect_log_file_stderr('stdio-diff', 'fatal: ambiguous argument')
+        self.expect_log_file_stderr('stdio-diff', 'fatal: ambiguous argument\n')
         self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
         return self.run_step()
 

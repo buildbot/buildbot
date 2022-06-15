@@ -344,24 +344,19 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'args': [[{'header': 'mkdir: test_error: {}'.format(path)}, 0]],
+                'args': [['header', 'mkdir: test_error: {}'.format(path)], ['rc', 1]],
                 'command_id': '123',
                 'seq_number': 0
             }, {
                 'op': 'update',
-                'args': [[{'rc': 1}, 0]],
+                'args': [['elapsed', 0]],
                 'command_id': '123',
                 'seq_number': 1
-            }, {
-                'op': 'update',
-                'args': [[{'elapsed': 0}, 0]],
-                'command_id': '123',
-                'seq_number': 2
             }, {
                 'op': 'complete',
                 'args': None,
                 'command_id': '123',
-                'seq_number': 3
+                'seq_number': 2
             },
             # response result is always None, even if the command failed
             {'op': 'response', 'result': None, 'seq_number': 1}
@@ -377,7 +372,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         yield self.send_message(create_msg(0))
         yield self.send_message(create_msg(1))
         yield self.send_message(create_msg(2))
-        yield self.send_message(create_msg(3))
 
         # worker should not send any new messages in response to masters 'response'
         self.assertEqual(self.list_send_message_args, [])
@@ -389,11 +383,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         # patch runprocess to handle the 'echo', below
         workdir = os.path.join('basedir', 'test_basedir')
         self.patch_runprocess(
-            Expect(['echo'], workdir) +
-            {'hdr': 'headers'} +
-            {'stdout': 'hello\n'} +
-            {'rc': 0} +
-            0,)
+            Expect(['echo'], workdir)
+            .update('hdr', 'headers')
+            .update('stdout', 'hello\n')
+            .update('rc', 0)
+            .exit(0)
+            )
 
         yield self.send_message({
             'op': 'start_command',
@@ -406,22 +401,22 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'args': [[{'hdr': 'headers'}, 0]],
+                'args': [['hdr', 'headers']],
                 'command_id': '123',
                 'seq_number': 0
             }, {
                 'op': 'update',
-                'args': [[{'stdout': 'hello\n'}, 0]],
+                'args': [['stdout', 'hello\n']],
                 'command_id': '123',
                 'seq_number': 1
             }, {
                 'op': 'update',
-                'args': [[{'rc': 0}, 0]],
+                'args': [['rc', 0]],
                 'command_id': '123',
                 'seq_number': 2
             }, {
                 'op': 'update',
-                'args': [[{'elapsed': 0}, 0]],
+                'args': [['elapsed', 0]],
                 'command_id': '123',
                 'seq_number': 3
             }, {
@@ -470,9 +465,9 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         # except that we interrupt it)
         workdir = os.path.join('basedir', 'test_basedir')
         self.patch_runprocess(
-            Expect(['sleep', '10'], workdir) +
-            {'hdr': 'headers'} +
-            {'wait': True}
+            Expect(['sleep', '10'], workdir)
+            .update('hdr', 'headers')
+            .update('wait', True)
         )
 
         yield self.send_message({
@@ -493,7 +488,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'seq_number': 0,
                 'command_id': '123',
-                'args': [[{'hdr': 'headers'}, 0]]
+                'args': [['hdr', 'headers']]
             }, {
                 'op': 'response',
                 'seq_number': 1,
@@ -513,12 +508,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'seq_number': 1,
                 'command_id': '123',
-                'args': [[{'hdr': 'killing'}, 0]],
+                'args': [['hdr', 'killing']],
             }, {
                 'op': 'update',
                 'seq_number': 2,
                 'command_id': '123',
-                'args': [[{'rc': -1}, 0]]
+                'args': [['rc', -1]]
             }, {
                 'op': 'complete', 'seq_number': 3, 'command_id': '123', 'args': None
             }, {

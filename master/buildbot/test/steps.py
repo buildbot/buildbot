@@ -176,11 +176,11 @@ class Expect:
         Implement the given behavior.  Returns a Deferred.
         """
         if behavior == 'rc':
-            yield command.remoteUpdate({'rc': args[0]})
+            yield command.remoteUpdate('rc', args[0], False)
         elif behavior == 'err':
             raise args[0]
         elif behavior == 'update':
-            yield command.remoteUpdate({args[0]: args[1]})
+            yield command.remoteUpdate(args[0], args[1], False)
         elif behavior == 'log':
             name, streams = args
             for stream in streams:
@@ -189,11 +189,11 @@ class Expect:
 
             if name == command.stdioLogName:
                 if 'header' in streams:
-                    command.addHeader(streams['header'])
+                    command.remote_update([({"header": streams['header']}, 0)])
                 if 'stdout' in streams:
-                    command.addStdout(streams['stdout'])
+                    command.remote_update([({"stdout": streams['stdout']}, 0)])
                 if 'stderr' in streams:
-                    command.addStderr(streams['stderr'])
+                    command.remote_update([({"stderr": streams['stderr']}, 0)])
             else:
                 if 'header' in streams or 'stderr' in streams:
                     raise Exception('Non stdio streams only support stdout')

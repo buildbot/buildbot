@@ -36,7 +36,8 @@ class FakeProtocolCommand(ProtocolCommandBase):
     def send_update(self, status):
         if self.debug:
             print("FakeWorkerForBuilder.sendUpdate", status)
-        self.updates.append(status)
+        for st in status:
+            self.updates.append(st)
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):

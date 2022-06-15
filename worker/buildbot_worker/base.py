@@ -74,9 +74,7 @@ class ProtocolCommandBase:
         # master still expects to receive. Provide it to avoid significant
         # interoperability issues between new workers and old masters.
         if not self.is_complete:
-            update = [data, 0]
-            updates = [update]
-            d = self.protocol_update(updates)
+            d = self.protocol_update(data)
             d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
 
     def _ack_failed(self, why, where):
