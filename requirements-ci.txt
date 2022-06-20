@@ -84,7 +84,7 @@ Twisted==22.4.0
 txaio==22.2.1
 txrequests==0.9.6
 unidiff==0.7.3
-webcolors==1.11.1
+webcolors==1.12
 Werkzeug==2.1.2
 wrapt==1.14.1
 xmltodict==0.12.0
