@@ -5,7 +5,7 @@ astroid==2.11.6
 attrs==21.4.0
 autobahn==22.5.1
 Automat==20.2.0
-Babel==2.10.1
+Babel==2.10.3
 backports.functools-lru-cache==1.6.4
 boto==2.49.0
 boto3==1.18.1
