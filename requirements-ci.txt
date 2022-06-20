@@ -59,7 +59,7 @@ pyenchant==3.2.2
 pyflakes==2.4.0
 pypugjs==5.9.11
 PyJWT==2.4.0
-pylint==2.13.8
+pylint==2.14.3
 pyOpenSSL==20.0.1
 pyparsing==3.0.8
 python-dateutil==2.8.2
