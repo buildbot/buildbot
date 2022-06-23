@@ -148,9 +148,6 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         query secret from Vault and re-authenticate if not authenticated
         """
 
-        # no need to "try" import, it was already handled by reconfigService()
-        import hvac
-
         if not self.client.is_authenticated():
             self.authenticator.authenticate(self.client)
 
