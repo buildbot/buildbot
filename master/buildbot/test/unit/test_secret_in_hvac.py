@@ -91,6 +91,9 @@ class FakeHvacClient:
         self.secrets.kv.v1.token = new_token
         self.secrets.kv.v2.token = new_token
 
+    def is_authenticated(self):
+        return self._token
+
 
 def mock_vault(*args, **kwargs):
     client = FakeHvacClient()
