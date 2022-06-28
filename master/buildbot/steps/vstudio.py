@@ -548,6 +548,8 @@ class MsBuild141(VisualStudio):
         self.env['VCENV_BAT'] = self.vcenv_bat
         self.add_env_path("PATH",
                    'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\')
+        self.add_env_path("PATH",
+                   'C:\\Program Files\\Microsoft Visual Studio\\Installer\\')
         self.add_env_path("PATH", r'${PATH}')
 
     def describe_project(self, done=False):

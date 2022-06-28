@@ -306,6 +306,7 @@ errbacks
 errorCb
 et
 eventPathPatterns
+executables
 explorable
 extensibility
 facto
