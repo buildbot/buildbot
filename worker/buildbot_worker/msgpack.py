@@ -70,10 +70,18 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
 
     def split_lines(self, stream, text):
         try:
-            return self._lbfs[stream].append(text)
+            result = self._lbfs[stream].append(text, 0.0)
+            if result is not None:
+                text, _, _ = result
+                result = text
+            return result
         except KeyError:
             lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder()
-            return lbf.append(text)
+            result = lbf.append(text, 0.0)
+            if result is not None:
+                text, _, _ = result
+                result = text
+            return result
 
     def protocol_args_setup(self, command, args):
         if "want_stdout" in args:
@@ -124,12 +132,14 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
             if key in ['stdout', 'stderr', 'header']:
                 whole_line = lbf.flush()
                 if whole_line is not None:
-                    lines.append((key, whole_line))
+                    text, _, _ = whole_line
+                    lines.append((key, text))
             else:  # custom logfile
                 logname = key
                 whole_line = lbf.flush()
-                value = (logname, whole_line)
                 if whole_line is not None:
+                    whole_line, _, _ = whole_line
+                    value = (logname, whole_line)
                     lines.append((key, value))
         d_update = defer.succeed(None)
         if lines:
