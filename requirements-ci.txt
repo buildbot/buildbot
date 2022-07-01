@@ -7,14 +7,16 @@ autobahn==22.3.2
 Automat==20.2.0
 Babel==2.10.1
 backports.functools-lru-cache==1.6.4
-boto==2.49.0
 boto3==1.18.1
+boto==2.49.0
 botocore==1.21.1
 cffi==1.15.0
 click==8.1.3
+codecov==2.1.12
 configparser==5.2.0
 constantly==15.1.0
 cookies==2.2.1
+coverage==6.3.2
 cryptography==3.4.7
 decorator==5.1.1
 dicttoxml==1.7.4
@@ -50,23 +52,23 @@ pep8==1.7.1
 Pillow==9.1.1
 psutil==5.9.0
 pyaml==21.10.1
-ruamel.yaml==0.17.21
-pyasn1==0.4.8
 pyasn1-modules==0.2.8
+pyasn1==0.4.8
 pycodestyle==2.8.0
 pycparser==2.21
 pyenchant==3.2.2
 pyflakes==2.4.0
-pypugjs==5.9.11
 PyJWT==2.4.0
 pylint==2.13.8
 pyOpenSSL==20.0.1
 pyparsing==3.0.8
+pypugjs==5.9.11
 python-dateutil==2.8.2
 python-subunit==1.4.0
 pytz==2022.1
 PyYAML==6.0
 requests==2.27.1
+ruamel.yaml==0.17.21
 s3transfer==0.5.2
 scandir==1.10.0
 service-identity==21.1.0
@@ -89,8 +91,6 @@ Werkzeug==2.1.2
 wrapt==1.14.1
 xmltodict==0.12.0
 zope.interface==5.4.0
-coverage==6.3.2
-codecov==2.1.12
 -e master
 -e worker
 -e pkg
