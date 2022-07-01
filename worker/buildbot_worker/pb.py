@@ -427,6 +427,9 @@ if sys.version_info >= (3, 6):
                 # command that wasn't actually running
                 log.msg(" .. but none was running")
                 return
+            d = self.protocol_commands[command_id].flush_command_output()
+            d.addErrback(self.protocol_commands[command_id]._ack_failed,
+                         "ProtocolCommandMsgpack.flush_command_output")
             self.protocol_commands[command_id].command.doInterrupt()
 
 
@@ -563,7 +566,7 @@ class Worker(WorkerBase):
 
         if protocol == 'pb':
             bot_class = BotPb
-        elif protocol == 'msgpack_experimental_v4':
+        elif protocol == 'msgpack_experimental_v5':
             if sys.version_info < (3, 6):
                 raise NotImplementedError(
                     'Msgpack protocol is only supported on Python 3.6 and newer'
@@ -596,7 +599,7 @@ class Worker(WorkerBase):
         if protocol == 'pb':
             bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
             bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
-        elif protocol == 'msgpack_experimental_v4':
+        elif protocol == 'msgpack_experimental_v5':
             if connection_string is None:
                 ws_conn_string = "ws://{}:{}".format(buildmaster_host, port)
             else:

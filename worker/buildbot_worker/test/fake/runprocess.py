@@ -55,7 +55,11 @@ class Expect(object):
             other_kwargs, self.result)
 
     def update(self, key, value):
-        self.status_updates.append((key, value))
+        self.status_updates.append([(key, value)])
+        return self
+
+    def updates(self, updates):
+        self.status_updates.append((updates))
         return self
 
     def exit(self, rc_code):
@@ -157,22 +161,24 @@ class FakeRunProcess(object):
         if keepStderr:
             self.stderr = ''
         finish_immediately = True
-        for key, value in self._exp.status_updates:
-            if key == 'stdout':
-                if keepStdout:
-                    self.stdout += value
-                if not sendStdout:
-                    continue  # don't send this update
-            if key == 'stderr':
-                if keepStderr:
-                    self.stderr += value
-                if not sendStderr:
-                    continue
-            if key == 'wait':
-                finish_immediately = False
-                continue
+
+        for update in self._exp.status_updates:
             data = []
-            data.append((key, value))
+            for key, value in update:
+                if key == 'stdout':
+                    if keepStdout:
+                        self.stdout += value
+                    if not sendStdout:
+                        continue  # don't send this update
+                if key == 'stderr':
+                    if keepStderr:
+                        self.stderr += value
+                    if not sendStderr:
+                        continue
+                if key == 'wait':
+                    finish_immediately = False
+                    continue
+                data.append((key, value))
             self.send_update(data)
 
         d = self.run_deferred = defer.Deferred()
@@ -189,6 +195,6 @@ class FakeRunProcess(object):
             self.run_deferred.callback(self._exp.result[1])
 
     def kill(self, reason):
-        self.send_update([('hdr', 'killing')])
+        self.send_update([('header', 'killing')])
         self.send_update([('rc', -1)])
         self.run_deferred.callback(-1)

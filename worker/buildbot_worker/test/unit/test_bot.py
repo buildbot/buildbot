@@ -207,7 +207,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to handle the 'echo', below
         self.patch_runprocess(
             Expect(['echo', 'hello'], os.path.join(self.basedir, 'wfb', 'workdir'))
-            .update('hdr', 'headers')
+            .update('header', 'headers')
             .update('stdout', 'hello\n')
             .update('rc', 0)
             .exit(0)
@@ -219,7 +219,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         yield st.wait_for_finish()
 
         self.assertEqual(st.actions, [
-            ['update', [[{'hdr': 'headers'}, 0]]],
+            ['update', [[{'header': 'headers'}, 0]]],
             ['update', [[{'stdout': 'hello\n'}, 0]]],
             ['update', [[{'rc': 0}, 0]]],
             ['update', [[{'elapsed': 1}, 0]]],
@@ -235,7 +235,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # except that we interrupt it)
         self.patch_runprocess(
             Expect(['sleep', '10'], os.path.join(self.basedir, 'wfb', 'workdir'))
-            .update('hdr', 'headers')
+            .update('header', 'headers')
             .update('wait', True)
         )
 
@@ -254,8 +254,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         yield st.wait_for_finish()
 
         self.assertEqual(st.actions, [
-            ['update', [[{'hdr': 'headers'}, 0]]],
-            ['update', [[{'hdr': 'killing'}, 0]]],
+            ['update', [[{'header': 'headers'}, 0]]],
+            ['update', [[{'header': 'killing'}, 0]]],
             ['update', [[{'rc': -1}, 0]]],
             ['complete', None],
         ])
