@@ -712,6 +712,7 @@ Currently only one provider is available:
         :param accountExtraFields: extra fields to extracts for use with the authorization policies
 
         If one of the three optional groups parameters is supplied, then all of them become mandatory. If none is supplied, the retrieved user info has an empty list of groups.
+        Other types of return values except search result entries are filtered out. This is because Active Directory delivers search result references for every query which can not be suppressed by query parameters in certain setups.
 
 Example:
 
