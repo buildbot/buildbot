@@ -1,0 +1,1 @@
+Active Directory returns search result references in addition to search results, which can not be suppressed by query parameters. These will now be filtered out.
