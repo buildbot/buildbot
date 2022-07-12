@@ -141,6 +141,9 @@ class GitHubEventHandler(PullRequestMixin):
     def handle_ping(self, _, __):
         return [], 'git'
 
+    def handle_workflow_run(self, _, __):
+        return [], 'git'
+
     def handle_push(self, payload, event):
         # This field is unused:
         user = None
