@@ -1,7 +1,7 @@
 Sphinx==5.0.2
 sphinx-jinja==2.0.2
 sphinx-rtd-theme==1.0.0
-sphinxcontrib-spelling==7.3.3
+sphinxcontrib-spelling==7.6.0
 sphinxcontrib-websupport==1.2.4
 Pygments==2.9.0
 towncrier==21.9.0
