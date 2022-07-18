@@ -85,7 +85,7 @@ requests==2.28.1
 responses==0.21.0
 ruamel.yaml.clib==0.2.6
 ruamel.yaml==0.17.21
-s3transfer==0.5.2
+s3transfer==0.6.0
 scandir==1.10.0
 service-identity==21.1.0
 setuptools-trial==0.6.0
