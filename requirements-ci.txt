@@ -12,7 +12,7 @@ boto3==1.24.31
 boto==2.49.0
 botocore==1.27.31
 certifi==2022.6.15
-cffi==1.15.0
+cffi==1.15.1
 chardet==4.0.0
 charset-normalizer==2.0.12
 click-default-group==1.2.2
