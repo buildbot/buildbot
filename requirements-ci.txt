@@ -10,7 +10,7 @@ Babel==2.10.3
 backports.functools-lru-cache==1.6.4
 boto3==1.24.31
 boto==2.49.0
-botocore==1.21.1
+botocore==1.27.31
 certifi==2021.10.8
 cffi==1.15.0
 chardet==4.0.0
