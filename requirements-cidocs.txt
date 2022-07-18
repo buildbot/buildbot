@@ -1,5 +1,5 @@
 Sphinx==5.0.2
-sphinx-jinja==2.0.1
+sphinx-jinja==2.0.2
 sphinx-rtd-theme==1.0.0
 sphinxcontrib-spelling==7.3.3
 sphinxcontrib-websupport==1.2.4
