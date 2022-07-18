@@ -62,7 +62,7 @@ parameterized==0.8.1
 pathlib2==2.3.7.post1
 pbr==5.9.0
 pep8==1.7.1
-Pillow==9.1.1
+Pillow==9.2.0
 platformdirs==2.5.2
 psutil==5.9.0
 pyaml==21.10.1
