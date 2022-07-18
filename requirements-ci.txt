@@ -1,5 +1,5 @@
 alabaster==0.7.12
-alembic==1.7.7
+alembic==1.8.1
 appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==2.11.4
