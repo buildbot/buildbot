@@ -344,24 +344,18 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'args': [['rc', 1]],
+                'args': [
+                    ['rc', 1],
+                    ['elapsed', 0],
+                    ['header', 'mkdir: test_error: {}\n'.format(path)]
+                ],
                 'command_id': '123',
                 'seq_number': 0
-            }, {
-                'op': 'update',
-                'args': [['elapsed', 0]],
-                'command_id': '123',
-                'seq_number': 1
-            }, {
-                'op': 'update',
-                'args': [['header', 'mkdir: test_error: {}\n'.format(path)]],
-                'command_id': '123',
-                'seq_number': 2
             }, {
                 'op': 'complete',
                 'args': None,
                 'command_id': '123',
-                'seq_number': 3
+                'seq_number': 1
             },
             # response result is always None, even if the command failed
             {'op': 'response', 'result': None, 'seq_number': 1}
@@ -376,7 +370,6 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
         yield self.send_message(create_msg(0))
         yield self.send_message(create_msg(1))
-        yield self.send_message(create_msg(2))
 
         # worker should not send any new messages in response to masters 'response'
         self.assertEqual(self.list_send_message_args, [])
@@ -406,29 +399,19 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'args': [['stdout', 'hello\n']],
+                'args': [
+                    ['stdout', 'hello\n'],
+                    ['rc', 0],
+                    ['elapsed', 0],
+                    ['header', 'headers\n']
+                ],
                 'command_id': '123',
                 'seq_number': 0
-            }, {
-                'op': 'update',
-                'args': [['rc', 0]],
-                'command_id': '123',
-                'seq_number': 1
-            }, {
-                'op': 'update',
-                'args': [['elapsed', 0]],
-                'command_id': '123',
-                'seq_number': 2
-            }, {
-                'op': 'update',
-                'args': [['header', 'headers\n']],
-                'command_id': '123',
-                'seq_number': 3
             }, {
                 'op': 'complete',
                 'args': None,
                 'command_id': '123',
-                'seq_number': 4
+                'seq_number': 1
             }, {
                 'op': 'response', 'seq_number': 1, 'result': None
             }
@@ -457,24 +440,19 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'args': [['stdout', 'hello\n'], ['rc', 0]],
+                'args': [
+                    ['stdout', 'hello\n'],
+                    ['rc', 0],
+                    ['elapsed', 0],
+                    ['header', 'headers\n']
+                ],
                 'command_id': '123',
                 'seq_number': 0
-            }, {
-                'op': 'update',
-                'args': [['elapsed', 0]],
-                'command_id': '123',
-                'seq_number': 1
-            }, {
-                'op': 'update',
-                'args': [['header', 'headers\n']],
-                'command_id': '123',
-                'seq_number': 2
             }, {
                 'op': 'complete',
                 'args': None,
                 'command_id': '123',
-                'seq_number': 3
+                'seq_number': 1
             }, {
                 'op': 'response', 'seq_number': 1, 'result': None
             }
@@ -559,14 +537,9 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'seq_number': 1,
                 'command_id': '123',
-                'args': [['rc', -1]]
+                'args': [['rc', -1], ['header', 'killing\n']],
             }, {
-                'op': 'update',
-                'seq_number': 2,
-                'command_id': '123',
-                'args': [['header', 'killing\n']],
-            }, {
-                'op': 'complete', 'seq_number': 3, 'command_id': '123', 'args': None
+                'op': 'complete', 'seq_number': 2, 'command_id': '123', 'args': None
             }, {
                 'op': 'response', 'seq_number': 1, 'result': None
             }

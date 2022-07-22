@@ -24,9 +24,11 @@ from autobahn.twisted.websocket import WebSocketClientFactory
 from autobahn.twisted.websocket import WebSocketClientProtocol
 from autobahn.websocket.types import ConnectingRequest
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot_worker.base import ProtocolCommandBase
+from buildbot_worker.util import buffer_manager
 from buildbot_worker.util import deferwaiter
 from buildbot_worker.util import lineboundaries
 
@@ -60,6 +62,11 @@ def remote_print(self, message):
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):
+    # Don't send any data until at least BUFFER_SIZE bytes have been collected
+    # or BUFFER_TIMEOUT elapsed
+    BUFFER_SIZE = 64 * 1024
+    BUFFER_TIMEOUT = 5
+
     def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
                  on_command_complete, protocol, command_id, command, args):
         ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
@@ -67,21 +74,15 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
         self.protocol = protocol
         self.command_id = command_id
         self._lbfs = {}
+        self.buffer = buffer_manager.BufferManager(reactor, self._message_consumer,
+                                                   self.BUFFER_SIZE, self.BUFFER_TIMEOUT)
 
     def split_lines(self, stream, text):
         try:
-            result = self._lbfs[stream].append(text, 0.0)
-            if result is not None:
-                text, _, _ = result
-                result = text
-            return result
+            return self._lbfs[stream].append(text, 0.0)
         except KeyError:
             lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder()
-            result = lbf.append(text, 0.0)
-            if result is not None:
-                text, _, _ = result
-                result = text
-            return result
+            return lbf.append(text, 0.0)
 
     def protocol_args_setup(self, command, args):
         if "want_stdout" in args:
@@ -102,50 +103,57 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
         if command == "download_file" and 'reader' not in args:
             args['reader'] = None
 
+    def _cleanup_update(self, message):
+        new_message = []
+        if message[0] in ["stdout", "stderr", "header", "log"]:
+            new_message.append(message[0])
+            new_message.append(message[1][0])
+            return new_message
+        return message
+
+    def _message_consumer(self, message):
+        new_message = []
+        for one_message in message:
+            new_message_part = self._cleanup_update(one_message)
+            new_message.append(new_message_part)
+
+        d = self.protocol.get_message_result({'op': 'update', 'args': new_message,
+                                              'command_id': self.command_id})
+        d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
+
     # Returns a Deferred
     def protocol_update(self, data):
-        lines = []
         for key, value in data:
             if key in ['stdout', 'stderr', 'header']:
                 whole_line = self.split_lines(key, value)
                 if whole_line is not None:
-                    lines.append((key, whole_line))
+                    self.buffer.append(key, whole_line)
             elif key == 'log':
                 logname, data = value
                 whole_line = self.split_lines(logname, data)
-                value = (logname, whole_line)
                 if whole_line is not None:
-                    lines.append((key, value))
+                    self.buffer.append('log', (logname, whole_line))
             else:
-                lines.append((key, value))
-        if lines:
-            return self.protocol.get_message_result({'op': 'update', 'args': lines,
-                                                     'command_id': self.command_id})
+                self.buffer.append(key, value)
         return defer.succeed(None)
 
     def protocol_notify_on_disconnect(self):
         pass
 
     def flush_command_output(self):
-        lines = []
         for key, lbf in self._lbfs.items():
             if key in ['stdout', 'stderr', 'header']:
                 whole_line = lbf.flush()
                 if whole_line is not None:
-                    text, _, _ = whole_line
-                    lines.append((key, text))
+                    self.buffer.append(key, whole_line)
             else:  # custom logfile
                 logname = key
                 whole_line = lbf.flush()
                 if whole_line is not None:
-                    whole_line, _, _ = whole_line
-                    value = (logname, whole_line)
-                    lines.append((key, value))
-        d_update = defer.succeed(None)
-        if lines:
-            d_update = self.protocol.get_message_result({'op': 'update', 'args': lines,
-                                                         'command_id': self.command_id})
-        return d_update
+                    self.buffer.append('log', (logname, whole_line))
+
+        self.buffer.flush()
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def protocol_complete(self, failure):
