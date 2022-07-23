@@ -103,21 +103,8 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
         if command == "download_file" and 'reader' not in args:
             args['reader'] = None
 
-    def _cleanup_update(self, message):
-        new_message = []
-        if message[0] in ["stdout", "stderr", "header", "log"]:
-            new_message.append(message[0])
-            new_message.append(message[1][0])
-            return new_message
-        return message
-
     def _message_consumer(self, message):
-        new_message = []
-        for one_message in message:
-            new_message_part = self._cleanup_update(one_message)
-            new_message.append(new_message_part)
-
-        d = self.protocol.get_message_result({'op': 'update', 'args': new_message,
+        d = self.protocol.get_message_result({'op': 'update', 'args': message,
                                               'command_id': self.command_id})
         d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
 

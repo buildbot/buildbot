@@ -782,7 +782,7 @@ Runs a ``shell`` command on the worker.
 
 
     If command succeeded, worker sends ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
-    It can also send many other ``update`` messages with keys ``header``, ``stdout`` or ``stderr`` to inform about command execution.
+    It can also send many other ``update`` messages with keys such as ``header``, ``stdout`` or ``stderr`` to inform about command execution.
     If command failed, it sends ``rc`` value with the error number.
 
     The basic structure of worker ``update`` message is explained in section :ref:`MsgPack_Keys_And_Values_Message`.
@@ -1090,7 +1090,7 @@ This command removes the specified file.
 Contents of the value corresponding to ``args`` key in the dictionary of ``update`` request message
 ---------------------------------------------------------------------------------------------------
 
-The ``args`` key-value pair describes information that the request sends to master.
+The ``args`` key-value pair describes information that the request message sends to master.
 The value is a list of lists.
 Each sub-list contains a name-value pair and represents a single update.
 First element in a list represents the name of update (see below) and second element represents its value.
@@ -1099,7 +1099,7 @@ Commands may have their own update names so only common ones are described here.
 ``stdout``
     Value is a standard output of a process as a string.
     Some of the commands that master requests worker to start, may initiate processes which output a result as a standard output and this result is saved in the value of ``stdout``.
-    The value is satisfies the requirements described in a section below.
+    The value satisfies the requirements described in a section below.
 
 ``rc``
     Value is an integer.
@@ -1126,24 +1126,30 @@ Commands may have their own update names so only common ones are described here.
     The value satisfies the requirements described in a section below.
 
 ``log``
-    Value is a list where first element represents the name of the log and second element represents the contents of the file as a string.
+    Value is a list where the first element represents the name of the log and the second element is a list, representing the contents of the file.
+    The composition of this second element is described in the section below.
     This message is used to transfer the contents of the file that master requested worker to read.
-    This file is identified by the second member in workers tuple.
+    This file is identified by the name of the log.
     The same value is sent by master as the key of dictionary represented by ``logfile`` key within ``args`` dictionary of ``StartCommand`` command.
-    The string value of the message is the contents of a file that worker read.
-    The value satisfies the requirements described in a section below.
 
 ``elapsed``
     Value is an integer.
     It represents how much time has passed between the start of a command and the completion in seconds.
 
-Requirements for values of ``stdout``, ``stderr``, ``header`` and ``log``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Requirements for content lists of ``stdout``, ``stderr``, ``header`` and ``log``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The lists that represents the contents of the output or a file consist of three elements.
 
-Values of ``stdout``, ``header``, ``stderr``, ``log`` must be processed using the following algorithm:
+First element is a string with the content, which must be processed using the following algorithm:
 
-- Each value may contain one or more lines (characters with a terminating ``\n`` character).
-  Each line is not longer than internal ``maxsize`` value on worker side.
-  Longer lines are split into multiple lines where each except the last line contains exactly ``maxsize`` characters and the last line may contain less.
+* Each value may contain one or more lines (characters with a terminating ``\n`` character).
+    Each line is not longer than internal ``maxsize`` value on worker side.
+    Longer lines are split into multiple lines where each except the last line contains exactly ``maxsize`` characters and the last line may contain less.
 
-- The lines are run through an internal worker cleanup regex.
+* The lines are run through an internal worker cleanup regex.
+
+Second element is a list of indexes, representing the positions of newline characters in the string of first tuple element.
+
+Third element is a list of numbers, representing at what time each line was received as an output while processing the command.
+
+The number of elements in both lists is always the same.

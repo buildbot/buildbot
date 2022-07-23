@@ -347,7 +347,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'args': [
                     ['rc', 1],
                     ['elapsed', 0],
-                    ['header', 'mkdir: test_error: {}\n'.format(path)]
+                    ['header', ['mkdir: test_error: {}\n'.format(path), [35], [0.0]]]
                 ],
                 'command_id': '123',
                 'seq_number': 0
@@ -400,10 +400,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {
                 'op': 'update',
                 'args': [
-                    ['stdout', 'hello\n'],
+                    ['stdout', ['hello\n', [5], [0.0]]],
                     ['rc', 0],
                     ['elapsed', 0],
-                    ['header', 'headers\n']
+                    ['header', ['headers\n', [7], [0.0]]]
                 ],
                 'command_id': '123',
                 'seq_number': 0
@@ -441,10 +441,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {
                 'op': 'update',
                 'args': [
-                    ['stdout', 'hello\n'],
+                    ['stdout', ['hello\n', [5], [0.0]]],
                     ['rc', 0],
                     ['elapsed', 0],
-                    ['header', 'headers\n']
+                    ['header', ['headers\n', [7], [0.0]]]
                 ],
                 'command_id': '123',
                 'seq_number': 0
@@ -532,12 +532,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'seq_number': 0,
                 'command_id': '123',
-                'args': [['header', 'headers\n']]
+                'args': [['header', ['headers\n', [7], [0.0]]]]
             }, {
                 'op': 'update',
                 'seq_number': 1,
                 'command_id': '123',
-                'args': [['rc', -1], ['header', 'killing\n']],
+                'args': [['rc', -1], ['header', ['killing\n', [7], [0.0]]]],
             }, {
                 'op': 'complete', 'seq_number': 2, 'command_id': '123', 'args': None
             }, {
