@@ -22,6 +22,7 @@ import socket
 import sys
 
 from twisted.application import service
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
@@ -30,6 +31,8 @@ import buildbot_worker
 from buildbot_worker import monkeypatches
 from buildbot_worker.commands import base
 from buildbot_worker.commands import registry
+from buildbot_worker.util import buffer_manager
+from buildbot_worker.util import lineboundaries
 
 
 class UnknownCommand(pb.Error):
@@ -37,6 +40,11 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandBase:
+    # Don't send any data until at least BUFFER_SIZE bytes have been collected
+    # or BUFFER_TIMEOUT elapsed
+    BUFFER_SIZE = 64 * 1024
+    BUFFER_TIMEOUT = 5
+
     def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
                  on_command_complete, on_lost_remote_step, command, command_id, args):
         self.unicode_encoding = unicode_encoding
@@ -54,8 +62,34 @@ class ProtocolCommandBase:
 
         # .command points to a WorkerCommand instance, and is set while the step is running.
         self.command = factory(self, command_id, args)
+        self._lbfs = {}
+        self.buffer = buffer_manager.BufferManager(reactor, self._message_consumer,
+                                                   self.BUFFER_SIZE, self.BUFFER_TIMEOUT)
 
         self.is_complete = False
+
+    def split_lines(self, stream, text):
+        try:
+            return self._lbfs[stream].append(text, 0.0)
+        except KeyError:
+            lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder()
+            return lbf.append(text, 0.0)
+
+    def flush_command_output(self):
+        for key in sorted(list(self._lbfs)):
+            lbf = self._lbfs[key]
+            if key in ['stdout', 'stderr', 'header']:
+                whole_line = lbf.flush()
+                if whole_line is not None:
+                    self.buffer.append(key, whole_line)
+            else:  # custom logfile
+                logname = key
+                whole_line = lbf.flush()
+                if whole_line is not None:
+                    self.buffer.append('log', (logname, whole_line))
+
+        self.buffer.flush()
+        return defer.succeed(None)
 
     # sendUpdate is invoked by the Commands we spawn
     def send_update(self, data):

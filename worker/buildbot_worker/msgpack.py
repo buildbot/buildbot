@@ -24,13 +24,10 @@ from autobahn.twisted.websocket import WebSocketClientFactory
 from autobahn.twisted.websocket import WebSocketClientProtocol
 from autobahn.websocket.types import ConnectingRequest
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot_worker.base import ProtocolCommandBase
-from buildbot_worker.util import buffer_manager
 from buildbot_worker.util import deferwaiter
-from buildbot_worker.util import lineboundaries
 
 
 class RemoteWorkerError(Exception):
@@ -62,27 +59,12 @@ def remote_print(self, message):
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):
-    # Don't send any data until at least BUFFER_SIZE bytes have been collected
-    # or BUFFER_TIMEOUT elapsed
-    BUFFER_SIZE = 64 * 1024
-    BUFFER_TIMEOUT = 5
-
     def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
                  on_command_complete, protocol, command_id, command, args):
         ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
                                      on_command_complete, None, command, command_id, args)
         self.protocol = protocol
         self.command_id = command_id
-        self._lbfs = {}
-        self.buffer = buffer_manager.BufferManager(reactor, self._message_consumer,
-                                                   self.BUFFER_SIZE, self.BUFFER_TIMEOUT)
-
-    def split_lines(self, stream, text):
-        try:
-            return self._lbfs[stream].append(text, 0.0)
-        except KeyError:
-            lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder()
-            return lbf.append(text, 0.0)
 
     def protocol_args_setup(self, command, args):
         if "want_stdout" in args:
@@ -126,21 +108,6 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
 
     def protocol_notify_on_disconnect(self):
         pass
-
-    def flush_command_output(self):
-        for key, lbf in self._lbfs.items():
-            if key in ['stdout', 'stderr', 'header']:
-                whole_line = lbf.flush()
-                if whole_line is not None:
-                    self.buffer.append(key, whole_line)
-            else:  # custom logfile
-                logname = key
-                whole_line = lbf.flush()
-                if whole_line is not None:
-                    self.buffer.append('log', (logname, whole_line))
-
-        self.buffer.flush()
-        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def protocol_complete(self, failure):
