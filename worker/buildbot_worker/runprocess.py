@@ -19,7 +19,6 @@ Support for running 'shell commands'
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.builtins import range
 from future.utils import PY3
 from future.utils import iteritems
 from future.utils import string_types
@@ -34,7 +33,6 @@ import subprocess
 import sys
 import traceback
 from codecs import getincrementaldecoder
-from collections import deque
 from tempfile import NamedTemporaryFile
 
 from twisted.internet import defer
@@ -268,15 +266,8 @@ class RunProcess(object):
     This is a helper class, used by worker commands to run programs in a child
     shell.
     """
-
     BACKUP_TIMEOUT = 5
     interruptSignal = "KILL"
-    CHUNK_LIMIT = 128 * 1024
-
-    # Don't send any data until at least BUFFER_SIZE bytes have been collected
-    # or BUFFER_TIMEOUT elapsed
-    BUFFER_SIZE = 64 * 1024
-    BUFFER_TIMEOUT = 5
 
     # For sending elapsed time:
     startTime = None
@@ -397,10 +388,6 @@ class RunProcess(object):
         self.keepStdout = keepStdout
         self.keepStderr = keepStderr
 
-        self.buffered = deque()
-        self.buflen = 0
-        self.sendBuffersTimer = None
-
         assert usePTY in (True, False), \
             "Unexpected usePTY argument value: {!r}. Expected boolean.".format(
                 usePTY)
@@ -457,9 +444,9 @@ class RunProcess(object):
             self._startCommand()
         except Exception as e:
             log.err(failure.Failure(), "error in RunProcess._startCommand")
-            self._addToBuffers('stderr', "error in RunProcess._startCommand (%s)\n" % str(e))
-            self._addToBuffers('stderr', traceback.format_exc())
-            self._sendBuffers()
+            self.send_update([('stderr', "error in RunProcess._startCommand (%s)\n" % str(e))])
+
+            self.sendStatus([('stderr', traceback.format_exc())])
             # pretend it was a shell error
             self.deferred.errback(AbandonChain(-1, 'Got exception (%s)' % str(e)))
         return self.deferred
@@ -520,7 +507,7 @@ class RunProcess(object):
         # self.stdin is handled in RunProcessPP.connectionMade
 
         log.msg(u" " + display)
-        self._addToBuffers(u'header', display + u"\n")
+        self.sendStatus([(u'header', display + u"\n")])
 
         # then comes the secondary information
         msg = u" in dir {0}".format(self.workdir)
@@ -537,16 +524,16 @@ class RunProcess(object):
                 unit = u"secs"
             msg += u" (maxTime {0} {1})".format(self.maxTime, unit)
         log.msg(u" " + msg)
-        self._addToBuffers(u'header', msg + u"\n")
+        self.sendStatus([(u'header', msg + u"\n")])
 
         msg = " watching logfiles {0}".format(self.logfiles)
         log.msg(" " + msg)
-        self._addToBuffers('header', msg + u"\n")
+        self.sendStatus([('header', msg + u"\n")])
 
         # then the obfuscated command array for resolving unambiguity
         msg = u" argv: {0}".format(self.fake_command)
         log.msg(u" " + msg)
-        self._addToBuffers('header', msg + u"\n")
+        self.sendStatus([('header', msg + u"\n")])
 
         # then the environment, since it sometimes causes problems
         if self.logEnviron:
@@ -558,16 +545,16 @@ class RunProcess(object):
                                              bytes2unicode(self.environ[name],
                                                            encoding=self.unicode_encoding))
             log.msg(u" environment:\n{0}".format(pprint.pformat(self.environ)))
-            self._addToBuffers(u'header', msg)
+            self.sendStatus([(u'header', msg)])
 
         if self.initialStdin:
             msg = u" writing {0} bytes to stdin".format(len(self.initialStdin))
             log.msg(u" " + msg)
-            self._addToBuffers(u'header', msg + u"\n")
+            self.sendStatus([(u'header', msg + u"\n")])
 
         msg = u" using PTY: {0}".format(bool(self.usePTY))
         log.msg(u" " + msg)
-        self._addToBuffers(u'header', msg + u"\n")
+        self.sendStatus([(u'header', msg + u"\n")])
 
         # put data into stdin and close it, if necessary.  This will be
         # buffered until connectionMade is called
@@ -653,117 +640,9 @@ class RunProcess(object):
         return reactor.spawnProcess(processProtocol, executable, argv, env,
                                     path, usePTY=usePTY)
 
-    def _chunkForSend(self, data):
-        """
-        limit the chunks that we send over PB to 128k, since it has a hardwired
-        string-size limit of 640k.
-        """
-        LIMIT = self.CHUNK_LIMIT
-        for i in range(0, len(data), LIMIT):
-            yield data[i:i + LIMIT]
-
-    def _collapseMsg(self, msg):
-        """
-        Take msg, which is a dictionary of lists of output chunks, and
-        concatenate all the chunks into a single string
-        """
-        retval = {}
-        for logname in msg:
-            data = u""
-            for m in msg[logname]:
-                m = bytes2unicode(m, self.unicode_encoding)
-                data += m
-            if isinstance(logname, tuple) and logname[0] == 'log':
-                retval['log'] = (logname[1], data)
-            else:
-                retval[logname] = data
-        return retval
-
-    def _sendMessage(self, msg):
-        """
-        Collapse and send msg to the master
-        """
-        if not msg:
-            return
-        msg = self._collapseMsg(msg)
-        data = []
-        for key, value in msg.items():
-            data.append((key, value))
-        self.sendStatus(data)
-
-    def _bufferTimeout(self):
-        self.sendBuffersTimer = None
-        self._sendBuffers()
-
-    def _sendBuffers(self):
-        """
-        Send all the content in our buffers.
-        """
-        msg_size = 0
-        lastlog = None
-        logdata = []
-        while self.buffered:
-            # Grab the next bits from the buffer
-            logname, data = self.buffered.popleft()
-
-            # If this log is different than the last one, then we have to send
-            # out the message so far.  This is because the message is
-            # transferred as a dictionary, which makes the ordering of keys
-            # unspecified, and makes it impossible to interleave data from
-            # different logs.  A future enhancement could be to change the
-            # master to support a list of (logname, data) tuples instead of a
-            # dictionary.
-            # On our first pass through this loop lastlog is None
-            if lastlog is None:
-                lastlog = logname
-            elif logname != lastlog:
-                self._sendMessage({lastlog: logdata})
-                msg_size = 0
-                lastlog = logname
-                logdata = []
-
-            # Chunkify the log data to make sure we're not sending more than
-            # CHUNK_LIMIT at a time
-            for chunk in self._chunkForSend(data):
-                if not chunk:
-                    continue
-                logdata.append(chunk)
-                msg_size += len(chunk)
-                if msg_size >= self.CHUNK_LIMIT:
-                    # We've gone beyond the chunk limit, so send out our
-                    # message.  At worst this results in a message slightly
-                    # larger than (2*CHUNK_LIMIT)-1
-                    self._sendMessage({logname: logdata})
-                    logdata = []
-                    msg_size = 0
-        self.buflen = 0
-        if logdata:
-            self._sendMessage({logname: logdata})
-        if self.sendBuffersTimer:
-            if self.sendBuffersTimer.active():
-                self.sendBuffersTimer.cancel()
-            self.sendBuffersTimer = None
-
-    def _addToBuffers(self, logname, data):
-        """
-        Add data to the buffer for logname
-        Start a timer to send the buffers if BUFFER_TIMEOUT elapses.
-        If adding data causes the buffer size to grow beyond BUFFER_SIZE, then
-        the buffers will be sent.
-        """
-        n = len(data)
-
-        self.buflen += n
-        self.buffered.append((logname, data))
-        if self.buflen > self.BUFFER_SIZE:
-            self._sendBuffers()
-        elif not self.sendBuffersTimer:
-            self.sendBuffersTimer = self._reactor.callLater(
-                self.BUFFER_TIMEOUT, self._bufferTimeout)
-
     def addStdout(self, data):
         if self.sendStdout:
-            self._addToBuffers('stdout', data)
+            self.sendStatus([('stdout', data)])
 
         if self.keepStdout:
             self.stdout += data
@@ -772,7 +651,7 @@ class RunProcess(object):
 
     def addStderr(self, data):
         if self.sendStderr:
-            self._addToBuffers('stderr', data)
+            self.sendStatus([('stderr', data)])
 
         if self.keepStderr:
             self.stderr += data
@@ -780,7 +659,7 @@ class RunProcess(object):
             self.ioTimeoutTimer.reset(self.timeout)
 
     def addLogfile(self, name, data):
-        self._addToBuffers(('log', name), data)
+        self.sendStatus([('log', (name, data))])
 
         if self.ioTimeoutTimer:
             self.ioTimeoutTimer.reset(self.timeout)
@@ -792,7 +671,6 @@ class RunProcess(object):
         for w in self.logFileWatchers:
             # this will send the final updates
             w.stop()
-        self._sendBuffers()
         if sig is not None:
             rc = -1
         if self.sendRC:
@@ -809,7 +687,6 @@ class RunProcess(object):
             log.msg("Hey, command {0} finished twice".format(self))
 
     def failed(self, why):
-        self._sendBuffers()
         log.msg("RunProcess.failed: command failed: {0}".format(why))
         self._cancelTimers()
         d = self.deferred
@@ -944,7 +821,6 @@ class RunProcess(object):
     def kill(self, msg):
         # This may be called by the timeout, or when the user has decided to
         # abort this build.
-        self._sendBuffers()
         self._cancelTimers()
         msg += ", attempting to kill"
         log.msg(msg)
@@ -974,8 +850,7 @@ class RunProcess(object):
         self.failed(RuntimeError(signalName + " failed to kill process"))
 
     def _cancelTimers(self):
-        for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer',
-                          'sendBuffersTimer', 'sigtermTimer'):
+        for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer', 'sigtermTimer'):
             timer = getattr(self, timerName, None)
             if timer:
                 timer.cancel()
