@@ -336,7 +336,7 @@ class MailNotifier(ReporterBase):
             unicode2bytes(self.smtpUser), unicode2bytes(self.smtpPassword),
             parseaddr(self.fromaddr)[1], recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
-            requireAuthentication=useAuth)
+            requireAuthentication=useAuth, hostname=self.relayhost)
 
         if self.useSmtps:
             reactor.connectSSL(self.relayhost, self.smtpPort,
