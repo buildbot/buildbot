@@ -204,15 +204,10 @@ class RemoteCommand(base.RemoteCommandImpl):
             for key, value in updates:
                 if self.active and not self.ignore_updates:
                     if key in ['stdout', 'stderr', 'header']:
-                        whole_line = self.split_line(key, value)
-                        if whole_line is not None:
-                            self.remoteUpdate(key, whole_line, False)
+                        self.remoteUpdate(key, value[0], False)
                     elif key == "log":
                         logname, data = value
-                        whole_line = self.split_line(logname, data)
-                        value = (logname, whole_line)
-                        if whole_line is not None:
-                            self.remoteUpdate(key, value, False)
+                        self.remoteUpdate(key, (logname, data[0]), False)
                     else:
                         self.remoteUpdate(key, value, False)
         except Exception:
