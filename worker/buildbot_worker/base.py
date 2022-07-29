@@ -20,6 +20,7 @@ import multiprocessing
 import os.path
 import socket
 import sys
+import time
 
 from twisted.application import service
 from twisted.internet import defer
@@ -68,12 +69,12 @@ class ProtocolCommandBase:
 
         self.is_complete = False
 
-    def split_lines(self, stream, text):
+    def split_lines(self, stream, text, text_time):
         try:
-            return self._lbfs[stream].append(text, 0.0)
+            return self._lbfs[stream].append(text, text_time)
         except KeyError:
             lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder()
-            return lbf.append(text, 0.0)
+            return lbf.append(text, text_time)
 
     def flush_command_output(self):
         for key in sorted(list(self._lbfs)):
@@ -108,7 +109,7 @@ class ProtocolCommandBase:
         # master still expects to receive. Provide it to avoid significant
         # interoperability issues between new workers and old masters.
         if not self.is_complete:
-            d = self.protocol_update(data)
+            d = self.protocol_update(data, time.time())
             d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
 
     def _ack_failed(self, why, where):

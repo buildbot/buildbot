@@ -135,17 +135,17 @@ class ProtocolCommandPb(ProtocolCommandBase):
             d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
 
     # Returns a Deferred
-    def protocol_update(self, data):
+    def protocol_update(self, data, data_time):
         # data is a list of tuples
         # first element of the tuple is dictionary key, second element is value
         for key, value in data:
             if key in ['stdout', 'stderr', 'header']:
-                whole_line = self.split_lines(key, value)
+                whole_line = self.split_lines(key, value, data_time)
                 if whole_line is not None:
                     self.buffer.append(key, whole_line)
             elif key == 'log':
                 logname, data = value
-                whole_line = self.split_lines(logname, data)
+                whole_line = self.split_lines(logname, data, data_time)
                 if whole_line is not None:
                     self.buffer.append('log', (logname, whole_line))
             else:
