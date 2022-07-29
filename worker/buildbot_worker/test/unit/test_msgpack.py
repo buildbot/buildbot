@@ -418,6 +418,53 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ])
 
     @defer.inlineCallbacks
+    def test_call_start_command_shell_success_logs(self):
+        self.setup_with_worker_for_builder()
+
+        workdir = os.path.join('basedir', 'test_basedir')
+        self.patch_runprocess(
+            Expect(['echo'], workdir)
+            .update('header', 'headers\n')
+            .update('log', ('test_log', ('hello')))
+            .update('log', ('test_log', ('hello1\n')))
+            .update('log', ('test_log2', ('hello2\n')))
+            .update('log', ('test_log3', ('hello3')))
+            .update('rc', 0)
+            .exit(0)
+            )
+
+        yield self.send_message({
+            'op': 'start_command',
+            'seq_number': 1,
+            'command_id': '123',
+            'command_name': 'shell',
+            'args': {'command': ['echo'], 'workdir': workdir}
+        })
+
+        self.assert_sent_messages([
+            {
+                'op': 'update',
+                'args': [
+                    ['header', ['headers\n', [7], [0.0]]],
+                    ['log', ['test_log', ['hellohello1\n', [11], [0.0]]]],
+                    ['log', ['test_log2', ['hello2\n', [6], [0.0]]]],
+                    ['rc', 0],
+                    ['elapsed', 0],
+                    ['log', ['test_log3', ['hello3\n', [6], [0.0]]]],
+                ],
+                'command_id': '123',
+                'seq_number': 0
+            }, {
+                'op': 'complete',
+                'args': None,
+                'command_id': '123',
+                'seq_number': 1
+            }, {
+                'op': 'response', 'seq_number': 1, 'result': None
+            }
+        ])
+
+    @defer.inlineCallbacks
     def test_start_command_shell_success_updates_single(self):
         self.setup_with_worker_for_builder()
 

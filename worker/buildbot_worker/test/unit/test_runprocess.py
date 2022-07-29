@@ -938,44 +938,6 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         s.sendStatus([('stdout', nl('hello\n'))])
         self.assertEqual(self.updates, [('stdout', nl('hello\n'))], self.show())
 
-    def testSendBuffered(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
-        s._addToBuffers('stdout', 'hello ')
-        s._addToBuffers('stdout', 'world')
-        s._sendBuffers()
-        self.assertEqual(self.updates, [('stdout', 'hello world')], self.show())
-
-    def testSendBufferedInterleaved(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
-        s._addToBuffers('stdout', 'hello ')
-        s._addToBuffers('stderr', 'DIEEEEEEE')
-        s._addToBuffers('stdout', 'world')
-        s._sendBuffers()
-        self.assertEqual(self.updates, [
-            ('stdout', 'hello '),
-            ('stderr', 'DIEEEEEEE'),
-            ('stdout', 'world'),
-        ])
-
-    def testSendChunked(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
-        data = "x" * int(runprocess.RunProcess.CHUNK_LIMIT * 3 / 2)
-        s._addToBuffers('stdout', data)
-        s._sendBuffers()
-        self.assertEqual(len(self.updates), 2)
-
-    def testSendNotimeout(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
-        data = "x" * (runprocess.RunProcess.BUFFER_SIZE + 1)
-        s._addToBuffers('stdout', data)
-        self.assertEqual(len(self.updates), 1)
-
-    def testSendLog(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
-        s._addToBuffers(('log', 'stdout'), 'hello ')
-        s._sendBuffers()
-        self.assertEqual(self.updates, [('log', ('stdout', 'hello '))])
-
 
 class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
 
@@ -1032,8 +994,6 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
                 f.write(INVALID_UTF8)
             # the watcher picks up the changed log
             lf.poll()
-            # flush she buffer
-            rp._sendBuffers()
             # the log file content was captured and the invalid byte replaced with \ufffd (the
             # replacement character, often a black diamond with a white question mark)
             REPLACED = u'before\ufffdafter'

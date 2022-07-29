@@ -217,12 +217,11 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
                                   "13", "shell", dict(command=['echo', 'hello'],
                                                       workdir='workdir'))
         yield st.wait_for_finish()
-
         self.assertEqual(st.actions, [
-            ['update', [[{'header': 'headers'}, 0]]],
             ['update', [[{'stdout': 'hello\n'}, 0]]],
             ['update', [[{'rc': 0}, 0]]],
             ['update', [[{'elapsed': 1}, 0]]],
+            ['update', [[{'header': 'headers\n'}, 0]]],
             ['complete', None],
         ])
 
@@ -254,9 +253,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         yield st.wait_for_finish()
 
         self.assertEqual(st.actions, [
-            ['update', [[{'header': 'headers'}, 0]]],
-            ['update', [[{'header': 'killing'}, 0]]],
             ['update', [[{'rc': -1}, 0]]],
+            ['update', [[{'header': 'headerskilling\n'}, 0]]],
             ['complete', None],
         ])
 

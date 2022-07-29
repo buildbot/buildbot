@@ -24,25 +24,38 @@ class BufferManager:
         self._send_message_timer = None
         self._message_consumer = message_consumer
 
+    def join_line_info(self, previous_line_info, new_line_info):
+        previous_line_text = previous_line_info[0]
+        len_previous_line_text = len(previous_line_text)
+        new_line_text = previous_line_text + new_line_info[0]
+
+        new_line_indexes = previous_line_info[1]
+        for index in new_line_info[1]:
+            new_line_indexes.append(len_previous_line_text + index)
+
+        new_time_indexes = previous_line_info[2]
+        for time in new_line_info[2]:
+            new_time_indexes.append(time)
+
+        return (new_line_text, new_line_indexes, new_time_indexes)
+
     def buffered_append_maybe_join_lines(self, logname, msg_data):
-        # if logname is the same as before: join message's information with previous one
+        # if logname is the same as before: join message's line information with previous one
         if len(self._buffered) > 0 and self._buffered[-1][0] == logname:
-            previous_msg_text = self._buffered[-1][1][0]
-            len_previous_msg_text = len(previous_msg_text)
-
-            new_text = previous_msg_text + msg_data[0]
-
-            new_indexes = self._buffered[-1][1][1]
-            for index in msg_data[1]:
-                new_indexes.append(len_previous_msg_text + index)
-
-            new_times = self._buffered[-1][1][2]
-            for time in msg_data[2]:
-                new_times.append(time)
-
-            self._buffered[-1] = (logname, (new_text, new_indexes, new_times))
-            return
-
+            # different data format, when logname is 'log'
+            # compare a log of first element of the data
+            # second element is information about line
+            # e.g. data = ('test_log', ('hello\n', [5], [0.0]))
+            udpate_output = self._buffered[-1][1]
+            if logname == "log":
+                if udpate_output[0] == msg_data[0]:
+                    joined_line_info = self.join_line_info(udpate_output[1], msg_data[1])
+                    self._buffered[-1] = (logname, (msg_data[0], joined_line_info))
+                    return
+            else:
+                joined_line_info = self.join_line_info(udpate_output, msg_data)
+                self._buffered[-1] = (logname, joined_line_info)
+                return
         self._buffered.append((logname, msg_data))
 
     def setup_timeout(self):
@@ -60,8 +73,12 @@ class BufferManager:
         if not is_log_message:
             len_data = 20
         else:
-            # data = (output_lines, positions_new_line_characters, lines_times)
-            len_data = len(data[0]) + 8 * (len(data[1]) + len(data[2]))
+            if logname == "log":
+                # different data format, when logname is 'log'
+                # e.g. data = ('test_log', ('hello\n', [5], [0.0]))
+                len_data = len(data[1][0]) + 8 * (len(data[1][1]) + len(data[1][2]))
+            else:
+                len_data = len(data[0]) + 8 * (len(data[1]) + len(data[2]))
 
         space_left = self._buffer_size - self._buflen
 
@@ -86,6 +103,10 @@ class BufferManager:
         if not is_log_message:
             self.send_message([(logname, data)])
             return
+
+        if logname == "log":
+            log = data[0]
+            data = data[1]
 
         pos_start = 0
         while pos_start < len(data[1]):
@@ -118,13 +139,18 @@ class BufferManager:
             pos_substring_end = data[1][pos_end - 1] + 1
             if pos_start != 0:
                 pos_substring_start = data[1][pos_start - 1] + 1
-                msg_data = (data[0][pos_substring_start:pos_substring_end],
-                            [index - pos_substring_start for index in data[1][pos_start:pos_end]],
-                            data[2][pos_start: pos_end])
+                line_info = (data[0][pos_substring_start:pos_substring_end],
+                             [index - pos_substring_start for index in data[1][pos_start:pos_end]],
+                             data[2][pos_start: pos_end])
             else:
-                msg_data = (data[0][:pos_substring_end],
-                            data[1][:pos_end],
-                            data[2][:pos_end])
+                line_info = (data[0][:pos_substring_end],
+                             data[1][:pos_end],
+                             data[2][:pos_end])
+
+            if logname == "log":
+                msg_data = (log, line_info)
+            else:
+                msg_data = line_info
 
             self.send_message([(logname, msg_data)])
             pos_start = pos_end
