@@ -917,28 +917,6 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         self.assert_alive(child_pid)
 
 
-class TestLogging(BasedirMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpBasedir()
-        self.updates = []
-
-    def send_update(self, status):
-        for st in status:
-            self.updates.append(st)
-
-    def show(self):
-        return pprint.pformat(self.updates)
-
-    def tearDown(self):
-        self.tearDownBasedir()
-
-    def testSendStatus(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
-        s.sendStatus([('stdout', nl('hello\n'))])
-        self.assertEqual(self.updates, [('stdout', nl('hello\n'))], self.show())
-
-
 class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
 
     def setUp(self):

@@ -16,6 +16,7 @@
 import base64
 import os
 import sys
+import time
 
 from parameterized import parameterized
 
@@ -326,6 +327,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_call_start_command_failed(self):
+        self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
         path = os.path.join('basedir', 'test_dir')
@@ -347,7 +349,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'args': [
                     ['rc', 1],
                     ['elapsed', 0],
-                    ['header', ['mkdir: test_error: {}\n'.format(path), [35], [0.0]]]
+                    ['header', ['mkdir: test_error: {}\n'.format(path), [35], [123.0]]]
                 ],
                 'command_id': '123',
                 'seq_number': 0
@@ -376,6 +378,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_call_start_command_shell_success(self):
+        self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
         # patch runprocess to handle the 'echo', below
@@ -400,10 +403,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {
                 'op': 'update',
                 'args': [
-                    ['stdout', ['hello\n', [5], [0.0]]],
+                    ['stdout', ['hello\n', [5], [123.0]]],
                     ['rc', 0],
                     ['elapsed', 0],
-                    ['header', ['headers\n', [7], [0.0]]]
+                    ['header', ['headers\n', [7], [123.0]]]
                 ],
                 'command_id': '123',
                 'seq_number': 0
@@ -419,6 +422,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_call_start_command_shell_success_logs(self):
+        self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
         workdir = os.path.join('basedir', 'test_basedir')
@@ -445,12 +449,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {
                 'op': 'update',
                 'args': [
-                    ['header', ['headers\n', [7], [0.0]]],
-                    ['log', ['test_log', ['hellohello1\n', [11], [0.0]]]],
-                    ['log', ['test_log2', ['hello2\n', [6], [0.0]]]],
+                    ['header', ['headers\n', [7], [123.0]]],
+                    ['log', ['test_log', ['hellohello1\n', [11], [123.0]]]],
+                    ['log', ['test_log2', ['hello2\n', [6], [123.0]]]],
                     ['rc', 0],
                     ['elapsed', 0],
-                    ['log', ['test_log3', ['hello3\n', [6], [0.0]]]],
+                    ['log', ['test_log3', ['hello3\n', [6], [123.0]]]],
                 ],
                 'command_id': '123',
                 'seq_number': 0
@@ -466,6 +470,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_start_command_shell_success_updates_single(self):
+        self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
         # patch runprocess to handle the 'echo', below
@@ -488,10 +493,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {
                 'op': 'update',
                 'args': [
-                    ['stdout', ['hello\n', [5], [0.0]]],
+                    ['stdout', ['hello\n', [5], [123.0]]],
                     ['rc', 0],
                     ['elapsed', 0],
-                    ['header', ['headers\n', [7], [0.0]]]
+                    ['header', ['headers\n', [7], [123.0]]]
                 ],
                 'command_id': '123',
                 'seq_number': 0
@@ -534,6 +539,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_call_interrupt_command_success(self):
+        self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
         self.protocol.factory.command.doInterrupt = mock.Mock()
 
@@ -579,12 +585,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'seq_number': 0,
                 'command_id': '123',
-                'args': [['header', ['headers\n', [7], [0.0]]]]
+                'args': [['header', ['headers\n', [7], [123.0]]]]
             }, {
                 'op': 'update',
                 'seq_number': 1,
                 'command_id': '123',
-                'args': [['rc', -1], ['header', ['killing\n', [7], [0.0]]]],
+                'args': [['rc', -1], ['header', ['killing\n', [7], [123.0]]]],
             }, {
                 'op': 'complete', 'seq_number': 2, 'command_id': '123', 'args': None
             }, {

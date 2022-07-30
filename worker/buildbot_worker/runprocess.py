@@ -399,7 +399,7 @@ class RunProcess(object):
         # and for .closeStdin to matter, we must use a pipe, not a PTY
         if runtime.platformType != "posix" or initialStdin is not None:
             if self.usePTY:
-                self.sendStatus([('header', "WARNING: disabling usePTY for this command")])
+                self.send_update([('header', "WARNING: disabling usePTY for this command")])
             self.usePTY = False
 
         # use an explicit process group on POSIX, noting that usePTY always implies
@@ -429,9 +429,6 @@ class RunProcess(object):
     def __repr__(self):
         return "<{0} '{1}'>".format(self.__class__.__name__, self.fake_command)
 
-    def sendStatus(self, status):
-        self.send_update(status)
-
     def start(self):
         # return a Deferred which fires (with the exit code) when the command
         # completes
@@ -446,7 +443,7 @@ class RunProcess(object):
             log.err(failure.Failure(), "error in RunProcess._startCommand")
             self.send_update([('stderr', "error in RunProcess._startCommand (%s)\n" % str(e))])
 
-            self.sendStatus([('stderr', traceback.format_exc())])
+            self.send_update([('stderr', traceback.format_exc())])
             # pretend it was a shell error
             self.deferred.errback(AbandonChain(-1, 'Got exception (%s)' % str(e)))
         return self.deferred
@@ -507,7 +504,7 @@ class RunProcess(object):
         # self.stdin is handled in RunProcessPP.connectionMade
 
         log.msg(u" " + display)
-        self.sendStatus([(u'header', display + u"\n")])
+        self.send_update([(u'header', display + u"\n")])
 
         # then comes the secondary information
         msg = u" in dir {0}".format(self.workdir)
@@ -524,16 +521,16 @@ class RunProcess(object):
                 unit = u"secs"
             msg += u" (maxTime {0} {1})".format(self.maxTime, unit)
         log.msg(u" " + msg)
-        self.sendStatus([(u'header', msg + u"\n")])
+        self.send_update([(u'header', msg + u"\n")])
 
         msg = " watching logfiles {0}".format(self.logfiles)
         log.msg(" " + msg)
-        self.sendStatus([('header', msg + u"\n")])
+        self.send_update([('header', msg + u"\n")])
 
         # then the obfuscated command array for resolving unambiguity
         msg = u" argv: {0}".format(self.fake_command)
         log.msg(u" " + msg)
-        self.sendStatus([('header', msg + u"\n")])
+        self.send_update([('header', msg + u"\n")])
 
         # then the environment, since it sometimes causes problems
         if self.logEnviron:
@@ -545,16 +542,16 @@ class RunProcess(object):
                                              bytes2unicode(self.environ[name],
                                                            encoding=self.unicode_encoding))
             log.msg(u" environment:\n{0}".format(pprint.pformat(self.environ)))
-            self.sendStatus([(u'header', msg)])
+            self.send_update([(u'header', msg)])
 
         if self.initialStdin:
             msg = u" writing {0} bytes to stdin".format(len(self.initialStdin))
             log.msg(u" " + msg)
-            self.sendStatus([(u'header', msg + u"\n")])
+            self.send_update([(u'header', msg + u"\n")])
 
         msg = u" using PTY: {0}".format(bool(self.usePTY))
         log.msg(u" " + msg)
-        self.sendStatus([(u'header', msg + u"\n")])
+        self.send_update([(u'header', msg + u"\n")])
 
         # put data into stdin and close it, if necessary.  This will be
         # buffered until connectionMade is called
@@ -642,7 +639,7 @@ class RunProcess(object):
 
     def addStdout(self, data):
         if self.sendStdout:
-            self.sendStatus([('stdout', data)])
+            self.send_update([('stdout', data)])
 
         if self.keepStdout:
             self.stdout += data
@@ -651,7 +648,7 @@ class RunProcess(object):
 
     def addStderr(self, data):
         if self.sendStderr:
-            self.sendStatus([('stderr', data)])
+            self.send_update([('stderr', data)])
 
         if self.keepStderr:
             self.stderr += data
@@ -659,7 +656,7 @@ class RunProcess(object):
             self.ioTimeoutTimer.reset(self.timeout)
 
     def addLogfile(self, name, data):
-        self.sendStatus([('log', (name, data))])
+        self.send_update([('log', (name, data))])
 
         if self.ioTimeoutTimer:
             self.ioTimeoutTimer.reset(self.timeout)
@@ -675,9 +672,9 @@ class RunProcess(object):
             rc = -1
         if self.sendRC:
             if sig is not None:
-                self.sendStatus([('header', "process killed by signal {0}\n".format(sig))])
-            self.sendStatus([('rc', rc)])
-        self.sendStatus([('header', "elapsedTime={0:0.6f}\n".format(self.elapsedTime))])
+                self.send_update([('header', "process killed by signal {0}\n".format(sig))])
+            self.send_update([('rc', rc)])
+        self.send_update([('header', "elapsedTime={0:0.6f}\n".format(self.elapsedTime))])
         self._cancelTimers()
         d = self.deferred
         self.deferred = None
@@ -824,7 +821,7 @@ class RunProcess(object):
         self._cancelTimers()
         msg += ", attempting to kill"
         log.msg(msg)
-        self.sendStatus([('header', "\n" + msg + "\n")])
+        self.send_update([('header', "\n" + msg + "\n")])
 
         # let the PP know that we are killing it, so that it can ensure that
         # the exit status comes out right
@@ -844,9 +841,9 @@ class RunProcess(object):
                 " finish anyway")
         self.killTimer = None
         signalName = "SIG" + self.interruptSignal
-        self.sendStatus([('header', signalName + " failed to kill process\n")])
+        self.send_update([('header', signalName + " failed to kill process\n")])
         if self.sendRC:
-            self.sendStatus([('header', "using fake rc=-1\n"), ('rc', -1)])
+            self.send_update([('header', "using fake rc=-1\n"), ('rc', -1)])
         self.failed(RuntimeError(signalName + " failed to kill process"))
 
     def _cancelTimers(self):
