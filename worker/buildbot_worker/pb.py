@@ -117,13 +117,16 @@ class ProtocolCommandPb(ProtocolCommandBase):
             del args['workdir']
             del args['workerdest']
 
-    def _message_consumer(self, message):
+    def protocol_send_update_message(self, message):
         # after self.buffer.append log message is of type:
         # (key, (text, newline_indexes, line_times))
         # only key and text is sent to master in PB protocol
         # if message is not log, simply sends the value (e.g.[("rc", 0)])
         for key, value in message:
             if key in ['stdout', 'stderr', 'header']:
+                # the update[1]=0 comes from the leftover 'updateNum', which the
+                # master still expects to receive. Provide it to avoid significant
+                # interoperability issues between new workers and old masters.
                 update = [{key: value[0]}, 0]
             elif key == "log":
                 logname, data = value
@@ -133,24 +136,6 @@ class ProtocolCommandPb(ProtocolCommandBase):
             updates = [update]
             d = self.command_ref.callRemote("update", updates)
             d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
-
-    # Returns a Deferred
-    def protocol_update(self, data, data_time):
-        # data is a list of tuples
-        # first element of the tuple is dictionary key, second element is value
-        for key, value in data:
-            if key in ['stdout', 'stderr', 'header']:
-                whole_line = self.split_lines(key, value, data_time)
-                if whole_line is not None:
-                    self.buffer.append(key, whole_line)
-            elif key == 'log':
-                logname, data = value
-                whole_line = self.split_lines(logname, data, data_time)
-                if whole_line is not None:
-                    self.buffer.append('log', (logname, whole_line))
-            else:
-                self.buffer.append(key, value)
-        return defer.succeed(None)
 
     def protocol_notify_on_disconnect(self):
         self.command_ref.notifyOnDisconnect(self.on_lost_remote_step)

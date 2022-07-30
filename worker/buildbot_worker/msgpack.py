@@ -85,26 +85,10 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
         if command == "download_file" and 'reader' not in args:
             args['reader'] = None
 
-    def _message_consumer(self, message):
+    def protocol_send_update_message(self, message):
         d = self.protocol.get_message_result({'op': 'update', 'args': message,
                                               'command_id': self.command_id})
         d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
-
-    # Returns a Deferred
-    def protocol_update(self, data, data_time):
-        for key, value in data:
-            if key in ['stdout', 'stderr', 'header']:
-                whole_line = self.split_lines(key, value, data_time)
-                if whole_line is not None:
-                    self.buffer.append(key, whole_line)
-            elif key == 'log':
-                logname, data = value
-                whole_line = self.split_lines(logname, data, data_time)
-                if whole_line is not None:
-                    self.buffer.append('log', (logname, whole_line))
-            else:
-                self.buffer.append(key, value)
-        return defer.succeed(None)
 
     def protocol_notify_on_disconnect(self):
         pass

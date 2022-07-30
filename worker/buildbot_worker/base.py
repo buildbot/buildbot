@@ -64,7 +64,7 @@ class ProtocolCommandBase:
         # .command points to a WorkerCommand instance, and is set while the step is running.
         self.command = factory(self, command_id, args)
         self._lbfs = {}
-        self.buffer = buffer_manager.BufferManager(reactor, self._message_consumer,
+        self.buffer = buffer_manager.BufferManager(reactor, self.protocol_send_update_message,
                                                    self.BUFFER_SIZE, self.BUFFER_TIMEOUT)
 
         self.is_complete = False
@@ -94,23 +94,25 @@ class ProtocolCommandBase:
 
     # sendUpdate is invoked by the Commands we spawn
     def send_update(self, data):
-        """This sends the status update to the master-side
-        L{buildbot.process.step.RemoteCommand} object, giving it a sequence
-        number in the process. It adds the update to a queue, and asks the
-        master to acknowledge the update so it can be removed from that
-        queue."""
-
         if not self.builder_is_running:
-            # .running comes from service.Service, and says whether the
-            # service is running or not. If we aren't running, don't send any
-            # status messages.
+            # if builder is not running, do not send any status messages
             return
-        # the update[1]=0 comes from the leftover 'updateNum', which the
-        # master still expects to receive. Provide it to avoid significant
-        # interoperability issues between new workers and old masters.
+
         if not self.is_complete:
-            d = self.protocol_update(data, time.time())
-            d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
+            # first element of the tuple is dictionary key, second element is value
+            data_time = time.time()
+            for key, value in data:
+                if key in ['stdout', 'stderr', 'header']:
+                    whole_line = self.split_lines(key, value, data_time)
+                    if whole_line is not None:
+                        self.buffer.append(key, whole_line)
+                elif key == 'log':
+                    logname, data = value
+                    whole_line = self.split_lines(logname, data, data_time)
+                    if whole_line is not None:
+                        self.buffer.append('log', (logname, whole_line))
+                else:
+                    self.buffer.append(key, value)
 
     def _ack_failed(self, why, where):
         log.msg("ProtocolCommandBase._ack_failed:", where)
