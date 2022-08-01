@@ -57,10 +57,10 @@ class WorkerRegistration:
                 worker_config.workername, worker_config.password,
                 global_config.protocols['pb']['port'])
 
-        if 'msgpack_experimental_v6' in global_config.protocols:
+        if 'msgpack_experimental_v7' in global_config.protocols:
             self.msgpack_reg = yield self.master.workers.msgpack.updateRegistration(
                 worker_config.workername, worker_config.password,
-                global_config.protocols['msgpack_experimental_v6']['port'])
+                global_config.protocols['msgpack_experimental_v7']['port'])
 
     def getPBPort(self):
         return self.pbReg.getPort()
