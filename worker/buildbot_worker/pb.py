@@ -54,12 +54,14 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandPb(ProtocolCommandBase):
-    def __init__(self, unicode_encoding, worker_basedir, basedir, builder_is_running,
-                 on_command_complete, on_lost_remote_step, command, stepId, args, command_ref):
+    def __init__(self, unicode_encoding, worker_basedir, basedir, buffer_size, buffer_timeout,
+                 max_line_length, newline_re, builder_is_running, on_command_complete,
+                 on_lost_remote_step, command, stepId, args, command_ref):
         self.basedir = basedir
         self.command_ref = command_ref
-        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
-                                     on_command_complete, on_lost_remote_step,
+        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, buffer_size,
+                                     buffer_timeout, max_line_length, newline_re,
+                                     builder_is_running, on_command_complete, on_lost_remote_step,
                                      command, stepId, args)
 
     def protocol_args_setup(self, command, args):
@@ -193,10 +195,15 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
     # is severed.
     remote = None
 
-    def __init__(self, name, unicode_encoding):
+    def __init__(self, name, unicode_encoding, buffer_size, buffer_timeout, max_line_length,
+                 newline_re):
         # service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
         self.unicode_encoding = unicode_encoding
+        self.buffer_size = buffer_size
+        self.buffer_timeout = buffer_timeout
+        self.max_line_length = max_line_length
+        self.newline_re = newline_re
         self.protocol_command = None
 
     def __repr__(self):
@@ -275,7 +282,9 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
             self.protocol_command = None
 
         self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.bot.basedir,
-                                                     self.basedir, self.running,
+                                                     self.basedir, self.buffer_size,
+                                                     self.buffer_timeout, self.max_line_length,
+                                                     self.newline_re, self.running,
                                                      on_command_complete,
                                                      self.lostRemoteStep, command, stepId, args,
                                                      command_ref)
@@ -330,7 +339,9 @@ class BotPbLike(BotBase):
                             name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
-                b = self.WorkerForBuilder(name, self.unicode_encoding)
+                b = self.WorkerForBuilder(name, self.unicode_encoding, self.buffer_size,
+                                          self.buffer_timeout, self.max_line_length,
+                                          self.newline_re)
                 b.setServiceParent(self)
                 b.setBuilddir(builddir)
                 self.builders[name] = b
@@ -418,6 +429,8 @@ if sys.version_info >= (3, 6):
                 del self.protocol_commands[command_id]
 
             protocol_command = ProtocolCommandMsgpack(self.unicode_encoding, self.basedir,
+                                                      self.buffer_size, self.buffer_timeout,
+                                                      self.max_line_length, self.newline_re,
                                                       self.running, on_command_complete,
                                                       protocol, command_id, command, args)
 
