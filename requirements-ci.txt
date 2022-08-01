@@ -8,7 +8,7 @@ autobahn==22.6.1
 Automat==20.2.0
 Babel==2.10.3
 backports.functools-lru-cache==1.6.4
-boto3==1.18.1
+boto3==1.24.42
 boto==2.49.0
 botocore==1.21.1
 certifi==2021.10.8
