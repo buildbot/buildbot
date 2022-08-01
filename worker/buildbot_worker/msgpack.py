@@ -227,6 +227,25 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
+    def call_set_worker_settings(self, msg):
+        is_exception = False
+        try:
+            self.contains_msg_key(msg, ('args',))
+            for setting in ["buffer_size", "buffer_timeout", "newline_re", "max_line_length"]:
+                if setting not in msg["args"]:
+                    raise KeyError('message did not contain obligatory settings for worker')
+
+            self.factory.buildbot_bot.buffer_size = msg["args"]["buffer_size"]
+            self.factory.buildbot_bot.buffer_timeout = msg["args"]["buffer_timeout"]
+            self.factory.buildbot_bot.newline_re = msg["args"]["newline_re"]
+            self.factory.buildbot_bot.max_line_length = msg["args"]["max_line_length"]
+            result = None
+        except Exception as e:
+            is_exception = True
+            result = str(e)
+
+        self.send_response_msg(msg, result, is_exception)
+
     @defer.inlineCallbacks
     def call_start_command(self, msg):
         is_exception = False
@@ -295,6 +314,8 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             self._deferwaiter.add(self.call_print(msg))
         elif msg['op'] == "keepalive":
             self._deferwaiter.add(self.call_keepalive(msg))
+        elif msg['op'] == "set_worker_settings":
+            self._deferwaiter.add(self.call_set_worker_settings(msg))
         elif msg['op'] == "get_worker_info":
             self._deferwaiter.add(self.call_get_worker_info(msg))
         elif msg['op'] == "start_command":
