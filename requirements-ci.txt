@@ -71,7 +71,7 @@ pyasn1==0.4.8
 pycodestyle==2.9.0
 pycparser==2.21
 pyenchant==3.2.2
-pyflakes==2.4.0
+pyflakes==2.5.0
 PyJWT==2.4.0
 pylint==2.13.8
 pyOpenSSL==20.0.1
