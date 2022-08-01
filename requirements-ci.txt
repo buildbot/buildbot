@@ -30,7 +30,7 @@ docker==5.0.3
 docutils==0.19
 extras==1.0.0
 fixtures==4.0.1
-flake8==4.0.1
+flake8==5.0.2
 funcsigs==1.0.2
 future==0.18.2
 graphql-core==3.2.1
