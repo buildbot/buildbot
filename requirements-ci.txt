@@ -110,7 +110,7 @@ webcolors==1.12
 websocket-client==1.3.3
 Werkzeug==2.2.1
 wrapt==1.14.1
-xmltodict==0.12.0
+xmltodict==0.13.0
 zope.interface==5.4.0
 -e master
 -e worker
