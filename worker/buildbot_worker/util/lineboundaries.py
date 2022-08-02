@@ -23,17 +23,13 @@ log = Logger()
 
 class LineBoundaryFinder:
 
-    __slots__ = ['max_line_length', 'partial_line', 'warned', 'time']
-    # the lookahead here (`(?=.)`) ensures that `\r` doesn't match at the end
-    # of the buffer
-    # we also convert cursor control sequence to newlines
-    # and ugly \b+ (use of backspace to implement progress bar)
-    newline_re = re.compile(r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)')
+    __slots__ = ['max_line_length', 'newline_re', 'partial_line', 'warned', 'time']
 
-    def __init__(self, max_line_length=4096):
+    def __init__(self, max_line_length, newline_re):
         # split at reasonable line length.
         # too big lines will fill master's memory, and slow down the UI too much.
         self.max_line_length = max_line_length
+        self.newline_re = re.compile(newline_re)
         self.partial_line = ""
         self.warned = False
         self.time = None

@@ -202,7 +202,7 @@ class RunMasterBase(unittest.TestCase):
                 proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
                 workerclass = worker.Worker
             if self.proto == 'msgpack':
-                proto = {"msgpack_experimental_v6": {"port": 0}}
+                proto = {"msgpack_experimental_v7": {"port": 0}}
                 workerclass = worker.Worker
             elif self.proto == 'null':
                 proto = {"null": {}}
@@ -226,7 +226,7 @@ class RunMasterBase(unittest.TestCase):
                 protocol = 'pb'
                 dispatcher = list(m.pbmanager.dispatchers.values())[0]
             else:
-                protocol = 'msgpack_experimental_v6'
+                protocol = 'msgpack_experimental_v7'
                 dispatcher = list(m.msgmanager.dispatchers.values())[0]
 
                 unsupported_python_versions = ['2.7', '3.4', '3.5']

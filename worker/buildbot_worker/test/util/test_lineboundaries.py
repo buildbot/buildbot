@@ -31,8 +31,8 @@ def join_line_info(info1, info2):
 class LBF(unittest.TestCase):
 
     def setUp(self):
-        # LineBoundaryFinder append function returns a tuple: (text, new_line_positions, line_times)
-        self.lbf = lineboundaries.LineBoundaryFinder(20)
+        newline_re = r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)'
+        self.lbf = lineboundaries.LineBoundaryFinder(20, newline_re)
 
     def test_empty_line(self):
         self.assertEqual(self.lbf.append('1234', 1.0), None)

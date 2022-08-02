@@ -211,6 +211,46 @@ As a convention, there are files named 'admin' and 'host':
     Value is a string.
     It specifies the name of the host.
 
+set_worker_settings
+~~~~~~~~~~~~~~~~~~~
+
+Request
++++++++
+
+Master sends this message to set worker settings.
+The settings must be sent from master before first command.
+
+``seq_number``
+    Described in section on :ref:`MsgPack_Request_Message` structure.
+
+``op``
+    Value is a string ``set_worker_settings``.
+
+``args``
+    Value is a dictionary.
+    It represents the settings needed for worker to format command output and buffer messages.
+    The following settings are mandatory:
+
+    * "buffer_size" - the maximum size of buffer in bytes to fill before sending an update message.
+
+    * "buffer_timeout" - the maximum time in seconds that data can wait in buffer before update message is sent.
+
+    * "newline_re" - the pattern in output string, which will be replaced with newline symbol.
+
+    * "max_line_length" - the maximum size of command output line in bytes.
+
+Response
+++++++++
+
+``seq_number``
+    Described in section  on :ref:`MsgPack_Response_Message` structure.
+
+``op``
+    Value is a string ``response``.
+
+``result``
+    Value is ``None`` if success.
+    Otherwise – message of exception.
 
 start_command
 ~~~~~~~~~~~~~

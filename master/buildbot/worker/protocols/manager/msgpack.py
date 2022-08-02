@@ -261,10 +261,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id',))
-
-            if "args" not in msg:
-                raise KeyError('message did not contain obligatory "args" key')
+            self.contains_msg_key(msg, ('command_id', 'args'))
 
             if msg['command_id'] not in self.command_id_to_writer_map:
                 raise KeyError('unknown "command_id"')

@@ -41,15 +41,15 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandBase:
-    # Don't send any data until at least BUFFER_SIZE bytes have been collected
-    # or BUFFER_TIMEOUT elapsed
-    BUFFER_SIZE = 64 * 1024
-    BUFFER_TIMEOUT = 5
-
-    def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
-                 on_command_complete, on_lost_remote_step, command, command_id, args):
+    def __init__(self, unicode_encoding, worker_basedir, buffer_size, buffer_timeout,
+                 max_line_length, newline_re, builder_is_running, on_command_complete,
+                 on_lost_remote_step, command, command_id, args):
         self.unicode_encoding = unicode_encoding
         self.worker_basedir = worker_basedir
+        self.buffer_size = buffer_size
+        self.buffer_timeout = buffer_timeout
+        self.max_line_length = max_line_length
+        self.newline_re = newline_re
         self.builder_is_running = builder_is_running
         self.on_command_complete = on_command_complete
         self.on_lost_remote_step = on_lost_remote_step
@@ -65,7 +65,7 @@ class ProtocolCommandBase:
         self.command = factory(self, command_id, args)
         self._lbfs = {}
         self.buffer = buffer_manager.BufferManager(reactor, self.protocol_send_update_message,
-                                                   self.BUFFER_SIZE, self.BUFFER_TIMEOUT)
+                                                   self.buffer_size, self.buffer_timeout)
 
         self.is_complete = False
 
@@ -73,7 +73,8 @@ class ProtocolCommandBase:
         try:
             return self._lbfs[stream].append(text, text_time)
         except KeyError:
-            lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder()
+            lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder(self.max_line_length,
+                                                                         self.newline_re)
             return lbf.append(text, text_time)
 
     def flush_command_output(self):
@@ -161,6 +162,12 @@ class BotBase(service.MultiService):
         ) or 'ascii'
         self.delete_leftover_dirs = delete_leftover_dirs
         self.builders = {}
+        # Don't send any data until at least buffer_size bytes have been collected
+        # or buffer_timeout elapsed
+        self.buffer_size = 64 * 1024
+        self.buffer_timeout = 5
+        self.max_line_length = 4096
+        self.newline_re = r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)'
 
     # for testing purposes
     def setOsReleaseFile(self, os_release_file):
