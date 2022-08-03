@@ -18,6 +18,8 @@ import subprocess
 import time
 from unittest.case import SkipTest
 
+from parameterized import parameterized
+
 from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
@@ -35,16 +37,18 @@ from buildbot.test.util.integration import RunMasterBase
 # to properly launch images.
 @skipUnlessPlatformIs('posix')
 class TestVaultHvac(RunMasterBase):
-    def setUp(self):
+
+    def start_container(self, image_tag):
         try:
-            subprocess.check_call(['docker', 'pull', 'vault:1.9.4'])
+            image = f'vault:{image_tag}'
+            subprocess.check_call(['docker', 'pull', image])
 
             subprocess.check_call(['docker', 'run', '-d',
                                    '-e', 'SKIP_SETCAP=yes',
                                    '-e', 'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken',
                                    '-e', 'VAULT_TOKEN=my_vaulttoken',
                                    '--name=vault_for_buildbot',
-                                   '-p', '8200:8200', 'vault:1.9.4'])
+                                   '-p', '8200:8200', image])
             time.sleep(1)  # the container needs a little time to setup itself
             self.addCleanup(self.remove_container)
 
@@ -69,7 +73,8 @@ class TestVaultHvac(RunMasterBase):
         subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'])
 
     @defer.inlineCallbacks
-    def do_secret_test(self, secret_specifier, expected_obfuscation, expected_value):
+    def do_secret_test(self, image_tag, secret_specifier, expected_obfuscation, expected_value):
+        self.start_container(image_tag)
         yield self.setupConfig(master_config(secret_specifier=secret_specifier))
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -82,17 +87,27 @@ class TestVaultHvac(RunMasterBase):
         res = yield self.checkBuildStepLogExist(build, patterns)
         self.assertTrue(res)
 
-    @defer.inlineCallbacks
-    def test_key(self):
-        yield self.do_secret_test('%(secret:key|value)s', '<key|value>', 'word')
+    all_tags = [
+        ('1.9.7',),
+        ('1.10.5',),
+        ('1.11.1',),
+    ]
 
+    @parameterized.expand(all_tags)
     @defer.inlineCallbacks
-    def test_key_any_value(self):
-        yield self.do_secret_test('%(secret:anykey|anyvalue)s', '<anykey|anyvalue>', 'anyword')
+    def test_key(self, image_tag):
+        yield self.do_secret_test(image_tag, '%(secret:key|value)s', '<key|value>', 'word')
 
+    @parameterized.expand(all_tags)
     @defer.inlineCallbacks
-    def test_nested_key(self):
-        yield self.do_secret_test('%(secret:key1/key2|id)s', '<key1/key2|id>', 'val')
+    def test_key_any_value(self, image_tag):
+        yield self.do_secret_test(image_tag, '%(secret:anykey|anyvalue)s', '<anykey|anyvalue>',
+                                  'anyword')
+
+    @parameterized.expand(all_tags)
+    @defer.inlineCallbacks
+    def test_nested_key(self, image_tag):
+        yield self.do_secret_test(image_tag, '%(secret:key1/key2|id)s', '<key1/key2|id>', 'val')
 
 
 def master_config(secret_specifier):
