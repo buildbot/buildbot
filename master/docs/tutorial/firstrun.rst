@@ -189,7 +189,7 @@ The username (``example-worker``), and password (``pass``) should be the same as
 
 .. code-block:: bash
 
-  cat ../bb-master/master/master.cfg
+  cat ../master/master/master.cfg
 
 And finally, start the worker:
 
