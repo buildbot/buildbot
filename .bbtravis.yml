@@ -45,7 +45,7 @@ matrix:
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
     - python: "3.9"
-      env: TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=18.7.0 SQLALCHEMY=latest TESTS=trial
     - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=ci/coverage
     - python: "3.8"
@@ -73,7 +73,7 @@ matrix:
     # Worker tests on python and twisted package combinations.
     # We support worker on Python 2.7, on which Twisted 20.3.0 is the last version that works
     - python: "3.9"
-      env: TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial_worker
+      env: TWISTED=18.7.0 SQLALCHEMY=latest TESTS=trial_worker
     - python: "2.7"
       env: TWISTED=20.3.0 SQLALCHEMY=latest TESTS=trial_worker
 
