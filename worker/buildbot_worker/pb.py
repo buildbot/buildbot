@@ -481,8 +481,8 @@ class BotFactory(AutoLoginPBFactory):
 
     _reactor = reactor
 
-    def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay):
-        AutoLoginPBFactory.__init__(self)
+    def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay, retryPolicy=None):
+        AutoLoginPBFactory.__init__(self, retryPolicy=retryPolicy)
         self.keepaliveInterval = keepaliveInterval
         self.keepalive_lock = defer.DeferredLock()
         self._shutting_down = False
@@ -621,8 +621,15 @@ class Worker(WorkerBase):
 
         self.allow_shutdown = allow_shutdown
 
+        def policy(attempt):
+            if maxRetries and attempt >= maxRetries:
+                reactor.stop()
+            return backoffPolicy()(attempt)
+
         if protocol == 'pb':
-            bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
+            bf = self.bf = BotFactory(
+                buildmaster_host, port, keepalive, maxdelay, retryPolicy=policy
+            )
             bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
         elif protocol == 'msgpack_experimental_v7':
             if connection_string is None:
@@ -670,10 +677,6 @@ class Worker(WorkerBase):
                 connection_string = get_connection_string(buildmaster_host, port)
             endpoint = clientFromString(reactor, connection_string)
 
-        def policy(attempt):
-            if maxRetries and attempt >= maxRetries:
-                reactor.stop()
-            return backoffPolicy()(attempt)
         pb_service = ClientService(endpoint, bf, retryPolicy=policy)
         self.addService(pb_service)
 
