@@ -4,7 +4,9 @@
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
 buildbot-www==3.6.0
 
+autobahn==22.7.1
 boto3==1.24.60
+autobahn==22.7.1
 flake8==5.0.4
 pylint==2.14.5
 
@@ -19,7 +21,6 @@ appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==2.11.7
 attrs==22.1.0
-autobahn==22.3.2
 Automat==20.2.0
 Babel==2.10.1
 backports.functools-lru-cache==1.6.4
