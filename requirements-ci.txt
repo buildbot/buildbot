@@ -89,7 +89,7 @@ pyflakes==2.5.0
 PyJWT==2.4.0
 pyOpenSSL==22.0.0
 pyparsing==3.0.9
-pypugjs==5.9.11
+pypugjs==5.9.12
 python-dateutil==2.8.2
 python-subunit==1.4.0
 pytz==2022.1
