@@ -18,7 +18,7 @@ alembic==1.8.1
 appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==2.11.7
-attrs==21.4.0
+attrs==22.1.0
 autobahn==22.3.2
 Automat==20.2.0
 Babel==2.10.1
