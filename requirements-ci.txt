@@ -8,6 +8,7 @@ autobahn==22.7.1
 boto3==1.24.60
 autobahn==22.7.1
 flake8==5.0.4
+msgpack==1.0.4
 pylint==2.14.5
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
@@ -69,7 +70,6 @@ mccabe==0.7.0
 mock==4.0.3
 more-itertools==8.14.0
 moto==4.0.1
-msgpack==1.0.3
 olefile==0.46
 packaging==21.3
 parameterized==0.8.1
