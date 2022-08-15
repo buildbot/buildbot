@@ -22,7 +22,7 @@ asn1crypto==1.5.1
 astroid==2.11.7
 attrs==22.1.0
 Automat==20.2.0
-Babel==2.10.1
+Babel==2.10.3
 backports.functools-lru-cache==1.6.4
 boto==2.49.0
 botocore==1.27.60
