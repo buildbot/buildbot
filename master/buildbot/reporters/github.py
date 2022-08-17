@@ -36,12 +36,13 @@ from buildbot.util import httpclientservice
 from buildbot.util.giturlparse import giturlparse
 
 HOSTED_BASE_URL = 'https://api.github.com'
+HOSTED_BASE_REGEX = r'github\.com\/(.+?)\/'
 
 
 class GitHubStatusPush(ReporterBase):
     name = "GitHubStatusPush"
 
-    def checkConfig(self, token, context=None, baseURL=None, verbose=False,
+    def checkConfig(self, token, context=None, baseURL=None, base_re=None, verbose=False,
                     debug=None, verify=None, generators=None,
                     **kwargs):
 
@@ -52,13 +53,14 @@ class GitHubStatusPush(ReporterBase):
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, token, context=None, baseURL=None, verbose=False,
+    def reconfigService(self, token, context=None, baseURL=None, base_re=None, verbose=False,
                         debug=None, verify=None, generators=None,
                         **kwargs):
         token = yield self.renderSecrets(token)
         self.debug = debug
         self.verify = verify
         self.verbose = verbose
+        self.base_re = base_re
         self.context = self.setup_context(context)
 
         if generators is None:
@@ -141,6 +143,13 @@ class GitHubStatusPush(ReporterBase):
         repo_name = None
         project = sourcestamp['project']
         repository = sourcestamp['repository']
+        base_re = self.base_re
+        if base_re is None:
+            base_re = HOSTED_BASE_REGEX
+        github_url = re.search(base_re, repository)
+        if not github_url:
+            log.msg('skipped as not a github url')
+            return None, None
         if project and "/" in project:
             repo_owner, repo_name = project.split('/')
         elif repository:
