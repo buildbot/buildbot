@@ -36,6 +36,7 @@ class ReporterBase(service.BuildbotService):
         super().__init__(*args, **kwargs)
         self.generators = None
         self._event_consumers = []
+        self._pending_got_event_call = None
 
     def checkConfig(self, generators):
         if not isinstance(generators, list):
@@ -56,6 +57,10 @@ class ReporterBase(service.BuildbotService):
             yield consumer.stopConsuming()
         self._event_consumers = []
 
+        if self._pending_got_event_call is not None:
+            yield self._pending_got_event_call
+        self._pending_got_event_call = None
+
         self.generators = generators
 
         wanted_event_keys = set()
@@ -71,6 +76,9 @@ class ReporterBase(service.BuildbotService):
         for consumer in self._event_consumers:
             yield consumer.stopConsuming()
         self._event_consumers = []
+        if self._pending_got_event_call is not None:
+            yield self._pending_got_event_call
+        self._pending_got_event_call = None
         yield super().stopService()
 
     def _does_generator_want_key(self, generator, key):
@@ -81,6 +89,16 @@ class ReporterBase(service.BuildbotService):
 
     @defer.inlineCallbacks
     def _got_event(self, key, msg):
+        pending_got_event_call = self._pending_got_event_call
+
+        # Mark this call as pending.
+        self._pending_got_event_call = d = defer.Deferred()
+
+        # Wait for previously pending call, if any, to ensure
+        # reports are sent out in the order events were queued.
+        if pending_got_event_call is not None:
+            yield pending_got_event_call
+
         try:
             reports = []
             for g in self.generators:
@@ -93,6 +111,8 @@ class ReporterBase(service.BuildbotService):
                 yield self.sendMessage(reports)
         except Exception as e:
             log.err(e, 'Got exception when handling reporter events')
+
+        d.callback(None)  # This event is now fully handled
 
     def getResponsibleUsersForBuild(self, master, buildid):
         # Use library method but subclassers may want to override that

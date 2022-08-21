@@ -186,3 +186,44 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
         self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
         self.assertLogged('Got exception when handling reporter events')
+
+    @defer.inlineCallbacks
+    def test_reports_sent_in_order_despite_slow_generator(self):
+        gen = self.setup_mock_generator([('fake1', None, None)])
+
+        notifier = yield self.setupNotifier(generators=[gen])
+
+        # Handle an event when generate is slow
+        gen.generate = slow_generate = mock.Mock(return_value=defer.Deferred())
+        notifier._got_event(('fake1', None, None), None)
+        notifier.sendMessage.assert_not_called()
+
+        # Then handle an event when generate is fast
+        gen.generate = mock.Mock(return_value=defer.Deferred())
+        gen.generate.return_value.callback(2)
+        notifier._got_event(('fake1', None, None), None)
+
+        # sendMessage still not called
+        notifier.sendMessage.assert_not_called()
+
+        # Have the slow generate finish
+        slow_generate.return_value.callback(1)
+
+        # Now sendMessage should have been called two times
+        self.assertEqual(notifier.sendMessage.call_args_list, [mock.call([1]), mock.call([2])])
+
+    @defer.inlineCallbacks
+    def test_reconfig_waits_for_pending_events(self):
+        gen = self.setup_mock_generator([('fake1', None, None)])
+        gen.generate = mock.Mock(return_value=defer.Deferred())
+
+        notifier = yield self.setupNotifier(generators=[gen])
+        notifier._got_event(('fake1', None, None), None)
+        self.assertIsNotNone(notifier._pending_got_event_call)
+
+        d = notifier.reconfigService(generators=[gen])
+        self.assertFalse(d.called)
+
+        gen.generate.return_value.callback(1)
+        self.assertTrue(d.called)
+        self.assertIsNone(notifier._pending_got_event_call)
