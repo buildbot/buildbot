@@ -54,7 +54,10 @@ const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWi
 
           return (
             <li key={subGroup.name} className={subClassName}>
-              <Link to={subGroup.route} onClick={() => sidebarStore.hide()}>{subGroup.caption}</Link>
+              {subGroup.route === null
+                ? <span>{subGroup.caption}</span>
+                : <Link to={subGroup.route} onClick={() => sidebarStore.hide()}>{subGroup.caption}</Link>
+              }
             </li>
           )
         });
@@ -80,9 +83,14 @@ const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWi
           <div>
             {groupIndex > 0 ? <li className="sidebar-separator"></li> : <></>}
             <li className="sidebar-list">
-              <Link to={group.route} onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
-                <span className={"menu-icon fa fa-" + group.icon}></span>
-              </Link>
+              {group.route === null
+                ? <a onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
+                    <span className={"menu-icon fa fa-" + group.icon}></span>
+                  </a>
+                : <Link to={group.route} onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
+                    <span className={"menu-icon fa fa-" + group.icon}></span>
+                  </Link>
+              }
             </li>
           </div>
         </div>

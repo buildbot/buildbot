@@ -21,7 +21,7 @@ export type GroupSettings = {
   name: string;
   parentName: string | null;
   caption: string;
-  route: string;
+  route: string | null;
   icon: string | null;
   order: number | null;
 };
@@ -29,7 +29,7 @@ export type GroupSettings = {
 export type ResolvedGroupSettings = {
   name: string;
   caption: string;
-  route: string;
+  route: string | null;
   icon: string | null;
   order: number;
   subGroups: ResolvedGroupSettings[];
