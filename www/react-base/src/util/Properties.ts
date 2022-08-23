@@ -15,6 +15,8 @@
   Copyright Buildbot Team Members
 */
 
+import {emailInString} from "../data/DataUtils";
+
 export function getPropertyValueArrayOrEmpty(props: {[key: string]: any}, key: string) {
   if (!(key in props)) {
     return [];
@@ -41,4 +43,20 @@ export function getPropertyValueOrDefault(props: {[key: string]: any}, key: stri
     return def;
   }
   return prop[0];
+}
+
+export function parseChangeAuthorNameAndEmail(author: string): [string, string | null] {
+  const email = emailInString(author);
+  // Remove email from author string
+  if (email) {
+    let name: string;
+    if (author.split(' ').length > 1) {
+      name = author.replace(new RegExp(`\\s<${email}>`), '');
+    } else {
+      name = email.split("@")[0];
+    }
+    return [name, email];
+  }
+
+  return [author, null];
 }
