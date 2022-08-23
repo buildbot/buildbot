@@ -18,9 +18,10 @@
 import DataCollection, {IDataCollection} from "./DataCollection";
 import DataClient from "./DataClient";
 import IDataDescriptor from "./classes/DataDescriptor";
-import {ControlParams, RequestQuery} from "./DataQuery";
+import {ControlParams, Query, RequestQuery} from "./DataQuery";
 import BaseClass from "./classes/BaseClass";
 import DataPropertiesCollection from "./DataPropertiesCollection";
+import {CancellablePromise} from "../util/CancellablePromise";
 
 export interface IDataAccessor {
   registerCollection(c: IDataCollection): void;
@@ -29,6 +30,8 @@ export interface IDataAccessor {
   get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
                                   descriptor: IDataDescriptor<DataType>): DataCollection<DataType>;
   getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection;
+
+  getRaw(endpoint: string, query: Query): CancellablePromise<any>;
   control(endpoint: string, method: string, params: ControlParams): Promise<void>;
 }
 
@@ -74,6 +77,10 @@ export default class BaseDataAccessor implements IDataAccessor {
     return this.client.getProperties(endpoint, this, query.query ?? {}, query.subscribe ?? true);
   }
 
+  getRaw(endpoint: string, query: Query): CancellablePromise<any> {
+    return this.client.restClient.get(endpoint, query);
+  }
+
   control(endpoint: string, method: string, params: ControlParams) {
     return this.client.control(endpoint, method, params);
   }
@@ -91,6 +98,10 @@ export class EmptyDataAccessor implements IDataAccessor {
   }
 
   getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection {
+    throw Error("Not implemented");
+  }
+
+  getRaw(endpoint: string, query: Query): CancellablePromise<any> {
     throw Error("Not implemented");
   }
 
