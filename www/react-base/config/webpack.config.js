@@ -61,6 +61,7 @@ const swSrc = paths.swSrc;
 // style files regexes
 const cssRegex = /\.css$/;
 const cssModuleRegex = /\.module\.css$/;
+const lessRegex = /\.(less)$/;
 const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
 
@@ -97,7 +98,7 @@ module.exports = function (webpackEnv) {
   const shouldUseReactRefresh = env.raw.FAST_REFRESH;
 
   // common function to get style loaders
-  const getStyleLoaders = (cssOptions, preProcessor) => {
+  const getStyleLoaders = (cssOptions, preProcessor, isLess) => {
     const loaders = [
       isEnvDevelopment && require.resolve('style-loader'),
       isEnvProduction && {
@@ -112,7 +113,10 @@ module.exports = function (webpackEnv) {
         loader: require.resolve('css-loader'),
         options: cssOptions,
       },
-      {
+      isLess && {
+        loader: require.resolve('less-loader'),
+      },
+      !isLess && {
         // Options for PostCSS as we reference these options twice
         // Adds vendor prefixing based on your specified browser support in
         // package.json
@@ -475,7 +479,7 @@ module.exports = function (webpackEnv) {
                 sourceMap: isEnvProduction
                   ? shouldUseSourceMap
                   : isEnvDevelopment,
-              }),
+              }, false, false),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
               // Remove this when webpack adds a warning or an error for this.
@@ -494,7 +498,17 @@ module.exports = function (webpackEnv) {
                 modules: {
                   getLocalIdent: getCSSModuleLocalIdent,
                 },
-              }),
+              }, false, false),
+            },
+            {
+              test: lessRegex,
+              use: getStyleLoaders({
+                importLoaders: 1,
+                sourceMap: isEnvProduction
+                    ? shouldUseSourceMap
+                    : isEnvDevelopment,
+              }, false, true),
+              sideEffects: true,
             },
             // Opt-in support for SASS (using .scss or .sass extensions).
             // By default we support SASS Modules with the
@@ -509,7 +523,7 @@ module.exports = function (webpackEnv) {
                     ? shouldUseSourceMap
                     : isEnvDevelopment,
                 },
-                'sass-loader'
+                'sass-loader', false
               ),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
@@ -531,7 +545,7 @@ module.exports = function (webpackEnv) {
                     getLocalIdent: getCSSModuleLocalIdent,
                   },
                 },
-                'sass-loader'
+                'sass-loader', false
               ),
             },
             // "file" loader makes sure those assets get served by WebpackDevServer.

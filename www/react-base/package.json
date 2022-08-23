@@ -80,6 +80,7 @@
     "build": "node scripts/build.js",
     "test": "node scripts/test.js"
   },
+  "proxy": "http://buildbot.buildbot.net",
   "eslintConfig": {
     "extends": [
       "react-app"
@@ -153,5 +154,9 @@
     "presets": [
       "react-app"
     ]
+  },
+  "devDependencies": {
+    "less": "^3.0.0",
+    "less-loader": "^5.0.0"
   }
 }
