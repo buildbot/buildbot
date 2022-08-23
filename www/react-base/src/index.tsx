@@ -3,13 +3,52 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import {DataClientContext} from "./data/ReactUtils";
+import DataClient from "./data/DataClient";
+import RestClient, {getRestUrl} from "./data/RestClient";
+import {getWebSocketUrl, WebSocketClient} from "./data/WebSocketClient";
+import {Config, ConfigContext} from "./contexts/Config";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
+const restClient = new RestClient(getRestUrl(window.location));
+const webSocketClient = new WebSocketClient(getWebSocketUrl(window.location),
+    url => new WebSocket(url));
+
+const dataClient = new DataClient(restClient, webSocketClient);
+
+// FIXME: the config should come from master
+const hardcodedUrl = `${window.location.protocol}://${window.location.hostname}${window.location.port}/`;
+const hardcodedConfig: Config = {
+  user: { anonymous: true },
+  port: "",
+  plugins: {},
+  auth: { name: "", oauth2: false, fa_icon: "", autologin: false },
+  avatar_methods: [],
+  versions: [
+    ["Python", "3.6.13"],
+    ["Buildbot", "3.5.1"],
+    ["Twisted", "18.9.0"],
+    ["buildbot_travis", "0.6.4"],
+    ["buildbot-grid-view", "2.2.1"],
+    ["buildbot-codeparameter", "1.6.1"],
+  ],
+  ui_default_config: {},
+  buildbotURL: hardcodedUrl,
+  title: "test buildbot",
+  titleURL: hardcodedUrl,
+  multiMaster: false,
+}
+
 root.render(
   <React.StrictMode>
-    <App />
+    <DataClientContext.Provider value={dataClient}>
+      <ConfigContext.Provider value={hardcodedConfig}>
+        <App />
+      </ConfigContext.Provider>
+    </DataClientContext.Provider>
   </React.StrictMode>
 );
 
