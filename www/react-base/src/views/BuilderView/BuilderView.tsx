@@ -112,9 +112,9 @@ const BuilderView = observer(() => {
     buildersQuery.getRelated(builder => builder.getForceschedulers({query: {order: "name"}})));
 
   const builder = buildersQuery.getNthOrNull(0);
-  const builds = buildsQuery.getParentCollectionOrEmpty<Build>(builderid.toString());
-  const buildrequests = buildrequestsQuery.getParentCollectionOrEmpty<Buildrequest>(builderid.toString());
-  const forceschedulers = forceSchedulersQuery.getParentCollectionOrEmpty<Forcescheduler>(builderid.toString());
+  const builds = buildsQuery.getParentCollectionOrEmpty(builderid.toString());
+  const buildrequests = buildrequestsQuery.getParentCollectionOrEmpty(builderid.toString());
+  const forceschedulers = forceSchedulersQuery.getParentCollectionOrEmpty(builderid.toString());
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);

@@ -16,7 +16,15 @@
 */
 
 import BaseClass from "./classes/BaseClass";
-import {action, autorun, IObservableArray, makeObservable, observable} from "mobx";
+import {
+  action,
+  autorun,
+  computed,
+  IObservableArray,
+  makeObservable,
+  observable,
+  ObservableMap
+} from "mobx";
 import DataCollection, {IDataCollection} from "./DataCollection";
 import {IReactionDisposer} from "mobx";
 
@@ -25,38 +33,68 @@ import {IReactionDisposer} from "mobx";
 export default class DataMultiCollection<ParentDataType extends BaseClass,
     DataType extends BaseClass> implements IDataCollection {
 
-  parentArray: IObservableArray<ParentDataType>;
+  parentArray: IObservableArray<ParentDataType> | null;
+  parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null;
   parentFilteredIds: IObservableArray<string>;
+
   @observable byParentId = observable.map<string, DataCollection<DataType>>();
   callback: (child: ParentDataType) => DataCollection<DataType>;
   private disposer: IReactionDisposer;
 
-  constructor(parentArray: IObservableArray<ParentDataType>,
+  constructor(parentArray: IObservableArray<ParentDataType> | null,
+              parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
               parentFilteredIds: IObservableArray<string> | null,
               callback: (child: ParentDataType) => DataCollection<DataType>) {
     makeObservable(this);
     this.parentArray = parentArray;
+    this.parentArrayMap = parentArrayMap;
     this.parentFilteredIds = parentFilteredIds ?? observable([]);
 
     this.callback = callback;
-    this.disposer = autorun(() => {
-      const newParentIds = new Set<string>();
-      for (let parent of this.parentArray) {
-        if (!this.parentFilteredIds.indexOf(parent.id)) {
-          continue;
+    if (parentArray !== null) {
+      this.disposer = autorun(() => {
+        const newParentIds = new Set<string>();
+        for (let parent of this.parentArray!) {
+          if (!this.parentFilteredIds.indexOf(parent.id)) {
+            continue;
+          }
+
+          newParentIds.add(parent.id);
+          if (!this.byParentId.has(parent.id)) {
+            this.addByParentId(parent.id, this.callback(parent));
+          }
         }
 
-        newParentIds.add(parent.id);
-        if (!this.byParentId.has(parent.id)) {
-          this.addByParentId(parent.id, this.callback(parent));
+        for (let key of this.byParentId.keys()) {
+          if (!newParentIds.has(key)) {
+            this.removeByParentId(key);
+          }
         }
-      }
-      for (let key of this.byParentId.keys()) {
-        if (!newParentIds.has(key)) {
-          this.removeByParentId(key);
+      });
+    } else if (parentArrayMap !== null) {
+      this.disposer = autorun(() => {
+        const newParentIds = new Set<string>();
+        for (const parentList of this.parentArrayMap!.values()) {
+          for (const parent of parentList.array) {
+            if (!this.parentFilteredIds.indexOf(parent.id)) {
+              continue;
+            }
+
+            newParentIds.add(parent.id);
+            if (!this.byParentId.has(parent.id)) {
+              this.addByParentId(parent.id, this.callback(parent));
+            }
+          }
         }
-      }
-    });
+        for (let key of this.byParentId.keys()) {
+          if (!newParentIds.has(key)) {
+            this.removeByParentId(key);
+          }
+        }
+      });
+    } else {
+      throw Error("Either parentArray or parentArrayMap must not be null");
+    }
   }
 
   subscribe() {
@@ -75,31 +113,31 @@ export default class DataMultiCollection<ParentDataType extends BaseClass,
   }
 
   @action removeByParentId(id: string) {
-    this.byParentId.get(id)!.close();
+    this.byParentId.get(id)?.close();
     this.byParentId.delete(id);
   }
 
-  getNthOfParentOrNull<DataType extends BaseClass>(parentId: string, index: number): DataType | null {
-    if (!(parentId in this.byParentId)) {
+  getRelated<ChildDataType extends BaseClass>(
+    callback: (child: DataType) => DataCollection<ChildDataType>) {
+    return new DataMultiCollection<DataType, ChildDataType>(null, this.byParentId, null, callback);
+  }
+
+  getNthOfParentOrNull(parentId: string, index: number): DataType | null {
+    const collection = this.byParentId.get(parentId);
+    if (collection === undefined) {
       return null;
     }
-
-    // FIXME: this should be enforced by the typescript type system (that is, it shouldn't be
-    // possible to call this function if it contains wrong collection.
-    const collection = this.byParentId[parentId] as unknown as DataCollection<DataType>;
     if (index >= collection.array.length) {
       return null;
     }
     return collection.array[index];
   }
 
-  getParentCollectionOrEmpty<DataType extends BaseClass>(parentId: string): Collection {
-    if (!(parentId in this.byParentId)) {
-      // FIXME: this should be enforced by the typescript type system (that is, it shouldn't be
-      // possible to call this function if it contains wrong collection.
-      return new DataCollection<DataType>() as unknown as Collection;
+  getParentCollectionOrEmpty(parentId: string): DataCollection<DataType> {
+    const collection = this.byParentId.get(parentId);
+    if (collection === undefined) {
+      return new DataCollection<DataType>();
     }
-
-    return this.byParentId[parentId];
+    return collection;
   }
 }

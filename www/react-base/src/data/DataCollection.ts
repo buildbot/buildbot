@@ -92,13 +92,14 @@ export default class DataCollection<DataType extends BaseClass> implements IData
 
   getRelated<ChildDataType extends BaseClass>(
       callback: (child: DataType) => DataCollection<ChildDataType>) {
-    return new DataMultiCollection<DataType, ChildDataType>(this.array, null, callback);
+    return new DataMultiCollection<DataType, ChildDataType>(this.array, null, null, callback);
   }
 
   getRelatedOfFiltered<ChildDataType extends BaseClass>(
       filteredIds: IObservableArray<string>,
       callback: (child: DataType) => DataCollection<ChildDataType>) {
-    return new DataMultiCollection<DataType, ChildDataType>(this.array, filteredIds, callback);
+    return new DataMultiCollection<DataType, ChildDataType>(this.array, null, filteredIds,
+      callback);
   }
 
   getNthOrNull(index: number): DataType | null {
