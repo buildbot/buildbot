@@ -8,6 +8,9 @@ import DataClient from "./data/DataClient";
 import RestClient, {getRestUrl} from "./data/RestClient";
 import {getWebSocketUrl, WebSocketClient} from "./data/WebSocketClient";
 import {Config, ConfigContext} from "./contexts/Config";
+import SidebarStore from "./stores/SidebarStore";
+import { StoresContext } from './contexts/Stores';
+import TopbarStore from "./stores/TopbarStore";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -42,11 +45,19 @@ const hardcodedConfig: Config = {
   multiMaster: false,
 }
 
+const sidebarStore = new SidebarStore();
+const topbarStore = new TopbarStore();
+
 root.render(
   <React.StrictMode>
     <DataClientContext.Provider value={dataClient}>
       <ConfigContext.Provider value={hardcodedConfig}>
-        <App />
+        <StoresContext.Provider value={{
+          sidebar: sidebarStore,
+          topbar: topbarStore,
+        }}>
+          <App />
+        </StoresContext.Provider>
       </ConfigContext.Provider>
     </DataClientContext.Provider>
   </React.StrictMode>
