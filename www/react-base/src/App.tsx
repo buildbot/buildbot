@@ -20,6 +20,7 @@ import './views/BuildersView/BuildersView';
 import './views/BuilderView/BuilderView';
 import './views/BuildView/BuildView';
 import './views/PendingBuildRequestsView/PendingBuildRequestsView';
+import './views/ChangesView/ChangesView';
 
 function App() {
   const stores = useContext(StoresContext);
