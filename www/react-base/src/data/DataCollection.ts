@@ -22,6 +22,7 @@ import BaseClass from "./classes/BaseClass";
 import IDataDescriptor from "./classes/DataDescriptor";
 import {IDataAccessor} from "./DataAccessor";
 import {action, IObservableArray, makeObservable, observable} from "mobx";
+import DataMultiCollection from "./DataMultiCollection";
 
 export interface IDataCollection {
   close(): void;
@@ -85,6 +86,11 @@ export default class DataCollection<DataType extends BaseClass> implements IData
       return this.webSocketClient.unsubscribe(this.socketPath, this);
     }
     return Promise.resolve();
+  }
+
+  getRelated<ChildDataType extends BaseClass>(
+      callback: (child: DataType) => DataCollection<ChildDataType>) {
+    return new DataMultiCollection<DataType, ChildDataType>(this.array, callback);
   }
 
   @action initial(data: any[]) {
