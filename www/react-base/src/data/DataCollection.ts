@@ -92,7 +92,13 @@ export default class DataCollection<DataType extends BaseClass> implements IData
 
   getRelated<ChildDataType extends BaseClass>(
       callback: (child: DataType) => DataCollection<ChildDataType>) {
-    return new DataMultiCollection<DataType, ChildDataType>(this.array, callback);
+    return new DataMultiCollection<DataType, ChildDataType>(this.array, null, callback);
+  }
+
+  getRelatedOfFiltered<ChildDataType extends BaseClass>(
+      filteredIds: IObservableArray<string>,
+      callback: (child: DataType) => DataCollection<ChildDataType>) {
+    return new DataMultiCollection<DataType, ChildDataType>(this.array, filteredIds, callback);
   }
 
   @action initial(data: any[]) {

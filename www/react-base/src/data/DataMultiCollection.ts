@@ -26,18 +26,26 @@ export default class DataMultiCollection<ParentDataType extends BaseClass,
     DataType extends BaseClass> implements IDataCollection {
 
   parentArray: IObservableArray<ParentDataType>;
+  parentFilteredIds: IObservableArray<string>;
   @observable byParentId = observable.map<string, DataCollection<DataType>>();
   callback: (child: ParentDataType) => DataCollection<DataType>;
   private disposer: IReactionDisposer;
 
   constructor(parentArray: IObservableArray<ParentDataType>,
+              parentFilteredIds: IObservableArray<string> | null,
               callback: (child: ParentDataType) => DataCollection<DataType>) {
     makeObservable(this);
     this.parentArray = parentArray;
+    this.parentFilteredIds = parentFilteredIds ?? observable([]);
+
     this.callback = callback;
     this.disposer = autorun(() => {
       const newParentIds = new Set<string>();
       for (let parent of this.parentArray) {
+        if (!this.parentFilteredIds.indexOf(parent.id)) {
+          continue;
+        }
+
         newParentIds.add(parent.id);
         if (!this.byParentId.has(parent.id)) {
           this.addByParentId(parent.id, this.callback(parent));
