@@ -63,6 +63,7 @@
     "prompts": "2.4.0",
     "react": "^18.2.0",
     "react-app-polyfill": "^2.0.0",
+    "react-bootstrap": "^1.6.5",
     "react-dev-utils": "^11.0.3",
     "react-dom": "^18.2.0",
     "react-refresh": "^0.8.3",
