@@ -1,28 +1,36 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {useContext} from 'react';
 import './App.css';
 import './globals';
 import './styles/styles.less';
 import 'bootstrap';
+import {Routes, Route} from "react-router-dom";
+
+import PageWithSidebar from "./components/PageWithSidebar/PageWithSidebar";
+import {StoresContext} from "./contexts/Stores";
+import {globalMenuSettings} from "./plugins/GlobalMenuSettings";
+import {globalRoutes} from "./plugins/GlobalRoutes";
+import Topbar from "./components/Topbar/Topbar";
+import Loginbar from "./components/Loginbar/Loginbar";
+
+// import the views so that they register themselves in the plugin system
+import './views/HomeView/HomeView';
 
 function App() {
+  const stores = useContext(StoresContext);
+
+  const routeElements = globalRoutes.routes.map(config => {
+    return <Route key={config.route} path={config.route} element={config.element()}/>
+  });
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
+      <Topbar store={stores.topbar} appTitle={globalMenuSettings.appTitle}>
+        <Loginbar/>
+      </Topbar>
+      <Routes>
+        {routeElements}
+      </Routes>
+    </PageWithSidebar>
   );
 }
 

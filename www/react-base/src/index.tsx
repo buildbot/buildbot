@@ -8,6 +8,7 @@ import DataClient from "./data/DataClient";
 import RestClient, {getRestUrl} from "./data/RestClient";
 import {getWebSocketUrl, WebSocketClient} from "./data/WebSocketClient";
 import {Config, ConfigContext} from "./contexts/Config";
+import {HashRouter} from "react-router-dom";
 import SidebarStore from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';
 import TopbarStore from "./stores/TopbarStore";
@@ -58,7 +59,9 @@ root.render(
           sidebar: sidebarStore,
           topbar: topbarStore,
         }}>
-          <App />
+          <HashRouter>
+            <App />
+          </HashRouter>
         </StoresContext.Provider>
       </ConfigContext.Provider>
     </DataClientContext.Provider>
