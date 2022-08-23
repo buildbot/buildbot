@@ -26,6 +26,7 @@ import DataCollection from "../../data/DataCollection";
 import BuildSticker from "../../components/BuildSticker/BuildSticker";
 import {Link} from "react-router-dom";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
+import {globalSettings} from "../../plugins/GlobalSettings";
 
 
 function maybeShowUrlWarning(location: Location, config: Config) {
@@ -78,8 +79,11 @@ const HomeView = observer(() => {
   const buildsRunning = useDataApiQuery(
     () => Build.getAll(accessor, {query: {order: '-started_at', complete: false}}));
 
+  const maxRecentBuilds = globalSettings.getIntegerSetting("Home.max_recent_builds");
+
   const recentBuilds = useDataApiQuery(
-    () => Build.getAll(accessor, {query: {order: '-buildid', complete: true, limit: 20}}));
+    () => Build.getAll(accessor, {query: {order: '-buildid', complete: true,
+        limit: maxRecentBuilds}}));
 
   const builders = useDataApiQuery(() => Builder.getAll(accessor));
 
@@ -163,5 +167,15 @@ globalRoutes.addRoute({
   group: "home",
   element: () => <HomeView/>,
 });
+
+globalSettings.addGroup({
+  name: 'Home',
+  caption: 'Home page related settings',
+  items: [{
+    type: 'integer',
+    name: 'max_recent_builds',
+    caption: 'Max recent builds',
+    defaultValue: 20
+  }]});
 
 export default HomeView;
