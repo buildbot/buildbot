@@ -9,6 +9,7 @@ import PageWithSidebar from "./components/PageWithSidebar/PageWithSidebar";
 import {StoresContext} from "./contexts/Stores";
 import {globalMenuSettings} from "./plugins/GlobalMenuSettings";
 import {globalRoutes} from "./plugins/GlobalRoutes";
+import {useCurrentTimeSetupTimers} from "./util/Moment";
 import Topbar from "./components/Topbar/Topbar";
 import TopbarActions from "./components/TopbarActions/TopbarActions";
 import Loginbar from "./components/Loginbar/Loginbar";
@@ -18,6 +19,8 @@ import './views/HomeView/HomeView';
 
 function App() {
   const stores = useContext(StoresContext);
+
+  useCurrentTimeSetupTimers();
 
   const routeElements = globalRoutes.routes.map(config => {
     return <Route key={config.route} path={config.route} element={config.element()}/>

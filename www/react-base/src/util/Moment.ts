@@ -16,7 +16,8 @@
 */
 
 import moment from "moment";
-import {useEffect, useState} from "react";
+import {useContext, useEffect} from "react";
+import {TimeContext} from "../contexts/Time";
 
 export function durationFormat(time: number) {
   if (time < 0) {
@@ -51,27 +52,18 @@ export function durationFromNowFormat(time: number, now: number) {
   return moment.unix(time).from(moment.unix(now), true);
 }
 
-// FIXME: this should use global state so that all times are updated exactly once
 export function useCurrentTime() {
-  const [now, setNow] = useState(moment().unix());
+  const timeStore = useContext(TimeContext);
+  return timeStore.now;
+}
+
+export function useCurrentTimeSetupTimers() {
+  const timeStore = useContext(TimeContext);
   useEffect(() => {
     const timer = setInterval(
-      () => setNow(moment().unix()),
+      () => timeStore.setTime(moment().unix()),
       1000
     );
     return () => clearInterval(timer);
   }, []);
-  return now;
-}
-
-export function mockMoment(mockedDate: string) {
-  jest.mock("moment", () => {
-    const real = jest.requireActual("moment");
-    const mocked: any = (date: string | undefined) => real(date || mockedDate);
-
-    for (let prop in real) {
-      mocked[prop] = real[prop];
-    }
-    return mocked;
-  });
 }

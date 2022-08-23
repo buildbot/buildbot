@@ -21,18 +21,22 @@ import BuildSticker from "./BuildSticker";
 import {Builder} from "../../data/classes/Builder";
 import {FAILURE, SUCCESS} from "../../util/Results";
 import {MemoryRouter} from "react-router-dom";
-import {mockMoment} from "../../util/Moment";
+import TimeStore from "../../stores/TimeStore";
+import { TimeContext } from "../../contexts/Time";
 
 function assertBuildStickerRenderSnapshot(build: Build, builder: Builder) {
+  const timeStore = new TimeStore();
+  timeStore.setTimeFromString("2022-01-01T00:00:00.000Z");
+
   const component = renderer.create(
     <MemoryRouter>
-      <BuildSticker build={build} builder={builder}/>
+      <TimeContext.Provider value={timeStore}>
+        <BuildSticker build={build} builder={builder}/>
+      </TimeContext.Provider>
     </MemoryRouter>
   );
   expect(component.toJSON()).toMatchSnapshot();
 }
-
-mockMoment("2022-01-01T00:00:00.000Z");
 
 describe('buildsticker component', function() {
   it('simple', () => {

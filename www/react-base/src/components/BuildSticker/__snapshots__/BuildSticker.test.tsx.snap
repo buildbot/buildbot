@@ -68,7 +68,7 @@ exports[`buildsticker component pending 1`] = `
       <span
         className="pull-right"
       >
-        19220 days 1:40:22
+        18992 days 23:59:40
       </span>
       <span>
         pending
@@ -107,7 +107,7 @@ exports[`buildsticker component simple 1`] = `
       <span
         className="pull-right"
       >
-        19220 days 1:40:42
+        18993 days 0:00:00
       </span>
       <span />
     </div>

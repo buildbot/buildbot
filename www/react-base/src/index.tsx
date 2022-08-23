@@ -14,6 +14,9 @@ import { StoresContext } from './contexts/Stores';
 import TopbarStore from "./stores/TopbarStore";
 import TopbarActionsStore from "./stores/TopbarActionsStore";
 import {globalSettings} from "./plugins/GlobalSettings";
+import {TimeContext} from "./contexts/Time";
+import TimeStore from "./stores/TimeStore";
+import moment from "moment";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -48,6 +51,9 @@ const hardcodedConfig: Config = {
   multiMaster: false,
 }
 
+const timeStore = new TimeStore();
+timeStore.setTime(moment().unix());
+
 const sidebarStore = new SidebarStore();
 const topbarStore = new TopbarStore();
 const topbarActionsStore = new TopbarActionsStore();
@@ -57,15 +63,17 @@ root.render(
   <React.StrictMode>
     <DataClientContext.Provider value={dataClient}>
       <ConfigContext.Provider value={hardcodedConfig}>
-        <StoresContext.Provider value={{
-          sidebar: sidebarStore,
-          topbar: topbarStore,
-          topbarActions: topbarActionsStore,
-        }}>
-          <HashRouter>
-            <App />
-          </HashRouter>
-        </StoresContext.Provider>
+        <TimeContext.Provider value={timeStore}>
+          <StoresContext.Provider value={{
+            sidebar: sidebarStore,
+            topbar: topbarStore,
+            topbarActions: topbarActionsStore,
+          }}>
+            <HashRouter>
+              <App />
+            </HashRouter>
+          </StoresContext.Provider>
+        </TimeContext.Provider>
       </ConfigContext.Provider>
     </DataClientContext.Provider>
   </React.StrictMode>
