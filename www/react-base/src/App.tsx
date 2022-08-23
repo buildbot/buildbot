@@ -18,6 +18,7 @@ import Loginbar from "./components/Loginbar/Loginbar";
 import './views/HomeView/HomeView';
 import './views/BuildersView/BuildersView';
 import './views/BuilderView/BuilderView';
+import './views/BuildView/BuildView';
 
 function App() {
   const stores = useContext(StoresContext);
