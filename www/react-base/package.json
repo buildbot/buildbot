@@ -15,6 +15,7 @@
     "@types/react-dom": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^4.5.0",
     "@typescript-eslint/parser": "^4.5.0",
+    "axios": "^0.27.2",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.6.0",
     "babel-loader": "8.1.0",
@@ -156,6 +157,7 @@
     ]
   },
   "devDependencies": {
+    "axios-mock-adapter": "^1.21.1",
     "less": "^3.0.0",
     "less-loader": "^5.0.0"
   }
