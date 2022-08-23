@@ -32,7 +32,7 @@ export interface IDataAccessor {
   getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection;
 
   getRaw(endpoint: string, query: Query): CancellablePromise<any>;
-  control(endpoint: string, method: string, params: ControlParams): Promise<void>;
+  control(endpoint: string, method: string, params: ControlParams): Promise<any>;
 }
 
 export default class BaseDataAccessor implements IDataAccessor {
@@ -105,7 +105,7 @@ export class EmptyDataAccessor implements IDataAccessor {
     throw Error("Not implemented");
   }
 
-  control(endpoint: string, method: string, params: ControlParams): Promise<void> {
+  control(endpoint: string, method: string, params: ControlParams): Promise<any> {
     throw Error("Not implemented");
   }
 }
