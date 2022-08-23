@@ -78,4 +78,28 @@ export default class DataMultiCollection<ParentDataType extends BaseClass,
     this.byParentId.get(id)!.close();
     this.byParentId.delete(id);
   }
+
+  getNthOfParentOrNull<DataType extends BaseClass>(parentId: string, index: number): DataType | null {
+    if (!(parentId in this.byParentId)) {
+      return null;
+    }
+
+    // FIXME: this should be enforced by the typescript type system (that is, it shouldn't be
+    // possible to call this function if it contains wrong collection.
+    const collection = this.byParentId[parentId] as unknown as DataCollection<DataType>;
+    if (index >= collection.array.length) {
+      return null;
+    }
+    return collection.array[index];
+  }
+
+  getParentCollectionOrEmpty<DataType extends BaseClass>(parentId: string): Collection {
+    if (!(parentId in this.byParentId)) {
+      // FIXME: this should be enforced by the typescript type system (that is, it shouldn't be
+      // possible to call this function if it contains wrong collection.
+      return new DataCollection<DataType>() as unknown as Collection;
+    }
+
+    return this.byParentId[parentId];
+  }
 }

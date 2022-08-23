@@ -101,6 +101,20 @@ export default class DataCollection<DataType extends BaseClass> implements IData
     return new DataMultiCollection<DataType, ChildDataType>(this.array, filteredIds, callback);
   }
 
+  getNthOrNull(index: number): DataType | null {
+    if (index >= this.array.length) {
+      return null;
+    }
+    return this.array[index];
+  }
+
+  getByIdOrNull(id: string): DataType | null {
+    if (id in this.byId) {
+      return this.byId[id];
+    }
+    return null;
+  }
+
   @action initial(data: any[]) {
     // put items one by one if not already in the array if they are that means they come from an
     // update event the event is always considered the latest data so we don't overwrite it
