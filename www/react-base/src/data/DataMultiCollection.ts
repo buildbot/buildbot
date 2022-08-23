@@ -38,6 +38,7 @@ export default class DataMultiCollection<ParentDataType extends BaseClass,
   parentFilteredIds: IObservableArray<string>;
 
   @observable byParentId = observable.map<string, DataCollection<DataType>>();
+  @observable sortedParentIds = observable.array<string>();
   callback: (child: ParentDataType) => DataCollection<DataType>;
   private disposer: IReactionDisposer;
 
@@ -110,16 +111,47 @@ export default class DataMultiCollection<ParentDataType extends BaseClass,
 
   @action addByParentId(id: string, collection: DataCollection<DataType>) {
     this.byParentId.set(id, collection);
+    this.sortedParentIds.push(id);
+    this.sortedParentIds.sort();
   }
 
   @action removeByParentId(id: string) {
     this.byParentId.get(id)?.close();
     this.byParentId.delete(id);
+    this.sortedParentIds.remove(id);
   }
 
   getRelated<ChildDataType extends BaseClass>(
     callback: (child: DataType) => DataCollection<ChildDataType>) {
     return new DataMultiCollection<DataType, ChildDataType>(null, this.byParentId, null, callback);
+  }
+
+  // Acquires nth element across all collections tracked by this multi collection. The iteration
+  // order is in ascending order of parent IDs.
+  getNthOrNull(index: number): DataType | null {
+    for (const parentId of this.sortedParentIds) {
+      const parent = this.byParentId.get(parentId);
+      if (parent === undefined) {
+        continue;
+      }
+      if (index < parent.array.length) {
+        return parent.array[index];
+      }
+      index -= parent.array.length;
+    }
+    return null;
+  }
+
+  getAll(): DataType[] {
+    const all: DataType[] = [];
+    for (const parentId of this.sortedParentIds) {
+      const parent = this.byParentId.get(parentId);
+      if (parent === undefined) {
+        continue;
+      }
+      all.push(...parent.array);
+    }
+    return all;
   }
 
   getNthOfParentOrNull(parentId: string, index: number): DataType | null {
