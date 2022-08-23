@@ -16,6 +16,7 @@ import Loginbar from "./components/Loginbar/Loginbar";
 
 // import the views so that they register themselves in the plugin system
 import './views/HomeView/HomeView';
+import './views/BuildersView/BuildersView';
 
 function App() {
   const stores = useContext(StoresContext);
