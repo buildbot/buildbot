@@ -11,3 +11,8 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* This is needed for React-Bootstrap v1.6.x to interoperate with Bootstrap v3 */
+.tooltip.show {
+  opacity: 1;
+}
