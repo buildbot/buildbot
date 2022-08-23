@@ -23,6 +23,8 @@ import IDataDescriptor from "./classes/DataDescriptor";
 import {IDataAccessor} from "./DataAccessor";
 import {action, IObservableArray, makeObservable, observable} from "mobx";
 import DataMultiCollection from "./DataMultiCollection";
+import DataPropertiesCollection from "./DataPropertiesCollection";
+import DataMultiPropertiesCollection from "./DataMultiPropertiesCollection";
 
 export interface IDataCollection {
   subscribe(): Promise<void>;
@@ -93,6 +95,10 @@ export default class DataCollection<DataType extends BaseClass> implements IData
   getRelated<ChildDataType extends BaseClass>(
       callback: (child: DataType) => DataCollection<ChildDataType>) {
     return new DataMultiCollection<DataType, ChildDataType>(this.array, null, null, callback);
+  }
+
+  getRelatedProperties(callback: (child: DataType) => DataPropertiesCollection) {
+    return new DataMultiPropertiesCollection<DataType>(this.array, null, null, callback);
   }
 
   getRelatedOfFiltered<ChildDataType extends BaseClass>(
