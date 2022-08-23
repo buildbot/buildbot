@@ -18,6 +18,7 @@
 import {createContext, useContext, useEffect, useRef} from "react";
 import DataClient from "./DataClient";
 import {IDataAccessor} from "./DataAccessor";
+import {IDataCollection} from "./DataCollection";
 
 // The default value is not used as the context is injected
 export const DataClientContext =
@@ -48,5 +49,33 @@ export function useDataApiQuery<Collection>(callback: () => Collection): Collect
   if (storedCollection.current === null) {
     storedCollection.current = callback();
   }
+  return storedCollection.current;
+}
+
+function arrayElementsEqual<T>(a: (T|null)[], b: (T|null)[]) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
+    dependency: (T|null)[], callback: () => Collection): Collection {
+  const storedDependency = useRef<(T|null)[]>([]);
+  let storedCollection = useRef<Collection|null>(null);
+
+  if (storedCollection.current === null || !arrayElementsEqual(dependency, storedDependency.current)) {
+    if (storedCollection.current !== null) {
+      storedCollection.current.close();
+    }
+    storedCollection.current = callback();
+    storedDependency.current = [...dependency];
+  }
+
   return storedCollection.current;
 }
