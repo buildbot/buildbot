@@ -1,0 +1,179 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PropertiesTable component rendering 1`] = `
+<table
+  className="table table-hover table-striped table-condensed"
+>
+  <thead>
+    <tr>
+      <th
+        className="text-left"
+      >
+        Name
+      </th>
+      <th
+        className="text-center"
+      >
+        Value
+      </th>
+      <th
+        className="text-right"
+      >
+        Source
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td
+        className="text-left"
+      >
+        str
+      </td>
+      <td
+        className="text-left"
+      >
+        <pre
+          className="bb-properties-value"
+        >
+          "string"
+        </pre>
+        <i
+          className="bb-properties-copy fa fa-copy clickable"
+          onClick={[Function]}
+        />
+      </td>
+      <td
+        className="text-right"
+      >
+        string source
+      </td>
+    </tr>
+    <tr>
+      <td
+        className="text-left"
+      >
+        int
+      </td>
+      <td
+        className="text-left"
+      >
+        <pre
+          className="bb-properties-value"
+        >
+          123
+        </pre>
+        <i
+          className="bb-properties-copy fa fa-copy clickable"
+          onClick={[Function]}
+        />
+      </td>
+      <td
+        className="text-right"
+      >
+        int source
+      </td>
+    </tr>
+    <tr>
+      <td
+        className="text-left"
+      >
+        float
+      </td>
+      <td
+        className="text-left"
+      >
+        <pre
+          className="bb-properties-value"
+        >
+          123.4
+        </pre>
+        <i
+          className="bb-properties-copy fa fa-copy clickable"
+          onClick={[Function]}
+        />
+      </td>
+      <td
+        className="text-right"
+      >
+        float source
+      </td>
+    </tr>
+    <tr>
+      <td
+        className="text-left"
+      >
+        boolean
+      </td>
+      <td
+        className="text-left"
+      >
+        <pre
+          className="bb-properties-value"
+        >
+          true
+        </pre>
+        <i
+          className="bb-properties-copy fa fa-copy clickable"
+          onClick={[Function]}
+        />
+      </td>
+      <td
+        className="text-right"
+      >
+        boolean source
+      </td>
+    </tr>
+    <tr>
+      <td
+        className="text-left"
+      >
+        array
+      </td>
+      <td
+        className="text-left"
+      >
+        <pre
+          className="bb-properties-value"
+        >
+          [321,"astr",false]
+        </pre>
+        <i
+          className="bb-properties-copy fa fa-copy clickable"
+          onClick={[Function]}
+        />
+      </td>
+      <td
+        className="text-right"
+      >
+        array source
+      </td>
+    </tr>
+    <tr>
+      <td
+        className="text-left"
+      >
+        object
+      </td>
+      <td
+        className="text-left"
+      >
+        <pre
+          className="bb-properties-value"
+        >
+          {"s":"str","i":789,"b":false}
+        </pre>
+        <i
+          className="bb-properties-copy fa fa-copy clickable"
+          onClick={[Function]}
+        />
+      </td>
+      <td
+        className="text-right"
+      >
+        object source
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
