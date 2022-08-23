@@ -23,6 +23,7 @@ import './views/PendingBuildRequestsView/PendingBuildRequestsView';
 import './views/ChangesView/ChangesView';
 import './views/ChangeBuildsView/ChangeBuildsView';
 import './views/MastersView/MastersView';
+import './views/SchedulersView/SchedulersView';
 
 function App() {
   const stores = useContext(StoresContext);
