@@ -60,7 +60,6 @@ const topbarActionsStore = new TopbarActionsStore();
 globalSettings.applyBuildbotConfig(hardcodedConfig);
 
 root.render(
-  <React.StrictMode>
     <DataClientContext.Provider value={dataClient}>
       <ConfigContext.Provider value={hardcodedConfig}>
         <TimeContext.Provider value={timeStore}>
@@ -76,7 +75,6 @@ root.render(
         </TimeContext.Provider>
       </ConfigContext.Provider>
     </DataClientContext.Provider>
-  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
