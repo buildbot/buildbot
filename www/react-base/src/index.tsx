@@ -12,6 +12,7 @@ import {HashRouter} from "react-router-dom";
 import SidebarStore from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';
 import TopbarStore from "./stores/TopbarStore";
+import TopbarActionsStore from "./stores/TopbarActionsStore";
 import {globalSettings} from "./plugins/GlobalSettings";
 
 const root = ReactDOM.createRoot(
@@ -49,6 +50,7 @@ const hardcodedConfig: Config = {
 
 const sidebarStore = new SidebarStore();
 const topbarStore = new TopbarStore();
+const topbarActionsStore = new TopbarActionsStore();
 globalSettings.applyBuildbotConfig(hardcodedConfig);
 
 root.render(
@@ -58,6 +60,7 @@ root.render(
         <StoresContext.Provider value={{
           sidebar: sidebarStore,
           topbar: topbarStore,
+          topbarActions: topbarActionsStore,
         }}>
           <HashRouter>
             <App />

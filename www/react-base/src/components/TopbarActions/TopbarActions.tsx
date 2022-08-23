@@ -15,6 +15,8 @@
   Copyright Buildbot Team Members
 */
 
+import TopbarActionsStore from "../../stores/TopbarActionsStore";
+
 export type TopbarAction = {
   caption: string;
   icon?: string;
@@ -23,8 +25,12 @@ export type TopbarAction = {
   action: () => void;
 }
 
-const TopbarContextualActions = (actions: TopbarAction[]) => {
-  const elements = actions.map(action => {
+type TopbarActionsProps = {
+  store: TopbarActionsStore;
+}
+
+const TopbarActions = ({store}: TopbarActionsProps) => {
+  const elements = store.actions.map(action => {
     return (
       <div className="form-group">
         <button className={"btn btn-default " + (action.extraClass ?? "")} type="button"
@@ -44,4 +50,4 @@ const TopbarContextualActions = (actions: TopbarAction[]) => {
   );
 }
 
-export default TopbarContextualActions;
+export default TopbarActions;

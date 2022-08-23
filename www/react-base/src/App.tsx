@@ -10,6 +10,7 @@ import {StoresContext} from "./contexts/Stores";
 import {globalMenuSettings} from "./plugins/GlobalMenuSettings";
 import {globalRoutes} from "./plugins/GlobalRoutes";
 import Topbar from "./components/Topbar/Topbar";
+import TopbarActions from "./components/TopbarActions/TopbarActions";
 import Loginbar from "./components/Loginbar/Loginbar";
 
 // import the views so that they register themselves in the plugin system
@@ -25,6 +26,7 @@ function App() {
   return (
     <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
       <Topbar store={stores.topbar} appTitle={globalMenuSettings.appTitle}>
+        <TopbarActions store={stores.topbarActions}/>
         <Loginbar/>
       </Topbar>
       <Routes>
