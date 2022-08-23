@@ -11,6 +11,7 @@ import {Config, ConfigContext} from "./contexts/Config";
 import SidebarStore from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';
 import TopbarStore from "./stores/TopbarStore";
+import {globalSettings} from "./plugins/GlobalSettings";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -47,6 +48,7 @@ const hardcodedConfig: Config = {
 
 const sidebarStore = new SidebarStore();
 const topbarStore = new TopbarStore();
+globalSettings.applyBuildbotConfig(hardcodedConfig);
 
 root.render(
   <React.StrictMode>
