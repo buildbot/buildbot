@@ -162,8 +162,10 @@
     ]
   },
   "devDependencies": {
+    "@types/react-test-renderer": "^18.0.0",
     "axios-mock-adapter": "^1.21.1",
     "less": "^3.0.0",
-    "less-loader": "^5.0.0"
+    "less-loader": "^5.0.0",
+    "react-test-renderer": "^18.2.0"
   }
 }
