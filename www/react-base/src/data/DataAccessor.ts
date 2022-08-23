@@ -15,13 +15,18 @@
   Copyright Buildbot Team Members
 */
 
-import {IDataCollection} from "./DataCollection";
+import DataCollection, {IDataCollection} from "./DataCollection";
 import DataClient from "./DataClient";
+import IDataDescriptor from "./classes/DataDescriptor";
+import {RequestQuery} from "./DataQuery";
+import BaseClass from "./classes/BaseClass";
 
 export interface IDataAccessor {
   registerCollection(c: IDataCollection): void;
   unregisterCollection(c: IDataCollection): void;
   close(): void;
+  get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
+                                  descriptor: IDataDescriptor<DataType>): DataCollection<DataType>;
 }
 
 export default class BaseDataAccessor implements IDataAccessor {
@@ -51,6 +56,13 @@ export default class BaseDataAccessor implements IDataAccessor {
     }
   }
 
+  get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
+                                  descriptor: IDataDescriptor<DataType>): DataCollection<DataType> {
+    if (query.id !== undefined) {
+      endpoint += "/" + query.id;
+    }
+    return this.client.get(endpoint, this, descriptor, query.query ?? {}, query.subscribe ?? true);
+  }
 }
 
 export class EmptyDataAccessor implements IDataAccessor {
@@ -59,4 +71,8 @@ export class EmptyDataAccessor implements IDataAccessor {
 
   close() {}
 
+  get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
+                                  descriptor: IDataDescriptor<DataType>): DataCollection<DataType> {
+    throw Error("Not implemented");
+  }
 }

@@ -48,6 +48,11 @@ export class MockWebSocket implements WebSocket {
     this.parsedSendQueue.push(JSON.parse(message) ?? '');
   }
 
+  clearSendQueue() {
+    this.sendQueue = [];
+    this.parsedSendQueue = [];
+  }
+
   respond(message: string) {
     if (this.onmessage !== null) {
       this.onmessage(new MessageEvent('', {data: message}));

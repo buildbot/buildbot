@@ -17,6 +17,12 @@
 
 export type Query = {[key: string]: any};
 
+export type RequestQuery = {
+  query?: Query;
+  subscribe?: boolean;
+  id?: string;
+};
+
 type ValueFilter = (v: any) => boolean;
 
 const parseFilter = (fieldAndOperator: string, value: any): ValueFilter | null => {

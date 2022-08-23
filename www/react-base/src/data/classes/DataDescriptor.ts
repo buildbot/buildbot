@@ -18,6 +18,7 @@
 import {IDataAccessor} from "../DataAccessor";
 
 export default interface IDataDescriptor<T> {
+  restArrayField: string;
   fieldId: string;
   parse(accessor: IDataAccessor, endpoint: string, object: any): T;
 }

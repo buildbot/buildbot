@@ -16,16 +16,18 @@
 */
 
 import {type} from "../DataUtils";
-import BaseDataAccessor from "../DataAccessor";
+import {IDataAccessor} from "../DataAccessor";
 import IDataDescriptor from "./DataDescriptor";
-import {Query} from "../DataQuery";
+import {RequestQuery} from "../DataQuery";
 
 export default class BaseClass {
+  // base endpoint for the items of this class, e.g. "builds", or "builds/12/steps". Full
+  // API URL referring to the item is `${endpoint}/${id}`.
   private endpoint: string;
   id: string;
-  private accessor: BaseDataAccessor;
+  private accessor: IDataAccessor;
 
-  constructor(accessor: BaseDataAccessor, endpoint: string, id: string) {
+  constructor(accessor: IDataAccessor, endpoint: string, id: string) {
     this.accessor = accessor;
     this.id = id;
     this.endpoint = endpoint;
@@ -38,6 +40,12 @@ export default class BaseClass {
 
   update(object: any) {
     throw Error("Not implemented");
+  }
+
+  get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
+                                  descriptor: IDataDescriptor<DataType>) {
+    return this.accessor.get(this.endpoint + "/" + this.id + "/" + endpoint,
+      query, descriptor);
   }
 }
 
