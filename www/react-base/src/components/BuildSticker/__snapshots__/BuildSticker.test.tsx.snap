@@ -1,0 +1,155 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`buildsticker component failed 1`] = `
+<div
+  className="panel panel-default buildsticker results_FAILURE"
+>
+  <div
+    className="panel-body no-select"
+  >
+    <div
+      className="row"
+    >
+      <span
+        className="pull-right label results_FAILURE"
+      >
+        FAILURE
+      </span>
+      <a
+        href="/builders/2/builds/1"
+        onClick={[Function]}
+      >
+        /
+        1
+      </a>
+    </div>
+    <div
+      className="row"
+    >
+      <span
+        className="pull-right"
+      >
+        10 s
+      </span>
+      <span>
+        failed
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`buildsticker component pending 1`] = `
+<div
+  className="panel panel-default buildsticker results_PENDING"
+>
+  <div
+    className="panel-body no-select"
+  >
+    <div
+      className="row"
+    >
+      <span
+        className="pull-right label results_PENDING"
+      >
+        ...
+      </span>
+      <a
+        href="/builders/2/builds/1"
+        onClick={[Function]}
+      >
+        /
+        1
+      </a>
+    </div>
+    <div
+      className="row"
+    >
+      <span
+        className="pull-right"
+      >
+        19220 days 1:40:22
+      </span>
+      <span>
+        pending
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`buildsticker component simple 1`] = `
+<div
+  className="panel panel-default buildsticker results_UNKNOWN"
+>
+  <div
+    className="panel-body no-select"
+  >
+    <div
+      className="row"
+    >
+      <span
+        className="pull-right label results_UNKNOWN"
+      >
+        ...
+      </span>
+      <a
+        href="/builders/2/builds/1"
+        onClick={[Function]}
+      >
+        /
+        1
+      </a>
+    </div>
+    <div
+      className="row"
+    >
+      <span
+        className="pull-right"
+      >
+        19220 days 1:40:42
+      </span>
+      <span />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`buildsticker component success 1`] = `
+<div
+  className="panel panel-default buildsticker results_SUCCESS"
+>
+  <div
+    className="panel-body no-select"
+  >
+    <div
+      className="row"
+    >
+      <span
+        className="pull-right label results_SUCCESS"
+      >
+        SUCCESS
+      </span>
+      <a
+        href="/builders/2/builds/1"
+        onClick={[Function]}
+      >
+        /
+        1
+      </a>
+    </div>
+    <div
+      className="row"
+    >
+      <span
+        className="pull-right"
+      >
+        10 s
+      </span>
+      <span>
+        finished
+      </span>
+    </div>
+  </div>
+</div>
+`;
