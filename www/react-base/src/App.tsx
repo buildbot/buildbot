@@ -2,7 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import './globals';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import './styles/styles.less';
 import 'bootstrap';
 
 function App() {
