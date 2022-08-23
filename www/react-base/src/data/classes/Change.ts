@@ -32,7 +32,7 @@ export class Change extends BaseClass {
   files!: string[];
   parent_changeids!: number[];
   project!: string;
-  properties!: {[key: string]: any}; // FIXME:
+  properties!: {[key: string]: any}; // for subscription to properties use getProperties
   repository!: string;
   revision!: string|null;
   revlink!: string|null;
@@ -84,6 +84,10 @@ export class Change extends BaseClass {
 
   getBuilds(query: RequestQuery = {}) {
     return this.get<Build>("builds", query, buildDescriptor);
+  }
+
+  getProperties(query: RequestQuery = {}) {
+    return this.getPropertiesImpl("properties", query);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {

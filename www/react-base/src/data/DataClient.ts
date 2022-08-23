@@ -20,9 +20,11 @@ import {WebSocketClient} from "./WebSocketClient";
 import {restPath} from "./DataUtils";
 import BaseDataAccessor, {IDataAccessor} from "./DataAccessor";
 import {Query} from "./DataQuery";
-import DataCollection from "./DataCollection";
-import IDataDescriptor from "./classes/DataDescriptor";
+import DataCollection, {IDataCollection} from "./DataCollection";
+import IDataDescriptor, {IAnyDataDescriptor} from "./classes/DataDescriptor";
 import BaseClass from "./classes/BaseClass";
+import DataPropertiesCollection from "./DataPropertiesCollection";
+import {propertiesDescriptor} from "./classes/Properties";
 
 export default class DataClient {
   restClient: RestClient;
@@ -37,6 +39,27 @@ export default class DataClient {
   get<DataType extends BaseClass>(endpoint: string, accessor: IDataAccessor,
                                   descriptor: IDataDescriptor<DataType>,
                                   query: Query, subscribe: boolean) {
+    return this.getAny(endpoint, accessor, descriptor, query, subscribe,
+      () => {
+        const c = new DataCollection<DataType>();
+        c.open(endpoint, query, accessor, descriptor, this.webSocketClient);
+        return c;
+      });
+  }
+
+  getProperties(endpoint: string, accessor: IDataAccessor,
+                query: Query, subscribe: boolean) {
+    return this.getAny(endpoint, accessor, propertiesDescriptor, query, subscribe,
+      () => {
+        const c = new DataPropertiesCollection();
+        c.open(endpoint, query, accessor, this.webSocketClient);
+        return c;
+      });
+  }
+
+  getAny<T extends IDataCollection>(endpoint: string, accessor: IDataAccessor,
+                                    descriptor: IAnyDataDescriptor, query: Query,
+                                    subscribe: boolean, collectionFactory: () => T) {
     // subscribe for changes if 'subscribe' is true
     if (subscribe && !accessor) {
       console.warn("subscribe call should be done after DataClient.open() for " +
@@ -44,9 +67,7 @@ export default class DataClient {
       subscribe = false;
     }
 
-    // up to date array, this will be returned
-    const collection = new DataCollection<DataType>();
-    collection.open(endpoint, query, accessor, descriptor, this.webSocketClient);
+    const collection = collectionFactory();
 
     const subscribePromise = subscribe ? collection.subscribe() : Promise.resolve();
 

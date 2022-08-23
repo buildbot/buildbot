@@ -34,7 +34,7 @@ export class Build extends BaseClass {
   complete!: boolean;
   state_string!: string;
   results!: number|null;
-  properties!: {[key: string]: any};
+  properties!: {[key: string]: any}; // for subscription to properties use getProperties()
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.buildid));
@@ -81,7 +81,9 @@ export class Build extends BaseClass {
     return this.get<Step>("steps", query, stepDescriptor);
   }
 
-  // TODO: properties
+  getProperties(query: RequestQuery = {}) {
+    return this.getPropertiesImpl("properties", query);
+  }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
     return accessor.get<Build>("builds", query, buildDescriptor);

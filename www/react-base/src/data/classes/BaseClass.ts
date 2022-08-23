@@ -47,5 +47,9 @@ export default class BaseClass {
     return this.accessor.get(this.endpoint + "/" + this.id + "/" + endpoint,
       query, descriptor);
   }
+
+  protected getPropertiesImpl(endpoint: string, query: RequestQuery) {
+    return this.accessor.getProperties(this.endpoint + "/" + this.id + "/" + endpoint, query);
+  }
 }
 

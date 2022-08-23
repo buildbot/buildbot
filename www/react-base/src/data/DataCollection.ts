@@ -25,7 +25,9 @@ import {action, IObservableArray, makeObservable, observable} from "mobx";
 import DataMultiCollection from "./DataMultiCollection";
 
 export interface IDataCollection {
-  close(): void;
+  subscribe(): Promise<void>;
+  initial(data: any[]): void;
+  close(): Promise<void>;
 }
 
 export default class DataCollection<DataType extends BaseClass> implements IDataCollection {

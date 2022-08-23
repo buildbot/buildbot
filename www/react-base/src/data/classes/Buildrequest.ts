@@ -31,7 +31,7 @@ export class Buildrequest extends BaseClass {
   complete!: boolean;
   complete_at!: number|null;
   priority!: number;
-  properties!: {[key: string]: any};
+  properties!: {[key: string]: any}; // for subscription to properties use getProperties
   results!: number|null;
   submitted_at!: number;
   waited_for!: boolean;
@@ -77,6 +77,10 @@ export class Buildrequest extends BaseClass {
 
   getBuilds(query: RequestQuery = {}) {
     return this.get<Build>("builds", query, buildDescriptor);
+  }
+
+  getProperties(query: RequestQuery = {}) {
+    return this.getPropertiesImpl("properties", query);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {

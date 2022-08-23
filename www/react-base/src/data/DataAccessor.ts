@@ -20,6 +20,7 @@ import DataClient from "./DataClient";
 import IDataDescriptor from "./classes/DataDescriptor";
 import {RequestQuery} from "./DataQuery";
 import BaseClass from "./classes/BaseClass";
+import DataPropertiesCollection from "./DataPropertiesCollection";
 
 export interface IDataAccessor {
   registerCollection(c: IDataCollection): void;
@@ -27,6 +28,7 @@ export interface IDataAccessor {
   close(): void;
   get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
                                   descriptor: IDataDescriptor<DataType>): DataCollection<DataType>;
+  getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection;
 }
 
 export default class BaseDataAccessor implements IDataAccessor {
@@ -63,6 +65,13 @@ export default class BaseDataAccessor implements IDataAccessor {
     }
     return this.client.get(endpoint, this, descriptor, query.query ?? {}, query.subscribe ?? true);
   }
+
+  getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection {
+    if (query.id !== undefined) {
+      endpoint += "/" + query.id;
+    }
+    return this.client.getProperties(endpoint, this, query.query ?? {}, query.subscribe ?? true);
+  }
 }
 
 export class EmptyDataAccessor implements IDataAccessor {
@@ -73,6 +82,10 @@ export class EmptyDataAccessor implements IDataAccessor {
 
   get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
                                   descriptor: IDataDescriptor<DataType>): DataCollection<DataType> {
+    throw Error("Not implemented");
+  }
+
+  getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection {
     throw Error("Not implemented");
   }
 }

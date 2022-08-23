@@ -15,13 +15,11 @@
   Copyright Buildbot Team Members
 */
 
-import {IDataAccessor} from "../DataAccessor";
+import {IAnyDataDescriptor} from "./DataDescriptor";
 
-export interface IAnyDataDescriptor {
-  restArrayField: string;
+export class PropertiesDescriptor implements IAnyDataDescriptor {
+  restArrayField = "properties";
 }
 
-export default interface IDataDescriptor<T> extends IAnyDataDescriptor {
-  fieldId: string;
-  parse(accessor: IDataAccessor, endpoint: string, object: any): T;
-}
+export const propertiesDescriptor = new PropertiesDescriptor();
+
