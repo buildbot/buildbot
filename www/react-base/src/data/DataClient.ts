@@ -17,9 +17,8 @@
 
 import RestClient from "./RestClient";
 import {WebSocketClient} from "./WebSocketClient";
-import {restPath} from "./DataUtils";
 import BaseDataAccessor, {IDataAccessor} from "./DataAccessor";
-import {Query} from "./DataQuery";
+import {ControlParams, Query} from "./DataQuery";
 import DataCollection, {IDataCollection} from "./DataCollection";
 import IDataDescriptor, {IAnyDataDescriptor} from "./classes/DataDescriptor";
 import BaseClass from "./classes/BaseClass";
@@ -89,11 +88,8 @@ export default class DataClient {
     return collection;
   }
 
-  control(endpoint: string, id: string, method: string, params?: {[key: string]: string}) {
-    if (params === undefined) {
-      params = {};
-    }
-    return this.restClient.post(restPath([endpoint, id]), {
+  control(endpoint: string, method: string, params: ControlParams) {
+    return this.restClient.post(endpoint, {
         id: this.getNextRpcId(),
         jsonrpc: '2.0',
         method,

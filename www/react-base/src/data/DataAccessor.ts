@@ -18,7 +18,7 @@
 import DataCollection, {IDataCollection} from "./DataCollection";
 import DataClient from "./DataClient";
 import IDataDescriptor from "./classes/DataDescriptor";
-import {RequestQuery} from "./DataQuery";
+import {ControlParams, RequestQuery} from "./DataQuery";
 import BaseClass from "./classes/BaseClass";
 import DataPropertiesCollection from "./DataPropertiesCollection";
 
@@ -29,6 +29,7 @@ export interface IDataAccessor {
   get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
                                   descriptor: IDataDescriptor<DataType>): DataCollection<DataType>;
   getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection;
+  control(endpoint: string, method: string, params: ControlParams): Promise<void>;
 }
 
 export default class BaseDataAccessor implements IDataAccessor {
@@ -72,6 +73,10 @@ export default class BaseDataAccessor implements IDataAccessor {
     }
     return this.client.getProperties(endpoint, this, query.query ?? {}, query.subscribe ?? true);
   }
+
+  control(endpoint: string, method: string, params: ControlParams) {
+    return this.client.control(endpoint, method, params);
+  }
 }
 
 export class EmptyDataAccessor implements IDataAccessor {
@@ -86,6 +91,10 @@ export class EmptyDataAccessor implements IDataAccessor {
   }
 
   getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection {
+    throw Error("Not implemented");
+  }
+
+  control(endpoint: string, method: string, params: ControlParams): Promise<void> {
     throw Error("Not implemented");
   }
 }

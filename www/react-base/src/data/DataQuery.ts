@@ -23,6 +23,8 @@ export type RequestQuery = {
   id?: string;
 };
 
+export type ControlParams = {[key: string]: any};
+
 type ValueFilter = (v: any) => boolean;
 
 const parseFilter = (fieldAndOperator: string, value: any): ValueFilter | null => {

@@ -186,7 +186,7 @@ describe('Data service', () => {
 
       const method = 'force';
       const params = {a: "1"};
-      client.control("tests", "1", method, params);
+      client.control("tests/1", method, params);
       expect(mock.history.post[0].url).toEqual(rootUrl + "tests/1");
       expect(mock.history.post[0].data).toEqual(JSON.stringify({
         id: 1,

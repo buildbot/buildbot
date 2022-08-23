@@ -18,7 +18,7 @@
 import {type} from "../DataUtils";
 import {IDataAccessor} from "../DataAccessor";
 import IDataDescriptor from "./DataDescriptor";
-import {RequestQuery} from "../DataQuery";
+import {ControlParams, RequestQuery} from "../DataQuery";
 
 export default class BaseClass {
   // base endpoint for the items of this class, e.g. "builds", or "builds/12/steps". Full
@@ -48,8 +48,11 @@ export default class BaseClass {
       query, descriptor);
   }
 
+  control(method: string, params: ControlParams = {}) {
+    return this.accessor.control(this.endpoint + "/" + this.id, method, params);;
+  }
+
   protected getPropertiesImpl(endpoint: string, query: RequestQuery) {
     return this.accessor.getProperties(this.endpoint + "/" + this.id + "/" + endpoint, query);
   }
 }
-
