@@ -20,6 +20,7 @@ import {observer} from "mobx-react";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {Buildrequest} from "../../data/classes/Buildrequest";
 import {Builder} from "../../data/classes/Builder";
+import BuildSummary from "../BuildSummary/BuildSummary";
 import {Buildset} from "../../data/classes/Buildset";
 import {Link} from "react-router-dom";
 
@@ -44,7 +45,7 @@ const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSummaryProps
   const builder = builderQuery.getNthOrNull(0);
 
   const buildElements = builds.array.map(build => (
-    <>TODO</>
+    <BuildSummary build={build} condensed={true} parentBuild={null} parentRelationship={null}/>
   ));
 
   const renderBuildRequestDetails = () => {
