@@ -22,12 +22,14 @@ import {OverlayTrigger, Tooltip} from "react-bootstrap";
 import {Build} from "../../data/classes/Build";
 import {results2class} from "../../util/Results";
 import {observer} from "mobx-react";
+import {Builder} from "../../data/classes/Builder";
 
 type BuildLinkWithSummaryTooltipProps = {
   build: Build;
+  builder?: Builder;
 };
 
-const BuildLinkWithSummaryTooltip = observer(({build}: BuildLinkWithSummaryTooltipProps) => {
+const BuildLinkWithSummaryTooltip = observer(({build, builder}: BuildLinkWithSummaryTooltipProps) => {
 
   const renderBuildTooltip = (props: {[p: string]: any}) => (
     <Tooltip className="buildsummarytooltipstyle" id="bb-tooltip-build" {...props}>
@@ -35,12 +37,16 @@ const BuildLinkWithSummaryTooltip = observer(({build}: BuildLinkWithSummaryToolt
     </Tooltip>
   );
 
+  const linkText = builder !== undefined
+    ? <>{builder.name} / {build.number}</>
+    : <>{build.number}</>
+
   return (
     <Link to={`/builders/${build.builderid.toString()}/builds/${build.number}`}>
       <OverlayTrigger trigger={["hover", "focus"]} delay={{ show: 250, hide: 400 }}
                       overlay={renderBuildTooltip} placement="right">
         <span className={"badge-status " + results2class(build, 'pulse')}>
-          {build.number}
+          {linkText}
         </span>
       </OverlayTrigger>
     </Link>
