@@ -141,10 +141,10 @@ intersphinx_mapping = {
 }
 
 extlinks = {
-    'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request '),
-    'issue': ('https://github.com/buildbot/buildbot/issues/%s', 'issue # '),
+    'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request %s'),
+    'issue': ('https://github.com/buildbot/buildbot/issues/%s', 'issue #%s'),
     # deprecated. Use issue instead, and point to Github
-    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),
+    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #%s'),
     # Renders as link with whole url, e.g.
     #   :src-link:`master`
     # renders as
@@ -154,8 +154,8 @@ extlinks = {
     'src-link': ('https://github.com/buildbot/buildbot/tree/master/%s', None),
     # "pretty" reference that looks like relative path in Buildbot source tree
     # by default.
-    'src': ('https://github.com/buildbot/buildbot/tree/master/%s', ''),
-    'contrib-src': ('https://github.com/buildbot/buildbot-contrib/tree/master/%s', ''),
+    'src': ('https://github.com/buildbot/buildbot/tree/master/%s', '%s'),
+    'contrib-src': ('https://github.com/buildbot/buildbot-contrib/tree/master/%s', '%s'),
 }
 
 # Sphinx' link checker.
