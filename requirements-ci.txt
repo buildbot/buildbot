@@ -3,6 +3,7 @@
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
 buildbot-www==3.6.0
+flake8==5.0.4
 pylint==2.14.5
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
@@ -42,7 +43,6 @@ docker==5.0.3
 docutils==0.17.1
 extras==1.0.0
 fixtures==3.0.0
-flake8==4.0.1
 funcsigs==1.0.2
 future==0.18.2
 graphql-core==3.2.1
@@ -63,7 +63,7 @@ lz4==4.0.0
 Mako==1.2.0
 markdown2==2.4.3
 MarkupSafe==2.1.1
-mccabe==0.6.1
+mccabe==0.7.0
 mock==4.0.3
 more-itertools==8.13.0
 moto==2.1.0
@@ -80,10 +80,10 @@ psutil==5.9.0
 pyaml==21.10.1
 pyasn1-modules==0.2.8
 pyasn1==0.4.8
-pycodestyle==2.8.0
+pycodestyle==2.9.1
 pycparser==2.21
 pyenchant==3.2.2
-pyflakes==2.4.0
+pyflakes==2.5.0
 PyJWT==2.4.0
 pyOpenSSL==20.0.1
 pyparsing==3.0.8
