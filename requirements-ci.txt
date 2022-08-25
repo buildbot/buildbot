@@ -3,6 +3,8 @@
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
 buildbot-www==3.6.0
+
+boto3==1.24.60
 flake8==5.0.4
 pylint==2.14.5
 
@@ -21,9 +23,8 @@ autobahn==22.3.2
 Automat==20.2.0
 Babel==2.10.1
 backports.functools-lru-cache==1.6.4
-boto3==1.18.1
 boto==2.49.0
-botocore==1.21.1
+botocore==1.27.60
 certifi==2021.10.8
 cffi==1.15.0
 chardet==4.0.0
@@ -66,7 +67,7 @@ MarkupSafe==2.1.1
 mccabe==0.7.0
 mock==4.0.3
 more-itertools==8.13.0
-moto==2.1.0
+moto==4.0.1
 msgpack==1.0.3
 olefile==0.46
 packaging==21.3
@@ -96,7 +97,7 @@ requests==2.27.1
 responses==0.20.0
 ruamel.yaml.clib==0.2.6
 ruamel.yaml==0.17.21
-s3transfer==0.5.2
+s3transfer==0.6.0
 scandir==1.10.0
 service-identity==21.1.0
 setuptools-trial==0.6.0
