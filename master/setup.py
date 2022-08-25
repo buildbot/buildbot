@@ -319,8 +319,9 @@ setup_args = {
             ('buildbot.steps.vstudio', [
                 'VC6', 'VC7', 'VS2003', 'VC8', 'VS2005', 'VCExpress9', 'VC9',
                 'VS2008', 'VC10', 'VS2010', 'VC11', 'VS2012', 'VC12', 'VS2013',
-                'VC14', 'VS2015', 'VC141', 'VS2017', 'MsBuild4', 'MsBuild',
-                'MsBuild12', 'MsBuild14', 'MsBuild141']),
+                'VC14', 'VS2015', 'VC141', 'VS2017', 'VS2019', 'VS2022',
+                'MsBuild4', 'MsBuild', 'MsBuild12', 'MsBuild14', 'MsBuild141',
+                'MsBuild15', 'MsBuild16', 'MsBuild17']),
             ('buildbot.steps.worker', [
                 'SetPropertiesFromEnv', 'FileExists', 'CopyDirectory',
                 'RemoveDirectory', 'MakeDirectory']),
