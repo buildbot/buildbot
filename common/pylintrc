@@ -110,6 +110,7 @@ disable=
   arguments-renamed,
   not-context-manager,
   unspecified-encoding,
+  unnecessary-lambda-assignment,
 
 [REPORTS]
 

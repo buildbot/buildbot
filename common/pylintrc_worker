@@ -120,6 +120,7 @@ disable=
   arguments-renamed,
   not-context-manager,
   use-a-generator,
+  unnecessary-lambda-assignment,
 
 [REPORTS]
 
