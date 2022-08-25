@@ -157,16 +157,6 @@ BuildStep
 
     Execution of the step itself is governed by the following methods and attributes.
 
-    .. py:method:: startStep(remote)
-
-        :param remote: a remote reference to the worker-side
-            :class:`~buildbot_worker.pb.WorkerForBuilderPb` instance
-        :returns: Deferred
-
-        Begin the step.
-        This is the build's interface to step execution.
-        Subclasses should override :meth:`run` to implement custom behaviors.
-
     .. py:method:: run()
 
         :returns: result via Deferred
