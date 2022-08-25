@@ -178,41 +178,6 @@ BuildStep
         Any other output from the step (logfiles, status strings, URLs, etc.) is the responsibility of the ``run`` method.
 
         Subclasses should override this method.
-        Do *not* call :py:meth:`finished` or :py:meth:`failed` from this method.
-
-    .. py:method:: start()
-
-        :returns: ``None`` or :data:`~buildbot.process.results.SKIPPED`,
-            optionally via a Deferred.
-
-        Begin the step.
-        BuildSteps written before Buildbot-0.9.0 often override this method instead of :py:meth:`run`, but this approach is deprecated.
-
-        When the step is done, it should call :py:meth:`finished`, with a result -- a constant from :mod:`buildbot.process.results`.
-        The result will be handed off to the :py:class:`~buildbot.process.build.Build`.
-
-        If the step encounters an exception, it should call :meth:`failed` with a Failure object.
-
-        If the step decides it does not need to be run, :meth:`start` can return the constant :data:`~buildbot.process.results.SKIPPED`.
-        In this case, it is not necessary to call :meth:`finished` directly.
-
-    .. py:method:: finished(results)
-
-        :param results: a constant from :mod:`~buildbot.process.results`
-
-        A call to this method indicates that the step is finished and the build should analyze the results and perhaps proceed to the next step.
-        The step should not perform any additional processing after calling this method.
-        This method must only be called from the (deprecated) :py:meth:`start` method.
-
-    .. py:method:: failed(failure)
-
-        :param failure: a :class:`~twisted.python.failure.Failure` instance
-
-        Similar to :meth:`finished`, this method indicates that the step is finished, but handles exceptions with appropriate logging and diagnostics.
-
-        This method handles :exc:`BuildStepFailed` specially, by calling ``finished(FAILURE)``.
-        This provides subclasses with a shortcut to stop execution of a step by raising this failure in a context where :meth:`failed` will catch it.
-        This method must only be called from the (deprecated) :py:meth:`start` method.
 
     .. py:method:: interrupt(reason)
 
@@ -221,7 +186,6 @@ BuildStep
 
         This method is used from various control interfaces to stop a running step.
         The step should be brought to a halt as quickly as possible, by cancelling a remote command, killing a local process, etc.
-        The step must still finish with either :meth:`finished` or :meth:`failed`.
 
         The ``reason`` parameter can be a string or, when a worker is lost during step processing, a :exc:`~twisted.internet.error.ConnectionLost` failure.
 
