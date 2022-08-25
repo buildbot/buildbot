@@ -8,6 +8,52 @@ Release Notes
 
 .. towncrier release notes start
 
+
+Buildbot ``3.6.0`` ( ``2022-08-25`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed compatibility with Autobahn 22.4.x.
+- Fixed a circular import that causes errors in certain cases.
+- Fixed issue with :bb:worker:`DockerLatentWorker` accumulating connections with the docker server (:issue:`6538`).
+- Fixed documentation build for ReadTheDocs: Sphinx and Python have been updated to latest version.
+- Fixed build pending and canceled status reports to GitLab.
+- Fixed compatibility of hvac implementation with Vault 1.10.x (:issue:`6475`).
+- Fixed a race condition in ``PyLint`` step that may lead to step throwing exceptions.
+- Reporters now always wait for previous report to completing upload before sending another one.
+  This works around a race condition in GitLab build reports ingestion pipeline (:issue:`6563`).
+- Fixed "retry fetch" and "clobber on failure" git checkout options.
+- Improved Visual Studio installation path retrieval when using MSBuild and only 'BuildTools' are installed.
+- Fixed search for Visual Studio executables by inspecting both ``C:\Program Files`` and ``C:\Program Files (x86)`` directories.
+- Fixed Visual Studio based steps causing an exception in ``getResultSummary`` when being skipped.
+- Fixed issue where workers would immediately retry login on authentication failure.
+- Fixed sending emails when using Twisted 21.2 or newer (:issue:`5943`)
+
+Features
+--------
+
+- Implemented support for App password authentication in ``BitbucketStatusPush`` reporter.
+- Cancelled build requests now generate build reports.
+- Implemented support for ``--no-verify`` git option to the ``GitCommit`` step.
+- ``HTTPClientService`` now accepts full URL in its methods.
+  Previously only a relative URL was supported.
+- Callback argument of class ``LineBoundaryFinder`` is now optional and deprecated.
+- Added ``VS2019``, ``VS2022``, ``MsBuild15``, ``MsBuild16``, ``MsBuild17`` steps.
+- Names of transfer related temporary files are now prefixed with ``buildbot-transfer-``.
+- ``buildbot try`` now accepts empty diffs and prints a warning instead of rejecting the diff.
+- Implemented note event handling in GitLab www hook.
+
+Deprecations and Removals
+-------------------------
+
+- Removed support for Python 3.6 from master.
+  Minimal python version for the master is now 3.7.
+  The Python version requirements for the worker don't change: 2.7 or 3.4 and newer.
+- ``buildbot`` package now requires Twisted versions >= 18.7.0
+
+
 Buildbot ``3.5.0`` ( ``2022-03-06`` )
 =====================================
 

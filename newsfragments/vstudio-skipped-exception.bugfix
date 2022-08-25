@@ -1,1 +1,0 @@
-Fixed `VisualStudio` based steps causing an exception in `getResultSummary` when being skipped.

@@ -1,1 +1,0 @@
-Generate and send reports in event queue order in `ReporterBase` (:issue:`6563`).

@@ -133,7 +133,7 @@ trial: virtualenv
 
 release_notes: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
-	yes | towncrier --version $(VERSION) --date `date -u  +%F`
+	towncrier build --yes  --version $(VERSION) --date `date -u  +%F`
 	git commit -m "Release notes for $(VERSION)"
 
 $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_deps

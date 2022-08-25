@@ -1,1 +1,0 @@
-Fixed search for Visual Studio executables by inspecting both ``C:\Program Files`` and ``C:\Program Files (x86)`` directories.

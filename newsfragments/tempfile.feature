@@ -1,1 +1,0 @@
-Prefix transfer related temporary files with ``buildbot-transfer-``.
