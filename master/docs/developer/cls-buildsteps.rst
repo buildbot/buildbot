@@ -167,6 +167,8 @@ BuildStep
         If the method raises an exception or its Deferred fires with failure, then the step will be completed with an EXCEPTION result.
         Any other output from the step (logfiles, status strings, URLs, etc.) is the responsibility of the ``run`` method.
 
+        The function is not called if the step is skipped or otherwise not run.
+
         Subclasses should override this method.
 
     .. py:method:: interrupt(reason)
