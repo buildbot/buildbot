@@ -384,7 +384,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
     def test_simple(self):
         self.fakemaster.count_reads = True    # get actual byte counts
         self.fakemaster.data = test_data = b'1234' * 13
-        assert(len(self.fakemaster.data) == 52)
+        assert len(self.fakemaster.data) == 52
 
         path = os.path.join(self.basedir, os.path.expanduser('data'))
         self.make_command(transfer.WorkerFileDownloadCommand, {

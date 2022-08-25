@@ -131,7 +131,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             log.msg(f"bad json line: {line}")
             return defer.succeed(None)
 
-        if not(isinstance(event, dict) and "type" in event):
+        if not (isinstance(event, dict) and "type" in event):
             if self.debug:
                 log.msg(f"no type in event {line}")
             return defer.succeed(None)
@@ -171,8 +171,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             "codebase": '',
         }
 
-        _, found_existing = yield(
-             self.master.db.sourcestamps.findOrCreateId(**stampdict))
+        _, found_existing = yield self.master.db.sourcestamps.findOrCreateId(**stampdict)
 
         if found_existing and event_type in ("patchset-created", "ref-updated"):
             if self.debug:
