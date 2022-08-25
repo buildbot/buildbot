@@ -1,1 +1,0 @@
-Let MSBuild find the VS installation path if only the 'BuildTools' are installed.

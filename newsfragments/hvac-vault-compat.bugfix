@@ -1,1 +1,0 @@
-Fix compatibility of hvac implementation with Vault 1.10.x (:issue:`6475`).

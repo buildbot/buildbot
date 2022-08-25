@@ -1,1 +1,0 @@
-Fixed sending emails when using Twisted 21.2 or newer (:issue:`5943`)

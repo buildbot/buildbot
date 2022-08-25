@@ -1,1 +1,0 @@
-Fixed issue where workers would immediately retry login on authentication failure.
