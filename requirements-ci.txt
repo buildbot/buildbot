@@ -3,6 +3,7 @@
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
 buildbot-www==3.6.0
+pylint==2.14.5
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
@@ -13,7 +14,7 @@ alabaster==0.7.12
 alembic==1.7.7
 appdirs==1.4.4
 asn1crypto==1.5.1
-astroid==2.11.4
+astroid==2.11.7
 attrs==21.4.0
 autobahn==22.3.2
 Automat==20.2.0
@@ -84,7 +85,6 @@ pycparser==2.21
 pyenchant==3.2.2
 pyflakes==2.4.0
 PyJWT==2.4.0
-pylint==2.13.8
 pyOpenSSL==20.0.1
 pyparsing==3.0.8
 pypugjs==5.9.11
@@ -109,6 +109,7 @@ termcolor==1.1.0
 testtools==2.5.0
 toml==0.10.2
 tomli==2.0.1
+tomlkit==0.11.4
 towncrier==21.9.0
 treq==22.2.0
 Twisted==22.4.0
