@@ -16,11 +16,16 @@
 .. bb:step:: VS2013
 .. bb:step:: VS2015
 .. bb:step:: VS2017
+.. bb:step:: VS2019
+.. bb:step:: VS2022
 .. bb:step:: VCExpress9
 .. bb:step:: MsBuild4
 .. bb:step:: MsBuild12
 .. bb:step:: MsBuild14
 .. bb:step:: MsBuild141
+.. bb:step:: MsBuild15
+.. bb:step:: MsBuild16
+.. bb:step:: MsBuild17
 
 .. _Step-VisualCxx:
 
@@ -52,11 +57,16 @@ The available classes are:
 * ``VS2013``
 * ``VS2015``
 * ``VS2017``
+* ``VS2019``
+* ``VS2022``
 * ``VCExpress9``
 * ``MsBuild4``
 * ``MsBuild12``
 * ``MsBuild14``
 * ``MsBuild141``
+* ``MsBuild15``
+* ``MsBuild16``
+* ``MsBuild17``
 
 The available constructor arguments are
 

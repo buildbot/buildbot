@@ -887,9 +887,9 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
@@ -901,9 +901,9 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
@@ -915,9 +915,9 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
@@ -930,9 +930,9 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
@@ -944,9 +944,60 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
+        return self.run_step()
+
+    def test_aliases_MsBuild15(self):
+        self.assertIdentical(vstudio.MsBuild141, vstudio.MsBuild15)
+
+
+class TestMsBuild16(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
+
+    def tearDown(self):
+        return self.tear_down_test_build_step()
+
+    def test_version_range_is_correct(self):
+        self.setup_step(vstudio.MsBuild16(
+            projectfile='pf', config='cfg', platform='Win32', project='pj'))
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir',
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[16.0,17.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
+        return self.run_step()
+
+
+class TestMsBuild17(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
+
+    def tearDown(self):
+        return self.tear_down_test_build_step()
+
+    def test_version_range_is_correct(self):
+        self.setup_step(vstudio.MsBuild17(
+            projectfile='pf', config='cfg', platform='Win32', project='pj'))
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir',
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[17.0,18.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
