@@ -108,7 +108,7 @@ class FakeStepsComponent(FakeDBComponent):
         build_steps = [r for r in self.steps.values()
                        if r['buildid'] == buildid]
         if build_steps:
-            number = max([r['number'] for r in build_steps]) + 1
+            number = max(r['number'] for r in build_steps) + 1
             names = {r['name'] for r in build_steps}
             if name in names:
                 i = 1
