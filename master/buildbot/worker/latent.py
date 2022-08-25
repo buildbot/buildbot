@@ -557,8 +557,8 @@ class LocalLatentWorker(AbstractLatentWorker):
     starts_without_substantiate = True
 
     def checkConfig(self, name, password, **kwargs):
-        super.checkConfig(self, name, password, build_wait_timeout=-1,
-                          **kwargs)
+        super().checkConfig(self, name, password, build_wait_timeout=-1,
+                            **kwargs)
 
     def reconfigService(self, name, password, **kwargs):
         return super().reconfigService(name, password, build_wait_timeout=-1,

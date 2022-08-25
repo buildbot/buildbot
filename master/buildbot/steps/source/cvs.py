@@ -339,7 +339,7 @@ class CVS(Source):
     def computeSourceRevision(self, changes):
         if not changes:
             return None
-        lastChange = max([c.when for c in changes])
-        lastSubmit = max([br.submittedAt for br in self.build.requests])
+        lastChange = max(c.when for c in changes)
+        lastSubmit = max(br.submittedAt for br in self.build.requests)
         when = (lastChange + lastSubmit) / 2
         return formatdate(when)

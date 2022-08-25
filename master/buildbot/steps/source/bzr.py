@@ -198,7 +198,7 @@ class Bzr(Source):
     def computeSourceRevision(self, changes):
         if not changes:
             return None
-        lastChange = max([int(c.revision) for c in changes])
+        lastChange = max(int(c.revision) for c in changes)
         return lastChange
 
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):

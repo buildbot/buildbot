@@ -74,7 +74,7 @@ class Debouncer:
             while self.completeDeferreds:
                 self.completeDeferreds.pop(0).callback(None)
             if queued:
-                self.__call__()
+                self()
 
     def start(self):
         self.stopped = False
