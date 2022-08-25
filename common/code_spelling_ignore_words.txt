@@ -142,6 +142,7 @@ botmaster
 botmaster's
 botname
 boto
+botocore
 br
 brainerd
 branchfile
