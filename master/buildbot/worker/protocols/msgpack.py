@@ -121,7 +121,7 @@ class Connection(base.Connection):
 
     def loseConnection(self):
         self.stopKeepaliveTimer()
-        self.protocol.sendClose()
+        self.protocol.transport.abortConnection()
 
     # keepalive handling
 
