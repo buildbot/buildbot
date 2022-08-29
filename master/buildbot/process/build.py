@@ -628,6 +628,7 @@ class Build(properties.PropertiesMixin):
     def controlStopBuild(self, key, params):
         return self.stopBuild(**params)
 
+    @defer.inlineCallbacks
     def stopBuild(self, reason="<no reason given>", results=CANCELLED):
         # the idea here is to let the user cancel a build because, e.g.,
         # they realized they committed a bug and they don't want to waste
@@ -642,7 +643,7 @@ class Build(properties.PropertiesMixin):
         # TODO: include 'reason' in this point event
         self.stopped = True
         if self.currentStep and self.currentStep.results is None:
-            self.currentStep.interrupt(reason)
+            yield self.currentStep.interrupt(reason)
 
         self.results = results
 

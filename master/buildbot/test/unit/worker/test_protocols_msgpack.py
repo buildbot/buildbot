@@ -129,7 +129,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.conn.loseConnection()
 
         self.assertEqual(self.conn.keepalive_timer, None)
-        self.protocol.sendClose.assert_called()
+        self.protocol.transport.abortConnection.assert_called()
 
     def test_do_keepalive(self):
         self.conn._do_keepalive()

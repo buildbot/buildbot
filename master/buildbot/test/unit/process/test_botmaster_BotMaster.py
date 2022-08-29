@@ -62,6 +62,7 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
         self.reason = reason
         self.results = results
         self.finishFakeBuild()
+        return defer.succeed(None)
 
     def finishFakeBuild(self):
         self.fake_builder.building = []
