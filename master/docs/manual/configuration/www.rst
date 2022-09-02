@@ -691,7 +691,7 @@ In this case the username provided by oauth2 will be used, and all other informa
 
 Currently only one provider is available:
 
-.. py:class:: buildbot.ldapuserinfo.LdapUserInfo(uri, bindUser, bindPw, accountBase, accountPattern, groupBase=None, groupMemberPattern=None, groupName=None, accountFullName, accountEmail, avatarPattern=None, avatarData=None, accountExtraFields=None)
+.. py:class:: buildbot.ldapuserinfo.LdapUserInfo(uri, bindUser, bindPw, accountBase, accountPattern, groupBase=None, groupMemberPattern=None, groupName=None, accountFullName, accountEmail, avatarPattern=None, avatarData=None, accountExtraFields=None, tls=None)
 
         :param uri: uri of the ldap server
         :param bindUser: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
@@ -710,6 +710,7 @@ Currently only one provider is available:
         :param avatarData: the name of the field in groups ldap database where the avatar picture is to be found.
                            This field is supposed to contain the raw picture, format is automatically detected from jpeg, png or git.
         :param accountExtraFields: extra fields to extracts for use with the authorization policies
+        :param tls: an instance of ``ldap.Tls`` that specifies TLS settings.
 
         If one of the three optional groups parameters is supplied, then all of them become mandatory. If none is supplied, the retrieved user info has an empty list of groups.
 

@@ -53,7 +53,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                  groupName=None,
                  avatarPattern=None,
                  avatarData=None,
-                 accountExtraFields=None):
+                 accountExtraFields=None,
+                 tls=None):
         # Throw import error now that this is being used
         if not ldap3:
             importlib.import_module('ldap3')
@@ -81,13 +82,14 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             accountExtraFields = []
         self.accountExtraFields = accountExtraFields
         self.ldap_encoding = ldap3.get_config_parameter('DEFAULT_SERVER_ENCODING')
+        self.tls = tls
 
     def connectLdap(self):
         server = urlparse(self.uri)
         netloc = server.netloc.split(":")
         # define the server and the connection
         s = ldap3.Server(netloc[0], port=int(netloc[1]), use_ssl=server.scheme == 'ldaps',
-                         get_info=ldap3.ALL)
+                         get_info=ldap3.ALL, tls=self.tls)
 
         auth = ldap3.SIMPLE
         if self.bindUser is None and self.bindPw is None:
