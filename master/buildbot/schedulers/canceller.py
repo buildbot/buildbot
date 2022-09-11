@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import re
+
 from twisted.internet import defer
 
 from buildbot import config
@@ -50,8 +52,9 @@ class _TrackedCancellable:
 
 class _OldBuildTracker:
 
-    def __init__(self, filter, on_cancel_cancellable):
+    def __init__(self, filter, branch_key, on_cancel_cancellable):
         self.filter = filter
+        self.branch_key = branch_key
         self.on_cancel_cancellable = on_cancel_cancellable
 
         # We need to track builds by build IDs so that when such build finishes we know what we
@@ -65,8 +68,9 @@ class _OldBuildTracker:
         self.tracked_by_id_tuple = {}
         self.tracked_by_ss = {}
 
-    def reconfig(self, filter):
+    def reconfig(self, filter, branch_key):
         self.filter = filter
+        self.branch_key = branch_key
 
     def is_build_tracked(self, build_id):
         return (True, build_id) in self.tracked_by_id_tuple
@@ -94,7 +98,7 @@ class _OldBuildTracker:
         if not matched_ss:
             return
 
-        ss_tuples = [(ss['project'], ss['codebase'], ss['repository'], ss['branch'])
+        ss_tuples = [(ss['project'], ss['codebase'], ss['repository'], self.branch_key(ss))
                      for ss in matched_ss]
 
         tracked_canc = _TrackedCancellable(id_tuple, ss_tuples)
@@ -126,7 +130,8 @@ class _OldBuildTracker:
                 del self.tracked_by_ss[ss_tuple]
 
     def on_change(self, change):
-        ss_tuple = (change['project'], change['codebase'], change['repository'], change['branch'])
+        ss_tuple = (change['project'], change['codebase'], change['repository'],
+                    self.branch_key(change))
 
         canc_dict = self.tracked_by_ss.pop(ss_tuple, None)
         if canc_dict is None:
@@ -161,7 +166,7 @@ class OldBuildCanceller(BuildbotService):
 
     compare_attrs = BuildbotService.compare_attrs + ('filters',)
 
-    def checkConfig(self, name, filters):
+    def checkConfig(self, name, filters, branch_key=None):
         OldBuildCanceller.check_filters(filters)
 
         self.name = name
@@ -178,7 +183,7 @@ class OldBuildCanceller(BuildbotService):
         self._completed_buildrequests_while_reconfiguring = []
 
     @defer.inlineCallbacks
-    def reconfigService(self, name, filters):
+    def reconfigService(self, name, filters, branch_key=None):
         # While reconfiguring we acquire a list of currently running builds or pending build
         # requests and seed the build tracker with these. We need to ensure that even if some
         # builds or build requests finish during this process, the tracker gets to know about
@@ -189,12 +194,16 @@ class OldBuildCanceller(BuildbotService):
         # were created, so for already tracked builds we don't need to do anything.
         self._reconfiguring = True
 
+        if branch_key is None:
+            branch_key = self._default_branch_key
+
         filter_set_object = OldBuildCanceller.filter_tuples_to_filter_set_object(filters)
 
         if self._build_tracker is None:
-            self._build_tracker = _OldBuildTracker(filter_set_object, self._cancel_cancellable)
+            self._build_tracker = _OldBuildTracker(filter_set_object, branch_key,
+                                                   self._cancel_cancellable)
         else:
-            self._build_tracker.reconfig(filter_set_object)
+            self._build_tracker.reconfig(filter_set_object, branch_key)
 
         all_running_buildrequests = yield self.master.data.get(
             ('buildrequests',), filters=[resultspec.Filter('complete', 'eq', [False])])
@@ -279,6 +288,18 @@ class OldBuildCanceller(BuildbotService):
             filter_set.add_filter(extract_filter_values(builders, 'builders'), ss_filter)
 
         return filter_set
+
+    def _default_branch_key(self, ss_or_change):
+        branch = ss_or_change['branch']
+
+        # On some VCS systems each iteration of a PR gets its own branch. We want to track all
+        # iterations of the PR as a single unit.
+        if branch.startswith('refs/changes/'):
+            m = re.match(r'refs/changes/(\d+)/(\d+)/\d+', branch)
+            if m is not None:
+                return f'refs/changes/{m.group(1)}/{m.group(2)}'
+
+        return branch
 
     def _on_change(self, key, change):
         self._build_tracker.on_change(change)
