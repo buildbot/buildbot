@@ -36,17 +36,39 @@ class ChangeFilter(ComparableMixin):
         'codebase_fn',
     )
 
-    def __init__(self,
-                 # gets a Change object, returns boolean
-                 filter_fn=None,
-
-                 project=None, project_re=None, project_fn=None,
-                 repository=None, repository_re=None, repository_fn=None,
-                 branch=NotABranch, branch_re=None, branch_fn=None,
-                 category=None, category_re=None, category_fn=None,
-                 codebase=None, codebase_re=None, codebase_fn=None,
-                 property_eq=None, property_re=None):
-
+    def __init__(
+        self,
+        filter_fn=None,  # gets a Change object, returns boolean
+        project=None,
+        project_not_eq=None,
+        project_re=None,
+        project_not_re=None,
+        project_fn=None,
+        repository=None,
+        repository_not_eq=None,
+        repository_re=None,
+        repository_not_re=None,
+        repository_fn=None,
+        branch=NotABranch,
+        branch_not_eq=NotABranch,
+        branch_re=None,
+        branch_not_re=None,
+        branch_fn=None,
+        category=None,
+        category_not_eq=None,
+        category_re=None,
+        category_not_re=None,
+        category_fn=None,
+        codebase=None,
+        codebase_not_eq=None,
+        codebase_re=None,
+        codebase_not_re=None,
+        codebase_fn=None,
+        property_eq=None,
+        property_not_eq=None,
+        property_re=None,
+        property_not_re=None
+    ):
         self.filter_fn = filter_fn
         self.project_fn = project_fn
         self.repository_fn = repository_fn
@@ -54,40 +76,46 @@ class ChangeFilter(ComparableMixin):
         self.category_fn = category_fn
         self.codebase_fn = codebase_fn
 
-        self.filters = _create_filters(project, None, project_re, None, 'project')
+        self.filters = _create_filters(
+            project,
+            project_not_eq,
+            project_re,
+            project_not_re,
+            'project'
+        )
         self.filters += _create_filters(
             repository,
-            None,
+            repository_not_eq,
             repository_re,
-            None,
+            repository_not_re,
             'repository',
         )
         self.filters += _create_branch_filters(
             branch,
-            NotABranch,
+            branch_not_eq,
             branch_re,
-            None,
+            branch_not_re,
             'branch',
         )
         self.filters += _create_filters(
             category,
-            None,
+            category_not_eq,
             category_re,
-            None,
+            category_not_re,
             'category',
         )
         self.filters += _create_filters(
             codebase,
-            None,
+            codebase_not_eq,
             codebase_re,
-            None,
+            codebase_not_re,
             'codebase',
         )
         self.property_filters = _create_property_filters(
             property_eq,
-            None,
+            property_not_eq,
             property_re,
-            None,
+            property_not_re,
             'property'
         )
 

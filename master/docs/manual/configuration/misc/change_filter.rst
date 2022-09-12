@@ -16,13 +16,42 @@ The following parameters are supported by the :py:class:`ChangeFilter`:
 
 ``project``, ``repository``, ``branch``, ``category``, ``codebase``
     (optional, a string or a list of strings)
-    The corresponding property of the change must match exactly to at least one string from the value supplied by the argument.
+    The corresponding attribute of the change must match exactly to at least one string from the value supplied by the argument.
+
+    ``branch`` uses ``util.NotABranch`` as its default value which indicates that no checking should be done, because the branch may actually have ``None`` value to be checked.
+
+``project_not_eq``, ``repository_not_eq``, ``branch_not_eq``, ``category_not_eq``, ``codebase_not_eq``
+    (optional, a string or a list of strings)
+    The corresponding attribute of the change must not match exactly to any of the strings from the value supplied by the argument.
 
     ``branch`` uses ``util.NotABranch`` as its default value which indicates that no checking should be done, because the branch may actually have ``None`` value to be checked.
 
 ``project_re``, ``repository_re``, ``branch_re``, ``category_re``, ``codebase_re``
-    (optional, a string or regex pattern object)
-    The corresponding property of the change must match to at least one regex from the value supplied by the argument.
+    (optional, a string or a list of strings or regex pattern objects)
+    The corresponding attribute of the change must match to at least one regex from the value supplied by the argument.
+    Any strings passed via this parameter are converted to a regex via ``re.compile``.
+
+``project_not_re``, ``repository_not_re``, ``branch_not_re``, ``category_not_re``, ``codebase_not_re``
+    (optional, a string or a list of strings or regex pattern objects)
+    The corresponding attribute of the change must not match to at least any regex from the value supplied by the argument.
+    Any strings passed via this parameter are converted to a regex via ``re.compile``.
+
+``property_eq``
+    (optional, a dictionary containing string keys and values each of which with a string or a list of strings)
+    The property of the change with corresponding name must match exactly to at least one string from the value supplied by the argument.
+
+``property_not_eq``
+    (optional, a string or a list of strings)
+    The property of the change with corresponding name must not be present or not match exactly to at least one string from the value supplied by the argument.
+
+``property_re``
+    (optional, a string or a list of strings or regex pattern objects)
+    The property of the change with corresponding name must match to at least one regex from the value supplied by the argument.
+    Any strings passed via this parameter are converted to a regex via ``re.compile``.
+
+``property_not_re``
+    (optional, a string or a list of strings or regex pattern objects)
+    The property of the change with corresponding name must not be present or not match to at least one regex from the value supplied by the argument.
     Any strings passed via this parameter are converted to a regex via ``re.compile``.
 
 ``project_fn``, ``repository_fn``, ``branch_fn``, ``category_fn``, ``codebase_fn``
