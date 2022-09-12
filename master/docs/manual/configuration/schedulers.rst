@@ -188,7 +188,7 @@ There are several common arguments for schedulers, although not all are availabl
 
 ``change_filter`` (optional)
 
-    The change filter that will determine which changes are recognized by this scheduler (see :ref:`Change-Filters`).
+    The change filter that will determine which changes are recognized by this scheduler (see :ref:`ChangeFilter`).
     Note that this is different from ``fileIsImportant``; if the change filter filters out a change, the change is completely ignored by the scheduler.
     If a change is allowed by the change filter but is deemed unimportant, it will not cause builds to start but will be remembered and shown in status displays.
     The default value of ``None`` does not filter any changes at all.
@@ -224,109 +224,6 @@ The Data API and web UI display the master on which each scheduler is running.
 There is currently no mechanism to control which master's scheduler instance becomes active.
 The behavior is nondeterministic, based on the timing of polling by inactive schedulers.
 The failover is non-revertive.
-
-.. _Change-Filters:
-
-Change Filters
-~~~~~~~~~~~~~~
-
-Several schedulers perform filtering on an incoming set of changes.
-The filter can most generically be specified as a :class:`ChangeFilter`.
-
-Set up a :class:`ChangeFilter` like this:
-
-.. code-block:: python
-
-    from buildbot.plugins import util
-    my_filter = util.ChangeFilter(project_re="^baseproduct/.*", branch="devel")
-
-and then assign it to a scheduler with the ``change_filter`` parameter:
-
-.. code-block:: python
-
-    sch = SomeSchedulerClass(...,
-        change_filter=my_filter)
-
-There are five attributes of changes on which you can filter:
-
-``project``
-
-    The project string, as defined by the ChangeSource.
-
-``repository``
-
-    The repository in which the change occurred.
-
-``branch``
-
-    The branch on which the change occurred.
-    Note that 'trunk' or 'master' is often denoted by ``None``.
-
-``category``
-
-    The category, again as defined by the ChangeSource.
-
-``codebase``
-
-    The change's codebase.
-
-For each attribute, the filter can look for one specific value:
-
-.. code-block:: python
-
-    my_filter = util.ChangeFilter(project='myproject')
-
-or accept a set of values:
-
-.. code-block:: python
-
-    my_filter = util.ChangeFilter(project=['myproject', 'jimsproject'])
-
-or apply a regular expression, using the attribute name with a "``_re``" suffix:
-
-.. code-block:: python
-
-    my_filter = util.ChangeFilter(category_re='.*deve.*')
-    # or, to use regular expression flags:
-    import re
-    my_filter = util.ChangeFilter(category_re=re.compile('.*deve.*', re.I))
-
-:class:`buildbot.www.hooks.github.GitHubEventHandler` has a special ``github_distinct`` property that can be used to specify whether or not non-distinct changes should be considered.
-For example, if a commit is pushed to a branch that is not being watched and then later pushed to a watched branch, by default, this will be recorded as two separate changes.
-In order to record a change only the first time the commit appears, you can use a custom :class:`ChangeFilter` like this:
-
-.. code-block:: python
-
-    ChangeFilter(filter_fn=lambda c: c.properties.getProperty('github_distinct'))
-
-For anything more complicated, define a Python function to recognize the strings you want:
-
-.. code-block:: python
-
-    def my_branch_fn(branch):
-        return branch in branches_to_build and branch not in branches_to_ignore
-    my_filter = util.ChangeFilter(branch_fn=my_branch_fn)
-
-The special argument ``filter_fn`` can be used to specify a function that is given the entire Change object, and returns a boolean.
-
-The entire set of allowed arguments, then, is
-
-+------------+---------------+---------------+
-| project    | project_re    | project_fn    |
-+------------+---------------+---------------+
-| repository | repository_re | repository_fn |
-+------------+---------------+---------------+
-| branch     | branch_re     | branch_fn     |
-+------------+---------------+---------------+
-| category   | category_re   | category_fn   |
-+------------+---------------+---------------+
-| codebase   | codebase_re   | codebase_fn   |
-+------------+---------------+---------------+
-| filter_fn                                  |
-+--------------------------------------------+
-
-A Change passes the filter only if *all* arguments are satisfied.
-If no filter object is given to a scheduler, then all changes will be built (subject to any other restrictions the scheduler enforces).
 
 Usage example
 ~~~~~~~~~~~~~
