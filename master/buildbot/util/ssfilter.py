@@ -213,12 +213,6 @@ class SourceStampFilter(ComparableMixin):
             return False
         return True
 
-    def is_matched_codebase(self, codebase):
-        for filter in self.codebase_filters:
-            if not filter.is_matched(codebase):
-                return False
-        return True
-
     def _repr_filters(self, filters, prop):
         return [filter.describe(prop) for filter in filters]
 
