@@ -19,11 +19,6 @@ from buildbot.util import ComparableMixin
 from buildbot.util import NotABranch
 
 
-def is_re_pattern(obj):
-    # re.Pattern only exists in Python 3.7
-    return hasattr(obj, 'search') and hasattr(obj, 'match')
-
-
 def extract_filter_values(values, filter_name):
     if not isinstance(values, (list, str)):
         raise ValueError(f"Values of filter {filter_name} must be list of strings or a string")
@@ -50,14 +45,14 @@ def extract_filter_values_branch(values, filter_name):
 
 
 def extract_filter_values_regex(values, filter_name):
-    if not isinstance(values, (list, str)) and not is_re_pattern(values):
+    if not isinstance(values, (list, str, re.Pattern)):
         raise ValueError(f"Values of filter {filter_name} must be list of strings, "
                          "a string or regex")
-    if isinstance(values, str) or is_re_pattern(values):
+    if isinstance(values, (str, re.Pattern)):
         values = [values]
     else:
         for value in values:
-            if not isinstance(value, str) and not is_re_pattern(value):
+            if not isinstance(value, (str, re.Pattern)):
                 raise ValueError(f"Value of filter {filter_name} must be string or regex")
     return values
 
@@ -89,7 +84,7 @@ class _FilterRegex:
         self.regexes = [self._compile(regex) for regex in regexes]
 
     def _compile(self, regex):
-        if is_re_pattern(regex):
+        if isinstance(regex, re.Pattern):
             return regex
         return re.compile(regex)
 
@@ -110,7 +105,7 @@ class _FilterRegexInverse:
         self.regexes = [self._compile(regex) for regex in regexes]
 
     def _compile(self, regex):
-        if is_re_pattern(regex):
+        if isinstance(regex, re.Pattern):
             return regex
         return re.compile(regex)
 
