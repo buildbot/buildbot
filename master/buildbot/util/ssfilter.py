@@ -57,7 +57,9 @@ def extract_filter_values_regex(values, filter_name):
     return values
 
 
-class _FilterExactMatch:
+class _FilterExactMatch(ComparableMixin):
+    compare_attrs = ('prop', 'values')
+
     def __init__(self, prop, values):
         self.prop = prop
         self.values = values
@@ -69,7 +71,9 @@ class _FilterExactMatch:
         return f'{self.prop} in {self.values}'
 
 
-class _FilterExactMatchInverse:
+class _FilterExactMatchInverse(ComparableMixin):
+    compare_attrs = ('prop', 'values')
+
     def __init__(self, prop, values):
         self.prop = prop
         self.values = values
@@ -81,7 +85,9 @@ class _FilterExactMatchInverse:
         return f'{self.prop} not in {self.values}'
 
 
-class _FilterRegex:
+class _FilterRegex(ComparableMixin):
+    compare_attrs = ('prop', 'regexes')
+
     def __init__(self, prop, regexes):
         self.prop = prop
         self.regexes = [self._compile(regex) for regex in regexes]
@@ -103,7 +109,9 @@ class _FilterRegex:
         return f'{self.prop} matches {self.regexes}'
 
 
-class _FilterRegexInverse:
+class _FilterRegexInverse(ComparableMixin):
+    compare_attrs = ('prop', 'regexes')
+
     def __init__(self, prop, regexes):
         self.prop = prop
         self.regexes = [self._compile(regex) for regex in regexes]
