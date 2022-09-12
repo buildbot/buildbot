@@ -131,11 +131,7 @@ class ChangeFilter(unittest.TestCase):
         self.check()
 
     def test_filter_props(self):
-        self.setfilter()
-        self.filt.checks.update(
-            self.filt.createChecks(
-                ("ref-updated", None, None, "prop:event.type"),
-            ))
+        self.setfilter(property_eq={'event.type': 'ref-updated'})
         self.yes(
             Change(properties={'event.type': 'ref-updated'}), "matching property")
         self.no(

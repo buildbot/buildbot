@@ -57,6 +57,18 @@ def extract_filter_values_regex(values, filter_name):
     return values
 
 
+def extract_filter_values_dict(values, filter_name):
+    if not isinstance(values, dict):
+        raise ValueError(f"Value of filter {filter_name} must be dict")
+    return {k: extract_filter_values(v, filter_name) for k, v in values.items()}
+
+
+def extract_filter_values_dict_regex(values, filter_name):
+    if not isinstance(values, dict):
+        raise ValueError(f"Value of filter {filter_name} must be dict")
+    return {k: extract_filter_values_regex(v, filter_name) for k, v in values.items()}
+
+
 class _FilterExactMatch(ComparableMixin):
     compare_attrs = ('prop', 'values')
 
@@ -171,6 +183,27 @@ def _create_filters(eq, not_eq, regex, not_regex, prop):
     if not_regex is not None:
         values = extract_filter_values_regex(not_regex, prop + '_not_re')
         filters.append(_FilterRegexInverse(prop, values))
+
+    return filters
+
+
+def _create_property_filters(eq, not_eq, regex, not_regex, arg_prefix):
+    filters = []
+    if eq is not None:
+        values_dict = extract_filter_values_dict(eq, arg_prefix + '_eq')
+        filters += [_FilterExactMatch(prop, values) for prop, values in values_dict.items()]
+
+    if not_eq is not None:
+        values_dict = extract_filter_values_dict(not_eq, arg_prefix + '_not_eq')
+        filters += [_FilterExactMatchInverse(prop, values) for prop, values in values_dict.items()]
+
+    if regex is not None:
+        values_dict = extract_filter_values_dict_regex(regex, arg_prefix + '_re')
+        filters += [_FilterRegex(prop, values) for prop, values in values_dict.items()]
+
+    if not_regex is not None:
+        values_dict = extract_filter_values_dict_regex(not_regex, arg_prefix + '_not_re')
+        filters += [_FilterRegexInverse(prop, values) for prop, values in values_dict.items()]
 
     return filters
 
