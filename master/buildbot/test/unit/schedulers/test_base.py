@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
+
 import mock
 
 from twisted.internet import defer
@@ -252,32 +254,33 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             None,
             change_kwargs={'category': 'ref-updated', 'branch': 'refs/changes/123'})
 
-    def test_change_consumption_change_filter_gerrit_filters_branch_deprecated(self):
+    @parameterized.expand(
+        [
+            (
+                "branch",
+                filter.ChangeFilter(branch='refs/heads/master'),
+                True
+            ),
+            (
+                "branch_re",
+                filter.ChangeFilter(branch_re='refs/heads/master'),
+                True
+            ),
+            (
+                "branch_re_no_match",
+                filter.ChangeFilter(branch_re='(refs/heads/other|master)'),
+                None
+            )
+        ]
+    )
+    def test_change_consumption_refs_heads_branch_deprecated(self, name, cf, expected_result):
         with assertProducesWarning(DeprecatedApiWarning,
                                    "Change filters must not expect ref-updated events"):
-            cf = filter.ChangeFilter(branch='refs/heads/master')
             return self.do_test_change_consumption(
                 {'change_filter': cf},
-                True,
-                change_kwargs={'category': 'ref-updated', 'branch': 'master'})
-
-    def test_change_consumption_change_filter_gerrit_filters_branch_re_deprecated(self):
-        with assertProducesWarning(DeprecatedApiWarning,
-                                   "Change filters must not expect ref-updated events"):
-            cf = filter.ChangeFilter(branch_re='refs/heads/master')
-            return self.do_test_change_consumption(
-                {'change_filter': cf},
-                True,
-                change_kwargs={'category': 'ref-updated', 'branch': 'master'})
-
-    def test_change_consumption_change_filter_gerrit_filters_branch_re_deprecated_no_match(self):
-        with assertProducesWarning(DeprecatedApiWarning,
-                                   "Change filters must not expect ref-updated events"):
-            cf = filter.ChangeFilter(branch_re='(refs/heads/other|master)')
-            return self.do_test_change_consumption(
-                {'change_filter': cf},
-                None,
-                change_kwargs={'category': 'ref-updated', 'branch': 'master'})
+                expected_result,
+                change_kwargs={'category': 'ref-updated', 'branch': 'master'}
+            )
 
     def test_change_consumption_change_filter_gerrit_filters_branch_new(self):
         cf = filter.ChangeFilter(branch='master')
