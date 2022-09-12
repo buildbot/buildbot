@@ -740,7 +740,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
 
 class TestGerritChangeFilter(unittest.TestCase):
 
-    def test_basic(self):
+    def test_event_type(self):
         props = {
             'event.type': 'patchset-created',
             'event.change.branch': 'master',
@@ -758,5 +758,40 @@ class TestGerritChangeFilter(unittest.TestCase):
         self.assertFalse(f.filter_change(ch))
         self.assertEqual(
             repr(f),
-            '<GerritChangeFilter on prop:event.change.branch == master and '
-            'prop:event.type == ref-updated>')
+            '<GerritChangeFilter on event.type in [\'ref-updated\'] and '
+            'event.change.branch in [\'master\']>')
+
+    def create_props(self, branch, event_type):
+        return {
+            'event.type': event_type,
+            'event.change.branch': branch,
+        }
+
+    def test_event_type_re(self):
+        f = gerritchangesource.GerritChangeFilter(eventtype_re="patchset-.*")
+        self.assertTrue(f.filter_change(
+            Change(properties=self.create_props("br", "patchset-created"))
+        ))
+        self.assertFalse(f.filter_change(
+            Change(properties=self.create_props("br", "ref-updated"))
+        ))
+
+    def test_event_type_fn(self):
+        f = gerritchangesource.GerritChangeFilter(eventtype_fn=lambda t: t == "patchset-created")
+        self.assertTrue(f.filter_change(
+            Change(properties=self.create_props("br", "patchset-created"))
+        ))
+        self.assertFalse(f.filter_change(
+            Change(properties=self.create_props("br", "ref-updated"))
+        ))
+        self.assertEqual(repr(f), '<GerritChangeFilter on <lambda>(eventtype)>')
+
+    def test_branch_fn(self):
+        f = gerritchangesource.GerritChangeFilter(branch_fn=lambda t: t == "br0")
+        self.assertTrue(f.filter_change(
+            Change(properties=self.create_props("br0", "patchset-created"))
+        ))
+        self.assertFalse(f.filter_change(
+            Change(properties=self.create_props("br1", "ref-updated"))
+        ))
+        self.assertEqual(repr(f), '<GerritChangeFilter on <lambda>(branch)>')

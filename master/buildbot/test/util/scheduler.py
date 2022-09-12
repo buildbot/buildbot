@@ -16,6 +16,7 @@
 
 from twisted.internet import defer
 
+from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
@@ -174,6 +175,9 @@ class SchedulerMixin(interfaces.InterfaceTests):
         attributes"""
         ch = self.FakeChange()
         ch.__dict__.update(kwargs)
+        properties = ch.properties
+        ch.properties = Properties()
+        ch.properties.update(properties, "Change")
         return ch
 
     @defer.inlineCallbacks

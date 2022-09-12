@@ -694,6 +694,7 @@ Refactoring
 refactorings
 refspec
 regex
+regexes
 regexp
 regexps
 registerAdapter

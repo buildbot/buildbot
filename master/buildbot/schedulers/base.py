@@ -212,9 +212,15 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                 old_filter_result = change_filter.filter_change(old_change)
                 new_filter_result = change_filter.filter_change(change)
 
-                if old_filter_result != new_filter_result and \
-                        'refs/heads/' in repr(change_filter.checks['branch']):
+                def has_deprecated_ref_branch_filter():
+                    for filter in change_filter.filters:
+                        if filter.prop == 'branch':
+                            if 'refs/heads/' in filter.describe():
+                                return True
 
+                    return False
+
+                if old_filter_result != new_filter_result and has_deprecated_ref_branch_filter():
                     warn_deprecated('3.5.0',
                                     'Change filters must not expect ref-updated events from '
                                     'Gerrit to include refs/heads prefix for the branch attr.')
