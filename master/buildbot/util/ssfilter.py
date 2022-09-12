@@ -121,6 +121,56 @@ class _FilterRegexInverse:
         return f'{prop} does not match {self.regexes}'
 
 
+def _create_branch_filters(eq, not_eq, regex, not_regex, filter_name):
+    filters = []
+    if eq is not NotABranch:
+        values = extract_filter_values_branch(eq, filter_name + '_eq')
+        filters.append(_FilterExactMatch(values))
+
+    if not_eq is not NotABranch:
+        values = extract_filter_values_branch(not_eq, filter_name + '_not_eq')
+        filters.append(_FilterExactMatchInverse(values))
+
+    if regex is not None:
+        values = extract_filter_values_regex(regex, filter_name + '_re')
+        filters.append(_FilterRegex(values))
+
+    if not_regex is not None:
+        values = extract_filter_values_regex(not_regex, filter_name + '_re')
+        filters.append(_FilterRegexInverse(values))
+
+    return filters
+
+
+def _create_filters(eq, not_eq, regex, not_regex, filter_name):
+    filters = []
+    if eq is not None:
+        values = extract_filter_values(eq, filter_name + '_eq')
+        filters.append(_FilterExactMatch(values))
+
+    if not_eq is not None:
+        values = extract_filter_values(not_eq, filter_name + '_not_eq')
+        filters.append(_FilterExactMatchInverse(values))
+
+    if regex is not None:
+        values = extract_filter_values_regex(regex, filter_name + '_re')
+        filters.append(_FilterRegex(values))
+
+    if not_regex is not None:
+        values = extract_filter_values_regex(not_regex, filter_name + '_re')
+        filters.append(_FilterRegexInverse(values))
+
+    return filters
+
+
+def _perform_dict_filtering(object, prop, filters):
+    value = object.get(prop, '')
+    for filter in filters:
+        if not filter.is_matched(value):
+            return False
+    return True
+
+
 class SourceStampFilter(ComparableMixin):
 
     compare_attrs = (
@@ -142,74 +192,30 @@ class SourceStampFilter(ComparableMixin):
                  codebase_eq=None, codebase_not_eq=None, codebase_re=None, codebase_not_re=None):
 
         self.filter_fn = filter_fn
-        self.project_filters = self.create_filters(project_eq, project_not_eq,
-                                                   project_re, project_not_re, 'project')
-        self.codebase_filters = self.create_filters(codebase_eq, codebase_not_eq,
-                                                    codebase_re, codebase_not_re, 'codebase')
-        self.repository_filters = self.create_filters(repository_eq, repository_not_eq,
-                                                      repository_re, repository_not_re,
-                                                      'repository')
-        self.branch_filters = self.create_branch_filters(branch_eq, branch_not_eq,
-                                                         branch_re, branch_not_re, 'branch')
-
-    def create_branch_filters(self, eq, not_eq, regex, not_regex, filter_name):
-        filters = []
-        if eq is not NotABranch:
-            values = extract_filter_values_branch(eq, filter_name + '_eq')
-            filters.append(_FilterExactMatch(values))
-
-        if not_eq is not NotABranch:
-            values = extract_filter_values_branch(not_eq, filter_name + '_not_eq')
-            filters.append(_FilterExactMatchInverse(values))
-
-        if regex is not None:
-            values = extract_filter_values_regex(regex, filter_name + '_re')
-            filters.append(_FilterRegex(values))
-
-        if not_regex is not None:
-            values = extract_filter_values_regex(not_regex, filter_name + '_re')
-            filters.append(_FilterRegexInverse(values))
-
-        return filters
-
-    def create_filters(self, eq, not_eq, regex, not_regex, filter_name):
-        filters = []
-        if eq is not None:
-            values = extract_filter_values(eq, filter_name + '_eq')
-            filters.append(_FilterExactMatch(values))
-
-        if not_eq is not None:
-            values = extract_filter_values(not_eq, filter_name + '_not_eq')
-            filters.append(_FilterExactMatchInverse(values))
-
-        if regex is not None:
-            values = extract_filter_values_regex(regex, filter_name + '_re')
-            filters.append(_FilterRegex(values))
-
-        if not_regex is not None:
-            values = extract_filter_values_regex(not_regex, filter_name + '_re')
-            filters.append(_FilterRegexInverse(values))
-
-        return filters
-
-    def do_prop_match(self, ss, prop, filters):
-        value = ss.get(prop, '')
-        for filter in filters:
-            if not filter.is_matched(value):
-                return False
-        return True
+        self.project_filters = _create_filters(project_eq, project_not_eq,
+                                               project_re, project_not_re, 'project')
+        self.codebase_filters = _create_filters(codebase_eq, codebase_not_eq,
+                                                codebase_re, codebase_not_re, 'codebase')
+        self.repository_filters = _create_filters(repository_eq, repository_not_eq,
+                                                  repository_re, repository_not_re,
+                                                  'repository')
+        self.branch_filters = _create_branch_filters(branch_eq, branch_not_eq,
+                                                     branch_re, branch_not_re, 'branch')
 
     def is_matched(self, ss):
         if self.filter_fn is not None and not self.filter_fn(ss):
             return False
-        if self.project_filters and not self.do_prop_match(ss, 'project', self.project_filters):
+        if self.project_filters and \
+                not _perform_dict_filtering(ss, 'project', self.project_filters):
             return False
-        if self.codebase_filters and not self.do_prop_match(ss, 'codebase', self.codebase_filters):
+        if self.codebase_filters and \
+                not _perform_dict_filtering(ss, 'codebase', self.codebase_filters):
             return False
         if self.repository_filters and \
-                not self.do_prop_match(ss, 'repository', self.repository_filters):
+                not _perform_dict_filtering(ss, 'repository', self.repository_filters):
             return False
-        if self.branch_filters and not self.do_prop_match(ss, 'branch', self.branch_filters):
+        if self.branch_filters and \
+                not _perform_dict_filtering(ss, 'branch', self.branch_filters):
             return False
         return True
 
