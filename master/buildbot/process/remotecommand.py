@@ -373,7 +373,6 @@ class RemoteCommand(base.RemoteCommandImpl):
                 self.updates[key] = []
             self.updates[key].append(value)
 
-    @util.deferredLocked('loglock')
     @defer.inlineCallbacks
     def remoteComplete(self, maybeFailure):
         if self._startTime and self._remoteElapsed:
@@ -384,21 +383,26 @@ class RemoteCommand(base.RemoteCommandImpl):
             if key in ['stdout', 'stderr', 'header']:
                 whole_line = lbf.flush()
                 if whole_line is not None:
-                    self.remoteUpdate(key, whole_line, True)
+                    yield self.remoteUpdate(key, whole_line, True)
             else:
                 logname = key
                 whole_line = lbf.flush()
                 value = (logname, whole_line)
                 if whole_line is not None:
-                    self.remoteUpdate("log", value, True)
+                    yield self.remoteUpdate("log", value, True)
 
-        for name, loog in self.logs.items():
-            if self._closeWhenFinished[name]:
-                if maybeFailure:
-                    yield loog.addHeader(f"\nremoteFailed: {maybeFailure}")
-                else:
-                    log.msg(f"closing log {loog}")
-                yield loog.finish()
+        try:
+            yield self.loglock.acquire()
+            for name, loog in self.logs.items():
+                if self._closeWhenFinished[name]:
+                    if maybeFailure:
+                        yield loog.addHeader(f"\nremoteFailed: {maybeFailure}")
+                    else:
+                        log.msg(f"closing log {loog}")
+                    yield loog.finish()
+        finally:
+            yield self.loglock.release()
+
         if maybeFailure:
             # Message Pack protocol can not send an exception object back to the master, so
             # exception information is sent as a string
