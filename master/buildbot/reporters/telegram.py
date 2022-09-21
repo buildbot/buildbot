@@ -185,8 +185,8 @@ class TelegramContact(Contact):
         if self.is_private_chat:
             self.send(f"Your ID is `{self.user_id}`.")
         else:
-            yield self.send(f"{self.user_name}, your ID is {self.user_id}.")
-            self.send(f'This {self.channel.chat_info.get("type", "group")} ID is {self.chat_id}.')
+            yield self.send(f"{self.user_name}, your ID is `{self.user_id}`.")
+            self.send(f'This {self.channel.chat_info.get("type", "group")} ID is `{self.chat_id}`.')
     command_GETID.usage = "getid - get user and chat ID that can be put in the master " \
                           "configuration file"
 
