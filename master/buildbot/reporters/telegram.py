@@ -133,6 +133,8 @@ class TelegramContact(Contact):
 
     @defer.inlineCallbacks
     def command_START(self, args, **kwargs):
+        self.bot.post('/setChatMenuButton', json={'chat_id': self.channel.id,
+                                                  'menu_button': {'type': 'commands'}})
         yield self.command_HELLO(args)
         reactor.callLater(0.2, self.command_HELP, '')
 
@@ -150,7 +152,7 @@ class TelegramContact(Contact):
     command_NAY.usage = "nay - never mind the command we are currently discussing"
 
     @classmethod
-    def describe_commands(cls):
+    def get_commands(cls):
         commands = cls.build_commands()
         response = []
         for command in commands:
@@ -160,8 +162,12 @@ class TelegramContact(Contact):
             doc = getattr(meth, '__doc__', None)
             if not doc:
                 doc = command
-            response.append(f"{command} - {doc}")
+            response.append((command, doc))
         return response
+
+    @classmethod
+    def describe_commands(cls):
+        return [f"{command} - {doc}" for command, doc in cls.get_commands()]
 
     @Contact.overrideCommand
     def command_COMMANDS(self, args, **kwargs):
@@ -177,7 +183,7 @@ class TelegramContact(Contact):
     def command_GETID(self, args, **kwargs):
         """get user and chat ID"""
         if self.is_private_chat:
-            self.send(f"Your ID is {self.user_id}.")
+            self.send(f"Your ID is `{self.user_id}`.")
         else:
             yield self.send(f"{self.user_name}, your ID is {self.user_id}.")
             self.send(f'This {self.channel.chat_info.get("type", "group")} ID is {self.chat_id}.')
@@ -608,6 +614,8 @@ class TelegramStatusBot(StatusBot):
             channel = self.getChannel(c)
             channel.add_notification_events(self.notify_events)
         yield self.loadState()
+        commands = [{'command': command, 'description': doc} for command, doc in TelegramContact.get_commands()]
+        self.post('/setMyCommands', json={'commands': commands})
 
     results_emoji = {
         SUCCESS: ' ✅',
