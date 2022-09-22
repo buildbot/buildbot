@@ -1,1 +1,0 @@
-Fixed worker ``cpdir`` command handling when using PB protocol (:issue:`6539`)

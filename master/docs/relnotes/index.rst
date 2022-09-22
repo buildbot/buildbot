@@ -9,6 +9,16 @@ Release Notes
 .. towncrier release notes start
 
 
+Buildbot ``3.6.1`` ( ``2022-09-22`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed handling of last line in logs when Buildbot worker 3.5 and older connects to Buildbot master 3.6 (:issue:`6632`).
+- Fixed worker ``cpdir`` command handling when using PB protocol (:issue:`6539`)
+
+
 Buildbot ``3.6.0`` ( ``2022-08-25`` )
 =====================================
 
