@@ -1,0 +1,1 @@
+Fix incomplete logs from remote commands introduced in  Buildbot 3.6 (:issue: `6632`).
