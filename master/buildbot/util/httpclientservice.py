@@ -30,54 +30,57 @@ from buildbot.util import unicode2bytes
 
 try:
     import txrequests
-    @implementer(IHttpResponse)
-    class TxRequestsResponseWrapper:
-
-        def __init__(self, res):
-            self._res = res
-
-        def content(self):
-            return defer.succeed(self._res.content)
-
-        def json(self):
-            return defer.succeed(self._res.json())
-
-        @property
-        def code(self):
-            return self._res.status_code
-
-        @property
-        def url(self):
-            return self._res.url
 except ImportError:
     txrequests = None
 
 try:
     import treq
-    @implementer(IHttpResponse)
-    class TreqResponseWrapper:
-
-        def __init__(self, res):
-            self._res = res
-
-        def content(self):
-            return self._res.content()
-
-        def json(self):
-            return self._res.json()
-
-        @property
-        def code(self):
-            return self._res.code
-
-        @property
-        def url(self):
-            return self._res.request.absoluteURI.decode()
-
 except ImportError:
     treq = None
 
 log = Logger()
+
+
+@implementer(IHttpResponse)
+class TxRequestsResponseWrapper:
+
+    def __init__(self, res):
+        self._res = res
+
+    def content(self):
+        return defer.succeed(self._res.content)
+
+    def json(self):
+        return defer.succeed(self._res.json())
+
+    @property
+    def code(self):
+        return self._res.status_code
+
+    @property
+    def url(self):
+        return self._res.url
+
+
+@implementer(IHttpResponse)
+class TreqResponseWrapper:
+
+    def __init__(self, res):
+        self._res = res
+
+    def content(self):
+        return self._res.content()
+
+    def json(self):
+        return self._res.json()
+
+    @property
+    def code(self):
+        return self._res.code
+
+    @property
+    def url(self):
+        return self._res.request.absoluteURI.decode()
 
 
 class HTTPClientService(service.SharedService):
