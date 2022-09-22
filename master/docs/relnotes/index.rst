@@ -9,20 +9,14 @@ Release Notes
 .. towncrier release notes start
 
 
+Buildbot ``3.6.1`` ( ``2022-09-22`` )
+=====================================
+
 Bug fixes
 ---------
 
-- Improved reliability of "buildbot stop" (:issue:`3535`).
+- Fixed handling of last line in logs when Buildbot worker 3.5 and older connects to Buildbot master 3.6 (:issue:`6632`).
 - Fixed worker ``cpdir`` command handling when using PB protocol (:issue:`6539`)
-
-Features
---------
-
-- Expanded ``ChangeFilter`` filtering capabilities:
-   - New ``<attribute>_not_eq`` parameters to require no match
-   - ``<attribute>_re`` now support multiple regexes
-   - New ``<attribute>_not_re`` parameters to require no match by regex
-   - New ``property_<match_type>`` parameters to perform filtering on change properties.
 
 
 Buildbot ``3.6.0`` ( ``2022-08-25`` )
