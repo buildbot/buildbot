@@ -35,8 +35,6 @@ except ImportError:
 
 try:
     import treq
-    implementer(IHttpResponse)(treq.response._Response)
-
 except ImportError:
     treq = None
 
@@ -62,6 +60,27 @@ class TxRequestsResponseWrapper:
     @property
     def url(self):
         return self._res.url
+
+
+@implementer(IHttpResponse)
+class TreqResponseWrapper:
+
+    def __init__(self, res):
+        self._res = res
+
+    def content(self):
+        return self._res.content()
+
+    def json(self):
+        return self._res.json()
+
+    @property
+    def code(self):
+        return self._res.code
+
+    @property
+    def url(self):
+        return self._res.request.absoluteURI.decode()
 
 
 class HTTPClientService(service.SharedService):
@@ -202,7 +221,7 @@ class HTTPClientService(service.SharedService):
         kwargs['agent'] = self._agent
 
         res = yield getattr(treq, method)(url, **kwargs)
-        return IHttpResponse(res)
+        return IHttpResponse(TreqResponseWrapper(res))
 
     # lets be nice to the auto completers, and don't generate that code
     def get(self, ep, **kwargs):
