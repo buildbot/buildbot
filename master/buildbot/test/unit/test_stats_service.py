@@ -121,14 +121,14 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
             [influxdb]
         except ImportError:
             with self.assertRaises(config.ConfigErrors):
-                InfluxStorageService("fake_url", "fake_port", "fake_user",
+                InfluxStorageService("fake_url", 12345, "fake_user",
                                      "fake_password", "fake_db", captures)
 
         # if instead influxdb is installed, then initialize it - no errors
         # should be realized
         else:
             new_storage_backends = [
-                InfluxStorageService("fake_url", "fake_port", "fake_user", "fake_password",
+                InfluxStorageService("fake_url", 12345, "fake_user", "fake_password",
                                      "fake_db", captures)
             ]
             yield self.stats_service.reconfigService(new_storage_backends)
