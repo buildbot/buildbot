@@ -116,6 +116,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.git.GitStepMixin',
             'buildbot.util.giturlparse.GitUrl',
             'buildbot.util.httpclientservice.HTTPClientService',
+            'buildbot.util.httpclientservice.TreqResponseWrapper',
             'buildbot.util.httpclientservice.TxRequestsResponseWrapper',
             'buildbot.util.kubeclientservice.KubeClientService',
             'buildbot.util.kubeclientservice.KubeConfigLoaderBase',
