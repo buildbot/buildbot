@@ -614,7 +614,8 @@ class TelegramStatusBot(StatusBot):
             channel = self.getChannel(c)
             channel.add_notification_events(self.notify_events)
         yield self.loadState()
-        commands = [{'command': command, 'description': doc} for command, doc in TelegramContact.get_commands()]
+        commands = [{'command': command, 'description': doc}
+                    for command, doc in TelegramContact.get_commands()]
         self.post('/setMyCommands', json={'commands': commands})
 
     results_emoji = {
