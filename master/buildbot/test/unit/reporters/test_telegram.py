@@ -85,6 +85,9 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         def getChannel(self, channel):
             return self.channelClass(self, channel)
 
+        def post(self, path, **kwargs):
+            return True
+
     USER = {
         "id": 123456789,
         "first_name": "Harry",

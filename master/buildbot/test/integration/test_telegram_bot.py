@@ -61,6 +61,9 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
 
     master = None
 
+    _commands = [{'command': command, 'description': doc}
+                 for command, doc in telegram.TelegramContact.get_commands()]
+
     @defer.inlineCallbacks
     def get_http(self, bot_token):
         base_url = "https://api.telegram.org/telegram" + bot_token
@@ -69,6 +72,8 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         # This is necessary as Telegram will make requests in the reconfig
         http.expect("post", "/getMe",
                     content_json={'ok': 1, 'result': {'username': 'testbot'}})
+        http.expect("post", "/setMyCommands", json={'commands': self._commands},
+                    content_json={'ok': 1})
         if bot_token == 'poll':
             http.expect("post", "/deleteWebhook",
                         content_json={'ok': 1})
