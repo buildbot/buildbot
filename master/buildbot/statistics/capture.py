@@ -282,7 +282,7 @@ class CaptureBuildDuration(CaptureBuildTimes):
                 divisor = 60
             elif report_in == 'hours':
                 divisor = 60 * 60
-            duration = end_time - start_time
+            duration = abs(end_time - start_time)
             # cannot use duration.total_seconds() on Python 2.6
             duration = ((duration.microseconds + (duration.seconds +
                                                   duration.days * 24 * 3600) * 1e6) / 1e6)
