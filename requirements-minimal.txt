@@ -48,7 +48,7 @@ msgpack==1.0.4
 packaging==21.3
 parameterized==0.8.1
 pep8==1.7.1
-psutil==5.9.1
+psutil==5.9.2
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycodestyle==2.7.0
