@@ -91,7 +91,7 @@ txaio==22.2.1
 txrequests==0.9.6
 typing-extensions==4.3.0
 urllib3==1.26.12
-Werkzeug==2.1.2
+Werkzeug==2.2.2
 wrapt==1.14.1
 xmltodict==0.13.0
 zipp==3.8.1
