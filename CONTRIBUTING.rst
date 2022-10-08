@@ -27,7 +27,7 @@ See http://trac.buildbot.net/wiki/LicensingYourContribution for details.
 
 You should run ``common/validate.sh`` before sending your patches.
 
-Also you can install our git hook for validating and fixing most common coding style issues
+Also, you can install our git hook for validating and fixing the most common coding style issues
 
 ::
 
@@ -45,3 +45,6 @@ Development Tips
 
 The easiest way to hack on Buildbot is in a ``virtualenv``.
 See http://docs.buildbot.net/latest/developer/tests.html#quick-start for a description of how to set up such a thing, and how to run the test suite.
+
+
+
