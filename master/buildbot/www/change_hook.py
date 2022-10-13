@@ -120,15 +120,15 @@ class ChangeHookResource(resource.Resource):
             raise ValueError(m)
 
         if dialect not in self._dialect_handlers:
-            if dialect not in self._plugins:
-                m = (f"The dialect specified, '{dialect}', is not registered as "
-                     "a buildbot.webhook plugin")
-                log.msg(m)
-                raise ValueError(m)
             options = self.dialects[dialect]
             if isinstance(options, dict) and 'custom_class' in options:
                 klass = options['custom_class']
             else:
+                if dialect not in self._plugins:
+                    m = (f"The dialect specified, '{dialect}', is not registered as "
+                         "a buildbot.webhook plugin")
+                    log.msg(m)
+                    raise ValueError(m)
                 klass = self._plugins.get(dialect)
             self._dialect_handlers[dialect] = klass(self.master, self.dialects[dialect])
 
