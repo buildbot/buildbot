@@ -1,4 +1,4 @@
-attrs==21.4.0;  python_version < "3.6"
+attrs==22.1.0;  python_version < "3.6"
 attrs==22.1.0;  python_version >= "3.6"
 autobahn==22.7.1;  python_version >= "3.7"
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
