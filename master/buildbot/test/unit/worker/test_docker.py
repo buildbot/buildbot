@@ -96,7 +96,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_contruction_minimal_docker_py(self):
-        docker.version = "1.10.6"
+        self.patch(dockerworker, 'docker_py_version', 1.10)
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         client = docker.APIClient.latest
@@ -106,7 +106,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_contruction_minimal_docker(self):
-        docker.version = "2.0.0"
+        self.patch(dockerworker, 'docker_py_version', 2.0)
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         client = docker.Client.latest
