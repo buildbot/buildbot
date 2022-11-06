@@ -128,5 +128,5 @@ class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         master.config.www['custom_templates_dir'] = 'foo'
         rsrc.parseCustomTemplateDir = mock.Mock(return_value="returnvalue")
         rsrc.reconfigResource(master.config)
-        self.assertNotIn('custom_templates_dir', master.config.www)
+        self.assertNotIn('custom_templates_dir', rsrc.frontend_config)
         self.assertEqual('returnvalue', rsrc.custom_templates)
