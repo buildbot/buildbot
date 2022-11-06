@@ -29,6 +29,43 @@ from buildbot.www import auth
 from buildbot.www import config
 
 
+class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    def setUp(self):
+        self.setup_test_reactor()
+
+    @defer.inlineCallbacks
+    def test_render(self):
+        _auth = auth.NoAuth()
+        _auth.maybeAutoLogin = mock.Mock()
+
+        custom_versions = [
+            ['test compoent', '0.1.2'],
+            ['test component 2', '0.2.1']
+        ]
+
+        master = self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions)
+        rsrc = config.ConfigResource(master)
+        rsrc.reconfigResource(master.config)
+
+        vjson = [list(v)
+                 for v in config.get_environment_versions()] + custom_versions
+
+        res = yield self.render_resource(rsrc, b'/config')
+        res = json.loads(bytes2unicode(res))
+        exp = {
+            "authz": {},
+            "titleURL": "http://buildbot.net",
+            "versions": vjson,
+            "title": "Buildbot",
+            "auth": {"name": "NoAuth"},
+            "user": {"anonymous": True},
+            "buildbotURL": "h:/a/b/",
+            "multiMaster": False,
+            "port": None
+        }
+        self.assertEqual(res, exp)
+
+
 class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):

@@ -91,6 +91,28 @@ def serialize_www_frontend_config_dict_to_json(config):
     return json.dumps(config, default=to_json)
 
 
+class ConfigResource(resource.Resource):
+    needsReconfig = True
+
+    def reconfigResource(self, new_config):
+        self.frontend_config = get_www_frontend_config_dict(self.master, new_config.www)
+
+    def render_GET(self, request):
+        return self.asyncRenderHelper(request, self.do_render)
+
+    def do_render(self, request):
+        config = {}
+        request.setHeader(b"content-type", b'application/json')
+        request.setHeader(b"Cache-Control", b"public,max-age=0")
+
+        config.update(self.frontend_config)
+        config.update({"user": self.master.www.getUserInfos(request)})
+
+        return defer.succeed(
+            unicode2bytes(serialize_www_frontend_config_dict_to_json(config), encoding='ascii')
+        )
+
+
 class IndexResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
