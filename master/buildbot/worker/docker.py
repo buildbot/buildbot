@@ -210,7 +210,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         return volume_list, volumes
 
     def _getDockerClient(self, client_args):
-        if docker.version[0] == '1':
+        if 1.0 <= docker_py_version < 2.0:
             docker_client = client.Client(**client_args)
         else:
             docker_client = client.APIClient(**client_args)
