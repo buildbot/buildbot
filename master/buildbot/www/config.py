@@ -29,6 +29,25 @@ from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
 
+def get_environment_versions():
+    import sys   # pylint: disable=import-outside-toplevel
+    import twisted   # pylint: disable=import-outside-toplevel
+    from buildbot import version as bbversion   # pylint: disable=import-outside-toplevel
+
+    pyversion = '.'.join(map(str, sys.version_info[:3]))
+
+    tx_version_info = (twisted.version.major,
+                       twisted.version.minor,
+                       twisted.version.micro)
+    txversion = '.'.join(map(str, tx_version_info))
+
+    return [
+        ('Python', pyversion),
+        ('Buildbot', bbversion),
+        ('Twisted', txversion),
+    ]
+
+
 class IndexResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
@@ -42,7 +61,7 @@ class IndexResource(resource.Resource):
     def reconfigResource(self, new_config):
         self.config = new_config.www
 
-        versions = self.getEnvironmentVersions()
+        versions = get_environment_versions()
         vs = self.config.get('versions')
         if isinstance(vs, list):
             versions += vs
@@ -93,25 +112,6 @@ class IndexResource(resource.Resource):
                 res[template_name % (basename,)] = html
 
         return res
-
-    @staticmethod
-    def getEnvironmentVersions():
-        import sys   # pylint: disable=import-outside-toplevel
-        import twisted   # pylint: disable=import-outside-toplevel
-        from buildbot import version as bbversion   # pylint: disable=import-outside-toplevel
-
-        pyversion = '.'.join(map(str, sys.version_info[:3]))
-
-        tx_version_info = (twisted.version.major,
-                           twisted.version.minor,
-                           twisted.version.micro)
-        txversion = '.'.join(map(str, tx_version_info))
-
-        return [
-            ('Python', pyversion),
-            ('Buildbot', bbversion),
-            ('Twisted', txversion),
-        ]
 
     @defer.inlineCallbacks
     def renderIndex(self, request):

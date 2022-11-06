@@ -34,7 +34,7 @@ from twisted.python import log
 
 from buildbot.process.buildstep import _BuildStepFactory
 from buildbot.util import unicode2bytes
-from buildbot.www.config import IndexResource
+from buildbot.www.config import get_environment_versions
 
 # This can't change! or we will need to make sure we are compatible with all
 # released version of buildbot >=0.9.0
@@ -128,7 +128,7 @@ def basicData(master):
     installid = hashlib.sha1(hashInput).hexdigest()
     return {
         'installid': installid,
-        'versions': dict(IndexResource.getEnvironmentVersions()),
+        'versions': dict(get_environment_versions()),
         'platform': {
             'platform': platform.platform(),
             'system': platform.system(),

@@ -52,7 +52,7 @@ class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         template.render = lambda configjson, config, custom_templates: configjson
 
         vjson = [list(v)
-                 for v in rsrc.getEnvironmentVersions()] + custom_versions
+                 for v in config.get_environment_versions()] + custom_versions
 
         res = yield self.render_resource(rsrc, b'/')
         res = json.loads(bytes2unicode(res))
