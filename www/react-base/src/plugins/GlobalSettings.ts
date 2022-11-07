@@ -34,7 +34,7 @@ export type SettingGroupConfig = {
   items: SettingItemConfig[];
 }
 
-type SettingItem = {
+export type SettingItem = {
   name: string;
   type: string;
   value: SettingValue;
@@ -42,13 +42,13 @@ type SettingItem = {
   caption: string;
 }
 
-type SettingGroup = {
+export type SettingGroup = {
   name: string;
   caption: string;
   items: {[name: string]: SettingItem};
 }
 
-type SettingGroups = {[name: string]: SettingGroup};
+export type SettingGroups = {[name: string]: SettingGroup};
 
 type StoredSettingGroup = {[name: string]: SettingValue};
 type StoredSettingGroups = {[name: string]: StoredSettingGroup};
