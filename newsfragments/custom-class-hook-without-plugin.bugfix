@@ -1,0 +1,1 @@
+Fix ``custom_class`` change hook checks to allow hook without a plugin.
