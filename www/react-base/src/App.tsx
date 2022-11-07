@@ -25,6 +25,7 @@ import './views/ChangeBuildsView/ChangeBuildsView';
 import './views/MastersView/MastersView';
 import './views/SchedulersView/SchedulersView';
 import './views/WorkersView/WorkersView';
+import './views/WorkerView/WorkerView';
 
 function App() {
   const stores = useContext(StoresContext);
