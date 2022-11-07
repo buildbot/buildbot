@@ -58,6 +58,7 @@ const sidebarStore = new SidebarStore();
 const topbarStore = new TopbarStore();
 const topbarActionsStore = new TopbarActionsStore();
 globalSettings.applyBuildbotConfig(hardcodedConfig);
+globalSettings.load();
 
 root.render(
     <DataClientContext.Provider value={dataClient}>
