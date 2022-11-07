@@ -24,6 +24,7 @@ import './views/PendingBuildRequestsView/PendingBuildRequestsView';
 import './views/ChangesView/ChangesView';
 import './views/ChangeBuildsView/ChangeBuildsView';
 import './views/MastersView/MastersView';
+import './views/SettingsView/SettingsView';
 import './views/SchedulersView/SchedulersView';
 import './views/WorkersView/WorkersView';
 import './views/WorkerView/WorkerView';
