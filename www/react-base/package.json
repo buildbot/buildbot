@@ -72,6 +72,7 @@
     "react-refresh": "^0.8.3",
     "react-router-dom": "^6.3.0",
     "react-tabs": "^5.1.0",
+    "react-virtualized": "^9.22.3",
     "resolve": "1.18.1",
     "resolve-url-loader": "^3.1.2",
     "sass-loader": "^10.0.5",
@@ -170,6 +171,7 @@
   },
   "devDependencies": {
     "@types/react-test-renderer": "^18.0.0",
+    "@types/react-virtualized": "^9.21.21",
     "axios-mock-adapter": "^1.21.1",
     "less": "^3.0.0",
     "less-loader": "^5.0.0",
