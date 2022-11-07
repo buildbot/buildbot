@@ -262,6 +262,12 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # was not made.
         return self._getPort().getHost().port
 
+    def refresh_base_plugin_name(self, new_config):
+        if 'base_react' in new_config.www.get('plugins', {}):
+            self.base_plugin_name = 'base_react'
+        else:
+            self.base_plugin_name = 'base'
+
     def configPlugins(self, root, new_config):
         known_plugins = set(new_config.www.get('plugins', {})) | set([self.base_plugin_name])
         for key, plugin in list(new_config.www.get('plugins', {}).items()):
@@ -278,6 +284,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             log.msg(f"NOTE: www plugin {repr(plugin_name)} is installed but not configured")
 
     def setupSite(self, new_config):
+        self.refresh_base_plugin_name(new_config)
+
         self.reconfigurableResources = []
 
         # we're going to need at least the base plugin (buildbot-www)
@@ -287,8 +295,16 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         root = self.apps.get(self.base_plugin_name).resource
         self.configPlugins(root, new_config)
         # /
-        root.putChild(b'', wwwconfig.IndexResource(
-            self.master, self.apps.get(self.base_plugin_name).static_dir))
+        if self.base_plugin_name == 'base':
+            root.putChild(b'', wwwconfig.IndexResource(
+                self.master,
+                self.apps.get(self.base_plugin_name).static_dir
+            ))
+        else:
+            root.putChild(b'', wwwconfig.IndexResourceReact(
+                self.master,
+                self.apps.get(self.base_plugin_name).static_dir
+            ))
 
         # /auth
         root.putChild(b'auth', auth.AuthRootResource(self.master))
@@ -346,6 +362,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.reconfigurableResources.append(resource)
 
     def reconfigSite(self, new_config):
+        self.refresh_base_plugin_name(new_config)
+
         root = self.apps.get(self.base_plugin_name).resource
         self.configPlugins(root, new_config)
         new_config.www['auth'].reconfigAuth(self.master, new_config)
