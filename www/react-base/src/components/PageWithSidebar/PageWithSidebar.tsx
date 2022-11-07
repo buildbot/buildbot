@@ -121,9 +121,7 @@ const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWi
         </div>
       </div>
       <div className="content">
-        <div>
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );

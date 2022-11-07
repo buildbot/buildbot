@@ -198,18 +198,20 @@
   }
   /* content */
   > .content {
-    position: relative;
+    display: flex;
+    flex-direction: column;
     height: 100%;
     transition: margin-left @gl-sidebar-transition-time ease-out 0s;
     padding-left: 0px;
     margin-left: 0px;
-    right:0px;
     overflow-y: visible;
     .container {
-      width: 100%
+      flex-grow: 1;
+      width: 100%;
     }
     .container-fluid {
-      width: 100%
+      flex-grow: 1;
+      width: 100%;
     }
   }
   overflow-y: visible;
