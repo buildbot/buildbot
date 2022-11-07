@@ -26,10 +26,14 @@ import {Builder} from "../../data/classes/Builder";
 
 type BuildLinkWithSummaryTooltipProps = {
   build: Build;
-  builder?: Builder;
+  builder?: Builder | null;
 };
 
 const BuildLinkWithSummaryTooltip = observer(({build, builder}: BuildLinkWithSummaryTooltipProps) => {
+
+  if (builder === null) {
+    builder = undefined;
+  }
 
   const renderBuildTooltip = (props: {[p: string]: any}) => (
     <Tooltip className="buildsummarytooltipstyle" id="bb-tooltip-build" {...props}>
