@@ -23,6 +23,7 @@ import './views/BuildView/BuildView';
 import './views/PendingBuildRequestsView/PendingBuildRequestsView';
 import './views/ChangesView/ChangesView';
 import './views/ChangeBuildsView/ChangeBuildsView';
+import './views/LogView/LogView';
 import './views/MastersView/MastersView';
 import './views/SettingsView/SettingsView';
 import './views/SchedulersView/SchedulersView';
