@@ -1,0 +1,1 @@
+Cancelled builds now have stop reason included into the state string.
