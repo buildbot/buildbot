@@ -19,12 +19,12 @@ import './LogPreview.less';
 import {Link} from "react-router-dom";
 import {Log} from "../../data/classes/Log";
 import {globalSettings} from "../../plugins/GlobalSettings";
-import {useEffect, useRef, useState} from 'react';
+import {useContext, useEffect, useRef, useState} from 'react';
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import {ansi2html, generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {action, makeObservable, observable} from 'mobx';
 import {useLocalObservable} from "mobx-react";
-import {useDataAccessor} from "../../data/ReactUtils";
+import {DataClientContext, useDataAccessor} from "../../data/ReactUtils";
 import {CancellablePromise} from "../../util/CancellablePromise";
 import {useStateWithDefaultIfNotSet} from "../../util/React";
 
@@ -80,6 +80,8 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
   const [fullDisplay, setFullDisplay] = useStateWithDefaultIfNotSet(() => initialFullDisplay);
 
   const accessor = useDataAccessor();
+  const dataClient = useContext(DataClientContext);
+  const apiRootUrl = dataClient.restClient.rootUrl;
 
   const [htmlLog, setHtmlLog] = useState('');
 
@@ -196,11 +198,11 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
                 <Link to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}>
                   view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}
                 </Link>
-                <Link to={`api/v2/logs/${log.id}/raw`} title="download log"
+                <a href={`${apiRootUrl}/logs/${log.id}/raw`} title="download log"
                       className="btn btn-default btn-xs">
                   <i className="fa fa-download"></i>
                   download
-                </Link>
+                </a>
               </div>
             </div>
           </div>
