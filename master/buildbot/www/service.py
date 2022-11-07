@@ -190,6 +190,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # load the apps early, in case something goes wrong in Python land
         self.apps = get_plugins('www', None, load_now=True)
+        self.base_plugin_name = 'base'
 
     @property
     def auth(self):
@@ -261,8 +262,14 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # was not made.
         return self._getPort().getHost().port
 
+    def refresh_base_plugin_name(self, new_config):
+        if 'base_react' in new_config.www.get('plugins', {}):
+            self.base_plugin_name = 'base_react'
+        else:
+            self.base_plugin_name = 'base'
+
     def configPlugins(self, root, new_config):
-        known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
+        known_plugins = set(new_config.www.get('plugins', {})) | set([self.base_plugin_name])
         for key, plugin in list(new_config.www.get('plugins', {}).items()):
             log.msg(f"initializing www plugin {repr(key)}")
             if key not in self.apps:
@@ -277,17 +284,27 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             log.msg(f"NOTE: www plugin {repr(plugin_name)} is installed but not configured")
 
     def setupSite(self, new_config):
+        self.refresh_base_plugin_name(new_config)
+
         self.reconfigurableResources = []
 
         # we're going to need at least the base plugin (buildbot-www)
-        if 'base' not in self.apps:
+        if self.base_plugin_name not in self.apps:
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
-        root = self.apps.get('base').resource
+        root = self.apps.get(self.base_plugin_name).resource
         self.configPlugins(root, new_config)
         # /
-        root.putChild(b'', wwwconfig.IndexResource(
-            self.master, self.apps.get('base').static_dir))
+        if self.base_plugin_name == 'base':
+            root.putChild(b'', wwwconfig.IndexResource(
+                self.master,
+                self.apps.get(self.base_plugin_name).static_dir
+            ))
+        else:
+            root.putChild(b'', wwwconfig.IndexResourceReact(
+                self.master,
+                self.apps.get(self.base_plugin_name).static_dir
+            ))
 
         # /auth
         root.putChild(b'auth', auth.AuthRootResource(self.master))
@@ -345,7 +362,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.reconfigurableResources.append(resource)
 
     def reconfigSite(self, new_config):
-        root = self.apps.get('base').resource
+        self.refresh_base_plugin_name(new_config)
+
+        root = self.apps.get(self.base_plugin_name).resource
         self.configPlugins(root, new_config)
         new_config.www['auth'].reconfigAuth(self.master, new_config)
         cookie_expiration_time = new_config.www.get('cookie_expiration_time')

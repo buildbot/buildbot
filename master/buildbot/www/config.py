@@ -195,3 +195,45 @@ class IndexResource(resource.Resource):
                          custom_templates=self.custom_templates,
                          config=self.config)
         return unicode2bytes(tpl, encoding='ascii')
+
+
+class IndexResourceReact(resource.Resource):
+    # enable reconfigResource calls
+    needsReconfig = True
+
+    def __init__(self, master, staticdir):
+        super().__init__(master)
+        self.static_dir = staticdir
+        with open(os.path.join(self.static_dir, 'index.html')) as index_f:
+            self.index_template = index_f.read()
+
+    def reconfigResource(self, new_config):
+        self.config = new_config.www
+        self.frontend_config = get_www_frontend_config_dict(self.master, self.config)
+
+    def render_GET(self, request):
+        return self.asyncRenderHelper(request, self.renderIndex)
+
+    @defer.inlineCallbacks
+    def renderIndex(self, request):
+        config = {}
+        request.setHeader(b"content-type", b'text/html')
+        request.setHeader(b"Cache-Control", b"public,max-age=0")
+
+        try:
+            yield self.config['auth'].maybeAutoLogin(request)
+        except Error as e:
+            config["on_load_warning"] = e.message
+
+        config.update(self.frontend_config)
+        config.update({"user": self.master.www.getUserInfos(request)})
+
+        serialized_config = serialize_www_frontend_config_dict_to_json(config)
+        rendered_index = self.index_template.replace(
+            ' <!-- BUILDBOT_CONFIG_PLACEHOLDER -->',
+            f'''<script id="bb-config">
+    window.buildbotFrontendConfig = {serialized_config};
+</script>'''
+        )
+
+        return unicode2bytes(rendered_index, encoding='ascii')
