@@ -17,52 +17,32 @@ import {globalSettings} from "./plugins/GlobalSettings";
 import {TimeContext} from "./contexts/Time";
 import TimeStore from "./stores/TimeStore";
 import moment from "moment";
+import axios from "axios";
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const doRender = (buildbotFrontendConfig: Config) => {
+  const root = ReactDOM.createRoot(
+    document.getElementById('root') as HTMLElement
+  );
 
-const restClient = new RestClient(getRestUrl(window.location));
-const webSocketClient = new WebSocketClient(getWebSocketUrl(window.location),
+  const restClient = new RestClient(getRestUrl(window.location));
+  const webSocketClient = new WebSocketClient(getWebSocketUrl(window.location),
     url => new WebSocket(url));
 
-const dataClient = new DataClient(restClient, webSocketClient);
+  const dataClient = new DataClient(restClient, webSocketClient);
 
-// FIXME: the config should come from master
-const hardcodedUrl = `${window.location.protocol}://${window.location.hostname}${window.location.port}/`;
-const hardcodedConfig: Config = {
-  user: { anonymous: true },
-  port: "",
-  plugins: {},
-  auth: { name: "", oauth2: false, fa_icon: "", autologin: false },
-  avatar_methods: [],
-  versions: [
-    ["Python", "3.6.13"],
-    ["Buildbot", "3.5.1"],
-    ["Twisted", "18.9.0"],
-    ["buildbot_travis", "0.6.4"],
-    ["buildbot-grid-view", "2.2.1"],
-    ["buildbot-codeparameter", "1.6.1"],
-  ],
-  ui_default_config: {},
-  buildbotURL: hardcodedUrl,
-  title: "test buildbot",
-  titleURL: hardcodedUrl,
-  multiMaster: false,
-}
 
-const timeStore = new TimeStore();
-timeStore.setTime(moment().unix());
+  const timeStore = new TimeStore();
+  timeStore.setTime(moment().unix());
 
-const sidebarStore = new SidebarStore();
-const topbarStore = new TopbarStore();
-const topbarActionsStore = new TopbarActionsStore();
-globalSettings.applyBuildbotConfig(hardcodedConfig);
-globalSettings.load();
+  const sidebarStore = new SidebarStore();
+  const topbarStore = new TopbarStore();
+  const topbarActionsStore = new TopbarActionsStore();
+  globalSettings.applyBuildbotConfig(buildbotFrontendConfig);
+  globalSettings.load();
 
-root.render(
+  root.render(
     <DataClientContext.Provider value={dataClient}>
-      <ConfigContext.Provider value={hardcodedConfig}>
+      <ConfigContext.Provider value={buildbotFrontendConfig}>
         <TimeContext.Provider value={timeStore}>
           <StoresContext.Provider value={{
             sidebar: sidebarStore,
@@ -70,15 +50,30 @@ root.render(
             topbarActions: topbarActionsStore,
           }}>
             <HashRouter>
-              <App />
+              <App/>
             </HashRouter>
           </StoresContext.Provider>
         </TimeContext.Provider>
       </ConfigContext.Provider>
     </DataClientContext.Provider>
-);
+  );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+  // If you want to start measuring performance in your app, pass a function
+  // to log results (for example: reportWebVitals(console.log))
+  // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+  reportWebVitals();
+};
+
+const windowAny: any = window;
+if ("buildbotFrontendConfig" in windowAny) {
+  doRender(windowAny.buildbotFrontendConfig);
+} else {
+  // fallback during development
+  axios.get("config").then(response => {
+    const buildbotFrontendConfig: Config = response.data;
+    // Override buildbot URL so that it does not complain about wrong configuration.
+    buildbotFrontendConfig.buildbotURL =
+      `${window.location.protocol}://${window.location.hostname}${window.location.port}/`;
+    doRender(buildbotFrontendConfig);
+  });
+}

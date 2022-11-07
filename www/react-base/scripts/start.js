@@ -121,6 +121,7 @@ checkBrowsers(paths.appPath, isInteractive)
     // backend URLs by a browser and instead directs to the app. Interestingly tools such as wget are
     // proxied correctly.
     const proxyConfigWithRoot = {
+      '/config': proxyConfig[0],
       '/api/v2': proxyConfig[0],
       '/ws': proxyConfig[0],
     };
