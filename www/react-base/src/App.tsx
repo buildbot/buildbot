@@ -15,6 +15,7 @@ import TopbarActions from "./components/TopbarActions/TopbarActions";
 import Loginbar from "./components/Loginbar/Loginbar";
 
 // import the views so that they register themselves in the plugin system
+import './views/AboutView/AboutView';
 import './views/HomeView/HomeView';
 import './views/BuildersView/BuildersView';
 import './views/BuilderView/BuilderView';
