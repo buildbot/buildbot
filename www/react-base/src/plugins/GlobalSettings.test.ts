@@ -48,12 +48,14 @@ describe('GlobalSettings', () => {
       "caption": "group caption",
       "items": {
         "setting1": {
+          "caption": "caption1",
           "defaultValue": "default1",
           "name": "setting1",
           "type": "string",
           "value": "default1"
         },
         "setting2": {
+          "caption": "caption2",
           "defaultValue": "default2",
           "name": "setting2",
           "type": "string",
@@ -87,6 +89,7 @@ describe('GlobalSettings', () => {
       "caption": "group caption",
       "items": {
         "setting2": {
+          "caption": "caption2",
           "defaultValue": "default2",
           "name": "setting2",
           "type": "string",
@@ -121,6 +124,7 @@ describe('GlobalSettings', () => {
       "caption": "group caption",
       "items": {
         "setting1": {
+          "caption": "caption1",
           "defaultValue": "default1",
           "name": "setting1",
           "type": "string",

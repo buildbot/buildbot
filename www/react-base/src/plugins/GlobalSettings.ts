@@ -39,6 +39,7 @@ type SettingItem = {
   type: string;
   value: SettingValue;
   defaultValue: SettingValue;
+  caption: string;
 }
 
 type SettingGroup = {
@@ -246,7 +247,8 @@ export class GlobalSettings {
           name: item.name,
           type: item.type,
           value: item.defaultValue,
-          defaultValue: item.defaultValue
+          defaultValue: item.defaultValue,
+          caption: item.caption,
         };
       }
       return;
@@ -259,6 +261,7 @@ export class GlobalSettings {
         type: item.type,
         value: item.defaultValue,
         defaultValue: item.defaultValue,
+        caption: item.caption,
       };
     }
     this.groups[config.name] = {
