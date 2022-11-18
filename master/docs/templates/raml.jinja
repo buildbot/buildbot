@@ -11,6 +11,11 @@
     {% if 'properties' in type -%}
     {% for key, value in type.properties.items() -%}
     :attr {{value.type}} {{key}}: {{raml.reindent(value.description, 4*2)}}
+        {% if 'properties' in value %}
+        {% for prop_name, prop_type in value.properties.items() -%}
+        * ``{{prop_name}}`` (*{{prop_type}}*)
+        {% endfor %}
+        {% endif %}{# if value has properties #}
     {% endfor %}
 {% if 'example' in type -%}
 
