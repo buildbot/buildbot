@@ -45,7 +45,7 @@ class P4(Source):
 
     name = 'p4'
 
-    renderables = ['mode', 'p4base', 'p4client', 'p4viewspec', 'p4branch', 'p4passwd']
+    renderables = ['mode', 'p4base', 'p4client', 'p4viewspec', 'p4branch', 'p4passwd', 'p4port']
     possible_modes = ('incremental', 'full')
 
     def __init__(self, mode='incremental',
