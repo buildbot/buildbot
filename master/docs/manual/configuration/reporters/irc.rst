@@ -125,7 +125,8 @@ The following parameters are accepted by this class:
 
     ``worker``
         A worker is missing. A notification is also send when the previously reported missing worker connects again.
-    This parameter can be changed during run-time by sending the ``notify`` command to the bot. Note however, that at the buildbot restart or reconfig the notifications listed here will be turned on for the specified channel and nicks. On the other hand, removing events from this parameters will not automatically stop notifications for them (you need to turn them off for every channel with the ``notify`` command).
+
+This parameter can be changed during run-time by sending the ``notify`` command to the bot. Note however, that at the buildbot restart or reconfig the notifications listed here will be turned on for the specified channel and nicks. On the other hand, removing events from this parameters will not automatically stop notifications for them (you need to turn them off for every channel with the ``notify`` command).
 
 ``noticeOnChannel``
    (optional, disabled by default)
