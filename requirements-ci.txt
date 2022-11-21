@@ -111,7 +111,7 @@ termcolor==2.1.1
 testtools==2.5.0
 toml==0.10.2
 tomli==2.0.1
-tomlkit==0.11.4
+tomlkit==0.11.6
 towncrier==21.9.0
 treq==22.2.0
 Twisted==22.4.0
