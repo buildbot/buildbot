@@ -91,8 +91,42 @@ The following parameters are accepted by this class:
 ``notify_events``
     (optional)
     A list or set of events to be notified on the IRC channels.
-    At the moment, irc bot can listen to build 'start' and 'finish' events. It can also notify about missing workers and their return.
-    This parameter can be changed during run-time by sending the ``notify`` command to the bot. Note however, that at the buildbot restart or reconfig the notifications listed here will be turned on for the specified channel and nicks. On the other hand, removing events from this parameters will not automatically stop notifications for them (you need to turn them off for every channel with the ``notify`` command).
+    Available events to be notified are:
+
+    ``started``
+        A build has started.
+
+    ``finished``
+        A build has finished.
+
+    ``success``
+        A build finished successfully.
+
+    ``failure``
+        A build failed.
+
+    ``exception``
+        A build generated and exception.
+
+    ``cancelled``
+        A build was cancelled.
+
+    ``problem``
+        The previous build result was success or warnings, but this one ended with failure or exception.
+
+    ``recovery``
+        This is the opposite of ``problem``: the previous build result was failure or exception and this one ended with success or warnings.
+
+    ``worse``
+        A build state was worse than the previous one (so e.g. it ended with warnings and the previous one was successful).
+
+    ``better``
+        A build state was better than the previous one.
+
+    ``worker``
+        A worker is missing. A notification is also send when the previously reported missing worker connects again.
+
+This parameter can be changed during run-time by sending the ``notify`` command to the bot. Note however, that at the buildbot restart or reconfig the notifications listed here will be turned on for the specified channel and nicks. On the other hand, removing events from this parameters will not automatically stop notifications for them (you need to turn them off for every channel with the ``notify`` command).
 
 ``noticeOnChannel``
    (optional, disabled by default)
