@@ -291,8 +291,8 @@ const BuildersView = observer(() => {
       return (
         <span>
           <span onClick={() => toggleTag(tags, tag, searchParams, setSearchParams)}
-                className={"label clickable " +
-                  (isTagFiltered(tags, tag) ? 'label-success': 'label-default')}>
+                className={"bb-builder-tag clickable " +
+                  (isTagFiltered(tags, tag) ? 'bb-builder-tag-filtered': '')}>
               {tag}
             </span>
           &nbsp;

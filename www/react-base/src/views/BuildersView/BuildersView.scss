@@ -20,3 +20,20 @@
   margin-left: 0;
   margin-right: 0;
 }
+
+.bb-builder-tag {
+  padding: 0.5em 0.6em 0.3em 0.6em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background-color: #777777;
+  text-align: center;
+  white-space: nowrap;
+  border-radius: 0.25em;
+}
+
+.bb-builder-tag-filtered {
+  background-color: #5cb85c;
+}
+
