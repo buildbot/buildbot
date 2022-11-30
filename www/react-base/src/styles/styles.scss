@@ -144,7 +144,7 @@ span:hover>.mouse-over-only  {display: inline;}
 .glyphicon-ok:before { content: $fa-var-check; }
 .glyphicon-remove:before { content: $fa-var-times; }
 
-body {
+#root, .modal .modal-dialog {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 20px;
