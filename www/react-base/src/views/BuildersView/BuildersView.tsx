@@ -34,6 +34,7 @@ import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {globalSettings} from "../../plugins/GlobalSettings";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
+import {Badge} from "react-bootstrap";
 
 const connected2class = (worker: Worker) => {
   if (worker.connected_to.length > 0) {
@@ -254,25 +255,22 @@ const BuildersView = observer(() => {
   if (tags.length < 5) {
     for (const tag of tags) {
       enabledTagsElements.push((
-        <span>
-          <span onClick={() => toggleTag(tags, tag, searchParams, setSearchParams)}
-                className="label label-success">{tag}</span>&nbsp;
-        </span>
+        <>
+          <Badge variant="success"
+                 onClick={() => toggleTag(tags, tag, searchParams, setSearchParams)}>{tag}</Badge>
+          &nbsp;
+        </>
       ));
     }
   } else {
     enabledTagsElements.push((
-      <span>
-        <span className="label label-success">{tags.length} tags</span>
-      </span>
+      <Badge variant="success">{tags.length} tags</Badge>
     ));
   }
   if (tags.length > 0) {
     enabledTagsElements.push((
-      <span>
-        <span onClick={() => setTags([], searchParams, setSearchParams)}
-              className="label clickable label-danger">x</span>
-      </span>
+      <Badge variant="danger" onClick={() => setTags([], searchParams, setSearchParams)}
+             className="clickable">x</Badge>
     ));
   }
 
