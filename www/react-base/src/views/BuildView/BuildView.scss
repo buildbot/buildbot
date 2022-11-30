@@ -1,0 +1,15 @@
+.bb-build-view-pager {
+  text-align: center;
+
+  li {
+    display: inline;
+  }
+
+  li.previous {
+    float: left;
+  }
+
+  li.next {
+    float: right;
+  }
+}

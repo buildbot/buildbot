@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './BuildView.scss';
 import {observer} from "mobx-react";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {globalSettings} from "../../plugins/GlobalSettings";
@@ -258,7 +259,7 @@ const BuildView = observer(() => {
     }
 
     return (
-      <ul className="pager">
+      <ul className="bb-build-view-pager">
         <li className={"previous " + (build.number === 1 ? " disabled" : "")}>
           {renderPrevLink()}
         </li>
