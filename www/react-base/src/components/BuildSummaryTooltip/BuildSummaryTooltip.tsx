@@ -26,6 +26,7 @@ import {results2class, results2text} from "../../util/Results";
 import {durationFormat, useCurrentTime} from "../../util/Moment";
 import {getPropertyValueOrDefault} from "../../util/Properties";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
+import BadgeRound from "../BadgeRound/BadgeRound";
 
 const isStepDisplayed = (step: Step) => {
   return !step.hidden;
@@ -70,7 +71,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
       <div className="flex-row">
         <div className="flex-grow-1">
           <span>{builder !== null ? limitStringLength(builder.name, 80) : ''}</span>
-          <span className={"badge-status" + buildResultClass}>{build.number}</span>
+          <BadgeRound className={buildResultClass}>{build.number.toString()}</BadgeRound>
           { reason !== null
             ? <span>&nbsp; | {reason}</span>
             : <></>
@@ -144,7 +145,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
       <li key={index} className="list-group-item">
         <div className="clearfix">
           <span className="pull-left">
-            <span className={"badge-status " + results2class(step, 'pulse')}>{step.number}</span>
+            <BadgeRound className={results2class(step, 'pulse')}>{step.number.toString()}</BadgeRound>
             &nbsp;
           </span>
           <span className="pull-left">{limitStringLength(step.name, 40)}

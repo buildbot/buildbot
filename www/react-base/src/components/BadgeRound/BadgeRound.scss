@@ -1,0 +1,84 @@
+@import "~bootstrap/scss/bootstrap";
+
+.bb-badge-round {
+  display: inline-block;
+  min-width: 10px;
+  padding: 3px 7px;
+  font-size: $font-size-sm;
+  font-weight: $badge-font-weight;
+  line-height: $font-size-sm;
+  vertical-align: baseline;
+  white-space: nowrap;
+  text-align: center;
+  border-radius: 10px;
+  transition: all 100ms cubic-bezier(0.25, 0.25, 0.75, 0.75);
+
+  .badge-active {
+    display: none;
+  }
+  &:hover,
+  &:focus {
+    -webkit-transform: scale(1.3);
+    transform: scale(1.3);
+    .badge-active {
+      display: inline-block;
+    }
+    .badge-inactive {
+      display: none;
+    }
+  }
+
+  &.results_SUCCESS, &.worker_CONNECTED {
+    color: #000;
+    background-color: #8d4;
+    border-color: #4F8530;
+  }
+
+  &.results_WARNINGS {
+    color: #FFFFFF;
+    background-color: #fa3;
+    border-color: #C29D46;
+  }
+
+  &.results_FAILURE, &.worker_DISCONNECTED {
+    color: #000;
+    background-color: #e88;
+    border-color: #A77272;
+  }
+
+  &.results_SKIPPED {
+    color: #000;
+    background: #AADDEE;
+    border-color: #AADDEE;
+  }
+
+  &.results_EXCEPTION {
+    color: #FFFFFF;
+    background-color: #c6c;
+    border-color: #ACA0B3;
+  }
+
+  &.results_RETRY {
+    color: #000;
+    background-color: #ecc;
+    border-color: #ACA0B3;
+  }
+
+  &.results_CANCELLED {
+    color: #000;
+    background-color: #ecc;
+    border-color: #ACA0B3;
+  }
+
+  &.results_PENDING {
+    color: #000;
+    background-color: #E7D100;
+    border-color: #ACA0B3;
+  }
+
+  &.results_UNKNOWN {
+    color: #000;
+    background-color: #EEE;
+    border-color: #ACA0B3;
+  }
+}

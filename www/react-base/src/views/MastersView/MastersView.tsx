@@ -28,6 +28,7 @@ import {durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {Builder} from "../../data/classes/Builder";
+import BadgeRound from "../../components/BadgeRound/BadgeRound";
 
 
 const MastersView = observer(() => {
@@ -65,7 +66,9 @@ const MastersView = observer(() => {
     return masterIdToConnectedWorkers[master.id].map(worker => (
       <span>
         <Link to={`/workers/${worker.id}`}>
-          <span className="badge-status results_SUCCESS">{worker.name}</span>
+          <BadgeRound className="results_SUCCESS">
+            {worker.name}
+          </BadgeRound>
         </Link>
       </span>
     ));

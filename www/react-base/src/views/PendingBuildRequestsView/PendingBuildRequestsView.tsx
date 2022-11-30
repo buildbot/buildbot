@@ -25,6 +25,7 @@ import {globalSettings} from "../../plugins/GlobalSettings";
 import {Buildrequest} from "../../data/classes/Buildrequest";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import {getPropertyValueOrDefault} from "../../util/Properties";
+import BadgeRound from "../../components/BadgeRound/BadgeRound";
 
 const PendingBuildRequestsView = observer(() => {
   const now = useCurrentTime();
@@ -59,7 +60,7 @@ const PendingBuildRequestsView = observer(() => {
         <tr key={buildRequest.id}>
           <td>
             <Link to={`/buildrequests/${buildRequest.id}`}>
-              <span className="badge-status">{buildRequest.id}</span>
+              <BadgeRound className=''>{buildRequest.id.toString()}</BadgeRound>
             </Link>
           </td>
           <td>

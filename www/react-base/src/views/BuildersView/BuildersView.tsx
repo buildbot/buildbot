@@ -33,6 +33,7 @@ import {StoresContext} from "../../contexts/Stores";
 import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {globalSettings} from "../../plugins/GlobalSettings";
+import BadgeRound from "../../components/BadgeRound/BadgeRound";
 
 const connected2class = (worker: Worker) => {
   if (worker.connected_to.length > 0) {
@@ -307,17 +308,14 @@ const BuildersView = observer(() => {
       workerElements = workers.map(worker => {
 
         const shownWorkerName = () => (
-          <span title={worker.name} className={"badge-status " + connected2class(worker)}>
-            {worker.name}
-          </span>
+          <BadgeRound title={worker.name} className={connected2class(worker)}/>
         );
 
         const hoverWorkerName = () => (
-          <span title={worker.name}
-                className={"badge-status " + connected2class(worker)}>
-              <div className="badge-inactive">{worker.workerid}</div>
-              <div className="badge-active">{worker.name}</div>
-            </span>
+          <BadgeRound title={worker.name} className={connected2class(worker)}>
+            <div className="badge-inactive">{worker.workerid}</div>
+            <div className="badge-active">{worker.name}</div>
+          </BadgeRound>
         );
 
         return (

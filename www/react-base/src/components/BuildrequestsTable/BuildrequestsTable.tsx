@@ -21,6 +21,7 @@ import DataCollection from "../../data/DataCollection";
 import {Link} from "react-router-dom";
 import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "../../util/Properties";
 import {Buildrequest} from "../../data/classes/Buildrequest";
+import BadgeRound from "../BadgeRound/BadgeRound";
 
 type BuildRequestsTableProps = {
   buildrequests: DataCollection<Buildrequest>;
@@ -45,7 +46,7 @@ const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableProps) =
         <tr key={br.buildrequestid}>
           <td>
             <Link to={`/buildrequests/${br.buildrequestid}`}>
-              <span className="badge-status">{br.buildrequestid}</span>
+              <BadgeRound className=''>{br.buildrequestid.toString()}</BadgeRound>
             </Link>
           </td>
           <td>

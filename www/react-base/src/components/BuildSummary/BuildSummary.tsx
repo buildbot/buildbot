@@ -35,6 +35,7 @@ import LogPreview from "../LogPreview/LogPreview";
 import {useStateWithParentTracking} from "../../util/React";
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import BuildRequestSummary from "../BuildRequestSummary/BuildRequestSummary";
+import BadgeRound from "../BadgeRound/BadgeRound";
 
 enum DetailLevel {
   None = 0,
@@ -183,7 +184,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
     <li key={step.id} className="list-group-item">
       <div onClick={() => setFullDisplay(!fullDisplay)}>
         {renderState()}
-        <span className={"badge-status " + results2class(step, 'pulse')}>{step.number}</span>
+        <BadgeRound className={results2class(step, 'pulse')}>{step.number.toString()}</BadgeRound>
         {maybeRenderArrowExpander()}
         {step.name}
         {maybeRenderPendingBuildCount()}

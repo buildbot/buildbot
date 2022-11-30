@@ -40,6 +40,7 @@ import {Change} from "../../data/classes/Change";
 import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "../../util/Properties";
 import {results2class} from "../../util/Results";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
+import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import RawData from "../../components/RawData/RawData";
 import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
 import ChangesTable from "../../components/ChangesTable/ChangesTable";
@@ -217,7 +218,7 @@ const BuildView = observer(() => {
       if (buildnumber > 1 && prevBuild !== null) {
         return (
           <Link to={`/builders/${builderid}/builds/${prevBuild.number}`}>
-            <span className={"badge-status " + results2class(prevBuild, 'pulse')}>&larr;</span>
+            <BadgeRound className={results2class(prevBuild, 'pulse')}>←</BadgeRound>
             <span className="nomobile">&nbsp;Previous</span>
           </Link>
         );
@@ -244,8 +245,8 @@ const BuildView = observer(() => {
       if (!lastBuild && nextBuild !== null) {
         return (
           <Link to={`/builders/${builderid}/builds/${nextBuild.number}`}>
-            <span className={"badge-status " + results2class(nextBuild, 'pulse')}>&larr;</span>
             <span className="nomobile">&nbsp;Next</span>
+            <BadgeRound className={results2class(nextBuild, 'pulse')}>→</BadgeRound>
           </Link>
         )
       }

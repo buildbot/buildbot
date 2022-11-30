@@ -24,6 +24,7 @@ import DataCollection from "../../data/DataCollection";
 import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {observer} from "mobx-react";
+import BadgeRound from "../BadgeRound/BadgeRound";
 
 export const getWorkerStatusIcon = (worker: Worker) => {
   if (worker.paused) {
@@ -102,10 +103,9 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
                       return (
                         <div key={masterid}>
                           <Link to={`/masters/${masterid}`}>
-                            <span title={master !== null ? master.name : ""}
-                                  className="badge-status results_SUCCESS">
-                              {masterid}
-                            </span>
+                            <BadgeRound title={master !== null ? master.name : ""} className="results_SUCCESS">
+                              {masterid.toString()}
+                            </BadgeRound>
                           </Link>
                         </div>
                       );
