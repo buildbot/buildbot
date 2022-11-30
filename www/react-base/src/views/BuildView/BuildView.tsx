@@ -63,7 +63,6 @@ const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStoppi
     } else {
       actions.push({
         caption: "Rebuild",
-        extraClass: "btn-default",
         action: doRebuild
       });
     }
@@ -77,7 +76,6 @@ const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStoppi
     } else {
       actions.push({
         caption: "Stop",
-        extraClass: "btn-default",
         action: doStop
       });
     }

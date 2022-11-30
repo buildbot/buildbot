@@ -17,10 +17,10 @@
 
 import './Topbar.scss'
 import {Link} from "react-router-dom";
-import {useState} from "react";
 import TopbarStore from "../../stores/TopbarStore";
 import {computed} from "mobx";
 import {observer} from "mobx-react";
+import {Nav, Navbar} from "react-bootstrap";
 
 export type TopbarItem = {
   route: string | null,
@@ -34,42 +34,30 @@ type TopbarProps = {
 }
 
 const Topbar = observer(({store, appTitle, children}: TopbarProps) => {
-  const [collapse, setCollapse] = useState(true);
-
   const elements = computed(() => store.items.map((item, index) => {
     if (item.route === null) {
       return (
-        <li key={index}><span>{item.caption}</span></li>
+        <li className="nav-item" key={index}><span>{item.caption}</span></li>
       );
     }
     return (
-      <li key={index}><Link to={item.route}>{item.caption}</Link></li>
+      <li className="nav-item" key={index}>
+        <Link className="nav-link" to={item.route}>{item.caption}</Link>
+      </li>
     );
   })).get();
 
   return (
-    <nav className="navbar navbar-default">
-      <div className="container-fluid">
-        <div className="navbar-header">
-          <button type="button" onClick={() => setCollapse(!collapse)}
-                  aria-expanded="false" className="navbar-toggle collapsed">
-            <span className="sr-only">Toggle navigation</span>
-            <span className="icon-bar"></span>
-            <span className="icon-bar"></span>
-            <span className="icon-bar"></span>
-          </button>
-          <a className="navbar-brand">{appTitle}</a>
-          <ol className="breadcrumb">
-            {elements}
-          </ol>
-        </div>
-        <div className={"navbar-collapse collapse pull-right" + (collapse ? "" : " in")}>
-          <ul className="nav navbar-nav">
-            {children}
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <Navbar bg="light" expand="lg">
+      <Navbar.Brand>{appTitle}</Navbar.Brand>
+      <Navbar.Toggle aria-controls="bb-topbar-navbar-nav" />
+      <Navbar.Collapse id="bb-topbar-navbar-nav">
+        <Nav className="mr-auto bb-topbar-navbar-elements">
+          {elements}
+        </Nav>
+        {children}
+      </Navbar.Collapse>
+    </Navbar>
   );
 });
 

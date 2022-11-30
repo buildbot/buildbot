@@ -1,3 +1,5 @@
+@import "bootstrap";
+
 $gl-sidebar-small-threshold: 600px;
 
 .fa.fa-ringing {
@@ -42,18 +44,42 @@ $gl-sidebar-small-threshold: 600px;
   50% { transform: rotate(0deg); }
   100% { }
 }
-.navbar-nav > li {
-  float: left;
+
+// Reset link color for hierarchy links because otherwise it's not clear which of these are clickable
+.navbar-light .bb-topbar-navbar-elements .nav-link {
+  color: $link-color;
+
+  @include hover() {
+    color: $link-hover-color;
+    text-decoration: $link-hover-decoration;
+  }
 }
-.navbar .breadcrumb {
-  margin-top: 6px;
-  font-size: 16px;
-  display: inline-block;
+
+// Positioning of the separators between hierarchy links.
+.bb-topbar-navbar-elements {
+  .nav-item:not(:first-child)::before {
+    padding: 0.5rem;
+    display: inline-block;
+    content: "/";
+    color: #cccccc;
+  }
+
+  .nav-link {
+    display: inline-block;
+  }
+}
+
+// Align navbar with sidebar
+.navbar {
+  padding-bottom: 0;
+  padding-top: 0;
 }
 .navbar .navbar-brand {
-  padding-top: 14px;
+  padding-top: 10px;
   font-size: 21px;
+  padding-bottom: 10px;
 }
+
 @media (max-width: $gl-sidebar-small-threshold) {
   .navbar .navbar-brand {
     display: none;
@@ -63,6 +89,7 @@ $gl-sidebar-small-threshold: 600px;
     padding-left: 0px;
   }
 }
+
 img.avatar {
   background-color: #ccc;
   border-radius: 50%;

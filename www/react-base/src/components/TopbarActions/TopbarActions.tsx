@@ -17,12 +17,14 @@
 
 import TopbarActionsStore from "../../stores/TopbarActionsStore";
 import {observer} from "mobx-react";
+import {Button, Form} from "react-bootstrap";
+import {ButtonVariant} from "react-bootstrap/types";
 
 export type TopbarAction = {
   caption: string;
   icon?: string;
   help?: string;
-  extraClass?: string;
+  variant?: ButtonVariant;
   action: () => void;
 }
 
@@ -34,20 +36,19 @@ const TopbarActions = observer(({store}: TopbarActionsProps) => {
   const elements = store.actions.map(action => {
     return (
       <div className="form-group">
-        <button className={"btn btn-default " + (action.extraClass ?? "")} type="button"
-                onClick={action.action} title={action.help ?? ""}>
+        <Button variant={action.variant} onClick={action.action} title={action.help ?? ""}>
           {action.icon ?  <><i className={"fa fa-" + action.icon}></i><span>&nbsp;</span></> : <></> }
           {action.caption}
-        </button>
+        </Button>
         &nbsp;
       </div>
     );
   });
 
   return (
-    <form className="navbar-form navbar-left">
+    <Form>
       {elements}
-    </form>
+    </Form>
   );
 });
 
