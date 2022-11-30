@@ -76,7 +76,7 @@ const buildTopbarActions = (builds: DataCollection<Build>,
 
   for (const sch of forceschedulers.array) {
     actions.push({
-      caption: sch.button_name[0],
+      caption: sch.button_name,
       extraClass: "btn-primary",
       action: () => { invokeScheduler(sch); }
     });

@@ -24,7 +24,7 @@ export class Forcescheduler extends BaseClass {
   name!: string;
   all_fields!: any[];
   builder_names!: string[];
-  button_name!: string[];
+  button_name!: string;
   label!: string;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
