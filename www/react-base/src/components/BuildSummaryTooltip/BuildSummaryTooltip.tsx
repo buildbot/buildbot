@@ -28,6 +28,7 @@ import {getPropertyValueOrDefault} from "../../util/Properties";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
 import BadgeRound from "../BadgeRound/BadgeRound";
 import BadgeStatus from "../BadgeStatus/BadgeStatus";
+import Card from 'react-bootstrap/Card';
 
 const isStepDisplayed = (step: Step) => {
   return !step.hidden;
@@ -162,15 +163,12 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
   });
 
   return (
-    <div style={{marginBottom: "0px"}}
-         className={"panel panel-default" + buildResultClass}>
-      <div className="panel-heading">
-        {headerElements}
-      </div>
+    <Card style={{marginBottom: "0px"}} className={buildResultClass}>
+      <Card.Header>{headerElements}</Card.Header>
       <ul className="list-group">
         {stepElements}
       </ul>
-    </div>
+    </Card>
   );
 });
 
