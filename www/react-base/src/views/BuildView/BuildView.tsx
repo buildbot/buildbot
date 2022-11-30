@@ -317,7 +317,7 @@ const BuildView = observer(() => {
         {build !== null ? renderPager(build) : <></>}
       </nav>
       <div className="row">
-        <Tabs>
+        <Tabs className="bb-build-view-tabs">
           <TabList>
             <Tab>Build steps</Tab>
             <Tab>Build Properties</Tab>
