@@ -349,28 +349,26 @@ const BuildersView = observer(() => {
 
   // FIXME: implement pagination
   return (
-    <div className="container">
-      <div className="row">
-        <form role="search" style={{width: "150px"}}>
-          <input type="text" value={builderNameFilter}
-                 onChange={e => setBuilderNameFilter(e.target.value)}
-                 placeholder="Search for builders" className="bb-builders-view-form-control"/>
-        </form>
-        <table className="table table-hover table-striped table-condensed">
-          <tbody>
-            <tr>
-              <th>Builder Name</th>
-              <th>Builds</th>
-              <th>
-                {tagHelpElement}
-                {enabledTagsElements}
-              </th>
-              <th style={{width: "20%px"}}>Workers</th>
-            </tr>
-            {builderRowElements}
-          </tbody>
+    <div className="bb-builders-view-container">
+      <form role="search" style={{width: "150px"}}>
+        <input type="text" value={builderNameFilter}
+               onChange={e => setBuilderNameFilter(e.target.value)}
+               placeholder="Search for builders" className="bb-builders-view-form-control"/>
+      </form>
+      <table className="table table-hover table-striped table-condensed">
+        <tbody>
+          <tr>
+            <th>Builder Name</th>
+            <th>Builds</th>
+            <th>
+              {tagHelpElement}
+              {enabledTagsElements}
+            </th>
+            <th style={{width: "20%px"}}>Workers</th>
+          </tr>
+          {builderRowElements}
+        </tbody>
         </table>
-      </div>
     </div>
   );
 
