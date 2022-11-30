@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './BuildsTable.scss';
 import {observer} from "mobx-react";
 import {Builder} from "../../data/classes/Builder";
 import {Build} from "../../data/classes/Build";
@@ -98,7 +99,7 @@ const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
   }
 
   return (
-    <div className="row">
+    <div className="bb-build-table-container">
       <>
         <h4>Builds:</h4>
         { builds.array.length === 0 ? <span>None</span> : tableElement() }
