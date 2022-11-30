@@ -13,7 +13,7 @@ permissions:
 jobs:
   db:
     name: DB / ${{ matrix.name }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
       fail-fast: false
