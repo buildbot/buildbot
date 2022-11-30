@@ -15,6 +15,8 @@
   Copyright Buildbot Team Members
 */
 
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
 import {observer} from "mobx-react";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import DataCollection from "../../data/DataCollection";
@@ -80,8 +82,13 @@ const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableProps) =
   return (
     <div className="row">
       <>
-        <h4>Build requests:</h4>
-        { buildrequests.array.length === 0 ? <span>None</span> : tableElement() }
+        <h4>
+          <Tabs defaultActiveKey={1}>
+            <Tab eventKey={1} title="Build requests">
+              {buildrequests.array.length === 0 ? <span>None</span> : tableElement()}
+            </Tab>
+          </Tabs>
+        </h4>
       </>
     </div>
   )
