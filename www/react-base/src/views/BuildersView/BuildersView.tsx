@@ -227,7 +227,7 @@ const BuildersView = observer(() => {
       <i style={{position: "relative"}} className="fa fa-question-circle clickable">
         {showTagHelp
           ? <div style={{display: "block", minWidth: "600px", left:"-300px", top: "30px"}}
-                 className="popover bottom anim-popover">
+                 className="bb-builders-view-help-popover popover bottom anim-popover">
               <h5 className="popover-title">Tags filtering</h5>
               <div className="popover-content">
                 <p><b>
