@@ -208,6 +208,7 @@ $gl-sidebar-width: 600px;
     .container {
       flex-grow: 1;
       width: 100%;
+      max-width: 100%;
     }
     .container-fluid {
       flex-grow: 1;
