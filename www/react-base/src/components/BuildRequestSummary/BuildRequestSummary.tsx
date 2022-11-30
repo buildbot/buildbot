@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './BuildRequestSummary.less';
+import './BuildRequestSummary.scss';
 import {observer} from "mobx-react";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {Buildrequest} from "../../data/classes/Buildrequest";

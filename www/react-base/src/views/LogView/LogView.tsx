@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './LogView.less';
+import './LogView.scss';
 import {observer} from "mobx-react";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {useContext} from "react";

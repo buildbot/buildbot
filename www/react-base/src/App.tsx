@@ -1,7 +1,7 @@
 import React, {useContext} from 'react';
 import './App.css';
 import './globals';
-import './styles/styles.less';
+import './styles/styles.scss';
 import 'bootstrap';
 import {Routes, Route} from "react-router-dom";
 

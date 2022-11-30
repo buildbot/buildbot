@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './Topbar.less'
+import './Topbar.scss'
 import {Link} from "react-router-dom";
 import {useState} from "react";
 import TopbarStore from "../../stores/TopbarStore";

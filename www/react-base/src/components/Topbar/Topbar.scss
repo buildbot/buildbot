@@ -1,4 +1,4 @@
-@gl-sidebar-small-threshold: 600px;
+$gl-sidebar-small-threshold: 600px;
 
 .fa.fa-ringing {
   -webkit-animation-name: 'ring_animation';
@@ -54,7 +54,7 @@
   padding-top: 14px;
   font-size: 21px;
 }
-@media (max-width: @gl-sidebar-small-threshold) {
+@media (max-width: $gl-sidebar-small-threshold) {
   .navbar .navbar-brand {
     display: none;
   }

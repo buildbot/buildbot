@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './ChangeUserAvatar.less';
+import './ChangeUserAvatar.scss';
 import {Link} from "react-router-dom";
 
 type ChangeUserAvatarProps = {

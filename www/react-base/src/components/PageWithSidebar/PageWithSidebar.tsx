@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './PageWithSidebar.less';
+import './PageWithSidebar.scss';
 import {observer} from "mobx-react";
 import {GlobalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import SidebarStore from "../../stores/SidebarStore";

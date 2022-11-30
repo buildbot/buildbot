@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './ChangeDetails.less';
+import './ChangeDetails.scss';
 import {Change} from "../../data/classes/Change";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import {useState} from "react";

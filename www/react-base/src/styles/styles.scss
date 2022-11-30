@@ -1,10 +1,10 @@
-@import "~bootstrap/less/bootstrap.less";
-@import "~font-awesome/less/font-awesome.less";
+@import "~bootstrap/scss/bootstrap";
+@import "~font-awesome/scss/font-awesome.scss";
 @import "~react-tabs/style/react-tabs";
-@import "./animations.less";
-@import "./colors.less";
-@import "./mobile.less";
-@import "./guanlecoja.less";
+@import "animations.scss";
+@import "colors.scss";
+@import "mobile.scss";
+@import "guanlecoja.scss";
 /* base css for angular, don't display anything until angular is running */
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important;
@@ -34,7 +34,7 @@ body.hundredpercent {
 
 /* make the sidebar be on the back of the modals dialog */
 .sidebar {
-  z-index: (@zindex-modal - 1) !important;
+  z-index: ($zindex-modal - 1) !important;
 }
 
 /* button bar inside the breadcrum, used for forcesched buttons */
@@ -54,13 +54,13 @@ body.hundredpercent {
   display: inline-block;
   min-width: 10px;
   padding: 3px 7px;
-  font-size: @font-size-small;
-  font-weight: @badge-font-weight;
-  line-height: @badge-line-height;
+  font-size: $font-size-sm;
+  font-weight: $badge-font-weight;
+  line-height: $font-size-sm;
   vertical-align: baseline;
   white-space: nowrap;
   text-align: center;
-  border-radius: @badge-border-radius;
+  border-radius: $badge-border-radius;
   transition: all 100ms cubic-bezier(0.250, 0.250, 0.750, 0.750);
   .badge-active{
     display: none;
@@ -174,5 +174,5 @@ span:hover>.mouse-over-only  {display: inline;}
 
 /* glyphicon to font awesome translation, for angular-bootstrap-multiselect */
 .glyphicon { font-family: 'FontAwesome'; }
-.glyphicon-ok:before { content: @fa-var-check; }
-.glyphicon-remove:before { content: @fa-var-times; }
+.glyphicon-ok:before { content: $fa-var-check; }
+.glyphicon-remove:before { content: $fa-var-times; }

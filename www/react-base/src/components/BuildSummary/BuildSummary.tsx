@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './BuildSummary.less';
+import './BuildSummary.scss';
 import {observer} from "mobx-react";
 import {results2class, results2text, SUCCESS} from "../../util/Results";
 import {useContext, useState} from "react";

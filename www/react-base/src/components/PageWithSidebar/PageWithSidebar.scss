@@ -1,14 +1,14 @@
 /* Based on http://ehesp.github.io/Responsive-Dashboard/ by Elliot Hesp */
-@gl-sidebar-transition-time: 0.2s;
-@gl-sidebar-small-threshold: 600px;
-@gl-sidebar-width: 600px;
+$gl-sidebar-transition-time: 0.2s;
+$gl-sidebar-small-threshold: 600px;
+$gl-sidebar-width: 600px;
 .fa-45{
   transform: rotate(45deg);
   -webkit-transform: rotate(45deg);
 }
 .gl-page-with-sidebar {
   padding-left: 70px;
-  @media (max-width: @gl-sidebar-small-threshold) {
+  @media (max-width: $gl-sidebar-small-threshold) {
     padding-left: 30px;
   }
   height: 100%;
@@ -67,9 +67,9 @@
   &.active-add, &.active-remove {
     // ngAnimate wants an animation on the object it watches
     //  even if it is not actually animated
-    transition: all @gl-sidebar-transition-time ease-out 0s;
+    transition: all $gl-sidebar-transition-time ease-out 0s;
     .sidebar {
-      transition: all @gl-sidebar-transition-time ease-out 0s;
+      transition: all $gl-sidebar-transition-time ease-out 0s;
 
     }
   }
@@ -82,7 +82,7 @@
     -ms-user-select: none;
     margin-left: -150px;
 
-    @media (max-width: @gl-sidebar-small-threshold) {
+    @media (max-width: $gl-sidebar-small-threshold) {
       width: 210px;
     }
     left: -30px;
@@ -105,7 +105,7 @@
         float: left;
         text-decoration: none;
         width: 250px;
-        @media (max-width: @gl-sidebar-small-threshold) {
+        @media (max-width: $gl-sidebar-small-threshold) {
           width: 210px;
         }
       }
@@ -120,7 +120,7 @@
           font-size: 18px;
           padding-right: 28px;
           line-height: 50px;
-          @media (max-width: @gl-sidebar-small-threshold) {
+          @media (max-width: $gl-sidebar-small-threshold) {
             padding-right: 8px;
           }
         }
@@ -152,7 +152,7 @@
           padding-right: 29px;
           line-height: 40px;
           width: 70px;
-          @media (max-width: @gl-sidebar-small-threshold) {
+          @media (max-width: $gl-sidebar-small-threshold) {
             width: 50px;
           }
         }
@@ -160,10 +160,10 @@
           text-indent: 25px;
         }
         &.subitem {
-          transition: height @gl-sidebar-transition-time ease-out 0s;
+          transition: height $gl-sidebar-transition-time ease-out 0s;
           a {
             padding-left:20px;
-            transition: line-height @gl-sidebar-transition-time ease-out 0s, color @gl-sidebar-transition-time ease-out 0s,  background @gl-sidebar-transition-time ease-out 0s;;
+            transition: line-height $gl-sidebar-transition-time ease-out 0s, color $gl-sidebar-transition-time ease-out 0s,  background $gl-sidebar-transition-time ease-out 0s;;
           }
           &:not(.active) {
             height: 0px;
@@ -201,7 +201,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    transition: margin-left @gl-sidebar-transition-time ease-out 0s;
+    transition: margin-left $gl-sidebar-transition-time ease-out 0s;
     padding-left: 0px;
     margin-left: 0px;
     overflow-y: visible;

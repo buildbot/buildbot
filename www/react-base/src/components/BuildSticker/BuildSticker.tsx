@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './BuildSticker.less'
+import './BuildSticker.scss'
 import {Build} from "../../data/classes/Build";
 import {Builder} from "../../data/classes/Builder";
 import {results2class, results2text} from "../../util/Results";

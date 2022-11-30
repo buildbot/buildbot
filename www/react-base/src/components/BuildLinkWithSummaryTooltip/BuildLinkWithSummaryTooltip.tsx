@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './BuildLinkWithSummaryTooltip.less';
+import './BuildLinkWithSummaryTooltip.scss';
 import {Link} from "react-router-dom";
 import BuildSummaryTooltip from "../BuildSummaryTooltip/BuildSummaryTooltip";
 import {OverlayTrigger, Tooltip} from "react-bootstrap";
