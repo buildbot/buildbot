@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './LogPreview.less';
+import './LogPreview.scss';
 import {Link} from "react-router-dom";
 import {Log} from "../../data/classes/Log";
 import {globalSettings} from "../../plugins/GlobalSettings";

@@ -1,0 +1,19 @@
+.bb-build-view-pager {
+  text-align: center;
+
+  li {
+    display: inline;
+  }
+
+  li.previous {
+    float: left;
+  }
+
+  li.next {
+    float: right;
+  }
+}
+
+.bb-build-view-tabs {
+  width: 100%;
+}

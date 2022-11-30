@@ -68,7 +68,7 @@ const buildTopbarActions = (builds: DataCollection<Build>,
     } else {
       actions.push({
         caption: "Cancel whole queue",
-        extraClass: "btn-danger",
+        variant: "danger",
         icon: "stop",
         action: cancelWholeQueue
       });
@@ -78,7 +78,7 @@ const buildTopbarActions = (builds: DataCollection<Build>,
   for (const sch of forceschedulers.array) {
     actions.push({
       caption: sch.button_name,
-      extraClass: "btn-primary",
+      variant: "primary",
       action: () => { invokeScheduler(sch); }
     });
   }

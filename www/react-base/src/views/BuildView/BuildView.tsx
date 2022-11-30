@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './BuildView.scss';
 import {observer} from "mobx-react";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {globalSettings} from "../../plugins/GlobalSettings";
@@ -39,6 +40,7 @@ import {Change} from "../../data/classes/Change";
 import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "../../util/Properties";
 import {results2class} from "../../util/Results";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
+import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import RawData from "../../components/RawData/RawData";
 import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
 import ChangesTable from "../../components/ChangesTable/ChangesTable";
@@ -63,7 +65,6 @@ const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStoppi
     } else {
       actions.push({
         caption: "Rebuild",
-        extraClass: "btn-default",
         action: doRebuild
       });
     }
@@ -77,7 +78,6 @@ const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStoppi
     } else {
       actions.push({
         caption: "Stop",
-        extraClass: "btn-default",
         action: doStop
       });
     }
@@ -218,7 +218,7 @@ const BuildView = observer(() => {
       if (buildnumber > 1 && prevBuild !== null) {
         return (
           <Link to={`/builders/${builderid}/builds/${prevBuild.number}`}>
-            <span className={"badge-status " + results2class(prevBuild, 'pulse')}>&larr;</span>
+            <BadgeRound className={results2class(prevBuild, 'pulse')}>←</BadgeRound>
             <span className="nomobile">&nbsp;Previous</span>
           </Link>
         );
@@ -245,8 +245,8 @@ const BuildView = observer(() => {
       if (!lastBuild && nextBuild !== null) {
         return (
           <Link to={`/builders/${builderid}/builds/${nextBuild.number}`}>
-            <span className={"badge-status " + results2class(nextBuild, 'pulse')}>&larr;</span>
             <span className="nomobile">&nbsp;Next</span>
+            <BadgeRound className={results2class(nextBuild, 'pulse')}>→</BadgeRound>
           </Link>
         )
       }
@@ -260,7 +260,7 @@ const BuildView = observer(() => {
     }
 
     return (
-      <ul className="pager">
+      <ul className="bb-build-view-pager">
         <li className={"previous " + (build.number === 1 ? " disabled" : "")}>
           {renderPrevLink()}
         </li>
@@ -318,7 +318,7 @@ const BuildView = observer(() => {
         {build !== null ? renderPager(build) : <></>}
       </nav>
       <div className="row">
-        <Tabs>
+        <Tabs className="bb-build-view-tabs">
           <TabList>
             <Tab>Build steps</Tab>
             <Tab>Build Properties</Tab>

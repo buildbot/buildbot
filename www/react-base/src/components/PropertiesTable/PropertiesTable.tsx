@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './PropertiesTable.less';
+import './PropertiesTable.scss';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 type PropertiesTableProps = {

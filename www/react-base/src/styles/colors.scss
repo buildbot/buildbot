@@ -56,7 +56,7 @@ pre.log {
     }
   }
 }
-.label,.badge-status {
+.label {
   &.results_SUCCESS, &.worker_CONNECTED {
     color: #000;
     background-color: #8d4;
@@ -107,7 +107,7 @@ pre.log {
     border-color: #ACA0B3;
   }
 }
-.panel,.badge-status {
+.panel {
   &.results_SUCCESS {
     border-color: #4F8530;
   }

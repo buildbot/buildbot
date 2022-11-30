@@ -15,12 +15,14 @@
   Copyright Buildbot Team Members
 */
 
-import './BuildSticker.less'
+import './BuildSticker.scss'
 import {Build} from "../../data/classes/Build";
 import {Builder} from "../../data/classes/Builder";
 import {results2class, results2text} from "../../util/Results";
 import {Link} from "react-router-dom";
 import {durationFormat, useCurrentTime} from "../../util/Moment";
+import { Card } from 'react-bootstrap';
+import BadgeStatus from "../BadgeStatus/BadgeStatus";
 
 type BuildStickerProps = {
   build: Build;
@@ -31,24 +33,24 @@ const BuildSticker = ({build, builder}: BuildStickerProps) => {
   const now = useCurrentTime();
 
   return (
-    <div className={"panel panel-default buildsticker " + results2class(build, null)}>
-      <div className="panel-body no-select">
-        <div className="row">
-          <span className={"pull-right label " + results2class(build, null)}>
+    <Card className={"bb-buildsticker " + results2class(build, null)}>
+      <Card.Body>
+        <div className="bb-buildsticker-left">
+          <BadgeStatus className={"pull-right " + results2class(build, null)}>
             {results2text(build)}
-          </span>
+          </BadgeStatus>
           <Link to={`builders/${builder.builderid}/builds/${build.number}`}>
             {builder.name}/{build.number}
           </Link>
         </div>
-        <div className="row">
+        <div className="bb-buildsticker-left">
           <span className="pull-right">
             {durationFormat((build.complete ? build.complete_at! : now) - build.started_at)}
           </span>
           <span>{build.state_string}</span>
         </div>
-      </div>
-    </div>
+      </Card.Body>
+    </Card>
   );
 }
 

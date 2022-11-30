@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './HomeView.scss';
 import {observer} from "mobx-react";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {useContext} from "react";
@@ -27,6 +28,7 @@ import BuildSticker from "../../components/BuildSticker/BuildSticker";
 import {Link} from "react-router-dom";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {globalSettings} from "../../plugins/GlobalSettings";
+import {Card} from "react-bootstrap";
 
 
 function maybeShowUrlWarning(location: Location, config: Config) {
@@ -90,63 +92,63 @@ const HomeView = observer(() => {
   const buildsByBuilder = computeBuildsByBuilder(builders, recentBuilds);
 
   return (
-    <div className="container">
+    <div className="bb-home-view container">
       {maybeShowUrlWarning(window.location, config)}
       <div className="row">
         <div className="col-sm-12">
-          <div className="well">
-            <h2>Welcome to buildbot</h2>
-            <h4>{buildsRunning.array.length} build{buildsRunning.array.length === 1 ? '' : 's'}
-              running currently</h4>
-            <ul>
-              {
-                buildsRunning.array
-                  .filter(build => build.complete === false &&
-                    build.builderid.toString() in builders.byId)
-                  .map(build => {
-                    return (
-                      <li className="unstyled">
-                        <BuildSticker build={build}
-                                      builder={builders.byId[build.builderid.toString()]}/>
-                      </li>
-                    )
-                  })
-              }
-            </ul>
-            <h4>{recentBuilds.array.length} recent builds</h4>
-            <div className="row">
-              {
-                Object.values(buildsByBuilder)
-                  .sort((a, b) => a.builder.name.localeCompare(b.builder.name))
-                  .map(b => {
-                    return (
-                      <div className="col-md-4">
-                        <div className="panel panel-primary">
-                          <div className="panel-heading">
-                            <h4 className="panel-title">
+          <Card bg="light">
+            <Card.Body>
+              <h2>Welcome to buildbot</h2>
+              <h4>{buildsRunning.array.length} build{buildsRunning.array.length === 1 ? '' : 's'}
+                running currently</h4>
+              <ul>
+                {
+                  buildsRunning.array
+                    .filter(build => build.complete === false &&
+                      build.builderid.toString() in builders.byId)
+                    .map(build => {
+                      return (
+                        <li className="unstyled">
+                          <BuildSticker build={build}
+                                        builder={builders.byId[build.builderid.toString()]}/>
+                        </li>
+                      )
+                    })
+                }
+              </ul>
+              <h4>{recentBuilds.array.length} recent builds</h4>
+              <div className="row">
+                {
+                  Object.values(buildsByBuilder)
+                    .sort((a, b) => a.builder.name.localeCompare(b.builder.name))
+                    .map(b => {
+                      return (
+                        <div className="col-md-4">
+                          <Card className="bb-home-builder-card">
+                            <Card.Header>
                               <Link to={`builders/${b.builder.builderid}`}>{b.builder.name}</Link>
-                            </h4>
+                            </Card.Header>
+                            <Card.Body>
+                              {
+                                Object.values(b.builds)
+                                  .sort((a, b) => a.number - b.number)
+                                  .map(build => {
+                                    return (
+                                      <span key={build.id}>
+                                        <BuildSticker build={build} builder={b.builder}/>
+                                      </span>
+                                    );
+                                  })
+                                }
+                            </Card.Body>
+                          </Card>
                         </div>
-                        <div className="panel-body">
-                          {
-                            Object.values(b.builds)
-                              .sort((a, b) => a.number - b.number)
-                              .map(build => {
-                                return (
-                                  <span key={build.id}>
-                                    <BuildSticker build={build} builder={b.builder}/>
-                                  </span>
-                                );
-                              })
-                          }
-                        </div>
-                      </div>
-                    </div>
-                    )
-                })
-              }
-            </div>
-          </div>
+                      )
+                    })
+                }
+              </div>
+            </Card.Body>
+          </Card>
         </div>
       </div>
     </div>

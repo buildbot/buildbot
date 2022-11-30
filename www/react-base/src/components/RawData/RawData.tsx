@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './RawData.scss';
 import {useState} from "react";
 import _ from "underscore";
 import {isObservableArray, isObservableObject} from "mobx";
@@ -81,7 +82,7 @@ const RawData = ({data}: RawDataProps) => {
       const [key, value] = keyValue;
 
       return (
-        <div key={key}>
+        <div className={'bb-raw-data-key-value'} key={key}>
           <dt>{key}</dt>
           {renderDataElement(value)}
         </div>

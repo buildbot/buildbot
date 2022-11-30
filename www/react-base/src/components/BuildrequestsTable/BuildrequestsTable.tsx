@@ -15,12 +15,15 @@
   Copyright Buildbot Team Members
 */
 
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
 import {observer} from "mobx-react";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import DataCollection from "../../data/DataCollection";
 import {Link} from "react-router-dom";
 import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "../../util/Properties";
 import {Buildrequest} from "../../data/classes/Buildrequest";
+import BadgeRound from "../BadgeRound/BadgeRound";
 
 type BuildRequestsTableProps = {
   buildrequests: DataCollection<Buildrequest>;
@@ -45,7 +48,7 @@ const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableProps) =
         <tr key={br.buildrequestid}>
           <td>
             <Link to={`/buildrequests/${br.buildrequestid}`}>
-              <span className="badge-status">{br.buildrequestid}</span>
+              <BadgeRound className=''>{br.buildrequestid.toString()}</BadgeRound>
             </Link>
           </td>
           <td>
@@ -79,8 +82,13 @@ const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableProps) =
   return (
     <div className="row">
       <>
-        <h4>Build requests:</h4>
-        { buildrequests.array.length === 0 ? <span>None</span> : tableElement() }
+        <h4>
+          <Tabs defaultActiveKey={1}>
+            <Tab eventKey={1} title="Build requests">
+              {buildrequests.array.length === 0 ? <span>None</span> : tableElement()}
+            </Tab>
+          </Tabs>
+        </h4>
       </>
     </div>
   )

@@ -15,15 +15,15 @@
   Copyright Buildbot Team Members
 */
 
-import {useContext, useState} from "react";
+import './Loginbar.scss';
+import {useContext} from "react";
 import {ConfigContext} from "../../contexts/Config";
 import {useLocation} from "react-router-dom";
+import {Nav, NavDropdown} from "react-bootstrap";
 
 const Loginbar = () => {
   const config = useContext(ConfigContext);
   const location = useLocation();
-
-  const [collapsed, setCollapsed] = useState(true);
 
   const user = config.user;
 
@@ -35,24 +35,21 @@ const Loginbar = () => {
 
   if (user.anonymous) {
     return (
-      <ul className="nav navbar-nav navbar-right">
-        <li className={"dropdown" + (collapsed ? "" : " open")}>
-          <a onClick={() => setCollapsed(!collapsed)}>Anonymous<b className="caret"></b></a>
-          <ul uib-dropdown-menu="uib-dropdown-menu" className="dropdown-menu">
-            <li>
-              <a href={"/auth/login?redirect=" + encodeURI(redirect)}>
-                {
-                  config.auth.oauth2
-                    ? <span>
-                        <i className={"fa " + config.auth.fa_icon}></i>&nbsp;Login with {config.auth.name}
-                      </span>
-                    : <span><i className="fa fa-sign-in"></i>&nbsp;Login</span>
-                }
-              </a>
-            </li>
-          </ul>
-        </li>
-      </ul>
+      <Nav className="ml-auto bb-loginbar-dropdown-nav">
+        <NavDropdown title="Anonymous" id="bb-loginbar-dropdown">
+          <NavDropdown.Item>
+            <a href={"/auth/login?redirect=" + encodeURI(redirect)}>
+              {
+                config.auth.oauth2
+                  ? <span>
+                      <i className={"fa " + config.auth.fa_icon}></i>&nbsp;Login with {config.auth.name}
+                    </span>
+                  : <span><i className="fa fa-sign-in"></i>&nbsp;Login</span>
+              }
+            </a>
+          </NavDropdown.Item>
+        </NavDropdown>
+      </Nav>
     );
   }
 
@@ -63,30 +60,27 @@ const Loginbar = () => {
     : <span>{user.full_name ?? user.username ?? ""}<b className="caret"></b></span>;
 
   const userDropdownHeader = (user.full_name || user.email)
-    ? <li className="dropdown-header">
-        <i className="fa fa-user"/>
-        <span>{config.user.full_name ?? ""} {config.user.email ?? ""}</span>
-      </li>
-    : <></>
+    ? <>
+        <NavDropdown.Header>
+          <i className="fa fa-user"/>
+          <span>{config.user.full_name ?? ""} {config.user.email ?? ""}</span>
+        </NavDropdown.Header>
+        <NavDropdown.Divider/>
+      </>
+      : <></>
 
   return (
-    <ul className="nav navbar-nav navbar-right">
-      <li className={"dropdown" + (collapsed ? "" : " open")}>
-        <a onClick={() => setCollapsed(!collapsed)}>
-          {dropdownToggle}
-        </a>
-        <ul uib-dropdown-menu="uib-dropdown-menu" className="dropdown-menu">
-          {userDropdownHeader}
-          <li className="divider"></li>
-          <li>
-            <a href={"auth/logout?redirect=" + encodeURI(redirect)}>
-              <i className="fa fa-sign-out"></i>
-              Logout
-            </a>
-          </li>
-        </ul>
-      </li>
-    </ul>
+    <Nav className="ml-auto bb-loginbar-dropdown-nav">
+      <NavDropdown title={dropdownToggle} id="bb-loginbar-dropdown">
+        {userDropdownHeader}
+        <NavDropdown.Item>
+          <a href={"auth/logout?redirect=" + encodeURI(redirect)}>
+            <i className="fa fa-sign-out"></i>
+            Logout
+          </a>
+        </NavDropdown.Item>
+      </NavDropdown>
+    </Nav>
   );
 };
 

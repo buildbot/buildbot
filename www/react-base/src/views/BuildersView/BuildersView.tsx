@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './BuildersView.scss';
 import {observer} from "mobx-react";
 import {useContext, useState} from "react";
 import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "../../data/ReactUtils";
@@ -32,6 +33,8 @@ import {StoresContext} from "../../contexts/Stores";
 import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {globalSettings} from "../../plugins/GlobalSettings";
+import BadgeRound from "../../components/BadgeRound/BadgeRound";
+import {Badge} from "react-bootstrap";
 
 const connected2class = (worker: Worker) => {
   if (worker.connected_to.length > 0) {
@@ -224,7 +227,7 @@ const BuildersView = observer(() => {
       <i style={{position: "relative"}} className="fa fa-question-circle clickable">
         {showTagHelp
           ? <div style={{display: "block", minWidth: "600px", left:"-300px", top: "30px"}}
-                 className="popover bottom anim-popover">
+                 className="bb-builders-view-help-popover popover bottom anim-popover">
               <h5 className="popover-title">Tags filtering</h5>
               <div className="popover-content">
                 <p><b>
@@ -252,25 +255,22 @@ const BuildersView = observer(() => {
   if (tags.length < 5) {
     for (const tag of tags) {
       enabledTagsElements.push((
-        <span>
-          <span onClick={() => toggleTag(tags, tag, searchParams, setSearchParams)}
-                className="label label-success">{tag}</span>&nbsp;
-        </span>
+        <>
+          <Badge variant="success"
+                 onClick={() => toggleTag(tags, tag, searchParams, setSearchParams)}>{tag}</Badge>
+          &nbsp;
+        </>
       ));
     }
   } else {
     enabledTagsElements.push((
-      <span>
-        <span className="label label-success">{tags.length} tags</span>
-      </span>
+      <Badge variant="success">{tags.length} tags</Badge>
     ));
   }
   if (tags.length > 0) {
     enabledTagsElements.push((
-      <span>
-        <span onClick={() => setTags([], searchParams, setSearchParams)}
-              className="label clickable label-danger">x</span>
-      </span>
+      <Badge variant="danger" onClick={() => setTags([], searchParams, setSearchParams)}
+             className="clickable">x</Badge>
     ));
   }
 
@@ -280,7 +280,7 @@ const BuildersView = observer(() => {
     if (builder.id in buildsByFilteredBuilder) {
       let builds = [...buildsByFilteredBuilder[builder.id]];
       builds = builds
-        .sort((a, b) => a.number - b.number)
+        .sort((a, b) => b.number - a.number)
         .slice(0, perBuilderBuildFetchLimit);
 
       buildElements = builds.map(build => (<BuildLinkWithSummaryTooltip build={build}/>));
@@ -290,8 +290,8 @@ const BuildersView = observer(() => {
       return (
         <span>
           <span onClick={() => toggleTag(tags, tag, searchParams, setSearchParams)}
-                className={"label clickable " +
-                  (isTagFiltered(tags, tag) ? 'label-success': 'label-default')}>
+                className={"bb-builder-tag clickable " +
+                  (isTagFiltered(tags, tag) ? 'bb-builder-tag-filtered': '')}>
               {tag}
             </span>
           &nbsp;
@@ -306,17 +306,14 @@ const BuildersView = observer(() => {
       workerElements = workers.map(worker => {
 
         const shownWorkerName = () => (
-          <span title={worker.name} className={"badge-status " + connected2class(worker)}>
-            {worker.name}
-          </span>
+          <BadgeRound title={worker.name} className={connected2class(worker)}/>
         );
 
         const hoverWorkerName = () => (
-          <span title={worker.name}
-                className={"badge-status " + connected2class(worker)}>
-              <div className="badge-inactive">{worker.workerid}</div>
-              <div className="badge-active">{worker.name}</div>
-            </span>
+          <BadgeRound title={worker.name} className={connected2class(worker)}>
+            <div className="badge-inactive">{worker.workerid}</div>
+            <div className="badge-active">{worker.name}</div>
+          </BadgeRound>
         );
 
         return (
@@ -348,28 +345,26 @@ const BuildersView = observer(() => {
 
   // FIXME: implement pagination
   return (
-    <div className="container">
-      <div className="row">
-        <form role="search" style={{width: "150px"}}>
-          <input type="text" value={builderNameFilter}
-                 onChange={e => setBuilderNameFilter(e.target.value)}
-                 placeholder="Search for builders" className="form-control"/>
-        </form>
-        <table className="table table-hover table-striped table-condensed">
-          <tbody>
-            <tr>
-              <th>Builder Name</th>
-              <th>Builds</th>
-              <th>
-                {tagHelpElement}
-                {enabledTagsElements}
-              </th>
-              <th style={{width: "20%px"}}>Workers</th>
-            </tr>
-            {builderRowElements}
-          </tbody>
+    <div className="bb-builders-view-container">
+      <form role="search" style={{width: "150px"}}>
+        <input type="text" value={builderNameFilter}
+               onChange={e => setBuilderNameFilter(e.target.value)}
+               placeholder="Search for builders" className="bb-builders-view-form-control"/>
+      </form>
+      <table className="table table-hover table-striped table-condensed">
+        <tbody>
+          <tr>
+            <th>Builder Name</th>
+            <th>Builds</th>
+            <th>
+              {tagHelpElement}
+              {enabledTagsElements}
+            </th>
+            <th style={{width: "20%px"}}>Workers</th>
+          </tr>
+          {builderRowElements}
+        </tbody>
         </table>
-      </div>
     </div>
   );
 

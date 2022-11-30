@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './LogViewerText.less'
+import './LogViewerText.scss'
 import {Log} from "../../data/classes/Log";
 import {FC, useRef, useState} from 'react';
 import {ansi2html, generateStyleElement} from "../../util/AnsiEscapeCodes";

@@ -26,6 +26,9 @@ import {results2class, results2text} from "../../util/Results";
 import {durationFormat, useCurrentTime} from "../../util/Moment";
 import {getPropertyValueOrDefault} from "../../util/Properties";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
+import BadgeRound from "../BadgeRound/BadgeRound";
+import BadgeStatus from "../BadgeStatus/BadgeStatus";
+import Card from 'react-bootstrap/Card';
 
 const isStepDisplayed = (step: Step) => {
   return !step.hidden;
@@ -70,7 +73,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
       <div className="flex-row">
         <div className="flex-grow-1">
           <span>{builder !== null ? limitStringLength(builder.name, 80) : ''}</span>
-          <span className={"badge-status" + buildResultClass}>{build.number}</span>
+          <BadgeRound className={buildResultClass}>{build.number.toString()}</BadgeRound>
           { reason !== null
             ? <span>&nbsp; | {reason}</span>
             : <></>
@@ -87,9 +90,10 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
               ? <span>{durationFormat(build.complete_at! - build.started_at)}</span>
               : <span>{durationFormat(now - build.started_at)}</span>
           }
+          &nbsp;
           { limitStringLength(build.state_string, 80) }
           &nbsp;
-          <div className={"label bb-build-result" + buildResultClass}>{results2text(build)}</div>
+          <BadgeStatus className={buildResultClass}>{results2text(build)}</BadgeStatus>
         </div>
       </div>
     ));
@@ -123,6 +127,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
                 ? <span>{durationFormat(step.complete_at! - step.started_at)}</span>
                 : <span>{durationFormat(now - step.started_at)}</span>
             }
+          &nbsp;
           {limitStringLength(step.state_string, 40)}
         </span>
       );
@@ -144,7 +149,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
       <li key={index} className="list-group-item">
         <div className="clearfix">
           <span className="pull-left">
-            <span className={"badge-status " + results2class(step, 'pulse')}>{step.number}</span>
+            <BadgeRound className={results2class(step, 'pulse')}>{step.number.toString()}</BadgeRound>
             &nbsp;
           </span>
           <span className="pull-left">{limitStringLength(step.name, 40)}
@@ -158,15 +163,12 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
   });
 
   return (
-    <div style={{marginBottom: "0px"}}
-         className={"panel panel-default" + buildResultClass}>
-      <div className="panel-heading">
-        {headerElements}
-      </div>
+    <Card style={{marginBottom: "0px"}} className={buildResultClass}>
+      <Card.Header>{headerElements}</Card.Header>
       <ul className="list-group">
         {stepElements}
       </ul>
-    </div>
+    </Card>
   );
 });
 

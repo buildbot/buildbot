@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './BuildLinkWithSummaryTooltip.less';
+import './BuildLinkWithSummaryTooltip.scss';
 import {Link} from "react-router-dom";
 import BuildSummaryTooltip from "../BuildSummaryTooltip/BuildSummaryTooltip";
 import {OverlayTrigger, Tooltip} from "react-bootstrap";
@@ -23,6 +23,7 @@ import {Build} from "../../data/classes/Build";
 import {results2class} from "../../util/Results";
 import {observer} from "mobx-react";
 import {Builder} from "../../data/classes/Builder";
+import BadgeRound from "../BadgeRound/BadgeRound";
 
 type BuildLinkWithSummaryTooltipProps = {
   build: Build;
@@ -49,9 +50,9 @@ const BuildLinkWithSummaryTooltip = observer(({build, builder}: BuildLinkWithSum
     <Link to={`/builders/${build.builderid.toString()}/builds/${build.number}`}>
       <OverlayTrigger trigger={["hover", "focus"]} delay={{ show: 250, hide: 400 }}
                       overlay={renderBuildTooltip} placement="right">
-        <span className={"badge-status " + results2class(build, 'pulse')}>
+        <BadgeRound className={results2class(build, 'pulse')}>
           {linkText}
-        </span>
+        </BadgeRound>
       </OverlayTrigger>
     </Link>
   );
