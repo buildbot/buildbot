@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './BuildersView.scss';
 import {observer} from "mobx-react";
 import {useContext, useState} from "react";
 import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "../../data/ReactUtils";
@@ -353,7 +354,7 @@ const BuildersView = observer(() => {
         <form role="search" style={{width: "150px"}}>
           <input type="text" value={builderNameFilter}
                  onChange={e => setBuilderNameFilter(e.target.value)}
-                 placeholder="Search for builders" className="form-control"/>
+                 placeholder="Search for builders" className="bb-builders-view-form-control"/>
         </form>
         <table className="table table-hover table-striped table-condensed">
           <tbody>
