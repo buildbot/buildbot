@@ -184,10 +184,10 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
   return (
     <li key={step.id} className="list-group-item">
       <div onClick={() => setFullDisplay(!fullDisplay)}>
-        {renderState()}
         <BadgeRound className={results2class(step, 'pulse')}>{step.number.toString()}</BadgeRound>
         {maybeRenderArrowExpander()}
         {step.name}
+        {renderState()}
         {maybeRenderPendingBuildCount()}
       </div>
       {showUrls ? renderStepUrls() : <></>}
