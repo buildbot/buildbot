@@ -20,11 +20,72 @@ import IDataDescriptor from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
 
+// Union types are not used because this makes it impossible to inherit properties and share
+// behaviors across related types.
+export type ForceSchedulerFieldBase = {
+  name: string;
+  fullName: string;
+  label: string;
+  tablabel: string;
+  type: string;
+  default: any;
+  multiple: boolean;
+  regex: string | null;
+  hide: boolean;
+  maxsize: number | null;
+  autopopulate: boolean | null;
+}
+
+export type ForceSchedulerFieldFixed = ForceSchedulerFieldBase & {
+  // type: 'fixed'
+}
+
+export type ForceSchedulerFieldString = ForceSchedulerFieldBase & {
+  // type: 'text'
+  size: number;
+}
+
+export type ForceSchedulerFieldText = ForceSchedulerFieldString & {
+  // type: 'textarea'
+  rows: number;
+  cols: number;
+}
+
+export type ForceSchedulerFieldInt = ForceSchedulerFieldString & {
+  // type: 'int'
+}
+
+export type ForceSchedulerFieldBoolean = ForceSchedulerFieldBase & {
+  // type: 'bool'
+}
+
+export type ForceSchedulerFieldUserName = ForceSchedulerFieldString & {
+  // type: 'username'
+}
+
+export type ForceSchedulerFieldChoiceString = ForceSchedulerFieldBase & {
+  // type: 'choices'
+  choices: string[];
+  strict: boolean;
+}
+
+// Not properly supported yet
+export type ForceSchedulerFieldInheritBuild = ForceSchedulerFieldChoiceString & {
+  // type: 'inherit'
+}
+
+export type ForceSchedulerFieldNested = ForceSchedulerFieldBase & {
+  // type: 'nested'
+  layout: string;
+  columns: number | null;
+  fields: ForceSchedulerFieldBase[];
+}
+
 export class Forcescheduler extends BaseClass {
   name!: string;
-  all_fields!: any[];
+  all_fields!: ForceSchedulerFieldBase[];
   builder_names!: string[];
-  button_name!: string[];
+  button_name!: string;
   label!: string;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {

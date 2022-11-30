@@ -16,6 +16,7 @@
 */
 
 import TopbarActionsStore from "../../stores/TopbarActionsStore";
+import {observer} from "mobx-react";
 
 export type TopbarAction = {
   caption: string;
@@ -29,7 +30,7 @@ type TopbarActionsProps = {
   store: TopbarActionsStore;
 }
 
-const TopbarActions = ({store}: TopbarActionsProps) => {
+const TopbarActions = observer(({store}: TopbarActionsProps) => {
   const elements = store.actions.map(action => {
     return (
       <div className="form-group">
@@ -48,6 +49,6 @@ const TopbarActions = ({store}: TopbarActionsProps) => {
       {elements}
     </form>
   );
-}
+});
 
 export default TopbarActions;

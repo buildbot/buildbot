@@ -29,9 +29,10 @@ import BuildRequestsTable from "../../components/BuildrequestsTable/Buildrequest
 import {Forcescheduler} from "../../data/classes/Forcescheduler";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import DataCollection from "../../data/DataCollection";
 import AlertNotification from "../../components/AlertNotification/AlertNotification";
+import ForceBuildModal from "../../components/ForceBuildModal/ForceBuildModal";
 
 const anyCancellableBuilds = (builds: DataCollection<Build>,
                               buildrequests: DataCollection<Buildrequest>) => {
@@ -76,7 +77,7 @@ const buildTopbarActions = (builds: DataCollection<Build>,
 
   for (const sch of forceschedulers.array) {
     actions.push({
-      caption: sch.button_name[0],
+      caption: sch.button_name,
       extraClass: "btn-primary",
       action: () => { invokeScheduler(sch); }
     });
@@ -87,6 +88,7 @@ const buildTopbarActions = (builds: DataCollection<Build>,
 
 const BuilderView = observer(() => {
   const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
+  const navigate = useNavigate();
 
   const stores = useContext(StoresContext);
   const accessor = useDataAccessor();
@@ -152,14 +154,20 @@ const BuilderView = observer(() => {
     })
   };
 
-  const invokeScheduler = (sch: Forcescheduler) => {
-    // TODO implement
-  }
+  const [shownForceScheduler, setShownForceScheduler] = useState<null|Forcescheduler>(null);
 
   const actions = buildTopbarActions(builds, buildrequests, forceschedulers, isCancelling,
-    cancelWholeQueue, invokeScheduler);
+    cancelWholeQueue, (sch) => setShownForceScheduler(sch));
 
   useTopbarActions(stores.topbarActions, actions);
+
+  const onForceBuildModalClose = (buildRequestNumber: string | null) => {
+    if (buildRequestNumber === null) {
+      setShownForceScheduler(null);
+    } else {
+      navigate(`/buildrequest/${buildRequestNumber}?redirect_to_build=true`);
+    }
+  };
 
   return (
     <div className="container">
@@ -170,6 +178,11 @@ const BuilderView = observer(() => {
       }
       <BuildRequestsTable buildrequests={buildrequests}/>
       <BuildsTable builds={builds} builders={null}/>
+      {shownForceScheduler !== null
+        ? <ForceBuildModal scheduler={shownForceScheduler} builderid={builderid}
+                           onClose={onForceBuildModalClose}/>
+        : <></>
+      }
     </div>
   );
   // TODO: reimplement build duration tab
