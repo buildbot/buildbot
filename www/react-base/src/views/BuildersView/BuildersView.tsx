@@ -280,7 +280,7 @@ const BuildersView = observer(() => {
     if (builder.id in buildsByFilteredBuilder) {
       let builds = [...buildsByFilteredBuilder[builder.id]];
       builds = builds
-        .sort((a, b) => a.number - b.number)
+        .sort((a, b) => b.number - a.number)
         .slice(0, perBuilderBuildFetchLimit);
 
       buildElements = builds.map(build => (<BuildLinkWithSummaryTooltip build={build}/>));
