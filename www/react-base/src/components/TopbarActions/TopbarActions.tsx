@@ -35,13 +35,13 @@ type TopbarActionsProps = {
 const TopbarActions = observer(({store}: TopbarActionsProps) => {
   const elements = store.actions.map(action => {
     return (
-      <div className="form-group">
+      <>
         <Button variant={action.variant} onClick={action.action} title={action.help ?? ""}>
           {action.icon ?  <><i className={"fa fa-" + action.icon}></i><span>&nbsp;</span></> : <></> }
           {action.caption}
         </Button>
         &nbsp;
-      </div>
+      </>
     );
   });
 
