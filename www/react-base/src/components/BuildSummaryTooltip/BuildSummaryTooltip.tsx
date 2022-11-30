@@ -27,6 +27,7 @@ import {durationFormat, useCurrentTime} from "../../util/Moment";
 import {getPropertyValueOrDefault} from "../../util/Properties";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
 import BadgeRound from "../BadgeRound/BadgeRound";
+import BadgeStatus from "../BadgeStatus/BadgeStatus";
 
 const isStepDisplayed = (step: Step) => {
   return !step.hidden;
@@ -90,7 +91,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
           }
           { limitStringLength(build.state_string, 80) }
           &nbsp;
-          <div className={"label bb-build-result" + buildResultClass}>{results2text(build)}</div>
+          <BadgeStatus className={buildResultClass}>{results2text(build)}</BadgeStatus>
         </div>
       </div>
     ));

@@ -36,6 +36,7 @@ import {useStateWithParentTracking} from "../../util/React";
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import BuildRequestSummary from "../BuildRequestSummary/BuildRequestSummary";
 import BadgeRound from "../BadgeRound/BadgeRound";
+import BadgeStatus from "../BadgeStatus/BadgeStatus";
 
 enum DetailLevel {
   None = 0,
@@ -241,9 +242,10 @@ const BuildSummary = observer(({build, parentBuild, parentRelationship,
     const relationship = parentRelationship === null ? "" : parentRelationship;
     return (
       <span>
-        <Link to={`/builders/${parentBuild.builderid}/builds/${parentBuild.number}`}
-              className={"label " + results2class(parentBuild, null)}>
-          {relationship}:{parentBuilder.name}/{parentBuild.number}
+        <Link to={`/builders/${parentBuild.builderid}/builds/${parentBuild.number}`}>
+          <BadgeStatus className={results2class(parentBuild, null)}>
+            <>{relationship}:{parentBuilder.name}/{parentBuild.number}</>
+          </BadgeStatus>
         </Link>
       </span>
     );
@@ -284,9 +286,7 @@ const BuildSummary = observer(({build, parentBuild, parentRelationship,
                 : <span>{durationFormat(now - build.started_at)}</span>
             }
             <span>{build.state_string}</span>
-            <div className={"label bb-build-result " + results2class(build, null)}>
-              {results2text(build)}
-            </div>
+            <BadgeStatus className={results2class(build, null)}>{results2text(build)}</BadgeStatus>
             {renderParentBuildLink()}
           </div>
         </div>

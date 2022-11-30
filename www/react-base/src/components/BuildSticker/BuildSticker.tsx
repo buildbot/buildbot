@@ -22,6 +22,7 @@ import {results2class, results2text} from "../../util/Results";
 import {Link} from "react-router-dom";
 import {durationFormat, useCurrentTime} from "../../util/Moment";
 import { Card } from 'react-bootstrap';
+import BadgeStatus from "../BadgeStatus/BadgeStatus";
 
 type BuildStickerProps = {
   build: Build;
@@ -35,9 +36,9 @@ const BuildSticker = ({build, builder}: BuildStickerProps) => {
     <Card className={"bb-buildsticker " + results2class(build, null)}>
       <Card.Body>
         <div className="bb-buildsticker-left">
-          <span className={"pull-right label bb-results " + results2class(build, null)}>
+          <BadgeStatus className={"pull-right " + results2class(build, null)}>
             {results2text(build)}
-          </span>
+          </BadgeStatus>
           <Link to={`builders/${builder.builderid}/builds/${build.number}`}>
             {builder.name}/{build.number}
           </Link>
