@@ -19,6 +19,7 @@ import './views/AboutView/AboutView';
 import './views/HomeView/HomeView';
 import './views/BuildersView/BuildersView';
 import './views/BuilderView/BuilderView';
+import './views/BuildRequestView/BuildRequestView';
 import './views/BuildView/BuildView';
 import './views/PendingBuildRequestsView/PendingBuildRequestsView';
 import './views/ChangesView/ChangesView';
