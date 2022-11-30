@@ -89,6 +89,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
               ? <span>{durationFormat(build.complete_at! - build.started_at)}</span>
               : <span>{durationFormat(now - build.started_at)}</span>
           }
+          &nbsp;
           { limitStringLength(build.state_string, 80) }
           &nbsp;
           <BadgeStatus className={buildResultClass}>{results2text(build)}</BadgeStatus>
@@ -125,6 +126,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
                 ? <span>{durationFormat(step.complete_at! - step.started_at)}</span>
                 : <span>{durationFormat(now - step.started_at)}</span>
             }
+          &nbsp;
           {limitStringLength(step.state_string, 40)}
         </span>
       );
