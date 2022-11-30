@@ -73,15 +73,15 @@ export function analyzeStepUrls(analyzer: StepUrlAnalyzer, urls: StepUrl[]): Ste
     let brRes = execRegexesGetFirstResult(analyzer.buildrequest, url.url)
     if (brRes !== null) {
       info.buildrequests.push({
-        buildrequestid: brRes[0],
+        buildrequestid: brRes[1],
       })
       continue;
     }
     let buildRes = execRegexesGetFirstResult(analyzer.build, url.url)
     if (buildRes !== null) {
       info.builds.push({
-        builderid: buildRes[0],
-        buildnumber: buildRes[1],
+        builderid: buildRes[1],
+        buildnumber: buildRes[2],
       })
       continue;
     }

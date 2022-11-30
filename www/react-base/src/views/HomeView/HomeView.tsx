@@ -124,7 +124,7 @@ const HomeView = observer(() => {
                         <div className="panel panel-primary">
                           <div className="panel-heading">
                             <h4 className="panel-title">
-                              <Link to={`builder/${b.builder.builderid}`}>{b.builder.name}</Link>
+                              <Link to={`builders/${b.builder.builderid}`}>{b.builder.name}</Link>
                             </h4>
                         </div>
                         <div className="panel-body">

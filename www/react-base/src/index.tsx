@@ -70,10 +70,6 @@ if ("buildbotFrontendConfig" in windowAny) {
 } else {
   // fallback during development
   axios.get("config").then(response => {
-    const buildbotFrontendConfig: Config = response.data;
-    // Override buildbot URL so that it does not complain about wrong configuration.
-    buildbotFrontendConfig.buildbotURL =
-      `${window.location.protocol}://${window.location.hostname}${window.location.port}/`;
-    doRender(buildbotFrontendConfig);
+    doRender(response.data);
   });
 }
