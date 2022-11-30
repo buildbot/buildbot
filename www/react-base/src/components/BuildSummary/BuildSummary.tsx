@@ -37,6 +37,7 @@ import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import BuildRequestSummary from "../BuildRequestSummary/BuildRequestSummary";
 import BadgeRound from "../BadgeRound/BadgeRound";
 import BadgeStatus from "../BadgeStatus/BadgeStatus";
+import {Card} from "react-bootstrap";
 
 enum DetailLevel {
   None = 0,
@@ -169,7 +170,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
     return (
       <div className="anim-stepdetails">
         {!showUrls ? renderStepUrls() : <></>}
-        <ul className="list-unstyled">
+        <ul className="list-unstyled group-results">
           {stepInfo.buildrequests.map(brInfo => (
             <li key={brInfo.buildrequestid}>
               <BuildRequestSummary buildrequestid={brInfo.buildrequestid}/>
@@ -258,43 +259,41 @@ const BuildSummary = observer(({build, parentBuild, parentRelationship,
   ));
 
   return (
-    <div className={"bb-build-summary-panel panel panel-default " + results2class(build, null)}>
-      <div className="panel-heading">
-        <div className="flex-row">
-          <div className="flex-grow-1">
-            <div onClick={() => setFullDisplay(!fullDisplay)} title="Expand all step logs"
-                 className="btn btn-xs btn-default">
-              <ArrowExpander isExpanded={fullDisplay}/>
-            </div>
-            <div onClick={toggleDetails} title="Show steps according to their importance"
-                 className="btn btn-xs btn-default">
-              <i className="fa fa-expand"></i>
-              {detailLevelToString(detailLevel)}
-            </div>
-            { builder !== null
-              ? <Link to={`/builders/${build.builderid}/builds/${build.number}`}>
-                  {builder.name}/{build.number}
-                </Link>
-              : <></>
-            }
-            {reason !== null ? <span>| {reason}</span> : <></>}
-          </div>
-          <div className="flex-grow-1 text-right">
-            {
-              build.complete
-                ? <span>{durationFormat(build.complete_at! - build.started_at)}</span>
-                : <span>{durationFormat(now - build.started_at)}</span>
-            }
-            <span>{build.state_string}</span>
-            <BadgeStatus className={results2class(build, null)}>{results2text(build)}</BadgeStatus>
-            {renderParentBuildLink()}
-          </div>
+    <Card className={"bb-build-summary " + results2class(build, null)}>
+      <Card.Header>
+        <div onClick={() => setFullDisplay(!fullDisplay)} title="Expand all step logs"
+             className="btn btn-xs btn-default">
+          <ArrowExpander isExpanded={fullDisplay}/>
         </div>
-      </div>
-      <ul className="list-group">
-        {stepElements}
-      </ul>
-    </div>
+        <div onClick={toggleDetails} title="Show steps according to their importance"
+             className="btn btn-xs btn-default">
+          <i className="fa fa-expand"></i>
+          {detailLevelToString(detailLevel)}
+        </div>
+        { builder !== null
+          ? <Link to={`/builders/${build.builderid}/builds/${build.number}`}>
+              {builder.name}/{build.number}
+            </Link>
+          : <></>
+        }
+        {reason !== null ? <span>| {reason}</span> : <></>}
+        <div className={"bb-build-summary-details"}>
+          {
+            build.complete
+              ? <span>{durationFormat(build.complete_at! - build.started_at)}</span>
+              : <span>{durationFormat(now - build.started_at)}</span>
+          }
+          <span>{build.state_string}</span>
+          <BadgeStatus className={results2class(build, null)}>{results2text(build)}</BadgeStatus>
+          {renderParentBuildLink()}
+        </div>
+      </Card.Header>
+      <Card.Body>
+        <ul className="list-group">
+          {stepElements}
+        </ul>
+      </Card.Body>
+    </Card>
   );
 });
 
