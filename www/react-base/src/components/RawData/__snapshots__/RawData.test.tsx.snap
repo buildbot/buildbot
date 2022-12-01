@@ -4,7 +4,9 @@ exports[`RawData component object with array of objects 1`] = `
 <dl
   className="dl-horizontal"
 >
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       array
     </dt>
@@ -25,7 +27,9 @@ exports[`RawData component object with array of objects expanded 1`] = `
 <dl
   className="dl-horizontal"
 >
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       array
     </dt>
@@ -39,7 +43,9 @@ exports[`RawData component object with array of objects expanded 1`] = `
           <dl
             className="dl-horizontal"
           >
-            <div>
+            <div
+              className="bb-raw-data-key-value"
+            >
               <dt>
                 str
               </dt>
@@ -54,7 +60,9 @@ exports[`RawData component object with array of objects expanded 1`] = `
           <dl
             className="dl-horizontal"
           >
-            <div>
+            <div
+              className="bb-raw-data-key-value"
+            >
               <dt>
                 int
               </dt>
@@ -69,7 +77,9 @@ exports[`RawData component object with array of objects expanded 1`] = `
           <dl
             className="dl-horizontal"
           >
-            <div>
+            <div
+              className="bb-raw-data-key-value"
+            >
               <dt>
                 float
               </dt>
@@ -84,7 +94,9 @@ exports[`RawData component object with array of objects expanded 1`] = `
           <dl
             className="dl-horizontal"
           >
-            <div>
+            <div
+              className="bb-raw-data-key-value"
+            >
               <dt>
                 boolean
               </dt>
@@ -105,7 +117,9 @@ exports[`RawData component observable object 1`] = `
 <dl
   className="dl-horizontal"
 >
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       str
     </dt>
@@ -114,7 +128,9 @@ exports[`RawData component observable object 1`] = `
        
     </dd>
   </div>
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       int
     </dt>
@@ -123,7 +139,9 @@ exports[`RawData component observable object 1`] = `
        
     </dd>
   </div>
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       float
     </dt>
@@ -132,7 +150,9 @@ exports[`RawData component observable object 1`] = `
        
     </dd>
   </div>
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       boolean
     </dt>
@@ -141,7 +161,9 @@ exports[`RawData component observable object 1`] = `
        
     </dd>
   </div>
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       array
     </dt>
@@ -157,7 +179,9 @@ exports[`RawData component observable object with array of objects 1`] = `
 <dl
   className="dl-horizontal"
 >
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       array
     </dt>
@@ -178,7 +202,9 @@ exports[`RawData component simple object 1`] = `
 <dl
   className="dl-horizontal"
 >
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       str
     </dt>
@@ -187,7 +213,9 @@ exports[`RawData component simple object 1`] = `
        
     </dd>
   </div>
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       int
     </dt>
@@ -196,7 +224,9 @@ exports[`RawData component simple object 1`] = `
        
     </dd>
   </div>
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       float
     </dt>
@@ -205,7 +235,9 @@ exports[`RawData component simple object 1`] = `
        
     </dd>
   </div>
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       boolean
     </dt>
@@ -214,7 +246,9 @@ exports[`RawData component simple object 1`] = `
        
     </dd>
   </div>
-  <div>
+  <div
+    className="bb-raw-data-key-value"
+  >
     <dt>
       array
     </dt>

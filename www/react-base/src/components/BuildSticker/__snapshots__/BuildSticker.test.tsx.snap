@@ -2,19 +2,19 @@
 
 exports[`buildsticker component failed 1`] = `
 <div
-  className="panel panel-default buildsticker results_FAILURE"
+  className="bb-buildsticker results_FAILURE card"
 >
   <div
-    className="panel-body no-select"
+    className="card-body"
   >
     <div
-      className="row"
+      className="bb-buildsticker-left"
     >
-      <span
-        className="pull-right label results_FAILURE"
+      <div
+        className="bb-badge-status pull-right results_FAILURE"
       >
         FAILURE
-      </span>
+      </div>
       <a
         href="/builders/2/builds/1"
         onClick={[Function]}
@@ -24,12 +24,12 @@ exports[`buildsticker component failed 1`] = `
       </a>
     </div>
     <div
-      className="row"
+      className="bb-buildsticker-left"
     >
       <span
         className="pull-right"
       >
-        10 s
+        10 s 
       </span>
       <span>
         failed
@@ -41,19 +41,19 @@ exports[`buildsticker component failed 1`] = `
 
 exports[`buildsticker component pending 1`] = `
 <div
-  className="panel panel-default buildsticker results_PENDING"
+  className="bb-buildsticker results_PENDING card"
 >
   <div
-    className="panel-body no-select"
+    className="card-body"
   >
     <div
-      className="row"
+      className="bb-buildsticker-left"
     >
-      <span
-        className="pull-right label results_PENDING"
+      <div
+        className="bb-badge-status pull-right results_PENDING"
       >
         ...
-      </span>
+      </div>
       <a
         href="/builders/2/builds/1"
         onClick={[Function]}
@@ -63,7 +63,7 @@ exports[`buildsticker component pending 1`] = `
       </a>
     </div>
     <div
-      className="row"
+      className="bb-buildsticker-left"
     >
       <span
         className="pull-right"
@@ -80,19 +80,19 @@ exports[`buildsticker component pending 1`] = `
 
 exports[`buildsticker component simple 1`] = `
 <div
-  className="panel panel-default buildsticker results_UNKNOWN"
+  className="bb-buildsticker results_UNKNOWN card"
 >
   <div
-    className="panel-body no-select"
+    className="card-body"
   >
     <div
-      className="row"
+      className="bb-buildsticker-left"
     >
-      <span
-        className="pull-right label results_UNKNOWN"
+      <div
+        className="bb-badge-status pull-right results_UNKNOWN"
       >
         ...
-      </span>
+      </div>
       <a
         href="/builders/2/builds/1"
         onClick={[Function]}
@@ -102,7 +102,7 @@ exports[`buildsticker component simple 1`] = `
       </a>
     </div>
     <div
-      className="row"
+      className="bb-buildsticker-left"
     >
       <span
         className="pull-right"
@@ -117,19 +117,19 @@ exports[`buildsticker component simple 1`] = `
 
 exports[`buildsticker component success 1`] = `
 <div
-  className="panel panel-default buildsticker results_SUCCESS"
+  className="bb-buildsticker results_SUCCESS card"
 >
   <div
-    className="panel-body no-select"
+    className="card-body"
   >
     <div
-      className="row"
+      className="bb-buildsticker-left"
     >
-      <span
-        className="pull-right label results_SUCCESS"
+      <div
+        className="bb-badge-status pull-right results_SUCCESS"
       >
         SUCCESS
-      </span>
+      </div>
       <a
         href="/builders/2/builds/1"
         onClick={[Function]}
@@ -139,12 +139,12 @@ exports[`buildsticker component success 1`] = `
       </a>
     </div>
     <div
-      className="row"
+      className="bb-buildsticker-left"
     >
       <span
         className="pull-right"
       >
-        10 s
+        10 s 
       </span>
       <span>
         finished
