@@ -21,6 +21,7 @@ import {Card} from "react-bootstrap";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {Buildrequest} from "../../data/classes/Buildrequest";
 import {Builder} from "../../data/classes/Builder";
+import BadgeStatus from "../BadgeStatus/BadgeStatus";
 import BuildSummary from "../BuildSummary/BuildSummary";
 import {Buildset} from "../../data/classes/Buildset";
 import {Link} from "react-router-dom";
@@ -67,7 +68,7 @@ const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSummaryProps
         </div>
         <div className="flex-grow-1 text-right">
           <span>waiting for available worker and locks</span>
-          <div className="label results_PENDING">...</div>
+          <BadgeStatus className="results_PENDING">...</BadgeStatus>
         </div>
       </>
     );
