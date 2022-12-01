@@ -76,7 +76,7 @@ function computeBuildsByBuilder(builders: DataCollection<Builder>,
 
 const HomeView = observer(() => {
   const config = useContext(ConfigContext);
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([]);
 
   const buildsRunning = useDataApiQuery(
     () => Build.getAll(accessor, {query: {order: '-started_at', complete: false}}));

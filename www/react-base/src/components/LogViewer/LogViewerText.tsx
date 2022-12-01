@@ -201,7 +201,7 @@ export type LogViewerProps = {
 
 const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowCount}: LogViewerProps) => {
   const viewerState = useLocalObservable(() => new LogViewerState());
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([]);
 
   const pendingRequest = useRef<PendingRequest | null>(null);
   const logLineDigitCount = digitCount(log.num_lines);

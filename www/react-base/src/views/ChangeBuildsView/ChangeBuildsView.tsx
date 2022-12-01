@@ -32,7 +32,7 @@ import BuildsTable from "../../components/BuildsTable/BuildsTable";
 const ChangeBuildsView = observer(() => {
   const changeid = Number.parseInt(useParams<"changeid">().changeid ?? "");
 
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([changeid]);
   const buildsFetchLimit = globalSettings.getIntegerSetting('ChangeBuilds.buildsFetchLimit');
 
   const changeQuery = useDataApiQuery(() => Change.getAll(accessor, {id: changeid.toString()}));

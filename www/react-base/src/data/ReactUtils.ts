@@ -24,12 +24,19 @@ import {IDataCollection} from "./DataCollection";
 export const DataClientContext =
   createContext(new DataClient(undefined as any, undefined as any));
 
-export function useDataAccessor() {
+export function useDataAccessor<T>(dependency: (T|null)[]) {
   const dataClient = useContext(DataClientContext);
 
+  const storedDependency = useRef<(T|null)[]>([]);
   const accessor= useRef<IDataAccessor|null>(null);
+
   if (accessor.current === null) {
     accessor.current = dataClient.open();
+    storedDependency.current = [...dependency];
+  } else if (!arrayElementsEqual(dependency, storedDependency.current)) {
+    accessor.current.close();
+    accessor.current = dataClient.open();
+    storedDependency.current = [...dependency];
   }
 
   useEffect(() => {
@@ -39,7 +46,7 @@ export function useDataAccessor() {
         accessor.current = null;
       }
     }
-  }, [accessor.current]);
+  }, []);
 
   return accessor.current;
 }

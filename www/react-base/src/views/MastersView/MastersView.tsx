@@ -33,7 +33,7 @@ import BadgeRound from "../../components/BadgeRound/BadgeRound";
 
 const MastersView = observer(() => {
   const now = useCurrentTime();
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([]);
 
   const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
   const workersQuery = useDataApiQuery(() => Worker.getAll(accessor));

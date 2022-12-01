@@ -29,7 +29,7 @@ type BuildRequestSummaryProps = {
 }
 
 const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSummaryProps) => {
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([buildrequestid]);
 
   const buildRequestQuery = useDataApiQuery(
     () => Buildrequest.getAll(accessor, {id: buildrequestid}));
