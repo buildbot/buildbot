@@ -70,6 +70,8 @@ if ("buildbotFrontendConfig" in windowAny) {
 } else {
   // fallback during development
   axios.get("config").then(response => {
-    doRender(response.data);
+    const config: Config = response.data;
+    config.isProxy = true;
+    doRender(config);
   });
 }
