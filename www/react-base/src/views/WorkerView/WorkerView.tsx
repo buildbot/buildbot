@@ -44,12 +44,10 @@ const WorkerView = observer(() => {
 
   return (
     <div className="container">
-      <div className="row">
-        <WorkersTable workers={workersQuery.array} buildersQuery={buildersQuery}
-                      mastersQuery={mastersQuery}
-                      buildsForWorker={null}/>
-        <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
-      </div>
+      <WorkersTable workers={workersQuery.array} buildersQuery={buildersQuery}
+                    mastersQuery={mastersQuery}
+                    buildsForWorker={null}/>
+      <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
     </div>
   );
 });

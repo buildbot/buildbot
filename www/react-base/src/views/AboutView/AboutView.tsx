@@ -82,40 +82,32 @@ const AboutView = observer(() => {
 
   return (
     <div className="container">
-      <div className="row">
-        <div className="well">
-          <h2><img src="img/icon.svg" alt="" width="64px" className="nut-spin"/>&nbsp;About this&nbsp;
-            <Link to="http://buildbot.net">buildbot</Link>&nbsp;running for&nbsp;
-            <Link to={config.titleURL}>{config.title}</Link>
-          </h2>
-          <div className="row">
-            <div className="col-sm-12">
-              <ul>
-                {
-                  config.versions.map(version => (
-                    <li key={version[0]}>{version[0]} version: {version[1]}</li>
-                  ))
-                }
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="row">
-        <div className="well">
-          <h2>Configuration</h2>buildbot-www is configured using
-          <RawData data={config}></RawData>
-        </div>
-      </div>
-      <div className="row">
-        <div className="well">
-          <h2>API description</h2>
-          <ul className="list-group">
-            { applicationSpecs
-                .sort((a, b) => a.path.localeCompare(b.path))
-                .map(spec => (<EndpointListItem spec={spec}/>)) }
+      <div className="well">
+        <h2><img src="img/icon.svg" alt="" width="64px" className="nut-spin"/>&nbsp;About this&nbsp;
+          <Link to="http://buildbot.net">buildbot</Link>&nbsp;running for&nbsp;
+          <Link to={config.titleURL}>{config.title}</Link>
+        </h2>
+        <div className="col-sm-12">
+          <ul>
+            {
+              config.versions.map(version => (
+                <li key={version[0]}>{version[0]} version: {version[1]}</li>
+              ))
+            }
           </ul>
         </div>
+      </div>
+      <div className="well">
+        <h2>Configuration</h2>buildbot-www is configured using
+        <RawData data={config}></RawData>
+      </div>
+      <div className="well">
+        <h2>API description</h2>
+        <ul className="list-group">
+          { applicationSpecs
+              .sort((a, b) => a.path.localeCompare(b.path))
+              .map(spec => (<EndpointListItem spec={spec}/>)) }
+        </ul>
       </div>
     </div>
   )

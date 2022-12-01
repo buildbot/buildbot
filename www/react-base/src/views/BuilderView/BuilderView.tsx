@@ -173,7 +173,7 @@ const BuilderView = observer(() => {
     <div className="container">
       <AlertNotification text={errorMsg}/>
       {builder !== null && builder.description !== null
-        ? <div className="row"><h4>Description:</h4>{builder.description}</div>
+        ? <div><h4>Description:</h4>{builder.description}</div>
         : <></>
       }
       <BuildRequestsTable buildrequests={buildrequests}/>

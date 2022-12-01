@@ -84,11 +84,9 @@ const WorkersView = observer(() => {
 
   return (
     <div className="container">
-      <div className="row">
-        <WorkersTable workers={filteredWorkers} buildersQuery={buildersQuery}
-                      mastersQuery={mastersQuery}
-                      buildsForWorker={getBuildsForWorkerMap(workersQuery, buildsQuery, 7)}/>
-      </div>
+      <WorkersTable workers={filteredWorkers} buildersQuery={buildersQuery}
+                    mastersQuery={mastersQuery}
+                    buildsForWorker={getBuildsForWorkerMap(workersQuery, buildsQuery, 7)}/>
     </div>
   );
 });

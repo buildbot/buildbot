@@ -114,10 +114,8 @@ const PendingBuildRequestsView = observer(() => {
 
   return (
     <div className="container">
-      <div className="row">
-        <h4>Pending Buildrequests:</h4>
-        {renderContents()}
-      </div>
+      <h4>Pending Buildrequests:</h4>
+      {renderContents()}
     </div>
   );
 });

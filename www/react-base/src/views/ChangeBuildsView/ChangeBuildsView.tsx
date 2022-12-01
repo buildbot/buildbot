@@ -65,17 +65,15 @@ const ChangeBuildsView = observer(() => {
 
   return (
     <div className="container">
-      <div className="row">
-        { change !== null
-          ? <ChangeDetails change={change} compact={false}
-                           showDetails={showDetails} setShowDetails={setShowDetails}/>
-          : <div>Loading... </div>
-        }
-        { buildsQuery.array.length > 0
-          ? <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
-          : <div>Loading... </div>
-        }
-      </div>
+      { change !== null
+        ? <ChangeDetails change={change} compact={false}
+                         showDetails={showDetails} setShowDetails={setShowDetails}/>
+        : <div>Loading... </div>
+      }
+      { buildsQuery.array.length > 0
+        ? <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
+        : <div>Loading... </div>
+      }
     </div>
   );
 });

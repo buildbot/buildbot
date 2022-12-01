@@ -80,16 +80,14 @@ const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableProps) =
   }
 
   return (
-    <div className="row">
-      <>
-        <h4>
-          <Tabs defaultActiveKey={1}>
-            <Tab eventKey={1} title="Build requests">
-              {buildrequests.array.length === 0 ? <span>None</span> : tableElement()}
-            </Tab>
-          </Tabs>
-        </h4>
-      </>
+    <div>
+      <h4>
+        <Tabs defaultActiveKey={1}>
+          <Tab eventKey={1} title="Build requests">
+            {buildrequests.array.length === 0 ? <span>None</span> : tableElement()}
+          </Tab>
+        </Tabs>
+      </h4>
     </div>
   )
 });
