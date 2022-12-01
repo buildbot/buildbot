@@ -95,7 +95,7 @@ const getResponsibleUsers = (propertiesQuery: DataPropertiesCollection,
   const responsibleUsers: {[name: string]: string | null} = {};
   if (getPropertyValueOrDefault(propertiesQuery.properties, "scheduler", "") === "force") {
     const owner = getPropertyValueOrDefault(propertiesQuery.properties, "owner", "");
-    if (owner.match(/^.+\<.+\@.+\..+\>.*$/)) {
+    if (owner.match(/^.+<.+@.+\..+>.*$/)) {
       const splitResult = owner.split(new RegExp('<|>'));
       if (splitResult.length === 2) {
         const name = splitResult[0];
