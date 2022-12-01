@@ -35,7 +35,7 @@ const Loginbar = () => {
 
   if (user.anonymous) {
     return (
-      <Nav className="ml-auto bb-loginbar-dropdown-nav">
+      <Nav className="bb-loginbar-dropdown-nav">
         <NavDropdown title="Anonymous" id="bb-loginbar-dropdown">
           <NavDropdown.Item>
             <a href={"/auth/login?redirect=" + encodeURI(redirect)}>
@@ -70,7 +70,7 @@ const Loginbar = () => {
       : <></>
 
   return (
-    <Nav className="ml-auto bb-loginbar-dropdown-nav">
+    <Nav className="bb-loginbar-dropdown-nav">
       <NavDropdown title={dropdownToggle} id="bb-loginbar-dropdown">
         {userDropdownHeader}
         <NavDropdown.Item>

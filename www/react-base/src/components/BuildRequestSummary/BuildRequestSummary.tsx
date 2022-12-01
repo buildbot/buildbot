@@ -17,9 +17,11 @@
 
 import './BuildRequestSummary.scss';
 import {observer} from "mobx-react";
+import {Card} from "react-bootstrap";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {Buildrequest} from "../../data/classes/Buildrequest";
 import {Builder} from "../../data/classes/Builder";
+import BadgeStatus from "../BadgeStatus/BadgeStatus";
 import BuildSummary from "../BuildSummary/BuildSummary";
 import {Buildset} from "../../data/classes/Buildset";
 import {Link} from "react-router-dom";
@@ -66,7 +68,7 @@ const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSummaryProps
         </div>
         <div className="flex-grow-1 text-right">
           <span>waiting for available worker and locks</span>
-          <div className="label results_PENDING">...</div>
+          <BadgeStatus className="results_PENDING">...</BadgeStatus>
         </div>
       </>
     );
@@ -75,13 +77,13 @@ const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSummaryProps
   const renderPendingBuilds = () => {
     return (
       <div>
-        <div className="bb-build-request-summary-pending-panel panel panel-default results_PENDING">
-          <div className="panel-heading no-select">
+        <Card className="bb-build-request-summary-pending-panel results_PENDING">
+          <Card.Header className="no-select">
             <div className="flex-row">
               {renderBuildRequestDetails()}
             </div>
-          </div>
-        </div>
+          </Card.Header>
+        </Card>
       </div>
     )
   }

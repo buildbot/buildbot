@@ -48,6 +48,8 @@ export type Config = {
   plugins: {[key: string]: any};
   user: UserConfig;
   port: string;
+  // Added by the frontend itself if it's running via a proxy.
+  isProxy?: boolean;
 }
 
 export const ConfigContext = createContext<Config>(undefined as any);

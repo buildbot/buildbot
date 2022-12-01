@@ -64,10 +64,23 @@ export class GlobalMenuSettings {
 
     const listToAdd = this.findParentGroupList(settings.parentName);
 
-    //
+    this.removeDuplicateSettings(listToAdd, settings);
+
     let insertIndex = listToAdd.findIndex(s => s.order > insertSettings.order);
     insertIndex = insertIndex === -1 ? listToAdd.length : insertIndex;
     listToAdd.splice(insertIndex, 0, insertSettings);
+  }
+
+  private removeDuplicateSettings(currSettings: ResolvedGroupSettings[], settings: GroupSettings) {
+    const itemsToRemove: number[] = [];
+    currSettings.forEach((currSettings, i) => {
+      if (currSettings.name == settings.name && currSettings.route == settings.route) {
+        itemsToRemove.push(i);
+      }
+    });
+    for (const i of itemsToRemove.reverse()) {
+      currSettings.splice(i, 1);
+    }
   }
 
   private findParentGroupList(parentName: string | null) {

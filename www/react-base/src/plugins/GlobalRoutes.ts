@@ -16,7 +16,7 @@
 */
 
 import {TopbarItem} from "../components/Topbar/Topbar";
-import {action, makeObservable, observable} from "mobx";
+import {action, makeObservable, observable, ObservableMap} from "mobx";
 
 export type RouteConfig = {
   route: string;
@@ -25,14 +25,20 @@ export type RouteConfig = {
 }
 
 export class GlobalRoutes {
-  @observable routes : RouteConfig[] = [];
+  @observable configs = new ObservableMap<string, RouteConfig>();
 
   constructor() {
     makeObservable(this);
   }
 
   @action addRoute(config: RouteConfig) {
-    this.routes.push(config);
+    if (this.configs.has(config.route)) {
+      // It is an error in a production app to have multiple route configs with the same route.
+      // However, this also happens whenever page source is hot-reloaded, therefore old value
+      // is simply replaced
+      console.log(`Duplicate route ${config.route}`);
+    }
+    this.configs.set(config.route, config);
   }
 }
 

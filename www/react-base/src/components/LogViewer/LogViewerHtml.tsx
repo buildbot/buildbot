@@ -19,6 +19,7 @@ import {Log} from "../../data/classes/Log";
 import {useEffect, useRef, useState} from 'react';
 import {useDataAccessor} from "../../data/ReactUtils";
 import {CancellablePromise} from "../../util/CancellablePromise";
+import {Card} from "react-bootstrap";
 
 export type LogViewerHtmlProps = {
   log: Log;
@@ -45,7 +46,7 @@ const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
   }, []);
 
   return (
-    <div className="panel-body" dangerouslySetInnerHTML={{__html: htmlLog}}/>
+    <Card.Body dangerouslySetInnerHTML={{__html: htmlLog}}/>
   );
 }
 
