@@ -16,6 +16,7 @@
 */
 
 import './LogPreview.scss';
+import {Card} from "react-bootstrap";
 import {Link} from "react-router-dom";
 import {Log} from "../../data/classes/Log";
 import {globalSettings} from "../../plugins/GlobalSettings";
@@ -162,7 +163,7 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
   const renderLogContent = () => {
     if (log.type === 'h') {
       return (
-        <div className="panel-body" dangerouslySetInnerHTML={{__html: htmlLog}}/>
+        <Card.Body dangerouslySetInnerHTML={{__html: htmlLog}}/>
       );
     }
 
@@ -184,10 +185,10 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
   }
 
   return (
-    <div className={"logpreview panel" + (log.name === 'err.html' ? ' panel-danger' : ' panel-default')}>
+    <Card bg={log.name === 'err.html' ? 'danger' : 'light'} className="logpreview">
       {generateStyleElement("pre.log")}
-      <div className="panel-heading">
-        <div className="panel-title">
+      <Card.Header>
+        <Card.Title>
           <div className="flex-row">
             <div onClick={() => setFullDisplay(!fullDisplay)} className="flex-grow-3">
               <ArrowExpander isExpanded={fullDisplay}/>
@@ -206,12 +207,12 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </Card.Title>
+      </Card.Header>
       <div>
         {renderLogContent()}
       </div>
-    </div>
+    </Card>
   );
 }
 

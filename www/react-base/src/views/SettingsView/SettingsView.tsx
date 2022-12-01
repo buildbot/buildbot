@@ -16,6 +16,7 @@
 */
 
 import {observer} from "mobx-react";
+import {Card} from "react-bootstrap";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {
@@ -96,11 +97,11 @@ const SettingsView = observer(() => {
 
   const renderGroup = (group: SettingGroup) => {
     return (
-      <div className="panel panel-default">
-        <div className="panel-heading">
-          <h3 className="panel-title">{group.caption}</h3>
-        </div>
-        <div className="panel-body">
+      <Card>
+        <Card.Header>
+          <Card.Title>{group.caption}</Card.Title>
+        </Card.Header>
+        <Card.Body>
           <form name={group.name}>
             {Object.values(group.items).map(item => (
               <div key={item.name}>
@@ -110,23 +111,23 @@ const SettingsView = observer(() => {
               </div>
             ))}
           </form>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     );
   }
 
   return (
     <div className="container">
       {Object.values(globalSettings.groups).map(group => renderGroup(group))}
-      <div className="panel panel-default">
-        <div className="panel-heading">
-          <h3 className="panel-title">Override defaults for all users</h3>
-        </div>
-        <div className="panel-body">
+      <Card>
+        <Card.Header>
+          <Card.Title>Override defaults for all users</Card.Title>
+        </Card.Header>
+        <Card.Body>
           <p>To override defaults for all users, put following code in master.cfg</p>
           <pre>{masterCfgOverrideSnippet}</pre>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     </div>
   );
 });

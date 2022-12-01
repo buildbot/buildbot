@@ -23,7 +23,7 @@ import {
   ForceSchedulerFieldNested
 } from "../../../data/classes/Forcescheduler";
 import FieldAny from "./FieldAny";
-import {Tab, Tabs} from "react-bootstrap";
+import {Card, Tab, Tabs} from "react-bootstrap";
 
 const shouldHideField = (field: ForceSchedulerFieldBase) => {
   if (field.hide) {
@@ -70,9 +70,9 @@ const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
 
   if (field.layout === 'vertical') {
     return (
-      <div className="panel panel-default">
-        { field.label !== null ? <div className="panel-heading">{field.label}</div> : <></> }
-        <div className="panel-body">
+      <Card>
+        { field.label !== null ? <Card.Header>{field.label}</Card.Header> : <></> }
+        <Card.Body>
           <div className="form-horizontal">
             {
               field.fields.filter(f => !shouldHideField(f)).map(f => (
@@ -82,8 +82,8 @@ const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
               ))
             }
           </div>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     )
   }
 
