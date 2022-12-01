@@ -32,7 +32,8 @@ import {Card} from "react-bootstrap";
 
 
 function maybeShowUrlWarning(location: Location, config: Config) {
-  const urlWithNoFragment = `${location.protocol}://${location.hostname}${location.port}${location.pathname}`;
+  const colonAndPort = location.port === '' ? '' : `:${location.port}`;
+  const urlWithNoFragment = `${location.protocol}://${location.hostname}${colonAndPort}${location.pathname}`;
   if (urlWithNoFragment === config.buildbotURL) {
     return <></>;
   }
