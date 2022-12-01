@@ -27,6 +27,7 @@ import DataPropertiesCollection from "./DataPropertiesCollection";
 import DataMultiPropertiesCollection from "./DataMultiPropertiesCollection";
 
 export interface IDataCollection {
+  isExpired(): boolean;
   subscribe(): Promise<void>;
   initial(data: any[]): void;
   close(): Promise<void>;
@@ -62,6 +63,13 @@ export default class DataCollection<DataType extends BaseClass> implements IData
     }
   }
 
+  isExpired() {
+    if (this.accessor === undefined) {
+      return false;
+    }
+    return !this.accessor.isOpen();
+  }
+
   subscribe() {
     return this.webSocketClient.subscribe(this.socketPath, this);
   }
@@ -94,18 +102,20 @@ export default class DataCollection<DataType extends BaseClass> implements IData
 
   getRelated<ChildDataType extends BaseClass>(
       callback: (child: DataType) => DataCollection<ChildDataType>) {
-    return new DataMultiCollection<DataType, ChildDataType>(this.array, null, null, callback);
+    return new DataMultiCollection<DataType, ChildDataType>(this.accessor, this.array, null, null,
+      callback);
   }
 
   getRelatedProperties(callback: (child: DataType) => DataPropertiesCollection) {
-    return new DataMultiPropertiesCollection<DataType>(this.array, null, null, callback);
+    return new DataMultiPropertiesCollection<DataType>(this.accessor, this.array, null, null,
+      callback);
   }
 
   getRelatedOfFiltered<ChildDataType extends BaseClass>(
       filteredIds: IObservableArray<string>,
       callback: (child: DataType) => DataCollection<ChildDataType>) {
-    return new DataMultiCollection<DataType, ChildDataType>(this.array, null, filteredIds,
-      callback);
+    return new DataMultiCollection<DataType, ChildDataType>(this.accessor, this.array, null,
+      filteredIds, callback);
   }
 
   getNthOrNull(index: number): DataType | null {

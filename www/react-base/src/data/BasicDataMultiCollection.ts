@@ -26,12 +26,14 @@ import {
 } from "mobx";
 import DataCollection, {IDataCollection} from "./DataCollection";
 import {IReactionDisposer} from "mobx";
+import {IDataAccessor} from "./DataAccessor";
 
 /* This class wraps multiple DataCollections of the same thing.
  */
 export class BasicDataMultiCollection<ParentDataType extends BaseClass,
   Collection extends IDataCollection> implements IDataCollection {
 
+  accessor: IDataAccessor;
   parentArray: IObservableArray<ParentDataType> | null;
   parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null;
   parentFilteredIds: IObservableArray<string>;
@@ -41,12 +43,14 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
   callback: (child: ParentDataType) => Collection;
   private disposer: IReactionDisposer;
 
-  constructor(parentArray: IObservableArray<ParentDataType> | null,
+  constructor(accessor: IDataAccessor,
+              parentArray: IObservableArray<ParentDataType> | null,
               parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
               parentFilteredIds: IObservableArray<string> | null,
               callback: (child: ParentDataType) => Collection) {
     makeObservable(this);
 
+    this.accessor = accessor;
     this.parentArray = parentArray;
     this.parentArrayMap = parentArrayMap;
     this.parentFilteredIds = parentFilteredIds ?? observable([]);
@@ -96,6 +100,10 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
     } else {
       throw Error("Either parentArray or parentArrayMap must not be null");
     }
+  }
+
+  isExpired() {
+    return !this.accessor.isOpen();
   }
 
   subscribe() {
