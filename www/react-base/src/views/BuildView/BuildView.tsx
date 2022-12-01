@@ -317,45 +317,43 @@ const BuildView = observer(() => {
       <nav>
         {build !== null ? renderPager(build) : <></>}
       </nav>
-      <div className="row">
-        <Tabs>
-          <Tab eventKey="build-steps" title="Build steps">
-            { build !== null
-              ? <BuildSummary build={build} condensed={false} parentBuild={parentBuild}
-                              parentRelationship={buildset === null ? null : buildset.parent_relationship}/>
-              : <></>
-            }
-          </Tab>
-          <Tab eventKey="properties" title="Build Properties">
-            <PropertiesTable properties={propertiesQuery.properties}/>
-          </Tab>
-          <Tab eventKey="worker" title={`Worker: ${workerName}`}>
-            <table className="table table-hover table-striped table-condensed">
-              <tbody>
-                <tr>
-                  <td className="text-left">name</td>
-                  <td className="text-center">{workerName}</td>
-                </tr>
-                {renderWorkerInfo()}
-              </tbody>
-            </table>
-          </Tab>
-          <Tab eventKey="responsible" title="Responsible Users">
-            <ul className="list-group">
-              {renderResponsibleUsers()}
-            </ul>
-          </Tab>
-          <Tab eventKey="changes" title="Changes">
-            {build !== null
-              ? <ChangesTable changes={changesQuery.getParentCollectionOrEmpty(build.id)}/>
-              : <></>
-            }
-          </Tab>
-          <Tab eventKey="debug" title="Debug">
-            {renderDebugInfo()}
-          </Tab>
-        </Tabs>
-      </div>
+      <Tabs>
+        <Tab eventKey="build-steps" title="Build steps">
+          { build !== null
+            ? <BuildSummary build={build} condensed={false} parentBuild={parentBuild}
+                            parentRelationship={buildset === null ? null : buildset.parent_relationship}/>
+            : <></>
+          }
+        </Tab>
+        <Tab eventKey="properties" title="Build Properties">
+          <PropertiesTable properties={propertiesQuery.properties}/>
+        </Tab>
+        <Tab eventKey="worker" title={`Worker: ${workerName}`}>
+          <table className="table table-hover table-striped table-condensed">
+            <tbody>
+              <tr>
+                <td className="text-left">name</td>
+                <td className="text-center">{workerName}</td>
+              </tr>
+              {renderWorkerInfo()}
+            </tbody>
+          </table>
+        </Tab>
+        <Tab eventKey="responsible" title="Responsible Users">
+          <ul className="list-group">
+            {renderResponsibleUsers()}
+          </ul>
+        </Tab>
+        <Tab eventKey="changes" title="Changes">
+          {build !== null
+            ? <ChangesTable changes={changesQuery.getParentCollectionOrEmpty(build.id)}/>
+            : <></>
+          }
+        </Tab>
+        <Tab eventKey="debug" title="Debug">
+          {renderDebugInfo()}
+        </Tab>
+      </Tabs>
     </div>
   );
 });

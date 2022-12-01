@@ -63,32 +63,28 @@ const ChangesTable = observer(({changes}: ChangesTableProps) => {
 
   return (
     <div className="container-fluid">
-      <div className="row">
-        <div className="navbar navbar-default">
-          <div className="container-fluid">
-            <div className="navbar-header">
-              <div className="navbar-brand">{changes.array.length} changes</div>
-            </div>
-            <div className="navbar-form navbar-right">
-              <div className="form-group">
-                <div onClick={() => tableState.setShowDetailsAll(false)} title="Collapse all"
-                     className="btn btn-default">
-                  <i className="fa fa-minus"></i>
-                </div>
-                <div onClick={() => tableState.setShowDetailsAll(true)} title="Expand all"
-                     className="btn btn-default">
-                  <i className="fa fa-plus"></i>
-                </div>
+      <div className="navbar navbar-default">
+        <div className="container-fluid">
+          <div className="navbar-header">
+            <div className="navbar-brand">{changes.array.length} changes</div>
+          </div>
+          <div className="navbar-form navbar-right">
+            <div className="form-group">
+              <div onClick={() => tableState.setShowDetailsAll(false)} title="Collapse all"
+                   className="btn btn-default">
+                <i className="fa fa-minus"></i>
+              </div>
+              <div onClick={() => tableState.setShowDetailsAll(true)} title="Expand all"
+                   className="btn btn-default">
+                <i className="fa fa-plus"></i>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="row">
-        <ul className="list-group">
-          {changeElements}
-        </ul>
-      </div>
+      <ul className="list-group">
+        {changeElements}
+      </ul>
     </div>
   );
 });

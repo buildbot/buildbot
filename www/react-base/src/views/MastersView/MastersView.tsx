@@ -115,20 +115,18 @@ const MastersView = observer(() => {
 
   return (
     <div className="container">
-      <div className="row">
-        <table className="table table-hover table-striped table-condensed">
-          <tbody>
-          <tr>
-            <th>Active</th>
-            <th>Name</th>
-            <th>Recent Builds</th>
-            <th>Workers</th>
-            <th>Last Active</th>
-          </tr>
-          {mastersQuery.array.map(master => renderMaster(master))}
-          </tbody>
-        </table>
-      </div>
+      <table className="table table-hover table-striped table-condensed">
+        <tbody>
+        <tr>
+          <th>Active</th>
+          <th>Name</th>
+          <th>Recent Builds</th>
+          <th>Workers</th>
+          <th>Last Active</th>
+        </tr>
+        {mastersQuery.array.map(master => renderMaster(master))}
+        </tbody>
+      </table>
     </div>
   );
 });

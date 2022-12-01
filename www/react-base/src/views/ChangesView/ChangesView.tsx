@@ -33,9 +33,7 @@ const ChangesView = observer(() => {
 
   return (
     <div className="container">
-      <div className="row">
-        <ChangesTable changes={changesQuery}/>
-      </div>
+      <ChangesTable changes={changesQuery}/>
     </div>
   );
 });
