@@ -16,7 +16,11 @@
 */
 
 import {observer} from "mobx-react";
-import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "../../data/ReactUtils";
+import {
+  useDataAccessor,
+  useDataApiQuery,
+  useDataApiSinglePropertiesQuery
+} from "../../data/ReactUtils";
 import {Builder} from "../../data/classes/Builder";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
@@ -33,7 +37,6 @@ import {Build} from "../../data/classes/Build";
 import BuildSummary from "../../components/BuildSummary/BuildSummary";
 import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
 import {Buildset} from "../../data/classes/Buildset";
-import DataPropertiesCollection from "../../data/DataPropertiesCollection";
 
 const buildTopbarActions = (builder: Builder | null,
                             buildRequest: Buildrequest | null,
@@ -91,8 +94,8 @@ const BuildRequestView = observer(() => {
   const builder = builderQuery.getNthOrNull(0);
   const buildset = buildsetQuery.getNthOrNull(0);
 
-  const buildsetPropertiesQuery = useDataApiDynamicQuery([buildset !== null], () =>
-    buildset === null ? new DataPropertiesCollection() : buildset.getProperties());
+  const buildsetPropertiesQuery = useDataApiSinglePropertiesQuery(buildset,
+    bs => bs.getProperties());
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
