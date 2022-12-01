@@ -34,7 +34,7 @@ import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {globalSettings} from "../../plugins/GlobalSettings";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
-import {Badge} from "react-bootstrap";
+import {Badge, Table} from "react-bootstrap";
 
 const connected2class = (worker: Worker) => {
   if (worker.connected_to.length > 0) {
@@ -351,7 +351,7 @@ const BuildersView = observer(() => {
                onChange={e => setBuilderNameFilter(e.target.value)}
                placeholder="Search for builders" className="bb-builders-view-form-control"/>
       </form>
-      <table className="table table-hover table-striped table-condensed">
+      <Table hover striped size="sm">
         <tbody>
           <tr>
             <th>Builder Name</th>
@@ -364,7 +364,7 @@ const BuildersView = observer(() => {
           </tr>
           {builderRowElements}
         </tbody>
-        </table>
+        </Table>
     </div>
   );
 

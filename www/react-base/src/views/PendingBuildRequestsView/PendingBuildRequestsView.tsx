@@ -16,6 +16,7 @@
 */
 
 import {observer} from "mobx-react";
+import {Table} from "react-bootstrap";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {Builder} from "../../data/classes/Builder";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
@@ -97,7 +98,7 @@ const PendingBuildRequestsView = observer(() => {
     }
 
     return (
-      <table className="table table-hover table-striped table-condensed table-bordered">
+      <Table hover striped size="sm">
         <tbody>
           <tr>
             <td width="100px">#</td>
@@ -108,7 +109,7 @@ const PendingBuildRequestsView = observer(() => {
           </tr>
           {renderBuildRequests()}
         </tbody>
-      </table>
+      </Table>
     )
   }
 

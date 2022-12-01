@@ -21,7 +21,7 @@ import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Mome
 import {useState} from "react";
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import {Link} from "react-router-dom";
-import {OverlayTrigger} from "react-bootstrap";
+import {OverlayTrigger, Table} from "react-bootstrap";
 import {parseChangeAuthorNameAndEmail} from "../../util/Properties";
 import ChangeUserAvatar from "../ChangeUserAvatar/ChangeUserAvatar";
 
@@ -38,7 +38,7 @@ const ChangeDetails = ({change, compact, showDetails, setShowDetails}: ChangeDet
 
   const renderChangeDetails = () => (
     <div className="anim-changedetails">
-      <table className="table table-striped table-condensed">
+      <Table striped size="sm">
         <tbody>
           { change.category !== null
             ? <tr>
@@ -88,7 +88,7 @@ const ChangeDetails = ({change, compact, showDetails, setShowDetails}: ChangeDet
             </td>
           </tr>
         </tbody>
-      </table>
+      </Table>
       <h5>Comment</h5>
       <pre>{change.comments}</pre>
       <h5>Changed files</h5>

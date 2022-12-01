@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {Table} from "react-bootstrap";
 import {Builder} from "../../data/classes/Builder";
 import {Master} from "../../data/classes/Master";
 import {Worker} from "../../data/classes/Worker";
@@ -70,7 +71,7 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
   const workerInfoNamesToDisplay = getWorkerInfoNamesToDisplay(workers);
 
   return (
-    <table className="table table-hover table-striped table-condensed">
+    <Table hover striped size="sm">
       <thead>
       <tr>
         <th>State</th>
@@ -144,7 +145,7 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
           })
       }
       </tbody>
-    </table>
+    </Table>
   );
 });
 

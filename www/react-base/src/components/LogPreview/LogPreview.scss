@@ -5,3 +5,7 @@
 .bb-log-preview-contents {
   padding: 9.5px;
 }
+
+.logline > span {
+  white-space: nowrap;
+}
