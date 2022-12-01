@@ -178,7 +178,7 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
     });
 
     return (
-      <pre className="select-content log">
+      <pre className="bb-log-preview-contents select-content log">
         {lineElements}
       </pre>
     );
@@ -188,26 +188,24 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
     <Card bg={log.name === 'err.html' ? 'danger' : 'light'} className="logpreview">
       {generateStyleElement("pre.log")}
       <Card.Header>
-        <Card.Title>
-          <div className="flex-row">
-            <div onClick={() => setFullDisplay(!fullDisplay)} className="flex-grow-3">
-              <ArrowExpander isExpanded={fullDisplay}/>
-              {log.name}
-            </div>
-            <div className="flex-grow-1">
-              <div className="pull-right">
-                <Link to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}>
-                  view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}
-                </Link>
-                <a href={`${apiRootUrl}/logs/${log.id}/raw`} title="download log"
-                      className="btn btn-default btn-xs">
-                  <i className="fa fa-download"></i>
-                  download
-                </a>
-              </div>
+        <div className="flex-row">
+          <div onClick={() => setFullDisplay(!fullDisplay)} className="flex-grow-3">
+            <ArrowExpander isExpanded={fullDisplay}/>
+            {log.name}
+          </div>
+          <div className="flex-grow-1">
+            <div className="pull-right">
+              <Link to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}>
+                view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}
+              </Link>
+              <a href={`${apiRootUrl}/logs/${log.id}/raw`} title="download log"
+                    className="btn btn-default btn-xs">
+                <i className="fa fa-download"></i>
+                download
+              </a>
             </div>
           </div>
-        </Card.Title>
+        </div>
       </Card.Header>
       <div>
         {renderLogContent()}
