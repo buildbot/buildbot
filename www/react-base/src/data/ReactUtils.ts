@@ -44,9 +44,14 @@ export function useDataAccessor() {
   return accessor.current;
 }
 
-export function useDataApiQuery<Collection>(callback: () => Collection): Collection {
+export function useDataApiQuery<Collection extends IDataCollection>(
+    callback: () => Collection): Collection {
   let storedCollection = useRef<Collection|null>(null);
-  if (storedCollection.current === null) {
+  if (storedCollection.current === null ||
+      storedCollection.current.isExpired()) {
+    if (storedCollection.current !== null) {
+      storedCollection.current.close();
+    }
     storedCollection.current = callback();
   }
   return storedCollection.current;
@@ -69,7 +74,9 @@ export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
   const storedDependency = useRef<(T|null)[]>([]);
   let storedCollection = useRef<Collection|null>(null);
 
-  if (storedCollection.current === null || !arrayElementsEqual(dependency, storedDependency.current)) {
+  if (storedCollection.current === null ||
+      !arrayElementsEqual(dependency, storedDependency.current) ||
+      storedCollection.current.isExpired()) {
     if (storedCollection.current !== null) {
       storedCollection.current.close();
     }
