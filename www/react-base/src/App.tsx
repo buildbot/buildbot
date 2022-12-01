@@ -36,7 +36,7 @@ function App() {
 
   useCurrentTimeSetupTimers();
 
-  const routeElements = globalRoutes.routes.map(config => {
+  const routeElements = [...globalRoutes.configs.values()].map(config => {
     return <Route key={config.route} path={config.route} element={config.element()}/>
   });
 
