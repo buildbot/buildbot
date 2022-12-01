@@ -26,6 +26,7 @@ import {CancellablePromise} from "../util/CancellablePromise";
 export interface IDataAccessor {
   registerCollection(c: IDataCollection): void;
   unregisterCollection(c: IDataCollection): void;
+  isOpen(): boolean;
   close(): void;
   get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
                                   descriptor: IDataDescriptor<DataType>): DataCollection<DataType>;
@@ -38,6 +39,7 @@ export interface IDataAccessor {
 export default class BaseDataAccessor implements IDataAccessor {
   private registeredCollections: IDataCollection[] = [];
   private client: DataClient;
+  private _isOpen: boolean = true;
 
   constructor(client: DataClient) {
     this.client = client;
@@ -54,7 +56,10 @@ export default class BaseDataAccessor implements IDataAccessor {
     }
   }
 
+  isOpen() { return this._isOpen; }
+
   close() {
+    this._isOpen = false;
     // We take a copy because collections will remove themselves from the
     // registeredCollections array
     for (const c of [...this.registeredCollections]) {
@@ -90,6 +95,7 @@ export class EmptyDataAccessor implements IDataAccessor {
   registerCollection(c: IDataCollection) {}
   unregisterCollection(c: IDataCollection) {}
 
+  isOpen() { return false; }
   close() {}
 
   get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
