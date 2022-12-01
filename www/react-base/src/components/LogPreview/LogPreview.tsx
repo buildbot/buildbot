@@ -28,6 +28,7 @@ import {useLocalObservable} from "mobx-react";
 import {DataClientContext, useDataAccessor} from "../../data/ReactUtils";
 import {CancellablePromise} from "../../util/CancellablePromise";
 import {useStateWithDefaultIfNotSet} from "../../util/React";
+import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
 
 type RenderedLogLine = {
   content: JSX.Element[];
@@ -81,8 +82,6 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
   const [fullDisplay, setFullDisplay] = useStateWithDefaultIfNotSet(() => initialFullDisplay);
 
   const accessor = useDataAccessor([builderid, buildnumber, stepnumber, log.id]);
-  const dataClient = useContext(DataClientContext);
-  const apiRootUrl = dataClient.restClient.rootUrl;
 
   const [htmlLog, setHtmlLog] = useState('');
 
@@ -198,11 +197,7 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
               <Link to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}>
                 view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}
               </Link>
-              <a href={`${apiRootUrl}/logs/${log.id}/raw`} title="download log"
-                    className="btn btn-default btn-xs">
-                <i className="fa fa-download"></i>
-                download
-              </a>
+              <LogDownloadButton log={log}/>
             </div>
           </div>
         </div>
