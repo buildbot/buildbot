@@ -2,7 +2,7 @@
 
 exports[`PropertiesTable component rendering 1`] = `
 <table
-  className="table table-hover table-striped table-condensed"
+  className="table table-sm table-striped table-hover"
 >
   <thead>
     <tr>

@@ -16,6 +16,7 @@
 */
 
 import './PropertiesTable.scss';
+import {Table} from "react-bootstrap";
 import CopyToClipboard from 'react-copy-to-clipboard';
 import {observer} from "mobx-react";
 
@@ -42,7 +43,7 @@ const PropertiesTable = observer(({properties}: PropertiesTableProps) => {
   });
 
   return (
-    <table className="table table-hover table-striped table-condensed">
+    <Table hover striped size="sm">
       <thead>
         <tr>
           <th className="text-left">Name</th>
@@ -53,7 +54,7 @@ const PropertiesTable = observer(({properties}: PropertiesTableProps) => {
       <tbody>
         {propertyRows}
       </tbody>
-    </table>
+    </Table>
   );
 });
 

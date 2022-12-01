@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {Table} from "react-bootstrap";
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import {observer} from "mobx-react";
@@ -65,7 +66,7 @@ const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableProps) =
     });
 
     return (
-      <table className="table table-hover table-striped table-condensed">
+      <Table hover striped size="sm">
         <tbody>
           <tr>
             <td width="100px">#</td>
@@ -75,7 +76,7 @@ const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableProps) =
           </tr>
           {rowElements}
         </tbody>
-      </table>
+      </Table>
     );
   }
 

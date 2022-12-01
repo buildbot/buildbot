@@ -16,6 +16,7 @@
 */
 
 import {observer} from "mobx-react";
+import {Table} from "react-bootstrap";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
@@ -47,7 +48,7 @@ const SchedulersView = observer(() => {
 
   return (
     <div className="container">
-      <table className="table table-hover table-striped table-condensed">
+      <Table hover striped size="sm">
         <tbody>
           <tr>
             <td>Enabled</td>
@@ -56,7 +57,7 @@ const SchedulersView = observer(() => {
           </tr>
           {schedulersQuery.array.map(scheduler => renderScheduler(scheduler))}
         </tbody>
-      </table>
+      </Table>
     </div>
   );
 });

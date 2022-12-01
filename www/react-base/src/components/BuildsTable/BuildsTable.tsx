@@ -17,6 +17,7 @@
 
 import './BuildsTable.scss';
 import {observer} from "mobx-react";
+import {Table} from "react-bootstrap";
 import {Builder} from "../../data/classes/Builder";
 import {Build} from "../../data/classes/Build";
 import {dateFormat, durationFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
@@ -81,7 +82,7 @@ const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
 
   const tableElement = () => {
     return (
-      <table className="table table-hover table-striped table-condensed">
+      <Table hover striped size="sm">
         <tbody>
           <tr>
             { builders !== null ? <td width="200px">Builder</td> : <></> }
@@ -94,7 +95,7 @@ const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
           </tr>
           {rowElements}
         </tbody>
-      </table>
+      </Table>
     );
   }
 

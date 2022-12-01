@@ -16,6 +16,7 @@
 */
 
 import {observer} from "mobx-react";
+import {Table} from "react-bootstrap";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
@@ -115,7 +116,7 @@ const MastersView = observer(() => {
 
   return (
     <div className="container">
-      <table className="table table-hover table-striped table-condensed">
+      <Table hover striped size="sm">
         <tbody>
         <tr>
           <th>Active</th>
@@ -126,7 +127,7 @@ const MastersView = observer(() => {
         </tr>
         {mastersQuery.array.map(master => renderMaster(master))}
         </tbody>
-      </table>
+      </Table>
     </div>
   );
 });

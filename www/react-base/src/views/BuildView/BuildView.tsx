@@ -46,7 +46,7 @@ import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
 import ChangesTable from "../../components/ChangesTable/ChangesTable";
 import BuildSummary from "../../components/BuildSummary/BuildSummary";
 import ChangeUserAvatar from "../../components/ChangeUserAvatar/ChangeUserAvatar";
-import {Tab, Tabs} from "react-bootstrap";
+import {Tab, Table, Tabs} from "react-bootstrap";
 
 const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStopping: boolean,
                             doRebuild: () => void, doStop: () => void) => {
@@ -329,7 +329,7 @@ const BuildView = observer(() => {
           <PropertiesTable properties={propertiesQuery.properties}/>
         </Tab>
         <Tab eventKey="worker" title={`Worker: ${workerName}`}>
-          <table className="table table-hover table-striped table-condensed">
+          <Table hover striped size="sm">
             <tbody>
               <tr>
                 <td className="text-left">name</td>
@@ -337,7 +337,7 @@ const BuildView = observer(() => {
               </tr>
               {renderWorkerInfo()}
             </tbody>
-          </table>
+          </Table>
         </Tab>
         <Tab eventKey="responsible" title="Responsible Users">
           <ul className="list-group">
