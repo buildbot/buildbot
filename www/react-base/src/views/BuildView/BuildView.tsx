@@ -46,7 +46,7 @@ import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
 import ChangesTable from "../../components/ChangesTable/ChangesTable";
 import BuildSummary from "../../components/BuildSummary/BuildSummary";
 import ChangeUserAvatar from "../../components/ChangeUserAvatar/ChangeUserAvatar";
-import {Tab, TabList, TabPanel, Tabs} from "react-tabs";
+import {Tab, Tabs} from "react-bootstrap";
 
 const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStopping: boolean,
                             doRebuild: () => void, doStop: () => void) => {
@@ -312,32 +312,24 @@ const BuildView = observer(() => {
   }
 
   return (
-    <div className="container">
+    <div className="container bb-build-view">
       <AlertNotification text={errorMsg}/>
       <nav>
         {build !== null ? renderPager(build) : <></>}
       </nav>
       <div className="row">
-        <Tabs className="bb-build-view-tabs">
-          <TabList>
-            <Tab>Build steps</Tab>
-            <Tab>Build Properties</Tab>
-            <Tab>{`Worker: ${workerName}`}</Tab>
-            <Tab>Responsible Users</Tab>
-            <Tab>Changes</Tab>
-            <Tab>Debug</Tab>
-          </TabList>
-          <TabPanel>
+        <Tabs>
+          <Tab eventKey="build-steps" title="Build steps">
             { build !== null
               ? <BuildSummary build={build} condensed={false} parentBuild={parentBuild}
                               parentRelationship={buildset === null ? null : buildset.parent_relationship}/>
               : <></>
             }
-          </TabPanel>
-          <TabPanel>
+          </Tab>
+          <Tab eventKey="properties" title="Build Properties">
             <PropertiesTable properties={propertiesQuery.properties}/>
-          </TabPanel>
-          <TabPanel>
+          </Tab>
+          <Tab eventKey="worker" title={`Worker: ${workerName}`}>
             <table className="table table-hover table-striped table-condensed">
               <tbody>
                 <tr>
@@ -347,21 +339,21 @@ const BuildView = observer(() => {
                 {renderWorkerInfo()}
               </tbody>
             </table>
-          </TabPanel>
-          <TabPanel>
+          </Tab>
+          <Tab eventKey="responsible" title="Responsible Users">
             <ul className="list-group">
               {renderResponsibleUsers()}
             </ul>
-          </TabPanel>
-          <TabPanel>
+          </Tab>
+          <Tab eventKey="changes" title="Changes">
             {build !== null
               ? <ChangesTable changes={changesQuery.getParentCollectionOrEmpty(build.id)}/>
               : <></>
             }
-          </TabPanel>
-          <TabPanel>
+          </Tab>
+          <Tab eventKey="debug" title="Debug">
             {renderDebugInfo()}
-          </TabPanel>
+          </Tab>
         </Tabs>
       </div>
     </div>
