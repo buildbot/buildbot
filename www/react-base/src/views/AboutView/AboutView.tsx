@@ -15,7 +15,9 @@
   Copyright Buildbot Team Members
 */
 
+import "./AboutView.scss";
 import {observer} from "mobx-react";
+import {Card} from "react-bootstrap";
 import {DataClientContext} from "../../data/ReactUtils";
 import {useContext, useState} from "react";
 import {ConfigContext} from "../../contexts/Config";
@@ -81,34 +83,41 @@ const AboutView = observer(() => {
   const applicationSpecs = useApplicationSpec(dataClient);
 
   return (
-    <div className="container">
-      <div className="well">
-        <h2><img src="img/icon.svg" alt="" width="64px" className="nut-spin"/>&nbsp;About this&nbsp;
-          <Link to="http://buildbot.net">buildbot</Link>&nbsp;running for&nbsp;
-          <Link to={config.titleURL}>{config.title}</Link>
-        </h2>
-        <div className="col-sm-12">
-          <ul>
-            {
-              config.versions.map(version => (
-                <li key={version[0]}>{version[0]} version: {version[1]}</li>
-              ))
-            }
+    <div className="container bb-about-view">
+      <Card bg="light">
+        <Card.Body>
+          <h2>
+            <img src="img/icon.svg" alt="" width="64px" className="nut-spin"/>&nbsp;About this&nbsp;
+            <Link to="http://buildbot.net">buildbot</Link>&nbsp;running for&nbsp;
+            <Link to={config.titleURL}>{config.title}</Link>
+          </h2>
+          <div className="col-sm-12">
+            <ul>
+              {
+                config.versions.map(version => (
+                  <li key={version[0]}>{version[0]} version: {version[1]}</li>
+                ))
+              }
+            </ul>
+          </div>
+        </Card.Body>
+      </Card>
+      <Card bg="light">
+        <Card.Body>
+          <h2>Configuration</h2>buildbot-www is configured using
+          <RawData data={config}></RawData>
+        </Card.Body>
+      </Card>
+      <Card bg="light">
+        <Card.Body>
+          <h2>API description</h2>
+          <ul className="list-group">
+            { applicationSpecs
+                .sort((a, b) => a.path.localeCompare(b.path))
+                .map(spec => (<EndpointListItem spec={spec}/>)) }
           </ul>
-        </div>
-      </div>
-      <div className="well">
-        <h2>Configuration</h2>buildbot-www is configured using
-        <RawData data={config}></RawData>
-      </div>
-      <div className="well">
-        <h2>API description</h2>
-        <ul className="list-group">
-          { applicationSpecs
-              .sort((a, b) => a.path.localeCompare(b.path))
-              .map(spec => (<EndpointListItem spec={spec}/>)) }
-        </ul>
-      </div>
+        </Card.Body>
+      </Card>
     </div>
   )
 });
