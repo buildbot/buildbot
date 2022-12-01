@@ -288,11 +288,9 @@ const BuildSummary = observer(({build, parentBuild, parentRelationship,
           {renderParentBuildLink()}
         </div>
       </Card.Header>
-      <Card.Body>
-        <ul className="list-group">
-          {stepElements}
-        </ul>
-      </Card.Body>
+      <ul className="list-group">
+        {stepElements}
+      </ul>
     </Card>
   );
 });
