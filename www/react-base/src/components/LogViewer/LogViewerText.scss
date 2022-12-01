@@ -60,3 +60,18 @@
 .bb-logviewer-text-row {
   font-family: "Monaco", monospace;
 }
+
+.bb-logviewer-text-download-log {
+  position: absolute;
+  top: 1em;
+  right: 2em;
+
+  & > div {
+    position: relative;
+    z-index: 1;
+
+    & > .btn {
+      background-color: white;
+    }
+  }
+}

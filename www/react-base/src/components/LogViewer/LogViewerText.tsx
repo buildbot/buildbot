@@ -33,6 +33,7 @@ import {
 import {RenderedRows} from "react-virtualized/dist/es/List";
 import {digitCount} from "../../util/Math";
 import {GridCellRangeProps} from "react-virtualized/dist/es/Grid";
+import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
 
 const List = _List as unknown as FC<ListProps>;
 const AutoSizer = _AutoSizer as unknown as FC<AutoSizerProps>;
@@ -320,6 +321,11 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
       <AutoSizer>
         {({height, width}) => (
           <div className="bb-logviewer-text-area" ref={containerRef}>
+            <div className="bb-logviewer-text-download-log">
+              <div>
+                <LogDownloadButton log={log}/>
+              </div>
+            </div>
             <List
               className="bb-logviewer-text-area"
               rowCount={log.num_lines}
