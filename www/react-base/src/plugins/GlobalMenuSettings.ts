@@ -74,7 +74,7 @@ export class GlobalMenuSettings {
   private removeDuplicateSettings(currSettings: ResolvedGroupSettings[], settings: GroupSettings) {
     const itemsToRemove: number[] = [];
     currSettings.forEach((currSettings, i) => {
-      if (currSettings.name == settings.name && currSettings.route == settings.route) {
+      if (currSettings.name === settings.name && currSettings.route === settings.route) {
         itemsToRemove.push(i);
       }
     });
