@@ -106,7 +106,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
 
   close() : Promise<void> {
     this.disposer();
-    return Promise.all(Object.values(this.byParentId).map((collection => collection.close()))).then();
+    return Promise.all([...this.byParentId.values()].map((collection => collection.close()))).then();
   }
 
   @action addByParentId(id: string, collection: Collection) {
