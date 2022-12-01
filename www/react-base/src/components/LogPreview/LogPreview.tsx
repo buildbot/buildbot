@@ -169,7 +169,7 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
     const lineElements = previewState.lines.map(line => {
       return (
         <div key={line.number} className="logline">
-          <span data-linenumber-content={line.number} className={`no-wrap ${line.class}`}>
+          <span data-linenumber-content={line.number} className={`${line.class}`}>
             {line.content}
           </span>
         </div>

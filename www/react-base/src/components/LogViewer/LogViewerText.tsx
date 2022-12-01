@@ -219,7 +219,7 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
     return (
       <div key={row.index} className="bb-logviewer-text-row" style={row.style}>
         <span data-linenumber-content={String(renderedLine.number).padStart(logLineDigitCount, ' ')}
-              className={`no-wrap ${renderedLine.class}`}>
+              className={renderedLine.class}>
           {renderedLine.content}
         </span>
       </div>
