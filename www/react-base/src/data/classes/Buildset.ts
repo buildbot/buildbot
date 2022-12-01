@@ -65,6 +65,10 @@ export class Buildset extends BaseClass {
     };
   }
 
+  getProperties(query: RequestQuery = {}) {
+    return this.getPropertiesImpl("properties", query);
+  }
+
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
     return accessor.get<Buildset>("buildsets", query, buildsetDescriptor);
   }

@@ -17,12 +17,13 @@
 
 import './PropertiesTable.scss';
 import CopyToClipboard from 'react-copy-to-clipboard';
+import {observer} from "mobx-react";
 
 type PropertiesTableProps = {
   properties: Map<string, any>;
 }
 
-const PropertiesTable = ({properties}: PropertiesTableProps) => {
+const PropertiesTable = observer(({properties}: PropertiesTableProps) => {
   const propertyRows = Array.from(properties.entries()).map(([key, valueSource]: [string, any]) => {
     const [value, source] = valueSource;
     const valueString = JSON.stringify(value);
@@ -54,6 +55,6 @@ const PropertiesTable = ({properties}: PropertiesTableProps) => {
       </tbody>
     </table>
   );
-}
+});
 
 export default PropertiesTable;
