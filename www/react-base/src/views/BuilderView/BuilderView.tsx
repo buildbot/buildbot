@@ -91,7 +91,7 @@ const BuilderView = observer(() => {
   const navigate = useNavigate();
 
   const stores = useContext(StoresContext);
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([builderid]);
 
   const numBuilds = 200;
 

@@ -24,12 +24,19 @@ import {IDataCollection} from "./DataCollection";
 export const DataClientContext =
   createContext(new DataClient(undefined as any, undefined as any));
 
-export function useDataAccessor() {
+export function useDataAccessor<T>(dependency: (T|null)[]) {
   const dataClient = useContext(DataClientContext);
 
+  const storedDependency = useRef<(T|null)[]>([]);
   const accessor= useRef<IDataAccessor|null>(null);
+
   if (accessor.current === null) {
     accessor.current = dataClient.open();
+    storedDependency.current = [...dependency];
+  } else if (!arrayElementsEqual(dependency, storedDependency.current)) {
+    accessor.current.close();
+    accessor.current = dataClient.open();
+    storedDependency.current = [...dependency];
   }
 
   useEffect(() => {
@@ -39,14 +46,19 @@ export function useDataAccessor() {
         accessor.current = null;
       }
     }
-  }, [accessor.current]);
+  }, []);
 
   return accessor.current;
 }
 
-export function useDataApiQuery<Collection>(callback: () => Collection): Collection {
+export function useDataApiQuery<Collection extends IDataCollection>(
+    callback: () => Collection): Collection {
   let storedCollection = useRef<Collection|null>(null);
-  if (storedCollection.current === null) {
+  if (storedCollection.current === null ||
+      storedCollection.current.isExpired()) {
+    if (storedCollection.current !== null) {
+      storedCollection.current.close();
+    }
     storedCollection.current = callback();
   }
   return storedCollection.current;
@@ -69,7 +81,9 @@ export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
   const storedDependency = useRef<(T|null)[]>([]);
   let storedCollection = useRef<Collection|null>(null);
 
-  if (storedCollection.current === null || !arrayElementsEqual(dependency, storedDependency.current)) {
+  if (storedCollection.current === null ||
+      !arrayElementsEqual(dependency, storedDependency.current) ||
+      storedCollection.current.isExpired()) {
     if (storedCollection.current !== null) {
       storedCollection.current.close();
     }

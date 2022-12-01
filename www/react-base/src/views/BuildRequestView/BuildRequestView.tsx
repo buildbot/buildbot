@@ -63,10 +63,11 @@ const buildTopbarActions = (builder: Builder | null,
 }
 
 const BuildRequestView = observer(() => {
-  const accessor = useDataAccessor();
   const buildRequestId = Number.parseInt(useParams<"buildrequestid">().buildrequestid ?? "");
   const [searchParams, setSearchParams] = useSearchParams();
   const redirectToBuild = searchParams.get("redirect_to_build") === "true";
+
+  const accessor = useDataAccessor([buildRequestId]);
 
   const navigate = useNavigate();
 

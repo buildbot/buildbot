@@ -27,8 +27,8 @@ import WorkersTable from "../../components/WorkersTable/WorkersTable";
 import BuildsTable from "../../components/BuildsTable/BuildsTable";
 
 const WorkerView = observer(() => {
-  const accessor = useDataAccessor();
   const workerid = Number.parseInt(useParams<"workerid">().workerid ?? "");
+  const accessor = useDataAccessor([workerid]);
 
   const workersQuery = useDataApiQuery(() => Worker.getAll(accessor, {id: workerid.toString()}));
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));

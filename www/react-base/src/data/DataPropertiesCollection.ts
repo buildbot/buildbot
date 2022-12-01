@@ -61,6 +61,13 @@ export default class DataPropertiesCollection implements IDataCollection {
     }
   }
 
+  isExpired() {
+    if (this.accessor === undefined) {
+      return false;
+    }
+    return !this.accessor.isOpen();
+  }
+
   subscribe() {
     return this.webSocketClient.subscribe(this.socketPath, this);
   }

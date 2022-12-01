@@ -19,20 +19,23 @@ import BaseClass from "./classes/BaseClass";
 import {IObservableArray, ObservableMap} from "mobx";
 import DataCollection from "./DataCollection";
 import {BasicDataMultiCollection} from "./BasicDataMultiCollection";
+import {IDataAccessor} from "./DataAccessor";
 
 export default class DataMultiCollection<ParentDataType extends BaseClass,
     DataType extends BaseClass> extends BasicDataMultiCollection<ParentDataType, DataCollection<DataType>> {
 
-  constructor(parentArray: IObservableArray<ParentDataType> | null,
+  constructor(accessor: IDataAccessor,
+              parentArray: IObservableArray<ParentDataType> | null,
               parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
               parentFilteredIds: IObservableArray<string> | null,
               callback: (child: ParentDataType) => DataCollection<DataType>) {
-    super(parentArray, parentArrayMap, parentFilteredIds, callback);
+    super(accessor, parentArray, parentArrayMap, parentFilteredIds, callback);
   }
 
   getRelated<ChildDataType extends BaseClass>(
     callback: (child: DataType) => DataCollection<ChildDataType>) {
-    return new DataMultiCollection<DataType, ChildDataType>(null, this.byParentId, null, callback);
+    return new DataMultiCollection<DataType, ChildDataType>(this.accessor, null, this.byParentId,
+      null, callback);
   }
 
   // Acquires nth element across all collections tracked by this multi collection. The iteration

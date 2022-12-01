@@ -79,7 +79,7 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
 
   const [fullDisplay, setFullDisplay] = useStateWithDefaultIfNotSet(() => initialFullDisplay);
 
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([builderid, buildnumber, stepnumber, log.id]);
   const dataClient = useContext(DataClientContext);
   const apiRootUrl = dataClient.restClient.rootUrl;
 

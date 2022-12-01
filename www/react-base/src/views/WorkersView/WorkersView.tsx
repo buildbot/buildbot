@@ -62,7 +62,7 @@ const getBuildsForWorkerMap = (workersQuery: DataCollection<Worker>,
 }
 
 const WorkersView = observer(() => {
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([]);
 
   const showOldWorkers = globalSettings.getBooleanSetting("Workers.show_old_workers");
 

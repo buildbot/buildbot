@@ -151,7 +151,7 @@ const toggleTag = (tags: string[], tag: string, searchParams: URLSearchParams,
 
 const BuildersView = observer(() => {
   const stores = useContext(StoresContext);
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([]);
 
   const [searchParams, setSearchParams] = useSearchParams();
 

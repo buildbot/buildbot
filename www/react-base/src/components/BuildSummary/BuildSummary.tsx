@@ -206,7 +206,7 @@ type BuildSummaryProps = {
 
 const BuildSummary = observer(({build, parentBuild, parentRelationship,
                                 condensed}: BuildSummaryProps) => {
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([build.id]);
   const now = useCurrentTime();
 
   const propertiesQuery = useDataApiQuery(() => build.getProperties());

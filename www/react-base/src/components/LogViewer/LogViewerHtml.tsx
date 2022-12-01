@@ -25,7 +25,7 @@ export type LogViewerHtmlProps = {
 }
 
 const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([]);
   const [htmlLog, setHtmlLog] = useState('');
   const pendingRequest = useRef<CancellablePromise<any> | null>(null);
 

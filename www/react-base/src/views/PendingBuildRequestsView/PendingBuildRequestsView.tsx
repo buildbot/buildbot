@@ -29,7 +29,7 @@ import BadgeRound from "../../components/BadgeRound/BadgeRound";
 
 const PendingBuildRequestsView = observer(() => {
   const now = useCurrentTime();
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([]);
 
   const buildRequestFetchLimit = globalSettings.getIntegerSetting("BuildRequests.buildrequestFetchLimit");
   const buildRequestsQuery = useDataApiQuery(

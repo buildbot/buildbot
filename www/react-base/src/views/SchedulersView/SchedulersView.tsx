@@ -22,7 +22,7 @@ import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {Scheduler} from "../../data/classes/Scheduler";
 
 const SchedulersView = observer(() => {
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([]);
 
   const schedulersQuery = useDataApiQuery(
     () => Scheduler.getAll(accessor, {query: {order: "name"}}));

@@ -47,7 +47,7 @@ type BuildSummaryTooltipProps = {
 }
 
 const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([build.id]);
   const config = useContext(ConfigContext);
 
   const propertiesQuery = useDataApiQuery(() => build.getProperties());

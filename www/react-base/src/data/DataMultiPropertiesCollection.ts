@@ -17,6 +17,7 @@
 
 import BaseClass from "./classes/BaseClass";
 import {IObservableArray, ObservableMap} from "mobx";
+import {IDataAccessor} from "./DataAccessor";
 import DataCollection from "./DataCollection";
 import {BasicDataMultiCollection} from "./BasicDataMultiCollection";
 import DataPropertiesCollection from "./DataPropertiesCollection";
@@ -24,11 +25,12 @@ import DataPropertiesCollection from "./DataPropertiesCollection";
 export default class DataMultiPropertiesCollection<ParentDataType extends BaseClass>
   extends BasicDataMultiCollection<ParentDataType, DataPropertiesCollection> {
 
-  constructor(parentArray: IObservableArray<ParentDataType> | null,
+  constructor(accessor: IDataAccessor,
+              parentArray: IObservableArray<ParentDataType> | null,
               parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
               parentFilteredIds: IObservableArray<string> | null,
               callback: (child: ParentDataType) => DataPropertiesCollection) {
-    super(parentArray, parentArrayMap, parentFilteredIds, callback);
+    super(accessor, parentArray, parentArrayMap, parentFilteredIds, callback);
   }
 
   getParentCollectionOrEmpty(parentId: string): DataPropertiesCollection {

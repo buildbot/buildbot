@@ -116,7 +116,7 @@ const BuildView = observer(() => {
   const navigate = useNavigate();
 
   const stores = useContext(StoresContext);
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([builderid, buildnumber]);
 
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid.toString()}));
   const builder = buildersQuery.getNthOrNull(0);

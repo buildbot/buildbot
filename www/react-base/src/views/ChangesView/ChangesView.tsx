@@ -25,7 +25,7 @@ import ChangesTable from "../../components/ChangesTable/ChangesTable";
 
 
 const ChangesView = observer(() => {
-  const accessor = useDataAccessor();
+  const accessor = useDataAccessor([]);
 
   const changesFetchLimit = globalSettings.getIntegerSetting("Changes.changesFetchLimit");
   const changesQuery = useDataApiQuery(
