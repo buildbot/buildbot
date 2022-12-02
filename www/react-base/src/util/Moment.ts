@@ -40,7 +40,7 @@ export function durationFormat(time: number) {
   if (d.minutes()) {
     return m.format('m:ss');
   } else {
-    return m.format('s') + " s ";
+    return m.format('s') + " s";
   }
 }
 
