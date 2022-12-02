@@ -106,13 +106,12 @@ const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWi
     );
   });
 
-  // TODO: a href javascript:
   return (
     <div className={pageWithSidebarClass}>
       <div onMouseEnter={() => sidebarStore.enter()} onMouseLeave={() => sidebarStore.leave()}
            onClick={() => sidebarStore.show()} className="sidebar sidebar-blue">
         <ul>
-          <li className="sidebar-main"><a href="javascript:">{appTitle}{sidebarIcon}</a></li>
+          <li className="sidebar-main"><Link to="/">{appTitle}{sidebarIcon}</Link></li>
           <li className="sidebar-title"><span>NAVIGATION</span></li>
           {groupElements}
         </ul>

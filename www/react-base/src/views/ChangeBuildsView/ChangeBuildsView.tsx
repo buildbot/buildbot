@@ -16,7 +16,12 @@
 */
 
 import {observer} from "mobx-react";
-import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "../../data/ReactUtils";
+import {
+  useDataAccessor,
+  useDataApiDynamicQuery,
+  useDataApiQuery,
+  useDataApiSingleElementQuery
+} from "../../data/ReactUtils";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {globalSettings} from "../../plugins/GlobalSettings";
 import {Change} from "../../data/classes/Change";
@@ -38,17 +43,11 @@ const ChangeBuildsView = observer(() => {
   const changeQuery = useDataApiQuery(() => Change.getAll(accessor, {id: changeid.toString()}));
   const change = changeQuery.getNthOrNull(0);
 
-  // TODO: create a simplier way to do dynamic data queries that depend on single element
-  const buildsQuery = useDataApiDynamicQuery([change !== null],
-    () => {
-      if (change === null) {
-        return new DataCollection<Build>();
-      }
-      return change.getBuilds({query: {
-          property: ["owners", "workername"],
-          limit: buildsFetchLimit
-        }})
-    });
+  const buildsQuery = useDataApiSingleElementQuery(change,
+    c => c.getBuilds({query: {
+        property: ["owners", "workername"],
+        limit: buildsFetchLimit
+      }}));
 
   const builderIds = Array.from(new Set(buildsQuery.array.map(build => build.builderid)));
 

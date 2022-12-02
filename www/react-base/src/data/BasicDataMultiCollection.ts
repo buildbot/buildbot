@@ -103,6 +103,9 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
   }
 
   isExpired() {
+    if (this.accessor === undefined) {
+      return false;
+    }
     return !this.accessor.isOpen();
   }
 

@@ -24,7 +24,13 @@ import {useContext, useState} from "react";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import {Link, useNavigate, useParams} from "react-router-dom";
-import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "../../data/ReactUtils";
+import {
+  findOrNull,
+  useDataAccessor,
+  useDataApiDynamicQuery,
+  useDataApiQuery,
+  useDataApiSingleElementQuery
+} from "../../data/ReactUtils";
 import {Builder} from "../../data/classes/Builder";
 import {Build} from "../../data/classes/Build";
 import {Worker} from "../../data/classes/Worker";
@@ -35,7 +41,6 @@ import DataCollection from "../../data/DataCollection";
 import {Buildset} from "../../data/classes/Buildset";
 import DataPropertiesCollection from "../../data/DataPropertiesCollection";
 import {computed} from "mobx";
-import DataMultiCollection from "../../data/DataMultiCollection";
 import {Change} from "../../data/classes/Change";
 import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "../../util/Properties";
 import {results2class} from "../../util/Results";
@@ -86,11 +91,11 @@ const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStoppi
 }
 
 const getResponsibleUsers = (propertiesQuery: DataPropertiesCollection,
-                             changesQuery: DataMultiCollection<Build, Change>) => {
+                             changesQuery: DataCollection<Change>) => {
   const responsibleUsers: {[name: string]: string | null} = {};
   if (getPropertyValueOrDefault(propertiesQuery.properties, "scheduler", "") === "force") {
     const owner = getPropertyValueOrDefault(propertiesQuery.properties, "owner", "");
-    if (owner.match(/^.+\<.+\@.+\..+\>.*$/)) {
+    if (owner.match(/^.+<.+@.+\..+>.*$/)) {
       const splitResult = owner.split(new RegExp('<|>'));
       if (splitResult.length === 2) {
         const name = splitResult[0];
@@ -100,7 +105,7 @@ const getResponsibleUsers = (propertiesQuery: DataPropertiesCollection,
     }
   }
 
-  for (const change of changesQuery.getAll()) {
+  for (const change of changesQuery.array) {
     const [name, email] = parseChangeAuthorNameAndEmail(change.author);
     if (email !== null || !(name in responsibleUsers)) {
       responsibleUsers[name] = email;
@@ -128,26 +133,19 @@ const BuildView = observer(() => {
   // need to see how that scales
   const buildsQuery = useDataApiQuery(() => Build.getAll(accessor, {query: {
         builderid: builderid,
-        number__eq: buildnumber}
+        number__eq: [buildnumber - 1, buildnumber, buildnumber + 1]}
     }));
-  const nextBuildsQuery = useDataApiQuery(() => Build.getAll(accessor, {query: {
-      builderid: builderid,
-      number__eq: buildnumber + 1}
-  }));
-  const prevBuildsQuery = useDataApiQuery(() => Build.getAll(accessor, {query: {
-      builderid: builderid,
-      number__eq: buildnumber - 1}
-  }));
 
-  const prevBuild = prevBuildsQuery.getNthOrNull(0);
-  const build = buildsQuery.getNthOrNull(0);
-  const nextBuild = nextBuildsQuery.getNthOrNull(0);
+  const prevBuild = findOrNull(buildsQuery.array, b => b.number === buildnumber - 1);
+  const build = findOrNull(buildsQuery.array, b => b.number === buildnumber);
+  const nextBuild = findOrNull(buildsQuery.array, b => b.number === buildnumber + 1);
 
-  const changesQuery = useDataApiQuery(() => buildsQuery.getRelated(b => b.getChanges()));
-  const buildrequestsQuery = useDataApiQuery(() => buildsQuery.getRelated(
+  const changesQuery = useDataApiSingleElementQuery(build, b => b.getChanges());
+  const buildrequestsQuery = useDataApiSingleElementQuery(build,
     b => b.buildrequestid === null
       ? new DataCollection<Buildrequest>()
-      : Buildrequest.getAll(accessor, {id: b.buildrequestid.toString()})));
+      : Buildrequest.getAll(accessor, {id: b.buildrequestid.toString()}));
+
   const buildsetsQuery = useDataApiQuery(() => buildrequestsQuery.getRelated(
     br => Buildset.getAll(accessor, {id: br.buildsetid.toString()})));
   const parentBuildQuery = useDataApiQuery(() => buildsetsQuery.getRelated(
@@ -157,8 +155,8 @@ const BuildView = observer(() => {
   const propertiesQuery = useDataApiDynamicQuery([build === null],
     () => build === null ? new DataPropertiesCollection() : build.getProperties());
 
-  const workersQuery = useDataApiQuery(() => buildsQuery.getRelated(
-    b => Worker.getAll(accessor, {id: b.workerid.toString()})));
+  const workersQuery = useDataApiSingleElementQuery(build,
+    b => Worker.getAll(accessor, {id: b.workerid.toString()}));
 
   const buildrequest = buildrequestsQuery.getNthOrNull(0);
   const buildset = buildsetsQuery.getNthOrNull(0);
@@ -346,7 +344,7 @@ const BuildView = observer(() => {
         </Tab>
         <Tab eventKey="changes" title="Changes">
           {build !== null
-            ? <ChangesTable changes={changesQuery.getParentCollectionOrEmpty(build.id)}/>
+            ? <ChangesTable changes={changesQuery}/>
             : <></>
           }
         </Tab>

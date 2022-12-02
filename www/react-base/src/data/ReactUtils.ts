@@ -18,7 +18,10 @@
 import {createContext, useContext, useEffect, useRef} from "react";
 import DataClient from "./DataClient";
 import {IDataAccessor} from "./DataAccessor";
-import {IDataCollection} from "./DataCollection";
+import DataCollection, {IDataCollection} from "./DataCollection";
+import {IObservableArray} from "mobx";
+import BaseClass from "./classes/BaseClass";
+import DataPropertiesCollection from "./DataPropertiesCollection";
 
 // The default value is not used as the context is injected
 export const DataClientContext =
@@ -92,4 +95,25 @@ export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
   }
 
   return storedCollection.current;
+}
+
+export function useDataApiSingleElementQuery<T extends BaseClass, U extends BaseClass>(
+    el: T | null, callback: (el: T) => DataCollection<U>): DataCollection<U> {
+  return useDataApiDynamicQuery([el === null],
+    () => el === null ? new DataCollection<U>() : callback(el));
+}
+
+export function useDataApiSinglePropertiesQuery<T extends BaseClass>(
+  el: T | null, callback: (el: T) => DataPropertiesCollection): DataPropertiesCollection {
+  return useDataApiDynamicQuery([el === null],
+    () => el === null ? new DataPropertiesCollection() : callback(el));
+}
+
+export function findOrNull<T>(array: IObservableArray<T>, filter: (el: T) => boolean): T | null {
+  for (const el of array) {
+    if (filter(el)) {
+      return el;
+    }
+  }
+  return null;
 }
