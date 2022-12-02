@@ -18,10 +18,11 @@
 import './LogViewerText.scss'
 import {Log} from "../../data/classes/Log";
 import {FC, useRef, useState} from 'react';
-import {ansi2html, generateStyleElement} from "../../util/AnsiEscapeCodes";
+import {escapeClassesToHtml, generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {action, observable} from 'mobx';
 import {observer, useLocalObservable} from "mobx-react";
 import {useDataAccessor} from "../../data/ReactUtils";
+import {binarySearchGreater, binarySearchLessEqual} from "../../util/BinarySearch";
 import {CancellablePromise} from "../../util/CancellablePromise";
 import {
   AutoSizer as _AutoSizer,
@@ -31,6 +32,7 @@ import {
   ListRowProps
 } from 'react-virtualized';
 import {RenderedRows} from "react-virtualized/dist/es/List";
+import {ParsedLogChunk, parseLogChunk} from "../../util/LogChunkParsing";
 import {digitCount} from "../../util/Math";
 import {GridCellRangeProps} from "react-virtualized/dist/es/Grid";
 import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
@@ -52,13 +54,14 @@ const isSelectionActiveWithinElement = (element: HTMLElement | null | undefined)
 }
 
 type RenderedLogLine = {
-  content: JSX.Element[];
-  class: string;
+  content: JSX.Element | JSX.Element[];
   number: number;
 }
 
 class LogViewerState {
   lines = observable.map<number, RenderedLogLine>();
+  chunks: ParsedLogChunk[] = [];
+
   startIndex = 0; // not observable
   endIndex = 0; // not observable
 
@@ -180,6 +183,11 @@ class LogViewerState {
     }
   }
 
+  @action addChunk(chunk: ParsedLogChunk) {
+    this.chunks.splice(binarySearchGreater(this.chunks, chunk.firstLine, (ch, line) => ch.firstLine - line),
+      0, chunk);
+  }
+
   @action addLine(line: RenderedLogLine) {
     if (this.lines.has(line.number)) {
       return;
@@ -210,20 +218,49 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
   // Used to refresh displayed data when the log is downloaded and line state changes
   const [renderCounter, setRenderCounter] = useState(0);
 
+  const renderEmptyRow = (row: ListRowProps) => {
+    return <div key={row.index} className="bb-logviewer-text-row" style={row.style}></div>;
+  }
 
   const renderRow = (row: ListRowProps) => {
     const renderedLine = viewerState.lines.get(row.index);
-    if (renderedLine === undefined) {
-      return <div key={row.index} className="bb-logviewer-text-row" style={row.style}></div>;
+    if (renderedLine !== undefined) {
+      return renderedLine.content;
     }
-    return (
+
+    const chunkIndex = binarySearchLessEqual(viewerState.chunks, row.index,
+      (ch, index) => ch.firstLine - index);
+
+    if (chunkIndex < 0 || chunkIndex >= viewerState.chunks.length) {
+      return renderEmptyRow(row);
+    }
+    const chunk = viewerState.chunks[chunkIndex];
+    if (row.index < chunk.firstLine || row.index >= chunk.lastLine) {
+      return renderEmptyRow(row);
+    }
+    const lineIndexInChunk = row.index - chunk.firstLine;
+    const lineType = chunk.lineTypes[lineIndexInChunk];
+    const lineCssClasses = chunk.cssClasses[lineIndexInChunk];
+    const lineStartInChunk = chunk.lineBounds[lineIndexInChunk];
+    const lineEndInChunk = chunk.lineBounds[lineIndexInChunk + 1];
+    const lineContent = escapeClassesToHtml(chunk.visibleText, lineStartInChunk, lineEndInChunk,
+      lineCssClasses);
+
+    const content = (
       <div key={row.index} className="bb-logviewer-text-row" style={row.style}>
-        <span data-linenumber-content={String(renderedLine.number).padStart(logLineDigitCount, ' ')}
-              className={renderedLine.class}>
-          {renderedLine.content}
+        <span data-linenumber-content={String(row.index).padStart(logLineDigitCount, ' ')}
+              className={`log_${lineType}`}>
+          {lineContent}
         </span>
       </div>
     );
+
+    viewerState.addLine({
+      content: content,
+      number: row.index
+    })
+
+    return content;
   };
 
   const renderNoRows = () => {
@@ -276,23 +313,10 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
         lines.pop();
       }
 
-      viewerState.addDownloadedRange(fetchFirstRow, fetchFirstRow + lines.length,
+      const chunk = parseLogChunk(fetchFirstRow, content, log.type);
+      viewerState.addDownloadedRange(chunk.firstLine, chunk.lastLine,
         destroyOverscanRowCount);
-
-      let lineNumber = fetchFirstRow;
-      for (let line of lines) {
-        let logclass = "o";
-        if ((line.length > 0) && (log.type === 's')) {
-          logclass = line[0];
-          line = line.slice(1);
-        }
-        viewerState.addLine({
-          content: ansi2html(line),
-          class: `log_${logclass}`,
-          number: lineNumber
-        });
-        lineNumber += 1;
-      }
+      viewerState.addChunk(chunk);
       setRenderCounter(counter => counter + 1);
     })
   };
