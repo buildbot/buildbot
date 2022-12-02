@@ -52,6 +52,7 @@ import ChangesTable from "../../components/ChangesTable/ChangesTable";
 import BuildSummary from "../../components/BuildSummary/BuildSummary";
 import ChangeUserAvatar from "../../components/ChangeUserAvatar/ChangeUserAvatar";
 import {Tab, Table, Tabs} from "react-bootstrap";
+import TableHeading from "../../components/TableHeading/TableHeading";
 
 const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStopping: boolean,
                             doRebuild: () => void, doStop: () => void) => {
@@ -296,16 +297,16 @@ const BuildView = observer(() => {
 
   const renderDebugInfo = () => {
     if (buildrequest === null || buildset === null) {
-      return <h4>Buildrequest:</h4>;
+      return <TableHeading>Buildrequest:</TableHeading>;
     }
 
     return (
       <>
-        <h4>
+        <TableHeading>
           <Link to={`/buildrequests/${buildrequest.id}`}>Buildrequest:</Link>
-        </h4>
+        </TableHeading>
         <RawData data={buildrequest.toObject()}/>
-        <h4>Buildset:</h4>
+        <TableHeading>Buildset:</TableHeading>
         <RawData data={buildset.toObject()}/>
       </>
     );

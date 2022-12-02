@@ -26,6 +26,7 @@ import {Link} from "react-router-dom";
 import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "../../util/Properties";
 import BuildLinkWithSummaryTooltip
   from "../BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
+import TableHeading from "../TableHeading/TableHeading";
 
 type BuildsTableProps = {
   builds: DataCollection<Build>;
@@ -102,7 +103,7 @@ const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
   return (
     <div className="bb-build-table-container">
       <>
-        <h4>Builds:</h4>
+        <TableHeading>Builds:</TableHeading>
         { builds.array.length === 0 ? <span>None</span> : tableElement() }
       </>
     </div>

@@ -27,6 +27,7 @@ import {Buildrequest} from "../../data/classes/Buildrequest";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import {getPropertyValueOrDefault} from "../../util/Properties";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
+import TableHeading from "../../components/TableHeading/TableHeading";
 
 const PendingBuildRequestsView = observer(() => {
   const now = useCurrentTime();
@@ -115,7 +116,7 @@ const PendingBuildRequestsView = observer(() => {
 
   return (
     <div className="container">
-      <h4>Pending Buildrequests:</h4>
+      <TableHeading>Pending Buildrequests:</TableHeading>
       {renderContents()}
     </div>
   );

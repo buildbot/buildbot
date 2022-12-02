@@ -37,6 +37,7 @@ import {Build} from "../../data/classes/Build";
 import BuildSummary from "../../components/BuildSummary/BuildSummary";
 import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
 import {Buildset} from "../../data/classes/Buildset";
+import TableHeading from "../../components/TableHeading/TableHeading";
 
 const buildTopbarActions = (builder: Builder | null,
                             buildRequest: Buildrequest | null,
@@ -142,7 +143,7 @@ const BuildRequestView = observer(() => {
 
   const buildRawData = buildsQuery.array.map(build => (
     <>
-      <h4>Build {build.number}</h4>
+      <TableHeading>Build {build.number}</TableHeading>
       <RawData data={build.toObject()}/>
     </>
   ));
@@ -156,11 +157,11 @@ const BuildRequestView = observer(() => {
           <PropertiesTable properties={buildsetPropertiesQuery.properties}/>
         </Tab>
         <Tab eventKey="debug" title="Debug">
-          <h4>Buildrequest</h4>
+          <TableHeading>Buildrequest</TableHeading>
           <RawData data={buildRequest !== null ? buildRequest.toObject() : {}}/>
-          <h4>Buildset</h4>
+          <TableHeading>Buildset</TableHeading>
           <RawData data={buildset !== null ? buildset.toObject() : {}}/>
-          <h4>Builder</h4>
+          <TableHeading>Builder</TableHeading>
           <RawData data={builder !== null ? builder.toObject() : {}}/>
           {buildRawData}
         </Tab>

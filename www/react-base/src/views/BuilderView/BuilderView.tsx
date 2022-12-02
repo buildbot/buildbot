@@ -33,6 +33,7 @@ import {useNavigate, useParams} from "react-router-dom";
 import DataCollection from "../../data/DataCollection";
 import AlertNotification from "../../components/AlertNotification/AlertNotification";
 import ForceBuildModal from "../../components/ForceBuildModal/ForceBuildModal";
+import TableHeading from "../../components/TableHeading/TableHeading";
 
 const anyCancellableBuilds = (builds: DataCollection<Build>,
                               buildrequests: DataCollection<Buildrequest>) => {
@@ -173,7 +174,7 @@ const BuilderView = observer(() => {
     <div className="container">
       <AlertNotification text={errorMsg}/>
       {builder !== null && builder.description !== null
-        ? <div><h4>Description:</h4>{builder.description}</div>
+        ? <div><TableHeading>Description:</TableHeading>{builder.description}</div>
         : <></>
       }
       <BuildRequestsTable buildrequests={buildrequests}/>

@@ -29,6 +29,7 @@ import {Link} from "react-router-dom";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {globalSettings} from "../../plugins/GlobalSettings";
 import {Card} from "react-bootstrap";
+import TableHeading from "../../components/TableHeading/TableHeading";
 
 
 function maybeShowUrlWarning(location: Location, config: Config) {
@@ -99,8 +100,10 @@ const HomeView = observer(() => {
         <Card bg="light">
           <Card.Body>
             <h2>Welcome to buildbot</h2>
-            <h4>{buildsRunning.array.length} build{buildsRunning.array.length === 1 ? '' : 's'}
-              running currently</h4>
+              <TableHeading>
+                {buildsRunning.array.length} build{buildsRunning.array.length === 1 ? ' ' : 's '}
+                running currently
+              </TableHeading>
             <ul>
               {
                 buildsRunning.array
@@ -116,7 +119,7 @@ const HomeView = observer(() => {
                   })
               }
             </ul>
-            <h4>{recentBuilds.array.length} recent builds</h4>
+            <TableHeading>{recentBuilds.array.length} recent builds</TableHeading>
             <div className="row">
               {
                 Object.values(buildsByBuilder)
