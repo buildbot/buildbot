@@ -215,14 +215,15 @@ const BuildView = observer(() => {
     const renderPrevLink = () => {
       if (buildnumber > 1 && prevBuild !== null) {
         return (
-          <Link to={`/builders/${builderid}/builds/${prevBuild.number}`}>
+          <Link to={`/builders/${builderid}/builds/${prevBuild.number}`}
+                className="bb-build-view-nav-button">
             <BadgeRound className={results2class(prevBuild, 'pulse')}>←</BadgeRound>
             <span className="nomobile">&nbsp;Previous</span>
           </Link>
         );
       }
       return (
-        <span>&larr;
+        <span className="bb-build-view-nav-button">&larr;
           <span className="nomobile">&nbsp;Previous</span>
         </span>
       );
@@ -242,15 +243,16 @@ const BuildView = observer(() => {
     const renderNextLink = () => {
       if (!lastBuild && nextBuild !== null) {
         return (
-          <Link to={`/builders/${builderid}/builds/${nextBuild.number}`}>
-            <span className="nomobile">&nbsp;Next</span>
+          <Link to={`/builders/${builderid}/builds/${nextBuild.number}`}
+                className="bb-build-view-nav-button">
+            <span className="nomobile">Next&nbsp;</span>
             <BadgeRound className={results2class(nextBuild, 'pulse')}>→</BadgeRound>
           </Link>
         )
       }
 
       return (
-        <span>
+        <span className="bb-build-view-nav-button">
           <span className="nomobile">Next&nbsp;</span>
           <span>&rarr;</span>
         </span>
