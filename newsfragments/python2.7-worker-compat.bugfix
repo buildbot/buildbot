@@ -1,0 +1,1 @@
+Fixed Buildbot Worker being unable to start on Python 2.7 due to issue in a new version of Automat dependency.
