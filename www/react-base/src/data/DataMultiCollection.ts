@@ -16,21 +16,11 @@
 */
 
 import BaseClass from "./classes/BaseClass";
-import {IObservableArray, ObservableMap} from "mobx";
 import DataCollection from "./DataCollection";
 import {BasicDataMultiCollection} from "./BasicDataMultiCollection";
-import {IDataAccessor} from "./DataAccessor";
 
 export default class DataMultiCollection<ParentDataType extends BaseClass,
     DataType extends BaseClass> extends BasicDataMultiCollection<ParentDataType, DataCollection<DataType>> {
-
-  constructor(accessor: IDataAccessor,
-              parentArray: IObservableArray<ParentDataType> | null,
-              parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
-              parentFilteredIds: IObservableArray<string> | null,
-              callback: (child: ParentDataType) => DataCollection<DataType>) {
-    super(accessor, parentArray, parentArrayMap, parentFilteredIds, callback);
-  }
 
   getRelated<ChildDataType extends BaseClass>(
     callback: (child: DataType) => DataCollection<ChildDataType>) {
