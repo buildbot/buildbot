@@ -187,7 +187,7 @@ export default class DataCollection<DataType extends BaseClass> implements IData
     }
   }
 
-  recomputeQuery() {
+  @action recomputeQuery() {
     this.queryExecutor.computeQuery(this.array);
   }
 }

@@ -114,6 +114,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
               ? <span>{durationFormat(step.complete_at! - step.started_at)}</span>
               : <span>{durationFormat(now - step.started_at)}</span>
           }
+        &nbsp;
         {step.state_string}
         </span>
     );
@@ -186,7 +187,9 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
     <li key={step.id} className="list-group-item">
       <div onClick={() => setFullDisplay(!fullDisplay)}>
         <BadgeRound className={results2class(step, 'pulse')}>{step.number.toString()}</BadgeRound>
+        &nbsp;
         {maybeRenderArrowExpander()}
+        &nbsp;
         {step.name}
         {renderState()}
         {maybeRenderPendingBuildCount()}
@@ -272,6 +275,7 @@ const BuildSummary = observer(({build, parentBuild, parentRelationship,
         </div>
         { builder !== null
           ? <Link to={`/builders/${build.builderid}/builds/${build.number}`}>
+              &nbsp;
               {builder.name}/{build.number}
             </Link>
           : <></>
@@ -280,10 +284,10 @@ const BuildSummary = observer(({build, parentBuild, parentRelationship,
         <div className={"bb-build-summary-details"}>
           {
             build.complete
-              ? <span>{durationFormat(build.complete_at! - build.started_at)}</span>
-              : <span>{durationFormat(now - build.started_at)}</span>
+              ? <span>{durationFormat(build.complete_at! - build.started_at)}&nbsp;</span>
+              : <span>{durationFormat(now - build.started_at)}&nbsp;</span>
           }
-          <span>{build.state_string}</span>
+          <span>{build.state_string}&nbsp;</span>
           <BadgeStatus className={results2class(build, null)}>{results2text(build)}</BadgeStatus>
           {renderParentBuildLink()}
         </div>

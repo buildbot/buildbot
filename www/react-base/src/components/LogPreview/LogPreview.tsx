@@ -190,12 +190,13 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
         <div className="flex-row">
           <div onClick={() => setFullDisplay(!fullDisplay)} className="flex-grow-3">
             <ArrowExpander isExpanded={fullDisplay}/>
+            &nbsp;
             {log.name}
           </div>
           <div className="flex-grow-1">
             <div className="pull-right">
               <Link to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}>
-                view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}
+                view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}&nbsp;
               </Link>
               <LogDownloadButton log={log}/>
             </div>

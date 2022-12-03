@@ -52,6 +52,7 @@ import ChangesTable from "../../components/ChangesTable/ChangesTable";
 import BuildSummary from "../../components/BuildSummary/BuildSummary";
 import ChangeUserAvatar from "../../components/ChangeUserAvatar/ChangeUserAvatar";
 import {Tab, Table, Tabs} from "react-bootstrap";
+import TableHeading from "../../components/TableHeading/TableHeading";
 
 const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStopping: boolean,
                             doRebuild: () => void, doStop: () => void) => {
@@ -215,14 +216,15 @@ const BuildView = observer(() => {
     const renderPrevLink = () => {
       if (buildnumber > 1 && prevBuild !== null) {
         return (
-          <Link to={`/builders/${builderid}/builds/${prevBuild.number}`}>
+          <Link to={`/builders/${builderid}/builds/${prevBuild.number}`}
+                className="bb-build-view-nav-button">
             <BadgeRound className={results2class(prevBuild, 'pulse')}>←</BadgeRound>
             <span className="nomobile">&nbsp;Previous</span>
           </Link>
         );
       }
       return (
-        <span>&larr;
+        <span className="bb-build-view-nav-button">&larr;
           <span className="nomobile">&nbsp;Previous</span>
         </span>
       );
@@ -242,15 +244,16 @@ const BuildView = observer(() => {
     const renderNextLink = () => {
       if (!lastBuild && nextBuild !== null) {
         return (
-          <Link to={`/builders/${builderid}/builds/${nextBuild.number}`}>
-            <span className="nomobile">&nbsp;Next</span>
+          <Link to={`/builders/${builderid}/builds/${nextBuild.number}`}
+                className="bb-build-view-nav-button">
+            <span className="nomobile">Next&nbsp;</span>
             <BadgeRound className={results2class(nextBuild, 'pulse')}>→</BadgeRound>
           </Link>
         )
       }
 
       return (
-        <span>
+        <span className="bb-build-view-nav-button">
           <span className="nomobile">Next&nbsp;</span>
           <span>&rarr;</span>
         </span>
@@ -294,16 +297,16 @@ const BuildView = observer(() => {
 
   const renderDebugInfo = () => {
     if (buildrequest === null || buildset === null) {
-      return <h4>Buildrequest:</h4>;
+      return <TableHeading>Buildrequest:</TableHeading>;
     }
 
     return (
       <>
-        <h4>
+        <TableHeading>
           <Link to={`/buildrequests/${buildrequest.id}`}>Buildrequest:</Link>
-        </h4>
+        </TableHeading>
         <RawData data={buildrequest.toObject()}/>
-        <h4>Buildset:</h4>
+        <TableHeading>Buildset:</TableHeading>
         <RawData data={buildset.toObject()}/>
       </>
     );
