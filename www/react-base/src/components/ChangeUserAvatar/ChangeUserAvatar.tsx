@@ -29,7 +29,7 @@ const ChangeUserAvatar = ({name, email, showName}: ChangeUserAvatarProps) => {
     return (
       <>
         <div className="change-avatar">
-          <img title={name} src={`avatar?email=unknown`}/>
+          <img alt="unknown" title={name} src={`avatar?email=unknown`}/>
         </div>
         {showName ? <span>{name}</span> : <></>}
       </>
@@ -40,7 +40,7 @@ const ChangeUserAvatar = ({name, email, showName}: ChangeUserAvatarProps) => {
     <>
       <div className="change-avatar">
         <Link to={`mailto:${email}`} title={name}>
-          <img src={`avatar?email=${encodeURI(email)}`}/>
+          <img alt={email} src={`avatar?email=${encodeURI(email)}`}/>
         </Link>
       </div>
       {showName ? <Link to={`mailto:${email}`}>{name}</Link> : <></>}

@@ -21,7 +21,6 @@ import {
   ForceSchedulerFieldBase,
   ForceSchedulerFieldBoolean,
   ForceSchedulerFieldChoiceString,
-  ForceSchedulerFieldFixed,
   ForceSchedulerFieldInt,
   ForceSchedulerFieldNested,
   ForceSchedulerFieldString,

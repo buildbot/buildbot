@@ -15,7 +15,6 @@
   Copyright Buildbot Team Members
 */
 
-import {TopbarItem} from "../components/Topbar/Topbar";
 import {action, makeObservable, observable, ObservableMap} from "mobx";
 
 export type RouteConfig = {

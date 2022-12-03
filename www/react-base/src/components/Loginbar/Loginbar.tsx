@@ -56,7 +56,7 @@ const Loginbar = () => {
   const avatarURL = `avatar?username=${encodeURI(user.username ?? "")}&amp;email=${encodeURI(user.email ?? "")}`;
 
   const dropdownToggle = config.avatar_methods.length > 0
-    ? <img src={avatarURL} className="avatar"/>
+    ? <img alt={user.username ?? user.email ?? ""} src={avatarURL} className="avatar"/>
     : <span>{user.full_name ?? user.username ?? ""}<b className="caret"></b></span>;
 
   const userDropdownHeader = (user.full_name || user.email)
