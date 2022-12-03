@@ -94,7 +94,7 @@
     "build": "node scripts/build.js",
     "build-dev": "node scripts/build.js",
     "test": "jest",
-    "test": "jest --watchAll"
+    "test-watch": "jest --watchAll"
   },
   "proxy": "http://buildbot.buildbot.net",
   "eslintConfig": {
