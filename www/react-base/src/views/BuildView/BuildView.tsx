@@ -232,7 +232,7 @@ const BuildView = observer(() => {
 
     const renderCompleteTime = () => {
       if (!build.complete) {
-        return null;
+        return <li>&nbsp;</li>;
       }
       return (
         <li title={dateFormat(build.complete_at!)}>
