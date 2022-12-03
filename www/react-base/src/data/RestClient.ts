@@ -18,87 +18,6 @@
 import axios, {AxiosRequestConfig} from 'axios';
 import {CancellablePromise} from "../util/CancellablePromise";
 
-// Axios 1.0.0 will provide an easier way to disable emission of braces, for now we use a modified
-// version of Axios internal serializer as of 0.27.2. The following three functions are:
-// # Copyright (c) 2014-present Matt Zabriskie & Collaborators
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the "Software"), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute,
-// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all copies or
-// substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-const axiosEncode = (val: any) => {
-  return encodeURIComponent(val).
-  replace(/%3A/gi, ':').
-  replace(/%24/g, '$').
-  replace(/%2C/gi, ',').
-  replace(/%20/g, '+').
-  replace(/%5B/gi, '[').
-  replace(/%5D/gi, ']');
-}
-
-const axiosForEach = (obj: any, fn: (obj: any, key: any) => void) => {
-  // Don't bother if no value provided
-  if (obj === null || typeof obj === 'undefined') {
-    return;
-  }
-
-  // Force an array if not already something iterable
-  if (typeof obj !== 'object') {
-    /*eslint no-param-reassign:0*/
-    obj = [obj];
-  }
-
-  if (Array.isArray(obj)) {
-    // Iterate over array values
-    for (let i = 0, l = obj.length; i < l; i++) {
-      fn(obj[i], i);
-    }
-  } else {
-    // Iterate over object keys
-    const keys = Object.keys(obj);
-    const len = keys.length;
-    let key;
-
-    for (let i = 0; i < len; i++) {
-      key = keys[i];
-      fn(obj[key], key);
-    }
-  }
-}
-
-const axiosParamsSerializerWithoutBraces = (params: any[]) => {
-  let parts: string[] = [];
-
-  axiosForEach(params, (val, key) => {
-    if (val === null || typeof val === 'undefined') {
-      return;
-    }
-
-    if (!Array.isArray(val)) {
-      val = [val];
-    }
-
-    axiosForEach(val, (v: any) => {
-      if (v !== null && typeof v === 'object') {
-        v = JSON.stringify(v);
-      }
-      parts.push(axiosEncode(key) + '=' + axiosEncode(v));
-    });
-  });
-
-  return parts.join('&');
-}
-
 export default class RestClient {
   rootUrl: string;
 
@@ -133,7 +52,7 @@ export default class RestClient {
       method: 'get',
       url: this.rootUrl + url,
       params: params,
-      paramsSerializer: axiosParamsSerializerWithoutBraces,
+      paramsSerializer: {indexes: null},
     });
   }
 
