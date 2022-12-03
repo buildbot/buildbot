@@ -199,7 +199,7 @@ class BuildJsCommand(distutils.cmd.Command):
         if self.already_run:
             return
         package = self.distribution.packages[0]
-        if os.path.exists("webpack.config.js"):
+        if os.path.exists("package.json"):
 
             shell = bool(os.name == 'nt')
 
