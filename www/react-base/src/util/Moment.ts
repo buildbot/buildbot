@@ -49,7 +49,7 @@ export function dateFormat(time: number) {
 }
 
 export function durationFromNowFormat(time: number, now: number) {
-  return moment.unix(time).from(moment.unix(now), true);
+  return moment.unix(time).from(moment.unix(now), false);
 }
 
 export function useCurrentTime() {
