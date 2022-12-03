@@ -205,9 +205,7 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
           </div>
         </div>
       </Card.Header>
-      <div>
-        {renderLogContent()}
-      </div>
+      {fullDisplay ? <div>{renderLogContent()}</div> : <></>}
     </Card>
   );
 }
