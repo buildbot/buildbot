@@ -53,7 +53,7 @@ const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWi
             (sidebarStore.activeGroup === group.name ? " active": "");
 
           return (
-            <li key={subGroup.name} className={subClassName}>
+            <li key={`group-${subGroup.name}`} className={subClassName}>
               {subGroup.route === null
                 ? <span>{subGroup.caption}</span>
                 : <Link to={subGroup.route} onClick={() => sidebarStore.hide()}>{subGroup.caption}</Link>
@@ -62,39 +62,39 @@ const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWi
           )
         });
 
-      return (
-        <>
-          <li className="sidebar-list">
-            <button onClick={() => {sidebarStore.toggleGroup(group.name); }}>
-              <i className="fa fa-angle-right"></i>&nbsp;{group.caption}
-              <span className={"menu-icon fa fa-" + group.icon}></span>
-            </button>
-          </li>
-          {subGroups}
-        </>
-      );
+      return [
+        <li key={`group-${group.name}`} className="sidebar-list">
+          <button onClick={() => {sidebarStore.toggleGroup(group.name); }}>
+            <i className="fa fa-angle-right"></i>&nbsp;{group.caption}
+            <span className={"menu-icon fa fa-" + group.icon}></span>
+          </button>
+        </li>,
+        ...subGroups
+      ];
     }
 
-    return (
-      <>
-        {groupIndex > 0 ? <li className="sidebar-separator"></li> : <></>}
-        <li className="sidebar-list">
-          {group.route === null
-            ? <button onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
-                <span className={"menu-icon fa fa-" + group.icon}></span>
-              </button>
-            : <Link to={group.route} onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
-                <span className={"menu-icon fa fa-" + group.icon}></span>
-              </Link>
-          }
-        </li>
-      </>
-    );
+    const elements: JSX.Element[] = [];
+    if (groupIndex > 0) {
+      elements.push(<li key={`groupsep-${group.name}`} className="sidebar-separator"></li>);
+    }
+    elements.push(
+      <li key={`group-${group.name}`} className="sidebar-list">
+        {group.route === null
+          ? <button onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
+            <span className={"menu-icon fa fa-" + group.icon}></span>
+          </button>
+          : <Link to={group.route} onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
+            <span className={"menu-icon fa fa-" + group.icon}></span>
+          </Link>
+        }
+      </li>
+    )
+    return elements;
   });
 
-  const footerElements = footerItems.map(footerItem => {
+  const footerElements = footerItems.map((footerItem, index) => {
     return (
-      <div className="col-xs-4">
+      <div key={index} className="col-xs-4">
         <Link to={footerItem.route}>{footerItem.caption}</Link>
       </div>
     );
@@ -105,8 +105,8 @@ const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWi
       <div onMouseEnter={() => sidebarStore.enter()} onMouseLeave={() => sidebarStore.leave()}
            onClick={() => sidebarStore.show()} className="sidebar sidebar-blue">
         <ul>
-          <li className="sidebar-main"><Link to="/">{appTitle}{sidebarIcon}</Link></li>
-          <li className="sidebar-title"><span>NAVIGATION</span></li>
+          <li key="sidebar-main" className="sidebar-main"><Link to="/">{appTitle}{sidebarIcon}</Link></li>
+          <li key="sidebar-title" className="sidebar-title"><span>NAVIGATION</span></li>
           {groupElements}
         </ul>
         <div className="sidebar-footer">

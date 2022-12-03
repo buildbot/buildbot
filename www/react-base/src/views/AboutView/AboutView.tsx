@@ -67,7 +67,7 @@ const EndpointListItem = ({spec}: EndpointListItemProps) => {
   const fieldCount = spec.type_spec.fields !== undefined ? spec.type_spec.fields.length : 0;
 
   return (
-    <li className="list-group-item">
+    <li key={spec.path} className="list-group-item">
       <b onClick={(e) => { setShowDetail(!showDetail); }}>
         /{spec.path}:
       </b>{fieldCount} fields

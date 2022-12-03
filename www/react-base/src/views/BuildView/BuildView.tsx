@@ -212,9 +212,9 @@ const BuildView = observer(() => {
 
   useTopbarActions(stores.topbarActions, actions);
 
-  const renderPager = (build: Build) => {
+  const renderPager = (build: Build|null) => {
     const renderPrevLink = () => {
-      if (buildnumber > 1 && prevBuild !== null) {
+      if (buildnumber > 1 && prevBuild !== null && build !== null) {
         return (
           <Link to={`/builders/${builderid}/builds/${prevBuild.number}`}
                 className="bb-build-view-nav-button">
@@ -231,8 +231,8 @@ const BuildView = observer(() => {
     }
 
     const renderCompleteTime = () => {
-      if (!build.complete) {
-        return null;
+      if (build === null || !build.complete) {
+        return <li>&nbsp;</li>;
       }
       return (
         <li title={dateFormat(build.complete_at!)}>
@@ -262,7 +262,7 @@ const BuildView = observer(() => {
 
     return (
       <ul className="bb-build-view-pager">
-        <li className={"previous " + (build.number === 1 ? " disabled" : "")}>
+        <li className={"previous " + ((build === null || build.number === 1) ? " disabled" : "")}>
           {renderPrevLink()}
         </li>
         {renderCompleteTime()}
@@ -316,7 +316,7 @@ const BuildView = observer(() => {
     <div className="container bb-build-view">
       <AlertNotification text={errorMsg}/>
       <nav>
-        {build !== null ? renderPager(build) : <></>}
+        {renderPager(build)}
       </nav>
       <Tabs>
         <Tab eventKey="build-steps" title="Build steps">

@@ -135,8 +135,14 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
                     if (info === undefined) {
                       info = '';
                     }
+
                     return (
-                      <td key={"info-" + name}>{info}</td>
+                      <td key={"info-" + name}>
+                        {name === 'access_uri'
+                          ? <a href={info}>{info}</a>
+                          : <>{info}</>
+                        }
+                      </td>
                     );
                   })
                 }

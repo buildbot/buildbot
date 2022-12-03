@@ -111,7 +111,7 @@ const HomeView = observer(() => {
                     build.builderid.toString() in builders.byId)
                   .map(build => {
                     return (
-                      <li className="unstyled">
+                      <li key={`${build.builderid}-${build.id}`} className="unstyled">
                         <BuildSticker build={build}
                                       builder={builders.byId[build.builderid.toString()]}/>
                       </li>
@@ -126,7 +126,7 @@ const HomeView = observer(() => {
                   .sort((a, b) => a.builder.name.localeCompare(b.builder.name))
                   .map(b => {
                     return (
-                      <div className="col-md-4">
+                      <div key={b.builder.builderid} className="col-md-4">
                         <Card className="bb-home-builder-card">
                           <Card.Header>
                             <Link to={`builders/${b.builder.builderid}`}>{b.builder.name}</Link>

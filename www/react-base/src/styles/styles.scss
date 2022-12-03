@@ -71,7 +71,7 @@ Firefox will insert newlines if the selection go over a no-select span, so we ne
 [data-linenumber-content--before]::before,
 [data-linenumber-content--after]::after {
   content: attr(data-linenumber-content);
-  color: #c7c7c7;
+  color: $bb-color-log-white;
   padding-right: 10px;
   white-space: pre;
 }

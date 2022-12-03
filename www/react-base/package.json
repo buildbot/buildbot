@@ -94,7 +94,7 @@
     "build": "node scripts/build.js",
     "build-dev": "node scripts/build.js",
     "test": "jest",
-    "test": "jest --watchAll"
+    "test-watch": "jest --watchAll"
   },
   "proxy": "http://buildbot.buildbot.net",
   "eslintConfig": {
@@ -133,7 +133,7 @@
       "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
     ],
     "testEnvironment": "jsdom",
-    "testRunner": "/home/p12/code/my/checkouts/buildbot2/www/react-base/node_modules/jest-circus/runner.js",
+    "testRunner": "./node_modules/jest-circus/runner.js",
     "transform": {
       "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.js",
       "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
@@ -175,6 +175,7 @@
     "@types/react-test-renderer": "^18.0.0",
     "@types/react-virtualized": "^9.21.21",
     "axios-mock-adapter": "^1.21.1",
+    "copy-webpack-plugin": "^6.4.0",
     "less": "^3.0.0",
     "less-loader": "^5.0.0",
     "react-test-renderer": "^18.2.0",

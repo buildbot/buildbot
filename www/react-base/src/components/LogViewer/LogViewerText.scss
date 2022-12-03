@@ -1,3 +1,4 @@
+@import '../../styles/colors.scss';
 
 .bb-logviewer-text-wrapper {
   height: 100%;
@@ -5,13 +6,13 @@
 
 .bb-logviewer-text-area {
   background-color: #000;
-  color: #c7c7c7;
+  color: $bb-color-log-white;
   .padding {
     // zebra pattern
     background: repeating-linear-gradient(-45deg,rgb(10, 10, 10),rgb(40, 40, 40) 7%, rgb(10,10,10) 10%)
   }
   .log_o, .ansi_white, .ansi30 {
-    color: #c7c7c7;
+    color: $bb-color-log-white;
   }
   .log_e, .ansi_red, .ansi31 {
     color: #c91b00;
