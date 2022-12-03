@@ -15,7 +15,7 @@ $gl-sidebar-width: 600px;
   /* theme */
   .sidebar.sidebar-blue {
     background: #30426a;
-    ul .sidebar-main, .sidebar-footer, a:hover {
+    ul .sidebar-main, .sidebar-footer, a:hover, button:hover {
       background: #273759;
     }
     ul .sidebar-title {
@@ -45,7 +45,8 @@ $gl-sidebar-width: 600px;
         display: block;
         margin: 13px 0;
       }
-      .sidebar-list a:hover span {
+      .sidebar-list a:hover span,
+      .sidebar-list button:hover span{
         border-left: 3px solid #e99d1a;
         text-indent: 22px;
       }
@@ -99,10 +100,17 @@ $gl-sidebar-width: 600px;
       text-indent: 20px;
       overflow-x: hidden;
       overflow-y: hidden;
-      li a {
+
+      li button {
+        background-color: transparent;
+        border: 0;
+        text-align: left;
+      }
+
+      li a,
+      li button {
         color: #fff;
         display: block;
-        float: left;
         text-decoration: none;
         width: 250px;
         @media (max-width: $gl-sidebar-small-threshold) {
@@ -111,7 +119,7 @@ $gl-sidebar-width: 600px;
       }
       li.sidebar-main {
         height: 51px;
-        a {
+        a, button {
           font-size: 18px;
           line-height: 50px;
         }
@@ -133,7 +141,7 @@ $gl-sidebar-width: 600px;
       }
       li.sidebar-list {
         height: 40px;
-        a {
+        a, button {
           text-indent: 25px;
           font-size: 15px;
           color: #b2bfdc;
@@ -142,7 +150,8 @@ $gl-sidebar-width: 600px;
             margin-left: -34px;
           }
         }
-        a:hover {
+        a:hover,
+        button:hover {
           color: #fff;
           border-left: 3px solid #e99d1a;
           text-indent: 22px;
@@ -156,18 +165,19 @@ $gl-sidebar-width: 600px;
             width: 50px;
           }
         }
-        a:hover .menu-icon {
+        a:hover .menu-icon,
+        button:hover .menu-icon {
           text-indent: 25px;
         }
         &.subitem {
           transition: height $gl-sidebar-transition-time ease-out 0s;
-          a {
+          a, button {
             padding-left:20px;
             transition: line-height $gl-sidebar-transition-time ease-out 0s, color $gl-sidebar-transition-time ease-out 0s,  background $gl-sidebar-transition-time ease-out 0s;;
           }
           &:not(.active) {
             height: 0px;
-            a {
+            a, button {
               line-height: 0px;
               color: rgba(255, 0, 0, 0.0);
             }
@@ -186,12 +196,20 @@ $gl-sidebar-width: 600px;
     padding: 0;
     margin: 0;
     text-align: center;
-    div a {
+
+    div button {
+      background-color: transparent;
+      border: 0;
+    }
+
+    div a,
+    div button {
       color: #b2bfdc;
       font-size: 12px;
       line-height: 43px;
     }
-    div a:hover {
+    div a:hover,
+    div button:hover {
       color: #ffffff;
       text-decoration: none;
     }

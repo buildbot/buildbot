@@ -63,38 +63,32 @@ const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWi
         });
 
       return (
-        <div key={group.name}>
-          <div>
-            <li className="sidebar-list">
-              <a onClick={() => {sidebarStore.toggleGroup(group.name); }}>
-                <i className="fa fa-angle-right"></i>&nbsp;{group.caption}
-                <span className={"menu-icon fa fa-" + group.icon}></span>
-              </a>
-            </li>
-            {subGroups}
-          </div>
-        </div>
+        <>
+          <li className="sidebar-list">
+            <button onClick={() => {sidebarStore.toggleGroup(group.name); }}>
+              <i className="fa fa-angle-right"></i>&nbsp;{group.caption}
+              <span className={"menu-icon fa fa-" + group.icon}></span>
+            </button>
+          </li>
+          {subGroups}
+        </>
       );
     }
 
     return (
-      <div key={group.name}>
-        <div>
-          <div>
-            {groupIndex > 0 ? <li className="sidebar-separator"></li> : <></>}
-            <li className="sidebar-list">
-              {group.route === null
-                ? <a onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
-                    <span className={"menu-icon fa fa-" + group.icon}></span>
-                  </a>
-                : <Link to={group.route} onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
-                    <span className={"menu-icon fa fa-" + group.icon}></span>
-                  </Link>
-              }
-            </li>
-          </div>
-        </div>
-      </div>
+      <>
+        {groupIndex > 0 ? <li className="sidebar-separator"></li> : <></>}
+        <li className="sidebar-list">
+          {group.route === null
+            ? <button onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
+                <span className={"menu-icon fa fa-" + group.icon}></span>
+              </button>
+            : <Link to={group.route} onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
+                <span className={"menu-icon fa fa-" + group.icon}></span>
+              </Link>
+          }
+        </li>
+      </>
     );
   });
 
