@@ -48,6 +48,7 @@ export const useApplicationSpec = (dataClient: DataClient) => {
       setResult(response.specs as EndpointDescription[]);
     }
     performRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return result;
 }

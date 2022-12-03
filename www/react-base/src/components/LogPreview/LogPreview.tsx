@@ -157,6 +157,8 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
         });
       };
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [log.num_lines, fullDisplay]);
 
   const renderLogContent = () => {

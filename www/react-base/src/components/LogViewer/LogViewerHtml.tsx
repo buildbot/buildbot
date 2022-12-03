@@ -43,6 +43,8 @@ const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
     pendingRequest.current.then(content => {
       setHtmlLog(content.logchunks[0].content);
     });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
