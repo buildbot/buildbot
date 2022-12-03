@@ -146,7 +146,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
     const urlElements = stepInfo.otherUrls.map((url, index) => {
       return (
         <li key={index}>
-          <a href={url.url} target="_blank">
+          <a href={url.url} rel="noreferrer" target="_blank">
             {url.name}
           </a>
         </li>
