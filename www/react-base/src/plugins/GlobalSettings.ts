@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable, set} from "mobx";
+import {action, makeObservable, observable} from "mobx";
 import {Config} from "../contexts/Config";
 
 export type SettingValue = string | number | boolean;

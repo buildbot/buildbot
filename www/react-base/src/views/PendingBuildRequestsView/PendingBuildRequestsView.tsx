@@ -52,9 +52,8 @@ const PendingBuildRequestsView = observer(() => {
       const properties = propertiesQuery.getParentCollectionOrEmpty(buildRequest.id);
 
       const propertiesElements = Array.from(properties.properties.entries()).map(([name, valueSource]) => {
-        const [value, _] = valueSource;
         return (
-          <li key={name}>{name} = {JSON.stringify(value)}</li>
+          <li key={name}>{name} = {JSON.stringify(valueSource[0])}</li>
         );
       });
 

@@ -27,7 +27,6 @@ import {globalSettings} from "../../plugins/GlobalSettings";
 import {Change} from "../../data/classes/Change";
 import {useParams} from "react-router-dom";
 import {useState} from "react";
-import {Build} from "../../data/classes/Build";
 import DataCollection from "../../data/DataCollection";
 import {Builder} from "../../data/classes/Builder";
 import ChangeDetails from "../../components/ChangeDetails/ChangeDetails";

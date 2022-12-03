@@ -27,16 +27,6 @@ export const EXCEPTION = 4;
 export const RETRY = 5;
 export const CANCELLED = 6;
 
-const resultToInt = {
-  SUCCESS: SUCCESS,
-  WARNINGS: WARNINGS,
-  FAILURE: FAILURE,
-  SKIPPED: SKIPPED,
-  EXCEPTION: EXCEPTION,
-  RETRY: RETRY,
-  CANCELLED: CANCELLED,
-};
-
 const intToResult: {[key: number]: string} = {
   [SUCCESS]: "SUCCESS",
   [WARNINGS]: "WARNINGS",
