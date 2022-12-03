@@ -29,7 +29,7 @@ exports[`buildsticker component failed 1`] = `
       <span
         className="pull-right"
       >
-        10 s 
+        10 s
       </span>
       <span>
         failed
@@ -144,7 +144,7 @@ exports[`buildsticker component success 1`] = `
       <span
         className="pull-right"
       >
-        10 s 
+        10 s
       </span>
       <span>
         finished
