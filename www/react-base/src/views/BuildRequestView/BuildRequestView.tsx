@@ -104,7 +104,7 @@ const BuildRequestView = observer(() => {
   useTopbarItems(stores.topbar, [
     {caption: "Builders", route: "/builders"},
     {caption: "Build requests", route: null},
-    {caption: buildRequestId.toString(), route: `/buildrequest/${buildRequestId}`},
+    {caption: buildRequestId.toString(), route: `/buildrequests/${buildRequestId}`},
   ]);
 
   console.log(redirectToBuild, buildsQuery.array);

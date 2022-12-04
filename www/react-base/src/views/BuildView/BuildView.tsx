@@ -184,7 +184,7 @@ const BuildView = observer(() => {
 
     build!.control('rebuild').then((res) => {
       const brid = Object.values(res.result[1])[0];
-      navigate(`/buildrequest/${brid}?redirect_to_build=true`);
+      navigate(`/buildrequests/${brid}?redirect_to_build=true`);
     }, (reason) => {
       setIsRebuilding(false);
       setErrorMsg(`Cannot rebuild: ${reason.error.message}`);

@@ -166,7 +166,7 @@ const BuilderView = observer(() => {
     if (buildRequestNumber === null) {
       setShownForceScheduler(null);
     } else {
-      navigate(`/buildrequest/${buildRequestNumber}?redirect_to_build=true`);
+      navigate(`/buildrequests/${buildRequestNumber}?redirect_to_build=true`);
     }
   };
 
