@@ -638,6 +638,13 @@ Overriding these members ensures that builds aren't ran on incompatible workers 
         The method may be called when the instance is not yet started and should indicate compatible build in that case.
         In the default implementation the callback returns ``True``.
 
+    .. py:method:: check_instance(self)
+
+        This method determines the health of an instance.
+        The method should return ``False`` if it determines that a serious error has occurred and worker will not connect to the master.
+        Otherwise, the method should return ``True``.
+
+
 Custom Build Classes
 --------------------
 
