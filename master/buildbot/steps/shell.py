@@ -235,14 +235,19 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
     suppressionLineRe = re.compile(
         r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
 
+    class Sentinel:
+        pass
+
+    _sentinel = Sentinel()
+
     def __init__(self,
-                 warningPattern=None, warningExtractor=None, maxWarnCount=None,
+                 warningPattern=_sentinel, warningExtractor=None, maxWarnCount=None,
                  directoryEnterPattern=None, directoryLeavePattern=None,
                  suppressionFile=None, suppressionList=None, **kwargs):
         # See if we've been given a regular expression to use to match
         # warnings. If not, use a default that assumes any line with "warning"
         # present is a warning. This may lead to false positives in some cases.
-        if warningPattern:
+        if not isinstance(warningPattern, self.Sentinel):
             self.warningPattern = warningPattern
         if directoryEnterPattern:
             self.directoryEnterPattern = directoryEnterPattern
@@ -273,9 +278,10 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
         self.warnCount = 0
         self.loggedWarnings = []
 
-        self.addLogObserver(
-            'stdio',
-            logobserver.LineConsumerLogObserver(self.warningLogConsumer))
+        if self.warningPattern is not None:
+            self.addLogObserver(
+                'stdio',
+                logobserver.LineConsumerLogObserver(self.warningLogConsumer))
 
     def addSuppression(self, suppressionList):
         """

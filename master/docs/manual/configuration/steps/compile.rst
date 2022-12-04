@@ -26,6 +26,8 @@ To use a different regexp, provide a ``warningPattern=`` argument, or use a subc
 
 The ``warningPattern=`` can also be a pre-compiled Python regexp object: this makes it possible to add flags like ``re.I`` (to use case-insensitive matching).
 
+If ``warningPattern`` is set to ``None`` then warning counting is disabled.
+
 Note that the compiled ``warningPattern`` will have its :meth:`match` method called, which is subtly different from a :meth:`search`.
 Your regular expression must match the from the beginning of the line.
 This means that to look for the word "warning" in the middle of a line, you will need to prepend ``'.*'`` to your regular expression.
