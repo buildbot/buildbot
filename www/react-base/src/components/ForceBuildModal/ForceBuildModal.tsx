@@ -152,10 +152,8 @@ const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceBuildMod
     forceBuildStart();
   };
 
-  // FIXME: Backdrop and animation are included only to fix incompatibility between version
-  // mismatch of react-bootstrap and bootstrap.
   return (
-    <Modal show={true} backdrop={false} animation={false} onHide={() => onClose(null)}>
+    <Modal show={true} onHide={() => onClose(null)}>
       <Modal.Header closeButton>
         <Modal.Title>{scheduler.label}</Modal.Title>
       </Modal.Header>
