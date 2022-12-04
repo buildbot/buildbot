@@ -162,4 +162,14 @@ span:hover>.mouse-over-only  {display: inline;}
     padding-left: 16px;
     padding-right: 16px;
   }
+
+  .btn-light {
+    background-color: #fff;
+    border-color: #ccc;
+  }
+
+  .btn-light:hover {
+    background-color: #e6e6e6;
+    border-color: #adadad;
+  }
 }
