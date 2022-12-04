@@ -153,4 +153,23 @@ span:hover>.mouse-over-only  {display: inline;}
   a:hover {
     text-decoration: none;
   }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    // The padding is increased so that scroll bars don't appear when using .row elements in modal. The padding
+    // is such that it's larger than the negative margin of .row.
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .btn-light {
+    background-color: #fff;
+    border-color: #ccc;
+  }
+
+  .btn-light:hover {
+    background-color: #e6e6e6;
+    border-color: #adadad;
+  }
 }

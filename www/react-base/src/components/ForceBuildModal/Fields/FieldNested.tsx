@@ -71,9 +71,9 @@ const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
   if (field.layout === 'vertical') {
     return (
       <Card>
-        { field.label !== null ? <Card.Header>{field.label}</Card.Header> : <></> }
+        { field.label !== null && field.label !== '' ? <Card.Header>{field.label}</Card.Header> : <></> }
         <Card.Body>
-          <div className="form-horizontal">
+          <div className="row">
             {
               field.fields.filter(f => !shouldHideField(f)).map(f => (
                 <div className={columnClass}>
@@ -89,7 +89,7 @@ const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
 
   // layout === simple
   return (
-    <div className="form-horizontal">
+    <div className="row">
       {
         field.fields.filter(f => !shouldHideField(f)).map(f => (
           <div className={columnClass}>
