@@ -8,12 +8,18 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.7.0`` ( ``2022-12-04`` )
+=====================================
 
 Bug fixes
 ---------
 
+- Improved statistics capture to avoid negative build duration.
 - Improved reliability of "buildbot stop" (:issue:`3535`).
-- Fixed worker ``cpdir`` command handling when using PB protocol (:issue:`6539`)
+- Cancelled builds now have stop reason included into the state string.
+- Fixed ``custom_class`` change hook checks to allow hook without a plugin.
+- Added treq response wrapper to fix issue with missing url attribute.
+- Fixed Buildbot Worker being unable to start on Python 2.7 due to issue in a new version of Automat dependency.
 
 Features
 --------
@@ -23,6 +29,30 @@ Features
    - ``<attribute>_re`` now support multiple regexes
    - New ``<attribute>_not_re`` parameters to require no match by regex
    - New ``property_<match_type>`` parameters to perform filtering on change properties.
+- Exposed frontend configuration as implementation-defined JSON document that can be queried separately.
+- Added support for custom branch keys to ``OldBuildCanceller``.
+  This is useful in Version Control Systems such as Gerrit that have multiple branch names for the same logical branch that should be tracked by the canceller.
+- ``p4port`` argument of the ``P4`` step has been marked renderable.
+- Added automatic generation of commands for Telegram bot without need to send them manually to BotFather.
+
+Deprecations and Removals
+-------------------------
+
+- This release includes an experimental web UI written using React framework.
+  The existing web UI is written using AngularJS framework which is no longer maintained.
+  The new web UI can be tested by installing ``buildbot-www-react`` package and ``'base_react': {}`` key-value to www plugins.
+  Currently no web UI plugins are supported.
+  The existing web UI will be deprecated on subsequent Buildbot released and eventually replaced with the React-based web UI on Buildbot 4.0.
+
+
+Buildbot ``3.6.1`` ( ``2022-09-22`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed handling of last line in logs when Buildbot worker 3.5 and older connects to Buildbot master 3.6 (:issue:`6632`).
+- Fixed worker ``cpdir`` command handling when using PB protocol (:issue:`6539`)
 
 
 Buildbot ``3.6.0`` ( ``2022-08-25`` )

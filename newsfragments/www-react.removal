@@ -1,5 +1,0 @@
-This release includes an experimental web UI written using React framework.
-The existing web UI is written using AngularJS framework which is no longer maintained.
-The new web UI can be tested by installing `buildbot-www-react` package and `'base_react': {}` key-value to www plugins.
-Currently no web UI plugins are supported.
-The existing web UI will be deprecated on subsequent Buildbot released and eventually replaced with the React-based web UI on Buildbot 4.0.
