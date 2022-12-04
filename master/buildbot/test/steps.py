@@ -47,23 +47,29 @@ def _dict_diff(d1, d2):
     d2_keys = set(d2.keys())
     both = d1_keys & d2_keys
 
-    missing_in_d1 = []
-    missing_in_d2 = []
+    missing_in_d1 = {}
+    missing_in_d2 = {}
     different = []
 
     for k in both:
         if isinstance(d1[k], dict) and isinstance(d2[k], dict):
-            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(
-                d1[k], d2[k])
-            missing_in_d1.extend([f'{k}.{m}' for m in missing_in_v1])
-            missing_in_d2.extend([f'{k}.{m}' for m in missing_in_v2])
+            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(d1[k], d2[k])
+
+            for sub_key in missing_in_v1:
+                missing_in_d1[f'{k}.{sub_key}'] = d2[k][sub_key]
+            for sub_key in missing_in_v2:
+                missing_in_d2[f'{k}.{sub_key}'] = d1[k][sub_key]
+
             for child_k, left, right in different_in_v:
                 different.append((f'{k}.{child_k}', left, right))
             continue
         if d1[k] != d2[k]:
             different.append((k, d1[k], d2[k]))
-    missing_in_d1.extend(d2_keys - both)
-    missing_in_d2.extend(d1_keys - both)
+
+    for k in d2_keys - both:
+        missing_in_d1[k] = d2[k]
+    for k in d1_keys - both:
+        missing_in_d2[k] = d1[k]
     return missing_in_d1, missing_in_d2, different
 
 
@@ -76,15 +82,14 @@ def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
     text = ""
     missing_in_exp, missing_in_cmd, diff = _dict_diff(exp_args, got_args)
     if missing_in_exp:
-        missing_dict = {key: got_args[key] for key in missing_in_exp}
-        text += f'Keys in command missing from expectation: {missing_dict!r}\n'
+        text += f'Keys in command missing from expectation: {missing_in_exp!r}\n'
     if missing_in_cmd:
-        missing_dict = {key: exp_args[key] for key in missing_in_cmd}
-        text += f'Keys in expectation missing from command: {missing_dict!r}\n'
+        text += f'Keys in expectation missing from command: {missing_in_cmd!r}\n'
     if diff:
         formatted_diff = [f'"{d[0]}":\nexpected: {d[1]!r}\ngot:      {d[2]!r}\n' for d in diff]
         text += ('Key differences between expectation and command: {0}\n'.format(
             '\n'.join(formatted_diff)))
+
     return text
 
 
