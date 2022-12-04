@@ -126,6 +126,7 @@ checkBrowsers(paths.appPath, isInteractive)
       '/api/v2': proxyConfig[0],
       '/login': proxyConfig[0],
       '/ws': proxyConfig[0],
+      '/avatar': proxyConfig[0],
       '/browser-warning.js': proxyConfig[0],
       '/browser-warning.css': proxyConfig[0],
     };

@@ -100,7 +100,7 @@ const BuilderView = observer(() => {
   const buildsQuery = useDataApiQuery(() =>
     buildersQuery.getRelated(builder => Build.getAll(accessor, {query: {
         builderid: builder.builderid,
-        property: ["owners", "workername"],
+        property: ["owners", "workername", "branch"],
         limit: numBuilds,
         order: '-number'
       }
@@ -166,7 +166,7 @@ const BuilderView = observer(() => {
     if (buildRequestNumber === null) {
       setShownForceScheduler(null);
     } else {
-      navigate(`/buildrequest/${buildRequestNumber}?redirect_to_build=true`);
+      navigate(`/buildrequests/${buildRequestNumber}?redirect_to_build=true`);
     }
   };
 

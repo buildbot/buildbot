@@ -42,9 +42,13 @@ const BuildLinkWithSummaryTooltip = observer(({build, builder}: BuildLinkWithSum
     </Tooltip>
   );
 
+  const buildText = 'branch' in build.properties
+    ? `${build.properties['branch'][0]} (${build.number})`
+    : `${build.number}`;
+
   const linkText = builder !== undefined
-    ? <>{builder.name} / {build.number}</>
-    : <>{build.number}</>
+    ? `${builder.name} / ${buildText}`
+    : buildText
 
   return (
     <Link to={`/builders/${build.builderid.toString()}/builds/${build.number}`}>

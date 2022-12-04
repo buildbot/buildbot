@@ -30,6 +30,7 @@ import './views/SettingsView/SettingsView';
 import './views/SchedulersView/SchedulersView';
 import './views/WorkersView/WorkersView';
 import './views/WorkerView/WorkerView';
+import UrlNotFoundView from "./views/UrlNotFoundView/UrlNotFoundView";
 
 function App() {
   const stores = useContext(StoresContext);
@@ -39,6 +40,9 @@ function App() {
   const routeElements = [...globalRoutes.configs.values()].map(config => {
     return <Route key={config.route} path={config.route} element={config.element()}/>
   });
+  routeElements.push(
+    <Route key="*" path="*" element={<UrlNotFoundView/>}/>
+  );
 
   return (
     <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
