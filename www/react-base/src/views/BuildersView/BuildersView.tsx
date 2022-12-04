@@ -365,11 +365,22 @@ const BuildersView = observer(() => {
           </tr>
           {builderRowElements}
         </tbody>
-        </Table>
+      </Table>
+      <div>
+        <div className="form-group">
+          <label className="checkbox-inline">
+            <input type="checkbox" name="Show old builders"
+                   checked={showOldBuilders}
+                   onChange={event => {
+                     globalSettings.setSetting("Builders.show_old_builders", event.target.checked);
+                     globalSettings.save();
+                   }}/>
+            {' '}Show old builders
+          </label>
+        </div>
+      </div>
     </div>
   );
-
-  // FIXME: show old builders setting form
 });
 
 globalMenuSettings.addGroup({
