@@ -189,7 +189,8 @@ const BuildersView = observer(() => {
       return Build.getAll(accessor, {query: {
           limit: buildFetchLimit,
           order: '-started_at',
-          builderid__eq: filteredBuilderIds
+          builderid__eq: filteredBuilderIds,
+          property: 'branch',
         }})
     });
 
