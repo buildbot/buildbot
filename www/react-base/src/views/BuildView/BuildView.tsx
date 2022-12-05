@@ -44,7 +44,7 @@ import {computed} from "mobx";
 import {Change} from "../../data/classes/Change";
 import {useFavIcon} from "../../util/FavIcon";
 import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "../../util/Properties";
-import {getBuildOrStepResults, PENDING, results2class} from "../../util/Results";
+import {getBuildOrStepResults, results2class, UNKNOWN} from "../../util/Results";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import RawData from "../../components/RawData/RawData";
@@ -210,7 +210,7 @@ const BuildView = observer(() => {
   const actions = buildTopbarActions(build, isRebuilding, isStopping, doRebuild, doStop);
 
   useTopbarActions(stores.topbarActions, actions);
-  useFavIcon(getBuildOrStepResults(build, PENDING));
+  useFavIcon(getBuildOrStepResults(build, UNKNOWN));
 
   const renderPager = (build: Build|null) => {
     const renderPrevLink = () => {
