@@ -18,7 +18,6 @@ from twisted.trial.unittest import TestCase
 from twisted.web.server import Site
 from twisted.web.static import Data
 
-from ..backports import SynchronousTestCase
 from ..util import HangCheckFactory
 from ..util._hangcheck import HangCheckProtocol
 
@@ -40,7 +39,7 @@ def assert_clock_idle(case, clock):
     )
 
 
-class HangCheckTests(SynchronousTestCase):
+class HangCheckTests(TestCase):
     """
     Tests for HangCheckProtocol.
     """
