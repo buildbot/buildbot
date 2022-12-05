@@ -42,18 +42,24 @@ const intToResult: {[key: number]: string} = {
   [UNKNOWN]: "UNKNOWN",
 };
 
+export function getBuildOrStepResults(buildOrStep: Build | Step | null, unknownResults: number) {
+  if (buildOrStep === null) {
+    return unknownResults;
+  }
+  if ((buildOrStep.results !== null) && buildOrStep.results in intToResult) {
+    return buildOrStep.results;
+  }
+  if ((buildOrStep.complete === false) && ((buildOrStep.started_at ?? 0) > 0)) {
+    return PENDING;
+  }
+  return unknownResults;
+}
+
 export function results2class(buildOrStep: Build | Step, pulse: string | null) {
-  let ret = "results_UNKNOWN";
-  if (buildOrStep !== null) {
-    if ((buildOrStep.results !== null) && buildOrStep.results in intToResult) {
-      ret = `results_${intToResult[buildOrStep.results]}`;
-    }
-    if ((buildOrStep.complete === false)  && ((buildOrStep.started_at ?? 0) > 0)) {
-      ret = 'results_PENDING';
-      if (pulse != null) {
-        ret += ` ${pulse}`;
-      }
-    }
+  const results = getBuildOrStepResults(buildOrStep, UNKNOWN);
+  let ret = `results_${intToResult[results]}`
+  if (results === PENDING && pulse !== null) {
+    ret += ` ${pulse}`;
   }
   return ret;
 }
