@@ -42,6 +42,18 @@ const intToResult: {[key: number]: string} = {
   [UNKNOWN]: "UNKNOWN",
 };
 
+export const intToColor: {[key: number]: string} = {
+  [SUCCESS]: '#8d4',
+  [WARNINGS]: '#fa3',
+  [FAILURE]: '#e88',
+  [SKIPPED]: '#AADDEE',
+  [EXCEPTION]: '#c6c',
+  [RETRY]: '#ecc',
+  [CANCELLED]: '#ecc',
+  [PENDING]: '#E7D100',
+  [UNKNOWN]: '#EEE',
+}
+
 export function getBuildOrStepResults(buildOrStep: Build | Step | null, unknownResults: number) {
   if (buildOrStep === null) {
     return unknownResults;
