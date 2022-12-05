@@ -37,15 +37,13 @@
   background-color: #5cb85c;
 }
 
-.bb-builders-view-help-popover {
-  &.popover {
-    padding: 1px;
-    border-radius: 6px;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-    margin-top: 10px;
-  }
+#bb-build-view-tag-help-popover {
+  padding: 1px;
+  border-radius: 6px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  margin-top: 10px;
 
-  .popover-title {
+  .popover-header {
     padding: 8px 14px;
     margin: 0;
     font-size: 14px;
@@ -54,19 +52,19 @@
     border-radius: 5px 5px 0 0;
   }
 
-  .popover-content {
+  .popover-body {
     padding: 9px 14px;
-  }
 
-  pre {
-    display: block;
-    padding: 9.5px;
-    margin: 0 0 10px;
-    font-size: 13px;
-    word-break: break-all;
-    word-wrap: break-word;
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    pre {
+      display: block;
+      padding: 9.5px;
+      margin: 0 0 10px;
+      font-size: 13px;
+      word-break: break-all;
+      word-wrap: break-word;
+      background-color: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
   }
 }
