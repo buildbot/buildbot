@@ -160,7 +160,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
     return getStepLogsInDisplayOrder(logs).map(log => {
       const initialFullDisplay = logs.array.length === 1 || shouldExpandLog(log, logsToExpand);
       return (
-        <LogPreview builderid={build.builderid} buildnumber={build.number}
+        <LogPreview key={log.id} builderid={build.builderid} buildnumber={build.number}
                     stepnumber={step.number} log={log} initialFullDisplay={initialFullDisplay}/>
       );
     });
