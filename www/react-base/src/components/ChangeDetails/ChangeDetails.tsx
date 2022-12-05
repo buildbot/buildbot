@@ -21,7 +21,7 @@ import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Mome
 import {useState} from "react";
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import {Link} from "react-router-dom";
-import {OverlayTrigger, Table} from "react-bootstrap";
+import {OverlayTrigger, Popover, Table} from "react-bootstrap";
 import {parseChangeAuthorNameAndEmail} from "../../util/Properties";
 import ChangeUserAvatar from "../ChangeUserAvatar/ChangeUserAvatar";
 
@@ -101,6 +101,16 @@ const ChangeDetails = ({change, compact, showDetails, setShowDetails}: ChangeDet
 
   const [changeAuthorName, changeEmail] = parseChangeAuthorNameAndEmail(change.author);
 
+  const popoverWithText = (id: string, text: string) => {
+    return (
+      <Popover id={"bb-popover-change-details-" + id}>
+        <Popover.Content>
+          {text}
+        </Popover.Content>
+      </Popover>
+    );
+  }
+
   return (
     <div className="changedetails">
       <div className="changedetails-heading" onClick={() => setShowDetails(!showDetails)}>
@@ -108,18 +118,19 @@ const ChangeDetails = ({change, compact, showDetails, setShowDetails}: ChangeDet
           ? <ChangeUserAvatar name={changeAuthorName} email={changeEmail} showName={false}/>
           : <></>
         }
-        { change.revlink !== null
-          ? <OverlayTrigger placement="bottom" overlay={<>{change.comments}</>}>
-              <Link to={change.revlink}>{change.comments.split("\n")[0]}</Link>
-            </OverlayTrigger>
-          : <OverlayTrigger placement="bottom" overlay={<>{change.comments}</>}>
-              <span>{change.comments.split("\n")[0]}</span>
-            </OverlayTrigger>
-        }
+        <OverlayTrigger placement="top"
+                        overlay={popoverWithText("comments-" + change.id, change.comments)}>
+          {
+            change.revlink !== null
+            ? <Link to={change.revlink}>{change.comments.split("\n")[0]}</Link>
+            : <span>{change.comments.split("\n")[0]}</span>
+          }
+        </OverlayTrigger>
         { !compact
-          ? <OverlayTrigger placement="bottom"
-                            overlay={<>{dateFormat(change.when_timestamp)}</>}>
-              <>({durationFromNowFormat(change.when_timestamp, now)})</>
+          ? <OverlayTrigger placement="top"
+                            overlay={popoverWithText("date-" + change.id,
+                              dateFormat(change.when_timestamp))}>
+              <span>({durationFromNowFormat(change.when_timestamp, now)})</span>
             </OverlayTrigger>
           : <></>
         }
