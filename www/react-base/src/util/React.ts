@@ -24,18 +24,19 @@ export function useStateWithDefaultIfNotSet<T>(
   return [value, setValue];
 }
 
-// Tracks child state that can be set independently, but whenever parent state changes, the child
-// state changes too.
-export function useStateWithParentTracking<T>(
-    parentValue: T, defaultValue: T): [T, Dispatch<SetStateAction<T>>] {
+// Just like useStateWithDefaultIfNotSet, however the current state is changed whenever a given
+// "parent" state is changed. The current state can otherwise be changed independently
+export function useStateWithParentTrackingWithDefaultIfNotSet<T>(
+    parentValue: T, defaultCallback: () => T): [T, (v: T) => void] {
   const [lastParentValue, setLastParentValue] = useState(parentValue);
-  const [explicitValue, setExplicitValue] = useState(defaultValue);
+  const [explicitValue, setExplicitValue] = useState<T | null>(null);
 
   if (parentValue !== lastParentValue) {
     setLastParentValue(parentValue);
     setExplicitValue(parentValue);
-    return [parentValue, setExplicitValue];
+    return [parentValue, t => setExplicitValue(t)];
   }
 
-  return [explicitValue, setExplicitValue];
+  const value: T = explicitValue !== null ? explicitValue : defaultCallback();
+  return [value, t => setExplicitValue(t)];
 }

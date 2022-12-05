@@ -32,7 +32,7 @@ import {getPropertyValueOrDefault} from "../../util/Properties";
 import {Link} from "react-router-dom";
 import DataCollection from "../../data/DataCollection";
 import LogPreview from "../LogPreview/LogPreview";
-import {useStateWithParentTracking} from "../../util/React";
+import {useStateWithParentTrackingWithDefaultIfNotSet} from "../../util/React";
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import BuildRequestSummary from "../BuildRequestSummary/BuildRequestSummary";
 import BadgeRound from "../BadgeRound/BadgeRound";
@@ -100,7 +100,8 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
   const baseUrls = config.buildbotURLs || [config.buildbotURL];
   const stepUrlAnalyzer = useStepUrlAnalyzer(baseUrls);
 
-  const [fullDisplay, setFullDisplay] = useStateWithParentTracking(parentFullDisplay, !step.complete || (step.results !== SUCCESS));
+  const [fullDisplay, setFullDisplay] = useStateWithParentTrackingWithDefaultIfNotSet(
+    parentFullDisplay, () => !step.complete || (step.results !== SUCCESS));
 
   const renderState = () => {
     if (step.started_at === null) {
