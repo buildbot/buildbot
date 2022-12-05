@@ -663,6 +663,43 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
+    def test_stalled_substantiation_then_check_instance_fails_get_requeued(self):
+        """
+        If a latent worker substantiate, but not connect and check_instance() indicates a crash,
+        the build request should become unclaimed as soon as check_instance_interval passes
+        """
+        controller, builder_id = yield self.create_single_worker_config(
+            controller_kwargs={'check_instance_interval': 10}
+        )
+        controller.auto_connect_worker = False
+
+        # Trigger a buildrequest
+        _, brids = yield self.create_build_request([builder_id])
+
+        unclaimed_build_requests = []
+        yield self.master.mq.startConsuming(
+            lambda key, request: unclaimed_build_requests.append(request),
+            ('buildrequests', None, 'unclaimed'))
+
+        # The worker startup succeeds, but it doe not connect and check_instance() later
+        # indicates a crash.
+        yield controller.start_instance(True)
+
+        self.reactor.advance(10)
+        controller.has_crashed = True
+        self.reactor.advance(10)
+
+        # Flush the errors logged by the failure.
+        self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
+
+        # When the substantiation fails, the buildrequest becomes unclaimed.
+        self.assertEqual(
+            set(brids),
+            {req['buildrequestid'] for req in unclaimed_build_requests}
+        )
+        yield controller.auto_stop(True)
+
+    @defer.inlineCallbacks
     def test_sever_connection_before_ping_then_timeout_get_requeued(self):
         """
         If a latent worker connects, but its connection is severed without
