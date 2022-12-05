@@ -45,6 +45,11 @@ const getBuildsForWorkerMap = (workersQuery: DataCollection<Worker>,
   }
 
   for (const build of buildsQuery.array) {
+    if (!('workername' in build.properties)) {
+      // This may happen when WorkersView gets information of a new build via websocket update.
+      // FIXME: the internal API should re-request full data about build in such case
+      continue;
+    }
     const workername = build.properties['workername'][0];
     if (!(workername in map)) {
       // This means that workername is not in validNames either
