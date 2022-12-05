@@ -5,6 +5,42 @@
 */
 $bb-color-log-white: #eee;
 
+$bb-color-results-success: #000;
+$bb-color-background-results-success: #8d4;
+$bb-color-border-results-success: #4F8530;
+
+$bb-color-results-warnings: #FFFFFF;
+$bb-color-background-results-warnings: #fa3;
+$bb-color-border-results-warnings: #C29D46;
+
+$bb-color-results-failure: #000;
+$bb-color-background-results-failure: #e88;
+$bb-color-border-results-failure: #A77272;
+
+$bb-color-results-skipped: #000;
+$bb-color-background-results-skipped: #AADDEE;
+$bb-color-border-results-skipped: #AADDEE;
+
+$bb-color-results-exception: #FFFFFF;
+$bb-color-background-results-exception: #c6c;
+$bb-color-border-results-exception: #ACA0B3;
+
+$bb-color-results-retry: #000;
+$bb-color-background-results-retry: #ecc;
+$bb-color-border-results-retry: #ACA0B3;
+
+$bb-color-results-cancelled: #000;
+$bb-color-background-results-cancelled: #ecc;
+$bb-color-border-results-cancelled: #ACA0B3;
+
+$bb-color-results-pending: #000;
+$bb-color-background-results-pending: #E7D100;
+$bb-color-border-results-pending: #ACA0B3;
+
+$bb-color-results-unknown: #000;
+$bb-color-background-results-unknown: #EEE;
+$bb-color-border-results-unknown: #ACA0B3;
+
 pre.log {
   background-color: #000;
   color: $bb-color-log-white;
@@ -60,52 +96,52 @@ pre.log {
 }
 .label {
   &.results_SUCCESS, &.worker_CONNECTED {
-    color: #000;
-    background-color: #8d4;
-    border-color: #4F8530;
+    color: $bb-color-results-success;
+    background-color: $bb-color-background-results-success;
+    border-color: $bb-color-border-results-success;
   }
 
   &.results_WARNINGS {
-    color: #FFFFFF;
-    background-color: #fa3;
-    border-color: #C29D46;
+    color: $bb-color-results-warnings;
+    background-color: $bb-color-background-results-warnings;
+    border-color: $bb-color-border-results-warnings;
   }
 
   &.results_FAILURE, &.worker_DISCONNECTED {
-    color: #000;
-    background-color: #e88;
-    border-color: #A77272;
+    color: $bb-color-results-failure;
+    background-color: $bb-color-background-results-failure;
+    border-color: $bb-color-border-results-failure;
   }
 
   &.results_SKIPPED {
-    color: #000;
-    background: #AADDEE;
-    border-color: #AADDEE;
+    color: $bb-color-results-skipped;
+    background: $bb-color-background-results-skipped;
+    border-color: $bb-color-border-results-skipped;
   }
 
   &.results_EXCEPTION {
-    color: #FFFFFF;
-    background-color: #c6c;
-    border-color: #ACA0B3;
+    color: $bb-color-results-exception;
+    background-color: $bb-color-background-results-exception;
+    border-color: $bb-color-border-results-exception;
   }
   &.results_RETRY {
-    color: #000;
-    background-color: #ecc;
-    border-color: #ACA0B3;
+    color: $bb-color-results-retry;
+    background-color: $bb-color-background-results-retry;
+    border-color: $bb-color-border-results-retry;
   }
   &.results_CANCELLED {
-    color: #000;
-    background-color: #ecc;
-    border-color: #ACA0B3;
+    color: $bb-color-results-cancelled;
+    background-color: $bb-color-background-results-cancelled;
+    border-color: $bb-color-border-results-cancelled;
   }
   &.results_PENDING {
-    color: #000;
-    background-color: #E7D100;
-    border-color: #ACA0B3;
+    color: $bb-color-results-pending;
+    background-color: $bb-color-background-results-pending;
+    border-color: $bb-color-border-results-pending;
   }
   &.results_UNKNOWN {
-    color: #000;
-    background-color: #EEE;
-    border-color: #ACA0B3;
+    color: $bb-color-results-unknown;
+    background-color: $bb-color-background-results-unknown;
+    border-color: $bb-color-border-results-unknown;
   }
 }
