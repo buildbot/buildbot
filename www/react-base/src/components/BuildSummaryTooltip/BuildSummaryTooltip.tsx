@@ -29,6 +29,7 @@ import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
 import BadgeRound from "../BadgeRound/BadgeRound";
 import BadgeStatus from "../BadgeStatus/BadgeStatus";
 import Card from 'react-bootstrap/Card';
+import React from "react";
 
 const isStepDisplayed = (step: Step) => {
   return !step.hidden;
@@ -70,7 +71,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
 
   if (build !== null) {
     headerElements.push((
-      <div className="flex-row">
+      <div key="build" className="flex-row">
         <div className="flex-grow-1">
           <span>{builder !== null ? limitStringLength(builder.name, 80) : ''}</span>
           <BadgeRound className={buildResultClass}>{build.number.toString()}</BadgeRound>
@@ -83,7 +84,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
     ));
 
     headerElements.push((
-      <div className="flex-row">
+      <div key="result" className="flex-row">
         <div className="flex-grow-1">
           {
             build.complete
@@ -99,7 +100,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
     ));
   } else {
     headerElements.push((
-      <div className="flex-row">loading build details...</div>
+      <div key="build" className="flex-row">loading build details...</div>
     ));
   }
 
@@ -114,7 +115,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
           </li>
         )
       } else {
-        return <></>;
+        return <React.Fragment key={index}/>;
       }
     }
 
