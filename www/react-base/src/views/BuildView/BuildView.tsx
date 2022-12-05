@@ -288,8 +288,8 @@ const BuildView = observer(() => {
   }
 
   const renderResponsibleUsers = () => {
-    return Object.entries(responsibleUsers).map(([author, email]) => (
-      <li className="list-group-item">
+    return Object.entries(responsibleUsers).map(([author, email], index) => (
+      <li key={index} className="list-group-item">
         <ChangeUserAvatar name={author} email={email} showName={true}/>
       </li>
     ));
