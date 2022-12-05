@@ -26,6 +26,9 @@ export const SKIPPED = 3;
 export const EXCEPTION = 4;
 export const RETRY = 5;
 export const CANCELLED = 6;
+// Not returned by the API
+export const PENDING = 1000;
+export const UNKNOWN = 1001;
 
 const intToResult: {[key: number]: string} = {
   [SUCCESS]: "SUCCESS",
@@ -35,6 +38,8 @@ const intToResult: {[key: number]: string} = {
   [EXCEPTION]: "EXCEPTION",
   [RETRY]: "RETRY",
   [CANCELLED]: "CANCELLED",
+  [PENDING]: "PENDING",
+  [UNKNOWN]: "UNKNOWN",
 };
 
 export function results2class(buildOrStep: Build | Step, pulse: string | null) {
