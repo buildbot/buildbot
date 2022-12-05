@@ -82,7 +82,9 @@ class NotifierMaster(RunMasterBase):
         })
 
     def assertEncodedIn(self, text, mail):
-        # python 2.6 default transfer in base64 for utf-8
+        # The default transfer encoding is base64 for utf-8 even when it could be represented
+        # accurately by quoted 7bit encoding. TODO: it is possible to override it,
+        # see https://bugs.python.org/issue12552
         if "base64" not in mail:
             self.assertIn(text, mail)
         else:  # b64encode and remove '=' padding (hence [:-1])
