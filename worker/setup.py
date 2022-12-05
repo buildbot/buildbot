@@ -108,7 +108,6 @@ setup_args = {
     'packages': [
         "buildbot_worker",
         "buildbot_worker.util",
-        "buildbot_worker.backports",
         "buildbot_worker.commands",
         "buildbot_worker.scripts",
         "buildbot_worker.monkeypatches",
