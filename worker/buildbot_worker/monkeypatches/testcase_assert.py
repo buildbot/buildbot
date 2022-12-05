@@ -15,44 +15,12 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import string_types
 
-import re
 import unittest
 
 
-def _assertRaisesRegexp(self, expected_exception, expected_regexp,
-                        callable_obj, *args, **kwds):
-    """
-    Asserts that the message in a raised exception matches a regexp.
-
-    This is a simple clone of unittest.TestCase.assertRaisesRegexp() method
-    introduced in python 2.7. The goal for this function is to behave exactly
-    as assertRaisesRegexp() in standard library.
-    """
-    exception = None
-    try:
-        callable_obj(*args, **kwds)
-    except expected_exception as ex:  # let unexpected exceptions pass through
-        exception = ex
-
-    if exception is None:
-        self.fail("{0} not raised".format(str(expected_exception.__name__)))
-
-    if isinstance(expected_regexp, string_types):
-        expected_regexp = re.compile(expected_regexp)
-
-    if not expected_regexp.search(str(exception)):
-        self.fail('"{0}" does not match "{1}"'.format(
-                  expected_regexp.pattern, str(exception)))
-
-
 def patch():
-    hasAssertRaisesRegexp = getattr(unittest.TestCase, "assertRaisesRegexp", None)
     hasAssertRaisesRegex = getattr(unittest.TestCase, "assertRaisesRegex", None)
-    if not hasAssertRaisesRegexp:
-        # Python 2.6
-        unittest.TestCase.assertRaisesRegexp = _assertRaisesRegexp
     if not hasAssertRaisesRegex:
         # Python 2.6 and Python 2.7
         unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
