@@ -287,10 +287,7 @@ class CaptureBuildDuration(CaptureBuildTimes):
                 duration = datetime.timedelta(0)
             else:
                 duration = end_time - start_time
-            # cannot use duration.total_seconds() on Python 2.6
-            duration = ((duration.microseconds + (duration.seconds +
-                                                  duration.days * 24 * 3600) * 1e6) / 1e6)
-            return duration / divisor
+            return duration.total_seconds() / divisor
 
         if not callback:
             callback = default_callback
