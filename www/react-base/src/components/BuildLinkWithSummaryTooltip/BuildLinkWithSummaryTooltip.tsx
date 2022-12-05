@@ -43,7 +43,8 @@ const BuildLinkWithSummaryTooltip = observer(({build, builder}: BuildLinkWithSum
     </Tooltip>
   );
 
-  const buildText = 'branch' in build.properties
+  const buildText = ('branch' in build.properties) && (build.properties['branch'][0] !== null) &&
+                    (build.properties['branch'][0] !== "")
     ? `${build.properties['branch'][0]} (${build.number})`
     : `${build.number}`;
 
