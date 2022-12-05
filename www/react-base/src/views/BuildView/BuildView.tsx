@@ -42,8 +42,9 @@ import {Buildset} from "../../data/classes/Buildset";
 import DataPropertiesCollection from "../../data/DataPropertiesCollection";
 import {computed} from "mobx";
 import {Change} from "../../data/classes/Change";
+import {useFavIcon} from "../../util/FavIcon";
 import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "../../util/Properties";
-import {results2class} from "../../util/Results";
+import {getBuildOrStepResults, PENDING, results2class} from "../../util/Results";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import RawData from "../../components/RawData/RawData";
@@ -200,8 +201,6 @@ const BuildView = observer(() => {
     });
   };
 
-  // FIXME: faviconService.setFavIcon($scope.build);
-
   useTopbarItems(stores.topbar, [
     {caption: "Builders", route: "/builders"},
     {caption: builder === null ? "..." : builder.name, route: `/builders/${builderid}`},
@@ -211,6 +210,7 @@ const BuildView = observer(() => {
   const actions = buildTopbarActions(build, isRebuilding, isStopping, doRebuild, doStop);
 
   useTopbarActions(stores.topbarActions, actions);
+  useFavIcon(getBuildOrStepResults(build, PENDING));
 
   const renderPager = (build: Build|null) => {
     const renderPrevLink = () => {
@@ -288,8 +288,8 @@ const BuildView = observer(() => {
   }
 
   const renderResponsibleUsers = () => {
-    return Object.entries(responsibleUsers).map(([author, email]) => (
-      <li className="list-group-item">
+    return Object.entries(responsibleUsers).map(([author, email], index) => (
+      <li key={index} className="list-group-item">
         <ChangeUserAvatar name={author} email={email} showName={true}/>
       </li>
     ));

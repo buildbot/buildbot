@@ -34,7 +34,7 @@ import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {globalSettings} from "../../plugins/GlobalSettings";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
-import {Badge, Table} from "react-bootstrap";
+import {Badge, OverlayTrigger, Popover, Table} from "react-bootstrap";
 
 const connected2class = (worker: Worker) => {
   if (worker.connected_to.length > 0) {
@@ -222,29 +222,26 @@ const BuildersView = observer(() => {
     return byBuilderId;
   }).get();
 
-  const [showTagHelp, setShowTagHelp] = useState(false);
+  const tagHelpPopover = (
+    <Popover id="bb-build-view-tag-help-popover"
+             style={{display: "block", minWidth: "600px", left:"-300px", top: "30px"}}>
+      <Popover.Title as="h5">Tags filtering</Popover.Title>
+      <Popover.Content>
+        <p><b>
+          <pre>+{"{tag}"}</pre></b>all tags with '+' must be present in the builder tags</p>
+        <p><b>
+          <pre>-{"{tag}"}</pre></b>no tags with '-' must be present in the builder tags</p>
+        <p><b>
+          <pre>{"{tag}"}</pre></b>at least one of the filtered tag should be present</p>
+        <p>url bar is updated with you filter configuration, so you can bookmark your filters!</p>
+      </Popover.Content>
+    </Popover>
+  );
+
   const tagHelpElement = (
-    <span onClick={() => setShowTagHelp(!showTagHelp)}>
-      <i style={{position: "relative"}} className="fa fa-question-circle clickable">
-        {showTagHelp
-          ? <div style={{display: "block", minWidth: "600px", left:"-300px", top: "30px"}}
-                 className="bb-builders-view-help-popover popover bottom anim-popover">
-              <h5 className="popover-title">Tags filtering</h5>
-              <div className="popover-content">
-                <p><b>
-                  <pre>+{"{tag}"}</pre></b>all tags with '+' must be present in the builder tags</p>
-                <p><b>
-                  <pre>-{"{tag}"}</pre></b>no tags with '-' must be present in the builder tags</p>
-                <p><b>
-                  <pre>{"{tag}"}</pre></b>at least one of the filtered tag should be present</p>
-                <p>url bar is updated with you filter configuration, so you can bookmark your filters!</p>
-              </div>
-              <div className="arrow"></div>
-            </div>
-          : <></>
-        }
-      </i>
-    </span>
+    <OverlayTrigger trigger="click" placement="bottom" overlay={tagHelpPopover} rootClose={true}>
+      <i style={{position: "relative"}} className="fa fa-question-circle clickable"></i>
+    </OverlayTrigger>
   );
 
   const enabledTagsElements: JSX.Element[] = [];

@@ -37,12 +37,14 @@ const BuildLinkWithSummaryTooltip = observer(({build, builder}: BuildLinkWithSum
   }
 
   const renderBuildTooltip = (props: {[p: string]: any}) => (
-    <Tooltip className="buildsummarytooltipstyle" id="bb-tooltip-build" {...props}>
+    <Tooltip className={"buildsummarytooltipstyle " + results2class(build, null)}
+             id="bb-tooltip-build" {...props}>
       <BuildSummaryTooltip build={build}/>
     </Tooltip>
   );
 
-  const buildText = 'branch' in build.properties
+  const buildText = ('branch' in build.properties) && (build.properties['branch'][0] !== null) &&
+                    (build.properties['branch'][0] !== "")
     ? `${build.properties['branch'][0]} (${build.number})`
     : `${build.number}`;
 

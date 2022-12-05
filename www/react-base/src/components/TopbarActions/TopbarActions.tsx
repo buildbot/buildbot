@@ -19,6 +19,7 @@ import TopbarActionsStore from "../../stores/TopbarActionsStore";
 import {observer} from "mobx-react";
 import {Button, Form} from "react-bootstrap";
 import {ButtonVariant} from "react-bootstrap/types";
+import React from "react";
 
 export type TopbarAction = {
   caption: string;
@@ -33,15 +34,15 @@ type TopbarActionsProps = {
 }
 
 const TopbarActions = observer(({store}: TopbarActionsProps) => {
-  const elements = store.actions.map(action => {
+  const elements = store.actions.map((action, index) => {
     return (
-      <>
+      <React.Fragment key={index}>
         <Button variant={action.variant ?? "light"} onClick={action.action} title={action.help ?? ""}>
           {action.icon ?  <><i className={"fa fa-" + action.icon}></i><span>&nbsp;</span></> : <></> }
           {action.caption}
         </Button>
         &nbsp;
-      </>
+      </React.Fragment>
     );
   });
 

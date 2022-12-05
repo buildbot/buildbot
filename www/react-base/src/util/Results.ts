@@ -26,6 +26,9 @@ export const SKIPPED = 3;
 export const EXCEPTION = 4;
 export const RETRY = 5;
 export const CANCELLED = 6;
+// Not returned by the API
+export const PENDING = 1000;
+export const UNKNOWN = 1001;
 
 const intToResult: {[key: number]: string} = {
   [SUCCESS]: "SUCCESS",
@@ -35,20 +38,40 @@ const intToResult: {[key: number]: string} = {
   [EXCEPTION]: "EXCEPTION",
   [RETRY]: "RETRY",
   [CANCELLED]: "CANCELLED",
+  [PENDING]: "PENDING",
+  [UNKNOWN]: "UNKNOWN",
 };
 
+export const intToColor: {[key: number]: string} = {
+  [SUCCESS]: '#8d4',
+  [WARNINGS]: '#fa3',
+  [FAILURE]: '#e88',
+  [SKIPPED]: '#AADDEE',
+  [EXCEPTION]: '#c6c',
+  [RETRY]: '#ecc',
+  [CANCELLED]: '#ecc',
+  [PENDING]: '#E7D100',
+  [UNKNOWN]: '#EEE',
+}
+
+export function getBuildOrStepResults(buildOrStep: Build | Step | null, unknownResults: number) {
+  if (buildOrStep === null) {
+    return unknownResults;
+  }
+  if ((buildOrStep.results !== null) && buildOrStep.results in intToResult) {
+    return buildOrStep.results;
+  }
+  if ((buildOrStep.complete === false) && ((buildOrStep.started_at ?? 0) > 0)) {
+    return PENDING;
+  }
+  return unknownResults;
+}
+
 export function results2class(buildOrStep: Build | Step, pulse: string | null) {
-  let ret = "results_UNKNOWN";
-  if (buildOrStep !== null) {
-    if ((buildOrStep.results !== null) && buildOrStep.results in intToResult) {
-      ret = `results_${intToResult[buildOrStep.results]}`;
-    }
-    if ((buildOrStep.complete === false)  && ((buildOrStep.started_at ?? 0) > 0)) {
-      ret = 'results_PENDING';
-      if (pulse != null) {
-        ret += ` ${pulse}`;
-      }
-    }
+  const results = getBuildOrStepResults(buildOrStep, UNKNOWN);
+  let ret = `results_${intToResult[results]}`
+  if (results === PENDING && pulse !== null) {
+    ret += ` ${pulse}`;
   }
   return ret;
 }

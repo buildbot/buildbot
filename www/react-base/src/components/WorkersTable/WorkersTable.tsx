@@ -70,86 +70,87 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
                                 buildsForWorker}: WorkersTableProps) => {
   const workerInfoNamesToDisplay = getWorkerInfoNamesToDisplay(workers);
 
+  const renderConnectedMasters = (worker: Worker) => {
+    if (worker.connected_to.length === 0) {
+      return (
+        <div key="disconnected">
+          <i title="disconnected" className="fa fa-times text-danger"></i>
+        </div>
+      );
+    }
+
+    return worker.connected_to.map(connectedMaster => {
+      const masterid = connectedMaster.masterid;
+      const master = mastersQuery.getByIdOrNull(masterid.toString());
+      return (
+        <div key={`master-${masterid}`}>
+          <Link to={`/masters/${masterid}`}>
+            <BadgeRound title={master !== null ? master.name : ""} className="results_SUCCESS">
+              {masterid.toString()}
+            </BadgeRound>
+          </Link>
+        </div>
+      );
+    });
+  }
+
+  const renderWorkerRecentBuilds = (worker: Worker) => {
+    if (buildsForWorker === null) {
+      return <></>;
+    }
+    return buildsForWorker[worker.name].map(build => {
+      const builder = buildersQuery.getByIdOrNull(build.builderid.toString());
+
+      return (
+        <BuildLinkWithSummaryTooltip key={build.id} build={build} builder={builder}/>
+      );
+    })
+  }
+
+  const renderWorkerInfos = (worker: Worker) => {
+    return workerInfoNamesToDisplay.map(name => {
+      let info = worker.workerinfo[name];
+      if (info === undefined) {
+        info = '';
+      }
+
+      return (
+        <td key={"info-" + name}>
+          {name === 'access_uri'
+            ? <a href={info}>{info}</a>
+            : <>{info}</>
+          }
+        </td>
+      );
+    });
+  }
+
+  const renderWorkerRow = (worker: Worker) => {
+    // TODO: actions
+    return (
+      <tr key={worker.name}>
+        <td key="state">{getWorkerStatusIcon(worker)}</td>
+        <td key="masters">{renderConnectedMasters(worker)}</td>
+        <td key="name"><Link to={`/workers/${worker.workerid}`}>{worker.name}</Link></td>
+        <td key="builds">{renderWorkerRecentBuilds(worker)}</td>
+        {renderWorkerInfos(worker)}
+      </tr>
+    );
+  }
+
   return (
     <Table hover striped size="sm">
       <thead>
       <tr>
-        <th>State</th>
-        <th>Masters</th>
-        <th>WorkerName</th>
+        <th key="state">State</th>
+        <th key="masters">Masters</th>
+        <th key="name">WorkerName</th>
         { buildsForWorker === null ? <></> : <th key="builds">Recent Builds</th> }
         { workerInfoNamesToDisplay.map(name => <th key={"info-" + name}>{name}</th>) }
       </tr>
       </thead>
       <tbody>
-      {
-        workers
-          .map(worker => {
-            // TODO: actions
-            return (
-              <tr key={worker.name}>
-                <td>{getWorkerStatusIcon(worker)}</td>
-                <td>
-                  <div>
-                    {
-                      worker.connected_to.length === 0
-                        ? <i title="disconnected" className="fa fa-times text-danger"></i>
-                        : <></>
-                    }
-                  </div>
-                  {
-                    worker.connected_to.map(connectedMaster => {
-                      const masterid = connectedMaster.masterid;
-                      const master = mastersQuery.getByIdOrNull(masterid.toString());
-                      return (
-                        <div key={masterid}>
-                          <Link to={`/masters/${masterid}`}>
-                            <BadgeRound title={master !== null ? master.name : ""} className="results_SUCCESS">
-                              {masterid.toString()}
-                            </BadgeRound>
-                          </Link>
-                        </div>
-                      );
-                    })
-                  }
-                </td>
-                <td><Link to={`/workers/${worker.workerid}`}>{worker.name}</Link></td>
-                {
-                  buildsForWorker === null
-                  ? <></>
-                  : <td key="builds">
-                      {
-                        buildsForWorker[worker.name].map(build => {
-                          const builder = buildersQuery.getByIdOrNull(build.builderid.toString());
-
-                          return (
-                            <BuildLinkWithSummaryTooltip build={build} builder={builder}/>
-                          );
-                        })
-                      }
-                    </td>
-                }
-                {
-                  workerInfoNamesToDisplay.map(name => {
-                    let info = worker.workerinfo[name];
-                    if (info === undefined) {
-                      info = '';
-                    }
-
-                    return (
-                      <td key={"info-" + name}>
-                        {name === 'access_uri'
-                          ? <a href={info}>{info}</a>
-                          : <>{info}</>
-                        }
-                      </td>
-                    );
-                  })
-                }
-              </tr>
-            );
-          })
-      }
+        {workers.map(worker => renderWorkerRow(worker))}
       </tbody>
     </Table>
   );
