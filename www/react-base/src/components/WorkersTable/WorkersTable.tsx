@@ -102,7 +102,7 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
       const builder = buildersQuery.getByIdOrNull(build.builderid.toString());
 
       return (
-        <BuildLinkWithSummaryTooltip build={build} builder={builder}/>
+        <BuildLinkWithSummaryTooltip key={build.id} build={build} builder={builder}/>
       );
     })
   }
