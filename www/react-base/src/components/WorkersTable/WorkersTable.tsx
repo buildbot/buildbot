@@ -74,9 +74,9 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
     <Table hover striped size="sm">
       <thead>
       <tr>
-        <th>State</th>
-        <th>Masters</th>
-        <th>WorkerName</th>
+        <th key="state">State</th>
+        <th key="masters">Masters</th>
+        <th key="name">WorkerName</th>
         { buildsForWorker === null ? <></> : <th key="builds">Recent Builds</th> }
         { workerInfoNamesToDisplay.map(name => <th key={"info-" + name}>{name}</th>) }
       </tr>
@@ -88,9 +88,9 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
             // TODO: actions
             return (
               <tr key={worker.name}>
-                <td>{getWorkerStatusIcon(worker)}</td>
-                <td>
-                  <div>
+                <td key="state">{getWorkerStatusIcon(worker)}</td>
+                <td key="masters">
+                  <div key="disconnected">
                     {
                       worker.connected_to.length === 0
                         ? <i title="disconnected" className="fa fa-times text-danger"></i>
@@ -102,7 +102,7 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
                       const masterid = connectedMaster.masterid;
                       const master = mastersQuery.getByIdOrNull(masterid.toString());
                       return (
-                        <div key={masterid}>
+                        <div key={`master-${masterid}`}>
                           <Link to={`/masters/${masterid}`}>
                             <BadgeRound title={master !== null ? master.name : ""} className="results_SUCCESS">
                               {masterid.toString()}
@@ -113,7 +113,7 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
                     })
                   }
                 </td>
-                <td><Link to={`/workers/${worker.workerid}`}>{worker.name}</Link></td>
+                <td key="name"><Link to={`/workers/${worker.workerid}`}>{worker.name}</Link></td>
                 {
                   buildsForWorker === null
                   ? <></>
