@@ -71,32 +71,27 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
   const workerInfoNamesToDisplay = getWorkerInfoNamesToDisplay(workers);
 
   const renderConnectedMasters = (worker: Worker) => {
-    return (
-      <>
+    if (worker.connected_to.length === 0) {
+      return (
         <div key="disconnected">
-        {
-          worker.connected_to.length === 0
-            ? <i title="disconnected" className="fa fa-times text-danger"></i>
-            : <></>
-        }
+          <i title="disconnected" className="fa fa-times text-danger"></i>
         </div>
-      {
-        worker.connected_to.map(connectedMaster => {
-          const masterid = connectedMaster.masterid;
-          const master = mastersQuery.getByIdOrNull(masterid.toString());
-          return (
-            <div key={`master-${masterid}`}>
-              <Link to={`/masters/${masterid}`}>
-                <BadgeRound title={master !== null ? master.name : ""} className="results_SUCCESS">
-                  {masterid.toString()}
-                </BadgeRound>
-              </Link>
-            </div>
-          );
-        })
-      }
-      </>
-    );
+      );
+    }
+
+    return worker.connected_to.map(connectedMaster => {
+      const masterid = connectedMaster.masterid;
+      const master = mastersQuery.getByIdOrNull(masterid.toString());
+      return (
+        <div key={`master-${masterid}`}>
+          <Link to={`/masters/${masterid}`}>
+            <BadgeRound title={master !== null ? master.name : ""} className="results_SUCCESS">
+              {masterid.toString()}
+            </BadgeRound>
+          </Link>
+        </div>
+      );
+    });
   }
 
   const renderWorkerRecentBuilds = (worker: Worker) => {
