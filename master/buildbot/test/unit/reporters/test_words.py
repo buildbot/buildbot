@@ -536,9 +536,9 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.setupSomeBuilds()
         yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 2)
-        self.assertIn('Watching build [#3](http://localhost:8080/#builders/23/builds/3) of '
+        self.assertIn('Watching build [#3](http://localhost:8080/#/builders/23/builds/3) of '
                       '`builder1` until it finishes...', self.sent)
-        self.assertIn('Watching build [#6](http://localhost:8080/#builders/23/builds/6) of '
+        self.assertIn('Watching build [#6](http://localhost:8080/#/builders/23/builds/6) of '
                       '`builder1` until it finishes...', self.sent)
 
     @defer.inlineCallbacks
@@ -550,7 +550,7 @@ class TestContact(ContactMixin, unittest.TestCase):
 
         yield self.sendBuildFinishedMessage(16)
         self.assertEqual(len(self.sent), 1)
-        self.assertIn("Build [#6](http://localhost:8080/#builders/23/builds/6) of "
+        self.assertIn("Build [#6](http://localhost:8080/#/builders/23/builds/6) of "
                       "`builder1` completed successfully.", self.sent)
 
     @defer.inlineCallbacks
@@ -558,9 +558,9 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.setupSomeBuilds()
         yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 2)
-        self.assertIn('Watching build [#3](http://localhost:8080/#builders/23/builds/3) of '
+        self.assertIn('Watching build [#3](http://localhost:8080/#/builders/23/builds/3) of '
                       '`builder1` until it finishes...', self.sent)
-        self.assertIn('Watching build [#6](http://localhost:8080/#builders/23/builds/6) of '
+        self.assertIn('Watching build [#6](http://localhost:8080/#/builders/23/builds/6) of '
                       '`builder1` until it finishes...', self.sent)
 
     @defer.inlineCallbacks
@@ -699,7 +699,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.contact.channel.buildStarted(build)
         self.assertEqual(
             self.sent.pop(),
-            "Build [#3](http://localhost:8080/#builders/23/builds/3) of `builder1` started.")
+            "Build [#3](http://localhost:8080/#/builders/23/builds/3) of `builder1` started.")
 
     def test_getCommandMethod_authz_default(self):
         self.bot.authz = words.StatusBot.expand_authz(None)

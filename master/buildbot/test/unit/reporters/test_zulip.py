@@ -59,7 +59,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "event": 'new',
                 "buildid": 20,
                 "buildername": "Builder0",
-                "url": "http://localhost:8080/#builders/79/builds/0",
+                "url": "http://localhost:8080/#/builders/79/builds/0",
                 "project": "testProject",
                 "timestamp": 10000001
             })
@@ -76,7 +76,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "event": "finished",
                 "buildid": 20,
                 "buildername": "Builder0",
-                "url": "http://localhost:8080/#builders/79/builds/0",
+                "url": "http://localhost:8080/#/builders/79/builds/0",
                 "project": "testProject",
                 "timestamp": 10000005,
                 "results": 0
@@ -94,7 +94,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "event": "finished",
                 "buildid": 20,
                 "buildername": "Builder0",
-                "url": "http://localhost:8080/#builders/79/builds/0",
+                "url": "http://localhost:8080/#/builders/79/builds/0",
                 "project": "testProject",
                 "timestamp": 10000005,
                 "results": 0
@@ -122,7 +122,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "event": 'new',
                 "buildid": 20,
                 "buildername": "Builder0",
-                "url": "http://localhost:8080/#builders/79/builds/0",
+                "url": "http://localhost:8080/#/builders/79/builds/0",
                 "project": "testProject",
                 "timestamp": 10000001
             }, code=500)
@@ -141,7 +141,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "event": 'new',
                 "buildid": 20,
                 "buildername": "Builder0",
-                "url": "http://localhost:8080/#builders/79/builds/0",
+                "url": "http://localhost:8080/#/builders/79/builds/0",
                 "project": "testProject",
                 "timestamp": 10000001
             }, code=404)
@@ -160,7 +160,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "event": 'new',
                 "buildid": 20,
                 "buildername": "Builder0",
-                "url": "http://localhost:8080/#builders/79/builds/0",
+                "url": "http://localhost:8080/#/builders/79/builds/0",
                 "project": "testProject",
                 "timestamp": 10000001
             }, code=401, content_json={"result": "error", "msg": "Invalid API key",

@@ -76,7 +76,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
                 'key': 'Builder0',
                 'name': 'Builder0',
                 'description': '',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
             },
             code=201)
 
@@ -90,7 +90,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
                 'key': 'Builder0',
                 'name': 'Builder0',
                 'description': '',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
             },
             code=201)
 
@@ -104,7 +104,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
                 'key': 'Builder0',
                 'name': 'Builder0',
                 'description': '',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
             },
             code=201)
 
@@ -132,7 +132,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
                 'key': 'Builder0',
                 'name': 'Builder0',
                 'description': '',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
             },
             code=201)
 
@@ -151,7 +151,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
                 'key': 'Builder0',
                 'name': 'Builder0',
                 'description': '',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
             },
             code=200)
 
@@ -188,7 +188,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
                 'key': 'Builder0',
                 'name': 'Builder0',
                 'description': '',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
             },
             code=404,
             content_json={
@@ -267,7 +267,7 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
                 'key': 'Builder0/0',
                 'name': 'Builder0-0',
                 'description': 'not finished build',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
             },
             code=201)
 
@@ -281,7 +281,7 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
                 'key': 'Builder0/0',
                 'name': 'Builder0-0',
                 'description': 'Build succeeded!',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
             },
             code=201)
 

@@ -50,9 +50,9 @@ class _buildsummary {
         const baseUrls = config['buildbotURLs'] || [config['buildbotURL']]
         for (const baseurl of baseUrls) {
             buildrequestURLMatchers.push($urlMatcherFactory.compile(
-                `${baseurl}#buildrequests/{buildrequestid:[0-9]+}`))
+                `${baseurl}#/buildrequests/{buildrequestid:[0-9]+}`))
             buildURLMatchers.push($urlMatcherFactory.compile(
-                `${baseurl}#builders/{builderid:[0-9]+}/builds/{buildnumber:[0-9]+}`));
+                `${baseurl}#/builders/{builderid:[0-9]+}/builds/{buildnumber:[0-9]+}`));
         }
 
         function execMatchers(matchers, url) {

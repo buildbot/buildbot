@@ -182,7 +182,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         for i, buildResult in enumerate(buildResults):
             info.append({'name': f"Builder{i}", 'result': buildResult,
                          'resultText': resultText[i], 'text': 'buildText',
-                         'url': f"http://localhost:8080/#builders/{79 + i}/builds/{i}",
+                         'url': f"http://localhost:8080/#/builders/{79 + i}/builds/{i}",
                          'build': builds[i]})
         return info
 
