@@ -153,7 +153,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         build1 = res['builds'][0]
         self.assertEqual(build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT)
         self.assertEqual(build1['steps'][0]['logs'][0]['url'],
-                         'http://localhost:8080/#builders/80/builds/2/steps/29/logs/stdio')
+                         'http://localhost:8080/#/builders/80/builds/2/steps/29/logs/stdio')
 
     @defer.inlineCallbacks
     def test_get_details_for_buildset_all(self):
@@ -239,7 +239,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                         'slug': 'stdio',
                         'stepid': 120,
                         'type': 's',
-                        'url': 'http://localhost:8080/#builders/80/builds/2/steps/29/logs/stdio'
+                        'url': 'http://localhost:8080/#/builders/80/builds/2/steps/29/logs/stdio'
                     }],
                     'name': 'step1',
                     'number': 29,
@@ -262,7 +262,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                     'stepid': 220,
                     'urls': []
                 }],
-                'url': 'http://localhost:8080/#builders/80/builds/2',
+                'url': 'http://localhost:8080/#/builders/80/builds/2',
                 'workerid': 13
             }, {
                 'builder': {
@@ -338,7 +338,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                         'slug': 'stdio',
                         'stepid': 121,
                         'type': 's',
-                        'url': 'http://localhost:8080/#builders/80/builds/3/steps/29/logs/stdio'
+                        'url': 'http://localhost:8080/#/builders/80/builds/3/steps/29/logs/stdio'
                     }],
                     'name': 'step1',
                     'number': 29,
@@ -361,7 +361,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                     'stepid': 221,
                     'urls': []
                 }],
-                'url': 'http://localhost:8080/#builders/80/builds/3',
+                'url': 'http://localhost:8080/#/builders/80/builds/3',
                 'workerid': 13
             }],
             'buildset': {
@@ -450,4 +450,4 @@ class TestURLUtils(TestReactorMixin, unittest.TestCase):
 
     def test_UrlForBuild(self):
         self.assertEqual(utils.getURLForBuild(self.master, 1, 3),
-                         'http://localhost:8080/#builders/1/builds/3')
+                         'http://localhost:8080/#/builders/1/builds/3')

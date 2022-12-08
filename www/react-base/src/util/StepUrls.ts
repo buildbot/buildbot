@@ -50,10 +50,10 @@ export type StepUrlAnalyzer = {
 
 export function useStepUrlAnalyzer(baseUrls: string[]): StepUrlAnalyzer {
   const buildrequestRegexes = useMemo(
-    () => baseUrls.map(url => new RegExp(`${url}#buildrequests/([0-9]+)$`)),
+    () => baseUrls.map(url => new RegExp(`${url}#/buildrequests/([0-9]+)$`)),
     [baseUrls]);
   const buildRegexes = useMemo(
-    () => baseUrls.map(url => new RegExp(`${url}#builders/([0-9]+)/builds/([0-9]+)$`)),
+    () => baseUrls.map(url => new RegExp(`${url}#/builders/([0-9]+)/builds/([0-9]+)$`)),
     [baseUrls]);
 
   return {

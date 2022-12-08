@@ -231,7 +231,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 A passing build has been detected on builder Builder1 while building Buildbot.
 
                 Full details are available at:
-                    http://localhost:8080/#builders/80/builds/1
+                    http://localhost:8080/#/builders/80/builds/1
 
                 Build state: test
                 Revision: (unknown)
@@ -257,7 +257,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 A passing build has been detected on builder Builder1 while building Buildbot.
 
                 Full details are available at:
-                    http://localhost:8080/#builders/80/builds/1
+                    http://localhost:8080/#/builders/80/builds/1
 
                 Build state: test
                 Revision: abcd1234
@@ -271,12 +271,12 @@ class TestMessageFormatter(MessageFormatterTestBase):
 
                 - 2: second step ( success )
                     Logs:
-                        - stdio: http://localhost:8080/#builders/80/builds/1/steps/2/logs/stdio
-                        - stderr: http://localhost:8080/#builders/80/builds/1/steps/2/logs/stderr
+                        - stdio: http://localhost:8080/#/builders/80/builds/1/steps/2/logs/stdio
+                        - stderr: http://localhost:8080/#/builders/80/builds/1/steps/2/logs/stderr
 
                 - 3: third step ( success )
                     Logs:
-                        - stdio: http://localhost:8080/#builders/80/builds/1/steps/3/logs/stdio
+                        - stdio: http://localhost:8080/#/builders/80/builds/1/steps/3/logs/stdio
 
                 ''')
         })
@@ -290,7 +290,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
             'subject': '☺ Buildbot (Buildbot): Builder1 - test ((unknown revision))',
             'body': textwrap.dedent('''\
                 <p>A passing build has been detected on builder
-                <a href="http://localhost:8080/#builders/80/builds/1">Builder1</a>
+                <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
                 while building Buildbot.</p>
                 <p>Information:</p>
                 <ul>
@@ -318,7 +318,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
             'subject': '☺ Buildbot (Buildbot): Builder1 - test (abcd1234)',
             'body': textwrap.dedent('''\
                 <p>A passing build has been detected on builder
-                <a href="http://localhost:8080/#builders/80/builds/1">Builder1</a>
+                <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
                 while building Buildbot.</p>
                 <p>Information:</p>
                 <ul>
@@ -338,15 +338,15 @@ class TestMessageFormatter(MessageFormatterTestBase):
                     <li style="">
                     2: second step ( success )
                     (
-                        <a href="http://localhost:8080/#builders/80/builds/1/steps/2/logs/stdio">&lt;stdio&gt;</a>
-                        <a href="http://localhost:8080/#builders/80/builds/1/steps/2/logs/stderr">&lt;stderr&gt;</a>
+                        <a href="http://localhost:8080/#/builders/80/builds/1/steps/2/logs/stdio">&lt;stdio&gt;</a>
+                        <a href="http://localhost:8080/#/builders/80/builds/1/steps/2/logs/stderr">&lt;stderr&gt;</a>
                     )
                     </li>
 
                     <li style="">
                     3: third step ( success )
                     (
-                        <a href="http://localhost:8080/#builders/80/builds/1/steps/3/logs/stdio">&lt;stdio&gt;</a>
+                        <a href="http://localhost:8080/#/builders/80/builds/1/steps/3/logs/stdio">&lt;stdio&gt;</a>
                     )
                     </li>
 
@@ -359,7 +359,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(res['type'], "plain")
         self.assertEqual(res['body'],
-                         "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
+                         "URL: http://localhost:8080/#/builders/80/builds/1 -- Build succeeded!")
 
     @defer.inlineCallbacks
     def test_inline_subject(self):

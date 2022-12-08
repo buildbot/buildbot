@@ -235,29 +235,29 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def expectTriggeredLinks(self, *args):
         if 'a_br' in args:
             self.exp_added_urls.append(
-                ('a #11', 'baseurl/#buildrequests/11'))
+                ('a #11', 'baseurl/#/buildrequests/11'))
         if 'b_br' in args:
             self.exp_added_urls.append(
-                ('b #22', 'baseurl/#buildrequests/22'))
+                ('b #22', 'baseurl/#/buildrequests/22'))
         if 'c_br' in args:
             self.exp_added_urls.append(
-                ('c #33', 'baseurl/#buildrequests/33'))
+                ('c #33', 'baseurl/#/buildrequests/33'))
             self.exp_added_urls.append(
-                ('c #44', 'baseurl/#buildrequests/44'))
+                ('c #44', 'baseurl/#/buildrequests/44'))
         if 'a' in args:
             self.exp_added_urls.append(
-                ('success: A #4011', 'baseurl/#builders/77/builds/4011'))
+                ('success: A #4011', 'baseurl/#/builders/77/builds/4011'))
         if 'b' in args:
             self.exp_added_urls.append(
-                ('success: B #4022', 'baseurl/#builders/78/builds/4022'))
+                ('success: B #4022', 'baseurl/#/builders/78/builds/4022'))
         if 'afailed' in args:
             self.exp_added_urls.append(
-                ('failure: A #4011', 'baseurl/#builders/77/builds/4011'))
+                ('failure: A #4011', 'baseurl/#/builders/77/builds/4011'))
         if 'c' in args:
             self.exp_added_urls.append(
-                ('success: C1 #4033', 'baseurl/#builders/79/builds/4033'))
+                ('success: C1 #4033', 'baseurl/#/builders/79/builds/4033'))
             self.exp_added_urls.append(
-                ('success: C1 #4044', 'baseurl/#builders/79/builds/4044'))
+                ('success: C1 #4044', 'baseurl/#/builders/79/builds/4044'))
 
     # tests
     def test_no_schedulerNames(self):
