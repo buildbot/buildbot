@@ -18,7 +18,7 @@ Automat==20.2.0
 Babel==2.10.3
 boto3==1.24.59
 botocore==1.27.59
-certifi==2022.6.15
+certifi==2022.12.7
 cffi==1.15.1
 charset-normalizer==2.1.1
 click==8.1.3
