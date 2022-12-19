@@ -1,3 +1,4 @@
+import {observer} from "mobx-react";
 import React, {useContext, useEffect} from 'react';
 import './App.css';
 import './globals';
@@ -33,7 +34,7 @@ import './views/WorkersView/WorkersView';
 import './views/WorkerView/WorkerView';
 import UrlNotFoundView from "./views/UrlNotFoundView/UrlNotFoundView";
 
-function App() {
+const App = observer(() => {
   const stores = useContext(StoresContext);
   const config = useContext(ConfigContext);
 
@@ -61,6 +62,6 @@ function App() {
       </Routes>
     </PageWithSidebar>
   );
-}
+});
 
 export default App;
