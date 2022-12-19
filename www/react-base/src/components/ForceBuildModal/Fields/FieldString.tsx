@@ -30,7 +30,7 @@ const FieldString = observer(({field, fieldsState}: FieldStringProps) => {
 
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
-      <label htmlFor={field.name} className="control-label col-sm-2">{field.label}</label>
+      <label htmlFor={field.name} className="control-label col-sm-10">{field.label}</label>
       <div className="col-sm-10">
         <input type="text" id={field.name} autoComplete="on" className="form-control"
                value={state.value}

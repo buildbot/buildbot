@@ -31,7 +31,7 @@ const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStringProps
 
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
-      <Form.Label className="col-sm-2">{field.label}</Form.Label>
+      <Form.Label className="col-sm-10">{field.label}</Form.Label>
       <div className="col-sm-10">
         <Form.Control as="select" multiple={field.multiple} value={state.value}
                       onChange={event => fieldsState.setValue(field.name, event.target.value)}>
