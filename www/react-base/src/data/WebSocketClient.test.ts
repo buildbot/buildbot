@@ -90,7 +90,7 @@ describe('Web socket client', () => {
 
     it('should support url based on the host and port (localhost)', () => {
       const location = {
-        protocol: 'http',
+        protocol: 'http:',
         hostname: 'localhost',
         port: '8080',
         pathname: '/',
@@ -100,7 +100,7 @@ describe('Web socket client', () => {
 
     it('should support url based on the host and port', () => {
       const location = {
-        protocol: 'http',
+        protocol: 'http:',
         hostname: 'buildbot.test',
         port: '80',
         pathname: '/',
@@ -110,7 +110,7 @@ describe('Web socket client', () => {
 
     it('should support url based on host and port and protocol', () => {
       const location = {
-        protocol: 'https',
+        protocol: 'https:',
         hostname: 'buildbot.test',
         port: '443',
         pathname: '/',
@@ -120,7 +120,7 @@ describe('Web socket client', () => {
 
     it('should support url based on host and port and protocol and basedir', () => {
       const location = {
-        protocol: 'https',
+        protocol: 'https:',
         hostname: 'buildbot.test',
         port: '443',
         pathname: '/travis/',

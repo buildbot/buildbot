@@ -20,7 +20,6 @@ import {Change} from "../../data/classes/Change";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import {useState} from "react";
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
-import {Link} from "react-router-dom";
 import {OverlayTrigger, Popover, Table} from "react-bootstrap";
 import {parseChangeAuthorNameAndEmail} from "../../util/Properties";
 import ChangeUserAvatar from "../ChangeUserAvatar/ChangeUserAvatar";
@@ -122,7 +121,7 @@ const ChangeDetails = ({change, compact, showDetails, setShowDetails}: ChangeDet
                         overlay={popoverWithText("comments-" + change.id, change.comments)}>
           {
             change.revlink !== null
-            ? <Link to={change.revlink}>{change.comments.split("\n")[0]}</Link>
+            ? <a href={change.revlink}>{change.comments.split("\n")[0]}</a>
             : <span>{change.comments.split("\n")[0]}</span>
           }
         </OverlayTrigger>

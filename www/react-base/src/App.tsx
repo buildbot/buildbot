@@ -1,4 +1,5 @@
-import React, {useContext} from 'react';
+import {observer} from "mobx-react";
+import React, {useContext, useEffect} from 'react';
 import './App.css';
 import './globals';
 import './styles/styles.scss';
@@ -6,6 +7,7 @@ import 'bootstrap';
 import {Routes, Route} from "react-router-dom";
 
 import PageWithSidebar from "./components/PageWithSidebar/PageWithSidebar";
+import {ConfigContext} from "./contexts/Config";
 import {StoresContext} from "./contexts/Stores";
 import {globalMenuSettings} from "./plugins/GlobalMenuSettings";
 import {globalRoutes} from "./plugins/GlobalRoutes";
@@ -32,8 +34,13 @@ import './views/WorkersView/WorkersView';
 import './views/WorkerView/WorkerView';
 import UrlNotFoundView from "./views/UrlNotFoundView/UrlNotFoundView";
 
-function App() {
+const App = observer(() => {
   const stores = useContext(StoresContext);
+  const config = useContext(ConfigContext);
+
+  useEffect(() => {
+    globalMenuSettings.setAppTitle(config.title);
+  }, [config.title]);
 
   useCurrentTimeSetupTimers();
 
@@ -55,6 +62,6 @@ function App() {
       </Routes>
     </PageWithSidebar>
   );
-}
+});
 
 export default App;

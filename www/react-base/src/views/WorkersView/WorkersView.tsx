@@ -16,6 +16,8 @@
 */
 
 import {observer} from "mobx-react";
+import {useState} from "react";
+import WorkerActionsModal from "../../components/WorkerActionsModal/WorkerActionsModal";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
@@ -82,6 +84,8 @@ const WorkersView = observer(() => {
       }
     }));
 
+  const [workerForActions, setWorkerForActions] = useState<null|Worker>(null);
+
   const filteredWorkers = workersQuery.array.filter(worker => {
     return isWorkerFiltered(worker, showOldWorkers);
   }).sort((a, b) => a.name.localeCompare(b.name))
@@ -91,7 +95,13 @@ const WorkersView = observer(() => {
     <div className="container">
       <WorkersTable workers={filteredWorkers} buildersQuery={buildersQuery}
                     mastersQuery={mastersQuery}
-                    buildsForWorker={getBuildsForWorkerMap(workersQuery, buildsQuery, 7)}/>
+                    buildsForWorker={getBuildsForWorkerMap(workersQuery, buildsQuery, 7)}
+                    onWorkerIconClick={(worker) => setWorkerForActions(worker)}/>
+      { workerForActions !== null
+        ? <WorkerActionsModal worker={workerForActions}
+                              onClose={() => setWorkerForActions(null)}/>
+        : <></>
+      }
     </div>
   );
 });

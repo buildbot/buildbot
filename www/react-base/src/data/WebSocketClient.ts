@@ -147,8 +147,8 @@ export class WebSocketClient {
 
 export function getWebSocketUrl(location: Location) {
   const hostname = location.hostname;
-  const protocol = location.protocol === 'https' ? 'wss' : 'ws';
-  const defaultport = location.protocol === 'https' ? '443' : '80';
+  const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+  const defaultport = location.protocol === 'https:' ? '443' : '80';
   const path = location.pathname;
   const port = location.port === defaultport ? '' : `:${location.port}`;
   return `${protocol}://${hostname}${port}${path}ws`;

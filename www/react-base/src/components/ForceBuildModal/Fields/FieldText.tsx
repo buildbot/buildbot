@@ -30,7 +30,7 @@ const FieldText = observer(({field, fieldsState}: FieldTextProps) => {
 
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
-      <label htmlFor={field.name} className="control-label col-sm-2">{field.label}</label>
+      <label htmlFor={field.name} className="control-label col-sm-10">{field.label}</label>
       <div className="col-sm-10">
         <textarea className="form-control" rows={field.rows} value={state.value}
                   onChange={event => fieldsState.setValue(field.name, event.target.value)}/>

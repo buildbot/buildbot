@@ -304,7 +304,9 @@ const BuildersView = observer(() => {
       workerElements = workers.map(worker => {
 
         const shownWorkerName = () => (
-          <BadgeRound title={worker.name} className={connected2class(worker)}/>
+          <BadgeRound title={worker.name} className={connected2class(worker)}>
+            {worker.name}
+          </BadgeRound>
         );
 
         const hoverWorkerName = () => (

@@ -30,7 +30,7 @@ const FieldInt = observer(({field, fieldsState}: FieldIntProps) => {
 
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
-      <label htmlFor={field.name} className="control-label col-sm-2">{field.label}</label>
+      <label htmlFor={field.name} className="control-label col-sm-10">{field.label}</label>
       <div className="col-sm-10">
         <input type="text" className="form-control" value={state.value}
                onChange={event => fieldsState.setValue(field.name, event.target.value)}/>
