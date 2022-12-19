@@ -27,20 +27,20 @@ import BuildLinkWithSummaryTooltip
 import {observer} from "mobx-react";
 import BadgeRound from "../BadgeRound/BadgeRound";
 
-export const getWorkerStatusIcon = (worker: Worker) => {
+export const getWorkerStatusIcon = (worker: Worker, onClick: () => void) => {
   if (worker.paused) {
     return (
-      <i title="paused" className="fa fa-pause">&nbsp;</i>
+      <i title="paused" className="fa fa-pause" onClick={onClick}>&nbsp;</i>
     );
   }
   if (worker.graceful) {
     return (
-      <i title="graceful shutdown" className="fa fa-stop"></i>
+      <i title="graceful shutdown" className="fa fa-stop" onClick={onClick}></i>
     );
   }
   if (worker.connected_to.length > 0) {
     return (
-      <i className="fa fa-smile-o"></i>
+      <i className="fa fa-smile-o" onClick={onClick}></i>
     );
   }
   return (<></>);
@@ -64,10 +64,11 @@ export type WorkersTableProps = {
   buildersQuery: DataCollection<Builder>;
   mastersQuery: DataCollection<Master>;
   buildsForWorker: {[workername: string]: Build[]} | null;
+  onWorkerIconClick: (worker: Worker) => void;
 };
 
 const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
-                                buildsForWorker}: WorkersTableProps) => {
+                                buildsForWorker, onWorkerIconClick}: WorkersTableProps) => {
   const workerInfoNamesToDisplay = getWorkerInfoNamesToDisplay(workers);
 
   const renderConnectedMasters = (worker: Worker) => {
@@ -126,10 +127,9 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
   }
 
   const renderWorkerRow = (worker: Worker) => {
-    // TODO: actions
     return (
       <tr key={worker.name}>
-        <td key="state">{getWorkerStatusIcon(worker)}</td>
+        <td key="state">{getWorkerStatusIcon(worker, () => onWorkerIconClick(worker))}</td>
         <td key="masters">{renderConnectedMasters(worker)}</td>
         <td key="name"><Link to={`/workers/${worker.workerid}`}>{worker.name}</Link></td>
         <td key="builds">{renderWorkerRecentBuilds(worker)}</td>

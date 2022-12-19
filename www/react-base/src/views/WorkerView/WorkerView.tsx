@@ -46,7 +46,7 @@ const WorkerView = observer(() => {
     <div className="container">
       <WorkersTable workers={workersQuery.array} buildersQuery={buildersQuery}
                     mastersQuery={mastersQuery}
-                    buildsForWorker={null}/>
+                    buildsForWorker={null} onWorkerIconClick={(w) => {}}/>
       <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
     </div>
   );
