@@ -42,6 +42,20 @@ const shouldHideField = (field: ForceSchedulerFieldBase) => {
   return false;
 }
 
+const filteredMap = (fields: ForceSchedulerFieldBase[],
+                     callbackFn: (f: ForceSchedulerFieldBase, index: number) => JSX.Element) => {
+  // .filter(...).map(...) cannot be used because the indexes of the original array need to be preserved in the callback
+  const res: JSX.Element[] = [];
+  for (let i = 0; i < fields.length; ++i) {
+    const field = fields[i];
+    if (shouldHideField(field)) {
+      continue;
+    }
+    res.push(callbackFn(field, i));
+  }
+  return res;
+}
+
 type FieldNestedProps = {
   field: ForceSchedulerFieldNested;
   fieldsState: ForceBuildModalFieldsState;
@@ -57,8 +71,8 @@ const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
       <div>
         <Tabs>
           {
-            field.fields.filter(f => !shouldHideField(f)).map(f => (
-              <Tab title={f.tablabel} className={columnClass}>
+            filteredMap(field.fields, (f, index) => (
+              <Tab key={f.name === "" ? index : f.name} title={f.tablabel} className={columnClass}>
                 <FieldAny field={f} fieldsState={fieldsState}></FieldAny>
               </Tab>
             ))
@@ -75,8 +89,8 @@ const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
         <Card.Body>
           <div className="row">
             {
-              field.fields.filter(f => !shouldHideField(f)).map(f => (
-                <div className={columnClass}>
+              filteredMap(field.fields, (f, index) => (
+                <div key={f.name === "" ? index : f.name} className={columnClass}>
                   <FieldAny field={f} fieldsState={fieldsState}></FieldAny>
                 </div>
               ))
@@ -91,8 +105,8 @@ const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
   return (
     <div className="row">
       {
-        field.fields.filter(f => !shouldHideField(f)).map(f => (
-          <div className={columnClass}>
+        filteredMap(field.fields, (f, index) => (
+          <div key={f.name === "" ? index : f.name} className={columnClass}>
             <FieldAny field={f} fieldsState={fieldsState}></FieldAny>
           </div>
         ))
