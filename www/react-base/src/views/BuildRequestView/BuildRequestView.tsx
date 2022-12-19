@@ -107,8 +107,6 @@ const BuildRequestView = observer(() => {
     {caption: buildRequestId.toString(), route: `/buildrequests/${buildRequestId}`},
   ]);
 
-  console.log(redirectToBuild, buildsQuery.array);
-
   if (buildsQuery.array.length > 0 && redirectToBuild) {
     const build = buildsQuery.getNthOrNull(0);
     navigate(`/builders/${build?.builderid}/builds/${build?.number}`);
