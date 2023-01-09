@@ -1,0 +1,1 @@
+Fixed an issue with secrets provider stripping newline from ssh keys sent in git steps.

@@ -19,6 +19,7 @@ from twisted.trial import unittest
 
 from buildbot.test.util import config
 from buildbot.util.git import GitMixin
+from buildbot.util.git import ensureSshKeyNewline
 from buildbot.util.git import escapeShellArgIfNeeded
 from buildbot.util.git import getSshKnownHostsContents
 
@@ -141,3 +142,27 @@ class TestGetSshKnownHostsContents(unittest.TestCase):
 
         expected = '* ssh-rsa AAAA<...>WsHQ=='
         self.assertEqual(expected, getSshKnownHostsContents(key))
+
+
+class TestensureSshKeyNewline(unittest.TestCase):
+
+    def setUp(self):
+        self.sshGoodPrivateKey = \
+"""-----BEGIN SSH PRIVATE KEY-----
+base64encodedkeydata
+-----END SSH PRIVATE KEY-----
+"""
+        self.sshMissingNewlinePrivateKey = \
+"""-----BEGIN SSH PRIVATE KEY-----
+base64encodedkeydata
+-----END SSH PRIVATE KEY-----"""
+
+    def test_good_key(self):
+        """Don't break good keys"""
+        self.assertEqual(self.sshGoodPrivateKey,
+                         ensureSshKeyNewline(self.sshGoodPrivateKey))
+
+    def test_missing_newline(self):
+        """Add missing newline to stripped keys"""
+        self.assertEqual(self.sshGoodPrivateKey,
+                         ensureSshKeyNewline(self.sshMissingNewlinePrivateKey))
