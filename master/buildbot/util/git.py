@@ -125,6 +125,19 @@ def getSshKnownHostsContents(hostKey):
     return f'{host_name} {hostKey}'
 
 
+def ensureSshKeyNewline(privateKey: str) -> str:
+    """Ensure key has trailing newline
+
+    Providers can be configured to strip newlines from secrets. This feature
+    breaks SSH key use within the Git module. This helper function ensures that
+    when an ssh key is provided for a git step that is contains the trailing
+    newline.
+    """
+    if privateKey.endswith("\n") or privateKey.endswith("\r") or privateKey.endswith("\r\n"):
+        return privateKey
+    return privateKey + "\n"
+
+
 class GitStepMixin(GitMixin):
 
     def setupGitStep(self):
@@ -278,6 +291,7 @@ class GitStepMixin(GitMixin):
         yield self.runMkdir(ssh_data_path)
 
         private_key_path = self._getSshPrivateKeyPath(ssh_data_path)
+        private_key = ensureSshKeyNewline(private_key)
         yield self.downloadFileContentToWorker(private_key_path,
                                                private_key,
                                                workdir=workdir, mode=0o400)
