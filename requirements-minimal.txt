@@ -95,4 +95,4 @@ Werkzeug==2.1.2
 wrapt==1.14.1
 xmltodict==0.13.0
 zipp==3.8.1
-zope.interface==5.4.0
+zope.interface==5.5.2
