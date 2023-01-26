@@ -16,8 +16,7 @@
 
 import datetime
 import json
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

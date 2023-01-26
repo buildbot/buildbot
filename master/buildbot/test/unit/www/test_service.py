@@ -15,10 +15,9 @@
 
 import calendar
 import datetime
+from unittest import mock
 
 import jwt
-
-import mock
 
 from twisted.cred import strcred
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse

@@ -16,8 +16,7 @@
 
 import os
 import signal
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor

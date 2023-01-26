@@ -14,10 +14,9 @@
 # Copyright Buildbot Team Members
 
 import socket
+from unittest import mock
 
 from parameterized import parameterized
-
-import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

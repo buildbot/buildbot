@@ -21,8 +21,6 @@ import multiprocessing
 import os
 import shutil
 
-import mock
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -37,6 +35,11 @@ from buildbot_worker.commands.base import Command
 from buildbot_worker.test.fake.remote import FakeRemote
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util import command
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 
 class TestBot(unittest.TestCase):

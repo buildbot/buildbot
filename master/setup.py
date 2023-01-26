@@ -523,7 +523,6 @@ test_deps = [
     # boto3 and moto required for running EC2 tests
     'boto3',
     'moto',
-    'mock>=2.0.0',
     "Markdown>=3.0.0",
     'parameterized',
 ]

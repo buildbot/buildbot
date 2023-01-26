@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 import random
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.python import failure

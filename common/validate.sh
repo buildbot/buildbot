@@ -34,7 +34,7 @@ if $help; then
     echo "USAGE: common/validate.sh [oldrev] [--quick] [--no-js] [--help]"
     echo "  This script will test a set of patches (oldrev..HEAD) for basic acceptability as a patch"
     echo "  Run it in an activated virtualenv with the current Buildbot installed, as well as"
-    echo "      sphinx, flake8, mock, and so on"
+    echo "      sphinx, flake8, and so on"
     echo "To use a different directory for tests, pass TRIALTMP=/path as an env variable"
     echo "if --quick is passed validate will skip unit tests and concentrate on coding style"
     echo "if --no-js is passed validate will skip tests that require Node and NPM"

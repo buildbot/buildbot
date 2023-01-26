@@ -15,8 +15,7 @@
 # Portions Copyright 2013 Cray Inc.
 
 import hashlib
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

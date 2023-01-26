@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from mock import Mock
+from unittest.mock import Mock
 
 from twisted.internet import defer
 from twisted.internet import reactor

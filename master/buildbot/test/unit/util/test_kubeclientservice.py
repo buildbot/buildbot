@@ -19,11 +19,10 @@ import os
 import sys
 import textwrap
 from io import StringIO
+from unittest import mock
 from unittest.case import SkipTest
 
 import yaml
-
-import mock
 
 from twisted.internet import defer
 from twisted.python import runtime

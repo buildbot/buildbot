@@ -16,8 +16,7 @@
 import json
 import os
 import textwrap
-
-import mock
+from unittest import mock
 
 from autobahn.wamp.exception import TransportLost
 from autobahn.wamp.types import SubscribeOptions

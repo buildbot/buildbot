@@ -174,9 +174,13 @@ if setuptools is not None:
 
     # Unit test hard dependencies.
     test_deps = [
-        'mock',
         'psutil',
     ]
+    if sys.version_info < (3, 3):
+        # unittest.mock added in Python 3.3
+        test_deps += [
+            'mock',
+        ]
 
     setup_args['tests_require'] = test_deps
 

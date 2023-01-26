@@ -15,9 +15,8 @@
 
 import operator
 import posixpath
-
-from mock import Mock
-from mock import call
+from unittest.mock import Mock
+from unittest.mock import call
 
 from twisted.internet import defer
 from twisted.trial import unittest

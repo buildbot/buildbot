@@ -71,7 +71,6 @@ Mako==1.2.2
 markdown2==2.4.9
 MarkupSafe==2.1.3
 mccabe==0.7.0
-mock==5.1.0
 more-itertools==9.1.0
 moto==4.1.0
 olefile==0.46

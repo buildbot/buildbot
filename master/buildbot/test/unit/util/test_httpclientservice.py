@@ -16,8 +16,7 @@
 import datetime
 import json
 import os
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor

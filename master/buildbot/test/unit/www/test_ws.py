@@ -16,8 +16,7 @@
 import json
 import re
 from unittest.case import SkipTest
-
-from mock import Mock
+from unittest.mock import Mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

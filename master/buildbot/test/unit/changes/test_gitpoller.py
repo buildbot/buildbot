@@ -15,8 +15,7 @@
 
 import os
 import re
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

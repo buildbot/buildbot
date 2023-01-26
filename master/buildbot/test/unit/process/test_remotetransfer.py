@@ -17,8 +17,7 @@
 import os
 import stat
 import tempfile
-
-from mock import Mock
+from unittest.mock import Mock
 
 from twisted.trial import unittest
 

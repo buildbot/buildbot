@@ -21,8 +21,7 @@
 
 import contextlib
 import functools
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 

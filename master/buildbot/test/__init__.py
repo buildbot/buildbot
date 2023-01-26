@@ -16,7 +16,7 @@
 import os
 import sys
 import warnings
-from pkg_resources import parse_version
+from unittest import mock
 
 import setuptools  # force import setuptools before any other distutils imports
 
@@ -25,23 +25,13 @@ from buildbot.test.util.warnings import assertProducesWarning  # noqa pylint: di
 from buildbot.test.util.warnings import assertProducesWarnings  # noqa pylint: disable=wrong-import-position
 from buildbot.warnings import DeprecatedApiWarning  # noqa pylint: disable=wrong-import-position
 
-# import mock so we bail out early if it's not installed
-try:
-    import mock
-    [mock]
-except ImportError as e:
-    raise ImportError("\nBuildbot tests require the 'mock' module; "
-                      "try 'pip install mock'") from e
+[mock]
 
 # apply the same patches the buildmaster does when it starts
 monkeypatches.patch_all()
 
 # enable deprecation warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
-
-if parse_version(mock.__version__) < parse_version("0.8"):
-    raise ImportError("\nBuildbot tests require mock version 0.8.0 or "
-                      "higher; try 'pip install -U mock'")
 
 [setuptools]  # force use for pylint
 

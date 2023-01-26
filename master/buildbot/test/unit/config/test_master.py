@@ -17,10 +17,9 @@ import builtins
 import os
 import re
 import textwrap
+from unittest import mock
 
 from parameterized import parameterized
-
-import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

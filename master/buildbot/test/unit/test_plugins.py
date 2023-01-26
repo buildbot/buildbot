@@ -17,8 +17,7 @@ Unit tests for the plugin framework
 """
 
 import warnings
-
-import mock
+from unittest import mock
 
 from twisted.trial import unittest
 from zope.interface import implementer

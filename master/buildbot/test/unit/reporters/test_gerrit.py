@@ -15,9 +15,8 @@
 
 import warnings
 from pkg_resources import parse_version
-
-from mock import Mock
-from mock import call
+from unittest.mock import Mock
+from unittest.mock import call
 
 from twisted.internet import defer
 from twisted.internet import error
