@@ -130,7 +130,8 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
     @defer.inlineCallbacks
     def test_prepare_base_image_cheap(self):
         self.expect_commands(
-            ExpectMasterShell(["qemu-img", "create", "-b", "o", "-f", "qcow2", "p"])
+            ExpectMasterShell(["qemu-img", "create", "-o", "backing_fmt=qcow2",
+                               "-b", "o", "-f", "qcow2", "p"])
         )
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
