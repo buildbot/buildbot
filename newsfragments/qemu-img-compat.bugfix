@@ -1,0 +1,1 @@
+Fix compatibility with qemu 6.1 and newer when using LibVirtWorker with ``cheap_copy=True`` (default).
