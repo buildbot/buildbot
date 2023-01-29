@@ -12,9 +12,9 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
 ``port``
     The TCP port on which to serve requests.
-    It might be an integer or any string accepted by `serverFromString <https://twistedmatrix.com/documents/current/api/twisted.internet.endpoints.html#serverFromString>`_ (ex: "tcp:8010:interface=127.0.0.1" to listen on another interface).
-    Note that SSL is not supported.
-    To host Buildbot with SSL, use an HTTP proxy such as lighttpd, nginx, or Apache.
+    It might be an integer or any string accepted by `serverFromString <https://docs.twistedmatrix.com/en/stable/api/twisted.internet.endpoints.html#serverFromString>`_ (ex: `"tcp:8010:interface=127.0.0.1"` to listen on another interface).
+    Note that using twisted's SSL endpoint is discouraged.
+    Use a reverse proxy that offers proper SSL hardening instead (see :ref:`Reverse_Proxy_Config`).
     If this is ``None`` (the default), then the master will not implement a web server.
 
 ``json_cache_seconds``
