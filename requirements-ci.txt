@@ -106,7 +106,7 @@ singledispatch==4.0.0
 six==1.16.0
 snowballstemmer==2.2.0
 SQLAlchemy==2.0.1
-sqlparse==0.4.2
+sqlparse==0.4.3
 termcolor==1.1.0
 testtools==2.5.0
 toml==0.10.2
