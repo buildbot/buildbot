@@ -63,7 +63,7 @@ jsonref==1.1.0
 lazy-object-proxy==1.4.1  # pyup: ignore (required by astroid)
 ldap3==2.9.1
 lz4==4.3.2
-Mako==1.2.2
+Mako==1.2.4
 markdown2==2.4.3
 MarkupSafe==2.1.1
 mccabe==0.7.0
