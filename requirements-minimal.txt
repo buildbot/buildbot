@@ -30,7 +30,7 @@ flake8==6.0.0
 future==0.18.3
 greenlet==2.0.2
 hyperlink==21.0.0
-idna==3.3
+idna==3.4
 imagesize==1.4.1
 importlib-metadata==4.12.0
 incremental==22.10.0
