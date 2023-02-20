@@ -12,7 +12,7 @@ buildbot_www==3.5.0
 alabaster==0.7.13
 alembic==1.9.4
 astroid==2.14.2
-attrs==22.1.0
+attrs==22.2.0
 autobahn==23.1.2
 Automat==20.2.0
 Babel==2.10.3
