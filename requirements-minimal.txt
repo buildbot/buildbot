@@ -51,7 +51,7 @@ pep8==1.7.1
 psutil==5.9.4
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-pycodestyle==2.7.0
+pycodestyle==2.10.0
 pycparser==2.21
 pyenchant==3.2.2
 pyflakes==2.3.1
