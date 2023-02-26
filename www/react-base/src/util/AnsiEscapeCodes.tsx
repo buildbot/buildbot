@@ -77,7 +77,7 @@ export function stripAnsiSgrEntry(ansiEntry: string): string {
   return ansiEntry;
 }
 
-export function ansiSgrToCss(ansiClasses: string[], cssClasses: {[key: string]: boolean}) {
+export function ansiSgrClassesToCss(ansiClasses: string[], cssClasses: {[key: string]: boolean}) {
   if (ansiClasses.length === 0) {
     return cssClasses;
   }
@@ -89,21 +89,21 @@ export function ansiSgrToCss(ansiClasses: string[], cssClasses: {[key: string]: 
     }
     if (ansiClasses[1] === '5') {
       cssClasses = { }; // (simplification) always reset color
-      cssClasses[fgbg[ansiClasses[0]] + '-' + ansiClasses[2]] = true;
+      cssClasses[`ansi${fgbg[ansiClasses[0]]}-${ansiClasses[2]}`] = true;
     }
   } else {
     for (let i of ansiClasses) {
       if ((i === '39') || (i === '0')) { // "color reset" code and "all attributes off" code
         cssClasses = {};
       } else {
-        cssClasses[i] = true;
+        cssClasses[`ansi${i}`] = true;
       }
     }
   }
   return cssClasses;
 }
 
-function cssClassesMapToCssClassString(classes: {[key: string]: boolean}): string {
+function cssClassesMapToCssString(classes: {[key: string]: boolean}): string {
   let res = '';
   let isFirst = true;
   for (const c in classes) {
@@ -112,7 +112,7 @@ function cssClassesMapToCssClassString(classes: {[key: string]: boolean}): strin
     } else {
       res += ' ';
     }
-    res += `ansi${c}`;
+    res += c;
   }
   return res;
 }
@@ -161,8 +161,8 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
     } else {
       let ansiClasses: string[];
       [entryOutputText, ansiClasses] = parseAnsiSgrEntry(ansiEntry);
-      cssClassesMap = ansiSgrToCss(ansiClasses, cssClassesMap);
-      cssClasses = cssClassesMapToCssClassString(cssClassesMap);
+      cssClassesMap = ansiSgrClassesToCss(ansiClasses, cssClassesMap);
+      cssClasses = cssClassesMapToCssString(cssClassesMap);
     }
     if (entryOutputText.length > 0) {
       outputClasses.push({
