@@ -22,12 +22,12 @@ import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer, useLocalObservable} from "mobx-react";
 import {useDataAccessor} from "../../data/ReactUtils";
 import {
-  AutoSizer as _AutoSizer,
-  AutoSizerProps, defaultCellRangeRenderer,
+  defaultCellRangeRenderer,
   List as _List,
   ListProps,
   ListRowProps
 } from 'react-virtualized';
+import AutoSizer from "react-virtualized-auto-sizer";
 import {RenderedRows} from "react-virtualized/dist/es/List";
 import {digitCount} from "../../util/Math";
 import {GridCellRangeProps} from "react-virtualized/dist/es/Grid";
@@ -35,7 +35,6 @@ import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
 import {LogTextManager} from "./LogTextManager";
 
 const List = _List as unknown as FC<ListProps>;
-const AutoSizer = _AutoSizer as unknown as FC<AutoSizerProps>;
 
 const isSelectionActiveWithinElement = (element: HTMLElement | null | undefined) => {
   if (element === null || element === undefined) {
