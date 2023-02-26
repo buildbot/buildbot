@@ -16,9 +16,9 @@
 */
 
 import {
-  LineCssClasses,
   lineContainsEscapeCodes, parseEscapeCodesToClasses, stripLineEscapeCodes
 } from "./AnsiEscapeCodes";
+import {LineCssClasses} from "./LineCssClasses";
 
 export type ParsedLogChunk = {
   firstLine: number;

@@ -31,14 +31,10 @@
 // This parser does not work across lines
 // css class will be reset at each new line
 
+import {cssClassesMapToCssString, LineCssClasses} from "./LineCssClasses";
+
 const ANSI_RE = new RegExp(/^((\d+)(;\d+)*)?([a-zA-Z])/);
 const CSI_PREFIX = "\x1b[";
-
-export type LineCssClasses = {
-  firstPos: number;
-  lastPos: number;
-  cssClasses: string;
-}
 
 export function parseAnsiSgrEntry(ansiEntry: string): [string, string[]] {
   // simple utility to extract ansi sgr (Select Graphic Rendition) codes,
@@ -101,20 +97,6 @@ export function ansiSgrClassesToCss(ansiClasses: string[], cssClasses: {[key: st
     }
   }
   return cssClasses;
-}
-
-function cssClassesMapToCssString(classes: {[key: string]: boolean}): string {
-  let res = '';
-  let isFirst = true;
-  for (const c in classes) {
-    if (isFirst) {
-      isFirst = false;
-    } else {
-      res += ' ';
-    }
-    res += c;
-  }
-  return res;
 }
 
 export function lineContainsEscapeCodes(line: string) {
