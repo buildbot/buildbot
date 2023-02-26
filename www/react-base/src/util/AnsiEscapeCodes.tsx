@@ -165,7 +165,7 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
 //
 // Both line substring and the parsed line information must exclude trailing newline character.
 export function escapeClassesToHtml(text: string, lineStart: number, lineEnd: number,
-                                    cssClassesWithText: [string, LineCssClasses[] | null] | undefined) {
+                                    cssClassesWithText: [string | null, LineCssClasses[] | null] | undefined) {
   if (cssClassesWithText === undefined || cssClassesWithText[1] === null ||
       cssClassesWithText[1].length === 0) {
     return [
@@ -173,12 +173,16 @@ export function escapeClassesToHtml(text: string, lineStart: number, lineEnd: nu
     ]
   }
 
-  const [outputText, cssClasses] = cssClassesWithText;
-  return cssClasses.map((cssClass, index) => (
-    <span key={index} className={cssClass.cssClasses}>
-      {outputText.slice(lineStart + cssClass.firstPos, lineStart + cssClass.lastPos)}
-    </span>
-  ));
+  const [lineText, cssClasses] = cssClassesWithText;
+  return cssClasses.map((cssClass, index) => {
+    // Note that outputText already refers to the line text
+    const classText = lineText === null
+      ? text.slice(lineStart + cssClass.firstPos, lineStart + cssClass.lastPos)
+      : lineText.slice(cssClass.firstPos, cssClass.lastPos);
+    return (
+      <span key={index} className={cssClass.cssClasses}>{classText}</span>
+    );
+  });
 }
 
 // Parses escape codes in the given line and converts it TSX elements. The input line must exclude
