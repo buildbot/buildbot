@@ -27,7 +27,7 @@ describe('LogChunkParsing', () => {
       lastLine: 23,
       text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
         "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m",
-      textLineBounds: [0, 55, 75],
+      textLineBounds: [0, 55, 75, 96],
       linesWithEscapes: [0, 1, 2],
       lineTypes: "ooh",
       textNoEscapes: null,

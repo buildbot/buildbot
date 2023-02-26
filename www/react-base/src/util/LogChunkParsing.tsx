@@ -45,8 +45,8 @@ export type ParsedLogChunk = {
   // compute an almost duplicate of text member.
   textNoEscapes: string|null;
 
-  // An array of numbers specifying the start positions of lines within text. Contains an
-  // additional element with value of text.length so that lines can be extracted by
+  // An array of numbers specifying the start positions of lines within textNoEscapes. Contains an
+  // additional element with value of textNoEscapes.length so that lines can be extracted by
   // taking the following character range: [lineBounds[i], lineBounds[i + 1]).
   // If textNoEscapes is null, then this member is null too.
   textNoEscapesLineBounds: number[]|null;
@@ -62,7 +62,7 @@ export function parseLogChunk(firstLine: number, textWithTypes: string,
   }
 
   let text = '';
-  const textLineBounds: number[] = [];
+  const textLineBounds: number[] = [0];
   let linesWithEscapes: number[]|null = [];
 
   let textNoEscapes: string|null = null;
@@ -112,8 +112,8 @@ export function parseLogChunk(firstLine: number, textWithTypes: string,
       }
     }
 
-    textLineBounds.push(text.length);
     text += line;
+    textLineBounds.push(text.length);
     lineTypes += lineType;
     lineIndex += 1;
   }
