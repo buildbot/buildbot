@@ -18,10 +18,9 @@
 import './LogViewerText.scss'
 import {Log} from "../../data/classes/Log";
 import {FC, useRef, useState} from 'react';
-import {escapeClassesToHtml, generateStyleElement} from "../../util/AnsiEscapeCodes";
+import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer, useLocalObservable} from "mobx-react";
 import {useDataAccessor} from "../../data/ReactUtils";
-import {binarySearchLessEqual} from "../../util/BinarySearch";
 import {
   AutoSizer as _AutoSizer,
   AutoSizerProps, defaultCellRangeRenderer,
@@ -75,50 +74,26 @@ const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, download
 
   const logLineDigitCount = digitCount(log.num_lines);
 
-  const renderEmptyRow = (row: ListRowProps) => {
-    return <div key={row.index} className="bb-logviewer-text-row" style={row.style}></div>;
+  const renderEmptyRowContents = (index: number, style: React.CSSProperties) => {
+    return <div key={index} className="bb-logviewer-text-row" style={style}></div>;
   }
 
-  const renderRow = (row: ListRowProps) => {
-    const renderedLine = manager.lines[row.index];
-    if (renderedLine !== undefined) {
-      return renderedLine.content;
-    }
-
-    const chunkIndex = binarySearchLessEqual(manager.chunks, row.index,
-      (ch, index) => ch.firstLine - index);
-
-    if (chunkIndex < 0 || chunkIndex >= manager.chunks.length) {
-      return renderEmptyRow(row);
-    }
-    const chunk = manager.chunks[chunkIndex];
-    if (row.index < chunk.firstLine || row.index >= chunk.lastLine) {
-      return renderEmptyRow(row);
-    }
-    const lineIndexInChunk = row.index - chunk.firstLine;
-    const lineType = chunk.lineTypes[lineIndexInChunk];
-    const lineCssClasses = manager.getCssClassesForChunk(chunkIndex)[lineIndexInChunk];
-    const lineStartInChunk = chunk.textLineBounds[lineIndexInChunk];
-    const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1] - 1; // exclude trailing newline
-    const lineContent = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
-      lineCssClasses);
-
-    const content = (
-      <div key={row.index} className="bb-logviewer-text-row" style={row.style}>
-        <span data-linenumber-content={String(row.index).padStart(logLineDigitCount, ' ')}
+  const renderRowContents = (index: number, lineType: string, style: React.CSSProperties,
+                             content: JSX.Element[]) => {
+    return (
+      <div key={index} className="bb-logviewer-text-row" style={style}>
+        <span data-linenumber-content={String(index).padStart(logLineDigitCount, ' ')}
               className={`log_${lineType}`}>
-          {lineContent}
+          {content}
         </span>
       </div>
     );
-
-    manager.addLine({
-      content: content,
-      number: row.index
-    })
-
-    return content;
   };
+
+  const renderRow = (row: ListRowProps) => {
+    return manager.getRenderedLineContent(row.index, row.style,
+      renderRowContents, renderEmptyRowContents);
+  }
 
   const renderNoRows = () => {
     return <>...</>;

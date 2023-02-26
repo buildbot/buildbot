@@ -17,7 +17,8 @@
 
 import {RenderedRows} from "react-virtualized/dist/es/List";
 import {IDataAccessor} from "../../data/DataAccessor";
-import {binarySearchGreater} from "../../util/BinarySearch";
+import {escapeClassesToHtml} from "../../util/AnsiEscapeCodes";
+import {binarySearchGreater, binarySearchLessEqual} from "../../util/BinarySearch";
 import {CancellablePromise} from "../../util/CancellablePromise";
 import {
   ChunkCssClasses, mergeChunks,
@@ -32,19 +33,20 @@ import {
   limitRangeToSize
 } from "../../util/Math";
 
-export type RenderedLogLine = {
-  content: JSX.Element | JSX.Element[];
-  number: number;
-}
-
 export type PendingRequest = {
   promise: CancellablePromise<any>;
   startIndex: number;
   endIndex: number;
 }
 
+export type LineRenderer = (index: number, lineType: string, style: React.CSSProperties,
+                            lineContent: JSX.Element[]) => JSX.Element;
+
+export type EmptyLineRenderer =
+  (index: number, style: React.CSSProperties) => JSX.Element;
+
 export class LogTextManager {
-  lines: {[num: number]: RenderedLogLine} = {};
+  lines: {[num: number]: JSX.Element} = {};
 
   accessor: IDataAccessor;
   logid: number;
@@ -298,11 +300,34 @@ export class LogTextManager {
     return true;
   }
 
-  addLine(line: RenderedLogLine) {
-    if (line.number in this.lines) {
-      return;
+  getRenderedLineContent(index: number, style: React.CSSProperties,
+                         renderer: LineRenderer, emptyRenderer: EmptyLineRenderer) {
+    const renderedLine = this.lines[index];
+    if (renderedLine !== undefined) {
+      return renderedLine;
     }
-    this.lines[line.number] = line;
+
+    const chunkIndex = binarySearchLessEqual(this.chunks, index,
+      (ch, index) => ch.firstLine - index);
+
+    if (chunkIndex < 0 || chunkIndex >= this.chunks.length) {
+      return emptyRenderer(index, style);
+    }
+    const chunk = this.chunks[chunkIndex];
+    if (index < chunk.firstLine || index >= chunk.lastLine) {
+      return emptyRenderer(index, style);
+    }
+    const lineIndexInChunk = index - chunk.firstLine;
+    const lineType = chunk.lineTypes[lineIndexInChunk];
+    const lineCssClasses = this.getCssClassesForChunk(chunkIndex)[lineIndexInChunk];
+    const lineStartInChunk = chunk.textLineBounds[lineIndexInChunk];
+    const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1] - 1; // exclude trailing newline
+    const lineContent = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
+      lineCssClasses);
+
+    const renderedContent = renderer(index, lineType, style, lineContent);
+    this.lines[index] = renderedContent;
+    return renderedContent;
   }
 
   setLogNumLines(numLines: number) {
