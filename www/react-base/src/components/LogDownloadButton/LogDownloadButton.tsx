@@ -31,8 +31,8 @@ const LogDownloadButton = ({log}: LogDownloadButtonProps) => {
   return (
     <a href={`${apiRootUrl}/logs/${log.id}/raw`} title="download log"
        className="btn btn-default btn-xs">
-      <i className="fa fa-download"></i>
-      download
+      <i className="fa fa-download"></i>&nbsp;
+      Download
     </a>
   );
 }
