@@ -313,17 +313,17 @@ export class LogTextManager {
     return cssClasses;
   }
 
-  // precondition: this.pendingRequest !== null
-  private isPendingRequestSatisfyingVisibleRows(downloadedStart: number, downloadedEnd: number) {
-    if (this.currVisibleStartIndex >= downloadedStart &&
-      this.currVisibleEndIndex <= downloadedEnd) {
+  static isPendingRequestSatisfyingVisibleRows(downloadedStart: number, downloadedEnd: number,
+                                               requestedStart: number, requestedEnd: number,
+                                               visibleStart: number, visibleEnd: number) {
+    if (visibleStart >= downloadedStart && visibleEnd <= downloadedEnd) {
       return true;
     }
-    if (this.currVisibleEndIndex > downloadedEnd) {
-      return this.pendingRequest!.endIndex >= this.currVisibleEndIndex;
+    if (visibleEnd > downloadedEnd) {
+      return requestedEnd >= visibleEnd;
     }
-    // this.currVisibleStartIndex < downloadedStart
-    return this.pendingRequest!.startIndex <= this.currVisibleStartIndex;
+    // visibleStart < downloadedStart
+    return requestedStart <= visibleStart;
   }
 
   static selectChunkDownloadRange(downloadStart: number, downloadEnd: number,
@@ -400,8 +400,10 @@ export class LogTextManager {
     }
 
     if (this.pendingRequest) {
-      if (this.isPendingRequestSatisfyingVisibleRows(
-            downloadedStartIndex, downloadedEndIndex)) {
+      if (LogTextManager.isPendingRequestSatisfyingVisibleRows(
+            downloadedStartIndex, downloadedEndIndex,
+            this.pendingRequest.startIndex, this.pendingRequest.endIndex,
+            this.currVisibleStartIndex, this.currVisibleEndIndex)) {
         return;
       }
       this.pendingRequest.promise.cancel();
