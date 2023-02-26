@@ -18,6 +18,7 @@
 import {RenderedRows} from "react-virtualized/dist/es/List";
 import {IDataAccessor} from "../../data/DataAccessor";
 import {escapeClassesToHtml} from "../../util/AnsiEscapeCodes";
+import {repositionPositionedArray} from "../../util/Array";
 import {binarySearchGreater, binarySearchLessEqual} from "../../util/BinarySearch";
 import {CancellablePromise} from "../../util/CancellablePromise";
 import {
@@ -27,6 +28,8 @@ import {
   parseLogChunk
 } from "../../util/LogChunkParsing";
 import {
+  alignCeil,
+  alignFloor,
   areRangesOverlapping,
   expandRange,
   isRangeWithinAnother,
@@ -46,7 +49,8 @@ export type EmptyLineRenderer =
   (index: number, style: React.CSSProperties) => JSX.Element;
 
 export class LogTextManager {
-  lines: {[num: number]: JSX.Element} = {};
+  renderedLinesStartIndex = 0;
+  renderedLines: (JSX.Element|undefined)[] = [];
 
   accessor: IDataAccessor;
   logid: number;
@@ -126,13 +130,10 @@ export class LogTextManager {
   }
 
   cachedRenderedLineRange(): [number, number] {
-    return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
-      this.cacheRenderedOverscanRowCount);
-  }
-
-  prevCachedRenderedLineRange(): [number, number] {
-    return expandRange(this.prevVisibleStartIndex, this.prevVisibleEndIndex, 0, this.logNumLines,
-      this.cacheRenderedOverscanRowCount);
+    const [start, end] = expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex,
+      0, this.logNumLines, this.cacheRenderedOverscanRowCount);
+    const cacheBoundStep = 128;
+    return [alignFloor(start, cacheBoundStep), alignCeil(end, cacheBoundStep)];
   }
 
   downloadedLinesStartIndex() {
@@ -170,35 +171,24 @@ export class LogTextManager {
     }
   }
 
-  cleanupCachedRenderedLines() {
+  updateCachedRenderedLines() {
+    let [newStartIndex, newEndIndex] = this.cachedRenderedLineRange();
+    const startIndex = this.renderedLinesStartIndex;
+    const endIndex = startIndex + this.renderedLines.length;
+
     if (this.isSelectionActive) {
+      // Don't drop lines if selection is active
+      newStartIndex = Math.min(newStartIndex, startIndex);
+      newEndIndex = Math.max(newEndIndex, endIndex);
+    }
+
+    if (newStartIndex === startIndex && newEndIndex === endIndex) {
       return;
     }
 
-    const [currStart, currEnd] = this.cachedRenderedLineRange();
-    const [prevStart, prevEnd] = this.prevCachedRenderedLineRange();
-
-    if (prevStart === prevEnd) {
-      return;
-    }
-
-    if (currStart >= prevEnd) {
-      this.lines = {};
-      return;
-    }
-
-    if (currEnd <= currStart) {
-      this.lines = {};
-      return;
-    }
-
-    for (let i = prevStart; i < currStart; ++i) {
-      delete this.lines[i];
-    }
-
-    for (let i = currEnd; i < prevEnd; ++i) {
-      delete this.lines[i];
-    }
+    [this.renderedLines, this.renderedLinesStartIndex] =
+      repositionPositionedArray(this.renderedLines, this.renderedLinesStartIndex,
+        newStartIndex, newEndIndex);
   }
 
   cleanupDownloadedLines() {
@@ -302,7 +292,7 @@ export class LogTextManager {
 
   getRenderedLineContent(index: number, style: React.CSSProperties,
                          renderer: LineRenderer, emptyRenderer: EmptyLineRenderer) {
-    const renderedLine = this.lines[index];
+    const renderedLine = this.renderedLines[index - this.renderedLinesStartIndex];
     if (renderedLine !== undefined) {
       return renderedLine;
     }
@@ -327,7 +317,9 @@ export class LogTextManager {
       lineCssClasses);
 
     const renderedContent = renderer(index, lineType, style, lineContent);
-    this.lines[index] = renderedContent;
+    if (index >= this.renderedLinesStartIndex) {
+      this.renderedLines[index - this.renderedLinesStartIndex] = renderedContent;
+    }
     return renderedContent;
   }
 
@@ -406,7 +398,7 @@ export class LogTextManager {
     this.prevVisibleEndIndex = this.currVisibleEndIndex;
     this.currVisibleStartIndex = info.startIndex;
     this.currVisibleEndIndex = info.stopIndex;
-    this.cleanupCachedRenderedLines();
+    this.updateCachedRenderedLines();
 
     if (this.disableDownloadDueToError) {
       return;

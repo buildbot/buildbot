@@ -19,6 +19,14 @@ export const digitCount = (n: number) => {
   return Math.floor(Math.log10(n) + 1);
 }
 
+export function alignFloor(n: number, align: number) {
+  return Math.floor(n / align) * align;
+}
+
+export function alignCeil(n: number, align: number) {
+  return Math.ceil(n / align) * align;
+}
+
 export function expandRange(start: number, end: number, limitStart: number, limitEnd: number,
                             expand: number): [number, number] {
   start -= expand;
