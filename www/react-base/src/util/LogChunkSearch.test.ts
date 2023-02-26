@@ -17,12 +17,102 @@
 
 import {parseLogChunk} from "./LogChunkParsing";
 import {
+  ChunkSearchResults, findNextSearchResult, findPrevSearchResult,
   findTextInChunkRaw,
   overlaySearchResultsOnLine,
   resultsListToLineIndexMap
 } from "./LogChunkSearch";
 
 describe('LogChunkSearch', () => {
+  function createChunkSearchResults(resultCounts: number[]) {
+    return resultCounts.map(count => {
+      const results: ChunkSearchResults = {
+        results: [],
+        lineIndexToFirstChunkIndex: new Map<number, number>()
+      };
+      for (let i = 0; i < count; ++i) {
+        results.results.push({lineIndex: 0, lineStart: 0});
+      }
+      return results;
+    });
+  }
+
+  describe('findNextSearchResult', () => {
+    it('no results', () => {
+      expect(findNextSearchResult(createChunkSearchResults([]), 0, 0)).toEqual([-1, -1]);
+    });
+
+    it('out of bounds', () => {
+      expect(findNextSearchResult(createChunkSearchResults([3, 3]), 5, 10)).toEqual([-1, -1]);
+      expect(findNextSearchResult(createChunkSearchResults([3, 3]), -5, 10)).toEqual([-1, -1]);
+    });
+
+    it('single result', () => {
+      expect(findNextSearchResult(createChunkSearchResults([0, 0, 1]), 2, 0)).toEqual([2, 0]);
+      expect(findNextSearchResult(createChunkSearchResults([1, 0, 0]), 0, 0)).toEqual([0, 0]);
+    });
+
+    it('multiple results', () => {
+      expect(findNextSearchResult(createChunkSearchResults([3, 3, 3]), 0, 0)).toEqual([0, 1]);
+      expect(findNextSearchResult(createChunkSearchResults([3, 3, 3]), 0, 1)).toEqual([0, 2]);
+      expect(findNextSearchResult(createChunkSearchResults([3, 3, 3]), 0, 2)).toEqual([1, 0]);
+      expect(findNextSearchResult(createChunkSearchResults([3, 3, 3]), 1, 0)).toEqual([1, 1]);
+      expect(findNextSearchResult(createChunkSearchResults([3, 3, 3]), 1, 1)).toEqual([1, 2]);
+      expect(findNextSearchResult(createChunkSearchResults([3, 3, 3]), 1, 2)).toEqual([2, 0]);
+      expect(findNextSearchResult(createChunkSearchResults([3, 3, 3]), 2, 0)).toEqual([2, 1]);
+      expect(findNextSearchResult(createChunkSearchResults([3, 3, 3]), 2, 1)).toEqual([2, 2]);
+      expect(findNextSearchResult(createChunkSearchResults([3, 3, 3]), 2, 2)).toEqual([0, 0]);
+
+      expect(findNextSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 1, 0)).toEqual([1, 1]);
+      expect(findNextSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 1, 1)).toEqual([1, 2]);
+      expect(findNextSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 1, 2)).toEqual([2, 0]);
+      expect(findNextSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 2, 0)).toEqual([2, 1]);
+      expect(findNextSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 2, 1)).toEqual([2, 2]);
+      expect(findNextSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 2, 2)).toEqual([3, 0]);
+      expect(findNextSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 3, 0)).toEqual([3, 1]);
+      expect(findNextSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 3, 1)).toEqual([3, 2]);
+      expect(findNextSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 3, 2)).toEqual([1, 0]);
+    });
+  });
+
+  describe('findPrevSearchResult', () => {
+    it('no results', () => {
+      expect(findPrevSearchResult(createChunkSearchResults([]), 0, 0)).toEqual([-1, -1]);
+    });
+
+    it('out of bounds', () => {
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3]), 5, 10)).toEqual([-1, -1]);
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3]), -5, 10)).toEqual([-1, -1]);
+    });
+
+    it('single result', () => {
+      expect(findPrevSearchResult(createChunkSearchResults([0, 0, 1]), 2, 0)).toEqual([2, 0]);
+      expect(findPrevSearchResult(createChunkSearchResults([1, 0, 0]), 0, 0)).toEqual([0, 0]);
+    });
+
+    it('multiple results', () => {
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3, 3]), 0, 0)).toEqual([2, 2]);
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3, 3]), 0, 1)).toEqual([0, 0]);
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3, 3]), 0, 2)).toEqual([0, 1]);
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3, 3]), 1, 0)).toEqual([0, 2]);
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3, 3]), 1, 1)).toEqual([1, 0]);
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3, 3]), 1, 2)).toEqual([1, 1]);
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3, 3]), 2, 0)).toEqual([1, 2]);
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3, 3]), 2, 1)).toEqual([2, 0]);
+      expect(findPrevSearchResult(createChunkSearchResults([3, 3, 3]), 2, 2)).toEqual([2, 1]);
+
+      expect(findPrevSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 1, 0)).toEqual([3, 2]);
+      expect(findPrevSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 1, 1)).toEqual([1, 0]);
+      expect(findPrevSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 1, 2)).toEqual([1, 1]);
+      expect(findPrevSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 2, 0)).toEqual([1, 2]);
+      expect(findPrevSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 2, 1)).toEqual([2, 0]);
+      expect(findPrevSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 2, 2)).toEqual([2, 1]);
+      expect(findPrevSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 3, 0)).toEqual([2, 2]);
+      expect(findPrevSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 3, 1)).toEqual([3, 0]);
+      expect(findPrevSearchResult(createChunkSearchResults([0, 3, 3, 3, 0]), 3, 2)).toEqual([3, 1]);
+    });
+  });
+
   describe('findTextInChunkRaw', () => {
     it('no escapes', () => {
       expect(findTextInChunkRaw(parseLogChunk(20, 'oaaa\nboaaabaaa\no\noaaab\n', 's'), 'aaa'))

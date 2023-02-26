@@ -32,6 +32,62 @@ export type ChunkSearchResults = {
   lineIndexToFirstChunkIndex: Map<number, number>;
 };
 
+function findNextNonEmptyChunkSearchResults(results: ChunkSearchResults[], index: number) {
+  for (let i = index; i < results.length; ++i) {
+    if (results[i].results.length > 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// Returns a tuple of chunk index and index in chunk
+export function findNextSearchResult(results: ChunkSearchResults[],
+                                     chunkIndex: number, indexInChunk: number): [number, number] {
+  if (chunkIndex < 0 || chunkIndex >= results.length) {
+    return [-1, -1];
+  }
+  if (indexInChunk + 1 < results[chunkIndex].results.length) {
+    return [chunkIndex, indexInChunk + 1];
+  }
+
+  chunkIndex = findNextNonEmptyChunkSearchResults(results, chunkIndex + 1);
+  if (chunkIndex < 0) {
+    chunkIndex = findNextNonEmptyChunkSearchResults(results, 0);
+    if (chunkIndex < 0) {
+      return [-1, -1];
+    }
+  }
+  return [chunkIndex, 0];
+}
+
+function findPrevNonEmptyChunkSearchResults(results: ChunkSearchResults[], index: number) {
+  for (let i = index; i >= 0; --i) {
+    if (results[i].results.length > 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+export function findPrevSearchResult(results: ChunkSearchResults[],
+                                     chunkIndex: number, indexInChunk: number): [number, number] {
+  if (chunkIndex < 0 || chunkIndex >= results.length) {
+    return [-1, -1];
+  }
+  if (indexInChunk > 0) {
+    return [chunkIndex, indexInChunk - 1];
+  }
+  chunkIndex = findPrevNonEmptyChunkSearchResults(results, chunkIndex - 1);
+  if (chunkIndex < 0) {
+    chunkIndex = findPrevNonEmptyChunkSearchResults(results, results.length - 1);
+    if (chunkIndex < 0) {
+      return [-1, -1];
+    }
+  }
+  return [chunkIndex, results[chunkIndex].results.length - 1];
+}
+
 export function resultsListToLineIndexMap(results: ChunkSearchResult[]) : Map<number, number> {
   const indexMap = new Map<number, number>();
   if (results.length === 0) {
