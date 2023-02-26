@@ -25,9 +25,9 @@ describe('LogChunkParsing', () => {
     expect(chunk).toEqual({
       firstLine: 20,
       lastLine: 23,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m",
-      textLineBounds: [0, 55, 75, 96],
+      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      textLineBounds: [0, 56, 77, 99],
       linesWithEscapes: [0, 1, 2],
       lineTypes: "ooh",
       textNoEscapes: null,
@@ -64,13 +64,13 @@ describe('LogChunkParsing', () => {
     expect(chunk).toEqual({
       firstLine: 20,
       lastLine: 23,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m",
-      textLineBounds: [0, 55, 75, 96],
+      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      textLineBounds: [0, 56, 77, 99],
       linesWithEscapes: null,
       lineTypes: "ooh",
-      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine..F..",
-      textNoEscapesLineBounds: [0, 45, 47]
+      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n",
+      textNoEscapesLineBounds: [0, 46, 49]
     });
 
     const chunkCssClasses = parseCssClassesForChunk(chunk, 20, 23);
@@ -105,11 +105,11 @@ describe('LogChunkParsing', () => {
     expect(mergedChunk).toEqual({
       firstLine: 20,
       lastLine: 26,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m" +
-        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m",
-      textLineBounds: [0, 55, 75, 96, 151, 171, 192],
+      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n" +
+        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      textLineBounds: [0, 56, 77, 99, 155, 176, 198],
       linesWithEscapes: [0, 1, 2, 3, 4, 5],
       lineTypes: "oohooh",
       textNoEscapes: null,
@@ -126,16 +126,16 @@ describe('LogChunkParsing', () => {
     expect(mergedChunk).toEqual({
       firstLine: 20,
       lastLine: 26,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m" +
-        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m",
-      textLineBounds: [0, 55, 75, 96, 151, 171, 192],
+      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n" +
+        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      textLineBounds: [0, 56, 77, 99, 155, 176, 198],
       linesWithEscapes: null,
       lineTypes: "oohooh",
-      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine..F.." +
-        "DEBUG [plugin]: Loading plugin karma-jasmine..F..",
-      textNoEscapesLineBounds: [0, 45, 47, 49, 94, 96],
+      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n" +
+        "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n",
+      textNoEscapesLineBounds: [0, 46, 49, 52, 98, 101],
     });
   })
 
@@ -148,16 +148,16 @@ describe('LogChunkParsing', () => {
     expect(mergedChunk).toEqual({
       firstLine: 20,
       lastLine: 26,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m" +
-        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m",
-      textLineBounds: [0, 55, 75, 96, 151, 171, 192],
+      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n" +
+        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      textLineBounds: [0, 56, 77, 99, 155, 176, 198],
       linesWithEscapes: null,
       lineTypes: "oohooh",
-      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine..F.." +
-        "DEBUG [plugin]: Loading plugin karma-jasmine..F..",
-      textNoEscapesLineBounds: [0, 45, 47, 49, 94, 96],
+      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n" +
+        "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n",
+      textNoEscapesLineBounds: [0, 46, 49, 52, 98, 101],
     });
   })
 
@@ -170,16 +170,16 @@ describe('LogChunkParsing', () => {
     expect(mergedChunk).toEqual({
       firstLine: 20,
       lastLine: 26,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m" +
-        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine." +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m",
-      textLineBounds: [0, 55, 75, 96, 151, 171, 192],
+      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n" +
+        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
+        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      textLineBounds: [0, 56, 77, 99, 155, 176, 198],
       linesWithEscapes: null,
       lineTypes: "oohooh",
-      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine..F.." +
-        "DEBUG [plugin]: Loading plugin karma-jasmine..F..",
-      textNoEscapesLineBounds: [0, 45, 47, 49, 94, 96],
+      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n" +
+        "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n",
+      textNoEscapesLineBounds: [0, 46, 49, 52, 98, 101],
     });
   })
 });

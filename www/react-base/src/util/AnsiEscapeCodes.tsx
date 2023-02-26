@@ -177,6 +177,11 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
   return [outputText, outputClasses];
 }
 
+// Converts line information to TSX elements. Line information is supplied either as a substring
+// (text from lineStart inclusive to lineEnd exclusive) in case it does not contain escape
+// sequences, or a parsed line with CSS class information.
+//
+// Both line substring and the parsed line information must exclude trailing newline character.
 export function escapeClassesToHtml(text: string, lineStart: number, lineEnd: number,
                                     cssClassesWithText: [string, LineCssClasses[] | null] | undefined) {
   if (cssClassesWithText === undefined || cssClassesWithText[1] === null ||
@@ -194,6 +199,8 @@ export function escapeClassesToHtml(text: string, lineStart: number, lineEnd: nu
   ));
 }
 
+// Parses escape codes in the given line and converts it TSX elements. The input line must exclude
+// trailing newline character.
 export function ansi2html(line: string): JSX.Element[] {
   const [text, cssClasses] = parseEscapeCodesToClasses(line);
   return escapeClassesToHtml(text, 0, text.length, [text, cssClasses]);

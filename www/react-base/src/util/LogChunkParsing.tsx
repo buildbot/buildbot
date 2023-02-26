@@ -24,7 +24,8 @@ export type ParsedLogChunk = {
   firstLine: number;
   lastLine: number;
 
-  // Visible text concatenated into single string (includes escape sequences)
+  // Visible text concatenated into single string (includes escape sequences). Each line ends with
+  // a newline character, including the last line.
   text: string;
 
   // An array of numbers specifying the start positions of lines within text. Contains an
@@ -40,9 +41,11 @@ export type ParsedLogChunk = {
   // textNoEscapes and textNoEscapesLineBounds are not null.
   linesWithEscapes: number[]|null;
 
-  // Visible text concatenated into single string (excludes escape sequences). If the value is
-  // null, then the number of escape sequences was relatively small, and it was determined to not
-  // compute an almost duplicate of text member.
+  // Visible text concatenated into single string (excludes escape sequences). Each line ends with
+  // a newline character, including the last line.
+  //
+  // If the value is null, then the number of escape sequences was relatively small, and it was
+  // determined to not compute an almost duplicate of text member.
   textNoEscapes: string|null;
 
   // An array of numbers specifying the start positions of lines within textNoEscapes. Contains an
@@ -101,7 +104,7 @@ export function parseLogChunk(firstLine: number, textWithTypes: string, logType:
         // There were so many lines with escape codes that text is converted wholesale
         const noEscapesLine = lineContainsEscapeCodes(line) ? stripLineEscapeCodes(line) : line;
         textNoEscapesLineBounds!.push(textNoEscapes!.length);
-        textNoEscapes! += noEscapesLine;
+        textNoEscapes! += noEscapesLine + '\n';
       } else {
         if (lineContainsEscapeCodes(line)) {
           linesWithEscapes.push(lineIndex);
@@ -118,12 +121,12 @@ export function parseLogChunk(firstLine: number, textWithTypes: string, logType:
           // convertTextToNoEscapes() function above excluded the current line, add it too.
           const currNoEscapesLine = lineContainsEscapeCodes(line) ? stripLineEscapeCodes(line) : line;
           textNoEscapesLineBounds.push(textNoEscapes.length);
-          textNoEscapes += currNoEscapesLine;
+          textNoEscapes += currNoEscapesLine + '\n';
         }
       }
     }
 
-    text += line;
+    text += line + '\n';
     textLineBounds.push(text.length);
     lineTypes += lineType;
     lineIndex += 1;
@@ -208,8 +211,9 @@ export type ChunkCssClasses = {[globalLine: number]: [string, LineCssClasses[]]}
 
 // Parses ansi escape code information for a span of lines in a particular chunk. Returns a map
 // containing key-value pairs, where each key-value pair represents a line with at least on escape
-// code. Thee key is line number and value is a tuple containing the line text with escape
-// sequences removed and a list of CSS classes to style the line.
+// code. The key is line number and value is a tuple containing the line text with escape
+// sequences removed and a list of CSS classes to style the line. The line text and the
+// text positions in the list exclude any trailing newlines.
 export function parseCssClassesForChunk(chunk: ParsedLogChunk,
                                         firstLine: number, lastLine: number) {
   const cssClasses: ChunkCssClasses = {};
@@ -238,7 +242,7 @@ export function parseCssClassesForChunk(chunk: ParsedLogChunk,
       }
       // chunkLineI definitely has escape sequences
       const chunkLine = chunk.text.slice(
-        chunk.textLineBounds[chunkLineI], chunk.textLineBounds[chunkLineI + 1]);
+        chunk.textLineBounds[chunkLineI], chunk.textLineBounds[chunkLineI + 1] - 1);
       const lineI = chunkLineI + chunk.firstLine;
 
       const [strippedLine, lineCssClasses] = parseEscapeCodesToClasses(chunkLine);
@@ -249,7 +253,7 @@ export function parseCssClassesForChunk(chunk: ParsedLogChunk,
     for (let lineI = firstLine; lineI < lastLine; ++lineI) {
       const chunkLineI = lineI - chunk.firstLine;
       const chunkLine = chunk.text.slice(
-        chunk.textLineBounds[chunkLineI], chunk.textLineBounds[chunkLineI + 1]);
+        chunk.textLineBounds[chunkLineI], chunk.textLineBounds[chunkLineI + 1] - 1);
 
       const [strippedLine, lineCssClasses] = parseEscapeCodesToClasses(chunkLine);
       if (lineCssClasses !== null) {

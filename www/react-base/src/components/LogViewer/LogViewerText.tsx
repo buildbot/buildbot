@@ -93,7 +93,7 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
     const lineType = chunk.lineTypes[lineIndexInChunk];
     const lineCssClasses = manager.getCssClassesForChunk(chunk)[lineIndexInChunk];
     const lineStartInChunk = chunk.textLineBounds[lineIndexInChunk];
-    const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1];
+    const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1] - 1; // exclude trailing newline
     const lineContent = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
       lineCssClasses);
 
