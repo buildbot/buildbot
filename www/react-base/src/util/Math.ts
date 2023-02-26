@@ -37,3 +37,19 @@ export function isRangeWithinAnother(startIn: number, endIn: number,
                                      startOut: number, endOut: number) {
   return startOut <= startIn && endOut >= endIn;
 }
+
+export function limitRangeToSize(start: number, end: number, maxSize: number,
+                                 preferredCenter: number): [number, number] {
+  if (end - start <= maxSize) {
+    return [start, end];
+  }
+  const byCenterStart = Math.floor(preferredCenter - maxSize / 2);
+  const byCenterEnd = byCenterStart + maxSize;
+  if (byCenterStart < start) {
+    return [start, start + maxSize];
+  }
+  if (byCenterEnd > end) {
+    return [end - maxSize, end];
+  }
+  return [byCenterStart, byCenterEnd];
+}

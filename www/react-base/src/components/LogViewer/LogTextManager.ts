@@ -25,7 +25,12 @@ import {
   ParsedLogChunk,
   parseLogChunk
 } from "../../util/LogChunkParsing";
-import {areRangesOverlapping, expandRange, isRangeWithinAnother} from "../../util/Math";
+import {
+  areRangesOverlapping,
+  expandRange,
+  isRangeWithinAnother,
+  limitRangeToSize
+} from "../../util/Math";
 
 export type RenderedLogLine = {
   content: JSX.Element | JSX.Element[];
@@ -59,7 +64,8 @@ export class LogTextManager {
   // as the `chunks` array at all times.
   chunkToCssClasses: (ChunkCssClasses|null)[] = [];
 
-  // The minimum size of an existing chunk in order to not be merged to another chunk
+  // The maximum size of a chunk. This controls the size of the chunk as requested from the API and
+  // the size of chunks selected for merging.
   maxChunkLinesCount = 1000;
 
   // Certain errors are unrecoverable and further logs won't be downloaded from the backend
@@ -324,14 +330,16 @@ export class LogTextManager {
 
   static selectChunkDownloadRange(downloadStart: number, downloadEnd: number,
                                   downloadedStart: number, downloadedEnd: number,
-                                  visibleStart: number, visibleEnd: number): [number, number] {
-
+                                  visibleStart: number, visibleEnd: number,
+                                  maxSizeLimit: number): [number, number] {
+    const visibleCenter = Math.floor((visibleStart + visibleEnd) / 2);
     if (downloadedStart >= downloadedEnd) {
-      return [downloadStart, downloadEnd];
+      return limitRangeToSize(downloadStart, downloadEnd, maxSizeLimit, visibleCenter);
     }
 
     if (!areRangesOverlapping(downloadStart, downloadEnd, downloadedStart, downloadedEnd)) {
-      return [downloadStart, downloadEnd];
+      // In case of pinned downloaded range, the download range must extend the downloaded range
+      return limitRangeToSize(downloadStart, downloadEnd, maxSizeLimit, visibleCenter);
     }
 
     if (isRangeWithinAnother(downloadStart, downloadEnd, downloadedStart, downloadedEnd)) {
@@ -341,15 +349,16 @@ export class LogTextManager {
     if (!isRangeWithinAnother(downloadedStart, downloadedEnd, downloadStart, downloadEnd)) {
       if (downloadStart < downloadedStart) {
         downloadEnd = downloadedStart;
-      } else if (downloadEnd > downloadedEnd) {
-        downloadStart = downloadedEnd;
+        return limitRangeToSize(downloadStart, downloadEnd, maxSizeLimit, downloadedStart);
       }
-      return [downloadStart, downloadEnd];
+      // downloadEnd > downloadedEnd
+      downloadStart = downloadedEnd;
+      return limitRangeToSize(downloadStart, downloadEnd, maxSizeLimit, downloadedEnd);
     }
 
     // Downloaded range is within range to download, with the range to download extending the
     // downloaded range from both sides. The parts that overlap with currently visible lines
-    // are selected for downloading. If both parts overlap, then whole initial range is downloaded.
+    // are selected for downloading first. If both parts overlap, then the last part is downloaded.
     const firstPartStart = downloadStart;
     const firstPartEnd = downloadedStart;
     const lastPartStart = downloadedEnd;
@@ -360,15 +369,10 @@ export class LogTextManager {
     const lastPartWithVisible =
       areRangesOverlapping(lastPartStart, lastPartEnd, visibleStart, visibleEnd);
 
-    if (firstPartWithVisible && lastPartWithVisible) {
-      return [downloadStart, downloadEnd];
+    if ((firstPartWithVisible && lastPartWithVisible) || !firstPartWithVisible) {
+      return limitRangeToSize(lastPartStart, lastPartEnd, maxSizeLimit, lastPartStart);
     }
-    if (firstPartWithVisible) {
-      return [firstPartStart, firstPartEnd];
-    }
-    // If first part does not overlap visible rows, then it does not matter if the second part
-    // overlaps. Just return the second part.
-    return [lastPartStart, lastPartEnd];
+    return limitRangeToSize(firstPartStart, firstPartEnd, maxSizeLimit, firstPartEnd);
   }
 
   requestRows(info: RenderedRows) {
@@ -410,7 +414,7 @@ export class LogTextManager {
     const [chunkDownloadStartIndex, chunkDownloadEndIndex] =
       LogTextManager.selectChunkDownloadRange(downloadStartIndex, downloadEndIndex,
         downloadedStartIndex, downloadedEndIndex,
-        this.currVisibleStartIndex, this.currVisibleEndIndex);
+        this.currVisibleStartIndex, this.currVisibleEndIndex, this.maxChunkLinesCount);
 
     if (chunkDownloadStartIndex >= chunkDownloadEndIndex) {
       return;
