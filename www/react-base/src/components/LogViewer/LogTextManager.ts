@@ -20,11 +20,12 @@ import {IDataAccessor} from "../../data/DataAccessor";
 import {binarySearchGreater} from "../../util/BinarySearch";
 import {CancellablePromise} from "../../util/CancellablePromise";
 import {
-  ChunkCssClasses,
+  ChunkCssClasses, mergeChunks,
   parseCssClassesForChunk,
   ParsedLogChunk,
   parseLogChunk
 } from "../../util/LogChunkParsing";
+import {areRangesOverlapping, expandRange, isRangeWithinAnother} from "../../util/Math";
 
 export type RenderedLogLine = {
   content: JSX.Element | JSX.Element[];
@@ -43,8 +44,10 @@ export class LogTextManager {
   accessor: IDataAccessor;
   logid: number;
   logType: string;
-  fetchOverscanRowCount: number;
-  destroyOverscanRowCount: number;
+  downloadInitiateOverscanRowCount: number;
+  downloadOverscanRowCount: number;
+  cachedDownloadOverscanRowCount: number;
+  cacheRenderedOverscanRowCount: number;
   onStateChange: () => void;
 
   logNumLines = 0; // kept up to date
@@ -52,15 +55,26 @@ export class LogTextManager {
   pendingRequest: PendingRequest|null = null;
 
   chunks: ParsedLogChunk[] = [];
-  chunkToCssClasses: {[firstLine: string]: ChunkCssClasses} = {};
+  // Represents cached chunk CSS class information for each chunk. The array must have the same size
+  // as the `chunks` array at all times.
+  chunkToCssClasses: (ChunkCssClasses|null)[] = [];
 
-  // The start and end index of stored data
-  startIndex = 0;
-  endIndex = 0;
+  // The minimum size of an existing chunk in order to not be merged to another chunk
+  chunkMergeLimitLineCount = 1000;
 
-  // The start and end index of currently visible data
+  // Certain errors are unrecoverable and further logs won't be downloaded from the backend
+  disableDownloadDueToError = false;
+
+  // The start and end index of currently visible data. From this we compute all other different
+  // line ranges:
+  //  - download line range: line range for which line data should be fetched
+  //  - cached rendered line range: line range for which already rendered lines are cached
+  //  - cached download line range: line range for which already downloaded log data is kept
   currVisibleStartIndex = 0;
   currVisibleEndIndex = 0;
+
+  prevVisibleStartIndex = 0;
+  prevVisibleEndIndex = 0;
 
   // Ensures that when a selection is active no rows are removed from the set of nodes rendered
   // by React. Otherwise removed nodes will break selection.
@@ -72,14 +86,59 @@ export class LogTextManager {
   lastRenderEndIndex = 0;
 
   constructor(accessor: IDataAccessor, logid: number, logType: string,
-              fetchOverscanRowCount: number, destroyOverscanRowCount: number,
+              downloadInitiateOverscanRowCount: number,
+              downloadOverscanRowCount: number, cachedDownloadOverscanRowCount: number,
+              cacheRenderedOverscanRowCount: number,
+              chunkMergeLimitLineCount: number,
               onStateChange: () => void) {
     this.accessor = accessor;
     this.logid = logid;
     this.logType = logType;
-    this.fetchOverscanRowCount = fetchOverscanRowCount;
-    this.destroyOverscanRowCount = destroyOverscanRowCount;
+    this.downloadInitiateOverscanRowCount = downloadInitiateOverscanRowCount;
+    this.downloadOverscanRowCount = downloadOverscanRowCount;
+    this.cachedDownloadOverscanRowCount = cachedDownloadOverscanRowCount;
+    this.cacheRenderedOverscanRowCount = cacheRenderedOverscanRowCount;
+    this.chunkMergeLimitLineCount = chunkMergeLimitLineCount;
     this.onStateChange = onStateChange;
+  }
+
+  downloadInitiateLineRange(): [number, number] {
+    return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
+      this.downloadInitiateOverscanRowCount);
+  }
+
+  downloadLineRange(): [number, number] {
+    return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
+      this.downloadOverscanRowCount);
+  }
+
+  cachedDownloadLineRange(): [number, number] {
+    return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
+      this.cachedDownloadOverscanRowCount);
+  }
+
+  cachedRenderedLineRange(): [number, number] {
+    return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
+      this.cacheRenderedOverscanRowCount);
+  }
+
+  prevCachedRenderedLineRange(): [number, number] {
+    return expandRange(this.prevVisibleStartIndex, this.prevVisibleEndIndex, 0, this.logNumLines,
+      this.cacheRenderedOverscanRowCount);
+  }
+
+  downloadedLinesStartIndex() {
+    if (this.chunks.length === 0) {
+      return 0;
+    }
+    return this.chunks[0].firstLine;
+  }
+
+  downloadedLinesEndIndex() {
+    if (this.chunks.length === 0) {
+      return 0;
+    }
+    return this.chunks[this.chunks.length - 1].lastLine;
   }
 
   setIsSelectionActive(currIsSelectionActive: boolean) {
@@ -103,97 +162,134 @@ export class LogTextManager {
     }
   }
 
-  cleanupLines(targetStartIndex: number, targetEndIndex: number) {
-    if (targetStartIndex > this.endIndex) {
-      this.startIndex = targetStartIndex;
-      this.endIndex = targetStartIndex;
+  cleanupCachedRenderedLines() {
+    if (this.isSelectionActive) {
+      return;
+    }
+
+    const [currStart, currEnd] = this.cachedRenderedLineRange();
+    const [prevStart, prevEnd] = this.prevCachedRenderedLineRange();
+
+    if (prevStart === prevEnd) {
+      return;
+    }
+
+    if (currStart >= prevEnd) {
       this.lines = {};
       return;
     }
 
-    if (targetEndIndex < this.startIndex) {
-      this.startIndex = targetEndIndex;
-      this.endIndex = targetEndIndex;
+    if (currEnd <= currStart) {
       this.lines = {};
       return;
     }
 
-    if (this.startIndex < targetStartIndex) {
-      for (let i = this.startIndex; i < targetStartIndex; ++i) {
-        delete this.lines[i];
-      }
-      this.startIndex = targetStartIndex;
+    for (let i = prevStart; i < currStart; ++i) {
+      delete this.lines[i];
     }
-    if (targetEndIndex < this.endIndex) {
-      for (let i = targetEndIndex; i < this.endIndex; ++i) {
-        delete this.lines[i];
-      }
-      this.endIndex = targetEndIndex;
+
+    for (let i = currEnd; i < prevEnd; ++i) {
+      delete this.lines[i];
     }
   }
 
-  addDownloadedRange(startIndex: number, endIndex: number,
-                     destroyOverscanRowCount: number) {
-    // There are 3 areas where each of startIndex and endIndex can fall to:
-    //  a) X < this.startIndex
-    //  b) X >= this.startIndex && X <= this.endIndex
-    //  c) X > this.endIndex
-    // Given that there are both startIndex and endIndex, there are total of 9 combinations.
-    // Because startIndex <= endIndex, the following combinations are not valid:
-    //  b-a, c-a, c-b. The remaining a-a, a-b, a-c, b-b, b-c, c-c are handled below.
-
-    if (startIndex >= this.startIndex && endIndex <= this.endIndex) {
-      // Case b-b. Downloaded range is within the range of stored data. Nothing to do.
+  cleanupDownloadedLines() {
+    if (this.chunks.length === 0 || this.isSelectionActive) {
+      return;
+    }
+    const [currStart, currEnd] = this.cachedDownloadLineRange();
+    if (this.chunks[0].firstLine >= currEnd ||
+      this.chunks[this.chunks.length - 1].lastLine <= currStart) {
+      // Does not fall within the range at all
+      this.chunks = [];
+      this.chunkToCssClasses = [];
       return;
     }
 
-    if (startIndex <= this.startIndex && endIndex >= this.endIndex) {
-      //Case a-c. Downloaded data is superset of stored data. No need to cleanup existing data
-      this.startIndex = startIndex;
-      this.endIndex = endIndex;
-      return;
+    let leaveStart = 0;
+    let leaveEnd = this.chunks.length;
+
+    while (this.chunks[leaveStart].lastLine <= currStart) {
+      leaveStart++;
+    }
+    while (this.chunks[leaveEnd - 1].firstLine >= currEnd) {
+      leaveEnd--;
     }
 
-    if (endIndex < this.startIndex || startIndex > this.endIndex) {
-      // Cases a-a and c-c. New data is not contiguous with stored data.
-      // This means the current data needs to be thrown away.
-      this.lines = {};
-      this.startIndex = startIndex;
-      this.endIndex = endIndex;
-      return;
-    }
-
-    // Cases a-b and b-c. At least one of startIndex and endIndex is within the range of stored
-    // data. The currently stored data needs to be cleaned up.
-    if (this.isSelectionActive) {
-      if (startIndex < this.startIndex) {
-        // Case a-b.
-        this.startIndex = startIndex;
-      } else {
-        // Case b-c.
-        this.endIndex = endIndex;
-      }
-      return;
-    }
-
-    const overscanStartIndex = startIndex > destroyOverscanRowCount
-      ? startIndex - destroyOverscanRowCount : 0;
-    const overscanEndIndex = endIndex + destroyOverscanRowCount;
-
-    if (startIndex < this.startIndex) {
-      // Case a-b.
-      this.startIndex = startIndex;
-      this.cleanupLines(overscanStartIndex, overscanEndIndex);
-    } else {
-      // Case b-c.
-      this.endIndex = endIndex;
-      this.cleanupLines(overscanStartIndex, overscanEndIndex);
+    if (leaveStart !== 0 || leaveEnd !== this.chunks.length) {
+      this.chunks = this.chunks.slice(leaveStart, leaveEnd - leaveStart);
+      this.chunkToCssClasses = this.chunkToCssClasses.slice(leaveStart, leaveEnd - leaveStart);
     }
   }
 
   addChunk(chunk: ParsedLogChunk) {
-    this.chunks.splice(binarySearchGreater(this.chunks, chunk.firstLine, (ch, line) => ch.firstLine - line),
-      0, chunk);
+    if (this.chunks.length === 0) {
+      this.chunks.push(chunk);
+      this.chunkToCssClasses.push(null);
+      return;
+    }
+
+    const insertIndex = binarySearchGreater(this.chunks, chunk.firstLine,
+      (ch, line) => ch.firstLine - line);
+
+    // The inserted chunk must always be contiguous with already existing chunks. If this is not the
+    // case, then the API returned wrong data.
+    if (insertIndex !== 0) {
+      const prevChunk = this.chunks[insertIndex - 1];
+      if (prevChunk.lastLine !== chunk.firstLine) {
+        this.disableDownloadDueToError = true;
+        throw Error(`Received incontiguous chunk range ${chunk.firstLine}..${chunk.lastLine} vs ` +
+          `${prevChunk.firstLine}..${prevChunk.lastLine}`);
+      }
+    }
+
+    if (insertIndex !== this.chunks.length) {
+      const nextChunk = this.chunks[insertIndex];
+      if (nextChunk.firstLine !== chunk.lastLine) {
+        this.disableDownloadDueToError = true;
+        throw Error(`Received incontiguous chunk range ${chunk.firstLine}..${chunk.lastLine} vs ` +
+          `${nextChunk.firstLine}..${nextChunk.lastLine}`);
+      }
+    }
+
+    if (this.maybeMergeIntoChunk(insertIndex - 1, chunk, false)) {
+      return;
+    }
+    if (this.maybeMergeIntoChunk(insertIndex, chunk, true)) {
+      return;
+    }
+    this.chunks.splice(insertIndex, 0, chunk);
+    this.chunkToCssClasses.splice(insertIndex, 0, null);
+  }
+
+  private maybeMergeIntoChunk(mergeIndex: number, chunk: ParsedLogChunk, prepend: boolean) {
+    if (mergeIndex < 0 || mergeIndex >= this.chunks.length) {
+      return false;
+    }
+    const mergeChunkLength = this.chunks[mergeIndex].lastLine - this.chunks[mergeIndex].firstLine;
+    const chunkLength = chunk.lastLine - chunk.firstLine;
+
+    if (mergeChunkLength + chunkLength < this.chunkMergeLimitLineCount) {
+      return false;
+    }
+
+    if (prepend) {
+      this.chunks[mergeIndex] = mergeChunks(chunk, this.chunks[mergeIndex]);
+    } else {
+      this.chunks[mergeIndex] = mergeChunks(this.chunks[mergeIndex], chunk);
+    }
+    if (this.chunkToCssClasses[mergeIndex] !== null) {
+      // There was a need for CSS class information, and it wasn't cleared yet. This means that
+      // this information is useful and shouldn't be dropped yet. Additionally, the CSS class
+      // information for the prepended/appended chunk is likely to be needed. Thus, it doesn't
+      // hurt to compute CSS class information for whole chunk.
+      const chunkCssClasses = parseCssClassesForChunk(chunk, chunk.firstLine, chunk.lastLine);
+      this.chunkToCssClasses[mergeIndex] = {
+        ...chunkCssClasses,
+        ...this.chunkToCssClasses[mergeIndex]
+      };
+    }
+    return true;
   }
 
   addLine(line: RenderedLogLine) {
@@ -207,76 +303,133 @@ export class LogTextManager {
     this.logNumLines = numLines;
   }
 
-  getCssClassesForChunk(chunk: ParsedLogChunk) {
-    let cssClasses = this.chunkToCssClasses[chunk.firstLine];
-    if (cssClasses === undefined) {
+  getCssClassesForChunk(chunkIndex: number) {
+    let cssClasses = this.chunkToCssClasses[chunkIndex];
+    if (cssClasses === null) {
+      const chunk = this.chunks[chunkIndex];
       cssClasses = parseCssClassesForChunk(chunk, chunk.firstLine, chunk.lastLine);
-      this.chunkToCssClasses[chunk.firstLine] = cssClasses;
+      this.chunkToCssClasses[chunkIndex] = cssClasses;
     }
     return cssClasses;
   }
 
   // precondition: this.pendingRequest !== null
-  private isPendingRequestSatisfyingVisibleRows() {
-    if (this.currVisibleStartIndex >= this.startIndex &&
-      this.currVisibleEndIndex <= this.endIndex) {
+  private isPendingRequestSatisfyingVisibleRows(downloadedStart: number, downloadedEnd: number) {
+    if (this.currVisibleStartIndex >= downloadedStart &&
+      this.currVisibleEndIndex <= downloadedEnd) {
       return true;
     }
-    if (this.currVisibleEndIndex > this.endIndex) {
+    if (this.currVisibleEndIndex > downloadedEnd) {
       return this.pendingRequest!.endIndex >= this.currVisibleEndIndex;
     }
-    // this.currVisibleStartIndex < this.startIndex
+    // this.currVisibleStartIndex < downloadedStart
     return this.pendingRequest!.startIndex <= this.currVisibleStartIndex;
   }
 
+  static selectChunkDownloadRange(downloadStart: number, downloadEnd: number,
+                                  downloadedStart: number, downloadedEnd: number,
+                                  visibleStart: number, visibleEnd: number): [number, number] {
+
+    if (downloadedStart >= downloadedEnd) {
+      return [downloadStart, downloadEnd];
+    }
+
+    if (!areRangesOverlapping(downloadStart, downloadEnd, downloadedStart, downloadedEnd)) {
+      return [downloadStart, downloadEnd];
+    }
+
+    if (isRangeWithinAnother(downloadStart, downloadEnd, downloadedStart, downloadedEnd)) {
+      return [0, 0];
+    }
+
+    if (!isRangeWithinAnother(downloadedStart, downloadedEnd, downloadStart, downloadEnd)) {
+      if (downloadStart < downloadedStart) {
+        downloadEnd = downloadedStart;
+      } else if (downloadEnd > downloadedEnd) {
+        downloadStart = downloadedEnd;
+      }
+      return [downloadStart, downloadEnd];
+    }
+
+    // Downloaded range is within range to download, with the range to download extending the
+    // downloaded range from both sides. The parts that overlap with currently visible lines
+    // are selected for downloading. If both parts overlap, then whole initial range is downloaded.
+    const firstPartStart = downloadStart;
+    const firstPartEnd = downloadedStart;
+    const lastPartStart = downloadedEnd;
+    const lastPartEnd = downloadEnd;
+
+    const firstPartWithVisible =
+      areRangesOverlapping(firstPartStart, firstPartEnd, visibleStart, visibleEnd);
+    const lastPartWithVisible =
+      areRangesOverlapping(lastPartStart, lastPartEnd, visibleStart, visibleEnd);
+
+    if (firstPartWithVisible && lastPartWithVisible) {
+      return [downloadStart, downloadEnd];
+    }
+    if (firstPartWithVisible) {
+      return [firstPartStart, firstPartEnd];
+    }
+    // If first part does not overlap visible rows, then it does not matter if the second part
+    // overlaps. Just return the second part.
+    return [lastPartStart, lastPartEnd];
+  }
+
   requestRows(info: RenderedRows) {
+    this.prevVisibleStartIndex = this.currVisibleStartIndex;
+    this.prevVisibleEndIndex = this.currVisibleEndIndex;
     this.currVisibleStartIndex = info.startIndex;
     this.currVisibleEndIndex = info.stopIndex;
+    this.cleanupCachedRenderedLines();
 
-    if (info.overscanStartIndex >= this.startIndex &&
-      info.overscanStopIndex <= this.endIndex) {
+    if (this.disableDownloadDueToError) {
+      return;
+    }
+
+    const downloadedStartIndex = this.downloadedLinesStartIndex();
+    const downloadedEndIndex = this.downloadedLinesEndIndex();
+
+    if (info.overscanStartIndex >= downloadedStartIndex &&
+        info.overscanStopIndex <= downloadedEndIndex) {
+      return;
+    }
+
+    const [initiateStartIndex, initiateEndIndex] = this.downloadInitiateLineRange();
+    if (initiateStartIndex >= downloadedStartIndex && initiateEndIndex <= downloadedEndIndex) {
       return;
     }
 
     if (this.pendingRequest) {
-      if (this.isPendingRequestSatisfyingVisibleRows()) {
+      if (this.isPendingRequestSatisfyingVisibleRows(
+            downloadedStartIndex, downloadedEndIndex)) {
         return;
       }
       this.pendingRequest.promise.cancel();
+      this.pendingRequest = null;
     }
 
-    const needFirstRow = info.overscanStartIndex > this.fetchOverscanRowCount
-      ? info.overscanStartIndex - this.fetchOverscanRowCount : 0;
-    const needLastRow = info.overscanStopIndex + this.fetchOverscanRowCount < this.logNumLines
-      ? info.overscanStopIndex + this.fetchOverscanRowCount
-      : this.logNumLines;
+    const [downloadStartIndex, downloadEndIndex] = this.downloadLineRange();
+    const [chunkDownloadStartIndex, chunkDownloadEndIndex] =
+      LogTextManager.selectChunkDownloadRange(downloadStartIndex, downloadEndIndex,
+        downloadedStartIndex, downloadedEndIndex,
+        this.currVisibleStartIndex, this.currVisibleEndIndex);
 
-    let fetchFirstRow = needFirstRow;
-    if (needFirstRow >= this.startIndex && needFirstRow < this.endIndex) {
-      fetchFirstRow = this.endIndex;
-    }
-    let fetchLastRow = needLastRow;
-    if (needLastRow >= this.startIndex && needLastRow < this.endIndex) {
-      fetchLastRow = this.startIndex;
-    }
-    if (fetchFirstRow > fetchLastRow) {
-      // Shouldn't happen
+    if (chunkDownloadStartIndex >= chunkDownloadEndIndex) {
       return;
     }
 
     this.pendingRequest = {
       promise: this.accessor.getRaw(`logs/${this.logid}/contents`, {
-        offset: fetchFirstRow,
-        limit: fetchLastRow - fetchFirstRow
+        offset: chunkDownloadStartIndex,
+        limit: chunkDownloadEndIndex - chunkDownloadStartIndex
       }),
-      startIndex: fetchFirstRow,
-      endIndex: fetchLastRow,
+      startIndex: chunkDownloadStartIndex,
+      endIndex: chunkDownloadEndIndex,
     };
     this.pendingRequest.promise.then(response => {
       const content = response.logchunks[0].content as string;
-      const chunk = parseLogChunk(fetchFirstRow, content, this.logType);
-      this.addDownloadedRange(chunk.firstLine, chunk.lastLine,
-        this.destroyOverscanRowCount);
+      const chunk = parseLogChunk(chunkDownloadStartIndex, content, this.logType);
+      this.cleanupDownloadedLines();
       this.addChunk(chunk);
       this.onStateChange();
     }).catch((e: Error) => {

@@ -53,17 +53,23 @@ const isSelectionActiveWithinElement = (element: HTMLElement | null | undefined)
 
 export type LogViewerProps = {
   log: Log;
-  fetchOverscanRowCount: number;
-  destroyOverscanRowCount: number;
+  downloadInitiateOverscanRowCount: number;
+  downloadOverscanRowCount: number;
+  cachedDownloadOverscanRowCount: number;
+  cacheRenderedOverscanRowCount: number;
+  chunkMergeLimitLineCount: number;
 }
 
-const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowCount}: LogViewerProps) => {
+const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, downloadOverscanRowCount,
+                                  cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
+                                  chunkMergeLimitLineCount}: LogViewerProps) => {
   const accessor = useDataAccessor([]);
   const [, setRenderCounter] = useState(0);
 
   const manager = useLocalObservable(() =>
-    new LogTextManager(accessor, log.logid, log.type, fetchOverscanRowCount, destroyOverscanRowCount,
-      () => setRenderCounter(c => c + 1)));
+    new LogTextManager(accessor, log.logid, log.type, downloadInitiateOverscanRowCount,
+      downloadOverscanRowCount, cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
+      chunkMergeLimitLineCount, () => setRenderCounter(c => c + 1)));
 
   manager.setLogNumLines(log.num_lines);
 
@@ -91,7 +97,7 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
     }
     const lineIndexInChunk = row.index - chunk.firstLine;
     const lineType = chunk.lineTypes[lineIndexInChunk];
-    const lineCssClasses = manager.getCssClassesForChunk(chunk)[lineIndexInChunk];
+    const lineCssClasses = manager.getCssClassesForChunk(chunkIndex)[lineIndexInChunk];
     const lineStartInChunk = chunk.textLineBounds[lineIndexInChunk];
     const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1] - 1; // exclude trailing newline
     const lineContent = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
