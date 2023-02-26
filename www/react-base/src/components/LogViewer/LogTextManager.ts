@@ -313,17 +313,13 @@ export class LogTextManager {
     return cssClasses;
   }
 
-  static isPendingRequestSatisfyingVisibleRows(downloadedStart: number, downloadedEnd: number,
-                                               requestedStart: number, requestedEnd: number,
-                                               visibleStart: number, visibleEnd: number) {
-    if (visibleStart >= downloadedStart && visibleEnd <= downloadedEnd) {
+  static shouldKeepPendingRequest(downloadedStart: number, downloadedEnd: number,
+                                  requestedStart: number, requestedEnd: number,
+                                  visibleStart: number, visibleEnd: number) {
+    if (isRangeWithinAnother(visibleStart, visibleEnd, downloadedStart, downloadedEnd)) {
       return true;
     }
-    if (visibleEnd > downloadedEnd) {
-      return requestedEnd >= visibleEnd;
-    }
-    // visibleStart < downloadedStart
-    return requestedStart <= visibleStart;
+    return areRangesOverlapping(visibleStart, visibleEnd, requestedStart, requestedEnd);
   }
 
   static selectChunkDownloadRange(downloadStart: number, downloadEnd: number,
@@ -400,7 +396,7 @@ export class LogTextManager {
     }
 
     if (this.pendingRequest) {
-      if (LogTextManager.isPendingRequestSatisfyingVisibleRows(
+      if (LogTextManager.shouldKeepPendingRequest(
             downloadedStartIndex, downloadedEndIndex,
             this.pendingRequest.startIndex, this.pendingRequest.endIndex,
             this.currVisibleStartIndex, this.currVisibleEndIndex)) {
