@@ -32,7 +32,12 @@ import {
   ListRowProps
 } from 'react-virtualized';
 import {RenderedRows} from "react-virtualized/dist/es/List";
-import {ParsedLogChunk, parseLogChunk} from "../../util/LogChunkParsing";
+import {
+  ChunkCssClasses,
+  parseCssClassesForChunk,
+  ParsedLogChunk,
+  parseLogChunk
+} from "../../util/LogChunkParsing";
 import {digitCount} from "../../util/Math";
 import {GridCellRangeProps} from "react-virtualized/dist/es/Grid";
 import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
@@ -60,7 +65,8 @@ type RenderedLogLine = {
 
 class LogViewerState {
   lines = observable.map<number, RenderedLogLine>();
-  chunks: ParsedLogChunk[] = [];
+  chunks: ParsedLogChunk[] = []; // not observable
+  chunkToCssClasses: {[firstLine: string]: ChunkCssClasses} = {}; // not observable
 
   startIndex = 0; // not observable
   endIndex = 0; // not observable
@@ -194,6 +200,15 @@ class LogViewerState {
     }
     this.lines.set(line.number, line);
   }
+
+  getCssClassesForChunk(chunk: ParsedLogChunk) {
+    let cssClasses = this.chunkToCssClasses[chunk.firstLine];
+    if (cssClasses === undefined) {
+      cssClasses = parseCssClassesForChunk(chunk, chunk.firstLine, chunk.lastLine);
+      this.chunkToCssClasses[chunk.firstLine] = cssClasses;
+    }
+    return cssClasses;
+  }
 }
 
 export type PendingRequest = {
@@ -240,10 +255,10 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
     }
     const lineIndexInChunk = row.index - chunk.firstLine;
     const lineType = chunk.lineTypes[lineIndexInChunk];
-    const lineCssClasses = chunk.cssClasses[lineIndexInChunk];
-    const lineStartInChunk = chunk.lineBounds[lineIndexInChunk];
-    const lineEndInChunk = chunk.lineBounds[lineIndexInChunk + 1];
-    const lineContent = escapeClassesToHtml(chunk.visibleText, lineStartInChunk, lineEndInChunk,
+    const lineCssClasses = viewerState.getCssClassesForChunk(chunk)[lineIndexInChunk];
+    const lineStartInChunk = chunk.textLineBounds[lineIndexInChunk];
+    const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1];
+    const lineContent = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
       lineCssClasses);
 
     const content = (

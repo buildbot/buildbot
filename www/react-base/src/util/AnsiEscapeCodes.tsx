@@ -40,7 +40,7 @@ export type LineCssClasses = {
   cssClasses: string;
 }
 
-export function parseAnsiSgr(ansiEntry: string): [string, string[]] {
+export function parseAnsiSgrEntry(ansiEntry: string): [string, string[]] {
   // simple utility to extract ansi sgr (Select Graphic Rendition) codes,
   // and ignore other codes.
   // Invalid codes are restored
@@ -61,6 +61,20 @@ export function parseAnsiSgr(ansiEntry: string): [string, string[]] {
     ansiEntry = CSI_PREFIX + ansiEntry;
   }
   return [ansiEntry, classes];
+}
+
+export function stripAnsiSgrEntry(ansiEntry: string): string {
+  // simple utility to strip ansi sgr (Select Graphic Rendition) codes,
+  // and ignore other codes.
+  // Invalid codes are restored
+  const res = ANSI_RE.exec(ansiEntry);
+  if (res) {
+    ansiEntry = ansiEntry.substr(res[0].length);
+  } else {
+    // illegal code, restore the CSI
+    ansiEntry = CSI_PREFIX + ansiEntry;
+  }
+  return ansiEntry;
 }
 
 export function ansiSgrToCss(ansiClasses: string[], cssClasses: {[key: string]: boolean}) {
@@ -103,8 +117,32 @@ function cssClassesMapToCssClassString(classes: {[key: string]: boolean}): strin
   return res;
 }
 
+export function lineContainsEscapeCodes(line: string) {
+  return line.includes(CSI_PREFIX);
+}
+
+export function stripLineEscapeCodes(line: string) {
+  let firstEntry = true;
+  let outputText = "";
+
+  for (const ansiEntry of line.split(CSI_PREFIX)) {
+    let entryOutputText: string;
+    if (firstEntry) {
+      entryOutputText = ansiEntry;
+      firstEntry = false;
+    } else {
+      entryOutputText = stripAnsiSgrEntry(ansiEntry);
+    }
+    if (entryOutputText.length > 0) {
+      outputText += entryOutputText;
+    }
+  }
+
+  return outputText;
+}
+
 export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses[] | null] {
-  if (!line.includes(CSI_PREFIX)) {
+  if (!lineContainsEscapeCodes(line)) {
     return [line, null];
   }
 
@@ -122,7 +160,7 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
       firstEntry = false;
     } else {
       let ansiClasses: string[];
-      [entryOutputText, ansiClasses] = parseAnsiSgr(ansiEntry);
+      [entryOutputText, ansiClasses] = parseAnsiSgrEntry(ansiEntry);
       cssClassesMap = ansiSgrToCss(ansiClasses, cssClassesMap);
       cssClasses = cssClassesMapToCssClassString(cssClassesMap);
     }
@@ -140,23 +178,25 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
 }
 
 export function escapeClassesToHtml(text: string, lineStart: number, lineEnd: number,
-                                    cssClasses: LineCssClasses[] | null | undefined) {
-  if (cssClasses === null || cssClasses === undefined || cssClasses.length === 0) {
+                                    cssClassesWithText: [string, LineCssClasses[] | null] | undefined) {
+  if (cssClassesWithText === undefined || cssClassesWithText[1] === null ||
+      cssClassesWithText[1].length === 0) {
     return [
       <span key={1}>{text.slice(lineStart, lineEnd)}</span>
     ]
   }
 
+  const [outputText, cssClasses] = cssClassesWithText;
   return cssClasses.map((cssClass, index) => (
     <span key={index} className={cssClass.cssClasses}>
-      {text.slice(lineStart + cssClass.firstPos, lineStart + cssClass.lastPos)}
+      {outputText.slice(lineStart + cssClass.firstPos, lineStart + cssClass.lastPos)}
     </span>
   ));
 }
 
 export function ansi2html(line: string): JSX.Element[] {
   const [text, cssClasses] = parseEscapeCodesToClasses(line);
-  return escapeClassesToHtml(text, 0, text.length, cssClasses);
+  return escapeClassesToHtml(text, 0, text.length, [text, cssClasses]);
 }
 
 export function generateStyle(cssSelector: string) {
