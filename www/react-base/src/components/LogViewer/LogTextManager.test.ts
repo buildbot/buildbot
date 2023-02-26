@@ -99,23 +99,27 @@ describe('LogTextManager', () => {
 
   describe('shouldKeepPendingRequest', () => {
     it('visible in downloaded', () => {
-      expect(LogTextManager.shouldKeepPendingRequest(100, 200, 200, 300, 100, 150))
+      expect(LogTextManager.shouldKeepPendingRequest(100, 200, false, 200, 300, 100, 150))
+        .toEqual(true);
+    });
+    it('pinned downloaded', () => {
+      expect(LogTextManager.shouldKeepPendingRequest(100, 200, true, 200, 300, 10, 20))
         .toEqual(true);
     });
     it('visible after downloaded', () => {
-      expect(LogTextManager.shouldKeepPendingRequest(100, 200, 200, 300, 200, 250))
+      expect(LogTextManager.shouldKeepPendingRequest(100, 200, false, 200, 300, 200, 250))
         .toEqual(true);
-      expect(LogTextManager.shouldKeepPendingRequest(100, 200, 200, 220, 200, 250))
+      expect(LogTextManager.shouldKeepPendingRequest(100, 200, false, 200, 220, 200, 250))
         .toEqual(true);
-      expect(LogTextManager.shouldKeepPendingRequest(100, 200, 200, 220, 230, 250))
+      expect(LogTextManager.shouldKeepPendingRequest(100, 200, false, 200, 220, 230, 250))
         .toEqual(false);
     });
     it('visible before downloaded', () => {
-      expect(LogTextManager.shouldKeepPendingRequest(100, 200, 0, 100, 50, 150))
+      expect(LogTextManager.shouldKeepPendingRequest(100, 200, false, 0, 100, 50, 150))
         .toEqual(true);
-      expect(LogTextManager.shouldKeepPendingRequest(100, 200, 80, 100, 50, 150))
+      expect(LogTextManager.shouldKeepPendingRequest(100, 200, false, 80, 100, 50, 150))
         .toEqual(true);
-      expect(LogTextManager.shouldKeepPendingRequest(100, 200, 80, 100, 20, 50))
+      expect(LogTextManager.shouldKeepPendingRequest(100, 200, false, 80, 100, 20, 50))
         .toEqual(false);
     });
   });

@@ -28,6 +28,10 @@ import {
   parseLogChunk
 } from "../../util/LogChunkParsing";
 import {
+  ChunkSearchResults, findNextSearchResult, findPrevSearchResult, findTextInChunk,
+  overlaySearchResultsOnLine
+} from "../../util/LogChunkSearch";
+import {
   alignCeil,
   alignFloor,
   areRangesOverlapping,
@@ -51,6 +55,8 @@ export type EmptyLineRenderer =
 export class LogTextManager {
   renderedLinesStartIndex = 0;
   renderedLines: (JSX.Element|undefined)[] = [];
+  // Valid only if searchString !== null
+  renderedLinesForSearch: (JSX.Element|null|undefined)[] = [];
 
   accessor: IDataAccessor;
   logid: number;
@@ -88,6 +94,23 @@ export class LogTextManager {
   prevVisibleStartIndex = 0;
   prevVisibleEndIndex = 0;
 
+  // Whether search is active and whole log should be downloaded. Note that once search becomes
+  // active, the page will keep whole log in memory.
+  searchWasEnabled = false;
+
+  // Current search string or null if no search is being performed at the moment
+  searchString: string|null = null;
+  // Valid only if searchString !== null
+  chunkSearchResults: ChunkSearchResults[] = [];
+  // Valid only if searchString !== null
+  currentSearchResultIndex: number = -1;
+  // Valid only if searchString !== null
+  currentSearchResultChunkIndex: number = -1;
+  // Valid only if searchString !== null
+  currentSearchResultIndexInChunk: number = -1;
+  // Valid only if searchString !== null
+  totalSearchResultCount: number = -1;
+
   // Ensures that when a selection is active no rows are removed from the set of nodes rendered
   // by React. Otherwise removed nodes will break selection.
   isSelectionActive = false;
@@ -115,11 +138,17 @@ export class LogTextManager {
   }
 
   downloadInitiateLineRange(): [number, number] {
+    if (this.searchWasEnabled) {
+      return [0, this.logNumLines];
+    }
     return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
       this.downloadInitiateOverscanRowCount);
   }
 
   downloadLineRange(): [number, number] {
+    if (this.searchWasEnabled) {
+      return [0, this.logNumLines];
+    }
     return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
       this.downloadOverscanRowCount);
   }
@@ -186,9 +215,16 @@ export class LogTextManager {
       return;
     }
 
+    const oldRenderedLinesStartIndex = this.renderedLinesStartIndex;
     [this.renderedLines, this.renderedLinesStartIndex] =
-      repositionPositionedArray(this.renderedLines, this.renderedLinesStartIndex,
+      repositionPositionedArray(this.renderedLines, oldRenderedLinesStartIndex,
         newStartIndex, newEndIndex);
+
+    if (this.searchString !== null) {
+      this.renderedLinesForSearch =
+        repositionPositionedArray(this.renderedLinesForSearch, oldRenderedLinesStartIndex,
+          newStartIndex, newEndIndex)[0];
+    }
   }
 
   cleanupDownloadedLines() {
@@ -201,6 +237,7 @@ export class LogTextManager {
       // Does not fall within the range at all
       this.chunks = [];
       this.chunkToCssClasses = [];
+      this.chunkSearchResults = [];
       return;
     }
 
@@ -217,6 +254,9 @@ export class LogTextManager {
     if (leaveStart !== 0 || leaveEnd !== this.chunks.length) {
       this.chunks = this.chunks.slice(leaveStart, leaveEnd - leaveStart);
       this.chunkToCssClasses = this.chunkToCssClasses.slice(leaveStart, leaveEnd - leaveStart);
+      if (this.searchString !== null) {
+        this.chunkSearchResults = this.chunkSearchResults.slice(leaveStart, leaveEnd - leaveStart);
+      }
     }
   }
 
@@ -224,6 +264,7 @@ export class LogTextManager {
     if (this.chunks.length === 0) {
       this.chunks.push(chunk);
       this.chunkToCssClasses.push(null);
+      this.maybeInsertChunkSearchResults(0);
       return;
     }
 
@@ -258,6 +299,7 @@ export class LogTextManager {
     }
     this.chunks.splice(insertIndex, 0, chunk);
     this.chunkToCssClasses.splice(insertIndex, 0, null);
+    this.maybeInsertChunkSearchResults(insertIndex);
   }
 
   private maybeMergeIntoChunk(mergeIndex: number, chunk: ParsedLogChunk, prepend: boolean) {
@@ -287,14 +329,27 @@ export class LogTextManager {
         ...this.chunkToCssClasses[mergeIndex]
       };
     }
+    this.maybeMergeChunkSearchResults(mergeIndex, prepend);
     return true;
   }
 
   getRenderedLineContent(index: number, style: React.CSSProperties,
                          renderer: LineRenderer, emptyRenderer: EmptyLineRenderer) {
-    const renderedLine = this.renderedLines[index - this.renderedLinesStartIndex];
-    if (renderedLine !== undefined) {
-      return renderedLine;
+    if (this.searchString !== null) {
+      const renderedLineForSearch = this.renderedLinesForSearch[index - this.renderedLinesStartIndex];
+      if (renderedLineForSearch === null) {
+        const renderedLine = this.renderedLines[index - this.renderedLinesStartIndex];
+        if (renderedLine !== undefined) {
+          return renderedLine;
+        }
+      } else if (renderedLineForSearch !== undefined) {
+        return renderedLineForSearch;
+      }
+    } else {
+      const renderedLine = this.renderedLines[index - this.renderedLinesStartIndex];
+      if (renderedLine !== undefined) {
+        return renderedLine;
+      }
     }
 
     const downloadedStartIndex = this.downloadedLinesStartIndex();
@@ -310,21 +365,172 @@ export class LogTextManager {
     const chunk = this.chunks[chunkIndex];
     const lineIndexInChunk = index - chunk.firstLine;
     const lineType = chunk.lineTypes[lineIndexInChunk];
-    const lineCssClasses = this.getCssClassesForChunk(chunkIndex)[lineIndexInChunk];
     const lineStartInChunk = chunk.textLineBounds[lineIndexInChunk];
     const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1] - 1; // exclude trailing newline
+    const lineCssClassesWithText = this.getCssClassesForChunk(chunkIndex)[lineIndexInChunk];
     const lineContent = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
-      lineCssClasses);
+      lineCssClassesWithText);
 
     const renderedContent = renderer(index, lineType, style, lineContent);
     if (index >= this.renderedLinesStartIndex) {
       this.renderedLines[index - this.renderedLinesStartIndex] = renderedContent;
     }
+
+    if (this.searchString !== null) {
+      const chunkSearchResults = this.chunkSearchResults[chunkIndex];
+      const lineLength = lineEndInChunk - lineStartInChunk;
+      const lineCssClassesForSearch =
+        overlaySearchResultsOnLine(this.searchString, chunkSearchResults, index, lineLength,
+          lineCssClassesWithText === undefined ? null : lineCssClassesWithText[1],
+          "bb-logviewer-result-begin", "bb-logviewer-result", "bb-logviewer-result-end");
+
+      if (lineCssClassesForSearch === null) {
+        if (index >= this.renderedLinesStartIndex) {
+          this.renderedLinesForSearch[index - this.renderedLinesStartIndex] = null;
+        }
+        return renderedContent;
+      }
+
+      const lineContentForSearch = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
+        [lineCssClassesWithText === undefined ? null : lineCssClassesWithText[0],
+          lineCssClassesForSearch]);
+      const renderedContentForSearch = renderer(index, lineType, style, lineContentForSearch);
+      if (index >= this.renderedLinesStartIndex) {
+        this.renderedLinesForSearch[index - this.renderedLinesStartIndex] = renderedContentForSearch;
+      }
+      return renderedContentForSearch;
+    }
     return renderedContent;
   }
 
   setLogNumLines(numLines: number) {
+    if (this.logNumLines === numLines) {
+      return;
+    }
     this.logNumLines = numLines;
+    this.maybeUpdatePendingRequest(0, 0);
+  }
+
+  setSearchString(searchString: string|null) {
+    if (searchString === this.searchString) {
+      return;
+    }
+
+    this.currentSearchResultChunkIndex = -1;
+    this.currentSearchResultIndexInChunk = -1;
+    this.currentSearchResultIndex = -1;
+    this.totalSearchResultCount = 0;
+
+    if (searchString === null) {
+      this.chunkSearchResults = [];
+      this.searchString = null;
+      this.renderedLinesForSearch = [];
+      this.onStateChange();
+      return;
+    }
+
+    if (!this.searchWasEnabled) {
+      this.searchWasEnabled = true;
+      this.maybeUpdatePendingRequest(0, 0);
+    }
+    this.searchString = searchString;
+    this.chunkSearchResults = new Array(this.chunks.length);
+    this.renderedLinesForSearch = [];
+    this.totalSearchResultCount = 0;
+    this.currentSearchResultIndex = 0;
+
+    for (let i = 0; i < this.chunks.length; ++i) {
+      const newResult = findTextInChunk(this.chunks[i], this.searchString);
+      this.chunkSearchResults[i] = newResult;
+      this.totalSearchResultCount += newResult.results.length;
+      if (this.currentSearchResultChunkIndex < 0 && newResult.results.length > 0) {
+        this.currentSearchResultChunkIndex = i;
+        this.currentSearchResultIndexInChunk = 0;
+      }
+    }
+    this.onStateChange();
+  }
+
+  getCurrentSearchResultLine() {
+    if (this.currentSearchResultChunkIndex < 0) {
+      return null;
+    }
+    const chunkResults = this.chunkSearchResults[this.currentSearchResultChunkIndex].results;
+    return chunkResults[this.currentSearchResultIndexInChunk].lineIndex;
+  }
+
+  setNextSearchResult() {
+    if (this.currentSearchResultChunkIndex < 0 || this.totalSearchResultCount === 0) {
+      return;
+    }
+    this.currentSearchResultIndex += 1;
+    if (this.currentSearchResultIndex === this.totalSearchResultCount) {
+      this.currentSearchResultIndex = 0;
+    }
+    [this.currentSearchResultChunkIndex, this.currentSearchResultIndexInChunk] =
+      findNextSearchResult(this.chunkSearchResults, this.currentSearchResultChunkIndex,
+        this.currentSearchResultIndexInChunk);
+    this.onStateChange();
+  }
+
+  setPrevSearchResult() {
+    if (this.currentSearchResultChunkIndex < 0 || this.totalSearchResultCount === 0) {
+      return;
+    }
+    if (this.currentSearchResultIndex === 0) {
+      // wrap around
+      this.currentSearchResultIndex = this.totalSearchResultCount;
+    }
+    this.currentSearchResultIndex--;
+    [this.currentSearchResultChunkIndex, this.currentSearchResultIndexInChunk] =
+      findPrevSearchResult(this.chunkSearchResults, this.currentSearchResultChunkIndex,
+        this.currentSearchResultIndexInChunk);
+    this.onStateChange();
+  }
+
+  maybeInsertChunkSearchResults(insertIndex: number) {
+    if (this.searchString === null) {
+      return;
+    }
+    const newResult = findTextInChunk(this.chunks[insertIndex], this.searchString!);
+    this.chunkSearchResults.splice(insertIndex, 0, newResult);
+    this.totalSearchResultCount += newResult.results.length;
+
+    if (this.currentSearchResultChunkIndex < 0) {
+      if (newResult.results.length > 0) {
+        this.currentSearchResultChunkIndex = insertIndex;
+        this.currentSearchResultIndexInChunk = 0;
+        this.currentSearchResultIndex = 0;
+      }
+    } else if (insertIndex <= this.currentSearchResultChunkIndex) {
+      this.currentSearchResultChunkIndex++;
+      this.currentSearchResultIndex += newResult.results.length;
+    }
+  }
+
+  maybeMergeChunkSearchResults(mergeIndex: number, prepend: boolean) {
+    if (this.searchString !== null) {
+      return;
+    }
+    const prevResult = this.chunkSearchResults[mergeIndex];
+    const newResult = findTextInChunk(this.chunks[mergeIndex], this.searchString!);
+    const additionalResultsCount = newResult.results.length - prevResult!.results.length;
+
+    this.chunkSearchResults[mergeIndex] = newResult;
+    this.totalSearchResultCount += additionalResultsCount;
+
+    if (this.currentSearchResultChunkIndex < 0) {
+      if (newResult.results.length > 0) {
+        this.currentSearchResultChunkIndex = mergeIndex;
+        this.currentSearchResultIndexInChunk = 0;
+        this.currentSearchResultIndex = 0;
+      }
+    } else if (mergeIndex === this.currentSearchResultChunkIndex) {
+      if (prepend) {
+        this.currentSearchResultIndexInChunk += additionalResultsCount;
+        this.currentSearchResultIndex += additionalResultsCount;
+      }
+    }
   }
 
   getCssClassesForChunk(chunkIndex: number) {
@@ -338,9 +544,11 @@ export class LogTextManager {
   }
 
   static shouldKeepPendingRequest(downloadedStart: number, downloadedEnd: number,
+                                  downloadedPinned: boolean,
                                   requestedStart: number, requestedEnd: number,
                                   visibleStart: number, visibleEnd: number) {
-    if (isRangeWithinAnother(visibleStart, visibleEnd, downloadedStart, downloadedEnd)) {
+    if (downloadedPinned ||
+        isRangeWithinAnother(visibleStart, visibleEnd, downloadedStart, downloadedEnd)) {
       return true;
     }
     return areRangesOverlapping(visibleStart, visibleEnd, requestedStart, requestedEnd);
@@ -399,7 +607,10 @@ export class LogTextManager {
     this.currVisibleStartIndex = info.startIndex;
     this.currVisibleEndIndex = info.stopIndex;
     this.updateCachedRenderedLines();
+    this.maybeUpdatePendingRequest(info.overscanStartIndex, info.overscanStopIndex);
+  }
 
+  maybeUpdatePendingRequest(overscanStartIndex: number, overscanEndIndex: number) {
     if (this.disableDownloadDueToError) {
       return;
     }
@@ -407,9 +618,15 @@ export class LogTextManager {
     const downloadedStartIndex = this.downloadedLinesStartIndex();
     const downloadedEndIndex = this.downloadedLinesEndIndex();
 
-    if (isRangeWithinAnother(info.overscanStartIndex, info.overscanStopIndex,
+    if (!this.searchWasEnabled) {
+      if (overscanStartIndex >= overscanEndIndex) {
+        return;
+      }
+
+      if (isRangeWithinAnother(overscanStartIndex, overscanEndIndex,
         downloadedStartIndex, downloadedEndIndex)) {
-      return;
+        return;
+      }
     }
 
     const [initiateStartIndex, initiateEndIndex] = this.downloadInitiateLineRange();
@@ -420,7 +637,7 @@ export class LogTextManager {
 
     if (this.pendingRequest) {
       if (LogTextManager.shouldKeepPendingRequest(
-            downloadedStartIndex, downloadedEndIndex,
+            downloadedStartIndex, downloadedEndIndex, this.searchWasEnabled,
             this.pendingRequest.startIndex, this.pendingRequest.endIndex,
             this.currVisibleStartIndex, this.currVisibleEndIndex)) {
         return;
