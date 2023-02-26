@@ -22,7 +22,6 @@ import {escapeClassesToHtml, generateStyleElement} from "../../util/AnsiEscapeCo
 import {observer, useLocalObservable} from "mobx-react";
 import {useDataAccessor} from "../../data/ReactUtils";
 import {binarySearchLessEqual} from "../../util/BinarySearch";
-import {CancellablePromise} from "../../util/CancellablePromise";
 import {
   AutoSizer as _AutoSizer,
   AutoSizerProps, defaultCellRangeRenderer,
@@ -31,7 +30,6 @@ import {
   ListRowProps
 } from 'react-virtualized';
 import {RenderedRows} from "react-virtualized/dist/es/List";
-import {parseLogChunk} from "../../util/LogChunkParsing";
 import {digitCount} from "../../util/Math";
 import {GridCellRangeProps} from "react-virtualized/dist/es/Grid";
 import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
@@ -53,12 +51,6 @@ const isSelectionActiveWithinElement = (element: HTMLElement | null | undefined)
   return element.contains(selection.anchorNode) || element.contains(selection.focusNode);
 }
 
-export type PendingRequest = {
-  promise: CancellablePromise<any>;
-  startIndex: number;
-  endIndex: number;
-}
-
 export type LogViewerProps = {
   log: Log;
   fetchOverscanRowCount: number;
@@ -66,21 +58,23 @@ export type LogViewerProps = {
 }
 
 const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowCount}: LogViewerProps) => {
-  const manager = useLocalObservable(() => new LogTextManager());
   const accessor = useDataAccessor([]);
+  const [, setRenderCounter] = useState(0);
 
-  const pendingRequest = useRef<PendingRequest | null>(null);
+  const manager = useLocalObservable(() =>
+    new LogTextManager(accessor, log.logid, log.type, fetchOverscanRowCount, destroyOverscanRowCount,
+      () => setRenderCounter(c => c + 1)));
+
+  manager.setLogNumLines(log.num_lines);
+
   const logLineDigitCount = digitCount(log.num_lines);
-
-  // Used to refresh displayed data when the log is downloaded and line state changes
-  const [renderCounter, setRenderCounter] = useState(0);
 
   const renderEmptyRow = (row: ListRowProps) => {
     return <div key={row.index} className="bb-logviewer-text-row" style={row.style}></div>;
   }
 
   const renderRow = (row: ListRowProps) => {
-    const renderedLine = manager.lines.get(row.index);
+    const renderedLine = manager.lines[row.index];
     if (renderedLine !== undefined) {
       return renderedLine.content;
     }
@@ -125,50 +119,7 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
   };
 
   const onRowsRendered = (info: RenderedRows) => {
-    if (info.overscanStartIndex >= manager.startIndex &&
-        info.overscanStopIndex <= manager.endIndex) {
-      return;
-    }
-
-    if (pendingRequest.current) {
-      pendingRequest.current.promise.cancel();
-    }
-
-    const needFirstRow = info.overscanStartIndex > fetchOverscanRowCount
-      ? info.overscanStartIndex - fetchOverscanRowCount : 0;
-    const needLastRow = info.overscanStopIndex + fetchOverscanRowCount < log.num_lines
-      ? info.overscanStopIndex + fetchOverscanRowCount
-      : log.num_lines;
-
-    let fetchFirstRow = needFirstRow;
-    if (needFirstRow >= manager.startIndex && needFirstRow < manager.endIndex) {
-      fetchFirstRow = manager.endIndex;
-    }
-    let fetchLastRow = needLastRow;
-    if (needLastRow >= manager.startIndex && needLastRow < manager.endIndex) {
-      fetchLastRow = manager.startIndex;
-    }
-    if (fetchFirstRow > fetchLastRow) {
-      // Shouldn't happen
-      return;
-    }
-
-    pendingRequest.current = {
-      promise: accessor.getRaw(`logs/${log.logid}/contents`, {
-        offset: fetchFirstRow,
-        limit: fetchLastRow - fetchFirstRow
-      }),
-      startIndex: fetchFirstRow,
-      endIndex: fetchLastRow,
-    };
-    pendingRequest.current?.promise.then(response => {
-      const content = response.logchunks[0].content as string;
-      const chunk = parseLogChunk(fetchFirstRow, content, log.type);
-      manager.addDownloadedRange(chunk.firstLine, chunk.lastLine,
-        destroyOverscanRowCount);
-      manager.addChunk(chunk);
-      setRenderCounter(counter => counter + 1);
-    })
+    manager.requestRows(info);
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -209,7 +160,6 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
               height={height}
               width={width}
               rowHeight={18}
-              renderCounter={renderCounter}
               cellRangeRenderer={cellRangeRenderer}
               containerProps={{
                 onMouseDown: () => checkSelection(),

@@ -15,32 +15,68 @@
   Copyright Buildbot Team Members
 */
 
-
-import {action, observable} from "mobx";
+import {RenderedRows} from "react-virtualized/dist/es/List";
+import {IDataAccessor} from "../../data/DataAccessor";
 import {binarySearchGreater} from "../../util/BinarySearch";
-import {ChunkCssClasses, parseCssClassesForChunk, ParsedLogChunk} from "../../util/LogChunkParsing";
+import {CancellablePromise} from "../../util/CancellablePromise";
+import {
+  ChunkCssClasses,
+  parseCssClassesForChunk,
+  ParsedLogChunk,
+  parseLogChunk
+} from "../../util/LogChunkParsing";
 
 export type RenderedLogLine = {
   content: JSX.Element | JSX.Element[];
   number: number;
 }
 
-export class LogTextManager {
-  lines = observable.map<number, RenderedLogLine>();
-  chunks: ParsedLogChunk[] = []; // not observable
-  chunkToCssClasses: {[firstLine: string]: ChunkCssClasses} = {}; // not observable
+export type PendingRequest = {
+  promise: CancellablePromise<any>;
+  startIndex: number;
+  endIndex: number;
+}
 
-  startIndex = 0; // not observable
-  endIndex = 0; // not observable
+export class LogTextManager {
+  lines: {[num: number]: RenderedLogLine} = {};
+
+  accessor: IDataAccessor;
+  logid: number;
+  logType: string;
+  fetchOverscanRowCount: number;
+  destroyOverscanRowCount: number;
+  onStateChange: () => void;
+
+  logNumLines = 0; // kept up to date
+
+  pendingRequest: PendingRequest|null = null;
+
+  chunks: ParsedLogChunk[] = [];
+  chunkToCssClasses: {[firstLine: string]: ChunkCssClasses} = {};
+
+  // The start and end index of stored data
+  startIndex = 0;
+  endIndex = 0;
 
   // Ensures that when a selection is active no rows are removed from the set of nodes rendered
   // by React. Otherwise removed nodes will break selection.
-  isSelectionActive = false; // not observable
-  selectionStartIndex = 0; // not observable
-  selectionEndIndex = 0; // not observable
+  isSelectionActive = false;
+  selectionStartIndex = 0;
+  selectionEndIndex = 0;
 
-  lastRenderStartIndex = 0; // not observable
-  lastRenderEndIndex = 0; // not observable
+  lastRenderStartIndex = 0;
+  lastRenderEndIndex = 0;
+
+  constructor(accessor: IDataAccessor, logid: number, logType: string,
+              fetchOverscanRowCount: number, destroyOverscanRowCount: number,
+              onStateChange: () => void) {
+    this.accessor = accessor;
+    this.logid = logid;
+    this.logType = logType;
+    this.fetchOverscanRowCount = fetchOverscanRowCount;
+    this.destroyOverscanRowCount = destroyOverscanRowCount;
+    this.onStateChange = onStateChange;
+  }
 
   setIsSelectionActive(currIsSelectionActive: boolean) {
     if (currIsSelectionActive && !this.isSelectionActive) {
@@ -63,37 +99,37 @@ export class LogTextManager {
     }
   }
 
-  @action cleanupLines(targetStartIndex: number, targetEndIndex: number) {
+  cleanupLines(targetStartIndex: number, targetEndIndex: number) {
     if (targetStartIndex > this.endIndex) {
       this.startIndex = targetStartIndex;
       this.endIndex = targetStartIndex;
-      this.lines.clear();
+      this.lines = {};
       return;
     }
 
     if (targetEndIndex < this.startIndex) {
       this.startIndex = targetEndIndex;
       this.endIndex = targetEndIndex;
-      this.lines.clear();
+      this.lines = {};
       return;
     }
 
     if (this.startIndex < targetStartIndex) {
       for (let i = this.startIndex; i < targetStartIndex; ++i) {
-        this.lines.delete(i);
+        delete this.lines[i];
       }
       this.startIndex = targetStartIndex;
     }
     if (targetEndIndex < this.endIndex) {
       for (let i = targetEndIndex; i < this.endIndex; ++i) {
-        this.lines.delete(i);
+        delete this.lines[i];
       }
       this.endIndex = targetEndIndex;
     }
   }
 
-  @action addDownloadedRange(startIndex: number, endIndex: number,
-                             destroyOverscanRowCount: number) {
+  addDownloadedRange(startIndex: number, endIndex: number,
+                     destroyOverscanRowCount: number) {
     // There are 3 areas where each of startIndex and endIndex can fall to:
     //  a) X < this.startIndex
     //  b) X >= this.startIndex && X <= this.endIndex
@@ -117,7 +153,7 @@ export class LogTextManager {
     if (endIndex < this.startIndex || startIndex > this.endIndex) {
       // Cases a-a and c-c. New data is not contiguous with stored data.
       // This means the current data needs to be thrown away.
-      this.lines.clear();
+      this.lines = {};
       this.startIndex = startIndex;
       this.endIndex = endIndex;
       return;
@@ -151,16 +187,20 @@ export class LogTextManager {
     }
   }
 
-  @action addChunk(chunk: ParsedLogChunk) {
+  addChunk(chunk: ParsedLogChunk) {
     this.chunks.splice(binarySearchGreater(this.chunks, chunk.firstLine, (ch, line) => ch.firstLine - line),
       0, chunk);
   }
 
-  @action addLine(line: RenderedLogLine) {
-    if (this.lines.has(line.number)) {
+  addLine(line: RenderedLogLine) {
+    if (line.number in this.lines) {
       return;
     }
-    this.lines.set(line.number, line);
+    this.lines[line.number] = line;
+  }
+
+  setLogNumLines(numLines: number) {
+    this.logNumLines = numLines;
   }
 
   getCssClassesForChunk(chunk: ParsedLogChunk) {
@@ -170,5 +210,57 @@ export class LogTextManager {
       this.chunkToCssClasses[chunk.firstLine] = cssClasses;
     }
     return cssClasses;
+  }
+
+  requestRows(info: RenderedRows) {
+    if (info.overscanStartIndex >= this.startIndex &&
+      info.overscanStopIndex <= this.endIndex) {
+      return;
+    }
+
+    if (this.pendingRequest) {
+      this.pendingRequest.promise.cancel();
+    }
+
+    const needFirstRow = info.overscanStartIndex > this.fetchOverscanRowCount
+      ? info.overscanStartIndex - this.fetchOverscanRowCount : 0;
+    const needLastRow = info.overscanStopIndex + this.fetchOverscanRowCount < this.logNumLines
+      ? info.overscanStopIndex + this.fetchOverscanRowCount
+      : this.logNumLines;
+
+    let fetchFirstRow = needFirstRow;
+    if (needFirstRow >= this.startIndex && needFirstRow < this.endIndex) {
+      fetchFirstRow = this.endIndex;
+    }
+    let fetchLastRow = needLastRow;
+    if (needLastRow >= this.startIndex && needLastRow < this.endIndex) {
+      fetchLastRow = this.startIndex;
+    }
+    if (fetchFirstRow > fetchLastRow) {
+      // Shouldn't happen
+      return;
+    }
+
+    this.pendingRequest = {
+      promise: this.accessor.getRaw(`logs/${this.logid}/contents`, {
+        offset: fetchFirstRow,
+        limit: fetchLastRow - fetchFirstRow
+      }),
+      startIndex: fetchFirstRow,
+      endIndex: fetchLastRow,
+    };
+    this.pendingRequest.promise.then(response => {
+      const content = response.logchunks[0].content as string;
+      const chunk = parseLogChunk(fetchFirstRow, content, this.logType);
+      this.addDownloadedRange(chunk.firstLine, chunk.lastLine,
+        this.destroyOverscanRowCount);
+      this.addChunk(chunk);
+      this.onStateChange();
+    }).catch((e: Error) => {
+      if (e.name === "CanceledError") {
+        return;
+      }
+      throw e;
+    })
   }
 }
