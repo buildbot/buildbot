@@ -16,7 +16,11 @@
 */
 
 import {parseLogChunk} from "./LogChunkParsing";
-import {findTextInChunkRaw, resultsListToLineIndexMap} from "./LogChunkSearch";
+import {
+  findTextInChunkRaw,
+  overlaySearchResultsOnLine,
+  resultsListToLineIndexMap
+} from "./LogChunkSearch";
 
 describe('LogChunkSearch', () => {
   describe('findTextInChunkRaw', () => {
@@ -78,6 +82,73 @@ describe('LogChunkSearch', () => {
         [3, 2],
         [12, 5],
       ]));
+    });
+  });
+
+  describe('overlaySearchResultsOnLine', () => {
+    it('unstyled', () => {
+      expect(overlaySearchResultsOnLine("a", {
+        results: [{lineIndex: 10, lineStart: 5}],
+        lineIndexToFirstChunkIndex: new Map<number, number>([[10, 0]]),
+      }, 10, 20, null, "b", "m", "e")).toEqual([
+        {firstPos: 0, lastPos: 5, cssClasses: ""},
+        {firstPos: 5, lastPos: 6, cssClasses: "m b e"},
+        {firstPos: 6, lastPos: 20, cssClasses: ""},
+      ]);
+      expect(overlaySearchResultsOnLine("aa", {
+        results: [{lineIndex: 10, lineStart: 5}],
+        lineIndexToFirstChunkIndex: new Map<number, number>([[10, 0]]),
+      }, 10, 20, null, "b", "m", "e")).toEqual([
+        {firstPos: 0, lastPos: 5, cssClasses: ""},
+        {firstPos: 5, lastPos: 6, cssClasses: "m b"},
+        {firstPos: 6, lastPos: 7, cssClasses: "m e"},
+        {firstPos: 7, lastPos: 20, cssClasses: ""},
+      ]);
+      expect(overlaySearchResultsOnLine("aaa", {
+        results: [{lineIndex: 10, lineStart: 5}],
+        lineIndexToFirstChunkIndex: new Map<number, number>([[10, 0]]),
+      }, 10, 20, null, "b", "m", "e")).toEqual([
+        {firstPos: 0, lastPos: 5, cssClasses: ""},
+        {firstPos: 5, lastPos: 6, cssClasses: "m b"},
+        {firstPos: 6, lastPos: 7, cssClasses: "m"},
+        {firstPos: 7, lastPos: 8, cssClasses: "m e"},
+        {firstPos: 8, lastPos: 20, cssClasses: ""},
+      ]);
+    });
+    it('styled', () => {
+      expect(overlaySearchResultsOnLine("a", {
+        results: [{lineIndex: 10, lineStart: 5}],
+        lineIndexToFirstChunkIndex: new Map<number, number>([[10, 0]]),
+      }, 10, 20, [
+        {firstPos: 0, lastPos: 20, cssClasses: "u"},
+      ], "b", "m", "e")).toEqual([
+        {firstPos: 0, lastPos: 5, cssClasses: "u"},
+        {firstPos: 5, lastPos: 6, cssClasses: "u m b e"},
+        {firstPos: 6, lastPos: 20, cssClasses: "u"},
+      ]);
+      expect(overlaySearchResultsOnLine("aa", {
+        results: [{lineIndex: 10, lineStart: 5}],
+        lineIndexToFirstChunkIndex: new Map<number, number>([[10, 0]]),
+      }, 10, 20, [
+        {firstPos: 0, lastPos: 20, cssClasses: "u"},
+      ], "b", "m", "e")).toEqual([
+        {firstPos: 0, lastPos: 5, cssClasses: "u"},
+        {firstPos: 5, lastPos: 6, cssClasses: "u m b"},
+        {firstPos: 6, lastPos: 7, cssClasses: "u m e"},
+        {firstPos: 7, lastPos: 20, cssClasses: "u"},
+      ]);
+      expect(overlaySearchResultsOnLine("aaa", {
+        results: [{lineIndex: 10, lineStart: 5}],
+        lineIndexToFirstChunkIndex: new Map<number, number>([[10, 0]]),
+      }, 10, 20, [
+        {firstPos: 0, lastPos: 20, cssClasses: "u"},
+      ], "b", "m", "e")).toEqual([
+        {firstPos: 0, lastPos: 5, cssClasses: "u"},
+        {firstPos: 5, lastPos: 6, cssClasses: "u m b"},
+        {firstPos: 6, lastPos: 7, cssClasses: "u m"},
+        {firstPos: 7, lastPos: 8, cssClasses: "u m e"},
+        {firstPos: 8, lastPos: 20, cssClasses: "u"},
+      ]);
     });
   });
 });

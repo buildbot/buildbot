@@ -17,6 +17,7 @@
 
 import {stripLineEscapeCodes} from "./AnsiEscapeCodes";
 import {binarySearchGreater} from "./BinarySearch";
+import {addOverlayToCssClasses, combineCssClasses, LineCssClasses} from "./LineCssClasses";
 import {ParsedLogChunk} from "./LogChunkParsing";
 
 export type ChunkSearchResult = {
@@ -165,4 +166,51 @@ export function findTextInChunk(chunk: ParsedLogChunk,
                                 searchString: string): ChunkSearchResults {
   const results = findTextInChunkRaw(chunk, searchString);
   return {results, lineIndexToFirstChunkIndex: resultsListToLineIndexMap(results)};
+}
+
+// Returns null if no overlay is needed
+export function overlaySearchResultsOnLine(searchString: string,
+                                           chunkResults: ChunkSearchResults,
+                                           lineIndex: number,
+                                           lineLength: number,
+                                           lineCssClasses: LineCssClasses[]|null,
+                                           beginCssClasses: string,
+                                           cssClasses: string,
+                                           endCssClasses: string) {
+  const firstChunkIndex = chunkResults.lineIndexToFirstChunkIndex.get(lineIndex);
+  if (firstChunkIndex === undefined) {
+    return null;
+  }
+
+  const beginCssClassesAll = combineCssClasses(cssClasses, beginCssClasses);
+  const endCssClassesAll = combineCssClasses(cssClasses, endCssClasses);
+  const beginEndCssClassesAll = combineCssClasses(beginCssClassesAll, endCssClasses);
+
+
+  for (let i = firstChunkIndex; i < chunkResults.results.length; ++i) {
+    const result = chunkResults.results[i];
+    if (result.lineIndex !== lineIndex) {
+      break;
+    }
+    const beginPos = result.lineStart;
+    const endPos = beginPos + searchString.length;
+
+    if (searchString.length === 1) {
+      lineCssClasses = addOverlayToCssClasses(lineLength, lineCssClasses,
+        beginPos, endPos, beginEndCssClassesAll);
+    } else if (searchString.length === 2) {
+      lineCssClasses = addOverlayToCssClasses(lineLength, lineCssClasses,
+        beginPos, beginPos + 1, beginCssClassesAll);
+      lineCssClasses = addOverlayToCssClasses(lineLength, lineCssClasses,
+        beginPos + 1, endPos, endCssClassesAll);
+    } else {
+      lineCssClasses = addOverlayToCssClasses(lineLength, lineCssClasses,
+        beginPos, beginPos + 1, beginCssClassesAll);
+      lineCssClasses = addOverlayToCssClasses(lineLength, lineCssClasses,
+        beginPos + 1, endPos - 1, cssClasses);
+      lineCssClasses = addOverlayToCssClasses(lineLength, lineCssClasses,
+        endPos - 1, endPos, endCssClassesAll);
+    }
+  }
+  return lineCssClasses;
 }
