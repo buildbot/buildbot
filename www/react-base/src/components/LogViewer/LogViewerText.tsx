@@ -19,10 +19,9 @@ import './LogViewerText.scss'
 import {Log} from "../../data/classes/Log";
 import {FC, useRef, useState} from 'react';
 import {escapeClassesToHtml, generateStyleElement} from "../../util/AnsiEscapeCodes";
-import {action, observable} from 'mobx';
 import {observer, useLocalObservable} from "mobx-react";
 import {useDataAccessor} from "../../data/ReactUtils";
-import {binarySearchGreater, binarySearchLessEqual} from "../../util/BinarySearch";
+import {binarySearchLessEqual} from "../../util/BinarySearch";
 import {CancellablePromise} from "../../util/CancellablePromise";
 import {
   AutoSizer as _AutoSizer,
@@ -32,15 +31,11 @@ import {
   ListRowProps
 } from 'react-virtualized';
 import {RenderedRows} from "react-virtualized/dist/es/List";
-import {
-  ChunkCssClasses,
-  parseCssClassesForChunk,
-  ParsedLogChunk,
-  parseLogChunk
-} from "../../util/LogChunkParsing";
+import {parseLogChunk} from "../../util/LogChunkParsing";
 import {digitCount} from "../../util/Math";
 import {GridCellRangeProps} from "react-virtualized/dist/es/Grid";
 import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
+import {LogTextManager} from "./LogTextManager";
 
 const List = _List as unknown as FC<ListProps>;
 const AutoSizer = _AutoSizer as unknown as FC<AutoSizerProps>;
@@ -58,159 +53,6 @@ const isSelectionActiveWithinElement = (element: HTMLElement | null | undefined)
   return element.contains(selection.anchorNode) || element.contains(selection.focusNode);
 }
 
-type RenderedLogLine = {
-  content: JSX.Element | JSX.Element[];
-  number: number;
-}
-
-class LogViewerState {
-  lines = observable.map<number, RenderedLogLine>();
-  chunks: ParsedLogChunk[] = []; // not observable
-  chunkToCssClasses: {[firstLine: string]: ChunkCssClasses} = {}; // not observable
-
-  startIndex = 0; // not observable
-  endIndex = 0; // not observable
-
-  // Ensures that when a selection is active no rows are removed from the set of nodes rendered
-  // by React. Otherwise removed nodes will break selection.
-  isSelectionActive = false; // not observable
-  selectionStartIndex = 0; // not observable
-  selectionEndIndex = 0; // not observable
-
-  lastRenderStartIndex = 0; // not observable
-  lastRenderEndIndex = 0; // not observable
-
-  setIsSelectionActive(currIsSelectionActive: boolean) {
-    if (currIsSelectionActive && !this.isSelectionActive) {
-      this.selectionStartIndex = this.lastRenderStartIndex;
-      this.selectionEndIndex = this.lastRenderEndIndex;
-    }
-    this.isSelectionActive = currIsSelectionActive;
-  }
-
-  onCellRangeRendered(startIndex: number, endIndex: number) {
-    this.lastRenderStartIndex = startIndex;
-    this.lastRenderEndIndex = endIndex;
-    if (this.isSelectionActive) {
-      if (startIndex < this.selectionStartIndex) {
-        this.selectionStartIndex = startIndex;
-      }
-      if (endIndex > this.selectionEndIndex) {
-        this.selectionEndIndex = endIndex;
-      }
-    }
-  }
-
-  @action cleanupLines(targetStartIndex: number, targetEndIndex: number) {
-    if (targetStartIndex > this.endIndex) {
-      this.startIndex = targetStartIndex;
-      this.endIndex = targetStartIndex;
-      this.lines.clear();
-      return;
-    }
-
-    if (targetEndIndex < this.startIndex) {
-      this.startIndex = targetEndIndex;
-      this.endIndex = targetEndIndex;
-      this.lines.clear();
-      return;
-    }
-
-    if (this.startIndex < targetStartIndex) {
-      for (let i = this.startIndex; i < targetStartIndex; ++i) {
-        this.lines.delete(i);
-      }
-      this.startIndex = targetStartIndex;
-    }
-    if (targetEndIndex < this.endIndex) {
-      for (let i = targetEndIndex; i < this.endIndex; ++i) {
-        this.lines.delete(i);
-      }
-      this.endIndex = targetEndIndex;
-    }
-  }
-
-  @action addDownloadedRange(startIndex: number, endIndex: number,
-                             destroyOverscanRowCount: number) {
-    // There are 3 areas where each of startIndex and endIndex can fall to:
-    //  a) X < this.startIndex
-    //  b) X >= this.startIndex && X <= this.endIndex
-    //  c) X > this.endIndex
-    // Given that there are both startIndex and endIndex, there are total of 9 combinations.
-    // Because startIndex <= endIndex, the following combinations are not valid:
-    //  b-a, c-a, c-b. The remaining a-a, a-b, a-c, b-b, b-c, c-c are handled below.
-
-    if (startIndex >= this.startIndex && endIndex <= this.endIndex) {
-      // Case b-b. Downloaded range is within the range of stored data. Nothing to do.
-      return;
-    }
-
-    if (startIndex <= this.startIndex && endIndex >= this.endIndex) {
-      //Case a-c. Downloaded data is superset of stored data. No need to cleanup existing data
-      this.startIndex = startIndex;
-      this.endIndex = endIndex;
-      return;
-    }
-
-    if (endIndex < this.startIndex || startIndex > this.endIndex) {
-      // Cases a-a and c-c. New data is not contiguous with stored data.
-      // This means the current data needs to be thrown away.
-      this.lines.clear();
-      this.startIndex = startIndex;
-      this.endIndex = endIndex;
-      return;
-    }
-
-    // Cases a-b and b-c. At least one of startIndex and endIndex is within the range of stored
-    // data. The currently stored data needs to be cleaned up.
-    if (this.isSelectionActive) {
-      if (startIndex < this.startIndex) {
-        // Case a-b.
-        this.startIndex = startIndex;
-      } else {
-        // Case b-c.
-        this.endIndex = endIndex;
-      }
-      return;
-    }
-
-    const overscanStartIndex = startIndex > destroyOverscanRowCount
-      ? startIndex - destroyOverscanRowCount : 0;
-    const overscanEndIndex = endIndex + destroyOverscanRowCount;
-
-    if (startIndex < this.startIndex) {
-      // Case a-b.
-      this.startIndex = startIndex;
-      this.cleanupLines(overscanStartIndex, overscanEndIndex);
-    } else {
-      // Case b-c.
-      this.endIndex = endIndex;
-      this.cleanupLines(overscanStartIndex, overscanEndIndex);
-    }
-  }
-
-  @action addChunk(chunk: ParsedLogChunk) {
-    this.chunks.splice(binarySearchGreater(this.chunks, chunk.firstLine, (ch, line) => ch.firstLine - line),
-      0, chunk);
-  }
-
-  @action addLine(line: RenderedLogLine) {
-    if (this.lines.has(line.number)) {
-      return;
-    }
-    this.lines.set(line.number, line);
-  }
-
-  getCssClassesForChunk(chunk: ParsedLogChunk) {
-    let cssClasses = this.chunkToCssClasses[chunk.firstLine];
-    if (cssClasses === undefined) {
-      cssClasses = parseCssClassesForChunk(chunk, chunk.firstLine, chunk.lastLine);
-      this.chunkToCssClasses[chunk.firstLine] = cssClasses;
-    }
-    return cssClasses;
-  }
-}
-
 export type PendingRequest = {
   promise: CancellablePromise<any>;
   startIndex: number;
@@ -224,7 +66,7 @@ export type LogViewerProps = {
 }
 
 const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowCount}: LogViewerProps) => {
-  const viewerState = useLocalObservable(() => new LogViewerState());
+  const manager = useLocalObservable(() => new LogTextManager());
   const accessor = useDataAccessor([]);
 
   const pendingRequest = useRef<PendingRequest | null>(null);
@@ -238,24 +80,24 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
   }
 
   const renderRow = (row: ListRowProps) => {
-    const renderedLine = viewerState.lines.get(row.index);
+    const renderedLine = manager.lines.get(row.index);
     if (renderedLine !== undefined) {
       return renderedLine.content;
     }
 
-    const chunkIndex = binarySearchLessEqual(viewerState.chunks, row.index,
+    const chunkIndex = binarySearchLessEqual(manager.chunks, row.index,
       (ch, index) => ch.firstLine - index);
 
-    if (chunkIndex < 0 || chunkIndex >= viewerState.chunks.length) {
+    if (chunkIndex < 0 || chunkIndex >= manager.chunks.length) {
       return renderEmptyRow(row);
     }
-    const chunk = viewerState.chunks[chunkIndex];
+    const chunk = manager.chunks[chunkIndex];
     if (row.index < chunk.firstLine || row.index >= chunk.lastLine) {
       return renderEmptyRow(row);
     }
     const lineIndexInChunk = row.index - chunk.firstLine;
     const lineType = chunk.lineTypes[lineIndexInChunk];
-    const lineCssClasses = viewerState.getCssClassesForChunk(chunk)[lineIndexInChunk];
+    const lineCssClasses = manager.getCssClassesForChunk(chunk)[lineIndexInChunk];
     const lineStartInChunk = chunk.textLineBounds[lineIndexInChunk];
     const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1];
     const lineContent = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
@@ -270,7 +112,7 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
       </div>
     );
 
-    viewerState.addLine({
+    manager.addLine({
       content: content,
       number: row.index
     })
@@ -283,8 +125,8 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
   };
 
   const onRowsRendered = (info: RenderedRows) => {
-    if (info.overscanStartIndex >= viewerState.startIndex &&
-        info.overscanStopIndex <= viewerState.endIndex) {
+    if (info.overscanStartIndex >= manager.startIndex &&
+        info.overscanStopIndex <= manager.endIndex) {
       return;
     }
 
@@ -299,12 +141,12 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
       : log.num_lines;
 
     let fetchFirstRow = needFirstRow;
-    if (needFirstRow >= viewerState.startIndex && needFirstRow < viewerState.endIndex) {
-      fetchFirstRow = viewerState.endIndex;
+    if (needFirstRow >= manager.startIndex && needFirstRow < manager.endIndex) {
+      fetchFirstRow = manager.endIndex;
     }
     let fetchLastRow = needLastRow;
-    if (needLastRow >= viewerState.startIndex && needLastRow < viewerState.endIndex) {
-      fetchLastRow = viewerState.startIndex;
+    if (needLastRow >= manager.startIndex && needLastRow < manager.endIndex) {
+      fetchLastRow = manager.startIndex;
     }
     if (fetchFirstRow > fetchLastRow) {
       // Shouldn't happen
@@ -322,16 +164,16 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
     pendingRequest.current?.promise.then(response => {
       const content = response.logchunks[0].content as string;
       const chunk = parseLogChunk(fetchFirstRow, content, log.type);
-      viewerState.addDownloadedRange(chunk.firstLine, chunk.lastLine,
+      manager.addDownloadedRange(chunk.firstLine, chunk.lastLine,
         destroyOverscanRowCount);
-      viewerState.addChunk(chunk);
+      manager.addChunk(chunk);
       setRenderCounter(counter => counter + 1);
     })
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
   const checkSelection = () => {
-    viewerState.setIsSelectionActive(isSelectionActiveWithinElement(containerRef.current));
+    manager.setIsSelectionActive(isSelectionActiveWithinElement(containerRef.current));
   };
 
   const cellRangeRenderer = (params: GridCellRangeProps) => {
@@ -339,10 +181,10 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
     // because not rendered React nodes will disappear from DOM and lose selection information.
     // If it is determined that a selection is active, then no rows will be removed from the
     // range of rows to render, thus ensuring that selection information is not lost.
-    viewerState.onCellRangeRendered(params.rowStartIndex, params.rowStopIndex);
-    if (viewerState.isSelectionActive) {
-      params.rowStartIndex = viewerState.selectionStartIndex;
-      params.rowStopIndex = viewerState.selectionEndIndex;
+    manager.onCellRangeRendered(params.rowStartIndex, params.rowStopIndex);
+    if (manager.isSelectionActive) {
+      params.rowStartIndex = manager.selectionStartIndex;
+      params.rowStopIndex = manager.selectionEndIndex;
     }
     return defaultCellRangeRenderer(params);
   }
