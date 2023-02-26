@@ -461,6 +461,7 @@ export class LogTextManager {
       this.cleanupDownloadedLines();
       this.addChunk(chunk);
       this.onStateChange();
+      this.pendingRequest = null;
     }).catch((e: Error) => {
       if (e.name === "CanceledError") {
         return;
