@@ -74,7 +74,6 @@
     "react-dom": "^18.2.0",
     "react-refresh": "^0.8.3",
     "react-router-dom": "^6.3.0",
-    "react-virtualized": "^9.22.3",
     "react-virtualized-auto-sizer": "^1.0.7",
     "react-window": "^1.8.8",
     "resolve": "1.18.1",
@@ -177,7 +176,6 @@
   },
   "devDependencies": {
     "@types/react-test-renderer": "^18.0.0",
-    "@types/react-virtualized": "^9.21.21",
     "axios-mock-adapter": "^1.21.1",
     "copy-webpack-plugin": "^6.4.0",
     "less": "^3.0.0",
