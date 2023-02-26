@@ -389,13 +389,14 @@ export class LogTextManager {
     const downloadedStartIndex = this.downloadedLinesStartIndex();
     const downloadedEndIndex = this.downloadedLinesEndIndex();
 
-    if (info.overscanStartIndex >= downloadedStartIndex &&
-        info.overscanStopIndex <= downloadedEndIndex) {
+    if (isRangeWithinAnother(info.overscanStartIndex, info.overscanStopIndex,
+        downloadedStartIndex, downloadedEndIndex)) {
       return;
     }
 
     const [initiateStartIndex, initiateEndIndex] = this.downloadInitiateLineRange();
-    if (initiateStartIndex >= downloadedStartIndex && initiateEndIndex <= downloadedEndIndex) {
+    if (isRangeWithinAnother(initiateStartIndex, initiateEndIndex,
+        downloadedStartIndex, downloadedEndIndex)) {
       return;
     }
 
