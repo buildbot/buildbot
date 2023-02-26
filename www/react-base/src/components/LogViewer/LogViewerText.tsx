@@ -57,19 +57,19 @@ export type LogViewerProps = {
   downloadOverscanRowCount: number;
   cachedDownloadOverscanRowCount: number;
   cacheRenderedOverscanRowCount: number;
-  chunkMergeLimitLineCount: number;
+  maxChunkLinesCount: number;
 }
 
 const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, downloadOverscanRowCount,
                                   cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
-                                  chunkMergeLimitLineCount}: LogViewerProps) => {
+                                  maxChunkLinesCount}: LogViewerProps) => {
   const accessor = useDataAccessor([]);
   const [, setRenderCounter] = useState(0);
 
   const manager = useLocalObservable(() =>
     new LogTextManager(accessor, log.logid, log.type, downloadInitiateOverscanRowCount,
       downloadOverscanRowCount, cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
-      chunkMergeLimitLineCount, () => setRenderCounter(c => c + 1)));
+      maxChunkLinesCount, () => setRenderCounter(c => c + 1)));
 
   manager.setLogNumLines(log.num_lines);
 

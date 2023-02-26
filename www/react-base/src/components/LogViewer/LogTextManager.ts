@@ -60,7 +60,7 @@ export class LogTextManager {
   chunkToCssClasses: (ChunkCssClasses|null)[] = [];
 
   // The minimum size of an existing chunk in order to not be merged to another chunk
-  chunkMergeLimitLineCount = 1000;
+  maxChunkLinesCount = 1000;
 
   // Certain errors are unrecoverable and further logs won't be downloaded from the backend
   disableDownloadDueToError = false;
@@ -89,7 +89,7 @@ export class LogTextManager {
               downloadInitiateOverscanRowCount: number,
               downloadOverscanRowCount: number, cachedDownloadOverscanRowCount: number,
               cacheRenderedOverscanRowCount: number,
-              chunkMergeLimitLineCount: number,
+              maxChunkLinesCount: number,
               onStateChange: () => void) {
     this.accessor = accessor;
     this.logid = logid;
@@ -98,7 +98,7 @@ export class LogTextManager {
     this.downloadOverscanRowCount = downloadOverscanRowCount;
     this.cachedDownloadOverscanRowCount = cachedDownloadOverscanRowCount;
     this.cacheRenderedOverscanRowCount = cacheRenderedOverscanRowCount;
-    this.chunkMergeLimitLineCount = chunkMergeLimitLineCount;
+    this.maxChunkLinesCount = maxChunkLinesCount;
     this.onStateChange = onStateChange;
   }
 
@@ -269,7 +269,7 @@ export class LogTextManager {
     const mergeChunkLength = this.chunks[mergeIndex].lastLine - this.chunks[mergeIndex].firstLine;
     const chunkLength = chunk.lastLine - chunk.firstLine;
 
-    if (mergeChunkLength + chunkLength < this.chunkMergeLimitLineCount) {
+    if (mergeChunkLength + chunkLength < this.maxChunkLinesCount) {
       return false;
     }
 

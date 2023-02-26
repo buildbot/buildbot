@@ -35,7 +35,7 @@ const LogViewer = ({log}: LogViewerProps) => {
                      downloadOverscanRowCount={500}
                      cachedDownloadOverscanRowCount={10000}
                      cacheRenderedOverscanRowCount={1000}
-                     chunkMergeLimitLineCount={5000}/>
+                     maxChunkLinesCount={5000}/>
     )
   }
 }
