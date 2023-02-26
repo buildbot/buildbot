@@ -58,6 +58,10 @@ export class LogTextManager {
   startIndex = 0;
   endIndex = 0;
 
+  // The start and end index of currently visible data
+  currVisibleStartIndex = 0;
+  currVisibleEndIndex = 0;
+
   // Ensures that when a selection is active no rows are removed from the set of nodes rendered
   // by React. Otherwise removed nodes will break selection.
   isSelectionActive = false;
@@ -212,13 +216,32 @@ export class LogTextManager {
     return cssClasses;
   }
 
+  // precondition: this.pendingRequest !== null
+  private isPendingRequestSatisfyingVisibleRows() {
+    if (this.currVisibleStartIndex >= this.startIndex &&
+      this.currVisibleEndIndex <= this.endIndex) {
+      return true;
+    }
+    if (this.currVisibleEndIndex > this.endIndex) {
+      return this.pendingRequest!.endIndex >= this.currVisibleEndIndex;
+    }
+    // this.currVisibleStartIndex < this.startIndex
+    return this.pendingRequest!.startIndex <= this.currVisibleStartIndex;
+  }
+
   requestRows(info: RenderedRows) {
+    this.currVisibleStartIndex = info.startIndex;
+    this.currVisibleEndIndex = info.stopIndex;
+
     if (info.overscanStartIndex >= this.startIndex &&
       info.overscanStopIndex <= this.endIndex) {
       return;
     }
 
     if (this.pendingRequest) {
+      if (this.isPendingRequestSatisfyingVisibleRows()) {
+        return;
+      }
       this.pendingRequest.promise.cancel();
     }
 
