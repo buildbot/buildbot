@@ -453,7 +453,7 @@ export class LogTextManager {
 
   getCurrentSearchResultLine() {
     if (this.currentSearchResultChunkIndex < 0) {
-      return null;
+      return -1;
     }
     const chunkResults = this.chunkSearchResults[this.currentSearchResultChunkIndex].results;
     return chunkResults[this.currentSearchResultIndexInChunk].lineIndex;

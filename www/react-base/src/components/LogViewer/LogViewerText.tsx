@@ -26,6 +26,7 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import {digitCount} from "../../util/Math";
 import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
 import CustomFixedSizeList from "./CustomFixedSizeList";
+import LogSearchField from "../LogSearchField/LogSearchField";
 import {LogTextManager} from "./LogTextManager";
 import LogViewerTextLineRenderer from "./LogViewerTextLineRenderer";
 
@@ -91,6 +92,18 @@ const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, download
     return [overscanStartIndex, overscanStopIndex, visibleStartIndex, visibleStopIndex];
   }
 
+  const onSearchTextChanged = (text: string) => {
+    manager.setSearchString(text === '' ? null : text);
+  }
+
+  const listRef = useRef<CustomFixedSizeList>(null);
+  const currentSearchResultLineRef = useRef<number>(-1);
+  const currentSearchResultLine = manager.getCurrentSearchResultLine();
+  if (currentSearchResultLineRef.current !== currentSearchResultLine && listRef.current !== null) {
+    currentSearchResultLineRef.current = currentSearchResultLine;
+    listRef.current.scrollToItem(currentSearchResultLine);
+  }
+
   return (
     <>
       {generateStyleElement(".bb-logviewer-text-area")}
@@ -99,11 +112,17 @@ const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, download
           <div className="bb-logviewer-text-area" ref={containerRef}>
             <div className="bb-logviewer-text-download-log">
               <div>
+                <LogSearchField currentResult={manager.currentSearchResultIndex + 1}
+                                totalResults={Math.max(manager.totalSearchResultCount, 0)}
+                                onTextChanged={onSearchTextChanged}
+                                onPrevClicked={() => manager.setPrevSearchResult()}
+                                onNextClicked={() => manager.setNextSearchResult()}/>
                 <LogDownloadButton log={log}/>
               </div>
             </div>
             <CustomFixedSizeList
               className="bb-logviewer-text-area"
+              ref={listRef}
               itemCount={log.num_lines}
               onItemsRendered={onRowsRendered}
               height={height}
