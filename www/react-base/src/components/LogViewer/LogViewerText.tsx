@@ -306,13 +306,6 @@ const LogViewerText = observer(({log, fetchOverscanRowCount, destroyOverscanRowC
     };
     pendingRequest.current?.promise.then(response => {
       const content = response.logchunks[0].content as string;
-      const lines = content.split("\n");
-
-      // There is a trailing '\n' that generates an empty line in the end
-      if (lines.length > 1) {
-        lines.pop();
-      }
-
       const chunk = parseLogChunk(fetchFirstRow, content, log.type);
       viewerState.addDownloadedRange(chunk.firstLine, chunk.lastLine,
         destroyOverscanRowCount);
