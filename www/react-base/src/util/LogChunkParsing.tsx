@@ -52,8 +52,24 @@ export type ParsedLogChunk = {
   textNoEscapesLineBounds: number[]|null;
 }
 
-export function parseLogChunk(firstLine: number, textWithTypes: string,
-                              logType: string): ParsedLogChunk {
+// Converts the given line-delimited text that includes escape sequences into text that excludes
+// escape sequences
+function convertTextToNoEscapes(text: string, lineCount: number,
+                                textLineBounds: number[]) : [string, number[]]  {
+  let textNoEscapes = '';
+  let textNoEscapesLineBounds = [];
+  for (let i = 0; i < lineCount; ++i) {
+    // text contains lines that have already had their lineType symbol removed.
+    const iLine = text.slice(textLineBounds[i], textLineBounds[i + 1]);
+    const noEscapesLine = lineContainsEscapeCodes(iLine) ? stripLineEscapeCodes(iLine) : iLine;
+    textNoEscapesLineBounds.push(textNoEscapes.length);
+    textNoEscapes += noEscapesLine;
+  }
+  return [textNoEscapes, textNoEscapesLineBounds];
+}
+
+export function parseLogChunk(firstLine: number, textWithTypes: string, logType: string,
+                              forceTextNoEscapes: boolean = false): ParsedLogChunk {
   const lines = textWithTypes.split("\n");
 
   // There is a trailing '\n' that generates an empty line in the end
@@ -91,20 +107,15 @@ export function parseLogChunk(firstLine: number, textWithTypes: string,
           linesWithEscapes.push(lineIndex);
         }
 
-        if (linesWithEscapes.length > 100 && linesWithEscapes.length > lineIndex * 0.3) {
+        if (forceTextNoEscapes ||
+          (linesWithEscapes.length > 100 && linesWithEscapes.length > lineIndex * 0.3)) {
           // Switch between storing indexes of lines with escape sequences to storing whole text
           // with escape sequences removed.
           linesWithEscapes = null;
-          textNoEscapesLineBounds = [];
-          textNoEscapes = '';
-          for (let i = 0; i < lineIndex; ++i) {
-            // text contains lines that have already had their lineType symbol removed.
-            const iLine = text.slice(textLineBounds[i], textLineBounds[i + 1]);
-            const noEscapesLine = lineContainsEscapeCodes(iLine) ? stripLineEscapeCodes(iLine) : iLine;
-            textNoEscapesLineBounds.push(textNoEscapes.length);
-            textNoEscapes += noEscapesLine;
-          }
-          // Previous loop excluded the current line, add it too.
+          [textNoEscapes, textNoEscapesLineBounds] =
+            convertTextToNoEscapes(text, lineIndex, textLineBounds);
+
+          // convertTextToNoEscapes() function above excluded the current line, add it too.
           const currNoEscapesLine = lineContainsEscapeCodes(line) ? stripLineEscapeCodes(line) : line;
           textNoEscapesLineBounds.push(textNoEscapes.length);
           textNoEscapes += currNoEscapesLine;
@@ -128,6 +139,69 @@ export function parseLogChunk(firstLine: number, textWithTypes: string,
     textNoEscapes,
     textNoEscapesLineBounds
   };
+}
+
+export function mergeChunks(chunk1: ParsedLogChunk, chunk2: ParsedLogChunk): ParsedLogChunk {
+  if (chunk1.lastLine !== chunk2.firstLine) {
+    throw Error("Chunks to be merged must form continuous range");
+  }
+
+  const chunk1LineCount = chunk1.lastLine - chunk1.firstLine;
+  const chunk2LineCount = chunk2.lastLine - chunk2.firstLine;
+
+  const text = chunk1.text + chunk2.text;
+  const textLineBounds =
+    [...chunk1.textLineBounds.slice(0, -1), ...chunk2.textLineBounds.map(b => b + chunk1.text.length)];
+  const lineTypes = chunk1.lineTypes + chunk2.lineTypes;
+
+  let linesWithEscapes: number[]|null = null;
+  let textNoEscapes: string|null = null;
+  let textNoEscapesLineBounds: number[]|null = null;
+  if (chunk1.linesWithEscapes !== null && chunk2.linesWithEscapes !== null) {
+    // both chunks have small number of escaped lines and store escaped line indexes
+    linesWithEscapes = [
+      ...chunk1.linesWithEscapes,
+      ...chunk2.linesWithEscapes.map(l => l + chunk1LineCount)
+    ]
+  } else {
+    // At least one of the chunks has a large number of escaped lines. If one of the chunks doesn't
+    // use mode appropriate for many escaped lines, then it is converted to it.
+    let chunk1TextNoEscapes: string;
+    let chunk1TextNoEscapesLineBounds: number[];
+    let chunk2TextNoEscapes: string|null;
+    let chunk2TextNoEscapesLineBounds: number[]|null;
+    if (chunk1.linesWithEscapes === null) {
+      chunk1TextNoEscapes = chunk1.textNoEscapes!;
+      chunk1TextNoEscapesLineBounds = chunk1.textNoEscapesLineBounds!;
+    } else {
+      [chunk1TextNoEscapes, chunk1TextNoEscapesLineBounds] =
+        convertTextToNoEscapes(chunk1.text, chunk1LineCount, chunk1.textLineBounds);
+    }
+    if (chunk2.linesWithEscapes === null) {
+      chunk2TextNoEscapes = chunk2.textNoEscapes!;
+      chunk2TextNoEscapesLineBounds = chunk2.textNoEscapesLineBounds!;
+    } else {
+      [chunk2TextNoEscapes, chunk2TextNoEscapesLineBounds] =
+        convertTextToNoEscapes(chunk2.text, chunk2LineCount, chunk2.textLineBounds);
+    }
+
+    textNoEscapes = chunk1TextNoEscapes + chunk2TextNoEscapes!;
+    textNoEscapesLineBounds = [
+      ...chunk1TextNoEscapesLineBounds,
+      ...chunk2TextNoEscapesLineBounds.map(b => b + chunk1TextNoEscapes.length)
+    ]
+  }
+
+  return {
+    firstLine: chunk1.firstLine,
+    lastLine: chunk2.lastLine,
+    text,
+    textLineBounds,
+    lineTypes,
+    linesWithEscapes,
+    textNoEscapes,
+    textNoEscapesLineBounds
+  }
 }
 
 export type ChunkCssClasses = {[globalLine: number]: [string, LineCssClasses[]]};
