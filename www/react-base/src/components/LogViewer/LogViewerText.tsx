@@ -17,24 +17,17 @@
 
 import './LogViewerText.scss'
 import {Log} from "../../data/classes/Log";
-import {FC, useRef, useState} from 'react';
+import {forwardRef, useRef, useState} from 'react';
 import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer, useLocalObservable} from "mobx-react";
 import {useDataAccessor} from "../../data/ReactUtils";
-import {
-  defaultCellRangeRenderer,
-  List as _List,
-  ListProps,
-  ListRowProps
-} from 'react-virtualized';
+import {ListOnItemsRenderedProps} from 'react-window';
 import AutoSizer from "react-virtualized-auto-sizer";
-import {RenderedRows} from "react-virtualized/dist/es/List";
 import {digitCount} from "../../util/Math";
-import {GridCellRangeProps} from "react-virtualized/dist/es/Grid";
 import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
+import CustomFixedSizeList from "./CustomFixedSizeList";
 import {LogTextManager} from "./LogTextManager";
-
-const List = _List as unknown as FC<ListProps>;
+import LogViewerTextLineRenderer from "./LogViewerTextLineRenderer";
 
 const isSelectionActiveWithinElement = (element: HTMLElement | null | undefined) => {
   if (element === null || element === undefined) {
@@ -73,32 +66,7 @@ const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, download
 
   const logLineDigitCount = digitCount(log.num_lines);
 
-  const renderEmptyRowContents = (index: number, style: React.CSSProperties) => {
-    return <div key={index} className="bb-logviewer-text-row" style={style}></div>;
-  }
-
-  const renderRowContents = (index: number, lineType: string, style: React.CSSProperties,
-                             content: JSX.Element[]) => {
-    return (
-      <div key={index} className="bb-logviewer-text-row" style={style}>
-        <span data-linenumber-content={String(index).padStart(logLineDigitCount, ' ')}
-              className={`log_${lineType}`}>
-          {content}
-        </span>
-      </div>
-    );
-  };
-
-  const renderRow = (row: ListRowProps) => {
-    return manager.getRenderedLineContent(row.index, row.style,
-      renderRowContents, renderEmptyRowContents);
-  }
-
-  const renderNoRows = () => {
-    return <>...</>;
-  };
-
-  const onRowsRendered = (info: RenderedRows) => {
+  const onRowsRendered = (info: ListOnItemsRenderedProps) => {
     manager.requestRows(info);
   };
 
@@ -107,17 +75,20 @@ const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, download
     manager.setIsSelectionActive(isSelectionActiveWithinElement(containerRef.current));
   };
 
-  const cellRangeRenderer = (params: GridCellRangeProps) => {
+  const getRangeToRenderOverride = (overscanStartIndex: number,
+                                    overscanStopIndex: number,
+                                    visibleStartIndex: number,
+                                    visibleStopIndex: number): [number, number, number, number] => {
     // Default cell renderer will not render rows that are not visible. This breaks selection
     // because not rendered React nodes will disappear from DOM and lose selection information.
     // If it is determined that a selection is active, then no rows will be removed from the
     // range of rows to render, thus ensuring that selection information is not lost.
-    manager.onCellRangeRendered(params.rowStartIndex, params.rowStopIndex);
+    manager.onCellRangeRendered(overscanStartIndex, overscanStopIndex);
     if (manager.isSelectionActive) {
-      params.rowStartIndex = manager.selectionStartIndex;
-      params.rowStopIndex = manager.selectionEndIndex;
+      overscanStartIndex = manager.selectionStartIndex;
+      overscanStopIndex = manager.selectionEndIndex;
     }
-    return defaultCellRangeRenderer(params);
+    return [overscanStartIndex, overscanStopIndex, visibleStartIndex, visibleStopIndex];
   }
 
   return (
@@ -131,21 +102,24 @@ const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, download
                 <LogDownloadButton log={log}/>
               </div>
             </div>
-            <List
+            <CustomFixedSizeList
               className="bb-logviewer-text-area"
-              rowCount={log.num_lines}
-              rowRenderer={row => renderRow(row)}
-              onRowsRendered={onRowsRendered}
-              noRowsRenderer={renderNoRows}
+              itemCount={log.num_lines}
+              onItemsRendered={onRowsRendered}
               height={height}
               width={width}
-              rowHeight={18}
-              cellRangeRenderer={cellRangeRenderer}
-              containerProps={{
-                onMouseDown: () => checkSelection(),
-                onMouseUp: () => checkSelection(),
-              }}
-            />
+              itemSize={18}
+              getRangeToRenderOverride={getRangeToRenderOverride}
+              outerElementType={forwardRef((props, ref) => (
+                <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props}/>
+              ))}
+            >
+              {({index, style}) => (
+                  LogViewerTextLineRenderer({manager: manager, logLineDigitCount: logLineDigitCount,
+                    style: style, index: index})
+                )
+              }
+            </CustomFixedSizeList>
           </div>
         )}
       </AutoSizer>

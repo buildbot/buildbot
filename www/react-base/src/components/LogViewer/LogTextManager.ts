@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {RenderedRows} from "react-virtualized/dist/es/List";
+import {ListOnItemsRenderedProps} from "react-window";
 import {IDataAccessor} from "../../data/DataAccessor";
 import {escapeClassesToHtml} from "../../util/AnsiEscapeCodes";
 import {repositionPositionedArray} from "../../util/Array";
@@ -601,11 +601,11 @@ export class LogTextManager {
     return limitRangeToSize(firstPartStart, firstPartEnd, maxSizeLimit, firstPartEnd);
   }
 
-  requestRows(info: RenderedRows) {
+  requestRows(info: ListOnItemsRenderedProps) {
     this.prevVisibleStartIndex = this.currVisibleStartIndex;
     this.prevVisibleEndIndex = this.currVisibleEndIndex;
-    this.currVisibleStartIndex = info.startIndex;
-    this.currVisibleEndIndex = info.stopIndex;
+    this.currVisibleStartIndex = info.visibleStartIndex;
+    this.currVisibleEndIndex = info.visibleStopIndex;
     this.updateCachedRenderedLines();
     this.maybeUpdatePendingRequest(info.overscanStartIndex, info.overscanStopIndex);
   }
