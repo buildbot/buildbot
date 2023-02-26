@@ -307,16 +307,17 @@ export class LogTextManager {
       return renderedLine;
     }
 
+    const downloadedStartIndex = this.downloadedLinesStartIndex();
+    const downloadedEndIndex = this.downloadedLinesEndIndex();
+
+    if (index < downloadedStartIndex || index >= downloadedEndIndex) {
+      return emptyRenderer(index, style);
+    }
+
+    // Chunks form a contiguous range so at this point line is guaranteed to point to a valid chunk
     const chunkIndex = binarySearchLessEqual(this.chunks, index,
       (ch, index) => ch.firstLine - index);
-
-    if (chunkIndex < 0 || chunkIndex >= this.chunks.length) {
-      return emptyRenderer(index, style);
-    }
     const chunk = this.chunks[chunkIndex];
-    if (index < chunk.firstLine || index >= chunk.lastLine) {
-      return emptyRenderer(index, style);
-    }
     const lineIndexInChunk = index - chunk.firstLine;
     const lineType = chunk.lineTypes[lineIndexInChunk];
     const lineCssClasses = this.getCssClassesForChunk(chunkIndex)[lineIndexInChunk];
