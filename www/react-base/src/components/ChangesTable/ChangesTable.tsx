@@ -16,6 +16,7 @@
 */
 
 import {action, makeObservable, observable} from "mobx";
+import {FaMinus, FaPlus} from "react-icons/fa";
 import {Link} from "react-router-dom";
 import DataCollection from "../../data/DataCollection";
 import {Change} from "../../data/classes/Change";
@@ -72,11 +73,11 @@ const ChangesTable = observer(({changes}: ChangesTableProps) => {
             <div className="form-group">
               <div onClick={() => tableState.setShowDetailsAll(false)} title="Collapse all"
                    className="btn btn-default">
-                <i className="fa fa-minus"></i>
+                <FaMinus/>
               </div>
               <div onClick={() => tableState.setShowDetailsAll(true)} title="Expand all"
                    className="btn btn-default">
-                <i className="fa fa-plus"></i>
+                <FaPlus/>
               </div>
             </div>
           </div>

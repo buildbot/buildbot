@@ -34,6 +34,7 @@ import DataCollection from "../../data/DataCollection";
 import AlertNotification from "../../components/AlertNotification/AlertNotification";
 import ForceBuildModal from "../../components/ForceBuildModal/ForceBuildModal";
 import TableHeading from "../../components/TableHeading/TableHeading";
+import {FaStop, FaSpinner} from "react-icons/fa";
 
 const anyCancellableBuilds = (builds: DataCollection<Build>,
                               buildrequests: DataCollection<Buildrequest>) => {
@@ -63,14 +64,14 @@ const buildTopbarActions = (builds: DataCollection<Build>,
     if (isCancelling) {
       actions.push({
         caption: "Cancelling...",
-        icon: "spinner fa-spin",
+        icon: <FaSpinner/>,
         action: cancelWholeQueue
       });
     } else {
       actions.push({
         caption: "Cancel whole queue",
         variant: "danger",
-        icon: "stop",
+        icon: <FaStop/>,
         action: cancelWholeQueue
       });
     }

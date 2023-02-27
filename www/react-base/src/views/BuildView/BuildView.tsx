@@ -17,6 +17,7 @@
 
 import './BuildView.scss';
 import {observer} from "mobx-react";
+import {FaSpinner} from "react-icons/fa";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {globalSettings} from "../../plugins/GlobalSettings";
 import AlertNotification from "../../components/AlertNotification/AlertNotification";
@@ -66,7 +67,7 @@ const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStoppi
     if (isRebuilding) {
       actions.push({
         caption: "Rebuilding...",
-        icon: "spinner fa-spin",
+        icon: <FaSpinner/>,
         action: doRebuild
       });
     } else {
@@ -79,7 +80,7 @@ const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStoppi
     if (isStopping) {
       actions.push({
         caption: "Stopping...",
-        icon: "spinner fa-spin",
+        icon: <FaSpinner/>,
         action: doStop
       });
     } else {

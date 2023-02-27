@@ -22,7 +22,7 @@ export type GroupSettings = {
   parentName: string | null;
   caption: string;
   route: string | null;
-  icon: string | null;
+  icon?: JSX.Element;
   order: number | null;
 };
 
@@ -30,7 +30,7 @@ export type ResolvedGroupSettings = {
   name: string;
   caption: string;
   route: string | null;
-  icon: string | null;
+  icon?: JSX.Element,
   order: number;
   subGroups: ResolvedGroupSettings[];
 };

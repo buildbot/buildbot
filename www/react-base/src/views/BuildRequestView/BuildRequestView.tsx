@@ -16,6 +16,7 @@
 */
 
 import {observer} from "mobx-react";
+import {FaSpinner, FaStop} from "react-icons/fa";
 import {
   useDataAccessor,
   useDataApiQuery,
@@ -52,13 +53,13 @@ const buildTopbarActions = (builder: Builder | null,
   if (isCancelling) {
     actions.push({
       caption: "Cancelling...",
-      icon: "spinner fa-spin",
+      icon: <FaSpinner/>,
       action: cancelBuildRequest
     });
   } else {
     actions.push({
       caption: "Cancel",
-      icon: "stop",
+      icon: <FaStop/>,
       action: cancelBuildRequest
     });
   }

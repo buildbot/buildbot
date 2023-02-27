@@ -126,7 +126,6 @@ globalMenuSettings.addGroup({
   name: 'pendingbuildrequests',
   parentName: 'builds',
   caption: 'Pending Buildrequests',
-  icon: null,
   order: null,
   route: '/pendingbuildrequests',
 });

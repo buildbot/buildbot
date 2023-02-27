@@ -17,6 +17,7 @@
 
 import './LogSearchField.scss'
 import {useState} from "react";
+import {FaChevronDown, FaChevronUp, FaSearch} from "react-icons/fa";
 
 export type LogSearchButtonProps = {
   currentResult: number;
@@ -40,17 +41,17 @@ const LogSearchField = ({currentResult, totalResults,
     <div className="bb-log-search-field-nav">
       <span className="bb-log-search-field-result-count">{currentResult}/{totalResults}</span>
       <button className="bb-log-search-field-nav-button" onClick={onPrevClicked}>
-        <i className="fa fa-chevron-up"/>
+        <FaChevronUp/>
       </button>
       <button className="bb-log-search-field-nav-button" onClick={onNextClicked}>
-        <i className="fa fa-chevron-down"/>
+        <FaChevronDown/>
       </button>
     </div>
   );
 
   return (
     <form role="search" className="bb-log-search-field">
-      <i className="fa fa-search bb-log-search-field-icon"></i>
+      <FaSearch className="bb-log-search-field-icon"/>
       <input className="bb-log-search-field-text" type="text" value={searchText}
              onFocus={() => setHasFocus(true)} onBlur={() => setHasFocus(false)}
              onChange={e => onSearchTextChanged(e.target.value)}

@@ -17,6 +17,7 @@
 
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
+import {FaCheck, FaTimes} from "react-icons/fa";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
@@ -87,7 +88,10 @@ const MastersView = observer(() => {
     return (
       <tr key={master.id}>
         <td>
-          <i className={"fa " + (master.active ? "fa-check text-success" : "fa-times text-danger")}/>
+          {master.active
+           ? <FaCheck className="text-success"/>
+           : <FaTimes className="text-danger"/>
+          }
         </td>
         <td>{master.name}</td>
         <td>
@@ -136,7 +140,6 @@ globalMenuSettings.addGroup({
   name: 'masters',
   parentName: 'builds',
   caption: 'Build Masters',
-  icon: null,
   order: null,
   route: '/masters',
 });

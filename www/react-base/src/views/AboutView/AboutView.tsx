@@ -18,6 +18,7 @@
 import "./AboutView.scss";
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
+import {FaInfoCircle} from "react-icons/fa";
 import {DataClientContext} from "../../data/ReactUtils";
 import {useContext, useState} from "react";
 import {ConfigContext} from "../../contexts/Config";
@@ -125,7 +126,7 @@ const AboutView = observer(() => {
 globalMenuSettings.addGroup({
   name: 'about',
   caption: 'About',
-  icon: 'info-circle',
+  icon: <FaInfoCircle/>,
   order: 99,
   route: '/about',
   parentName: null,

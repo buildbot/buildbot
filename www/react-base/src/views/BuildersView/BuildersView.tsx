@@ -18,6 +18,7 @@
 import './BuildersView.scss';
 import {observer} from "mobx-react";
 import {useContext, useState} from "react";
+import {FaCogs, FaQuestionCircle} from "react-icons/fa";
 import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "../../data/ReactUtils";
 import {Builder} from "../../data/classes/Builder";
 import {Worker} from "../../data/classes/Worker";
@@ -240,7 +241,7 @@ const BuildersView = observer(() => {
 
   const tagHelpElement = (
     <OverlayTrigger trigger="click" placement="bottom" overlay={tagHelpPopover} rootClose={true}>
-      <i style={{position: "relative"}} className="fa fa-question-circle clickable"></i>
+      <FaQuestionCircle style={{position: "relative"}} className="clickable"/>
     </OverlayTrigger>
   );
 
@@ -386,7 +387,7 @@ globalMenuSettings.addGroup({
   name: 'builds',
   parentName: null,
   caption: 'Builds',
-  icon: 'cogs',
+  icon: <FaCogs/>,
   order: 10,
   route: null,
 });
@@ -395,7 +396,6 @@ globalMenuSettings.addGroup({
   name: 'builders',
   parentName: 'builds',
   caption: 'Builders',
-  icon: null,
   order: null,
   route: '/builders',
 });

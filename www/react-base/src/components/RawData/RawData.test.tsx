@@ -36,7 +36,7 @@ function assertRenderSnapshotExpanded(data: {[key: string]: any}) {
     </MemoryRouter>
   );
   act(() =>
-    component.root.findByType("i").props.onClick()
+    component.root.findByType("svg").props.onClick()
   );
   expect(component.toJSON()).toMatchSnapshot();
 }

@@ -16,9 +16,10 @@
 */
 
 import './BuildSummary.scss';
-import {observer} from "mobx-react";
-import {results2class, results2text, SUCCESS} from "../../util/Results";
 import {useContext, useState} from "react";
+import {observer} from "mobx-react";
+import {FaExpand} from "react-icons/fa";
+import {results2class, results2text, SUCCESS} from "../../util/Results";
 import {ConfigContext} from "../../contexts/Config";
 import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "../../data/ReactUtils";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
@@ -271,7 +272,7 @@ const BuildSummary = observer(({build, parentBuild, parentRelationship,
         </div>
         <div onClick={toggleDetails} title="Show steps according to their importance"
              className="btn btn-xs btn-default">
-          <i className="fa fa-expand"></i>
+          <FaExpand/>
           {detailLevelToString(detailLevel)}
         </div>
         { builder !== null

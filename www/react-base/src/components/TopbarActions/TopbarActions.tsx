@@ -23,7 +23,7 @@ import React from "react";
 
 export type TopbarAction = {
   caption: string;
-  icon?: string;
+  icon?: JSX.Element;
   help?: string;
   variant?: ButtonVariant;
   action: () => void;
@@ -38,7 +38,7 @@ const TopbarActions = observer(({store}: TopbarActionsProps) => {
     return (
       <React.Fragment key={index}>
         <Button variant={action.variant ?? "light"} onClick={action.action} title={action.help ?? ""}>
-          {action.icon ?  <><i className={"fa fa-" + action.icon}></i><span>&nbsp;</span></> : <></> }
+          {action.icon ?  <>{action.icon}<span>&nbsp;</span></> : <></> }
           {action.caption}
         </Button>
         &nbsp;
