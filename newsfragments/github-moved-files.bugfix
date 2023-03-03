@@ -1,0 +1,3 @@
+Buildbot will now include the previous location of moved files when evaluating a Github commit.
+This fixes an issue where a commit that moves a file out of a folder, would not be shown in the
+web UI for a builder that is tracking that same folder.
