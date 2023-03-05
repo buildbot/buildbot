@@ -1,0 +1,63 @@
+/*
+  This file is part of Buildbot.  Buildbot is free software: you can
+  redistribute it and/or modify it under the terms of the GNU General Public
+  License as published by the Free Software Foundation, version 2.
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+  details.
+
+  You should have received a copy of the GNU General Public License along with
+  this program; if not, write to the Free Software Foundation, Inc., 51
+  Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+  Copyright Buildbot Team Members
+*/
+
+import './LogSearchField.scss'
+import {useState} from "react";
+
+export type LogSearchButtonProps = {
+  currentResult: number;
+  totalResults: number;
+  onTextChanged: (text: string) => void;
+  onPrevClicked: () => void;
+  onNextClicked: () => void;
+};
+
+const LogSearchField = ({currentResult, totalResults,
+                         onTextChanged, onPrevClicked, onNextClicked}: LogSearchButtonProps) => {
+  const [searchText, setSearchText] = useState<string>('');
+  const [hasFocus, setHasFocus] = useState<boolean>(false);
+
+  const onSearchTextChanged = (text: string) => {
+    setSearchText(text);
+    onTextChanged(text);
+  };
+
+  const renderSearchNav = () => (
+    <div className="bb-log-search-field-nav">
+      <span className="bb-log-search-field-result-count">{currentResult}/{totalResults}</span>
+      <button className="bb-log-search-field-nav-button" onClick={onPrevClicked}>
+        <i className="fa fa-chevron-up"/>
+      </button>
+      <button className="bb-log-search-field-nav-button" onClick={onNextClicked}>
+        <i className="fa fa-chevron-down"/>
+      </button>
+    </div>
+  );
+
+  return (
+    <form role="search" className="bb-log-search-field">
+      <i className="fa fa-search bb-log-search-field-icon"></i>
+      <input className="bb-log-search-field-text" type="text" value={searchText}
+             onFocus={() => setHasFocus(true)} onBlur={() => setHasFocus(false)}
+             onChange={e => onSearchTextChanged(e.target.value)}
+             placeholder="Search log"/>
+      {(hasFocus || searchText !== '') ? renderSearchNav() : <></>}
+    </form>
+  );
+}
+
+export default LogSearchField;

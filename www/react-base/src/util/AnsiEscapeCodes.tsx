@@ -31,16 +31,12 @@
 // This parser does not work across lines
 // css class will be reset at each new line
 
+import {cssClassesMapToCssString, LineCssClasses} from "./LineCssClasses";
+
 const ANSI_RE = new RegExp(/^((\d+)(;\d+)*)?([a-zA-Z])/);
 const CSI_PREFIX = "\x1b[";
 
-export type LineCssClasses = {
-  firstPos: number;
-  lastPos: number;
-  cssClasses: string;
-}
-
-export function parseAnsiSgr(ansiEntry: string): [string, string[]] {
+export function parseAnsiSgrEntry(ansiEntry: string): [string, string[]] {
   // simple utility to extract ansi sgr (Select Graphic Rendition) codes,
   // and ignore other codes.
   // Invalid codes are restored
@@ -63,7 +59,21 @@ export function parseAnsiSgr(ansiEntry: string): [string, string[]] {
   return [ansiEntry, classes];
 }
 
-export function ansiSgrToCss(ansiClasses: string[], cssClasses: {[key: string]: boolean}) {
+export function stripAnsiSgrEntry(ansiEntry: string): string {
+  // simple utility to strip ansi sgr (Select Graphic Rendition) codes,
+  // and ignore other codes.
+  // Invalid codes are restored
+  const res = ANSI_RE.exec(ansiEntry);
+  if (res) {
+    ansiEntry = ansiEntry.substr(res[0].length);
+  } else {
+    // illegal code, restore the CSI
+    ansiEntry = CSI_PREFIX + ansiEntry;
+  }
+  return ansiEntry;
+}
+
+export function ansiSgrClassesToCss(ansiClasses: string[], cssClasses: {[key: string]: boolean}) {
   if (ansiClasses.length === 0) {
     return cssClasses;
   }
@@ -75,36 +85,46 @@ export function ansiSgrToCss(ansiClasses: string[], cssClasses: {[key: string]: 
     }
     if (ansiClasses[1] === '5') {
       cssClasses = { }; // (simplification) always reset color
-      cssClasses[fgbg[ansiClasses[0]] + '-' + ansiClasses[2]] = true;
+      cssClasses[`ansi${fgbg[ansiClasses[0]]}-${ansiClasses[2]}`] = true;
     }
   } else {
     for (let i of ansiClasses) {
       if ((i === '39') || (i === '0')) { // "color reset" code and "all attributes off" code
         cssClasses = {};
       } else {
-        cssClasses[i] = true;
+        cssClasses[`ansi${i}`] = true;
       }
     }
   }
   return cssClasses;
 }
 
-function cssClassesMapToCssClassString(classes: {[key: string]: boolean}): string {
-  let res = '';
-  let isFirst = true;
-  for (const c in classes) {
-    if (isFirst) {
-      isFirst = false;
+export function lineContainsEscapeCodes(line: string) {
+  return line.includes(CSI_PREFIX);
+}
+
+export function stripLineEscapeCodes(line: string) {
+  let firstEntry = true;
+  let outputText = "";
+
+  for (const ansiEntry of line.split(CSI_PREFIX)) {
+    let entryOutputText: string;
+    if (firstEntry) {
+      entryOutputText = ansiEntry;
+      firstEntry = false;
     } else {
-      res += ' ';
+      entryOutputText = stripAnsiSgrEntry(ansiEntry);
     }
-    res += `ansi${c}`;
+    if (entryOutputText.length > 0) {
+      outputText += entryOutputText;
+    }
   }
-  return res;
+
+  return outputText;
 }
 
 export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses[] | null] {
-  if (!line.includes(CSI_PREFIX)) {
+  if (!lineContainsEscapeCodes(line)) {
     return [line, null];
   }
 
@@ -122,9 +142,9 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
       firstEntry = false;
     } else {
       let ansiClasses: string[];
-      [entryOutputText, ansiClasses] = parseAnsiSgr(ansiEntry);
-      cssClassesMap = ansiSgrToCss(ansiClasses, cssClassesMap);
-      cssClasses = cssClassesMapToCssClassString(cssClassesMap);
+      [entryOutputText, ansiClasses] = parseAnsiSgrEntry(ansiEntry);
+      cssClassesMap = ansiSgrClassesToCss(ansiClasses, cssClassesMap);
+      cssClasses = cssClassesMapToCssString(cssClassesMap);
     }
     if (entryOutputText.length > 0) {
       outputClasses.push({
@@ -139,24 +159,37 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
   return [outputText, outputClasses];
 }
 
+// Converts line information to TSX elements. Line information is supplied either as a substring
+// (text from lineStart inclusive to lineEnd exclusive) in case it does not contain escape
+// sequences, or a parsed line with CSS class information.
+//
+// Both line substring and the parsed line information must exclude trailing newline character.
 export function escapeClassesToHtml(text: string, lineStart: number, lineEnd: number,
-                                    cssClasses: LineCssClasses[] | null | undefined) {
-  if (cssClasses === null || cssClasses === undefined || cssClasses.length === 0) {
+                                    cssClassesWithText: [string | null, LineCssClasses[] | null] | undefined) {
+  if (cssClassesWithText === undefined || cssClassesWithText[1] === null ||
+      cssClassesWithText[1].length === 0) {
     return [
       <span key={1}>{text.slice(lineStart, lineEnd)}</span>
     ]
   }
 
-  return cssClasses.map((cssClass, index) => (
-    <span key={index} className={cssClass.cssClasses}>
-      {text.slice(lineStart + cssClass.firstPos, lineStart + cssClass.lastPos)}
-    </span>
-  ));
+  const [lineText, cssClasses] = cssClassesWithText;
+  return cssClasses.map((cssClass, index) => {
+    // Note that outputText already refers to the line text
+    const classText = lineText === null
+      ? text.slice(lineStart + cssClass.firstPos, lineStart + cssClass.lastPos)
+      : lineText.slice(cssClass.firstPos, cssClass.lastPos);
+    return (
+      <span key={index} className={cssClass.cssClasses}>{classText}</span>
+    );
+  });
 }
 
+// Parses escape codes in the given line and converts it TSX elements. The input line must exclude
+// trailing newline character.
 export function ansi2html(line: string): JSX.Element[] {
   const [text, cssClasses] = parseEscapeCodesToClasses(line);
-  return escapeClassesToHtml(text, 0, text.length, cssClasses);
+  return escapeClassesToHtml(text, 0, text.length, [text, cssClasses]);
 }
 
 export function generateStyle(cssSelector: string) {

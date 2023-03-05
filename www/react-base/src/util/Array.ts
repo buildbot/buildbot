@@ -22,3 +22,50 @@ export function resizeArray<T>(array: T[], size: number, newValue: T) {
     array.push(...Array(size - array.length).fill(newValue));
   }
 }
+
+// Given an array + startIndex tuple that represents a space-optimized subarray that stores
+// elements in certain index range, repositions the elements into a potentially different index
+// range.
+export function repositionPositionedArray<T>(array: (T|undefined)[], startIndex: number,
+                                             newStartIndex: number,
+                                             newEndIndex: number): [(T|undefined)[], number] {
+  const endIndex = startIndex + array.length;
+  if (startIndex === newStartIndex && endIndex === newEndIndex) {
+    return [array, startIndex];
+  }
+
+  if (newStartIndex === newEndIndex) {
+    return [[], newStartIndex];
+  }
+
+  if (newStartIndex >= endIndex || newEndIndex <= newStartIndex) {
+    const newArray: (T|undefined)[] = [];
+    newArray[newEndIndex - newStartIndex - 1] = undefined; // preallocate
+    return [newArray, newStartIndex];
+  }
+
+  // Reposition the array
+  if (newStartIndex > startIndex) {
+    array.splice(0, newStartIndex - startIndex);
+  } else if (newStartIndex < startIndex) {
+    const newArray: (T|undefined)[] = [];
+
+    newArray[newEndIndex - newStartIndex - 1] = undefined; // preallocate
+
+    const copyCount = Math.min(newEndIndex - newStartIndex, endIndex - startIndex);
+    for (let i = 0; i < copyCount; ++i) {
+      newArray[startIndex + i - newStartIndex] = array[i];
+    }
+
+    array = newArray;
+  }
+
+  // Fix array length
+  if (array.length > newEndIndex - newStartIndex) {
+    array.splice(newEndIndex - newStartIndex);
+  } else if (array.length < newEndIndex - newStartIndex) {
+    array[newEndIndex - newStartIndex - 1] = undefined; // preallocate
+  }
+
+  return [array, newStartIndex];
+}

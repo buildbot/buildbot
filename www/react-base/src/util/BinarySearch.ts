@@ -36,6 +36,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. */
 
+// Finds the first element that is greater or equal to the given value.
 export function binarySearchGreaterEqual<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
                                                lo?: number, hi?: number) {
   let l = (lo === undefined) ? 0 : lo | 0;
@@ -55,6 +56,7 @@ export function binarySearchGreaterEqual<T, U>(a: ArrayLike<T>, y: U, c?: (a: T,
   return i;
 };
 
+// Finds the first element that is greater than the given value.
 export function binarySearchGreater<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
                                           lo?: number, hi?: number) {
   let l = (lo === undefined) ? 0 : lo | 0;
@@ -74,6 +76,7 @@ export function binarySearchGreater<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U
   return i;
 };
 
+// Finds the first element that is less than the given value.
 export function binarySearchLess<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
                                        lo?: number, hi?: number) {
   let l = (lo === undefined) ? 0 : lo | 0;
@@ -93,6 +96,7 @@ export function binarySearchLess<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) =
   return i;
 };
 
+// Finds the first element that is less or equal to the given value.
 export function binarySearchLessEqual<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
                                             lo?: number, hi?: number) {
   let l = (lo === undefined) ? 0 : lo | 0;
@@ -112,6 +116,7 @@ export function binarySearchLessEqual<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y:
   return i;
 }
 
+// Finds the element that is equal to the given value or -1 if no such element exists.
 export function binarySearchEqual<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
                                         lo?: number, hi?: number) {
   let l = (lo === undefined) ? 0 : lo | 0;

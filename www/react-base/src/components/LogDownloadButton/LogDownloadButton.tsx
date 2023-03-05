@@ -15,10 +15,10 @@
   Copyright Buildbot Team Members
 */
 
+import './LogDownloadButton.scss';
 import {useContext} from "react";
 import {Log} from "../../data/classes/Log";
 import {DataClientContext} from "../../data/ReactUtils";
-
 
 export type LogDownloadButtonProps = {
   log: Log;
@@ -30,9 +30,9 @@ const LogDownloadButton = ({log}: LogDownloadButtonProps) => {
 
   return (
     <a href={`${apiRootUrl}/logs/${log.id}/raw`} title="download log"
-       className="btn btn-default btn-xs">
-      <i className="fa fa-download"></i>
-      download
+       className="btn btn-default btn-xs bb-log-download-button">
+      <i className="fa fa-download"></i>&nbsp;
+      Download
     </a>
   );
 }
