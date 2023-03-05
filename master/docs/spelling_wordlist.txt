@@ -671,6 +671,7 @@ pythonic
 Pythonic
 pywin
 qcow
+qemu
 qmail
 queried
 queuedir
