@@ -3,5 +3,5 @@ sphinx-jinja==2.0.2
 sphinx-rtd-theme==1.2.0
 sphinxcontrib-spelling==8.0.0
 sphinxcontrib-websupport==1.2.4
-Pygments==2.12.0
+Pygments==2.14.0
 towncrier==22.12.0
