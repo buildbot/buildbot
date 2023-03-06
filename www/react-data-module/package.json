@@ -83,5 +83,5 @@
     "react-app-polyfill": "^2.0.0",
     "vite": "^4.1.4"
   },
-  "license": "GPL-2.0"
+  "license": "MPL-2.0"
 }
