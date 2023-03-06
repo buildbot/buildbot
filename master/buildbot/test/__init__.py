@@ -143,3 +143,7 @@ warnings.filterwarnings('ignore', ".*stream argument is deprecated. Use stream p
 # use. See https://github.com/boto/botocore/issues/2744
 warnings.filterwarnings('ignore', ".*'urllib3.contrib.pyopenssl' module is deprecated",
                         category=DeprecationWarning)
+
+# pipes is still used in astroid and buildbot_worker in default installation
+warnings.filterwarnings('ignore', "'pipes' is deprecated and slated for removal in Python 3.13",
+                        category=DeprecationWarning)
