@@ -18,6 +18,7 @@
     "axios": "^0.27.2",
     "babel-jest": "^26.6.0",
     "babel-preset-react-app": "^10.0.0",
+    "buildbot-data-js": "link:../react-data-module",
     "bootstrap": "^4.6.2",
     "eslint": "^7.11.0",
     "eslint-config-react-app": "^6.0.0",
@@ -110,6 +111,10 @@
       "^.+\\.module\\.(css|sass|scss)$"
     ],
     "modulePaths": [],
+    "moduleDirectories": [
+      "<rootDir>/node_modules",
+      "node_modules"
+    ],
     "moduleNameMapper": {
       "^react-native$": "react-native-web",
       "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy"

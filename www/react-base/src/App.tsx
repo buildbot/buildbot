@@ -5,13 +5,13 @@ import './globals';
 import './styles/styles.scss';
 import 'bootstrap';
 import {Routes, Route} from "react-router-dom";
+import {useCurrentTimeSetupTimers} from "buildbot-data-js/src/util/Moment";
 
 import PageWithSidebar from "./components/PageWithSidebar/PageWithSidebar";
 import {ConfigContext} from "./contexts/Config";
 import {StoresContext} from "./contexts/Stores";
 import {globalMenuSettings} from "./plugins/GlobalMenuSettings";
 import {globalRoutes} from "./plugins/GlobalRoutes";
-import {useCurrentTimeSetupTimers} from "./util/Moment";
 import Topbar from "./components/Topbar/Topbar";
 import TopbarActions from "./components/TopbarActions/TopbarActions";
 import Loginbar from "./components/Loginbar/Loginbar";

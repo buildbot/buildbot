@@ -17,20 +17,20 @@
 
 import {observer} from "mobx-react";
 import {useContext, useState} from "react";
-import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
+import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
-import {Build} from "../../data/classes/Build";
-import {Builder} from "../../data/classes/Builder";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
-import {Buildrequest} from "../../data/classes/Buildrequest";
+import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
 import BuildsTable from "../../components/BuildsTable/BuildsTable";
 import BuildRequestsTable from "../../components/BuildrequestsTable/BuildrequestsTable";
-import {Forcescheduler} from "../../data/classes/Forcescheduler";
+import {Forcescheduler} from "buildbot-data-js/src/data/classes/Forcescheduler";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {useNavigate, useParams} from "react-router-dom";
-import DataCollection from "../../data/DataCollection";
+import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import AlertNotification from "../../components/AlertNotification/AlertNotification";
 import ForceBuildModal from "../../components/ForceBuildModal/ForceBuildModal";
 import TableHeading from "../../components/TableHeading/TableHeading";

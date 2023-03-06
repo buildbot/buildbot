@@ -19,10 +19,10 @@ import './BuildLinkWithSummaryTooltip.scss';
 import {Link} from "react-router-dom";
 import BuildSummaryTooltip from "../BuildSummaryTooltip/BuildSummaryTooltip";
 import {OverlayTrigger, Tooltip} from "react-bootstrap";
-import {Build} from "../../data/classes/Build";
-import {results2class} from "../../util/Results";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
+import {results2class} from "buildbot-data-js/src/util/Results";
 import {observer} from "mobx-react";
-import {Builder} from "../../data/classes/Builder";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import BadgeRound from "../BadgeRound/BadgeRound";
 
 type BuildLinkWithSummaryTooltipProps = {

@@ -20,13 +20,13 @@ import {useState} from "react";
 import WorkerActionsModal from "../../components/WorkerActionsModal/WorkerActionsModal";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
-import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
+import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {globalSettings} from "../../plugins/GlobalSettings";
-import {Builder} from "../../data/classes/Builder";
-import {Master} from "../../data/classes/Master";
-import {Worker} from "../../data/classes/Worker";
-import {Build} from "../../data/classes/Build";
-import DataCollection from "../../data/DataCollection";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
+import {Master} from "buildbot-data-js/src/data/classes/Master";
+import {Worker} from "buildbot-data-js/src/data/classes/Worker";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
+import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import WorkersTable from "../../components/WorkersTable/WorkersTable";
 
 const isWorkerFiltered = (worker: Worker, showOldWorkers: boolean) => {

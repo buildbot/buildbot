@@ -18,7 +18,7 @@
 import {observer} from "mobx-react";
 import {useState} from "react";
 import {Button, Modal} from "react-bootstrap";
-import {Worker} from "../../data/classes/Worker";
+import {Worker} from "buildbot-data-js/src/data/classes/Worker";
 
 type WorkerActionsModalProps = {
   worker: Worker;

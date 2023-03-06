@@ -17,15 +17,15 @@
 
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
-import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
-import {Builder} from "../../data/classes/Builder";
+import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {Link} from "react-router-dom";
 import {globalSettings} from "../../plugins/GlobalSettings";
-import {Buildrequest} from "../../data/classes/Buildrequest";
-import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
-import {getPropertyValueOrDefault} from "../../util/Properties";
+import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
+import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
+import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import TableHeading from "../../components/TableHeading/TableHeading";
 

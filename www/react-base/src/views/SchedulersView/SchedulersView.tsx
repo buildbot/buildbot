@@ -19,8 +19,8 @@ import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
-import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
-import {Scheduler} from "../../data/classes/Scheduler";
+import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
+import {Scheduler} from "buildbot-data-js/src/data/classes/Scheduler";
 
 const SchedulersView = observer(() => {
   const accessor = useDataAccessor([]);

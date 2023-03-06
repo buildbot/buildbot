@@ -31,22 +31,22 @@ import {
   useDataApiDynamicQuery,
   useDataApiQuery,
   useDataApiSingleElementQuery
-} from "../../data/ReactUtils";
-import {Builder} from "../../data/classes/Builder";
-import {Build} from "../../data/classes/Build";
-import {Worker} from "../../data/classes/Worker";
+} from "buildbot-data-js/src/data/ReactUtils";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
+import {Worker} from "buildbot-data-js/src/data/classes/Worker";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
-import {Buildrequest} from "../../data/classes/Buildrequest";
-import DataCollection from "../../data/DataCollection";
-import {Buildset} from "../../data/classes/Buildset";
-import DataPropertiesCollection from "../../data/DataPropertiesCollection";
+import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
+import DataCollection from "buildbot-data-js/src/data/DataCollection";
+import {Buildset} from "buildbot-data-js/src/data/classes/Buildset";
+import DataPropertiesCollection from "buildbot-data-js/src/data/DataPropertiesCollection";
 import {computed} from "mobx";
-import {Change} from "../../data/classes/Change";
-import {useFavIcon} from "../../util/FavIcon";
-import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "../../util/Properties";
-import {getBuildOrStepResults, results2class, UNKNOWN} from "../../util/Results";
-import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
+import {Change} from "buildbot-data-js/src/data/classes/Change";
+import {useFavIcon} from "buildbot-data-js/src/util/FavIcon";
+import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "buildbot-data-js/src/util/Properties";
+import {getBuildOrStepResults, results2class, UNKNOWN} from "buildbot-data-js/src/util/Results";
+import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import RawData from "../../components/RawData/RawData";
 import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";

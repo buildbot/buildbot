@@ -21,14 +21,14 @@ import {
   useDataApiDynamicQuery,
   useDataApiQuery,
   useDataApiSingleElementQuery
-} from "../../data/ReactUtils";
+} from "buildbot-data-js/src/data/ReactUtils";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {globalSettings} from "../../plugins/GlobalSettings";
-import {Change} from "../../data/classes/Change";
+import {Change} from "buildbot-data-js/src/data/classes/Change";
 import {useParams} from "react-router-dom";
 import {useState} from "react";
-import DataCollection from "../../data/DataCollection";
-import {Builder} from "../../data/classes/Builder";
+import DataCollection from "buildbot-data-js/src/data/DataCollection";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import ChangeDetails from "../../components/ChangeDetails/ChangeDetails";
 import BuildsTable from "../../components/BuildsTable/BuildsTable";
 

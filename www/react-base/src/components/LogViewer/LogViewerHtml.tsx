@@ -15,10 +15,10 @@
   Copyright Buildbot Team Members
 */
 
-import {Log} from "../../data/classes/Log";
+import {Log} from "buildbot-data-js/src/data/classes/Log";
 import {useEffect, useRef, useState} from 'react';
-import {useDataAccessor} from "../../data/ReactUtils";
-import {CancellablePromise} from "../../util/CancellablePromise";
+import {useDataAccessor} from "buildbot-data-js/src/data/ReactUtils";
+import {CancellablePromise} from "buildbot-data-js/src/util/CancellablePromise";
 import {Card} from "react-bootstrap";
 
 export type LogViewerHtmlProps = {

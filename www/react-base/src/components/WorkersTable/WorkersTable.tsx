@@ -18,12 +18,12 @@
 import {Table} from "react-bootstrap";
 import {FaPause, FaRegSmile, FaTimes} from "react-icons/fa";
 import {FaStop} from "react-icons/fa";
-import {Builder} from "../../data/classes/Builder";
-import {Master} from "../../data/classes/Master";
-import {Worker} from "../../data/classes/Worker";
-import {Build} from "../../data/classes/Build";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
+import {Master} from "buildbot-data-js/src/data/classes/Master";
+import {Worker} from "buildbot-data-js/src/data/classes/Worker";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Link} from "react-router-dom";
-import DataCollection from "../../data/DataCollection";
+import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {observer} from "mobx-react";
