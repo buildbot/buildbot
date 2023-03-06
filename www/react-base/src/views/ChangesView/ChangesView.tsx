@@ -42,7 +42,6 @@ globalMenuSettings.addGroup({
   name: 'changes',
   parentName: 'builds',
   caption: 'Last Changes',
-  icon: null,
   order: null,
   route: '/changes',
 });

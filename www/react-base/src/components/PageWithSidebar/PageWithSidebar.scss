@@ -2,7 +2,7 @@
 $gl-sidebar-transition-time: 0.2s;
 $gl-sidebar-small-threshold: 600px;
 $gl-sidebar-width: 600px;
-.fa-45{
+.bb-rotate-45{
   transform: rotate(45deg);
   -webkit-transform: rotate(45deg);
 }
@@ -142,12 +142,13 @@ $gl-sidebar-width: 600px;
       li.sidebar-list {
         height: 40px;
         a, button {
+          padding: 0;
           text-indent: 25px;
           font-size: 15px;
           color: #b2bfdc;
           line-height: 40px;
-          .fa {
-            margin-left: -34px;
+          >svg {
+            margin-left: -1em;
           }
         }
         a:hover,

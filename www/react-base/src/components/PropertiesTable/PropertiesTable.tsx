@@ -19,6 +19,7 @@ import './PropertiesTable.scss';
 import {Table} from "react-bootstrap";
 import CopyToClipboard from 'react-copy-to-clipboard';
 import {observer} from "mobx-react";
+import {FaCopy} from "react-icons/fa";
 
 type PropertiesTableProps = {
   properties: Map<string, any>;
@@ -34,7 +35,7 @@ const PropertiesTable = observer(({properties}: PropertiesTableProps) => {
         <td className="text-left">
           <pre className="bb-properties-value">{valueString}</pre>
           <CopyToClipboard text={valueString}>
-            <i className="bb-properties-copy fa fa-copy clickable"></i>
+            <FaCopy className="bb-properties-copy clickable"></FaCopy>
           </CopyToClipboard>
         </td>
         <td className="text-right">{source}</td>

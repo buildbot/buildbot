@@ -17,6 +17,7 @@
 
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
+import {FaSlidersH} from "react-icons/fa";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {
@@ -135,7 +136,7 @@ const SettingsView = observer(() => {
 globalMenuSettings.addGroup({
   name: 'settings',
   caption: 'Settings',
-  icon: 'sliders',
+  icon: <FaSlidersH/>,
   order: 99,
   route: '/settings',
   parentName: null,

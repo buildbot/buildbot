@@ -17,6 +17,7 @@
 
 import './HomeView.scss';
 import {observer} from "mobx-react";
+import {FaHome} from "react-icons/fa";
 import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
 import {useContext} from "react";
 import {Config, ConfigContext} from "../../contexts/Config";
@@ -160,7 +161,7 @@ const HomeView = observer(() => {
 globalMenuSettings.addGroup({
   name: 'home',
   caption: 'Home',
-  icon: 'home',
+  icon: <FaHome/>,
   order: 1,
   route: '/',
   parentName: null,

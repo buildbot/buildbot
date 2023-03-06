@@ -66,7 +66,6 @@ globalMenuSettings.addGroup({
   name: 'schedulers',
   parentName: 'builds',
   caption: 'Schedulers',
-  icon: null,
   order: null,
   route: '/schedulers',
 });

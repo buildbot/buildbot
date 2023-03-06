@@ -15,6 +15,8 @@
   Copyright Buildbot Team Members
 */
 
+import {FaChevronCircleRight, FaChevronCircleDown} from "react-icons/fa";
+
 type ArrowExpanderProps = {
   isExpanded: boolean;
   setIsExpanded?: (expanded: boolean) => void;
@@ -23,11 +25,9 @@ type ArrowExpanderProps = {
 const ArrowExpander = ({isExpanded, setIsExpanded}: ArrowExpanderProps) => {
   const callback = setIsExpanded === undefined ? undefined : () => setIsExpanded(!isExpanded);
 
-  return (
-    <i onClick={callback}
-       className={"fa fa-chevron-circle-right rotate clickable" + (isExpanded ? " fa-rotate-90" : "")}>
-    </i>
-  );
+  return isExpanded
+    ? <FaChevronCircleDown onClick={callback} className={"rotate clickable"}/>
+    : <FaChevronCircleRight onClick={callback} className={"rotate clickable"}/>;
 }
 
 export default ArrowExpander;

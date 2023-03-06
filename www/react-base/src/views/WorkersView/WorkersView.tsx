@@ -110,7 +110,6 @@ globalMenuSettings.addGroup({
   name: 'workers',
   parentName: 'builds',
   caption: 'Workers',
-  icon: null,
   order: null,
   route: '/workers',
 });

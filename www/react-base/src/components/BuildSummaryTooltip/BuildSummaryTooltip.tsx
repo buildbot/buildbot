@@ -110,7 +110,7 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
         return (
           <li key={index} className="list-group-item">
             <div className="text-left">
-              <span className="fa-lg">⋮</span>
+              <span className="bb-buildsummary-tooltip-collapsed-entries">⋮</span>
             </div>
           </li>
         )

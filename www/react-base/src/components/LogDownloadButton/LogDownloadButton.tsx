@@ -17,6 +17,7 @@
 
 import './LogDownloadButton.scss';
 import {useContext} from "react";
+import {FaDownload} from "react-icons/fa";
 import {Log} from "../../data/classes/Log";
 import {DataClientContext} from "../../data/ReactUtils";
 
@@ -31,7 +32,7 @@ const LogDownloadButton = ({log}: LogDownloadButtonProps) => {
   return (
     <a href={`${apiRootUrl}/logs/${log.id}/raw`} title="download log"
        className="btn btn-default btn-xs bb-log-download-button">
-      <i className="fa fa-download"></i>&nbsp;
+      <FaDownload/>&nbsp;
       Download
     </a>
   );
