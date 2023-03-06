@@ -409,7 +409,10 @@ def asyncSleep(delay, reactor=None):
 
 def check_functional_environment(config):
     try:
-        locale.getdefaultlocale()
+        if sys.version_info >= (3, 11, 0):
+            locale.getencoding()
+        else:
+            locale.getdefaultlocale()
     except (KeyError, ValueError) as e:
         config.error("\n".join([
             "Your environment has incorrect locale settings. This means python cannot handle "
