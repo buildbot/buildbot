@@ -17,7 +17,7 @@ import DataPropertiesCollection from "./DataPropertiesCollection";
 export const DataClientContext =
   createContext(new DataClient(undefined as any, undefined as any));
 
-export function useDataAccessor<T>(dependency: (T|null)[]) {
+export function useDataAccessor<T>(dependency: (T|null)[]): IDataAccessor {
   const dataClient = useContext(DataClientContext);
 
   const storedDependency = useRef<(T|null)[]>([]);
