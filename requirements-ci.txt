@@ -22,7 +22,7 @@ appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==2.11.7
 attrs==22.1.0
-Automat==20.2.0
+Automat==22.10.0
 Babel==2.10.3
 backports.functools-lru-cache==1.6.4
 boto==2.49.0
@@ -41,7 +41,7 @@ coverage==6.4.3
 cryptography==37.0.4
 decorator==5.1.1
 dicttoxml==1.7.4
-dill==0.3.5.1
+dill==0.3.6
 docker==5.0.3
 docutils==0.17.1  # pyup: ignore (sphinx-rtd-theme 1.0.0 requires docutils<0.18)
 extras==1.0.0
@@ -49,7 +49,7 @@ fixtures==4.0.1
 funcsigs==1.0.2
 future==0.18.2
 graphql-core==3.2.1
-greenlet==1.1.2
+greenlet==2.0.2
 hvac==0.11.2
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
@@ -96,7 +96,6 @@ pytz==2022.2.1
 PyYAML==6.0
 requests==2.28.1
 responses==0.21.0
-ruamel.yaml.clib==0.2.6
 ruamel.yaml==0.17.21
 s3transfer==0.6.0
 scandir==1.10.0

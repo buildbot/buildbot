@@ -16,6 +16,7 @@
 import datetime
 import locale
 import os
+import sys
 
 import mock
 
@@ -381,7 +382,10 @@ class FunctionalEnvironment(unittest.TestCase):
     def test_broken_locale(self):
         def err():
             raise KeyError
-        self.patch(locale, 'getdefaultlocale', err)
+        if sys.version_info >= (3, 11, 0):
+            self.patch(locale, 'getencoding', err)
+        else:
+            self.patch(locale, 'getdefaultlocale', err)
         config = mock.Mock()
         util.check_functional_environment(config)
         config.error.assert_called_with(mock.ANY)

@@ -74,6 +74,7 @@ assertraisesregexp
 assertregex
 assertregexpmatches
 assertresults
+astroid
 async
 asynclrucache
 asyncio

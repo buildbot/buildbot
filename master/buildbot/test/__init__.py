@@ -87,10 +87,6 @@ warnings.filterwarnings('ignore', r"The value of convert_charrefs will become Tr
 # Twisted 18.4+ adds a deprecation warning and still use the deprecated API in its own code!
 warnings.filterwarnings('ignore', ".*getClientIP was deprecated.*", DeprecationWarning)
 
-# Python 3.7 adds a deprecation warning formatargspec.
-# The signature api that replaces it is not available in 2.7
-warnings.filterwarnings('ignore', ".*`formatargspec` is deprecated.*", DeprecationWarning)
-
 # Python 3.7 adds a deprecation importing ABCs from collection.
 # Such imports are made in dependencies (e.g moto, werzeug, pyparsing)
 warnings.filterwarnings('ignore', ".*Using or importing the ABCs from 'collections'.*",
@@ -142,4 +138,8 @@ warnings.filterwarnings('ignore', ".*stream argument is deprecated. Use stream p
 # Botocore imports deprecated urllib3.contrib.pyopenssl for backwards compatibility that we don't
 # use. See https://github.com/boto/botocore/issues/2744
 warnings.filterwarnings('ignore', ".*'urllib3.contrib.pyopenssl' module is deprecated",
+                        category=DeprecationWarning)
+
+# pipes is still used in astroid and buildbot_worker in default installation
+warnings.filterwarnings('ignore', "'pipes' is deprecated and slated for removal in Python 3.13",
                         category=DeprecationWarning)

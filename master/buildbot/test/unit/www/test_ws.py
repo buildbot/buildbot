@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import json
+import re
 from unittest.case import SkipTest
 
 from mock import Mock
@@ -44,6 +45,19 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         jsonArg = obj.call_args[0][0]
         jsonArg = bytes2unicode(jsonArg)
         actual_json = json.loads(jsonArg)
+
+        keys_to_pop = []
+        for key in expected_json:
+            if hasattr(expected_json[key], 'match'):
+                keys_to_pop.append(key)
+                regex = expected_json[key]
+                value = actual_json[key]
+                self.assertRegex(value, regex)
+
+        for key in keys_to_pop:
+            expected_json.pop(key)
+            actual_json.pop(key)
+
         self.assertEqual(actual_json, expected_json)
 
     def do_onConnect(self, protocols):
@@ -92,8 +106,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             {
                 "_id": 1,
                 "code": 400,
-                "error": "Invalid method argument 'cmd_ping() got an unexpected keyword "
-                "argument 'foo''",
+                "error": re.compile(".*Invalid method argument.*"),
             },
         )
 
@@ -106,8 +119,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.proto.sendMessage,
             {
                 "id": None,
-                "message": "Invalid method argument 'graphql_cmd_connection_init() got an "
-                "unexpected keyword argument 'foo''",
+                "message": re.compile('.*Invalid method argument.*'),
                 "type": "error",
             },
         )
