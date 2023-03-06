@@ -43,7 +43,7 @@ PHONE_HOME_URL = "https://events.buildbot.net/events/phone_home"
 
 def linux_distribution():
     os_release = "/etc/os-release"
-    meta_data = {'ID': "unknown_linux", 'VERSION_ID': "unknown_version"}
+    meta_data = {}
     if os.path.exists(os_release):
         with open("/etc/os-release", encoding='utf-8') as f:
             for line in f:
@@ -52,7 +52,15 @@ def linux_distribution():
                     meta_data[k] = v.strip('""')
                 except Exception:
                     pass
-    return meta_data['ID'], meta_data['VERSION_ID']
+
+    linux_id = meta_data.get("ID", "unknown_linux")
+
+    linux_version = "unknown_version"
+    # Pre-release versions of Debian contain VERSION_CODENAME but not VERSION_ID
+    for version_key in ["VERSION_ID", "VERSION_CODENAME"]:
+        linux_version = meta_data.get(version_key, linux_version)
+
+    return linux_id, linux_version
 
 
 def get_distro():
