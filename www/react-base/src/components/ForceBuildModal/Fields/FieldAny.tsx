@@ -26,7 +26,7 @@ import {
   ForceSchedulerFieldString,
   ForceSchedulerFieldText,
   ForceSchedulerFieldUserName
-} from "../../../data/classes/Forcescheduler";
+} from "buildbot-data-js/src/data/classes/Forcescheduler";
 import FieldNested from "./FieldNested";
 import FieldString from "./FieldString";
 import FieldText from "./FieldText";

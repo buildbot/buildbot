@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {ForceSchedulerFieldChoiceString} from "../../../data/classes/Forcescheduler";
+import {ForceSchedulerFieldChoiceString} from "buildbot-data-js/src/data/classes/Forcescheduler";
 import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
 import {observer} from "mobx-react";
 import FieldBase from "./FieldBase";
