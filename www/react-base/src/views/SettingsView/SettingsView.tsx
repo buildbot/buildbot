@@ -18,8 +18,6 @@
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
 import {FaSlidersH} from "react-icons/fa";
-import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {
   GlobalSettings,
   globalSettings,
@@ -133,19 +131,21 @@ const SettingsView = observer(() => {
   );
 });
 
-globalMenuSettings.addGroup({
-  name: 'settings',
-  caption: 'Settings',
-  icon: <FaSlidersH/>,
-  order: 99,
-  route: '/settings',
-  parentName: null,
-});
+buildbotSetupPlugin((reg) => {
+  reg.registerMenuGroup({
+    name: 'settings',
+    caption: 'Settings',
+    icon: <FaSlidersH/>,
+    order: 99,
+    route: '/settings',
+    parentName: null,
+  });
 
-globalRoutes.addRoute({
-  route: "/settings",
-  group: null,
-  element: () => <SettingsView/>,
+  reg.registerRoute({
+    route: "/settings",
+    group: null,
+    element: () => <SettingsView/>,
+  });
 });
 
 export default SettingsView;

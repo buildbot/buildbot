@@ -25,7 +25,6 @@ import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "buildbot
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
 import {durationFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
 import {Log} from "buildbot-data-js/src/data/classes/Log";
-import {globalSettings} from "../../plugins/GlobalSettings";
 import {Step} from "buildbot-data-js/src/data/classes/Step";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
@@ -95,8 +94,8 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
   const config = useContext(ConfigContext);
   const now = useCurrentTime();
 
-  const logsToExpand = globalSettings.getStringSetting("LogPreview.expand_logs");
-  const showUrls = globalSettings.getBooleanSetting("Build.show_urls");
+  const logsToExpand = buildbotGetSettings().getStringSetting("LogPreview.expand_logs");
+  const showUrls = buildbotGetSettings().getBooleanSetting("Build.show_urls");
 
   const baseUrls = config.buildbotURLs || [config.buildbotURL];
   const stepUrlAnalyzer = useStepUrlAnalyzer(baseUrls);

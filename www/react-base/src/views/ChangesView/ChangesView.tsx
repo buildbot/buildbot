@@ -17,9 +17,6 @@
 
 import {observer} from "mobx-react";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
-import {globalSettings} from "../../plugins/GlobalSettings";
 import {Change} from "buildbot-data-js/src/data/classes/Change";
 import ChangesTable from "../../components/ChangesTable/ChangesTable";
 
@@ -27,7 +24,7 @@ import ChangesTable from "../../components/ChangesTable/ChangesTable";
 const ChangesView = observer(() => {
   const accessor = useDataAccessor([]);
 
-  const changesFetchLimit = globalSettings.getIntegerSetting("Changes.changesFetchLimit");
+  const changesFetchLimit = buildbotGetSettings().getIntegerSetting("Changes.changesFetchLimit");
   const changesQuery = useDataApiQuery(
     () => Change.getAll(accessor, {query: {limit: changesFetchLimit, order: '-changeid'}}));
 
@@ -38,28 +35,31 @@ const ChangesView = observer(() => {
   );
 });
 
-globalMenuSettings.addGroup({
-  name: 'changes',
-  parentName: 'builds',
-  caption: 'Last Changes',
-  order: null,
-  route: '/changes',
-});
+buildbotSetupPlugin((reg) => {
+  reg.registerMenuGroup({
+    name: 'changes',
+    parentName: 'builds',
+    caption: 'Last Changes',
+    order: null,
+    route: '/changes',
+  });
 
-globalRoutes.addRoute({
-  route: "changes",
-  group: "builds",
-  element: () => <ChangesView/>,
-});
+  reg.registerRoute({
+    route: "changes",
+    group: "builds",
+    element: () => <ChangesView/>,
+  });
 
-globalSettings.addGroup({
-  name: 'Changes',
-  caption: 'Changes page related settings',
-  items: [{
-    type: 'integer',
-    name: 'changesFetchLimit',
-    caption: 'Maximum number of changes to fetch',
-    defaultValue: 50
-  }]});
+  reg.registerSettingGroup({
+    name: 'Changes',
+    caption: 'Changes page related settings',
+    items: [{
+      type: 'integer',
+      name: 'changesFetchLimit',
+      caption: 'Maximum number of changes to fetch',
+      defaultValue: 50
+    }]
+  });
+});
 
 export default ChangesView;

@@ -22,8 +22,6 @@ import {
   useDataApiQuery,
   useDataApiSingleElementQuery
 } from "buildbot-data-js/src/data/ReactUtils";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
-import {globalSettings} from "../../plugins/GlobalSettings";
 import {Change} from "buildbot-data-js/src/data/classes/Change";
 import {useParams} from "react-router-dom";
 import {useState} from "react";
@@ -37,7 +35,7 @@ const ChangeBuildsView = observer(() => {
   const changeid = Number.parseInt(useParams<"changeid">().changeid ?? "");
 
   const accessor = useDataAccessor([changeid]);
-  const buildsFetchLimit = globalSettings.getIntegerSetting('ChangeBuilds.buildsFetchLimit');
+  const buildsFetchLimit = buildbotGetSettings().getIntegerSetting('ChangeBuilds.buildsFetchLimit');
 
   const changeQuery = useDataApiQuery(() => Change.getAll(accessor, {id: changeid.toString()}));
   const change = changeQuery.getNthOrNull(0);
@@ -76,20 +74,23 @@ const ChangeBuildsView = observer(() => {
   );
 });
 
-globalRoutes.addRoute({
-  route: "changes/:changeid",
-  group: null,
-  element: () => <ChangeBuildsView/>,
-});
+buildbotSetupPlugin((reg) => {
+  reg.registerRoute({
+    route: "changes/:changeid",
+    group: null,
+    element: () => <ChangeBuildsView/>,
+  });
 
-globalSettings.addGroup({
-  name:'ChangeBuilds',
-  caption: 'ChangeBuilds page related settings',
-  items:[{
-    type: 'integer',
-    name: 'buildsFetchLimit',
-    caption: 'Maximum number of builds to fetch for the selected change',
-    defaultValue: 10
-  }]});
+  reg.registerSettingGroup({
+    name:'ChangeBuilds',
+    caption: 'ChangeBuilds page related settings',
+    items:[{
+      type: 'integer',
+      name: 'buildsFetchLimit',
+      caption: 'Maximum number of builds to fetch for the selected change',
+      defaultValue: 10
+    }]
+  });
+});
 
 export default ChangeBuildsView;

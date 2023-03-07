@@ -22,9 +22,7 @@ import {FaInfoCircle} from "react-icons/fa";
 import {DataClientContext} from "buildbot-data-js/src/data/ReactUtils";
 import {useContext, useState} from "react";
 import {ConfigContext} from "../../contexts/Config";
-import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {Link} from "react-router-dom";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {
   EndpointDescription,
   EndpointFieldSpec,
@@ -123,19 +121,22 @@ const AboutView = observer(() => {
   )
 });
 
-globalMenuSettings.addGroup({
-  name: 'about',
-  caption: 'About',
-  icon: <FaInfoCircle/>,
-  order: 99,
-  route: '/about',
-  parentName: null,
+buildbotSetupPlugin((reg) => {
+  reg.registerMenuGroup({
+    name: 'about',
+    caption: 'About',
+    icon: <FaInfoCircle/>,
+    order: 99,
+    route: '/about',
+    parentName: null,
+  });
+
+  reg.registerRoute({
+    route: "/about",
+    group: null,
+    element: () => <AboutView/>,
+  });
 });
 
-globalRoutes.addRoute({
-  route: "/about",
-  group: null,
-  element: () => <AboutView/>,
-});
 
 export default AboutView;

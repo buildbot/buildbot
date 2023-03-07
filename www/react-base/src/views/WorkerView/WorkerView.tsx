@@ -16,7 +16,6 @@
 */
 
 import {observer} from "mobx-react";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {Master} from "buildbot-data-js/src/data/classes/Master";
@@ -52,11 +51,12 @@ const WorkerView = observer(() => {
   );
 });
 
-globalRoutes.addRoute({
-  route: "workers/:workerid",
-  group: "workers",
-  element: () => <WorkerView/>,
+buildbotSetupPlugin((reg) => {
+  reg.registerRoute({
+    route: "workers/:workerid",
+    group: "workers",
+    element: () => <WorkerView/>,
+  });
 });
-
 
 export default WorkerView;

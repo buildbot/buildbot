@@ -22,8 +22,6 @@ import {FaCogs, FaQuestionCircle} from "react-icons/fa";
 import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {Worker} from "buildbot-data-js/src/data/classes/Worker";
-import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {Link, URLSearchParamsInit, useSearchParams} from "react-router-dom";
 import {Master} from "buildbot-data-js/src/data/classes/Master";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
@@ -33,7 +31,6 @@ import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
-import {globalSettings} from "../../plugins/GlobalSettings";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import {Badge, OverlayTrigger, Popover, Table} from "react-bootstrap";
 
@@ -163,9 +160,9 @@ const BuildersView = observer(() => {
     {caption: "Builders", route: "/builders"}
   ]);
 
-  const showOldBuilders = globalSettings.getBooleanSetting("Builders.show_old_builders");
-  const showWorkerName = globalSettings.getBooleanSetting("Builders.show_workers_name");
-  const buildFetchLimit = globalSettings.getIntegerSetting("Builders.buildFetchLimit");
+  const showOldBuilders = buildbotGetSettings().getBooleanSetting("Builders.show_old_builders");
+  const showWorkerName = buildbotGetSettings().getBooleanSetting("Builders.show_workers_name");
+  const buildFetchLimit = buildbotGetSettings().getIntegerSetting("Builders.buildFetchLimit");
   const perBuilderBuildFetchLimit = 15;
 
   // as there is usually lots of builders, its better to get the overall
@@ -372,8 +369,9 @@ const BuildersView = observer(() => {
             <input type="checkbox" name="Show old builders"
                    checked={showOldBuilders}
                    onChange={event => {
-                     globalSettings.setSetting("Builders.show_old_builders", event.target.checked);
-                     globalSettings.save();
+                     buildbotGetSettings().setSetting("Builders.show_old_builders",
+                       event.target.checked);
+                     buildbotGetSettings().save();
                    }}/>
             {' '}Show old builders
           </label>
@@ -383,33 +381,34 @@ const BuildersView = observer(() => {
   );
 });
 
-globalMenuSettings.addGroup({
-  name: 'builds',
-  parentName: null,
-  caption: 'Builds',
-  icon: <FaCogs/>,
-  order: 10,
-  route: null,
-});
+buildbotSetupPlugin((reg) => {
+  reg.registerMenuGroup({
+    name: 'builds',
+    parentName: null,
+    caption: 'Builds',
+    icon: <FaCogs/>,
+    order: 10,
+    route: null,
+  });
 
-globalMenuSettings.addGroup({
-  name: 'builders',
-  parentName: 'builds',
-  caption: 'Builders',
-  order: null,
-  route: '/builders',
-});
+  reg.registerMenuGroup({
+    name: 'builders',
+    parentName: 'builds',
+    caption: 'Builders',
+    order: null,
+    route: '/builders',
+  });
 
-globalRoutes.addRoute({
-  route: "builders",
-  group: "builders",
-  element: () => <BuildersView/>,
-});
+  reg.registerRoute({
+    route: "builders",
+    group: "builders",
+    element: () => <BuildersView/>,
+  });
 
-globalSettings.addGroup({
-  name: 'Builders',
-  caption: 'Builders page related settings',
-  items: [{
+  reg.registerSettingGroup({
+    name: 'Builders',
+    caption: 'Builders page related settings',
+    items: [{
       type: 'boolean',
       name: 'show_old_builders',
       caption: 'Show old builders',
@@ -431,5 +430,7 @@ globalSettings.addGroup({
       defaultValue: 100
     }
   ]});
+});
+
 
 export default BuildersView;
