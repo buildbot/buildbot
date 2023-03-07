@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import "./plugins/GlobalSetup";
+import "buildbot-plugin-support";
 import App from './App';
 import {DataClientContext} from "buildbot-data-js/src/data/ReactUtils";
 import DataClient from "buildbot-data-js/src/data/DataClient";

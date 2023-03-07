@@ -2651,6 +2651,10 @@ buffer@^5.5.0:
   version "0.0.0"
   uid ""
 
+"buildbot-plugin-support@link:../plugin_support":
+  version "0.0.0"
+  uid ""
+
 cache-base@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/cache-base/-/cache-base-1.0.1.tgz#0a7f46416831c8b662ee36fe4e7c59d76f666ab2"
