@@ -1244,6 +1244,30 @@ class TestShellMixin(TestBuildStepMixin,
         yield self.run_step()
 
     @defer.inlineCallbacks
+    def test_step_env_default(self):
+        env = {'ENV': 'TRUE'}
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], env=env))
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'], env=env)
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        yield self.run_step()
+
+    @defer.inlineCallbacks
+    def test_step_env_overridden(self):
+        env = {'ENV': 'TRUE'}
+        env_override = {'OVERRIDE': 'TRUE'}
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], env=env,
+                                           make_cmd_kwargs={'env': env_override}))
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'], env=env_override)
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        yield self.run_step()
+
+    @defer.inlineCallbacks
     def test_extra_logfile(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'],
                                           logfiles={'logname': 'logpath.log'}))
