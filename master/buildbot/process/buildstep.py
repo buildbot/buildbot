@@ -915,8 +915,10 @@ class ShellMixin:
 
         # merge the builder's environment with that supplied here
         builderEnv = self.build.builder.config.env
-        kwargs['env'] = yield self.build.render(builderEnv)
-        kwargs['env'].update(self.env)
+        kwargs['env'] = {
+            **(yield self.build.render(builderEnv)),
+            **kwargs['env'],
+        }
         kwargs['stdioLogName'] = stdioLogName
 
         # default the workdir appropriately
