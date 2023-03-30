@@ -21,11 +21,11 @@ import {
   useDataAccessor,
   useDataApiQuery,
   useDataApiSinglePropertiesQuery
-} from "../../data/ReactUtils";
-import {Builder} from "../../data/classes/Builder";
+} from "buildbot-data-js/src/data/ReactUtils";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
-import {Buildrequest} from "../../data/classes/Buildrequest";
+import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
 import {Tab, Tabs} from "react-bootstrap";
 import RawData from "../../components/RawData/RawData";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
@@ -34,10 +34,10 @@ import {StoresContext} from "../../contexts/Stores";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import AlertNotification from "../../components/AlertNotification/AlertNotification";
-import {Build} from "../../data/classes/Build";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
 import BuildSummary from "../../components/BuildSummary/BuildSummary";
 import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
-import {Buildset} from "../../data/classes/Buildset";
+import {Buildset} from "buildbot-data-js/src/data/classes/Buildset";
 import TableHeading from "../../components/TableHeading/TableHeading";
 
 const buildTopbarActions = (builder: Builder | null,

@@ -18,8 +18,8 @@
 import './LogDownloadButton.scss';
 import {useContext} from "react";
 import {FaDownload} from "react-icons/fa";
-import {Log} from "../../data/classes/Log";
-import {DataClientContext} from "../../data/ReactUtils";
+import {Log} from "buildbot-data-js/src/data/classes/Log";
+import {DataClientContext} from "buildbot-data-js/src/data/ReactUtils";
 
 export type LogDownloadButtonProps = {
   log: Log;

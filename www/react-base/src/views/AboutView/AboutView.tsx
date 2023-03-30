@@ -19,7 +19,7 @@ import "./AboutView.scss";
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
 import {FaInfoCircle} from "react-icons/fa";
-import {DataClientContext} from "../../data/ReactUtils";
+import {DataClientContext} from "buildbot-data-js/src/data/ReactUtils";
 import {useContext, useState} from "react";
 import {ConfigContext} from "../../contexts/Config";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
@@ -29,7 +29,7 @@ import {
   EndpointDescription,
   EndpointFieldSpec,
   useApplicationSpec
-} from "../../data/ApplicationSpec";
+} from "buildbot-data-js/src/data/ApplicationSpec";
 import RawData from "../../components/RawData/RawData";
 
 type EndpointListItemProps = {

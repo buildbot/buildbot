@@ -22,9 +22,9 @@ import {useContext} from "react";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import {useNavigate, useParams} from "react-router-dom";
-import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
-import {Builder} from "../../data/classes/Builder";
-import {Build} from "../../data/classes/Build";
+import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
 import LogViewer from "../../components/LogViewer/LogViewer";
 
 const LogView = observer(() => {

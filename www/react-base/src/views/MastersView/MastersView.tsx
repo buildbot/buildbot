@@ -18,18 +18,18 @@
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
 import {FaCheck, FaTimes} from "react-icons/fa";
-import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
+import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
-import {Worker} from "../../data/classes/Worker";
-import {Master} from "../../data/classes/Master";
+import {Worker} from "buildbot-data-js/src/data/classes/Worker";
+import {Master} from "buildbot-data-js/src/data/classes/Master";
 import {computed} from "mobx";
-import {Build} from "../../data/classes/Build";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Link} from "react-router-dom";
-import {durationFromNowFormat, useCurrentTime} from "../../util/Moment";
+import {durationFromNowFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
 import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
-import {Builder} from "../../data/classes/Builder";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
 
 

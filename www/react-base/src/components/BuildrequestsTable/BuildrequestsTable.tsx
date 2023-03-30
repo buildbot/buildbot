@@ -19,11 +19,11 @@ import {Table} from "react-bootstrap";
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import {observer} from "mobx-react";
-import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
-import DataCollection from "../../data/DataCollection";
+import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
+import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import {Link} from "react-router-dom";
-import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "../../util/Properties";
-import {Buildrequest} from "../../data/classes/Buildrequest";
+import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
+import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
 import BadgeRound from "../BadgeRound/BadgeRound";
 
 type BuildRequestsTableProps = {

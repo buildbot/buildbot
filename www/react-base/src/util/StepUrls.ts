@@ -16,7 +16,7 @@
 */
 
 import {useMemo} from "react";
-import {StepUrl} from "../data/classes/Step";
+import {StepUrl} from "buildbot-data-js/src/data/classes/Step";
 
 export type BuildInfoByUrls = {
   builderid: string;

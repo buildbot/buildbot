@@ -17,11 +17,11 @@
 
 import {observer} from "mobx-react";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
-import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
-import {Builder} from "../../data/classes/Builder";
-import {Master} from "../../data/classes/Master";
-import {Worker} from "../../data/classes/Worker";
-import {Build} from "../../data/classes/Build";
+import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
+import {Master} from "buildbot-data-js/src/data/classes/Master";
+import {Worker} from "buildbot-data-js/src/data/classes/Worker";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {useParams} from "react-router-dom";
 import WorkersTable from "../../components/WorkersTable/WorkersTable";
 import BuildsTable from "../../components/BuildsTable/BuildsTable";

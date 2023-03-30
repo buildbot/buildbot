@@ -18,12 +18,12 @@
 import './BuildsTable.scss';
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
-import {Builder} from "../../data/classes/Builder";
-import {Build} from "../../data/classes/Build";
-import {dateFormat, durationFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
-import DataCollection from "../../data/DataCollection";
+import {Builder} from "buildbot-data-js/src/data/classes/Builder";
+import {Build} from "buildbot-data-js/src/data/classes/Build";
+import {dateFormat, durationFormat, durationFromNowFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
+import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import {Link} from "react-router-dom";
-import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "../../util/Properties";
+import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
 import BuildLinkWithSummaryTooltip
   from "../BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import TableHeading from "../TableHeading/TableHeading";

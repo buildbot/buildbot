@@ -16,11 +16,11 @@
 */
 
 import {observer} from "mobx-react";
-import {useDataAccessor, useDataApiQuery} from "../../data/ReactUtils";
+import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {globalSettings} from "../../plugins/GlobalSettings";
-import {Change} from "../../data/classes/Change";
+import {Change} from "buildbot-data-js/src/data/classes/Change";
 import ChangesTable from "../../components/ChangesTable/ChangesTable";
 
 
