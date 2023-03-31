@@ -18,6 +18,7 @@
 import "buildbot-plugin-support";
 import "./styles/colors.scss";
 
+import "./components/ArrowExpander/ArrowExpander";
 import "./components/BadgeRound/BadgeRound";
 import "./components/BadgeStatus/BadgeStatus";
 import "./components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
