@@ -21,9 +21,9 @@ import {
   FaCogs, FaSignInAlt, FaSignOutAlt, FaUser,
   FaGithub, FaGitlab, FaBitbucket, FaGoogle, FaFacebook, FaLinkedin, FaMicrosoft
 } from "react-icons/fa";
-import {ConfigContext} from "../../contexts/Config";
 import {useLocation} from "react-router-dom";
 import {Nav, NavDropdown} from "react-bootstrap";
+import {ConfigContext} from "buildbot-ui/src/contexts/Config";
 
 function getAuthIcon(faIcon: string) {
   switch (faIcon) {

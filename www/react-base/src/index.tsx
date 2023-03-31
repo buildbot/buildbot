@@ -10,7 +10,7 @@ import RestClient, {getRestUrl} from "buildbot-data-js/src/data/RestClient";
 import {getWebSocketUrl, WebSocketClient} from "buildbot-data-js/src/data/WebSocketClient";
 import {TimeContext} from "buildbot-ui/src/contexts/Time";
 import TimeStore from "buildbot-ui/src/stores/TimeStore";
-import {Config, ConfigContext} from "./contexts/Config";
+import {Config, ConfigContext} from "buildbot-ui/src/contexts/Config";
 import {HashRouter} from "react-router-dom";
 import SidebarStore from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';

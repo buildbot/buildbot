@@ -16,8 +16,8 @@
 */
 
 import {action, makeObservable, observable} from "mobx";
+import {Config} from "buildbot-ui/src/contexts/Config";
 import {ISettings} from "../../../plugin_support";
-import {Config} from "../contexts/Config";
 
 export type SettingValue = string | number | boolean;
 export type SettingType = "string" | "integer" | "float" | "boolean";

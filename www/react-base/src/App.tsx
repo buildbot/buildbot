@@ -7,8 +7,8 @@ import 'bootstrap';
 import {Routes, Route} from "react-router-dom";
 import {useCurrentTimeSetupTimers} from "buildbot-ui/src/util/Moment";
 
+import {ConfigContext} from "buildbot-ui/src/contexts/Config";
 import PageWithSidebar from "./components/PageWithSidebar/PageWithSidebar";
-import {ConfigContext} from "./contexts/Config";
 import {StoresContext} from "./contexts/Stores";
 import {globalMenuSettings} from "./plugins/GlobalMenuSettings";
 import {globalRoutes} from "./plugins/GlobalRoutes";
