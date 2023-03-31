@@ -5,8 +5,8 @@
   Copyright Buildbot Team Members
 */
 
-import BaseClass from "./BaseClass";
-import IDataDescriptor from "./DataDescriptor";
+import {BaseClass} from "./BaseClass";
+import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
 import {Build, buildDescriptor} from "./Build";

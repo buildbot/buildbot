@@ -24,8 +24,8 @@ export type LogViewerTextLineRendererProps = {
   index: number;
 };
 
-const LogViewerTextLineRenderer = ({manager, logLineDigitCount,
-                                    style, index}: LogViewerTextLineRendererProps) => {
+export const LogViewerTextLineRenderer = ({manager, logLineDigitCount,
+                                           style, index}: LogViewerTextLineRendererProps) => {
   const renderEmptyRowContents = (index: number, style: React.CSSProperties) => {
     return <div key={index} className="bb-logviewer-text-row" style={style}></div>;
   }
@@ -45,5 +45,3 @@ const LogViewerTextLineRenderer = ({manager, logLineDigitCount,
   return manager.getRenderedLineContent(index, style,
     renderRowContents, renderEmptyRowContents);
 }
-
-export default LogViewerTextLineRenderer;

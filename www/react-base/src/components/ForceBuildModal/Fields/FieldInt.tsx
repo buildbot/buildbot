@@ -18,14 +18,14 @@
 import {ForceSchedulerFieldInt} from "buildbot-data-js/src/data/classes/Forcescheduler";
 import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
 import {observer} from "mobx-react";
-import FieldBase from "./FieldBase";
+import {FieldBase} from "./FieldBase";
 
 type FieldIntProps = {
   field: ForceSchedulerFieldInt;
   fieldsState: ForceBuildModalFieldsState;
 }
 
-const FieldInt = observer(({field, fieldsState}: FieldIntProps) => {
+export const FieldInt = observer(({field, fieldsState}: FieldIntProps) => {
   const state = fieldsState.fields.get(field.name)!;
 
   return (
@@ -38,5 +38,3 @@ const FieldInt = observer(({field, fieldsState}: FieldIntProps) => {
     </FieldBase>
   );
 });
-
-export default FieldInt;

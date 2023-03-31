@@ -25,7 +25,7 @@ type WorkerActionsModalProps = {
   onClose: () => void;
 }
 
-const WorkerActionsModal = observer(({worker, onClose}: WorkerActionsModalProps) => {
+export const WorkerActionsModal = observer(({worker, onClose}: WorkerActionsModalProps) => {
 
   const [errors, setErrors] = useState<string|null>(null);
   const [reasonText, setReasonText] = useState<string>("");
@@ -81,5 +81,3 @@ const WorkerActionsModal = observer(({worker, onClose}: WorkerActionsModalProps)
     </Modal>
   )
 });
-
-export default WorkerActionsModal;

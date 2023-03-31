@@ -6,13 +6,13 @@
 */
 
 import {action, makeObservable, observable} from "mobx";
-import DataQuery, {Query} from "./DataQuery";
+import {DataQuery, Query} from "./DataQuery";
 import {IDataAccessor} from "./DataAccessor";
 import {WebSocketClient} from "./WebSocketClient";
 import {endpointPath, socketPath, socketPathRE} from "./DataUtils";
 import {IDataCollection} from "./DataCollection";
 
-export default class DataPropertiesCollection implements IDataCollection {
+export class DataPropertiesCollection implements IDataCollection {
   restPath!: string;
   query!: Query;
   accessor!: IDataAccessor;

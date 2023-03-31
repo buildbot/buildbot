@@ -17,7 +17,7 @@
 
 import {action, makeObservable, observable} from "mobx";
 
-export default class SidebarStore {
+export class SidebarStore {
   @observable pinned: boolean;
   @observable active: boolean;
   @observable inside: boolean = false;

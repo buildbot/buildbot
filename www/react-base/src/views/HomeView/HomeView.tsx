@@ -22,12 +22,12 @@ import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactU
 import {useContext} from "react";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import DataCollection from "buildbot-data-js/src/data/DataCollection";
+import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
 import {Config, ConfigContext} from "buildbot-ui/src/contexts/Config";
-import BuildSticker from "../../components/BuildSticker/BuildSticker";
+import {BuildSticker} from "../../components/BuildSticker/BuildSticker";
 import {Link} from "react-router-dom";
 import {Card} from "react-bootstrap";
-import TableHeading from "../../components/TableHeading/TableHeading";
+import {TableHeading} from "../../components/TableHeading/TableHeading";
 
 
 function maybeShowUrlWarning(location: Location, config: Config) {
@@ -74,7 +74,7 @@ function computeBuildsByBuilder(builders: DataCollection<Builder>,
   return buildsByBuilder;
 }
 
-const HomeView = observer(() => {
+export const HomeView = observer(() => {
   const config = useContext(ConfigContext);
   const accessor = useDataAccessor([]);
 
@@ -181,5 +181,3 @@ buildbotSetupPlugin((reg) => {
       defaultValue: 20
     }]});
 });
-
-export default HomeView;

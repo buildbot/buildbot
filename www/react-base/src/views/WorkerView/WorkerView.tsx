@@ -22,10 +22,10 @@ import {Master} from "buildbot-data-js/src/data/classes/Master";
 import {Worker} from "buildbot-data-js/src/data/classes/Worker";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {useParams} from "react-router-dom";
-import WorkersTable from "../../components/WorkersTable/WorkersTable";
-import BuildsTable from "../../components/BuildsTable/BuildsTable";
+import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
+import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 
-const WorkerView = observer(() => {
+export const WorkerView = observer(() => {
   const workerid = Number.parseInt(useParams<"workerid">().workerid ?? "");
   const accessor = useDataAccessor([workerid]);
 
@@ -58,5 +58,3 @@ buildbotSetupPlugin((reg) => {
     element: () => <WorkerView/>,
   });
 });
-
-export default WorkerView;

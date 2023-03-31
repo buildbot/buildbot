@@ -5,17 +5,17 @@
   Copyright Buildbot Team Members
 */
 
-import RestClient from "./RestClient";
+import {RestClient} from "./RestClient";
 import {WebSocketClient} from "./WebSocketClient";
-import BaseDataAccessor, {IDataAccessor} from "./DataAccessor";
+import {BaseDataAccessor, IDataAccessor} from "./DataAccessor";
 import {ControlParams, Query} from "./DataQuery";
-import DataCollection, {IDataCollection} from "./DataCollection";
-import IDataDescriptor, {IAnyDataDescriptor} from "./classes/DataDescriptor";
-import BaseClass from "./classes/BaseClass";
-import DataPropertiesCollection from "./DataPropertiesCollection";
+import {DataCollection, IDataCollection} from "./DataCollection";
+import {IDataDescriptor, IAnyDataDescriptor} from "./classes/DataDescriptor";
+import {BaseClass} from "./classes/BaseClass";
+import {DataPropertiesCollection} from "./DataPropertiesCollection";
 import {propertiesDescriptor} from "./classes/Properties";
 
-export default class DataClient {
+export class DataClient {
   restClient: RestClient;
   webSocketClient: WebSocketClient;
   private jsonRpcId: number = 1;

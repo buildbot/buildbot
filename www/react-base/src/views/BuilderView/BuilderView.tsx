@@ -23,16 +23,16 @@ import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
-import BuildsTable from "../../components/BuildsTable/BuildsTable";
-import BuildRequestsTable from "../../components/BuildrequestsTable/BuildrequestsTable";
+import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
+import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
 import {Forcescheduler} from "buildbot-data-js/src/data/classes/Forcescheduler";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {useNavigate, useParams} from "react-router-dom";
-import DataCollection from "buildbot-data-js/src/data/DataCollection";
-import AlertNotification from "../../components/AlertNotification/AlertNotification";
-import ForceBuildModal from "../../components/ForceBuildModal/ForceBuildModal";
-import TableHeading from "../../components/TableHeading/TableHeading";
+import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
+import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
+import {ForceBuildModal} from "../../components/ForceBuildModal/ForceBuildModal";
+import {TableHeading} from "../../components/TableHeading/TableHeading";
 import {FaStop, FaSpinner} from "react-icons/fa";
 
 const anyCancellableBuilds = (builds: DataCollection<Build>,
@@ -87,7 +87,7 @@ const buildTopbarActions = (builds: DataCollection<Build>,
   return actions;
 }
 
-const BuilderView = observer(() => {
+export const BuilderView = observer(() => {
   const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
   const navigate = useNavigate();
 
@@ -197,5 +197,3 @@ buildbotSetupPlugin((reg) => {
       element: () => <BuilderView/>,
   });
 });
-
-export default BuilderView;

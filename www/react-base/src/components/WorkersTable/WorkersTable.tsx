@@ -23,9 +23,9 @@ import {Master} from "buildbot-data-js/src/data/classes/Master";
 import {Worker} from "buildbot-data-js/src/data/classes/Worker";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Link} from "react-router-dom";
-import DataCollection from "buildbot-data-js/src/data/DataCollection";
-import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
-import BuildLinkWithSummaryTooltip
+import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
+import {BadgeRound} from "buildbot-ui/src/components/BadgeRound/BadgeRound";
+import {BuildLinkWithSummaryTooltip}
   from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {observer} from "mobx-react";
 
@@ -69,8 +69,8 @@ export type WorkersTableProps = {
   onWorkerIconClick: (worker: Worker) => void;
 };
 
-const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
-                                buildsForWorker, onWorkerIconClick}: WorkersTableProps) => {
+export const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
+                                       buildsForWorker, onWorkerIconClick}: WorkersTableProps) => {
   const workerInfoNamesToDisplay = getWorkerInfoNamesToDisplay(workers);
 
   const renderConnectedMasters = (worker: Worker) => {
@@ -157,5 +157,3 @@ const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
     </Table>
   );
 });
-
-export default WorkersTable;

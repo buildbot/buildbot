@@ -40,7 +40,7 @@ function getAuthIcon(faIcon: string) {
   }
 }
 
-const Loginbar = () => {
+export const Loginbar = () => {
   const config = useContext(ConfigContext);
   const location = useLocation();
 
@@ -102,5 +102,3 @@ const Loginbar = () => {
     </Nav>
   );
 };
-
-export default Loginbar;

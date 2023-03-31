@@ -5,11 +5,11 @@
   Copyright Buildbot Team Members
 */
 
-import BaseClass from "./classes/BaseClass";
-import DataCollection from "./DataCollection";
+import {BaseClass} from "./classes/BaseClass";
+import {DataCollection} from "./DataCollection";
 import {BasicDataMultiCollection} from "./BasicDataMultiCollection";
 
-export default class DataMultiCollection<ParentDataType extends BaseClass,
+export class DataMultiCollection<ParentDataType extends BaseClass,
     DataType extends BaseClass> extends BasicDataMultiCollection<ParentDataType, DataCollection<DataType>> {
 
   getRelated<ChildDataType extends BaseClass>(

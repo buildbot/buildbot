@@ -24,11 +24,11 @@ import {useDataAccessor} from "buildbot-data-js/src/data/ReactUtils";
 import {ListOnItemsRenderedProps} from 'react-window';
 import AutoSizer from "react-virtualized-auto-sizer";
 import {digitCount} from "../../util/Math";
-import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
-import CustomFixedSizeList from "./CustomFixedSizeList";
-import LogSearchField from "../LogSearchField/LogSearchField";
+import {LogDownloadButton} from "../LogDownloadButton/LogDownloadButton";
+import {CustomFixedSizeList} from "./CustomFixedSizeList";
+import {LogSearchField} from "../LogSearchField/LogSearchField";
 import {LogTextManager} from "./LogTextManager";
-import LogViewerTextLineRenderer from "./LogViewerTextLineRenderer";
+import {LogViewerTextLineRenderer} from "./LogViewerTextLineRenderer";
 
 const isSelectionActiveWithinElement = (element: HTMLElement | null | undefined) => {
   if (element === null || element === undefined) {
@@ -52,9 +52,9 @@ export type LogViewerProps = {
   maxChunkLinesCount: number;
 }
 
-const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, downloadOverscanRowCount,
-                                  cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
-                                  maxChunkLinesCount}: LogViewerProps) => {
+export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, downloadOverscanRowCount,
+                                        cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
+                                        maxChunkLinesCount}: LogViewerProps) => {
   const accessor = useDataAccessor([]);
   const [, setRenderCounter] = useState(0);
 
@@ -145,5 +145,3 @@ const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, download
     </>
   );
 });
-
-export default LogViewerText;

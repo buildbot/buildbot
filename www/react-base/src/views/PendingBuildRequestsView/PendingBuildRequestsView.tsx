@@ -22,11 +22,11 @@ import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {Link} from "react-router-dom";
 import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
-import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
+import {BadgeRound} from "buildbot-ui/src/components/BadgeRound/BadgeRound";
 import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
-import TableHeading from "../../components/TableHeading/TableHeading";
+import {TableHeading} from "../../components/TableHeading/TableHeading";
 
-const PendingBuildRequestsView = observer(() => {
+export const PendingBuildRequestsView = observer(() => {
   const now = useCurrentTime();
   const accessor = useDataAccessor([]);
 
@@ -144,5 +144,3 @@ buildbotSetupPlugin((reg) => {
     }]
   });
 });
-
-export default PendingBuildRequestsView;

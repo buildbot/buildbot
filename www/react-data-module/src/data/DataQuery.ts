@@ -53,7 +53,7 @@ const parseFilter = (fieldAndOperator: string, value: any): ValueFilter | null =
   }
 }
 
-export default class DataQuery {
+export class DataQuery {
   query: Query;
   filters: ValueFilter[] = [];
 

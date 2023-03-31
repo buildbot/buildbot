@@ -5,16 +5,16 @@
   Copyright Buildbot Team Members
 */
 
-import DataQuery, {Query} from "./DataQuery";
+import {DataQuery, Query} from "./DataQuery";
 import {endpointPath, socketPath, socketPathRE} from "./DataUtils";
 import {WebSocketClient} from "./WebSocketClient";
-import BaseClass from "./classes/BaseClass";
-import IDataDescriptor from "./classes/DataDescriptor";
+import {BaseClass} from "./classes/BaseClass";
+import {IDataDescriptor} from "./classes/DataDescriptor";
 import {IDataAccessor} from "./DataAccessor";
 import {action, IObservableArray, makeObservable, observable} from "mobx";
-import DataMultiCollection from "./DataMultiCollection";
-import DataPropertiesCollection from "./DataPropertiesCollection";
-import DataMultiPropertiesCollection from "./DataMultiPropertiesCollection";
+import {DataMultiCollection} from "./DataMultiCollection";
+import {DataPropertiesCollection} from "./DataPropertiesCollection";
+import {DataMultiPropertiesCollection} from "./DataMultiPropertiesCollection";
 
 export interface IDataCollection {
   isExpired(): boolean;
@@ -23,7 +23,7 @@ export interface IDataCollection {
   close(): Promise<void>;
 }
 
-export default class DataCollection<DataType extends BaseClass> implements IDataCollection {
+export class DataCollection<DataType extends BaseClass> implements IDataCollection {
   restPath!: string;
   query!: Query;
   accessor!: IDataAccessor;

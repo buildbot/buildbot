@@ -25,7 +25,7 @@ export type LogDownloadButtonProps = {
   log: Log;
 }
 
-const LogDownloadButton = ({log}: LogDownloadButtonProps) => {
+export const LogDownloadButton = ({log}: LogDownloadButtonProps) => {
   const dataClient = useContext(DataClientContext);
   const apiRootUrl = dataClient.restClient.rootUrl;
 
@@ -37,5 +37,3 @@ const LogDownloadButton = ({log}: LogDownloadButtonProps) => {
     </a>
   );
 }
-
-export default LogDownloadButton;

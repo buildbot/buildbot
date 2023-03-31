@@ -28,7 +28,7 @@ import {
   EndpointFieldSpec,
   useApplicationSpec
 } from "buildbot-data-js/src/data/ApplicationSpec";
-import RawData from "../../components/RawData/RawData";
+import {RawData} from "../../components/RawData/RawData";
 
 type EndpointListItemProps = {
   spec: EndpointDescription;
@@ -75,7 +75,7 @@ const EndpointListItem = ({spec}: EndpointListItemProps) => {
   )
 }
 
-const AboutView = observer(() => {
+export const AboutView = observer(() => {
   const config = useContext(ConfigContext);
 
   const dataClient = useContext(DataClientContext);
@@ -137,6 +137,3 @@ buildbotSetupPlugin((reg) => {
     element: () => <AboutView/>,
   });
 });
-
-
-export default AboutView;

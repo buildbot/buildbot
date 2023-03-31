@@ -25,7 +25,7 @@ type FieldBaseProps = {
   children: JSX.Element | JSX.Element[] | string;
 }
 
-const FieldBase = observer(({field, fieldsState, children}: FieldBaseProps) => {
+export const FieldBase = observer(({field, fieldsState, children}: FieldBaseProps) => {
   const state = fieldsState.fields.get(field.name)!;
 
   let classNames = "form-group";
@@ -53,5 +53,3 @@ const FieldBase = observer(({field, fieldsState, children}: FieldBaseProps) => {
     </div>
   );
 });
-
-export default FieldBase;

@@ -27,20 +27,20 @@ import {
   ForceSchedulerFieldText,
   ForceSchedulerFieldUserName
 } from "buildbot-data-js/src/data/classes/Forcescheduler";
-import FieldNested from "./FieldNested";
-import FieldString from "./FieldString";
-import FieldText from "./FieldText";
-import FieldInt from "./FieldInt";
-import FieldBoolean from "./FieldBoolean";
-import FieldUserName from "./FieldUserName";
-import FieldChoiceString from "./FieldChoiceString";
+import {FieldNested} from "./FieldNested";
+import {FieldString} from "./FieldString";
+import {FieldText} from "./FieldText";
+import {FieldInt} from "./FieldInt";
+import {FieldBoolean} from "./FieldBoolean";
+import {FieldUserName} from "./FieldUserName";
+import {FieldChoiceString} from "./FieldChoiceString";
 
 type FieldAnyProps = {
   field: ForceSchedulerFieldBase;
   fieldsState: ForceBuildModalFieldsState;
 }
 
-const FieldAny = observer(({field, fieldsState}: FieldAnyProps) => {
+export const FieldAny = observer(({field, fieldsState}: FieldAnyProps) => {
   if (field.type === 'text') {
     return <FieldString field={field as ForceSchedulerFieldString} fieldsState={fieldsState}/>
   }
@@ -65,5 +65,3 @@ const FieldAny = observer(({field, fieldsState}: FieldAnyProps) => {
   }
   return (<></>);
 });
-
-export default FieldAny;

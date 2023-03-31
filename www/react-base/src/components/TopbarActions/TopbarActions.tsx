@@ -33,7 +33,7 @@ type TopbarActionsProps = {
   store: TopbarActionsStore;
 }
 
-const TopbarActions = observer(({store}: TopbarActionsProps) => {
+export const TopbarActions = observer(({store}: TopbarActionsProps) => {
   const elements = store.actions.map((action, index) => {
     return (
       <React.Fragment key={index}>
@@ -52,5 +52,3 @@ const TopbarActions = observer(({store}: TopbarActionsProps) => {
     </Form>
   );
 });
-
-export default TopbarActions;

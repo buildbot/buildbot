@@ -18,10 +18,10 @@
 import {observer} from "mobx-react";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {Change} from "buildbot-data-js/src/data/classes/Change";
-import ChangesTable from "../../components/ChangesTable/ChangesTable";
+import {ChangesTable} from "../../components/ChangesTable/ChangesTable";
 
 
-const ChangesView = observer(() => {
+export const ChangesView = observer(() => {
   const accessor = useDataAccessor([]);
 
   const changesFetchLimit = buildbotGetSettings().getIntegerSetting("Changes.changesFetchLimit");
@@ -61,5 +61,3 @@ buildbotSetupPlugin((reg) => {
     }]
   });
 });
-
-export default ChangesView;

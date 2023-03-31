@@ -25,13 +25,13 @@ import {
 import {Change} from "buildbot-data-js/src/data/classes/Change";
 import {useParams} from "react-router-dom";
 import {useState} from "react";
-import DataCollection from "buildbot-data-js/src/data/DataCollection";
+import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import ChangeDetails from "buildbot-ui/src/components/ChangeDetails/ChangeDetails";
-import BuildsTable from "../../components/BuildsTable/BuildsTable";
+import {ChangeDetails} from "buildbot-ui/src/components/ChangeDetails/ChangeDetails";
+import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 
 
-const ChangeBuildsView = observer(() => {
+export const ChangeBuildsView = observer(() => {
   const changeid = Number.parseInt(useParams<"changeid">().changeid ?? "");
 
   const accessor = useDataAccessor([changeid]);
@@ -92,5 +92,3 @@ buildbotSetupPlugin((reg) => {
     }]
   });
 });
-
-export default ChangeBuildsView;

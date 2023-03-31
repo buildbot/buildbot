@@ -25,12 +25,12 @@ import {computed} from "mobx";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Link} from "react-router-dom";
 import {durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
-import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
-import BuildLinkWithSummaryTooltip
+import {BadgeRound} from "buildbot-ui/src/components/BadgeRound/BadgeRound";
+import {BuildLinkWithSummaryTooltip}
   from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 
-const MastersView = observer(() => {
+export const MastersView = observer(() => {
   const now = useCurrentTime();
   const accessor = useDataAccessor([]);
 
@@ -148,5 +148,3 @@ buildbotSetupPlugin((reg) => {
     element: () => <MastersView/>,
   });
 });
-
-export default MastersView;

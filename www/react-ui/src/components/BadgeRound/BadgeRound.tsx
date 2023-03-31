@@ -23,10 +23,8 @@ type BadgeRoundProps = {
   title?: string;
 }
 
-const BadgeRound = ({className, children, title, ...props}: BadgeRoundProps) => {
+export const BadgeRound = ({className, children, title, ...props}: BadgeRoundProps) => {
   return (
     <span {...props} title={title} className={"bb-badge-round " + className}>{children}</span>
   );
 }
-
-export default BadgeRound;

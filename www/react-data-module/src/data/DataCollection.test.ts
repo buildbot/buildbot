@@ -5,13 +5,13 @@
   Copyright Buildbot Team Members
 */
 
-import DataCollection from "./DataCollection";
-import BaseClass from "./classes/BaseClass";
-import IDataDescriptor from "./classes/DataDescriptor";
+import {DataCollection} from "./DataCollection";
+import {BaseClass} from "./classes/BaseClass";
+import {IDataDescriptor} from "./classes/DataDescriptor";
 import {WebSocketClient} from "./WebSocketClient";
 import {MockWebSocket} from "./MockWebSocket";
 import {Query} from "./DataQuery";
-import BaseDataAccessor, {EmptyDataAccessor} from "./DataAccessor";
+import {BaseDataAccessor, EmptyDataAccessor} from "./DataAccessor";
 
 class TestDataClass extends BaseClass {
   testdata: string = '';

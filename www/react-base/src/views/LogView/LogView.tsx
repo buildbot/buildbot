@@ -24,7 +24,7 @@ import {useNavigate, useParams} from "react-router-dom";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
-import LogViewer from "../../components/LogViewer/LogViewer";
+import {LogViewer} from "../../components/LogViewer/LogViewer";
 
 const LogView = observer(() => {
   const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");

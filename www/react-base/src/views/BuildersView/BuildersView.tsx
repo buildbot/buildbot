@@ -27,11 +27,11 @@ import {Master} from "buildbot-data-js/src/data/classes/Master";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {TagFilterManager, useTagFilterManager} from "buildbot-ui/src/util/TagFilterManager";
 import {computed} from "mobx";
-import DataCollection from "buildbot-data-js/src/data/DataCollection";
-import WorkerBadge from "../../../../react-ui/src/components/WorkerBadge/WorkerBadge";
+import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
+import {WorkerBadge} from "../../../../react-ui/src/components/WorkerBadge/WorkerBadge";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
-import BuildLinkWithSummaryTooltip
+import {BuildLinkWithSummaryTooltip}
   from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {Table} from "react-bootstrap";
 
@@ -60,7 +60,7 @@ const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
   return filterManager.shouldShowByTags(builder.tags);
 };
 
-const BuildersView = observer(() => {
+export const BuildersView = observer(() => {
   const stores = useContext(StoresContext);
   const accessor = useDataAccessor([]);
 
@@ -259,6 +259,3 @@ buildbotSetupPlugin((reg) => {
     }
   ]});
 });
-
-
-export default BuildersView;

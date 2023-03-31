@@ -29,14 +29,14 @@ import {Step} from "buildbot-data-js/src/data/classes/Step";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
-import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
-import BadgeStatus from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
-import ArrowExpander from "buildbot-ui/src/components/ArrowExpander/ArrowExpander";
+import {BadgeRound} from "buildbot-ui/src/components/BadgeRound/BadgeRound";
+import {BadgeStatus} from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
+import {ArrowExpander} from "buildbot-ui/src/components/ArrowExpander/ArrowExpander";
 import {Link} from "react-router-dom";
-import DataCollection from "buildbot-data-js/src/data/DataCollection";
-import LogPreview from "../LogPreview/LogPreview";
+import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
+import {LogPreview} from "../LogPreview/LogPreview";
 import {useStateWithParentTrackingWithDefaultIfNotSet} from "buildbot-ui/src/util/React";
-import BuildRequestSummary from "../BuildRequestSummary/BuildRequestSummary";
+import {BuildRequestSummary} from "../BuildRequestSummary/BuildRequestSummary";
 import {Card} from "react-bootstrap";
 
 enum DetailLevel {
@@ -208,8 +208,8 @@ type BuildSummaryProps = {
   condensed: boolean;
 }
 
-const BuildSummary = observer(({build, parentBuild, parentRelationship,
-                                condensed}: BuildSummaryProps) => {
+export const BuildSummary = observer(({build, parentBuild, parentRelationship,
+                                       condensed}: BuildSummaryProps) => {
   const accessor = useDataAccessor([build.id]);
   const now = useCurrentTime();
 
@@ -299,5 +299,3 @@ const BuildSummary = observer(({build, parentBuild, parentRelationship,
     </Card>
   );
 });
-
-export default BuildSummary;

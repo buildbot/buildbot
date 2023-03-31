@@ -18,17 +18,15 @@
 import {ForceSchedulerFieldUserName} from "buildbot-data-js/src/data/classes/Forcescheduler";
 import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
 import {observer} from "mobx-react";
-import FieldString from "./FieldString";
+import {FieldString} from "./FieldString";
 
 type FieldUserNameProps = {
   field: ForceSchedulerFieldUserName;
   fieldsState: ForceBuildModalFieldsState;
 }
 
-const FieldUserName = observer(({field, fieldsState}: FieldUserNameProps) => {
+export const FieldUserName = observer(({field, fieldsState}: FieldUserNameProps) => {
   return (
     <FieldString field={field} fieldsState={fieldsState}/>
   );
 });
-
-export default FieldUserName;

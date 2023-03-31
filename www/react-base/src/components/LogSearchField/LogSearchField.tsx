@@ -27,8 +27,8 @@ export type LogSearchButtonProps = {
   onNextClicked: () => void;
 };
 
-const LogSearchField = ({currentResult, totalResults,
-                         onTextChanged, onPrevClicked, onNextClicked}: LogSearchButtonProps) => {
+export const LogSearchField = ({currentResult, totalResults,
+                                onTextChanged, onPrevClicked, onNextClicked}: LogSearchButtonProps) => {
   const [searchText, setSearchText] = useState<string>('');
   const [hasFocus, setHasFocus] = useState<boolean>(false);
 
@@ -60,5 +60,3 @@ const LogSearchField = ({currentResult, totalResults,
     </form>
   );
 }
-
-export default LogSearchField;

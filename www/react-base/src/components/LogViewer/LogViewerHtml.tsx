@@ -25,7 +25,7 @@ export type LogViewerHtmlProps = {
   log: Log;
 }
 
-const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
+export const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
   const accessor = useDataAccessor([]);
   const [htmlLog, setHtmlLog] = useState('');
   const pendingRequest = useRef<CancellablePromise<any> | null>(null);
@@ -51,5 +51,3 @@ const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
     <Card.Body dangerouslySetInnerHTML={{__html: htmlLog}}/>
   );
 }
-
-export default LogViewerHtml;

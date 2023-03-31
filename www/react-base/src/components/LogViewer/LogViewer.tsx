@@ -16,14 +16,14 @@
 */
 
 import {Log} from "buildbot-data-js/src/data/classes/Log";
-import LogViewerHtml from "./LogViewerHtml";
-import LogViewerText from "./LogViewerText";
+import {LogViewerHtml} from "./LogViewerHtml";
+import {LogViewerText} from "./LogViewerText";
 
 export type LogViewerProps = {
   log: Log;
 }
 
-const LogViewer = ({log}: LogViewerProps) => {
+export const LogViewer = ({log}: LogViewerProps) => {
   if (log.type === 'h') {
     return (
       <LogViewerHtml log={log}/>
@@ -39,5 +39,3 @@ const LogViewer = ({log}: LogViewerProps) => {
     )
   }
 }
-
-export default LogViewer;

@@ -7,7 +7,7 @@
 
 import axios from 'axios';
 import MockAdapter from "axios-mock-adapter";
-import RestClient from "./RestClient";
+import {RestClient} from "./RestClient";
 
 describe('Rest service', () => {
   let mock : MockAdapter;

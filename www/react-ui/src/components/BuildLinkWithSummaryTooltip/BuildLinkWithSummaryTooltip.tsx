@@ -22,15 +22,16 @@ import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {results2class} from "buildbot-data-js/src/util/Results";
 import {observer} from "mobx-react";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import BuildSummaryTooltip from "../BuildSummaryTooltip/BuildSummaryTooltip";
-import BadgeRound from "../BadgeRound/BadgeRound";
+import {BuildSummaryTooltip} from "../BuildSummaryTooltip/BuildSummaryTooltip";
+import {BadgeRound} from "../BadgeRound/BadgeRound";
 
 type BuildLinkWithSummaryTooltipProps = {
   build: Build;
   builder?: Builder | null;
 };
 
-const BuildLinkWithSummaryTooltip = observer(({build, builder}: BuildLinkWithSummaryTooltipProps) => {
+export const BuildLinkWithSummaryTooltip =
+  observer(({build, builder}: BuildLinkWithSummaryTooltipProps) => {
 
   if (builder === null) {
     builder = undefined;
@@ -63,5 +64,3 @@ const BuildLinkWithSummaryTooltip = observer(({build, builder}: BuildLinkWithSum
     </Link>
   );
 });
-
-export default BuildLinkWithSummaryTooltip;

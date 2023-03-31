@@ -6,12 +6,12 @@
 */
 
 import {createContext, useContext, useEffect, useRef} from "react";
-import DataClient from "./DataClient";
+import {DataClient} from "./DataClient";
 import {IDataAccessor} from "./DataAccessor";
-import DataCollection, {IDataCollection} from "./DataCollection";
+import {DataCollection, IDataCollection} from "./DataCollection";
 import {IObservableArray} from "mobx";
-import BaseClass from "./classes/BaseClass";
-import DataPropertiesCollection from "./DataPropertiesCollection";
+import {BaseClass} from "./classes/BaseClass";
+import {DataPropertiesCollection} from "./DataPropertiesCollection";
 
 // The default value is not used as the context is injected
 export const DataClientContext =

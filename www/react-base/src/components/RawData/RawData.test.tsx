@@ -17,7 +17,7 @@
 
 import renderer, {act} from 'react-test-renderer';
 import {MemoryRouter} from "react-router-dom";
-import RawData from './RawData';
+import {RawData} from './RawData';
 import {observable} from "mobx";
 
 function assertRenderSnapshot(data: {[key: string]: any}) {

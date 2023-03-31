@@ -89,7 +89,7 @@ const axiosParamsSerializerWithoutBraces = (params: any[]) => {
   return parts.join('&');
 }
 
-export default class RestClient {
+export class RestClient {
   rootUrl: string;
 
   constructor(rootUrl: string) {

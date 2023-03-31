@@ -17,7 +17,7 @@
 
 import {Link} from "react-router-dom";
 import {Worker} from "buildbot-data-js/src/data/classes/Worker";
-import BadgeRound from "../BadgeRound/BadgeRound";
+import {BadgeRound} from "../BadgeRound/BadgeRound";
 
 const connected2class = (worker: Worker) => {
   if (worker.connected_to.length > 0) {
@@ -32,7 +32,7 @@ type WorkerBadgeProps = {
   showWorkerName: boolean;
 }
 
-const WorkerBadge = ({worker, showWorkerName}: WorkerBadgeProps) => {
+export const WorkerBadge = ({worker, showWorkerName}: WorkerBadgeProps) => {
   const shownWorkerName = () => (
     <BadgeRound title={worker.name} className={connected2class(worker)}>
       {worker.name}
@@ -54,5 +54,3 @@ const WorkerBadge = ({worker, showWorkerName}: WorkerBadgeProps) => {
     </span>
   );
 }
-
-export default WorkerBadge;

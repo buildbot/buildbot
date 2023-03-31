@@ -5,12 +5,12 @@
   Copyright Buildbot Team Members
 */
 
-import DataCollection, {IDataCollection} from "./DataCollection";
-import DataClient from "./DataClient";
-import IDataDescriptor from "./classes/DataDescriptor";
+import {DataCollection, IDataCollection} from "./DataCollection";
+import {DataClient} from "./DataClient";
+import {IDataDescriptor} from "./classes/DataDescriptor";
 import {ControlParams, Query, RequestQuery} from "./DataQuery";
-import BaseClass from "./classes/BaseClass";
-import DataPropertiesCollection from "./DataPropertiesCollection";
+import {BaseClass} from "./classes/BaseClass";
+import {DataPropertiesCollection} from "./DataPropertiesCollection";
 import {CancellablePromise} from "../util/CancellablePromise";
 
 export interface IDataAccessor {
@@ -26,7 +26,7 @@ export interface IDataAccessor {
   control(endpoint: string, method: string, params: ControlParams): Promise<any>;
 }
 
-export default class BaseDataAccessor implements IDataAccessor {
+export class BaseDataAccessor implements IDataAccessor {
   private registeredCollections: IDataCollection[] = [];
   private client: DataClient;
   private _isOpen: boolean = true;

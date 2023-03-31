@@ -21,7 +21,7 @@ import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {results2class, results2text} from "buildbot-data-js/src/util/Results";
 import {Link} from "react-router-dom";
 import {durationFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
-import BadgeStatus from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
+import {BadgeStatus} from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
 import { Card } from 'react-bootstrap';
 
 type BuildStickerProps = {
@@ -29,7 +29,7 @@ type BuildStickerProps = {
   builder: Builder;
 }
 
-const BuildSticker = ({build, builder}: BuildStickerProps) => {
+export const BuildSticker = ({build, builder}: BuildStickerProps) => {
   const now = useCurrentTime();
 
   return (
@@ -53,5 +53,3 @@ const BuildSticker = ({build, builder}: BuildStickerProps) => {
     </Card>
   );
 }
-
-export default BuildSticker;

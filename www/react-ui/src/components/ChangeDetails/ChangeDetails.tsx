@@ -21,8 +21,8 @@ import {OverlayTrigger, Popover, Table} from "react-bootstrap";
 import {Change} from "buildbot-data-js/src/data/classes/Change";
 import {parseChangeAuthorNameAndEmail} from "buildbot-data-js/src/util/Properties";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
-import ArrowExpander from "../ArrowExpander/ArrowExpander";
-import ChangeUserAvatar from "../ChangeUserAvatar/ChangeUserAvatar";
+import {ArrowExpander} from "../ArrowExpander/ArrowExpander";
+import {ChangeUserAvatar} from "../ChangeUserAvatar/ChangeUserAvatar";
 
 type ChangeDetailsProps = {
   change: Change;
@@ -31,7 +31,7 @@ type ChangeDetailsProps = {
   setShowDetails: (show: boolean) => void;
 }
 
-const ChangeDetails = ({change, compact, showDetails, setShowDetails}: ChangeDetailsProps) => {
+export const ChangeDetails = ({change, compact, showDetails, setShowDetails}: ChangeDetailsProps) => {
   const now = useCurrentTime();
   const [showProps, setShowProps] = useState(false);
 
@@ -139,5 +139,3 @@ const ChangeDetails = ({change, compact, showDetails, setShowDetails}: ChangeDet
     </div>
   );
 }
-
-export default ChangeDetails;

@@ -7,13 +7,13 @@ import {Routes, Route} from "react-router-dom";
 import {useCurrentTimeSetupTimers} from "buildbot-ui/src/util/Moment";
 
 import {ConfigContext} from "buildbot-ui/src/contexts/Config";
-import PageWithSidebar from "./components/PageWithSidebar/PageWithSidebar";
+import {PageWithSidebar} from "./components/PageWithSidebar/PageWithSidebar";
 import {StoresContext} from "./contexts/Stores";
 import {globalMenuSettings} from "./plugins/GlobalMenuSettings";
 import {globalRoutes} from "./plugins/GlobalRoutes";
-import Topbar from "./components/Topbar/Topbar";
-import TopbarActions from "./components/TopbarActions/TopbarActions";
-import Loginbar from "./components/Loginbar/Loginbar";
+import {Topbar} from "./components/Topbar/Topbar";
+import {TopbarActions} from "./components/TopbarActions/TopbarActions";
+import {Loginbar} from "./components/Loginbar/Loginbar";
 
 // import the views so that they register themselves in the plugin system
 import './views/AboutView/AboutView';
@@ -31,9 +31,9 @@ import './views/SettingsView/SettingsView';
 import './views/SchedulersView/SchedulersView';
 import './views/WorkersView/WorkersView';
 import './views/WorkerView/WorkerView';
-import UrlNotFoundView from "./views/UrlNotFoundView/UrlNotFoundView";
+import {UrlNotFoundView} from "./views/UrlNotFoundView/UrlNotFoundView";
 
-const App = observer(() => {
+export const App = observer(() => {
   const stores = useContext(StoresContext);
   const config = useContext(ConfigContext);
 
@@ -62,5 +62,3 @@ const App = observer(() => {
     </PageWithSidebar>
   );
 });
-
-export default App;

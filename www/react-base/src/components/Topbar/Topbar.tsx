@@ -33,7 +33,7 @@ type TopbarProps = {
   children: JSX.Element | JSX.Element[]
 }
 
-const Topbar = observer(({store, appTitle, children}: TopbarProps) => {
+export const Topbar = observer(({store, appTitle, children}: TopbarProps) => {
   const elements = computed(() => store.items.map((item, index) => {
     if (item.route === null) {
       return (
@@ -60,5 +60,3 @@ const Topbar = observer(({store, appTitle, children}: TopbarProps) => {
     </Navbar>
   );
 });
-
-export default Topbar;

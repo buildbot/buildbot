@@ -5,7 +5,7 @@
   Copyright Buildbot Team Members
 */
 
-import DataClient from "./DataClient";
+import {DataClient} from "./DataClient";
 import {useEffect, useState} from "react";
 
 export type EndpointFieldSpec = {

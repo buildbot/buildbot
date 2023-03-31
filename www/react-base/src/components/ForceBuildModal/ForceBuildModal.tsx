@@ -25,7 +25,7 @@ import {Button, Modal} from "react-bootstrap";
 import {useContext, useState} from "react";
 import {observer, useLocalObservable} from "mobx-react";
 import {ForceBuildModalFieldsState} from "./ForceBuildModalFieldsState";
-import FieldNested from "./Fields/FieldNested";
+import {FieldNested} from "./Fields/FieldNested";
 import {ControlParams} from "buildbot-data-js/src/data/DataQuery";
 import {ConfigContext} from "buildbot-ui/src/contexts/Config";
 
@@ -52,7 +52,7 @@ type ForceBuildModalProps = {
   onClose: (buildRequestNumber: string | null) => void;
 }
 
-const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceBuildModalProps) => {
+export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceBuildModalProps) => {
   const config = useContext(ConfigContext);
 
   const fields = flattenFields(scheduler.all_fields);
@@ -175,5 +175,3 @@ const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceBuildMod
     </Modal>
   );
 });
-
-export default ForceBuildModal;

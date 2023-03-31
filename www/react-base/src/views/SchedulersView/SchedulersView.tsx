@@ -20,7 +20,7 @@ import {Table} from "react-bootstrap";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {Scheduler} from "buildbot-data-js/src/data/classes/Scheduler";
 
-const SchedulersView = observer(() => {
+export const SchedulersView = observer(() => {
   const accessor = useDataAccessor([]);
 
   const schedulersQuery = useDataApiQuery(
@@ -75,5 +75,3 @@ buildbotSetupPlugin((reg) => {
     element: () => <SchedulersView/>,
   });
 });
-
-export default SchedulersView;
