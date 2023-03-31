@@ -24,7 +24,7 @@ import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import {Link} from "react-router-dom";
 import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
 import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
-import BadgeRound from "../BadgeRound/BadgeRound";
+import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
 
 type BuildRequestsTableProps = {
   buildrequests: DataCollection<Buildrequest>;

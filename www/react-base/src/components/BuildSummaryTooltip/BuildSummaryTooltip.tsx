@@ -26,8 +26,8 @@ import {results2class, results2text} from "buildbot-data-js/src/util/Results";
 import {durationFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "buildbot-ui/src/util/StepUrls";
-import BadgeRound from "../BadgeRound/BadgeRound";
-import BadgeStatus from "../BadgeStatus/BadgeStatus";
+import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
+import BadgeStatus from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
 import Card from 'react-bootstrap/Card';
 import React from "react";
 

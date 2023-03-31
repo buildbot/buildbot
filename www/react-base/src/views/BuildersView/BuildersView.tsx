@@ -28,11 +28,11 @@ import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {TagFilterManager, useTagFilterManager} from "buildbot-ui/src/util/TagFilterManager";
 import {computed} from "mobx";
 import DataCollection from "buildbot-data-js/src/data/DataCollection";
+import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
-import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import {Table} from "react-bootstrap";
 
 const connected2class = (worker: Worker) => {

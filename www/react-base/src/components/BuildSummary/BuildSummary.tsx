@@ -29,14 +29,14 @@ import {Step} from "buildbot-data-js/src/data/classes/Step";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
+import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
+import BadgeStatus from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
 import {Link} from "react-router-dom";
 import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import LogPreview from "../LogPreview/LogPreview";
 import {useStateWithParentTrackingWithDefaultIfNotSet} from "buildbot-ui/src/util/React";
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import BuildRequestSummary from "../BuildRequestSummary/BuildRequestSummary";
-import BadgeRound from "../BadgeRound/BadgeRound";
-import BadgeStatus from "../BadgeStatus/BadgeStatus";
 import {Card} from "react-bootstrap";
 
 enum DetailLevel {

@@ -45,7 +45,7 @@ import {useFavIcon} from "buildbot-ui/src/util/FavIcon";
 import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "buildbot-data-js/src/util/Properties";
 import {getBuildOrStepResults, results2class, UNKNOWN} from "buildbot-data-js/src/util/Results";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
-import BadgeRound from "../../components/BadgeRound/BadgeRound";
+import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
 import RawData from "../../components/RawData/RawData";
 import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
 import ChangesTable from "../../components/ChangesTable/ChangesTable";

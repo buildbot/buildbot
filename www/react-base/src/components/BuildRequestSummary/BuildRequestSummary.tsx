@@ -21,7 +21,7 @@ import {Card} from "react-bootstrap";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import BadgeStatus from "../BadgeStatus/BadgeStatus";
+import BadgeStatus from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
 import BuildSummary from "../BuildSummary/BuildSummary";
 import {Buildset} from "buildbot-data-js/src/data/classes/Buildset";
 import {Link} from "react-router-dom";

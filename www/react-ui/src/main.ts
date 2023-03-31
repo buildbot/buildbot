@@ -18,6 +18,9 @@
 import "buildbot-plugin-support";
 import "./styles/colors.scss";
 
+import "./components/BadgeRound/BadgeRound";
+import "./components/BadgeStatus/BadgeStatus";
+
 import "./contexts/Time";
 
 import "./stores/TimeStore";

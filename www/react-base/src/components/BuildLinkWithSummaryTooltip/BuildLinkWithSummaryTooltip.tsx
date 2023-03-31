@@ -23,7 +23,7 @@ import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {results2class} from "buildbot-data-js/src/util/Results";
 import {observer} from "mobx-react";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import BadgeRound from "../BadgeRound/BadgeRound";
+import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
 
 type BuildLinkWithSummaryTooltipProps = {
   build: Build;

@@ -21,8 +21,8 @@ import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {results2class, results2text} from "buildbot-data-js/src/util/Results";
 import {Link} from "react-router-dom";
 import {durationFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
+import BadgeStatus from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
 import { Card } from 'react-bootstrap';
-import BadgeStatus from "../BadgeStatus/BadgeStatus";
 
 type BuildStickerProps = {
   build: Build;
