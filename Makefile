@@ -13,10 +13,10 @@ YARN := $(shell which yarnpkg || which yarn)
 
 WWW_PKGS := www/base www/react-base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample www/codeparameter
-WWW_DEP_PKGS := www/guanlecoja-ui www/data_module www/plugin_support www/react-ui www/react-data-module
+WWW_DEP_PKGS := www/guanlecoja-ui www/data_module www/plugin_support www/react-data-module www/react-ui
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
-WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support, $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/react-ui, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
@@ -75,7 +75,7 @@ frontend_tests_headless: frontend_deps
 	for i in $(WWW_PKGS); \
 		do (cd $$i; $(YARN) install --pure-lockfile); done
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
-		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test $$(if [ $$i != "www/react-base" -a $$i != "www/react-data-module" ]; then echo --browsers BBChromeHeadless; fi) || exit 1) || exit 1; done
+		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test $$(if [ $$i != "www/react-base" -a $$i != "www/react-data-module" -a $$i != "www/react-ui" ]; then echo --browsers BBChromeHeadless; fi) || exit 1) || exit 1; done
 
 # rebuild front-end from source
 frontend: frontend_deps
