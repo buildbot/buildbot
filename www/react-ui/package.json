@@ -68,6 +68,7 @@
   },
   "peerDependencies": {
     "axios": "^0.27.2",
+    "bootstrap": "^4.6.2",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
     "moment": "^2.29.4",
@@ -80,6 +81,7 @@
     "axios": "^0.27.2",
     "axios-mock-adapter": "^1.21.1",
     "babel-preset-react-app": "^10.0.0",
+    "bootstrap": "^4.6.2",
     "buildbot-plugin-support": "link:../plugin_support",
     "jest": "26.6.0",
     "jest-circus": "26.6.0",
