@@ -22,7 +22,7 @@ import {FaExpand} from "react-icons/fa";
 import {results2class, results2text, SUCCESS} from "buildbot-data-js/src/util/Results";
 import {ConfigContext} from "../../contexts/Config";
 import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
+import {analyzeStepUrls, useStepUrlAnalyzer} from "buildbot-ui/src/util/StepUrls";
 import {durationFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import {Log} from "buildbot-data-js/src/data/classes/Log";
 import {Step} from "buildbot-data-js/src/data/classes/Step";
