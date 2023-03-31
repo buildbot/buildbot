@@ -16,6 +16,7 @@
 */
 
 import "buildbot-plugin-support";
+import "./styles/colors.scss";
 
 import "./contexts/Time";
 
