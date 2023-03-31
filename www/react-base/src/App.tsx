@@ -1,7 +1,6 @@
 import {observer} from "mobx-react";
 import React, {useContext, useEffect} from 'react';
 import './App.css';
-import './globals';
 import './styles/styles.scss';
 import 'bootstrap';
 import {Routes, Route} from "react-router-dom";
