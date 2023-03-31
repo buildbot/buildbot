@@ -19,10 +19,10 @@ import './ChangeDetails.scss';
 import {useState} from "react";
 import {OverlayTrigger, Popover, Table} from "react-bootstrap";
 import {Change} from "buildbot-data-js/src/data/classes/Change";
-import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
-import ArrowExpander from "buildbot-ui/src/components/ArrowExpander/ArrowExpander";
-import ChangeUserAvatar from "buildbot-ui/src/components/ChangeUserAvatar/ChangeUserAvatar";
 import {parseChangeAuthorNameAndEmail} from "buildbot-data-js/src/util/Properties";
+import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
+import ArrowExpander from "../ArrowExpander/ArrowExpander";
+import ChangeUserAvatar from "../ChangeUserAvatar/ChangeUserAvatar";
 
 type ChangeDetailsProps = {
   change: Change;
