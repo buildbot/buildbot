@@ -46,11 +46,11 @@ import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "buildbot
 import {getBuildOrStepResults, results2class, UNKNOWN} from "buildbot-data-js/src/util/Results";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
+import ChangeUserAvatar from "buildbot-ui/src/components/ChangeUserAvatar/ChangeUserAvatar";
 import RawData from "../../components/RawData/RawData";
 import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
 import ChangesTable from "../../components/ChangesTable/ChangesTable";
 import BuildSummary from "../../components/BuildSummary/BuildSummary";
-import ChangeUserAvatar from "../../components/ChangeUserAvatar/ChangeUserAvatar";
 import {Tab, Table, Tabs} from "react-bootstrap";
 import TableHeading from "../../components/TableHeading/TableHeading";
 
