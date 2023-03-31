@@ -22,12 +22,12 @@ import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactU
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {results2class, results2text} from "buildbot-data-js/src/util/Results";
-import {ConfigContext} from "buildbot-ui/src/contexts/Config";
-import {durationFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
-import {analyzeStepUrls, useStepUrlAnalyzer} from "buildbot-ui/src/util/StepUrls";
-import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
-import BadgeStatus from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
+import {ConfigContext} from "../../contexts/Config";
+import {durationFormat, useCurrentTime} from "../../util/Moment";
+import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
+import BadgeRound from "../BadgeRound/BadgeRound";
+import BadgeStatus from "../BadgeStatus/BadgeStatus";
 import Card from 'react-bootstrap/Card';
 import React from "react";
 
