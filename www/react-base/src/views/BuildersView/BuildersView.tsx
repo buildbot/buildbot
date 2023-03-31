@@ -28,20 +28,12 @@ import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {TagFilterManager, useTagFilterManager} from "buildbot-ui/src/util/TagFilterManager";
 import {computed} from "mobx";
 import DataCollection from "buildbot-data-js/src/data/DataCollection";
-import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
+import WorkerBadge from "../../../../react-ui/src/components/WorkerBadge/WorkerBadge";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import BuildLinkWithSummaryTooltip
   from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {Table} from "react-bootstrap";
-
-const connected2class = (worker: Worker) => {
-  if (worker.connected_to.length > 0) {
-    return "worker_CONNECTED";
-  } else {
-    return "worker_DISCONNECTED";
-  }
-};
 
 const hasActiveMaster = (builder: Builder, masters: DataCollection<Master>) => {
   if ((builder.masterids == null)) {
@@ -155,29 +147,9 @@ const BuildersView = observer(() => {
     if (builder.id in workersByFilteredBuilder) {
       let workers = [...workersByFilteredBuilder[builder.id]];
       workers.sort((a, b) => a.name.localeCompare(b.name));
-      workerElements = workers.map(worker => {
-
-        const shownWorkerName = () => (
-          <BadgeRound title={worker.name} className={connected2class(worker)}>
-            {worker.name}
-          </BadgeRound>
-        );
-
-        const hoverWorkerName = () => (
-          <BadgeRound title={worker.name} className={connected2class(worker)}>
-            <div className="badge-inactive">{worker.workerid}</div>
-            <div className="badge-active">{worker.name}</div>
-          </BadgeRound>
-        );
-
-        return (
-          <span>
-            <Link to={`/workers/${worker.id}`}>
-              {showWorkerName ? shownWorkerName() : hoverWorkerName()}
-             </Link>
-          </span>
-        );
-      })
+      workerElements = workers.map(worker => (
+        <WorkerBadge key={worker.name} worker={worker} showWorkerName={showWorkerName}/>
+      ));
     }
 
     return (
