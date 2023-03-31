@@ -4,9 +4,8 @@ import './App.css';
 import './styles/styles.scss';
 import 'bootstrap';
 import {Routes, Route} from "react-router-dom";
-import {useCurrentTimeSetupTimers} from "buildbot-ui/src/util/Moment";
+import {ConfigContext, useCurrentTimeSetupTimers} from "buildbot-ui";
 
-import {ConfigContext} from "buildbot-ui/src/contexts/Config";
 import {PageWithSidebar} from "./components/PageWithSidebar/PageWithSidebar";
 import {StoresContext} from "./contexts/Stores";
 import {globalMenuSettings} from "./plugins/GlobalMenuSettings";

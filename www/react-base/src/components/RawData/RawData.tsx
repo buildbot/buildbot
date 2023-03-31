@@ -19,7 +19,7 @@ import './RawData.scss';
 import {useState} from "react";
 import _ from "underscore";
 import {isObservableArray, isObservableObject} from "mobx";
-import {ArrowExpander} from "buildbot-ui/src/components/ArrowExpander/ArrowExpander";
+import {ArrowExpander} from "buildbot-ui";
 
 const isArrayRaw = (v: any) => {
   return _.isArray(v) || isObservableArray(v);

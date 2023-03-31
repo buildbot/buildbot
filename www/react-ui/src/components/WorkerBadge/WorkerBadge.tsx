@@ -16,7 +16,7 @@
 */
 
 import {Link} from "react-router-dom";
-import {Worker} from "buildbot-data-js/src/data/classes/Worker";
+import {Worker} from "buildbot-data-js";
 import {BadgeRound} from "../BadgeRound/BadgeRound";
 
 const connected2class = (worker: Worker) => {

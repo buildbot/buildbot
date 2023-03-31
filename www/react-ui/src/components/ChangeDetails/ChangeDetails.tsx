@@ -18,8 +18,7 @@
 import './ChangeDetails.scss';
 import {useState} from "react";
 import {OverlayTrigger, Popover, Table} from "react-bootstrap";
-import {Change} from "buildbot-data-js/src/data/classes/Change";
-import {parseChangeAuthorNameAndEmail} from "buildbot-data-js/src/util/Properties";
+import {Change, parseChangeAuthorNameAndEmail} from "buildbot-data-js";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
 import {ArrowExpander} from "../ArrowExpander/ArrowExpander";
 import {ChangeUserAvatar} from "../ChangeUserAvatar/ChangeUserAvatar";

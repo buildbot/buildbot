@@ -19,23 +19,33 @@ import './BuildSummary.scss';
 import {useContext, useState} from "react";
 import {observer} from "mobx-react";
 import {FaExpand} from "react-icons/fa";
-import {results2class, results2text, SUCCESS} from "buildbot-data-js/src/util/Results";
-import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {ConfigContext} from "buildbot-ui/src/contexts/Config";
-import {analyzeStepUrls, useStepUrlAnalyzer} from "buildbot-ui/src/util/StepUrls";
-import {durationFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
-import {Log} from "buildbot-data-js/src/data/classes/Log";
-import {Step} from "buildbot-data-js/src/data/classes/Step";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
-import {BadgeRound} from "buildbot-ui/src/components/BadgeRound/BadgeRound";
-import {BadgeStatus} from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
-import {ArrowExpander} from "buildbot-ui/src/components/ArrowExpander/ArrowExpander";
+import {
+  ArrowExpander,
+  BadgeRound,
+  BadgeStatus,
+  ConfigContext,
+  analyzeStepUrls,
+  durationFormat,
+  useCurrentTime,
+  useStateWithParentTrackingWithDefaultIfNotSet,
+  useStepUrlAnalyzer
+} from "buildbot-ui";
+import {
+  Build,
+  Builder,
+  DataCollection,
+  Log,
+  Step,
+  getPropertyValueOrDefault,
+  results2class,
+  results2text,
+  SUCCESS,
+  useDataAccessor,
+  useDataApiDynamicQuery,
+  useDataApiQuery,
+} from "buildbot-data-js";
 import {Link} from "react-router-dom";
-import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
 import {LogPreview} from "../LogPreview/LogPreview";
-import {useStateWithParentTrackingWithDefaultIfNotSet} from "buildbot-ui/src/util/React";
 import {BuildRequestSummary} from "../BuildRequestSummary/BuildRequestSummary";
 import {Card} from "react-bootstrap";
 

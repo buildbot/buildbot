@@ -16,11 +16,14 @@
 */
 
 import {observer} from "mobx-react";
-import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {Master} from "buildbot-data-js/src/data/classes/Master";
-import {Worker} from "buildbot-data-js/src/data/classes/Worker";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
+import {
+  Build,
+  Builder,
+  Master,
+  Worker,
+  useDataAccessor,
+  useDataApiQuery
+} from "buildbot-data-js";
 import {useParams} from "react-router-dom";
 import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";

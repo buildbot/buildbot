@@ -14,8 +14,7 @@ import {BaseClass} from "./classes/BaseClass";
 import {DataPropertiesCollection} from "./DataPropertiesCollection";
 
 // The default value is not used as the context is injected
-export const DataClientContext =
-  createContext(new DataClient(undefined as any, undefined as any));
+export const DataClientContext = createContext<DataClient>(undefined as any);
 
 export function useDataAccessor<T>(dependency: (T|null)[]): IDataAccessor {
   const dataClient = useContext(DataClientContext);

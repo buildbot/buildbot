@@ -18,13 +18,15 @@
 import {observer} from "mobx-react";
 import {FaSpinner, FaStop} from "react-icons/fa";
 import {
+  Build,
+  Builder,
+  Buildrequest,
+  Buildset,
   useDataAccessor,
   useDataApiQuery,
   useDataApiSinglePropertiesQuery
-} from "buildbot-data-js/src/data/ReactUtils";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
+} from "buildbot-data-js";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
-import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
 import {Tab, Tabs} from "react-bootstrap";
 import {RawData} from "../../components/RawData/RawData";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
@@ -33,10 +35,8 @@ import {StoresContext} from "../../contexts/Stores";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
-import {Buildset} from "buildbot-data-js/src/data/classes/Buildset";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 
 const buildTopbarActions = (builder: Builder | null,

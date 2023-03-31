@@ -18,12 +18,15 @@
 import './HomeView.scss';
 import {observer} from "mobx-react";
 import {FaHome} from "react-icons/fa";
-import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
+import {
+  Build,
+  Builder,
+  DataCollection,
+  useDataAccessor,
+  useDataApiQuery
+} from "buildbot-data-js";
 import {useContext} from "react";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
-import {Config, ConfigContext} from "buildbot-ui/src/contexts/Config";
+import {Config, ConfigContext} from "buildbot-ui";
 import {BuildSticker} from "../../components/BuildSticker/BuildSticker";
 import {Link} from "react-router-dom";
 import {Card} from "react-bootstrap";

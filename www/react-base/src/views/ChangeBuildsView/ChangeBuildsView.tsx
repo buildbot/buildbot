@@ -17,17 +17,17 @@
 
 import {observer} from "mobx-react";
 import {
+  Builder,
+  Change,
+  DataCollection,
   useDataAccessor,
   useDataApiDynamicQuery,
   useDataApiQuery,
   useDataApiSingleElementQuery
-} from "buildbot-data-js/src/data/ReactUtils";
-import {Change} from "buildbot-data-js/src/data/classes/Change";
+} from "buildbot-data-js";
 import {useParams} from "react-router-dom";
 import {useState} from "react";
-import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {ChangeDetails} from "buildbot-ui/src/components/ChangeDetails/ChangeDetails";
+import {ChangeDetails} from "buildbot-ui";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 
 

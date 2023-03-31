@@ -7,7 +7,7 @@ import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as ReactRouterDOM from 'react-router-dom';
-import jquery from 'jquery';
+import * as jquery from 'jquery';
 
 declare global {
   var axios: any;

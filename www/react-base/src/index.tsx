@@ -6,13 +6,15 @@ import './index.css';
 import "./plugins/GlobalSetup";
 import "buildbot-plugin-support";
 import {App} from './App';
-import {DataClientContext} from "buildbot-data-js/src/data/ReactUtils";
-import {DataClient} from "buildbot-data-js/src/data/DataClient";
-import {RestClient, getRestUrl} from "buildbot-data-js/src/data/RestClient";
-import {getWebSocketUrl, WebSocketClient} from "buildbot-data-js/src/data/WebSocketClient";
-import {TimeContext} from "buildbot-ui/src/contexts/Time";
-import {TimeStore} from "buildbot-ui/src/stores/TimeStore";
-import {Config, ConfigContext} from "buildbot-ui/src/contexts/Config";
+import {
+  DataClient,
+  DataClientContext,
+  RestClient,
+  WebSocketClient,
+  getRestUrl,
+  getWebSocketUrl,
+} from "buildbot-data-js";
+import {Config, ConfigContext, TimeContext, TimeStore} from "buildbot-ui";
 import {HashRouter} from "react-router-dom";
 import {SidebarStore} from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';

@@ -21,7 +21,7 @@ import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
 import {
   ForceSchedulerFieldBase,
   ForceSchedulerFieldNested
-} from "buildbot-data-js/src/data/classes/Forcescheduler";
+} from "buildbot-data-js";
 import {FieldAny} from "./FieldAny";
 import {Card, Tab, Tabs} from "react-bootstrap";
 

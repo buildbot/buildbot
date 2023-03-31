@@ -18,9 +18,8 @@
 import {action, makeObservable, observable} from "mobx";
 import {FaMinus, FaPlus} from "react-icons/fa";
 import {Link} from "react-router-dom";
-import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
-import {Change} from "buildbot-data-js/src/data/classes/Change";
-import {ChangeDetails} from "buildbot-ui/src/components/ChangeDetails/ChangeDetails";
+import {Change, DataCollection} from "buildbot-data-js";
+import {ChangeDetails} from "buildbot-ui";
 import {observer, useLocalObservable} from "mobx-react";
 import {resizeArray} from "../../util/Array";
 

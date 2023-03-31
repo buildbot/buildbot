@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {Log} from "buildbot-data-js/src/data/classes/Log";
+import {Log} from "buildbot-data-js";
 import {LogViewerHtml} from "./LogViewerHtml";
 import {LogViewerText} from "./LogViewerText";
 

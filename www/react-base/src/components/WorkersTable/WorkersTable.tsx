@@ -18,15 +18,9 @@
 import {Table} from "react-bootstrap";
 import {FaPause, FaRegSmile, FaTimes} from "react-icons/fa";
 import {FaStop} from "react-icons/fa";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {Master} from "buildbot-data-js/src/data/classes/Master";
-import {Worker} from "buildbot-data-js/src/data/classes/Worker";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
+import {Build, Builder, DataCollection, Master, Worker} from "buildbot-data-js";
 import {Link} from "react-router-dom";
-import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
-import {BadgeRound} from "buildbot-ui/src/components/BadgeRound/BadgeRound";
-import {BuildLinkWithSummaryTooltip}
-  from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
+import {BadgeRound, BuildLinkWithSummaryTooltip} from "buildbot-ui";
 import {observer} from "mobx-react";
 
 export const getWorkerStatusIcon = (worker: Worker, onClick: () => void) => {

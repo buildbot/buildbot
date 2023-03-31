@@ -24,29 +24,36 @@ import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import {Link, useNavigate, useParams} from "react-router-dom";
 import {
+  Build,
+  Buildrequest,
+  Buildset,
+  Builder,
+  Change,
+  DataCollection,
+  DataPropertiesCollection,
+  Worker,
+  UNKNOWN,
   findOrNull,
+  getPropertyValueOrDefault,
+  getBuildOrStepResults,
+  parseChangeAuthorNameAndEmail,
+  results2class,
   useDataAccessor,
   useDataApiDynamicQuery,
   useDataApiQuery,
   useDataApiSingleElementQuery
-} from "buildbot-data-js/src/data/ReactUtils";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
-import {Worker} from "buildbot-data-js/src/data/classes/Worker";
+} from "buildbot-data-js";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
-import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
-import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
-import {Buildset} from "buildbot-data-js/src/data/classes/Buildset";
-import {DataPropertiesCollection} from "buildbot-data-js/src/data/DataPropertiesCollection";
 import {computed} from "mobx";
-import {Change} from "buildbot-data-js/src/data/classes/Change";
-import {useFavIcon} from "buildbot-ui/src/util/FavIcon";
-import {getPropertyValueOrDefault, parseChangeAuthorNameAndEmail} from "buildbot-data-js/src/util/Properties";
-import {getBuildOrStepResults, results2class, UNKNOWN} from "buildbot-data-js/src/util/Results";
-import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
-import {BadgeRound} from "buildbot-ui/src/components/BadgeRound/BadgeRound";
-import {ChangeUserAvatar} from "buildbot-ui/src/components/ChangeUserAvatar/ChangeUserAvatar";
+import {
+  BadgeRound,
+  ChangeUserAvatar,
+  dateFormat,
+  durationFromNowFormat,
+  useCurrentTime,
+  useFavIcon
+} from "buildbot-ui";
 import {RawData} from "../../components/RawData/RawData";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
 import {ChangesTable} from "../../components/ChangesTable/ChangesTable";

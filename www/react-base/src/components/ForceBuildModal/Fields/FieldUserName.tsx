@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {ForceSchedulerFieldUserName} from "buildbot-data-js/src/data/classes/Forcescheduler";
+import {ForceSchedulerFieldUserName} from "buildbot-data-js";
 import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
 import {observer} from "mobx-react";
 import {FieldString} from "./FieldString";

@@ -16,11 +16,10 @@
 */
 
 import './LogViewerText.scss'
-import {Log} from "buildbot-data-js/src/data/classes/Log";
 import {forwardRef, useRef, useState} from 'react';
 import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer, useLocalObservable} from "mobx-react";
-import {useDataAccessor} from "buildbot-data-js/src/data/ReactUtils";
+import {Log, useDataAccessor} from "buildbot-data-js";
 import {ListOnItemsRenderedProps} from 'react-window';
 import AutoSizer from "react-virtualized-auto-sizer";
 import {digitCount} from "../../util/Math";

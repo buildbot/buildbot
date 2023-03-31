@@ -19,20 +19,21 @@ import './BuildersView.scss';
 import {observer} from "mobx-react";
 import {useContext, useState} from "react";
 import {FaCogs} from "react-icons/fa";
-import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {Worker} from "buildbot-data-js/src/data/classes/Worker";
+import {
+  Build,
+  Builder,
+  DataCollection,
+  Master,
+  Worker,
+  useDataAccessor,
+  useDataApiDynamicQuery,
+  useDataApiQuery
+} from "buildbot-data-js";
 import {Link} from "react-router-dom";
-import {Master} from "buildbot-data-js/src/data/classes/Master";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
-import {TagFilterManager, useTagFilterManager} from "buildbot-ui/src/util/TagFilterManager";
+import {BuildLinkWithSummaryTooltip, WorkerBadge, TagFilterManager, useTagFilterManager} from "buildbot-ui";
 import {computed} from "mobx";
-import {DataCollection} from "buildbot-data-js/src/data/DataCollection";
-import {WorkerBadge} from "../../../../react-ui/src/components/WorkerBadge/WorkerBadge";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
-import {BuildLinkWithSummaryTooltip}
-  from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {Table} from "react-bootstrap";
 
 const hasActiveMaster = (builder: Builder, masters: DataCollection<Master>) => {

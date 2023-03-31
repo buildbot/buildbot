@@ -23,7 +23,7 @@ import {
 } from "react-icons/fa";
 import {useLocation} from "react-router-dom";
 import {Nav, NavDropdown} from "react-bootstrap";
-import {ConfigContext} from "buildbot-ui/src/contexts/Config";
+import {ConfigContext} from "buildbot-ui";
 
 function getAuthIcon(faIcon: string) {
   switch (faIcon) {

@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "main": "dist/buildbot-ui.umd.js",
   "style": "dist/buildbot-ui.css",
+  "module": "dist/buildbot-ui.mjs",
+  "types": "dist/main.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "start": "vite",
     "build": "vite build",
@@ -96,7 +101,8 @@
     "react-router-dom": "^6.3.0",
     "sass": "^1.56.0",
     "vite": "^4.1.4",
-    "vite-plugin-dts": "^2.1.0"
+    "vite-plugin-dts": "^2.1.0",
+    "vite-plugin-static-copy": "^0.13.1"
   },
   "license": "GPL-2.0",
   "dependencies": {

@@ -17,13 +17,15 @@
 
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
-import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {Link} from "react-router-dom";
-import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
-import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
-import {BadgeRound} from "buildbot-ui/src/components/BadgeRound/BadgeRound";
-import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
+import {
+  Builder,
+  Buildrequest,
+  getPropertyValueOrDefault,
+  useDataAccessor,
+  useDataApiQuery
+} from "buildbot-data-js";
+import {BadgeRound, dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 
 export const PendingBuildRequestsView = observer(() => {

@@ -16,18 +16,18 @@
 */
 
 import './ForceBuildModal.less';
+import {Button, Modal} from "react-bootstrap";
+import {useContext, useState} from "react";
 import {
+  ControlParams,
   Forcescheduler,
   ForceSchedulerFieldBase,
   ForceSchedulerFieldNested
-} from "buildbot-data-js/src/data/classes/Forcescheduler";
-import {Button, Modal} from "react-bootstrap";
-import {useContext, useState} from "react";
+} from "buildbot-data-js";
+import {ConfigContext} from "buildbot-ui";
 import {observer, useLocalObservable} from "mobx-react";
 import {ForceBuildModalFieldsState} from "./ForceBuildModalFieldsState";
 import {FieldNested} from "./Fields/FieldNested";
-import {ControlParams} from "buildbot-data-js/src/data/DataQuery";
-import {ConfigContext} from "buildbot-ui/src/contexts/Config";
 
 const visitFields = (fields: ForceSchedulerFieldBase[],
                      callback: (field: ForceSchedulerFieldBase) => void)  => {

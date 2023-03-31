@@ -4,6 +4,8 @@
   "description": "Buildbot React data module and utilities",
   "author": "Povilas Kanapickas <povilas@radix.lt>",
   "main": "dist/buildbot-data-js.umd.js",
+  "module": "dist/buildbot-data-js.mjs",
+  "types": "dist/main.d.ts",
   "scripts": {
     "start": "vite",
     "build": "vite build",

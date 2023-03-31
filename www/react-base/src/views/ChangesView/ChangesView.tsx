@@ -16,8 +16,7 @@
 */
 
 import {observer} from "mobx-react";
-import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {Change} from "buildbot-data-js/src/data/classes/Change";
+import {Change, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
 import {ChangesTable} from "../../components/ChangesTable/ChangesTable";
 
 
