@@ -5,7 +5,7 @@ import './globals';
 import './styles/styles.scss';
 import 'bootstrap';
 import {Routes, Route} from "react-router-dom";
-import {useCurrentTimeSetupTimers} from "buildbot-data-js/src/util/Moment";
+import {useCurrentTimeSetupTimers} from "buildbot-ui/src/util/Moment";
 
 import PageWithSidebar from "./components/PageWithSidebar/PageWithSidebar";
 import {ConfigContext} from "./contexts/Config";

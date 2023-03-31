@@ -39,9 +39,6 @@ import "./data/RestClient";
 import "./data/WebSocketClient";
 
 import "./util/CancellablePromise";
-import "./util/FavIcon";
-import "./util/Moment";
 import "./util/Properties";
-import "./util/React";
 import "./util/Results";
 import "./util/Stream";

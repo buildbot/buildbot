@@ -23,7 +23,7 @@ import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactU
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {results2class, results2text} from "buildbot-data-js/src/util/Results";
-import {durationFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
+import {durationFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
 import BadgeRound from "../BadgeRound/BadgeRound";

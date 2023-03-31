@@ -21,7 +21,7 @@ import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactU
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {Link} from "react-router-dom";
 import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
-import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
+import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import TableHeading from "../../components/TableHeading/TableHeading";

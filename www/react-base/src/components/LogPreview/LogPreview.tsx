@@ -26,7 +26,7 @@ import {action, makeObservable, observable} from 'mobx';
 import {useLocalObservable} from "mobx-react";
 import {useDataAccessor} from "buildbot-data-js/src/data/ReactUtils";
 import {CancellablePromise} from "buildbot-data-js/src/util/CancellablePromise";
-import {useStateWithDefaultIfNotSet} from "buildbot-data-js/src/util/React";
+import {useStateWithDefaultIfNotSet} from "buildbot-ui/src/util/React";
 import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
 
 type RenderedLogLine = {

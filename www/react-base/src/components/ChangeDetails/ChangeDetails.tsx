@@ -17,7 +17,7 @@
 
 import './ChangeDetails.scss';
 import {Change} from "buildbot-data-js/src/data/classes/Change";
-import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
+import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import {useState} from "react";
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import {OverlayTrigger, Popover, Table} from "react-bootstrap";

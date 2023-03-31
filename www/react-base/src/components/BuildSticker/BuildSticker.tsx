@@ -20,7 +20,7 @@ import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {results2class, results2text} from "buildbot-data-js/src/util/Results";
 import {Link} from "react-router-dom";
-import {durationFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
+import {durationFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import { Card } from 'react-bootstrap';
 import BadgeStatus from "../BadgeStatus/BadgeStatus";
 

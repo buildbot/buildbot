@@ -23,7 +23,7 @@ import {results2class, results2text, SUCCESS} from "buildbot-data-js/src/util/Re
 import {ConfigContext} from "../../contexts/Config";
 import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
-import {durationFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
+import {durationFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import {Log} from "buildbot-data-js/src/data/classes/Log";
 import {Step} from "buildbot-data-js/src/data/classes/Step";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
@@ -32,7 +32,7 @@ import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
 import {Link} from "react-router-dom";
 import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import LogPreview from "../LogPreview/LogPreview";
-import {useStateWithParentTrackingWithDefaultIfNotSet} from "buildbot-data-js/src/util/React";
+import {useStateWithParentTrackingWithDefaultIfNotSet} from "buildbot-ui/src/util/React";
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import BuildRequestSummary from "../BuildRequestSummary/BuildRequestSummary";
 import BadgeRound from "../BadgeRound/BadgeRound";

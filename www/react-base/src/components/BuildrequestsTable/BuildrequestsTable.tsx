@@ -19,7 +19,7 @@ import {Table} from "react-bootstrap";
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import {observer} from "mobx-react";
-import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
+import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui/src/util/Moment";
 import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import {Link} from "react-router-dom";
 import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
