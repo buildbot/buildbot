@@ -32,7 +32,7 @@ import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import BuildLinkWithSummaryTooltip
-  from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
+  from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {Table} from "react-bootstrap";
 
 const connected2class = (worker: Worker) => {

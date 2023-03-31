@@ -26,7 +26,7 @@ import {Link} from "react-router-dom";
 import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import BadgeRound from "buildbot-ui/src/components/BadgeRound/BadgeRound";
 import BuildLinkWithSummaryTooltip
-  from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
+  from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {observer} from "mobx-react";
 
 export const getWorkerStatusIcon = (worker: Worker, onClick: () => void) => {

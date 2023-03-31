@@ -25,7 +25,7 @@ import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import {Link} from "react-router-dom";
 import {getPropertyValueArrayOrEmpty, getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
 import BuildLinkWithSummaryTooltip
-  from "../BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
+  from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import TableHeading from "../TableHeading/TableHeading";
 
 type BuildsTableProps = {

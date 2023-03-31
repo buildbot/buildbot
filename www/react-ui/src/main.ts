@@ -20,6 +20,7 @@ import "./styles/colors.scss";
 
 import "./components/BadgeRound/BadgeRound";
 import "./components/BadgeStatus/BadgeStatus";
+import "./components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import "./components/BuildSummaryTooltip/BuildSummaryTooltip";
 
 import "./contexts/Config";
