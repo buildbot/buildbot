@@ -10,6 +10,19 @@ import IDataDescriptor from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
 
+// This class is effectively same as Sourcestamp except that it is returned as part of a Buildset
+// and not as a separate entity identified by id, like in the rest of the API.
+export type BuildsetSourcestamps = {
+  ssid: number;
+  branch: string|null;
+  codebase: string;
+  created_at: number;
+  patch: string|null;
+  project: string;
+  repository: string;
+  revision: string|null;
+}
+
 export class Buildset extends BaseClass {
   bsid!: number;
   complete!: boolean;
@@ -19,7 +32,7 @@ export class Buildset extends BaseClass {
   parent_relationship!: string|null;
   reason!: string;
   results!: number|null;
-  sourcestamps!: string[]; // TODO
+  sourcestamps!: BuildsetSourcestamps[];
   submitted_at!: number|null;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
@@ -36,7 +49,7 @@ export class Buildset extends BaseClass {
     this.parent_relationship = object.parent_relationship;
     this.reason = object.reason;
     this.results = object.results;
-    this.sourcestamps = object.sourcestamps; // FIXME
+    this.sourcestamps = object.sourcestamps;
     this.submitted_at = object.submitted_at;
   }
 
