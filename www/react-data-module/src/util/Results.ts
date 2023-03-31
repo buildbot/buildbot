@@ -44,6 +44,8 @@ export const intToColor: {[key: number]: string} = {
   [UNKNOWN]: '#EEE',
 }
 
+export const allResults = [SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED];
+
 export function getBuildOrStepResults(buildOrStep: Build | Step | null, unknownResults: number) {
   if (buildOrStep === null) {
     return unknownResults;
