@@ -25,6 +25,7 @@ import {Worker} from "buildbot-data-js/src/data/classes/Worker";
 import {Link} from "react-router-dom";
 import {Master} from "buildbot-data-js/src/data/classes/Master";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
+import {TagFilterManager, useTagFilterManager} from "buildbot-ui/src/util/TagFilterManager";
 import {computed} from "mobx";
 import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import {useTopbarItems} from "../../stores/TopbarStore";
@@ -33,7 +34,6 @@ import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
 import {Table} from "react-bootstrap";
-import {TagFilterManager, useTagFilterManager} from "../../util/TagFilterManager";
 
 const connected2class = (worker: Worker) => {
   if (worker.connected_to.length > 0) {

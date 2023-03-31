@@ -24,3 +24,4 @@ import "./stores/TimeStore";
 import "./util/FavIcon";
 import "./util/Moment";
 import "./util/React";
+import "./util/TagFilterManager";
