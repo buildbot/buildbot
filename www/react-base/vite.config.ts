@@ -1,6 +1,7 @@
 import {defineConfig, PluginOption, ViteDevServer} from "vite";
 import react from "@vitejs/plugin-react";
 import {viteStaticCopy} from 'vite-plugin-static-copy';
+import checker from 'vite-plugin-checker';
 import path from 'path';
 import fs from 'fs';
 
@@ -75,6 +76,7 @@ export default defineConfig({
         },
       ],
     }),
+    checker({typescript: true}),
     serveBuildbotPlugins(),
   ],
   build: {
