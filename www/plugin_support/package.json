@@ -4,6 +4,7 @@
   "description": "Utilities for Buildbot plugins",
   "author": "Povilas Kanapickas <povilas@radix.lt>",
   "main": "dist/buildbot-plugin-support.umd.js",
+  "module": "dist/buildbot-plugin-support.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "vite",
