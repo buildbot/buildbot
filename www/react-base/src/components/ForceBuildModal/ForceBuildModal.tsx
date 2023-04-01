@@ -114,7 +114,14 @@ export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceB
           setError("Invalid response from Buildbot");
           return;
         }
-        onClose(res.result[0]);
+        const buildrequestIds = Object.values<number>(res.result[1])
+        if (typeof buildrequestIds[0] !== "number") {
+          setDisableStartButton(false);
+          setError("Invalid response from Buildbot");
+          return;
+        }
+
+        onClose(buildrequestIds[0].toString());
       } catch (e: any) {
         setDisableStartButton(false);
         setError(null);
