@@ -61,9 +61,34 @@ export interface ISettings {
   save(): void;
 };
 
-declare global {
-  function buildbotSetupPlugin(
-    callback: (registrationCallbacks: RegistrationCallbacks) => void): void;
+export type PluginRegistrationCallback = (registrationCallbacks: RegistrationCallbacks) => void;
 
-  function buildbotGetSettings(): ISettings;
+const pluginRegistrationCallbacks: PluginRegistrationCallback[] = [];
+const pluginRegistrationConsumers: ((callback: PluginRegistrationCallback) => void)[] = [];
+
+export function buildbotSetupPlugin(callback: PluginRegistrationCallback) {
+  pluginRegistrationCallbacks.push(callback);
+  for (const consumer of pluginRegistrationConsumers) {
+    consumer(callback);
+  }
+}
+
+// Not intended to be used by plugins themselves
+export function registerPluginRegistrationConsumer(
+  consumer: (callback: PluginRegistrationCallback) => void) {
+  pluginRegistrationConsumers.push(consumer);
+  for (const callbacks of pluginRegistrationCallbacks) {
+    consumer(callbacks);
+  }
+}
+
+let settingsSingleton: ISettings = undefined as unknown as ISettings;
+
+export function buildbotGetSettings(): ISettings {
+  return settingsSingleton;
+}
+
+// Not intended to be used by plugins themselves
+export function registerBuildbotSettingsSingleton(settings: ISettings) {
+  settingsSingleton = settings;
 }

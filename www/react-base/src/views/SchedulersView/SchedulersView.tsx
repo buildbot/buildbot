@@ -17,6 +17,7 @@
 
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
+import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {Scheduler, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
 
 export const SchedulersView = observer(() => {

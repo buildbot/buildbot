@@ -22,6 +22,7 @@ import {useEffect, useRef, useState} from 'react';
 import {ansi2html, generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {action, makeObservable, observable} from 'mobx';
 import {useLocalObservable} from "mobx-react";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {ArrowExpander, useStateWithDefaultIfNotSet} from "buildbot-ui";
 import {CancellablePromise, Log, useDataAccessor} from "buildbot-data-js";
 import {LogDownloadButton} from "../LogDownloadButton/LogDownloadButton";

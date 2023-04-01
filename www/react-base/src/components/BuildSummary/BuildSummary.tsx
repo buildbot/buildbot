@@ -19,6 +19,7 @@ import './BuildSummary.scss';
 import {useContext, useState} from "react";
 import {observer} from "mobx-react";
 import {FaExpand} from "react-icons/fa";
+import {buildbotGetSettings} from "buildbot-plugin-support";
 import {
   ArrowExpander,
   BadgeRound,

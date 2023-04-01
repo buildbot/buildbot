@@ -19,6 +19,7 @@ import './BuildersView.scss';
 import {observer} from "mobx-react";
 import {useContext, useState} from "react";
 import {FaCogs} from "react-icons/fa";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
   Builder,

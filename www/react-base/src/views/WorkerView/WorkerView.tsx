@@ -25,6 +25,7 @@ import {
   useDataApiQuery
 } from "buildbot-data-js";
 import {useParams} from "react-router-dom";
+import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 

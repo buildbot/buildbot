@@ -18,6 +18,7 @@
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
 import {FaCheck, FaTimes} from "react-icons/fa";
+import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {Build, Builder, Master, Worker, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
 import {computed} from "mobx";
 import {Link} from "react-router-dom";

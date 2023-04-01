@@ -26,6 +26,7 @@ import {
   useDataApiQuery
 } from "buildbot-data-js";
 import {BadgeRound, dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 
 export const PendingBuildRequestsView = observer(() => {

@@ -17,21 +17,21 @@
 
 import {
   GroupSettings,
-  RegistrationCallbacks, RouteConfig, SettingGroupConfig
-} from "../../../plugin_support/src";
+  registerPluginRegistrationConsumer,
+  RegistrationCallbacks,
+  RouteConfig,
+  SettingGroupConfig
+} from "buildbot-plugin-support";
 import {globalMenuSettings} from "./GlobalMenuSettings";
 import {globalRoutes} from "./GlobalRoutes";
 import {globalSettings} from "./GlobalSettings";
 
-declare global {
-  function buildbotSetupPlugin(
-    callback: (registrationCallbacks: RegistrationCallbacks) => void): void;
-}
-
-window.buildbotSetupPlugin = (callback: (registrationCallbacks: RegistrationCallbacks) => void) => {
+const onBuildbotSetupPlugin = (callback: (registrationCallbacks: RegistrationCallbacks) => void) => {
   callback({
     registerMenuGroup: (group: GroupSettings) => { globalMenuSettings.addGroup(group); },
     registerRoute: (route: RouteConfig) => { globalRoutes.addRoute(route); },
     registerSettingGroup: (group: SettingGroupConfig) => { globalSettings.addGroup(group); },
   });
 }
+
+registerPluginRegistrationConsumer(onBuildbotSetupPlugin);

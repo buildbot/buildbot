@@ -18,6 +18,7 @@
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
 import {FaSlidersH} from "react-icons/fa";
+import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   GlobalSettings,
   globalSettings,
