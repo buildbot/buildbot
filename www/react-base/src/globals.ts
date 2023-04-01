@@ -10,12 +10,14 @@ import * as ReactRouterDOM from 'react-router-dom';
 import * as jquery from 'jquery';
 
 declare global {
-  var axios: any;
-  var mobx: any;
-  var React: any;
-  var ReactRouterDOM: any;
-  var jQuery: any;
-  var $: any;
+  interface Window {
+    axios: any;
+    mobx: any;
+    React: any;
+    ReactRouterDOM: any;
+    jQuery: any;
+    $: any;
+  }
 }
 
 window.axios = axios;
