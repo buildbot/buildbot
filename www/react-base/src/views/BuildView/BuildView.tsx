@@ -341,7 +341,7 @@ const BuildView = observer(() => {
             <tbody>
               <tr>
                 <td className="text-left">name</td>
-                <td className="text-center">{workerName}</td>
+                <td className="text-right">{workerName}</td>
               </tr>
               {renderWorkerInfo()}
             </tbody>
