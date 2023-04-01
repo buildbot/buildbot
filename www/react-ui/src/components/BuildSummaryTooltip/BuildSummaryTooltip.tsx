@@ -126,7 +126,7 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
     let stepInfoWhenStarted: JSX.Element | null = null;
     if (step.started_at !== null) {
       stepInfoWhenStarted = (
-        <span className="pull-right">
+        <span className="bb-buildsummary-tooltip-step-time">
             {
               step.complete
                 ? <span>{durationFormat(step.complete_at! - step.started_at)}</span>
@@ -153,11 +153,11 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
     return (
       <li key={index} className="list-group-item">
         <div className="clearfix">
-          <span className="pull-left">
+          <span className="bb-buildsummary-tooltip-step-badge">
             <BadgeRound className={results2class(step, 'pulse')}>{step.number.toString()}</BadgeRound>
             &nbsp;
           </span>
-          <span className="pull-left">{limitStringLength(step.name, 40)}
+          <span className="bb-buildsummary-tooltip-step-name">{limitStringLength(step.name, 40)}
             {stepBuildInfoElement}
           </span>
           <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>

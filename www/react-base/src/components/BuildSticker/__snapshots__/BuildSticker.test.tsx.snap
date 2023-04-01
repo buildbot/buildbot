@@ -11,7 +11,7 @@ exports[`buildsticker component failed 1`] = `
       className="bb-buildsticker-left"
     >
       <div
-        className="bb-badge-status pull-right results_FAILURE"
+        className="bb-badge-status results_FAILURE"
       >
         FAILURE
       </div>
@@ -27,7 +27,7 @@ exports[`buildsticker component failed 1`] = `
       className="bb-buildsticker-left"
     >
       <span
-        className="pull-right"
+        className="bb-buildsticker-time"
       >
         10 s
       </span>
@@ -50,7 +50,7 @@ exports[`buildsticker component pending 1`] = `
       className="bb-buildsticker-left"
     >
       <div
-        className="bb-badge-status pull-right results_PENDING"
+        className="bb-badge-status results_PENDING"
       >
         ...
       </div>
@@ -66,7 +66,7 @@ exports[`buildsticker component pending 1`] = `
       className="bb-buildsticker-left"
     >
       <span
-        className="pull-right"
+        className="bb-buildsticker-time"
       >
         18992 days 23:59:40
       </span>
@@ -89,7 +89,7 @@ exports[`buildsticker component simple 1`] = `
       className="bb-buildsticker-left"
     >
       <div
-        className="bb-badge-status pull-right results_UNKNOWN"
+        className="bb-badge-status results_UNKNOWN"
       >
         ...
       </div>
@@ -105,7 +105,7 @@ exports[`buildsticker component simple 1`] = `
       className="bb-buildsticker-left"
     >
       <span
-        className="pull-right"
+        className="bb-buildsticker-time"
       >
         18993 days 0:00:00
       </span>
@@ -126,7 +126,7 @@ exports[`buildsticker component success 1`] = `
       className="bb-buildsticker-left"
     >
       <div
-        className="bb-badge-status pull-right results_SUCCESS"
+        className="bb-badge-status results_SUCCESS"
       >
         SUCCESS
       </div>
@@ -142,7 +142,7 @@ exports[`buildsticker component success 1`] = `
       className="bb-buildsticker-left"
     >
       <span
-        className="pull-right"
+        className="bb-buildsticker-time"
       >
         10 s
       </span>

@@ -193,7 +193,7 @@ export const LogPreview = ({builderid, buildnumber, stepnumber, log,
             {log.name}
           </div>
           <div className="flex-grow-1">
-            <div className="pull-right">
+            <div className="bb-log-preview-download">
               <Link to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}>
                 view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}&nbsp;
               </Link>

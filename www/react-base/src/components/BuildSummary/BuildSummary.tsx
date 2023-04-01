@@ -120,7 +120,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
     }
 
     return (
-      <span className="pull-right">
+      <span className="bb-build-summary-time">
           {
             step.complete
               ? <span>{durationFormat(step.complete_at! - step.started_at)}</span>
