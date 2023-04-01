@@ -34,7 +34,7 @@ export const FieldBoolean = observer(({field, fieldsState}: FieldBooleanProps) =
           <label>
             <input type="checkbox" checked={state.value === 'true'}
                    onChange={event => fieldsState.setValue(field.name,
-                     event.target.checked ? 'true' : 'false')}/>{field.label}
+                     event.target.checked ? 'true' : 'false')}/> {field.label}
           </label>
         </div>
       </div>
