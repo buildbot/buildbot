@@ -19,7 +19,7 @@ import './PageWithSidebar.scss';
 import {observer} from "mobx-react";
 import {FaAngleRight, FaBars, FaThumbtack} from "react-icons/fa";
 import {GlobalMenuSettings} from "../../plugins/GlobalMenuSettings";
-import SidebarStore from "../../stores/SidebarStore";
+import {SidebarStore} from "../../stores/SidebarStore";
 import {Link} from "react-router-dom";
 
 type PageWithSidebarProps = {
@@ -28,7 +28,7 @@ type PageWithSidebarProps = {
   children: JSX.Element[] | JSX.Element,
 }
 
-const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWithSidebarProps) => {
+export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWithSidebarProps) => {
   const {appTitle, groups, footerItems} = menuSettings;
 
   const pageWithSidebarClass = "gl-page-with-sidebar" +
@@ -120,5 +120,3 @@ const PageWithSidebar = observer(({menuSettings, sidebarStore, children}: PageWi
     </div>
   );
 });
-
-export default PageWithSidebar;

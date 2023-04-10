@@ -16,11 +16,10 @@
 */
 
 import {ListOnItemsRenderedProps} from "react-window";
-import {IDataAccessor} from "buildbot-data-js/src/data/DataAccessor";
+import {IDataAccessor, CancellablePromise} from "buildbot-data-js";
 import {escapeClassesToHtml} from "../../util/AnsiEscapeCodes";
 import {repositionPositionedArray} from "../../util/Array";
 import {binarySearchGreater, binarySearchLessEqual} from "../../util/BinarySearch";
-import {CancellablePromise} from "buildbot-data-js/src/util/CancellablePromise";
 import {
   ChunkCssClasses, mergeChunks,
   parseCssClassesForChunk,

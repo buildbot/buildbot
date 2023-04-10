@@ -5,7 +5,7 @@
   Copyright Buildbot Team Members
 */
 
-import BaseClass from "./classes/BaseClass";
+import {BaseClass} from "./classes/BaseClass";
 import {
   action,
   autorun,
@@ -14,7 +14,7 @@ import {
   observable,
   ObservableMap
 } from "mobx";
-import DataCollection, {IDataCollection} from "./DataCollection";
+import {DataCollection, IDataCollection} from "./DataCollection";
 import {IReactionDisposer} from "mobx";
 import {IDataAccessor} from "./DataAccessor";
 

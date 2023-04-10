@@ -46,7 +46,7 @@ const computeMasterCfgSnippet = (settings: GlobalSettings) => {
   return code;
 };
 
-const SettingsView = observer(() => {
+export const SettingsView = observer(() => {
   const masterCfgOverrideSnippet = computeMasterCfgSnippet(globalSettings);
 
   const renderGroupItem = (groupName: string, item: SettingItem) => {
@@ -147,5 +147,3 @@ buildbotSetupPlugin((reg) => {
     element: () => <SettingsView/>,
   });
 });
-
-export default SettingsView;

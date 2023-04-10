@@ -17,7 +17,7 @@
 
 import renderer from 'react-test-renderer';
 import {MemoryRouter} from "react-router-dom";
-import PropertiesTable from './PropertiesTable';
+import {PropertiesTable} from './PropertiesTable';
 
 function assertRenderSnapshot(properties: Map<string, any>) {
   const component = renderer.create(

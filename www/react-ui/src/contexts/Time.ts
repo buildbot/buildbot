@@ -16,6 +16,6 @@
 */
 
 import {createContext} from "react";
-import TimeStore from "../stores/TimeStore";
+import {TimeStore} from "../stores/TimeStore";
 
 export const TimeContext = createContext<TimeStore>(undefined as any);

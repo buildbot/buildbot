@@ -19,7 +19,7 @@ import {action, IObservableArray, makeObservable, observable} from "mobx";
 import {useEffect} from "react";
 import {TopbarAction} from "../components/TopbarActions/TopbarActions";
 
-export default class TopbarActionsStore {
+export class TopbarActionsStore {
   actions: IObservableArray<TopbarAction> = observable<TopbarAction>([]);
 
   constructor() {

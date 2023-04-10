@@ -2,6 +2,7 @@ import {resolve} from "path";
 import {defineConfig} from "vite";
 import react from "@vitejs/plugin-react";
 import dts from 'vite-plugin-dts'
+import {viteStaticCopy} from 'vite-plugin-static-copy';
 
 const outDir = 'dist';
 
@@ -15,16 +16,25 @@ export default defineConfig({
       }
     }),
     dts(),
+    viteStaticCopy({
+      targets: [
+        { src: './src/styles/colors.scss',
+          dest: '',
+          rename: 'colors.scss'
+        },
+      ],
+    }),
   ],
   build: {
     lib: {
       entry: resolve(__dirname, 'src/main.ts'),
-      name: "buildbot-ui",
+      name: "buildbotUi",
       fileName: "buildbot-ui",
     },
     rollupOptions: {
       external: [
         'axios',
+        'buildbot-data-js',
         'mobx',
         'moment',
         'react',
@@ -34,6 +44,7 @@ export default defineConfig({
       output: {
         globals: {
           axios: "axios",
+          "buildbot-data-js": "BuildbotDataJs",
           mobx: "mobx",
           react: "React",
           moment: "moment",
@@ -45,5 +56,8 @@ export default defineConfig({
     target: ['es2015'],
     outDir: outDir,
     emptyOutDir: true,
+  },
+  define: {
+    'process.env.NODE_ENV': '"production"',
   },
 });

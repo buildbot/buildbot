@@ -19,7 +19,7 @@ type AlertNotificationProps = {
   text: string | null
 }
 
-const AlertNotification = ({text}: AlertNotificationProps) => {
+export const AlertNotification = ({text}: AlertNotificationProps) => {
   if (text === null) {
     return <></>;
   }
@@ -29,5 +29,3 @@ const AlertNotification = ({text}: AlertNotificationProps) => {
     <div className="alert alert-danger">{text}</div>
   );
 }
-
-export default AlertNotification;

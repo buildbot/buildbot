@@ -21,10 +21,8 @@ import {useContext} from "react";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import {useNavigate, useParams} from "react-router-dom";
-import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
-import LogViewer from "../../components/LogViewer/LogViewer";
+import {Builder, Build, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
+import {LogViewer} from "../../components/LogViewer/LogViewer";
 
 const LogView = observer(() => {
   const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");

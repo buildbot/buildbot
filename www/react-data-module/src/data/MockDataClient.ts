@@ -5,13 +5,12 @@
   Copyright Buildbot Team Members
 */
 
-import DataClient from "./DataClient";
+import {DataClient} from "./DataClient";
 import {Query} from "./DataQuery";
-import BaseClass from "./classes/BaseClass";
-import BaseDataAccessor from "./DataAccessor";
-import IDataDescriptor from "./classes/DataDescriptor";
-import DataCollection from "./DataCollection";
-import {restPath} from "./DataUtils";
+import {BaseClass} from "./classes/BaseClass";
+import {BaseDataAccessor} from "./DataAccessor";
+import {IDataDescriptor} from "./classes/DataDescriptor";
+import {DataCollection} from "./DataCollection";
 
 type MockedResult = {
   endpoint: string;
@@ -19,7 +18,7 @@ type MockedResult = {
   returnValue: any;
 }
 
-export default class MockDataClient extends DataClient {
+export class MockDataClient extends DataClient {
   private isSpied: boolean = false;
   private mocks: MockedResult[] = [];
   private expects: {endpoint: string, query: Query}[] = [];

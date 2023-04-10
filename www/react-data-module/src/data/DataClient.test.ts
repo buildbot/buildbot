@@ -5,16 +5,16 @@
   Copyright Buildbot Team Members
 */
 
+import axios from "axios";
 import {WebSocketClient} from "./WebSocketClient";
 import {MockWebSocket} from "./MockWebSocket";
 import MockAdapter from "axios-mock-adapter";
-import axios from "axios";
-import DataClient from "./DataClient";
-import RestClient from "./RestClient";
-import BaseClass from "./classes/BaseClass";
-import IDataDescriptor from "./classes/DataDescriptor";
-import MockDataClient from "./MockDataClient";
-import BaseDataAccessor from "./DataAccessor";
+import {DataClient} from "./DataClient";
+import {RestClient} from "./RestClient";
+import {BaseClass} from "./classes/BaseClass";
+import {IDataDescriptor} from "./classes/DataDescriptor";
+import {MockDataClient} from "./MockDataClient";
+import {BaseDataAccessor} from "./DataAccessor";
 
 class TestDataClass extends BaseClass {
   testdata!: string;

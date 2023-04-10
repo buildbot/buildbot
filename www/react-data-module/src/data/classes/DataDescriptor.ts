@@ -11,7 +11,7 @@ export interface IAnyDataDescriptor {
   restArrayField: string;
 }
 
-export default interface IDataDescriptor<T> extends IAnyDataDescriptor {
+export interface IDataDescriptor<T> extends IAnyDataDescriptor {
   fieldId: string;
   parse(accessor: IDataAccessor, endpoint: string, object: any): T;
 }

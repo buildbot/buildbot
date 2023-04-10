@@ -18,7 +18,7 @@
 import {action, makeObservable, observable} from "mobx";
 import moment from "moment";
 
-export default class TimeStore {
+export class TimeStore {
   @observable now: number;
 
   constructor() {

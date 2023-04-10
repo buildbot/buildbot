@@ -18,19 +18,16 @@
 import './BuildRequestSummary.scss';
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
-import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import BadgeStatus from "buildbot-ui/src/components/BadgeStatus/BadgeStatus";
-import BuildSummary from "../BuildSummary/BuildSummary";
-import {Buildset} from "buildbot-data-js/src/data/classes/Buildset";
+import {Builder, Buildrequest, Buildset, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
+import {BadgeStatus} from "buildbot-ui";
+import {BuildSummary} from "../BuildSummary/BuildSummary";
 import {Link} from "react-router-dom";
 
 type BuildRequestSummaryProps = {
   buildrequestid: string;
 }
 
-const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSummaryProps) => {
+export const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSummaryProps) => {
   const accessor = useDataAccessor([buildrequestid]);
 
   const buildRequestQuery = useDataApiQuery(
@@ -97,5 +94,3 @@ const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSummaryProps
     </div>
   );
 });
-
-export default BuildRequestSummary;

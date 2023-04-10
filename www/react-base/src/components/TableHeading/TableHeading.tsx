@@ -21,10 +21,8 @@ type TableHeadingProps = {
   children: React.ReactNode;
 }
 
-const TableHeading = ({children}: TableHeadingProps) => {
+export const TableHeading = ({children}: TableHeadingProps) => {
   return (
     <h4 className="bb-table-heading">{children}</h4>
   );
 }
-
-export default TableHeading;

@@ -27,7 +27,7 @@ export type CustomFixedSizeListProps<T = any> = FixedSizeListProps<T> & {
 
 // react-virtualized provided a way to adjust range to be rendered. react-window removed this
 // capability. As a workaround this functionality is patched back in.
-export default class CustomFixedSizeList<T = any> extends FixedSizeList<T> {
+export class CustomFixedSizeList<T = any> extends FixedSizeList<T> {
   // @ts-ignore
   readonly props: Readonly<CustomFixedSizeListProps<T>>;
 

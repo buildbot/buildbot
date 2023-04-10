@@ -21,8 +21,8 @@ import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
 import {
   ForceSchedulerFieldBase,
   ForceSchedulerFieldNested
-} from "buildbot-data-js/src/data/classes/Forcescheduler";
-import FieldAny from "./FieldAny";
+} from "buildbot-data-js";
+import {FieldAny} from "./FieldAny";
 import {Card, Tab, Tabs} from "react-bootstrap";
 
 const shouldHideField = (field: ForceSchedulerFieldBase) => {
@@ -61,7 +61,7 @@ type FieldNestedProps = {
   fieldsState: ForceBuildModalFieldsState;
 }
 
-const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
+export const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
 
   const columns = field.columns ?? 1;
   const columnClass = `col-sm-${(12 / columns).toString()}`;
@@ -114,5 +114,3 @@ const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => {
     </div>
   );
 });
-
-export default FieldNested;

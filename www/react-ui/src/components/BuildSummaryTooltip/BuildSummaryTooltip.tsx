@@ -17,17 +17,21 @@
 
 import {useContext} from "react";
 import {observer} from "mobx-react";
-import {Step} from "buildbot-data-js/src/data/classes/Step";
-import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
-import {results2class, results2text} from "buildbot-data-js/src/util/Results";
-import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
+import {
+  Builder,
+  Build,
+  Step,
+  getPropertyValueOrDefault,
+  useDataAccessor,
+  useDataApiQuery,
+  results2class,
+  results2text
+} from "buildbot-data-js";
 import {ConfigContext} from "../../contexts/Config";
 import {durationFormat, useCurrentTime} from "../../util/Moment";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
-import BadgeRound from "../BadgeRound/BadgeRound";
-import BadgeStatus from "../BadgeStatus/BadgeStatus";
+import {BadgeRound} from "../BadgeRound/BadgeRound";
+import {BadgeStatus} from "../BadgeStatus/BadgeStatus";
 import Card from 'react-bootstrap/Card';
 import React from "react";
 
@@ -47,7 +51,7 @@ type BuildSummaryTooltipProps = {
   build: Build;
 }
 
-const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
+export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
   const accessor = useDataAccessor([build.id]);
   const config = useContext(ConfigContext);
 
@@ -172,5 +176,3 @@ const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
     </Card>
   );
 });
-
-export default BuildSummaryTooltip;

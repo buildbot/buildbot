@@ -18,26 +18,26 @@
 import {observer} from "mobx-react";
 import {FaSpinner, FaStop} from "react-icons/fa";
 import {
+  Build,
+  Builder,
+  Buildrequest,
+  Buildset,
   useDataAccessor,
   useDataApiQuery,
   useDataApiSinglePropertiesQuery
-} from "buildbot-data-js/src/data/ReactUtils";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
+} from "buildbot-data-js";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
-import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
 import {Tab, Tabs} from "react-bootstrap";
-import RawData from "../../components/RawData/RawData";
+import {RawData} from "../../components/RawData/RawData";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
 import {useContext, useState} from "react";
 import {StoresContext} from "../../contexts/Stores";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {useTopbarItems} from "../../stores/TopbarStore";
-import AlertNotification from "../../components/AlertNotification/AlertNotification";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
-import BuildSummary from "../../components/BuildSummary/BuildSummary";
-import PropertiesTable from "../../components/PropertiesTable/PropertiesTable";
-import {Buildset} from "buildbot-data-js/src/data/classes/Buildset";
-import TableHeading from "../../components/TableHeading/TableHeading";
+import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
+import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
+import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
+import {TableHeading} from "../../components/TableHeading/TableHeading";
 
 const buildTopbarActions = (builder: Builder | null,
                             buildRequest: Buildrequest | null,
@@ -66,7 +66,7 @@ const buildTopbarActions = (builder: Builder | null,
   return actions;
 }
 
-const BuildRequestView = observer(() => {
+export const BuildRequestView = observer(() => {
   const buildRequestId = Number.parseInt(useParams<"buildrequestid">().buildrequestid ?? "");
   const [searchParams] = useSearchParams();
   const redirectToBuild = searchParams.get("redirect_to_build") === "true";
@@ -175,5 +175,3 @@ buildbotSetupPlugin((reg) => {
     element: () => <BuildRequestView/>,
   });
 });
-
-export default BuildRequestView;

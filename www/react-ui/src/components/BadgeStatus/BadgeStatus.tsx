@@ -23,10 +23,8 @@ type BadgeStatusProps = {
   title?: string;
 }
 
-const BadgeStatus = ({className, children, title, ...props}: BadgeStatusProps) => {
+export const BadgeStatus = ({className, children, title, ...props}: BadgeStatusProps) => {
   return (
     <div {...props} title={title} className={"bb-badge-status " + className}>{children}</div>
   );
 }
-
-export default BadgeStatus;

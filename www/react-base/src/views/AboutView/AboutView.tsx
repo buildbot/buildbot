@@ -19,16 +19,16 @@ import "./AboutView.scss";
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
 import {FaInfoCircle} from "react-icons/fa";
-import {DataClientContext} from "buildbot-data-js/src/data/ReactUtils";
-import {ConfigContext} from "buildbot-ui/src/contexts/Config";
-import {useContext, useState} from "react";
-import {Link} from "react-router-dom";
 import {
+  DataClientContext,
   EndpointDescription,
   EndpointFieldSpec,
   useApplicationSpec
-} from "buildbot-data-js/src/data/ApplicationSpec";
-import RawData from "../../components/RawData/RawData";
+} from "buildbot-data-js";
+import {ConfigContext} from "buildbot-ui";
+import {useContext, useState} from "react";
+import {Link} from "react-router-dom";
+import {RawData} from "../../components/RawData/RawData";
 
 type EndpointListItemProps = {
   spec: EndpointDescription;
@@ -75,7 +75,7 @@ const EndpointListItem = ({spec}: EndpointListItemProps) => {
   )
 }
 
-const AboutView = observer(() => {
+export const AboutView = observer(() => {
   const config = useContext(ConfigContext);
 
   const dataClient = useContext(DataClientContext);
@@ -137,6 +137,3 @@ buildbotSetupPlugin((reg) => {
     element: () => <AboutView/>,
   });
 });
-
-
-export default AboutView;

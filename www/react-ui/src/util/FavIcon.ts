@@ -17,7 +17,7 @@
 
 import axios from "axios";
 import {useEffect} from "react";
-import {intToColor, SUCCESS, UNKNOWN} from "buildbot-data-js/src/util/Results";
+import {intToColor, SUCCESS, UNKNOWN} from "buildbot-data-js";
 
 function setFavIconUrl(url: string) {
   const iconElement = document.getElementById('bbicon');

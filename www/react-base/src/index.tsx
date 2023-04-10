@@ -1,21 +1,25 @@
+import './globals';
+import './globals2';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import "./plugins/GlobalSetup";
 import "buildbot-plugin-support";
-import App from './App';
-import {DataClientContext} from "buildbot-data-js/src/data/ReactUtils";
-import DataClient from "buildbot-data-js/src/data/DataClient";
-import RestClient, {getRestUrl} from "buildbot-data-js/src/data/RestClient";
-import {getWebSocketUrl, WebSocketClient} from "buildbot-data-js/src/data/WebSocketClient";
-import {TimeContext} from "buildbot-ui/src/contexts/Time";
-import TimeStore from "buildbot-ui/src/stores/TimeStore";
-import {Config, ConfigContext} from "buildbot-ui/src/contexts/Config";
+import {App} from './App';
+import {
+  DataClient,
+  DataClientContext,
+  RestClient,
+  WebSocketClient,
+  getRestUrl,
+  getWebSocketUrl,
+} from "buildbot-data-js";
+import {Config, ConfigContext, TimeContext, TimeStore} from "buildbot-ui";
 import {HashRouter} from "react-router-dom";
-import SidebarStore from "./stores/SidebarStore";
+import {SidebarStore} from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';
-import TopbarStore from "./stores/TopbarStore";
-import TopbarActionsStore from "./stores/TopbarActionsStore";
+import {TopbarStore} from "./stores/TopbarStore";
+import {TopbarActionsStore} from "./stores/TopbarActionsStore";
 import {globalSettings} from "./plugins/GlobalSettings";
 import moment from "moment";
 import axios from "axios";

@@ -23,7 +23,7 @@ import {
 } from "react-icons/fa";
 import {useLocation} from "react-router-dom";
 import {Nav, NavDropdown} from "react-bootstrap";
-import {ConfigContext} from "buildbot-ui/src/contexts/Config";
+import {ConfigContext} from "buildbot-ui";
 
 function getAuthIcon(faIcon: string) {
   switch (faIcon) {
@@ -40,7 +40,7 @@ function getAuthIcon(faIcon: string) {
   }
 }
 
-const Loginbar = () => {
+export const Loginbar = () => {
   const config = useContext(ConfigContext);
   const location = useLocation();
 
@@ -102,5 +102,3 @@ const Loginbar = () => {
     </Nav>
   );
 };
-
-export default Loginbar;

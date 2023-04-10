@@ -22,12 +22,10 @@ type ArrowExpanderProps = {
   setIsExpanded?: (expanded: boolean) => void;
 }
 
-const ArrowExpander = ({isExpanded, setIsExpanded}: ArrowExpanderProps) => {
+export const ArrowExpander = ({isExpanded, setIsExpanded}: ArrowExpanderProps) => {
   const callback = setIsExpanded === undefined ? undefined : () => setIsExpanded(!isExpanded);
 
   return isExpanded
     ? <FaChevronCircleDown onClick={callback} className={"rotate clickable"}/>
     : <FaChevronCircleRight onClick={callback} className={"rotate clickable"}/>;
 }
-
-export default ArrowExpander;

@@ -7,10 +7,10 @@
 
 import {type} from "../DataUtils";
 import {IDataAccessor} from "../DataAccessor";
-import IDataDescriptor from "./DataDescriptor";
+import {IDataDescriptor} from "./DataDescriptor";
 import {ControlParams, RequestQuery} from "../DataQuery";
 
-export default class BaseClass {
+export class BaseClass {
   // base endpoint for the items of this class, e.g. "builds", or "builds/12/steps". Full
   // API URL referring to the item is `${endpoint}/${id}`.
   private endpoint: string;

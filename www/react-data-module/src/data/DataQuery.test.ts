@@ -5,7 +5,7 @@
   Copyright Buildbot Team Members
 */
 
-import DataQuery, {Query} from "./DataQuery";
+import {DataQuery, Query} from "./DataQuery";
 
 class WrappedDataQuery {
   filter(array: any[], query: Query) {

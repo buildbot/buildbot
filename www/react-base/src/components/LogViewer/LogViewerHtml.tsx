@@ -15,17 +15,15 @@
   Copyright Buildbot Team Members
 */
 
-import {Log} from "buildbot-data-js/src/data/classes/Log";
 import {useEffect, useRef, useState} from 'react';
-import {useDataAccessor} from "buildbot-data-js/src/data/ReactUtils";
-import {CancellablePromise} from "buildbot-data-js/src/util/CancellablePromise";
 import {Card} from "react-bootstrap";
+import {CancellablePromise, Log, useDataAccessor} from "buildbot-data-js";
 
 export type LogViewerHtmlProps = {
   log: Log;
 }
 
-const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
+export const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
   const accessor = useDataAccessor([]);
   const [htmlLog, setHtmlLog] = useState('');
   const pendingRequest = useRef<CancellablePromise<any> | null>(null);
@@ -51,5 +49,3 @@ const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
     <Card.Body dangerouslySetInnerHTML={{__html: htmlLog}}/>
   );
 }
-
-export default LogViewerHtml;

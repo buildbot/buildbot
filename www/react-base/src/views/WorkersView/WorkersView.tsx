@@ -17,14 +17,17 @@
 
 import {observer} from "mobx-react";
 import {useState} from "react";
-import WorkerActionsModal from "../../components/WorkerActionsModal/WorkerActionsModal";
-import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {Master} from "buildbot-data-js/src/data/classes/Master";
-import {Worker} from "buildbot-data-js/src/data/classes/Worker";
-import {Build} from "buildbot-data-js/src/data/classes/Build";
-import DataCollection from "buildbot-data-js/src/data/DataCollection";
-import WorkersTable from "../../components/WorkersTable/WorkersTable";
+import {
+  Build,
+  Builder,
+  DataCollection,
+  Master,
+  Worker,
+  useDataAccessor,
+  useDataApiQuery
+} from "buildbot-data-js";
+import {WorkerActionsModal} from "../../components/WorkerActionsModal/WorkerActionsModal";
+import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
 
 const isWorkerFiltered = (worker: Worker, showOldWorkers: boolean) => {
   if (showOldWorkers) {
@@ -65,7 +68,7 @@ const getBuildsForWorkerMap = (workersQuery: DataCollection<Worker>,
   return map;
 }
 
-const WorkersView = observer(() => {
+export const WorkersView = observer(() => {
   const accessor = useDataAccessor([]);
 
   const showOldWorkers = buildbotGetSettings().getBooleanSetting("Workers.show_old_workers");
@@ -129,5 +132,3 @@ buildbotSetupPlugin((reg) => {
     }]
   });
 });
-
-export default WorkersView;

@@ -17,7 +17,7 @@
 
 import './UrlNotFoundView.scss';
 
-const UrlNotFoundView = () => {
+export const UrlNotFoundView = () => {
   return (
     <div className="container bb-url-not-found-view">
       <div>
@@ -36,5 +36,3 @@ const UrlNotFoundView = () => {
     </div>
   );
 }
-
-export default UrlNotFoundView;

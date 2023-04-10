@@ -24,7 +24,7 @@ type ChangeUserAvatarProps = {
   showName: boolean;
 }
 
-const ChangeUserAvatar = ({name, email, showName}: ChangeUserAvatarProps) => {
+export const ChangeUserAvatar = ({name, email, showName}: ChangeUserAvatarProps) => {
   if (email === null) {
     return (
       <>
@@ -47,5 +47,3 @@ const ChangeUserAvatar = ({name, email, showName}: ChangeUserAvatarProps) => {
     </>
   );
 }
-
-export default ChangeUserAvatar;

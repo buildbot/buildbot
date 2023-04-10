@@ -25,7 +25,7 @@ type PropertiesTableProps = {
   properties: Map<string, any>;
 }
 
-const PropertiesTable = observer(({properties}: PropertiesTableProps) => {
+export const PropertiesTable = observer(({properties}: PropertiesTableProps) => {
   const propertyRows = Array.from(properties.entries()).map(([key, valueSource]: [string, any]) => {
     const [value, source] = valueSource;
     const valueString = JSON.stringify(value);
@@ -58,5 +58,3 @@ const PropertiesTable = observer(({properties}: PropertiesTableProps) => {
     </Table>
   );
 });
-
-export default PropertiesTable;

@@ -15,17 +15,17 @@
   Copyright Buildbot Team Members
 */
 
-import {ForceSchedulerFieldText} from "buildbot-data-js/src/data/classes/Forcescheduler";
+import {ForceSchedulerFieldText} from "buildbot-data-js";
 import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
 import {observer} from "mobx-react";
-import FieldBase from "./FieldBase";
+import {FieldBase} from "./FieldBase";
 
 type FieldTextProps = {
   field: ForceSchedulerFieldText;
   fieldsState: ForceBuildModalFieldsState;
 }
 
-const FieldText = observer(({field, fieldsState}: FieldTextProps) => {
+export const FieldText = observer(({field, fieldsState}: FieldTextProps) => {
   const state = fieldsState.fields.get(field.name)!;
 
   return (
@@ -38,5 +38,3 @@ const FieldText = observer(({field, fieldsState}: FieldTextProps) => {
     </FieldBase>
   );
 });
-
-export default FieldText;

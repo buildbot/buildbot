@@ -15,10 +15,10 @@
   Copyright Buildbot Team Members
 */
 
-import {ForceSchedulerFieldChoiceString} from "buildbot-data-js/src/data/classes/Forcescheduler";
+import {ForceSchedulerFieldChoiceString} from "buildbot-data-js";
 import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
 import {observer} from "mobx-react";
-import FieldBase from "./FieldBase";
+import {FieldBase} from "./FieldBase";
 import {Form} from "react-bootstrap";
 
 type FieldChoiceStringProps = {
@@ -26,7 +26,7 @@ type FieldChoiceStringProps = {
   fieldsState: ForceBuildModalFieldsState;
 }
 
-const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStringProps) => {
+export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStringProps) => {
   const state = fieldsState.fields.get(field.name)!;
 
   return (
@@ -46,5 +46,3 @@ const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStringProps
     </FieldBase>
   );
 });
-
-export default FieldChoiceString;

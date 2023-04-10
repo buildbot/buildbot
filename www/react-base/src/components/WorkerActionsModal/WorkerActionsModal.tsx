@@ -18,14 +18,14 @@
 import {observer} from "mobx-react";
 import {useState} from "react";
 import {Button, Modal} from "react-bootstrap";
-import {Worker} from "buildbot-data-js/src/data/classes/Worker";
+import {Worker} from "buildbot-data-js";
 
 type WorkerActionsModalProps = {
   worker: Worker;
   onClose: () => void;
 }
 
-const WorkerActionsModal = observer(({worker, onClose}: WorkerActionsModalProps) => {
+export const WorkerActionsModal = observer(({worker, onClose}: WorkerActionsModalProps) => {
 
   const [errors, setErrors] = useState<string|null>(null);
   const [reasonText, setReasonText] = useState<string>("");
@@ -81,5 +81,3 @@ const WorkerActionsModal = observer(({worker, onClose}: WorkerActionsModalProps)
     </Modal>
   )
 });
-
-export default WorkerActionsModal;
