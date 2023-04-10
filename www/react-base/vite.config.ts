@@ -1,11 +1,58 @@
-import {defineConfig} from "vite";
+import {defineConfig, PluginOption, ViteDevServer} from "vite";
 import react from "@vitejs/plugin-react";
 import {viteStaticCopy} from 'vite-plugin-static-copy';
+import path from 'path';
+import fs from 'fs';
 
 const proxyHost = 'buildbot.buildbot.net';
 const proxyTargetHttp = `http://${proxyHost}`;
 const proxyTargetWs = `ws://${proxyHost}`;
 const outDir = 'buildbot_www_react/static';
+
+const buildPluginsPathsMap = () => {
+  const root = path.resolve(__dirname, '..');
+  const aliases: {[src: string]: [string, string]} = {}
+
+  const addPlugin = (pluginName: string, pluginOutputRoot: string) => {
+    const knownPaths = [
+      ['js', 'scripts.js', 'text/javascript'],
+      ['css', 'styles.css', 'text/css']
+    ];
+
+    for (const [type, filename, mimeType] of knownPaths) {
+      const pluginOutputFile = path.join(pluginOutputRoot, filename);
+      if (fs.existsSync(pluginOutputFile)) {
+        aliases[`/plugins/${pluginName}.${type}`] = [pluginOutputFile, mimeType];
+      }
+    }
+  }
+
+  return aliases;
+}
+
+function serveBuildbotPlugins(): PluginOption {
+  return {
+    apply: 'serve',
+    configureServer(server: ViteDevServer) {
+      const pathMap = buildPluginsPathsMap();
+
+      return () => {
+        server.middlewares.use(async (req, res, next) => {
+          if (req.originalUrl !== undefined && (req.originalUrl in pathMap)) {
+            const [filePath, mimeType] = pathMap[req.originalUrl];
+            res.setHeader('Content-Type', mimeType);
+            res.writeHead(200);
+            res.write(fs.readFileSync(filePath));
+            res.end();
+          }
+
+          next();
+        });
+      };
+    },
+    name: 'serve-buildbot-plugins',
+  };
+}
 
 export default defineConfig({
   plugins: [
@@ -28,6 +75,7 @@ export default defineConfig({
         },
       ],
     }),
+    serveBuildbotPlugins(),
   ],
   build: {
     target: ['es2015'],
