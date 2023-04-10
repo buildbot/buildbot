@@ -23,7 +23,6 @@ import {
   useDataApiSinglePropertiesQuery
 } from "buildbot-data-js/src/data/ReactUtils";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
 import {Tab, Tabs} from "react-bootstrap";
@@ -169,10 +168,12 @@ const BuildRequestView = observer(() => {
   );
 });
 
-globalRoutes.addRoute({
-  route: "buildrequests/:buildrequestid",
-  group: "builds",
-  element: () => <BuildRequestView/>,
+buildbotSetupPlugin((reg) => {
+  reg.registerRoute({
+    route: "buildrequests/:buildrequestid",
+    group: "builds",
+    element: () => <BuildRequestView/>,
+  });
 });
 
 export default BuildRequestView;

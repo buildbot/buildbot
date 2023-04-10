@@ -18,7 +18,6 @@
 import {observer} from "mobx-react";
 import {useContext, useState} from "react";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {useTopbarItems} from "../../stores/TopbarStore";
@@ -191,10 +190,12 @@ const BuilderView = observer(() => {
   // TODO: display more than 100 builds
 });
 
-globalRoutes.addRoute({
-  route: "builders/:builderid",
-  group: null,
-  element: () => <BuilderView/>,
+buildbotSetupPlugin((reg) => {
+  reg.registerRoute({
+    route: "builders/:builderid",
+      group: null,
+      element: () => <BuilderView/>,
+  });
 });
 
 export default BuilderView;

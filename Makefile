@@ -13,10 +13,10 @@ YARN := $(shell which yarnpkg || which yarn)
 
 WWW_PKGS := www/base www/react-base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample www/codeparameter
-WWW_DEP_PKGS := www/guanlecoja-ui www/data_module www/react-data-module
+WWW_DEP_PKGS := www/guanlecoja-ui www/data_module www/react-data-module www/plugin_support
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
-WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)

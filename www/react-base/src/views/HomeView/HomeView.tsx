@@ -21,14 +21,11 @@ import {FaHome} from "react-icons/fa";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {useContext} from "react";
 import {Config, ConfigContext} from "../../contexts/Config";
-import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import DataCollection from "buildbot-data-js/src/data/DataCollection";
 import BuildSticker from "../../components/BuildSticker/BuildSticker";
 import {Link} from "react-router-dom";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
-import {globalSettings} from "../../plugins/GlobalSettings";
 import {Card} from "react-bootstrap";
 import TableHeading from "../../components/TableHeading/TableHeading";
 
@@ -84,7 +81,7 @@ const HomeView = observer(() => {
   const buildsRunning = useDataApiQuery(
     () => Build.getAll(accessor, {query: {order: '-started_at', complete: false}}));
 
-  const maxRecentBuilds = globalSettings.getIntegerSetting("Home.max_recent_builds");
+  const maxRecentBuilds = buildbotGetSettings().getIntegerSetting("Home.max_recent_builds");
 
   const recentBuilds = useDataApiQuery(
     () => Build.getAll(accessor, {query: {order: '-buildid', complete: true,
@@ -158,29 +155,31 @@ const HomeView = observer(() => {
   )
 });
 
-globalMenuSettings.addGroup({
-  name: 'home',
-  caption: 'Home',
-  icon: <FaHome/>,
-  order: 1,
-  route: '/',
-  parentName: null,
-});
+buildbotSetupPlugin((reg) => {
+  reg.registerMenuGroup({
+    name: 'home',
+    caption: 'Home',
+    icon: <FaHome/>,
+    order: 1,
+    route: '/',
+    parentName: null,
+  });
 
-globalRoutes.addRoute({
-  route: "/",
-  group: "home",
-  element: () => <HomeView/>,
-});
+  reg.registerRoute({
+    route: "/",
+    group: "home",
+    element: () => <HomeView/>,
+  });
 
-globalSettings.addGroup({
-  name: 'Home',
-  caption: 'Home page related settings',
-  items: [{
-    type: 'integer',
-    name: 'max_recent_builds',
-    caption: 'Max recent builds',
-    defaultValue: 20
-  }]});
+  reg.registerSettingGroup({
+    name: 'Home',
+    caption: 'Home page related settings',
+    items: [{
+      type: 'integer',
+      name: 'max_recent_builds',
+      caption: 'Max recent builds',
+      defaultValue: 20
+    }]});
+});
 
 export default HomeView;

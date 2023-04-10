@@ -19,6 +19,7 @@
     "babel-jest": "^26.6.0",
     "babel-preset-react-app": "^10.0.0",
     "buildbot-data-js": "link:../react-data-module",
+    "buildbot-plugin-support": "link:../plugin_support",
     "bootstrap": "^4.6.2",
     "eslint": "^7.11.0",
     "eslint-config-react-app": "^6.0.0",

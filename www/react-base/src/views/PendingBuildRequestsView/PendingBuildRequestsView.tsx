@@ -19,10 +19,7 @@ import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
-import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {Link} from "react-router-dom";
-import {globalSettings} from "../../plugins/GlobalSettings";
 import {Buildrequest} from "buildbot-data-js/src/data/classes/Buildrequest";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-data-js/src/util/Moment";
 import {getPropertyValueOrDefault} from "buildbot-data-js/src/util/Properties";
@@ -33,7 +30,7 @@ const PendingBuildRequestsView = observer(() => {
   const now = useCurrentTime();
   const accessor = useDataAccessor([]);
 
-  const buildRequestFetchLimit = globalSettings.getIntegerSetting("BuildRequests.buildrequestFetchLimit");
+  const buildRequestFetchLimit = buildbotGetSettings().getIntegerSetting("BuildRequests.buildrequestFetchLimit");
   const buildRequestsQuery = useDataApiQuery(
     () => Buildrequest.getAll(accessor, {query: {
       limit: buildRequestFetchLimit,
@@ -121,29 +118,31 @@ const PendingBuildRequestsView = observer(() => {
   );
 });
 
+buildbotSetupPlugin((reg) => {
+  reg.registerMenuGroup({
+    name: 'pendingbuildrequests',
+    parentName: 'builds',
+    caption: 'Pending Buildrequests',
+    order: null,
+    route: '/pendingbuildrequests',
+  });
 
-globalMenuSettings.addGroup({
-  name: 'pendingbuildrequests',
-  parentName: 'builds',
-  caption: 'Pending Buildrequests',
-  order: null,
-  route: '/pendingbuildrequests',
+  reg.registerRoute({
+    route: "pendingbuildrequests",
+    group: "builds",
+    element: () => <PendingBuildRequestsView/>,
+  });
+
+  reg.registerSettingGroup({
+    name: 'BuildRequests',
+    caption: 'Buildrequests page related settings',
+    items: [{
+      type: 'integer',
+      name: 'buildrequestFetchLimit',
+      caption: 'Maximum number of pending buildrequests to fetch',
+      defaultValue: 50
+    }]
+  });
 });
-
-globalRoutes.addRoute({
-  route: "pendingbuildrequests",
-  group: "builds",
-  element: () => <PendingBuildRequestsView/>,
-});
-
-globalSettings.addGroup({
-  name: 'BuildRequests',
-  caption: 'Buildrequests page related settings',
-  items: [{
-    type: 'integer',
-    name: 'buildrequestFetchLimit',
-    caption: 'Maximum number of pending buildrequests to fetch',
-    defaultValue: 50
-  }]});
 
 export default PendingBuildRequestsView;

@@ -18,8 +18,6 @@
 import './BuildView.scss';
 import {observer} from "mobx-react";
 import {FaSpinner} from "react-icons/fa";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
-import {globalSettings} from "../../plugins/GlobalSettings";
 import AlertNotification from "../../components/AlertNotification/AlertNotification";
 import {useContext, useState} from "react";
 import {useTopbarItems} from "../../stores/TopbarStore";
@@ -360,16 +358,17 @@ const BuildView = observer(() => {
   );
 });
 
-globalRoutes.addRoute({
-  route: "builders/:builderid/builds/:buildnumber",
-  group: null,
-  element: () => <BuildView/>,
-});
+buildbotSetupPlugin((reg) => {
+  reg.registerRoute({
+    route: "builders/:builderid/builds/:buildnumber",
+    group: null,
+    element: () => <BuildView/>,
+  });
 
-globalSettings.addGroup({
-  name:'Build',
-  caption: 'Build page related settings',
-  items:[{
+  reg.registerSettingGroup({
+    name:'Build',
+    caption: 'Build page related settings',
+    items:[{
       type: 'integer',
       name: 'trigger_step_page_size',
       caption: 'Number of builds to show per page in trigger step',
@@ -380,4 +379,6 @@ globalSettings.addGroup({
       caption: 'Always show URLs in step',
       defaultValue: true
     }
-  ]});
+    ]
+  });
+});

@@ -19,7 +19,6 @@ import './LogPreview.scss';
 import {Card} from "react-bootstrap";
 import {Link} from "react-router-dom";
 import {Log} from "buildbot-data-js/src/data/classes/Log";
-import {globalSettings} from "../../plugins/GlobalSettings";
 import {useEffect, useRef, useState} from 'react';
 import ArrowExpander from "../ArrowExpander/ArrowExpander";
 import {ansi2html, generateStyleElement} from "../../util/AnsiEscapeCodes";
@@ -76,8 +75,8 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
                      initialFullDisplay}: LogPreviewProps) => {
   const previewState = useLocalObservable(() => new LogPreviewState());
 
-  const initialLoadLines = globalSettings.getIntegerSetting('LogPreview.loadlines');
-  const maximumLoadLines = globalSettings.getIntegerSetting('LogPreview.maxlines');
+  const initialLoadLines = buildbotGetSettings().getIntegerSetting('LogPreview.loadlines');
+  const maximumLoadLines = buildbotGetSettings().getIntegerSetting('LogPreview.maxlines');
 
   const [fullDisplay, setFullDisplay] = useStateWithDefaultIfNotSet(() => initialFullDisplay);
 
@@ -212,10 +211,11 @@ const LogPreview = ({builderid, buildnumber, stepnumber, log,
 
 export default LogPreview;
 
-globalSettings.addGroup({
-  name: 'LogPreview',
-  caption: 'LogPreview related settings',
-  items: [{
+buildbotSetupPlugin((reg) => {
+  reg.registerSettingGroup({
+    name: 'LogPreview',
+    caption: 'LogPreview related settings',
+    items: [{
       type: 'integer',
       name: 'loadlines',
       caption: 'Initial number of lines to load',
@@ -231,4 +231,6 @@ globalSettings.addGroup({
       caption: 'Expand logs with these names (use ; as separator)',
       defaultValue: 'summary'
     }
-  ]});
+    ]
+  });
+})

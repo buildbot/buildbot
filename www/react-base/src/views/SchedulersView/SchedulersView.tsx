@@ -17,8 +17,6 @@
 
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
-import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {Scheduler} from "buildbot-data-js/src/data/classes/Scheduler";
 
@@ -62,18 +60,20 @@ const SchedulersView = observer(() => {
   );
 });
 
-globalMenuSettings.addGroup({
-  name: 'schedulers',
-  parentName: 'builds',
-  caption: 'Schedulers',
-  order: null,
-  route: '/schedulers',
-});
+buildbotSetupPlugin((reg) => {
+  reg.registerMenuGroup({
+    name: 'schedulers',
+    parentName: 'builds',
+    caption: 'Schedulers',
+    order: null,
+    route: '/schedulers',
+  });
 
-globalRoutes.addRoute({
-  route: "schedulers",
-  group: "schedulers",
-  element: () => <SchedulersView/>,
+  reg.registerRoute({
+    route: "schedulers",
+    group: "schedulers",
+    element: () => <SchedulersView/>,
+  });
 });
 
 export default SchedulersView;

@@ -19,8 +19,6 @@ import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
 import {FaCheck, FaTimes} from "react-icons/fa";
 import {useDataAccessor, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
-import {globalMenuSettings} from "../../plugins/GlobalMenuSettings";
-import {globalRoutes} from "../../plugins/GlobalRoutes";
 import {Worker} from "buildbot-data-js/src/data/classes/Worker";
 import {Master} from "buildbot-data-js/src/data/classes/Master";
 import {computed} from "mobx";
@@ -31,7 +29,6 @@ import BuildLinkWithSummaryTooltip
   from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import BadgeRound from "../../components/BadgeRound/BadgeRound";
-
 
 const MastersView = observer(() => {
   const now = useCurrentTime();
@@ -136,18 +133,20 @@ const MastersView = observer(() => {
   );
 });
 
-globalMenuSettings.addGroup({
-  name: 'masters',
-  parentName: 'builds',
-  caption: 'Build Masters',
-  order: null,
-  route: '/masters',
-});
+buildbotSetupPlugin((reg) => {
+  reg.registerMenuGroup({
+    name: 'masters',
+    parentName: 'builds',
+    caption: 'Build Masters',
+    order: null,
+    route: '/masters',
+  });
 
-globalRoutes.addRoute({
-  route: "masters",
-  group: "builds",
-  element: () => <MastersView/>,
+  reg.registerRoute({
+    route: "masters",
+    group: "builds",
+    element: () => <MastersView/>,
+  });
 });
 
 export default MastersView;
