@@ -18,6 +18,7 @@
     "axios": "^0.27.2",
     "babel-jest": "^26.6.0",
     "babel-preset-react-app": "^10.0.0",
+    "buildbot-ui": "link:../react-ui",
     "buildbot-data-js": "link:../react-data-module",
     "buildbot-plugin-support": "link:../plugin_support",
     "bootstrap": "^4.6.2",

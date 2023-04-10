@@ -15,18 +15,22 @@
   Copyright Buildbot Team Members
 */
 
-import './BadgeRound.scss';
+import {action, makeObservable, observable} from "mobx";
+import moment from "moment";
 
-type BadgeRoundProps = {
-  className: string;
-  children?: JSX.Element | JSX.Element[] | string;
-  title?: string;
+export default class TimeStore {
+  @observable now: number;
+
+  constructor() {
+    makeObservable(this);
+    this.now = 0;
+  }
+
+  @action setTime(now: number) {
+    this.now = now;
+  }
+
+  @action setTimeFromString(now: string) {
+    this.now = moment(now).unix();
+  }
 }
-
-const BadgeRound = ({className, children, title, ...props}: BadgeRoundProps) => {
-  return (
-    <span {...props} title={title} className={"bb-badge-round " + className}>{children}</span>
-  );
-}
-
-export default BadgeRound;

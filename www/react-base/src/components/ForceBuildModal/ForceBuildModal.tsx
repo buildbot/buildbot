@@ -26,8 +26,8 @@ import {useContext, useState} from "react";
 import {observer, useLocalObservable} from "mobx-react";
 import {ForceBuildModalFieldsState} from "./ForceBuildModalFieldsState";
 import FieldNested from "./Fields/FieldNested";
-import {ConfigContext} from "../../contexts/Config";
 import {ControlParams} from "buildbot-data-js/src/data/DataQuery";
+import {ConfigContext} from "buildbot-ui/src/contexts/Config";
 
 const visitFields = (fields: ForceSchedulerFieldBase[],
                      callback: (field: ForceSchedulerFieldBase) => void)  => {

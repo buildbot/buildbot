@@ -20,13 +20,13 @@ import {Card} from "react-bootstrap";
 import {Link} from "react-router-dom";
 import {Log} from "buildbot-data-js/src/data/classes/Log";
 import {useEffect, useRef, useState} from 'react';
-import ArrowExpander from "../ArrowExpander/ArrowExpander";
+import ArrowExpander from "buildbot-ui/src/components/ArrowExpander/ArrowExpander";
 import {ansi2html, generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {action, makeObservable, observable} from 'mobx';
 import {useLocalObservable} from "mobx-react";
 import {useDataAccessor} from "buildbot-data-js/src/data/ReactUtils";
 import {CancellablePromise} from "buildbot-data-js/src/util/CancellablePromise";
-import {useStateWithDefaultIfNotSet} from "buildbot-data-js/src/util/React";
+import {useStateWithDefaultIfNotSet} from "buildbot-ui/src/util/React";
 import LogDownloadButton from "../LogDownloadButton/LogDownloadButton";
 
 type RenderedLogLine = {

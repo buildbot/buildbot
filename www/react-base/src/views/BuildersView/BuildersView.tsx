@@ -18,29 +18,22 @@
 import './BuildersView.scss';
 import {observer} from "mobx-react";
 import {useContext, useState} from "react";
-import {FaCogs, FaQuestionCircle} from "react-icons/fa";
+import {FaCogs} from "react-icons/fa";
 import {useDataAccessor, useDataApiDynamicQuery, useDataApiQuery} from "buildbot-data-js/src/data/ReactUtils";
 import {Builder} from "buildbot-data-js/src/data/classes/Builder";
 import {Worker} from "buildbot-data-js/src/data/classes/Worker";
-import {Link, URLSearchParamsInit, useSearchParams} from "react-router-dom";
+import {Link} from "react-router-dom";
 import {Master} from "buildbot-data-js/src/data/classes/Master";
 import {Build} from "buildbot-data-js/src/data/classes/Build";
+import {TagFilterManager, useTagFilterManager} from "buildbot-ui/src/util/TagFilterManager";
 import {computed} from "mobx";
 import DataCollection from "buildbot-data-js/src/data/DataCollection";
+import WorkerBadge from "../../../../react-ui/src/components/WorkerBadge/WorkerBadge";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import BuildLinkWithSummaryTooltip
-  from "../../components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
-import BadgeRound from "../../components/BadgeRound/BadgeRound";
-import {Badge, OverlayTrigger, Popover, Table} from "react-bootstrap";
-
-const connected2class = (worker: Worker) => {
-  if (worker.connected_to.length > 0) {
-    return "worker_CONNECTED";
-  } else {
-    return "worker_DISCONNECTED";
-  }
-};
+  from "buildbot-ui/src/components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
+import {Table} from "react-bootstrap";
 
 const hasActiveMaster = (builder: Builder, masters: DataCollection<Master>) => {
   if ((builder.masterids == null)) {
@@ -59,101 +52,19 @@ const hasActiveMaster = (builder: Builder, masters: DataCollection<Master>) => {
   return active;
 };
 
-const isBuilderFiltered = (builder: Builder, tags: string[], masters: DataCollection<Master>,
-                           showOldBuilders: boolean) => {
+const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
+                           masters: DataCollection<Master>, showOldBuilders: boolean) => {
   if (!showOldBuilders && !hasActiveMaster(builder, masters)) {
     return false;
   }
-
-  const pluses = tags.filter(tag => tag.indexOf("+") === 0);
-  const minuses = tags.filter(tag => tag.indexOf("-") === 0);
-
-  // First enforce that we have no tag marked '-'
-  for (const tag of minuses) {
-    if (builder.tags.indexOf(tag.slice(1)) >= 0) {
-      return false;
-    }
-  }
-
-  // if only minuses or no filter
-  if (tags.length === minuses.length) {
-    return true;
-  }
-
-  // Then enforce that we have all the tags marked '+'
-  for (const tag of pluses) {
-    if (builder.tags.indexOf(tag.slice(1)) < 0) {
-      return false;
-    }
-  }
-
-  // Then enforce that we have at least one of the tag (marked '+' or not)
-  for (let tag of tags) {
-    if (tag.indexOf("+") === 0) {
-      tag = tag.slice(1);
-    }
-    if (builder.tags.indexOf(tag) >= 0) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const isTagFiltered = (tags: string[], tag: string) => {
-  return (
-    (tags.length === 0) ||
-    (tags.indexOf(tag) >= 0) ||
-    (tags.indexOf(`+${tag}`) >= 0) ||
-    (tags.indexOf(`-${tag}`) >= 0)
-  );
-}
-
-const setTags = (tags: string[], searchParams: URLSearchParams,
-                 setSearchParams: (nextInit: URLSearchParamsInit) => void) => {
-  const newParams = new URLSearchParams([...searchParams.entries()]);
-  newParams.delete("tags");
-  for (const tag of tags) {
-    newParams.append("tags", tag);
-  }
-  setSearchParams(newParams);
-}
-
-const toggleTag = (tags: string[], tag: string, searchParams: URLSearchParams,
-                   setSearchParams: (nextInit: URLSearchParamsInit) => void) => {
-  if (tag.indexOf('+') === 0) {
-    tag = tag.slice(1);
-  }
-  if (tag.indexOf('-') === 0) {
-    tag = tag.slice(1);
-  }
-
-  const i = tags.indexOf(tag);
-  const iplus = tags.indexOf(`+${tag}`);
-  const iminus = tags.indexOf(`-${tag}`);
-
-  const newTags = [...tags];
-  if ((i < 0) && (iplus < 0) && (iminus < 0)) {
-    newTags.push(`+${tag}`);
-  } else if (iplus >= 0) {
-    newTags.splice(iplus, 1);
-    newTags.push(`-${tag}`);
-  } else if (iminus >= 0) {
-    newTags.splice(iminus, 1);
-    newTags.push(tag);
-  } else {
-    newTags.splice(i, 1);
-  }
-
-  setTags(newTags, searchParams, setSearchParams);
+  return filterManager.shouldShowByTags(builder.tags);
 };
 
 const BuildersView = observer(() => {
   const stores = useContext(StoresContext);
   const accessor = useDataAccessor([]);
 
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const tags = searchParams.getAll("tags");
+  const filterManager = useTagFilterManager("tags");
   const [builderNameFilter, setBuilderNameFilter] = useState("");
 
   useTopbarItems(stores.topbar, [
@@ -172,7 +83,7 @@ const BuildersView = observer(() => {
   const workers = useDataApiQuery(() => Worker.getAll(accessor));
 
   const filteredBuilders = builders.array.filter(builder => {
-    return isBuilderFiltered(builder, tags, masters, showOldBuilders) &&
+    return isBuilderFiltered(builder, filterManager, masters, showOldBuilders) &&
       (builderNameFilter === null || builder.name.indexOf(builderNameFilter) >= 0)
   }).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -220,56 +131,6 @@ const BuildersView = observer(() => {
     return byBuilderId;
   }).get();
 
-  const tagHelpPopover = (
-    <Popover id="bb-build-view-tag-help-popover"
-             style={{display: "block", minWidth: "600px", left:"-300px", top: "30px"}}>
-      <Popover.Title as="h5">Tags filtering</Popover.Title>
-      <Popover.Content>
-        <p><b>
-          <pre>+{"{tag}"}</pre></b>all tags with '+' must be present in the builder tags</p>
-        <p><b>
-          <pre>-{"{tag}"}</pre></b>no tags with '-' must be present in the builder tags</p>
-        <p><b>
-          <pre>{"{tag}"}</pre></b>at least one of the filtered tag should be present</p>
-        <p>url bar is updated with you filter configuration, so you can bookmark your filters!</p>
-      </Popover.Content>
-    </Popover>
-  );
-
-  const tagHelpElement = (
-    <OverlayTrigger trigger="click" placement="bottom" overlay={tagHelpPopover} rootClose={true}>
-      <FaQuestionCircle style={{position: "relative"}} className="clickable"/>
-    </OverlayTrigger>
-  );
-
-  const enabledTagsElements: JSX.Element[] = [];
-  if (tags.length === 0) {
-    enabledTagsElements.push((
-      <span>Tags</span>
-    ));
-  }
-  if (tags.length < 5) {
-    for (const tag of tags) {
-      enabledTagsElements.push((
-        <>
-          <Badge variant="success"
-                 onClick={() => toggleTag(tags, tag, searchParams, setSearchParams)}>{tag}</Badge>
-          &nbsp;
-        </>
-      ));
-    }
-  } else {
-    enabledTagsElements.push((
-      <Badge variant="success">{tags.length} tags</Badge>
-    ));
-  }
-  if (tags.length > 0) {
-    enabledTagsElements.push((
-      <Badge variant="danger" onClick={() => setTags([], searchParams, setSearchParams)}
-             className="clickable">x</Badge>
-    ));
-  }
-
   const builderRowElements = filteredBuilders.map(builder => {
 
     let buildElements: JSX.Element[] = [];
@@ -282,46 +143,13 @@ const BuildersView = observer(() => {
       buildElements = builds.map(build => (<BuildLinkWithSummaryTooltip build={build}/>));
     }
 
-    const tagElements = builder.tags.map(tag => {
-      return (
-        <span>
-          <span onClick={() => toggleTag(tags, tag, searchParams, setSearchParams)}
-                className={"bb-builder-tag clickable " +
-                  (isTagFiltered(tags, tag) ? 'bb-builder-tag-filtered': '')}>
-              {tag}
-            </span>
-          &nbsp;
-          </span>
-      );
-    });
-
     let workerElements: JSX.Element[] = [];
     if (builder.id in workersByFilteredBuilder) {
       let workers = [...workersByFilteredBuilder[builder.id]];
       workers.sort((a, b) => a.name.localeCompare(b.name));
-      workerElements = workers.map(worker => {
-
-        const shownWorkerName = () => (
-          <BadgeRound title={worker.name} className={connected2class(worker)}>
-            {worker.name}
-          </BadgeRound>
-        );
-
-        const hoverWorkerName = () => (
-          <BadgeRound title={worker.name} className={connected2class(worker)}>
-            <div className="badge-inactive">{worker.workerid}</div>
-            <div className="badge-active">{worker.name}</div>
-          </BadgeRound>
-        );
-
-        return (
-          <span>
-            <Link to={`/workers/${worker.id}`}>
-              {showWorkerName ? shownWorkerName() : hoverWorkerName()}
-             </Link>
-          </span>
-        );
-      })
+      workerElements = workers.map(worker => (
+        <WorkerBadge key={worker.name} worker={worker} showWorkerName={showWorkerName}/>
+      ));
     }
 
     return (
@@ -332,7 +160,7 @@ const BuildersView = observer(() => {
           {buildElements}
         </td>
         <td style={{width: "20%"}}>
-          {tagElements}
+          {filterManager.getElementsForTags(builder.tags)}
         </td>
         <td style={{width: "20%"}}>
           {workerElements}
@@ -355,8 +183,8 @@ const BuildersView = observer(() => {
             <th>Builder Name</th>
             <th>Builds</th>
             <th>
-              {tagHelpElement}
-              {enabledTagsElements}
+              {filterManager.getFiltersHelpElement()}
+              {filterManager.getEnabledFiltersElements()}
             </th>
             <th style={{width: "20%px"}}>Workers</th>
           </tr>

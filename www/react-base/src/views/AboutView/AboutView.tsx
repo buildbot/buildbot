@@ -20,8 +20,8 @@ import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
 import {FaInfoCircle} from "react-icons/fa";
 import {DataClientContext} from "buildbot-data-js/src/data/ReactUtils";
+import {ConfigContext} from "buildbot-ui/src/contexts/Config";
 import {useContext, useState} from "react";
-import {ConfigContext} from "../../contexts/Config";
 import {Link} from "react-router-dom";
 import {
   EndpointDescription,

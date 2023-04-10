@@ -15,18 +15,24 @@
   Copyright Buildbot Team Members
 */
 
-import './BadgeStatus.scss';
+import "buildbot-plugin-support";
+import "./styles/colors.scss";
 
-type BadgeStatusProps = {
-  className: string;
-  children?: JSX.Element | JSX.Element[] | string;
-  title?: string;
-}
+import "./components/ArrowExpander/ArrowExpander";
+import "./components/BadgeRound/BadgeRound";
+import "./components/BadgeStatus/BadgeStatus";
+import "./components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
+import "./components/BuildSummaryTooltip/BuildSummaryTooltip";
+import "./components/ChangeDetails/ChangeDetails";
+import "./components/ChangeUserAvatar/ChangeUserAvatar";
 
-const BadgeStatus = ({className, children, title, ...props}: BadgeStatusProps) => {
-  return (
-    <div {...props} title={title} className={"bb-badge-status " + className}>{children}</div>
-  );
-}
+import "./contexts/Config";
+import "./contexts/Time";
 
-export default BadgeStatus;
+import "./stores/TimeStore";
+
+import "./util/FavIcon";
+import "./util/Moment";
+import "./util/React";
+import "./util/StepUrls";
+import "./util/TagFilterManager";
