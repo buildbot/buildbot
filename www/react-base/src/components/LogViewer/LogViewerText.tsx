@@ -21,7 +21,7 @@ import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer, useLocalObservable} from "mobx-react";
 import {Log, useDataAccessor} from "buildbot-data-js";
 import {ListOnItemsRenderedProps} from 'react-window';
-import AutoSizer from "react-virtualized-auto-sizer";
+import AutoSizer, {Size} from "react-virtualized-auto-sizer";
 import {digitCount} from "../../util/Math";
 import {LogDownloadButton} from "../LogDownloadButton/LogDownloadButton";
 import {CustomFixedSizeList} from "./CustomFixedSizeList";
@@ -103,43 +103,45 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
     listRef.current.scrollToItem(currentSearchResultLine);
   }
 
+  const LogTextArea: React.FC<Size> = ({height, width}) => (
+    <div className="bb-logviewer-text-area" ref={containerRef}>
+      <div className="bb-logviewer-text-download-log">
+        <div>
+          <LogSearchField currentResult={manager.currentSearchResultIndex + 1}
+                          totalResults={Math.max(manager.totalSearchResultCount, 0)}
+                          onTextChanged={onSearchTextChanged}
+                          onPrevClicked={() => manager.setPrevSearchResult()}
+                          onNextClicked={() => manager.setNextSearchResult()}/>
+          <LogDownloadButton log={log}/>
+        </div>
+      </div>
+      <CustomFixedSizeList
+        className="bb-logviewer-text-area"
+        ref={listRef}
+        itemCount={log.num_lines}
+        onItemsRendered={onRowsRendered}
+        height={height}
+        width={width}
+        itemSize={18}
+        getRangeToRenderOverride={getRangeToRenderOverride}
+        outerElementType={forwardRef((props, ref) => (
+          <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props}/>
+        ))}
+      >
+        {({index, style}) => (
+          LogViewerTextLineRenderer({manager: manager, logLineDigitCount: logLineDigitCount,
+            style: style, index: index})
+        )
+        }
+      </CustomFixedSizeList>
+    </div>
+  );
+
   return (
     <>
       {generateStyleElement(".bb-logviewer-text-area")}
       <AutoSizer>
-        {({height, width}) => (
-          <div className="bb-logviewer-text-area" ref={containerRef}>
-            <div className="bb-logviewer-text-download-log">
-              <div>
-                <LogSearchField currentResult={manager.currentSearchResultIndex + 1}
-                                totalResults={Math.max(manager.totalSearchResultCount, 0)}
-                                onTextChanged={onSearchTextChanged}
-                                onPrevClicked={() => manager.setPrevSearchResult()}
-                                onNextClicked={() => manager.setNextSearchResult()}/>
-                <LogDownloadButton log={log}/>
-              </div>
-            </div>
-            <CustomFixedSizeList
-              className="bb-logviewer-text-area"
-              ref={listRef}
-              itemCount={log.num_lines}
-              onItemsRendered={onRowsRendered}
-              height={height}
-              width={width}
-              itemSize={18}
-              getRangeToRenderOverride={getRangeToRenderOverride}
-              outerElementType={forwardRef((props, ref) => (
-                <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props}/>
-              ))}
-            >
-              {({index, style}) => (
-                  LogViewerTextLineRenderer({manager: manager, logLineDigitCount: logLineDigitCount,
-                    style: style, index: index})
-                )
-              }
-            </CustomFixedSizeList>
-          </div>
-        )}
+        {LogTextArea}
       </AutoSizer>
     </>
   );
