@@ -97,6 +97,14 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
         self.enabled = True
 
+    def __repr__(self):
+        """
+        Provide a meaningful string representation of scheduler.
+        """
+        return (
+            f'<{self.__class__.__name__}({self.name}, {self.builderNames}, enabled={self.enabled})>'
+        )
+
     def reconfigService(self, *args, **kwargs):
         raise NotImplementedError()
 
