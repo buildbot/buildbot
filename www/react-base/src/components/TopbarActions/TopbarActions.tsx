@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import TopbarActionsStore from "../../stores/TopbarActionsStore";
+import {TopbarActionsStore} from "../../stores/TopbarActionsStore";
 import {observer} from "mobx-react";
 import {Button, Form} from "react-bootstrap";
 import {ButtonVariant} from "react-bootstrap/types";
