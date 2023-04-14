@@ -37,7 +37,9 @@ test_script:
 
 on_success:
   - "coverage xml --rcfile=common/coveragerc -o coverage.xml -i"
-  - "codecov"
+  - ps: |
+        (New-Object System.Net.WebClient).DownloadFile("https://uploader.codecov.io/v0.4.1/windows/codecov.exe", (Join-Path $pwd "codecov.exe"))
+        .\codecov.exe
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.
