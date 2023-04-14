@@ -211,7 +211,12 @@ notifications:
 after_script:
   - |
       # codecov
-      if [ $TESTS = ci/coverage ]; then CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" codecov; fi
+      if [ $TESTS = ci/coverage ]; then
+        curl -Os https://uploader.codecov.io/v0.4.1/linux/codecov
+        echo "32cb14b5f3aaacd67f4c1ff55d82f037d3cd10c8e7b69c051f27391d2e66e15c  codecov" | sha256sum --check
+        chmod +x ./codecov
+        CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" ./codecov
+      fi
   # List installed packages along with their versions.
   - "pip list"
 
