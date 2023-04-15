@@ -49,12 +49,21 @@ export const LogSearchField = ({currentResult, totalResults,
     </div>
   );
 
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    console.log(e);
+    if (hasFocus && e.key === "Enter") {
+      e.preventDefault();
+      onNextClicked();
+    }
+  }
+
   return (
     <form role="search" className="bb-log-search-field">
       <FaSearch className="bb-log-search-field-icon"/>
       <input className="bb-log-search-field-text" type="text" value={searchText}
              onFocus={() => setHasFocus(true)} onBlur={() => setHasFocus(false)}
              onChange={e => onSearchTextChanged(e.target.value)}
+             onKeyDown={e => onKeyDown(e)}
              placeholder="Search log"/>
       {(hasFocus || searchText !== '') ? renderSearchNav() : <></>}
     </form>

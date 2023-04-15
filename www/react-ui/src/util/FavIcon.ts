@@ -16,8 +16,9 @@
 */
 
 import axios from "axios";
-import {useEffect} from "react";
+import {useContext, useEffect} from "react";
 import {intToColor, SUCCESS, UNKNOWN} from "buildbot-data-js";
+import {ConfigContext} from "../contexts/Config";
 
 function setFavIconUrl(url: string) {
   const iconElement = document.getElementById('bbicon');
@@ -26,17 +27,17 @@ function setFavIconUrl(url: string) {
   }
 }
 
-function setFavIconUrlOriginal() {
-  setFavIconUrl(process.env.PUBLIC_URL + "/icon.png");
+function setFavIconUrlOriginal(buildbotUrl: string) {
+  setFavIconUrl(buildbotUrl + "/img/icon.png");
 }
 
-async function setFavIcon(result: number) {
+async function setFavIcon(buildbotUrl: string, result: number) {
   if (result === UNKNOWN) {
-    setFavIconUrlOriginal();
+    setFavIconUrlOriginal(buildbotUrl);
     return;
   }
 
-  const response = await axios.get(process.env.PUBLIC_URL + "/icon.svg");
+  const response = await axios.get(buildbotUrl + "/img/icon.svg");
   const iconSvg = response.data;
 
   const canvas = document.createElement('canvas');
@@ -64,14 +65,17 @@ async function setFavIcon(result: number) {
 }
 
 export function useFavIcon(result: number) {
+  const config = useContext(ConfigContext);
+  const url = config.isProxy ? '' : config.buildbotURL;
+
   useEffect(() => {
-    setFavIcon(result);
+    setFavIcon(url, result);
   }, [result]);
 
   // We only want to clear the favicon once, thus the useEffect hook is split into two parts, one
   // for updates, one for eventual cleanup when navigating out of view.
   useEffect(() => {
-    return () => setFavIconUrlOriginal();
+    return () => setFavIconUrlOriginal(url);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }

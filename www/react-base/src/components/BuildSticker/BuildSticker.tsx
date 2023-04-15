@@ -33,7 +33,7 @@ export const BuildSticker = ({build, builder}: BuildStickerProps) => {
     <Card className={"bb-buildsticker " + results2class(build, null)}>
       <Card.Body>
         <div className="bb-buildsticker-left">
-          <BadgeStatus className={"pull-right " + results2class(build, null)}>
+          <BadgeStatus className={results2class(build, null)}>
             {results2text(build)}
           </BadgeStatus>
           <Link to={`builders/${builder.builderid}/builds/${build.number}`}>
@@ -41,7 +41,7 @@ export const BuildSticker = ({build, builder}: BuildStickerProps) => {
           </Link>
         </div>
         <div className="bb-buildsticker-left">
-          <span className="pull-right">
+          <span className="bb-buildsticker-time">
             {durationFormat((build.complete ? build.complete_at! : now) - build.started_at)}
           </span>
           <span>{build.state_string}</span>
