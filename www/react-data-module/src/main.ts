@@ -33,6 +33,7 @@ export * from "./data/DataPropertiesCollection";
 export * from "./data/DataQuery";
 export * from "./data/DataUtils";
 export * from "./data/MockDataClient";
+export * from "./data/MockDataCollection";
 export * from "./data/MockWebSocket";
 export * from "./data/ReactUtils";
 export * from "./data/RestClient";
