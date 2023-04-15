@@ -92,6 +92,7 @@ export default defineConfig({
       '/login': proxyTargetHttp,
       '/ws': {target: proxyTargetWs, ws: true},
       '/avatar': proxyTargetHttp,
+      '/img': proxyTargetHttp,
       '/browser-warning.js': proxyTargetHttp,
       '/browser-warning.css': proxyTargetHttp,
     },
