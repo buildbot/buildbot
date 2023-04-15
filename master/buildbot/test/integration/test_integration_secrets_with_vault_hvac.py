@@ -38,6 +38,36 @@ from buildbot.test.util.integration import RunMasterBase
 @skipUnlessPlatformIs('posix')
 class TestVaultHvac(RunMasterBase):
 
+    @defer.inlineCallbacks
+    def setup_config(self, secret_specifier):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.process.factory import BuildFactory
+        from buildbot.plugins import schedulers
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(name="force", builderNames=["testy"])
+        ]
+
+        # note that as of August 2021, the vault docker image default to kv
+        # version 2 to be enabled by default
+        c['secretsProviders'] = [
+            HashiCorpVaultKvSecretProvider(authenticator=VaultAuthenticatorToken('my_vaulttoken'),
+                                           vault_server="http://localhost:8200",
+                                           secrets_mount="secret")
+        ]
+
+        f = BuildFactory()
+        f.addStep(ShellCommand(command=Interpolate(f'echo {secret_specifier} | base64')))
+
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          workernames=["local1"],
+                          factory=f)
+        ]
+
+        yield self.setup_master(c)
+
     def start_container(self, image_tag):
         try:
             image = f'vault:{image_tag}'
@@ -75,7 +105,7 @@ class TestVaultHvac(RunMasterBase):
     @defer.inlineCallbacks
     def do_secret_test(self, image_tag, secret_specifier, expected_obfuscation, expected_value):
         self.start_container(image_tag)
-        yield self.setup_master(master_config(secret_specifier=secret_specifier))
+        yield self.setup_config(secret_specifier=secret_specifier)
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
 
@@ -108,33 +138,3 @@ class TestVaultHvac(RunMasterBase):
     @defer.inlineCallbacks
     def test_nested_key(self, image_tag):
         yield self.do_secret_test(image_tag, '%(secret:key1/key2|id)s', '<key1/key2|id>', 'val')
-
-
-def master_config(secret_specifier):
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import schedulers
-
-    c['schedulers'] = [
-        schedulers.ForceScheduler(name="force", builderNames=["testy"])
-    ]
-
-    # note that as of August 2021, the vault docker image default to kv
-    # version 2 to be enabled by default
-    c['secretsProviders'] = [
-        HashiCorpVaultKvSecretProvider(authenticator=VaultAuthenticatorToken('my_vaulttoken'),
-                                       vault_server="http://localhost:8200",
-                                       secrets_mount="secret")
-    ]
-
-    f = BuildFactory()
-    f.addStep(ShellCommand(command=Interpolate(f'echo {secret_specifier} | base64')))
-
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)
-    ]
-
-    return c

@@ -212,6 +212,7 @@ class RunMasterBase(unittest.TestCase):
             config_dict['protocols'] = proto
 
         m = yield getMaster(self, reactor, config_dict)
+        self.master_config_dict = config_dict
         self.master = m
         self.assertFalse(stop.called,
                          "startService tried to stop the reactor; check logs")

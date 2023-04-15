@@ -25,7 +25,8 @@ from buildbot.test.util.integration import RunMasterBase
 class TestLog(RunMasterBase):
     # master configuration
 
-    def masterConfig(self, step):
+    @defer.inlineCallbacks
+    def setup_config(self, step):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.process.factory import BuildFactory
@@ -42,7 +43,7 @@ class TestLog(RunMasterBase):
             BuilderConfig(name="testy",
                           workernames=["local1"],
                           factory=f)]
-        return c
+        yield self.setup_master(c)
 
     @defer.inlineCallbacks
     def test_shellcommand(self):
@@ -57,7 +58,7 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setup_master(self.masterConfig(step))
+        yield self.setup_config(step)
 
         change = dict(branch="master",
                       files=["foo.c"],
@@ -84,7 +85,7 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setup_master(self.masterConfig(step))
+        yield self.setup_config(step)
 
         change = dict(branch="master",
                       files=["foo.c"],
@@ -112,7 +113,7 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setup_master(self.masterConfig(step))
+        yield self.setup_config(step)
 
         change = dict(branch="master",
                       files=["foo.c"],

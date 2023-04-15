@@ -27,8 +27,26 @@ from buildbot.test.util.integration import RunMasterBase
 class CommandMixinMaster(RunMasterBase):
 
     @defer.inlineCallbacks
+    def setup_config(self):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.process.factory import BuildFactory
+        from buildbot.plugins import schedulers
+
+        c['schedulers'] = [
+            schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"])
+        ]
+
+        f = BuildFactory()
+        f.addStep(TestCommandMixinStep())
+        c['builders'] = [
+            BuilderConfig(name="testy", workernames=["local1"], factory=f)
+        ]
+        yield self.setup_master(c)
+
+    @defer.inlineCallbacks
     def test_commandmixin(self):
-        yield self.setup_master(masterConfig())
+        yield self.setup_config()
 
         change = dict(branch="master",
                       files=["foo.c"],
@@ -81,24 +99,3 @@ class TestCommandMixinStep(BuildStep, CommandMixin):
             return results.FAILURE
 
         return results.SUCCESS
-
-
-# master configuration
-def masterConfig():
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import schedulers
-
-    c['schedulers'] = [
-        schedulers.AnyBranchScheduler(
-            name="sched",
-            builderNames=["testy"])]
-
-    f = BuildFactory()
-    f.addStep(TestCommandMixinStep())
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
-    return c

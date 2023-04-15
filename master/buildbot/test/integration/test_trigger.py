@@ -52,8 +52,47 @@ class TriggeringMaster(RunMasterBase):
                   )
 
     @defer.inlineCallbacks
+    def setup_config(self, addFailure=False):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.process.factory import BuildFactory
+        from buildbot.plugins import steps, schedulers
+
+        c['schedulers'] = [
+            schedulers.Triggerable(
+                name="trigsched",
+                builderNames=["build"]),
+            schedulers.AnyBranchScheduler(
+                name="sched",
+                builderNames=["testy"])]
+
+        f = BuildFactory()
+        f.addStep(steps.ShellCommand(command='echo hello'))
+        f.addStep(steps.Trigger(schedulerNames=['trigsched'],
+                                waitForFinish=True,
+                                updateSourceStamp=True))
+        f.addStep(steps.ShellCommand(command='echo world'))
+        f2 = BuildFactory()
+        f2.addStep(steps.ShellCommand(command='echo ola'))
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          workernames=["local1"],
+                          factory=f),
+            BuilderConfig(name="build",
+                          workernames=["local1"],
+                          factory=f2)]
+        if addFailure:
+            f3 = BuildFactory()
+            f3.addStep(steps.ShellCommand(command='false'))
+            c['builders'].append(BuilderConfig(name="build2", workernames=["local1"], factory=f3))
+            c['builders'].append(BuilderConfig(name="build3", workernames=["local1"], factory=f2))
+            c['schedulers'][0] = schedulers.Triggerable(name="trigsched",
+                                                        builderNames=["build", "build2", "build3"])
+        yield self.setup_master(c)
+
+    @defer.inlineCallbacks
     def test_trigger(self):
-        yield self.setup_master(masterConfig())
+        yield self.setup_config()
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
 
@@ -72,7 +111,7 @@ class TriggeringMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_trigger_failure(self):
-        yield self.setup_master(masterConfig(addFailure=True))
+        yield self.setup_config(addFailure=True)
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
 
@@ -80,43 +119,3 @@ class TriggeringMaster(RunMasterBase):
             build['steps'][2]['state_string'], 'triggered trigsched, 2 successes, 1 failure')
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 4)
-
-
-# master configuration
-def masterConfig(addFailure=False):
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import steps, schedulers
-
-    c['schedulers'] = [
-        schedulers.Triggerable(
-            name="trigsched",
-            builderNames=["build"]),
-        schedulers.AnyBranchScheduler(
-            name="sched",
-            builderNames=["testy"])]
-
-    f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
-    f.addStep(steps.Trigger(schedulerNames=['trigsched'],
-                            waitForFinish=True,
-                            updateSourceStamp=True))
-    f.addStep(steps.ShellCommand(command='echo world'))
-    f2 = BuildFactory()
-    f2.addStep(steps.ShellCommand(command='echo ola'))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f),
-        BuilderConfig(name="build",
-                      workernames=["local1"],
-                      factory=f2)]
-    if addFailure:
-        f3 = BuildFactory()
-        f3.addStep(steps.ShellCommand(command='false'))
-        c['builders'].append(BuilderConfig(name="build2", workernames=["local1"], factory=f3))
-        c['builders'].append(BuilderConfig(name="build3", workernames=["local1"], factory=f2))
-        c['schedulers'][0] = schedulers.Triggerable(name="trigsched",
-                                                    builderNames=["build", "build2", "build3"])
-    return c

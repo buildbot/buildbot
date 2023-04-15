@@ -156,8 +156,8 @@ class RunMasterBehindProxy(RunMasterBase):
     @defer.inlineCallbacks
     def setup_master(self, config_dict, startWorker=True):
         proxy_connection_string = f"tcp:127.0.0.1:{self.target_port}"
-        yield RunMasterBase.setup_master(self, config_dict, startWorker,
-                                        proxy_connection_string=proxy_connection_string)
+        yield super().setup_master(config_dict, startWorker,
+                                   proxy_connection_string=proxy_connection_string)
 
 
 # Use interoperability test cases to test the HTTP proxy tunneling.
