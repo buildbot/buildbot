@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {Dispatch, SetStateAction, useState} from "react";
+import {Dispatch, SetStateAction, useEffect, useState} from "react";
 
 export function useStateWithDefaultIfNotSet<T>(
     defaultCallback: () => T): [T, Dispatch<SetStateAction<T|null>>] {
@@ -39,4 +39,26 @@ export function useStateWithParentTrackingWithDefaultIfNotSet<T>(
 
   const value: T = explicitValue !== null ? explicitValue : defaultCallback();
   return [value, t => setExplicitValue(t)];
+}
+
+function getWindowSize() {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+}
+
+export function useWindowSize() {
+  const [size, setSize] = useState(getWindowSize());
+
+  useEffect(() => {
+    function onResize() {
+      setSize(getWindowSize());
+    }
+
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  return size;
 }

@@ -28,6 +28,8 @@ const buildPluginsPathsMap = () => {
     }
   }
 
+  addPlugin('grid_view', path.join(root, `react-grid_view/buildbot_react_grid_view/static/`))
+
   return aliases;
 }
 
@@ -92,6 +94,7 @@ export default defineConfig({
       '/login': proxyTargetHttp,
       '/ws': {target: proxyTargetWs, ws: true},
       '/avatar': proxyTargetHttp,
+      '/img': proxyTargetHttp,
       '/browser-warning.js': proxyTargetHttp,
       '/browser-warning.css': proxyTargetHttp,
     },
