@@ -17,6 +17,7 @@
 
 import {observer} from "mobx-react";
 import {FaSpinner, FaStop} from "react-icons/fa";
+import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
   Builder,

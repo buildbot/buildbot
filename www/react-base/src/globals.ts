@@ -8,6 +8,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import * as ReactRouterDOM from 'react-router-dom';
 import * as jquery from 'jquery';
+import * as BuildbotPluginSupport from 'buildbot-plugin-support';
 
 declare global {
   interface Window {
@@ -17,6 +18,7 @@ declare global {
     ReactRouterDOM: any;
     jQuery: any;
     $: any;
+    BuildbotPluginSupport: any;
   }
 }
 
@@ -28,3 +30,4 @@ window.ReactDOM = ReactDOM as any;
 window.ReactRouterDOM = ReactRouterDOM;
 window.jQuery = jquery;
 window.$ = jquery;
+window.BuildbotPluginSupport = BuildbotPluginSupport;

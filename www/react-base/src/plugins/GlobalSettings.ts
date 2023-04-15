@@ -17,7 +17,7 @@
 
 import {action, makeObservable, observable} from "mobx";
 import {Config} from "buildbot-ui";
-import {ISettings} from "../../../plugin_support";
+import {ISettings, registerBuildbotSettingsSingleton} from "buildbot-plugin-support";
 
 export type SettingValue = string | number | boolean;
 export type SettingType = "string" | "integer" | "float" | "boolean";
@@ -275,8 +275,4 @@ export class GlobalSettings implements ISettings {
 
 export const globalSettings = new GlobalSettings();
 
-declare global {
-  function buildbotGetSettings(): ISettings;
-}
-
-window.buildbotGetSettings = () => { return globalSettings; }
+registerBuildbotSettingsSingleton(globalSettings);

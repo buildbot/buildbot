@@ -18,6 +18,7 @@
 import './HomeView.scss';
 import {observer} from "mobx-react";
 import {FaHome} from "react-icons/fa";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
   Builder,

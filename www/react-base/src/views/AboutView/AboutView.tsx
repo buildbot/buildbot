@@ -19,6 +19,7 @@ import "./AboutView.scss";
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
 import {FaInfoCircle} from "react-icons/fa";
+import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   DataClientContext,
   EndpointDescription,

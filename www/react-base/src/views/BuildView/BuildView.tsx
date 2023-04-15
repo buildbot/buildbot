@@ -23,6 +23,7 @@ import {useContext, useState} from "react";
 import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import {Link, useNavigate, useParams} from "react-router-dom";
+import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
   Buildrequest,
