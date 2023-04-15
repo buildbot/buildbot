@@ -75,7 +75,7 @@ class TestVaultHvac(RunMasterBase):
     @defer.inlineCallbacks
     def do_secret_test(self, image_tag, secret_specifier, expected_obfuscation, expected_value):
         self.start_container(image_tag)
-        yield self.setupConfig(master_config(secret_specifier=secret_specifier))
+        yield self.setup_master(master_config(secret_specifier=secret_specifier))
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
 

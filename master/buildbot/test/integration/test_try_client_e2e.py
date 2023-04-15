@@ -28,7 +28,7 @@ class TryClientE2E(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_shell(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
 
         def trigger_callback():
             port = self.master.pbmanager.dispatchers['tcp:0'].port.getHost().port

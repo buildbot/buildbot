@@ -83,7 +83,7 @@ class TransferStepsMasterPb(RunMasterBase):
     @flaky(bugNumber=4407, onPlatform='win32')
     @defer.inlineCallbacks
     def test_transfer(self):
-        yield self.setupConfig(masterConfig(bigfilename=self.mktemp()))
+        yield self.setup_master(masterConfig(bigfilename=self.mktemp()))
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
@@ -100,7 +100,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_globTransfer(self):
-        yield self.setupConfig(masterGlobConfig())
+        yield self.setup_master(masterGlobConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
         dirContents = self.readMasterDirContents("dest")
@@ -115,7 +115,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_no_exist_file_upload(self):
-        yield self.setupConfig(self.get_non_existing_file_upload_config())
+        yield self.setup_master(self.get_non_existing_file_upload_config())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
         res = yield self.checkBuildStepLogExist(build, "Cannot open file")
@@ -123,7 +123,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_no_exist_directory_upload(self):
-        yield self.setupConfig(self.get_non_existing_directory_upload_config())
+        yield self.setup_master(self.get_non_existing_directory_upload_config())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
         res = yield self.checkBuildStepLogExist(build, "Cannot open file")
@@ -131,7 +131,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_no_exist_multiple_file_upload(self):
-        yield self.setupConfig(self.get_non_existing_multiple_file_upload_config())
+        yield self.setup_master(self.get_non_existing_multiple_file_upload_config())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
         res = yield self.checkBuildStepLogExist(build, "Cannot open file")

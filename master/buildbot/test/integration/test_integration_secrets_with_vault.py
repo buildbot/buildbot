@@ -70,7 +70,7 @@ class SecretsConfig(RunMasterBase):
     @defer.inlineCallbacks
     def do_secret_test(self, secret_specifier, expected_obfuscation, expected_value):
         with assertProducesWarning(DeprecatedApiWarning):
-            yield self.setupConfig(masterConfig(secret_specifier=secret_specifier))
+            yield self.setup_master(masterConfig(secret_specifier=secret_specifier))
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
 

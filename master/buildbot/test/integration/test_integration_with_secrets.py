@@ -24,7 +24,7 @@ class SecretsConfig(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_secret(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         res = yield self.checkBuildStepLogExist(build, "<foo>")
@@ -32,7 +32,7 @@ class SecretsConfig(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_withsecrets(self):
-        yield self.setupConfig(masterConfig(use_with=True))
+        yield self.setup_master(masterConfig(use_with=True))
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         res = yield self.checkBuildStepLogExist(build, "<foo>")

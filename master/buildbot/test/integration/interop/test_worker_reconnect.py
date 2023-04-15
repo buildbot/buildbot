@@ -39,7 +39,7 @@ class WorkerReconnectPb(RunMasterBase):
     @defer.inlineCallbacks
     def test_eventually_reconnect(self):
         DisconnectingStep.disconnection_list = []
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
         build = yield self.doForceBuild()
         self.assertEqual(build['buildid'], 2)
         self.assertEqual(len(DisconnectingStep.disconnection_list), 2)

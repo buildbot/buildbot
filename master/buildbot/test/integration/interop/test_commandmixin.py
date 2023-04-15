@@ -28,7 +28,7 @@ class CommandMixinMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_commandmixin(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
 
         change = dict(branch="master",
                       files=["foo.c"],

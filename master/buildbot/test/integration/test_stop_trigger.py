@@ -133,7 +133,7 @@ class TriggeringMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def testTriggerRunsForever(self):
-        yield self.setupConfig(triggerRunsForever())
+        yield self.setup_master(triggerRunsForever())
         self.higherBuild = None
 
         def newCallback(_, data):
@@ -147,7 +147,7 @@ class TriggeringMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def testTriggerRunsForeverAfterCmdStarted(self):
-        yield self.setupConfig(triggerRunsForever())
+        yield self.setup_master(triggerRunsForever())
         self.higherBuild = None
 
         def newCallback(_, data):
@@ -165,7 +165,7 @@ class TriggeringMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def testTriggeredBuildIsNotCreated(self):
-        yield self.setupConfig(triggeredBuildIsNotCreated())
+        yield self.setup_master(triggeredBuildIsNotCreated())
 
         def newCallback(_, data):
             self.master.data.control("stop", {}, ("builds", data['buildid']))

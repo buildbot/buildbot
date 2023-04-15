@@ -28,7 +28,7 @@ class InterruptCommand(RunMasterBase):
     @flaky(bugNumber=4404, onPlatform='win32')
     @defer.inlineCallbacks
     def test_interrupt(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
         build = yield self.doForceBuild(wantSteps=True)
         self.assertEqual(build['steps'][-1]['results'], CANCELLED)
 

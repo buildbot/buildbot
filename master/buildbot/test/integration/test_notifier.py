@@ -54,7 +54,7 @@ class NotifierMaster(RunMasterBase):
             self.notification.callback(params)
         self.patch(PushoverNotifier, "sendNotification", sendNotification)
 
-        yield self.setupConfig(masterConfig(build_set_summary=build_set_summary))
+        yield self.setup_master(masterConfig(build_set_summary=build_set_summary))
 
     @defer.inlineCallbacks
     def doTest(self, what):

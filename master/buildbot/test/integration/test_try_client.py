@@ -99,7 +99,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         }
         self.sch = sch
 
-        yield self.setupConfig(masterConfig(extra_config))
+        yield self.setup_master(masterConfig(extra_config))
 
         # wait until the scheduler is active
         yield waitFor(lambda: self.sch.active)

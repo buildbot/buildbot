@@ -36,7 +36,7 @@ class CompositeStepMixinMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def do_compositemixin_test(self, is_list_mkdir, is_list_rmdir):
-        yield self.setupConfig(masterConfig(is_list_mkdir=is_list_mkdir,
+        yield self.setup_master(masterConfig(is_list_mkdir=is_list_mkdir,
                                             is_list_rmdir=is_list_rmdir))
 
         change = dict(branch="master",

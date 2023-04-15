@@ -57,7 +57,7 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setupConfig(self.masterConfig(step))
+        yield self.setup_master(self.masterConfig(step))
 
         change = dict(branch="master",
                       files=["foo.c"],
@@ -84,7 +84,7 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setupConfig(self.masterConfig(step))
+        yield self.setup_master(self.masterConfig(step))
 
         change = dict(branch="master",
                       files=["foo.c"],
@@ -112,7 +112,7 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setupConfig(self.masterConfig(step))
+        yield self.setup_master(self.masterConfig(step))
 
         change = dict(branch="master",
                       files=["foo.c"],

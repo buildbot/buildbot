@@ -185,7 +185,7 @@ class RunMasterBase(unittest.TestCase):
         skip = "buildbot-worker package is not installed"
 
     @defer.inlineCallbacks
-    def setupConfig(self, config_dict, startWorker=True, **worker_kwargs):
+    def setup_master(self, config_dict, startWorker=True, **worker_kwargs):
         """
         Setup and start a master configured
         by the function configFunc defined in the test module.

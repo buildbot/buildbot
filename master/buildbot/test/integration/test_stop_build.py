@@ -23,7 +23,7 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_shell(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
 
         @defer.inlineCallbacks
         def newStepCallback(_, data):

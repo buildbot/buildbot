@@ -50,7 +50,7 @@ class ShellMaster(RunMasterBase):
     @skipUnlessPlatformIs("posix")  # make is not installed on windows
     @defer.inlineCallbacks
     def test_shell(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True,
                                         forceParams={'foo_patch_body': PATCH})
         self.assertEqual(build['buildid'], 1)
@@ -59,7 +59,7 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_shell_no_patch(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         # if no patch, the source step is happy, but the make step cannot find makefile

@@ -28,7 +28,7 @@ class SetPropertyFromCommand(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_setProp(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
         oldNewLog = self.master.data.updates.addLog
 
         @defer.inlineCallbacks

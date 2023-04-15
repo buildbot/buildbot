@@ -42,7 +42,7 @@ class SecretsConfig(RunMasterBase):
     @defer.inlineCallbacks
     def test_secret(self, name, use_interpolation):
         c = masterConfig(use_interpolation)
-        yield self.setupConfig(c)
+        yield self.setup_master(c)
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
 
@@ -69,7 +69,7 @@ class SecretsConfig(RunMasterBase):
     @defer.inlineCallbacks
     def test_secretReconfig(self, name, use_interpolation):
         c = masterConfig(use_interpolation)
-        yield self.setupConfig(c)
+        yield self.setup_master(c)
         c['secretsProviders'] = [FakeSecretStorage(
             secretdict={"foo": "different_value", "something": "more"})]
         yield self.master.reconfig()

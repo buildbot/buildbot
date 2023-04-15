@@ -26,7 +26,7 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_shell(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
         # if you don't need change, you can just remove this change, and useChange parameter
         change = dict(branch="master",
                       files=["foo.c"],

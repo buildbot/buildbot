@@ -55,7 +55,7 @@ class MarathonMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_trigger(self):
-        yield self.setupConfig(masterConfig(num_concurrent=NUM_CONCURRENT), startWorker=False)
+        yield self.setup_master(masterConfig(num_concurrent=NUM_CONCURRENT), startWorker=False)
         yield self.doForceBuild()
 
         builds = yield self.master.data.get(("builds",))

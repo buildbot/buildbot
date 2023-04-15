@@ -53,7 +53,7 @@ class TriggeringMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_trigger(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
 
@@ -72,7 +72,7 @@ class TriggeringMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_trigger_failure(self):
-        yield self.setupConfig(masterConfig(addFailure=True))
+        yield self.setup_master(masterConfig(addFailure=True))
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
 

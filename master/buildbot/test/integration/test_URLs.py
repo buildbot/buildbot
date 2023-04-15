@@ -30,7 +30,7 @@ class UrlForBuildMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_url(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_master(masterConfig())
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)

@@ -30,7 +30,7 @@ class ShellMaster(RunMasterBase):
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
     def test_usePTY(self):
-        yield self.setupConfig(masterConfig(usePTY=True))
+        yield self.setup_master(masterConfig(usePTY=True))
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -50,7 +50,7 @@ class ShellMaster(RunMasterBase):
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
     def test_NOusePTY(self):
-        yield self.setupConfig(masterConfig(usePTY=False))
+        yield self.setup_master(masterConfig(usePTY=False))
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)

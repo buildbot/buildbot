@@ -58,7 +58,7 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_shell(self):
-        yield self.setupConfig(self.config_for_master_command(command='echo hello'))
+        yield self.setup_master(self.config_for_master_command(command='echo hello'))
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.get_change(), wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -66,7 +66,7 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_logs(self):
-        yield self.setupConfig(self.config_for_master_command(command=[
+        yield self.setup_master(self.config_for_master_command(command=[
             sys.executable, '-c', 'print("hello")'
         ]))
 
@@ -78,7 +78,7 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_fails(self):
-        yield self.setupConfig(self.config_for_master_command(command=[
+        yield self.setup_master(self.config_for_master_command(command=[
             sys.executable, '-c', 'exit(1)'
         ]))
 
@@ -88,7 +88,7 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_interrupt(self):
-        yield self.setupConfig(self.config_for_master_command(name='sleep', command=[
+        yield self.setup_master(self.config_for_master_command(name='sleep', command=[
             sys.executable, '-c', "while True: pass"
         ]))
 

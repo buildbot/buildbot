@@ -28,7 +28,7 @@ class ShellMaster(RunMasterBase):
     @defer.inlineCallbacks
     def test_shell(self):
         cfg = masterConfig()
-        yield self.setupConfig(cfg)
+        yield self.setup_master(cfg)
 
         change = dict(branch="master",
                       files=["foo.c"],
