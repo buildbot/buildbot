@@ -28,6 +28,8 @@ const buildPluginsPathsMap = () => {
     }
   }
 
+  addPlugin('grid_view', path.join(root, `react-grid_view/buildbot_react_grid_view/static/`))
+
   return aliases;
 }
 
