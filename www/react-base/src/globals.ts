@@ -5,7 +5,7 @@ import axios from 'axios';
 import * as mobx from 'mobx';
 import moment from 'moment';
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom';
 import * as ReactRouterDOM from 'react-router-dom';
 import * as jquery from 'jquery';
 
