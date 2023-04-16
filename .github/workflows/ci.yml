@@ -85,7 +85,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements-ci.txt', 'requirements-cidb.txt') }}
           restore-keys: ${{ runner.os }}-pip-
 
-      - run: pip install -U pip
+      - run: pip install pip==23.0.1
       - run: pip install -r requirements-ci.txt -r requirements-cidb.txt
 
       # run real db tests under coverage to have several merging coverage report
@@ -117,7 +117,8 @@ jobs:
           python -c "import sys; print(sys.exec_prefix)"
           python -c "import sys; print(sys.executable)"
           python -V -V
-          python -m pip install -U pip setuptools
+          python -m pip install pip==23.0.1
+          python -m pip install -U setuptools
           python -m pip install -r requirements-ci.txt
           python -m pip list
           # Check that pywin32 is properly installed
