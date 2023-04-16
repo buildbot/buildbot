@@ -96,7 +96,7 @@ matrix:
 
 # Dependencies installation commands
 install:
-  - pip install -U pip
+  - pip install -U pip wheel
   - condition: TESTS not in ("minimal_install", "smokes", "trial_worker")
     cmd: pip install -r requirements-ci.txt
   - condition: TESTS == "minimal_install"
