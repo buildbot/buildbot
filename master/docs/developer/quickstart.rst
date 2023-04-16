@@ -73,7 +73,7 @@ Prerequisites
 
 .. note::
 
-  Buildbot UI requires at least node 4 or newer and yarn.
+  Buildbot UI requires at least node 14.18 or newer and yarn.
 
 * Install LTS release of node.js.
 
@@ -81,13 +81,13 @@ Prerequisites
 
   For modern Linux distributions, you can often just install the distribution-provided node version if it's recent enough.
   You can use yarn from the same source.
-  The below method has been tested on Ubuntu 18.04 and should work on recent enough Debian.
+  The below method has been tested on Debian Bookworm.
 
   .. code-block:: none
 
     sudo apt install nodejs yarn
 
-  In other cases, use https://deb.nodesource.com.
+  In other cases, use https://deb.nodesource.com and https://classic.yarnpkg.com/lang/en/docs/install.
 
 .. _JSDevQuickStart:
 
