@@ -96,10 +96,7 @@ matrix:
 
 # Dependencies installation commands
 install:
-  - condition: python == "2.7"
-    cmd: pip install -U pip
-  - condition: python != "2.7"
-    cmd: pip install pip==23.0.1
+  - pip install -U pip wheel
   - condition: TESTS not in ("minimal_install", "smokes", "trial_worker")
     cmd: pip install -r requirements-ci.txt
   - condition: TESTS == "minimal_install"
