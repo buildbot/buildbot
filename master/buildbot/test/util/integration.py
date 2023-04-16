@@ -185,7 +185,7 @@ class RunMasterBase(unittest.TestCase):
         skip = "buildbot-worker package is not installed"
 
     @defer.inlineCallbacks
-    def setupConfig(self, config_dict, startWorker=True, **worker_kwargs):
+    def setup_master(self, config_dict, startWorker=True, **worker_kwargs):
         """
         Setup and start a master configured
         by the function configFunc defined in the test module.
@@ -212,6 +212,7 @@ class RunMasterBase(unittest.TestCase):
             config_dict['protocols'] = proto
 
         m = yield getMaster(self, reactor, config_dict)
+        self.master_config_dict = config_dict
         self.master = m
         self.assertFalse(stop.called,
                          "startService tried to stop the reactor; check logs")

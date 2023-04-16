@@ -62,9 +62,58 @@ class KubernetesMaster(RunMasterBase):
                 "Make sure that you're spawned worker can callback this IP")
 
     @defer.inlineCallbacks
+    def setup_config(self, num_concurrent, extra_steps=None):
+        if extra_steps is None:
+            extra_steps = []
+        c = {}
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(name="force", builderNames=["testy"])
+        ]
+        triggereables = []
+        for i in range(num_concurrent):
+            c['schedulers'].append(
+                schedulers.Triggerable(
+                    name="trigsched" + str(i), builderNames=["build"]))
+            triggereables.append("trigsched" + str(i))
+
+        f = BuildFactory()
+        f.addStep(steps.ShellCommand(command='echo hello'))
+        f.addStep(
+            steps.Trigger(
+                schedulerNames=triggereables,
+                waitForFinish=True,
+                updateSourceStamp=True))
+        f.addStep(steps.ShellCommand(command='echo world'))
+        f2 = BuildFactory()
+        f2.addStep(steps.ShellCommand(command='echo ola'))
+        for step in extra_steps:
+            f2.addStep(step)
+        c['builders'] = [
+            BuilderConfig(name="testy", workernames=["kubernetes0"], factory=f),
+            BuilderConfig(
+                name="build",
+                workernames=["kubernetes" + str(i) for i in range(num_concurrent)],
+                factory=f2)
+        ]
+        masterFQDN = os.environ.get('masterFQDN')
+        c['workers'] = [
+            kubernetes.KubeLatentWorker(
+                'kubernetes' + str(i),
+                'buildbot/buildbot-worker',
+                kube_config=kubeclientservice.KubeCtlProxyConfigLoader(
+                    namespace=os.getenv("KUBE_NAMESPACE", "default")),
+                masterFQDN=masterFQDN) for i in range(num_concurrent)
+        ]
+        # un comment for debugging what happens if things looks locked.
+        # c['www'] = {'port': 8080}
+        c['protocols'] = {"pb": {"port": "tcp:9989"}}
+
+        yield self.setup_master(c, startWorker=False)
+
+    @defer.inlineCallbacks
     def test_trigger(self):
-        yield self.setupConfig(
-            masterConfig(num_concurrent=NUM_CONCURRENT), startWorker=False)
+        yield self.setup_config(num_concurrent=NUM_CONCURRENT)
         yield self.doForceBuild()
 
         builds = yield self.master.data.get(("builds", ))
@@ -78,54 +127,3 @@ class KubernetesMasterTReq(KubernetesMaster):
     def setup(self):
         super().setUp()
         self.patch(kubernetes.KubeClientService, 'PREFER_TREQ', True)
-
-
-# master configuration
-def masterConfig(num_concurrent, extra_steps=None):
-    if extra_steps is None:
-        extra_steps = []
-    c = {}
-
-    c['schedulers'] = [
-        schedulers.ForceScheduler(name="force", builderNames=["testy"])
-    ]
-    triggereables = []
-    for i in range(num_concurrent):
-        c['schedulers'].append(
-            schedulers.Triggerable(
-                name="trigsched" + str(i), builderNames=["build"]))
-        triggereables.append("trigsched" + str(i))
-
-    f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
-    f.addStep(
-        steps.Trigger(
-            schedulerNames=triggereables,
-            waitForFinish=True,
-            updateSourceStamp=True))
-    f.addStep(steps.ShellCommand(command='echo world'))
-    f2 = BuildFactory()
-    f2.addStep(steps.ShellCommand(command='echo ola'))
-    for step in extra_steps:
-        f2.addStep(step)
-    c['builders'] = [
-        BuilderConfig(name="testy", workernames=["kubernetes0"], factory=f),
-        BuilderConfig(
-            name="build",
-            workernames=["kubernetes" + str(i) for i in range(num_concurrent)],
-            factory=f2)
-    ]
-    masterFQDN = os.environ.get('masterFQDN')
-    c['workers'] = [
-        kubernetes.KubeLatentWorker(
-            'kubernetes' + str(i),
-            'buildbot/buildbot-worker',
-            kube_config=kubeclientservice.KubeCtlProxyConfigLoader(
-                namespace=os.getenv("KUBE_NAMESPACE", "default")),
-            masterFQDN=masterFQDN) for i in range(num_concurrent)
-    ]
-    # un comment for debugging what happens if things looks locked.
-    # c['www'] = {'port': 8080}
-    c['protocols'] = {"pb": {"port": "tcp:9989"}}
-
-    return c

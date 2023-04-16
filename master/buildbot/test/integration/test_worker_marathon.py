@@ -54,8 +54,71 @@ class MarathonMaster(RunMasterBase):
                 " is with url to Marathon api ")
 
     @defer.inlineCallbacks
+    def setup_config(self, num_concurrent, extra_steps=None):
+        if extra_steps is None:
+            extra_steps = []
+        c = {}
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(
+                name="force",
+                builderNames=["testy"])]
+        triggereables = []
+        for i in range(num_concurrent):
+            c['schedulers'].append(
+                schedulers.Triggerable(
+                    name="trigsched" + str(i),
+                    builderNames=["build"]))
+            triggereables.append("trigsched" + str(i))
+
+        f = BuildFactory()
+        f.addStep(steps.ShellCommand(command='echo hello'))
+        f.addStep(steps.Trigger(schedulerNames=triggereables,
+                                waitForFinish=True,
+                                updateSourceStamp=True))
+        f.addStep(steps.ShellCommand(command='echo world'))
+        f2 = BuildFactory()
+        f2.addStep(steps.ShellCommand(command='echo ola'))
+        for step in extra_steps:
+            f2.addStep(step)
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          workernames=["marathon0"],
+                          factory=f),
+            BuilderConfig(name="build",
+                          workernames=["marathon" + str(i)
+                                       for i in range(num_concurrent)],
+                          factory=f2)]
+        url = os.environ.get('BBTEST_MARATHON_URL')
+        creds = os.environ.get('BBTEST_MARATHON_CREDS')
+        if creds is not None:
+            user, password = creds.split(":")
+        else:
+            user = password = None
+        masterFQDN = os.environ.get('masterFQDN')
+        marathon_extra_config = {
+        }
+        c['workers'] = [
+            MarathonLatentWorker('marathon' + str(i), url, user, password,
+                                 'buildbot/buildbot-worker:master',
+                                 marathon_extra_config=marathon_extra_config,
+                                 masterFQDN=masterFQDN)
+            for i in range(num_concurrent)
+        ]
+        # un comment for debugging what happens if things looks locked.
+        # c['www'] = {'port': 8080}
+        # if the masterFQDN is forced (proxy case), then we use 9989 default port
+        # else, we try to find a free port
+        if masterFQDN is not None:
+            c['protocols'] = {"pb": {"port": "tcp:9989"}}
+        else:
+            c['protocols'] = {"pb": {"port": "tcp:0"}}
+
+        yield self.setup_master(c, startWorker=False)
+
+    @defer.inlineCallbacks
     def test_trigger(self):
-        yield self.setupConfig(masterConfig(num_concurrent=NUM_CONCURRENT), startWorker=False)
+        yield self.setup_master(num_concurrent=NUM_CONCURRENT)
         yield self.doForceBuild()
 
         builds = yield self.master.data.get(("builds",))
@@ -63,67 +126,3 @@ class MarathonMaster(RunMasterBase):
         self.assertEqual(len(builds), 1 + NUM_CONCURRENT)
         for b in builds:
             self.assertEqual(b['results'], SUCCESS)
-
-
-# master configuration
-def masterConfig(num_concurrent, extra_steps=None):
-    if extra_steps is None:
-        extra_steps = []
-    c = {}
-
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
-    triggereables = []
-    for i in range(num_concurrent):
-        c['schedulers'].append(
-            schedulers.Triggerable(
-                name="trigsched" + str(i),
-                builderNames=["build"]))
-        triggereables.append("trigsched" + str(i))
-
-    f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
-    f.addStep(steps.Trigger(schedulerNames=triggereables,
-                            waitForFinish=True,
-                            updateSourceStamp=True))
-    f.addStep(steps.ShellCommand(command='echo world'))
-    f2 = BuildFactory()
-    f2.addStep(steps.ShellCommand(command='echo ola'))
-    for step in extra_steps:
-        f2.addStep(step)
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["marathon0"],
-                      factory=f),
-        BuilderConfig(name="build",
-                      workernames=["marathon" + str(i)
-                                   for i in range(num_concurrent)],
-                      factory=f2)]
-    url = os.environ.get('BBTEST_MARATHON_URL')
-    creds = os.environ.get('BBTEST_MARATHON_CREDS')
-    if creds is not None:
-        user, password = creds.split(":")
-    else:
-        user = password = None
-    masterFQDN = os.environ.get('masterFQDN')
-    marathon_extra_config = {
-    }
-    c['workers'] = [
-        MarathonLatentWorker('marathon' + str(i), url, user, password,
-                             'buildbot/buildbot-worker:master',
-                             marathon_extra_config=marathon_extra_config,
-                             masterFQDN=masterFQDN)
-        for i in range(num_concurrent)
-    ]
-    # un comment for debugging what happens if things looks locked.
-    # c['www'] = {'port': 8080}
-    # if the masterFQDN is forced (proxy case), then we use 9989 default port
-    # else, we try to find a free port
-    if masterFQDN is not None:
-        c['protocols'] = {"pb": {"port": "tcp:9989"}}
-    else:
-        c['protocols'] = {"pb": {"port": "tcp:0"}}
-
-    return c

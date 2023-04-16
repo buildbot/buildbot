@@ -36,7 +36,7 @@ class RunMaster(RunMasterBase, www.RequiresWwwMixin):
 
     @defer.inlineCallbacks
     def do_test_master(self):
-        yield self.setupConfig(BuildmasterConfig, startWorker=False)
+        yield self.setup_master(BuildmasterConfig, startWorker=False)
 
         # hang out for a fraction of a second, to let startup processes run
         yield deferLater(reactor, 0.01, lambda: None)
