@@ -807,10 +807,10 @@ class RunProcess(object):
             log.msg("taskkill'd pid {0}".format(pid))
 
         except subprocess.CalledProcessError as e:
-            # taskkill may return 128 as exit code when the child has already exited. We can't
-            # handle this race condition in any other way than just interpreting the kill action
-            # as successful
-            if e.returncode == 128:
+            # taskkill may return 128 or 255 as exit code when the child has already exited.
+            # We can't handle this race condition in any other way than just interpreting the kill
+            # action as successful
+            if e.returncode in (128, 255):
                 log.msg("taskkill didn't find pid {0} to kill".format(pid))
             else:
                 log.msg("taskkill failed to kill process {0}: {1}".format(pid, e))

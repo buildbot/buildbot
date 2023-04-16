@@ -1,0 +1,1 @@
+Fixed handling of occasional errors that happen when attempting to kill a master-side process that has already exited.
