@@ -1,2 +1,0 @@
-Improved reliability of Buildbot log watching to follow log files even after rotation.
-This improves reliability of Buildbot start and restart scripts.

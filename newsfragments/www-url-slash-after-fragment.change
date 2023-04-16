@@ -1,1 +1,0 @@
-The URLs emitted by the Buildbot APIs have been changed to include slash after the hash (``#``) symbol to be compatible with what React web UI supports.
