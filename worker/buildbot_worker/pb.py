@@ -96,7 +96,7 @@ class ProtocolCommandPb(ProtocolCommandBase):
             del args['dir']
 
         if command == "rmfile":
-            args['path'] = os.path.join(self.basedir, args['path'])
+            args['path'] = os.path.join(self.basedir, os.path.expanduser(args['path']))
 
         if command == "shell":
             args['workdir'] = os.path.join(self.basedir, args['workdir'])

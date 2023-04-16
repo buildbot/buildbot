@@ -297,7 +297,9 @@ class Connection(base.Connection):
             del args['dir']
 
         if commandName == "rmfile":
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['path'])
+            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
+                                                 self.path_expanduser(args['path'],
+                                                                      self.info['environ']))
 
         if commandName == "shell":
             args['workdir'] = self.path_module.join(self.builder_basedirs[builderName],
