@@ -1,0 +1,1 @@
+Fixed occasional errors that happen when killing processes on Windows. TASKKILL command may return code 255 when process has already exited.

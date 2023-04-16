@@ -271,10 +271,10 @@ class RunProcess:
                         subprocess.check_call(f"TASKKILL /F /PID {pid} /T")
                         success = True
                 except subprocess.CalledProcessError as e:
-                    # taskkill may return 128 as exit code when the child has already exited.
+                    # taskkill may return 128 or 255 as exit code when the child has already exited.
                     # We can't handle this race condition in any other way than just interpreting
                     # the kill action as successful
-                    if e.returncode == 128:
+                    if e.returncode in (128, 255):
                         log.msg(f"{self} taskkill didn't find pid {pid} to kill")
                         success = True
                     else:
