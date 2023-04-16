@@ -19,11 +19,34 @@ MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
 # that everything is rebuilt
-ENV         security_updates_as_of 2022-03-06
+ENV         security_updates_as_of 2023-04-16
 
 RUN \
     apt-get update && \
     apt-get -y upgrade && \
+    apt-get -y install -q \
+        wget \
+        gpg \
+        && \
+    rm -rf /var/lib/apt/lists/*
+
+# Required when using nodejs from nodesource and yarn from Debian.
+# Remove when migrating to bookworm. See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=933229
+ENV NODE_PATH /usr/lib/nodejs:/usr/share/nodejs
+
+RUN \
+    KEYRING=/usr/share/keyrings/nodesource.gpg && \
+    wget --quiet -O - https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor > "$KEYRING" && \
+    gpg --no-default-keyring --keyring "$KEYRING" --list-keys && \
+    chmod a+r /usr/share/keyrings/nodesource.gpg && \
+    VERSION=node_16.x && \
+    DISTRO=bullseye && \
+    echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
+    echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
+    cat /etc/apt/sources.list.d/nodesource.list
+
+RUN \
+    apt-get update && \
     apt-get -y install -q \
         curl \
         git \
@@ -34,6 +57,7 @@ RUN \
         libffi-dev \
         libpq-dev \
         libssl-dev \
+        nodejs \
         pkg-config \
         python3 \
         python3-dev \
@@ -72,7 +96,7 @@ MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
 # that everything is rebuilt
-ENV         security_updates_as_of 2022-03-06
+ENV         security_updates_as_of 2023-04-16
 
 RUN \
     apt-get update && \
