@@ -18,6 +18,7 @@
 import datetime
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pkg_resources import parse_version
@@ -198,6 +199,10 @@ class BuildJsCommand(distutils.cmd.Command):
         """Run command."""
         if self.already_run:
             return
+
+        if os.path.isdir('build'):
+            shutil.rmtree('build')
+
         package = self.distribution.packages[0]
         if os.path.exists("package.json"):
 
