@@ -102,4 +102,14 @@ export default defineConfig({
       '/browser-warning.css': proxyTargetHttp,
     },
   },
+  resolve: {
+    dedupe: [
+      'axios',
+      'mobx',
+      'moment',
+      'react',
+      'react-dom',
+      'react-router-dom'
+    ]
+  },
 });
