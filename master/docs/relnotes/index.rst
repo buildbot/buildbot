@@ -8,6 +8,48 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.8.0`` ( ``2023-04-16`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed compatibility issues with Python 3.11.
+- Fixed compatibility with Autobahn v22.4.1 and newer.
+- Fixed issue with overriding `env` when calling `ShellMixin.makeRemoteShellCommand`
+- Buildbot will now include the previous location of moved files when evaluating a Github commit.
+  This fixes an issue where a commit that moves a file out of a folder, would not be shown in the
+  web UI for a builder that is tracking that same folder.
+- Improved reliability of Buildbot log watching to follow log files even after rotation.
+  This improves reliability of Buildbot start and restart scripts.
+- Fixed handling of occasional errors that happen when attempting to kill a master-side process that has already exited.
+- Fixed a race condition in PyLint step that may lead to step throwing exceptions.
+- Fixed compatibility with qemu 6.1 and newer when using LibVirtWorker with ``cheap_copy=True`` (default).
+- Fixed an issue with secrets provider stripping newline from ssh keys sent in git steps.
+- Fixed occasional errors that happen when killing processes on Windows. TASKKILL command may return
+  code 255 when process has already exited.
+- Fixed deleting secrets from worker that contain '~' in their destination path.
+
+Changes
+-------
+
+- Buildbot now requires NodeJS 14.18 or newer to build the frontend.
+- The URLs emitted by the Buildbot APIs have been changed to include slash after the hash (``#``)
+  symbol to be compatible with what React web UI supports.
+
+Improved Documentation
+----------------------
+
+- Replace statement "https is unsupported" with a more detailed disclaimer.
+
+Features
+--------
+
+- Add a way to disable default ``WarningCountingShellCommand`` parser.
+- Added health check API that latent workers can use to specify that a particular worker will not connect and build should not wait for it and mark itself as failure immediately.
+- Implemented a way to customize TLS setting for ``LdapUserInfo``.
+
+
 Buildbot ``3.7.0`` ( ``2022-12-04`` )
 =====================================
 
