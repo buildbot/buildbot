@@ -4,6 +4,7 @@ import {viteStaticCopy} from 'vite-plugin-static-copy';
 import checker from 'vite-plugin-checker';
 import path from 'path';
 import fs from 'fs';
+import { visualizer } from "rollup-plugin-visualizer";
 
 const proxyHost = 'buildbot.buildbot.net';
 const proxyTargetHttp = `http://${proxyHost}`;
@@ -81,6 +82,7 @@ export default defineConfig({
     }),
     checker({typescript: true}),
     serveBuildbotPlugins(),
+    visualizer(),
   ],
   build: {
     target: ['es2015'],
