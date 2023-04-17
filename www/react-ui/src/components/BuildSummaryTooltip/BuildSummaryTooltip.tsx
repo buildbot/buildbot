@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './BuildSummaryTooltip.scss';
 import {useContext} from "react";
 import {observer} from "mobx-react";
 import {
