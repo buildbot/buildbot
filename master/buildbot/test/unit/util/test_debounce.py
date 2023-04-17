@@ -66,6 +66,9 @@ class DebounceTest(unittest.TestCase):
                 db.expCalls += 1
             elif e == 'complete':
                 db.callDeferred.callback(None)
+            elif e == 'complete-and-called':
+                db.callDeferred.callback(None)
+                db.expCalls += 1
             elif e == 'fail':
                 db.callDeferred.errback(failure.Failure(RuntimeError()))
             elif e == 'failure_logged':
@@ -217,7 +220,7 @@ class DebounceTest(unittest.TestCase):
     def test_stop_while_running_queued(self):
         """If the debounced method is stopped while running with another call
         queued, the running call completes, stop returns only after the call
-        completes, the queued call never occurs, and subsequent calls do
+        completes, the queued call still occurs, and subsequent calls do
         nothing."""
         self.scenario([
             (1, 0.0, 'maybe'),
@@ -225,9 +228,10 @@ class DebounceTest(unittest.TestCase):
             (1, 4.5, 'maybe'),
             (1, 5.0, 'stop'),
             (1, 5.0, 'stopNotComplete'),
-            (1, 6.0, 'complete'),
-            (1, 6.0, 'stopComplete'),
-            (1, 6.0, 'maybe'),
+            (1, 6.0, 'complete-and-called'),
+            (1, 6.5, 'complete'),
+            (1, 6.5, 'stopComplete'),
+            (1, 6.5, 'maybe'),
             (1, 10.0, 'check'),  # not called
         ])
 
