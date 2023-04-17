@@ -2,7 +2,7 @@
 -e master[tls,test,docs]
 -e worker[test]
 -e pkg
-buildbot_www==3.5.0
+buildbot_www==3.8.0
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
