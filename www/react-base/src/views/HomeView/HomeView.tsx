@@ -36,7 +36,7 @@ import {TableHeading} from "../../components/TableHeading/TableHeading";
 
 function maybeShowUrlWarning(location: Location, config: Config) {
   const colonAndPort = location.port === '' ? '' : `:${location.port}`;
-  const urlWithNoFragment = `${location.protocol}://${location.hostname}${colonAndPort}${location.pathname}`;
+  const urlWithNoFragment = `${location.protocol}//${location.hostname}${colonAndPort}${location.pathname}`;
   if (urlWithNoFragment === config.buildbotURL || config.isProxy === true) {
     return <></>;
   }
