@@ -44,7 +44,7 @@ MarkupSafe==2.1.1
 mccabe==0.6.1
 mock==4.0.3
 moto==4.0.1
-msgpack==1.0.4
+msgpack==1.0.5
 packaging==21.3
 parameterized==0.8.1
 pep8==1.7.1
