@@ -13,7 +13,7 @@ alabaster==0.7.12
 alembic==1.8.1
 astroid==1.4.9
 attrs==22.1.0
-autobahn==22.7.1
+autobahn==23.1.2
 Automat==22.10.0
 Babel==2.10.3
 boto3==1.24.59
