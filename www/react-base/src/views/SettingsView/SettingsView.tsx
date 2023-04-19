@@ -63,7 +63,7 @@ export const SettingsView = observer(() => {
           <label className="checkbox-inline">
             <input type="checkbox" name={item.name} checked={item.value as boolean}
                    onChange={event => setSetting(event.target.checked)}
-            />{item.caption}
+            /> {item.caption}
           </label>
         </div>
       );

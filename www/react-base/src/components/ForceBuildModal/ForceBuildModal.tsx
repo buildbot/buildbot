@@ -160,7 +160,7 @@ export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceB
   };
 
   return (
-    <Modal show={true} onHide={() => onClose(null)}>
+    <Modal className="bb-forcebuild-modal" show={true} onHide={() => onClose(null)}>
       <Modal.Header closeButton>
         <Modal.Title>{scheduler.label}</Modal.Title>
       </Modal.Header>

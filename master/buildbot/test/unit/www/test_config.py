@@ -211,7 +211,7 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
 
         master = self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions,
-                                  plugins=['base_react'])
+                                  plugins={'base_react': True})
 
         # IndexResourceReact only uses static path to get index.html. In the source checkout
         # index.html resides not in www/react-base/public but in www/react-base. Thus
@@ -236,6 +236,6 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
             "buildbotURL": "h:/a/b/",
             "multiMaster": False,
             "port": None,
-            "plugins": ["base_react"],
+            "plugins": {},
         }
         self.assertEqual(config_json, exp)
