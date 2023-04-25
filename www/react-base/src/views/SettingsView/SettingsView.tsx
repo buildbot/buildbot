@@ -97,7 +97,7 @@ export const SettingsView = observer(() => {
 
   const renderGroup = (group: SettingGroup) => {
     return (
-      <Card>
+      <Card key={group.name}>
         <Card.Header>
           <Card.Title>{group.caption}</Card.Title>
         </Card.Header>
