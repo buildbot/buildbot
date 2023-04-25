@@ -38,7 +38,7 @@ export class DataPropertiesCollection implements IDataCollection {
     return this.properties.has(key);
   }
 
-  listener(data: any) {
+  @action listener(data: any) {
     const key = data.k;
     const message = data.m;
     // Test if the message is for me

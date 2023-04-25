@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
@@ -20,20 +21,21 @@ export type ConnectedMaster = {
 }
 
 export class Worker extends BaseClass {
-  workerid!: number;
-  configured_on!: ConfiguredBuilder[];
-  connected_to!: ConnectedMaster[];
-  name!: string;
-  paused!: boolean;
-  graceful!: boolean;
-  workerinfo!: {[key: string]: any};
+  @observable workerid!: number;
+  @observable configured_on!: ConfiguredBuilder[];
+  @observable connected_to!: ConnectedMaster[];
+  @observable name!: string;
+  @observable paused!: boolean;
+  @observable graceful!: boolean;
+  @observable workerinfo!: {[key: string]: any};
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.workerid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.workerid = object.workerid;
     this.configured_on = object.configured_on;
     this.connected_to = object.connected_to;

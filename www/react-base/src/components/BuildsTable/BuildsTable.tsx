@@ -72,7 +72,9 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
         <td>
           {buildCompleteInfoElement}
         </td>
-        <td>{getPropertyValueArrayOrEmpty(build.properties, 'owners').map(owner => <span>{owner}</span>)}
+        <td>{getPropertyValueArrayOrEmpty(build.properties, 'owners').map((owner, index) => (
+          <span key={index}>{owner}</span>
+        ))}
         </td>
     <td>
       <Link to={`/workers/${build.workerid}`}>

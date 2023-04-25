@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
@@ -18,17 +19,18 @@ export type SchedulerMaster = {
 }
 
 export class Scheduler extends BaseClass {
-  schedulerid!: number;
-  name!: string;
-  master!: SchedulerMaster | null;
-  enabled!: boolean;
+  @observable schedulerid!: number;
+  @observable name!: string;
+  @observable master!: SchedulerMaster | null;
+  @observable enabled!: boolean;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.schedulerid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.schedulerid = object.schedulerid;
     this.name = object.name;
     this.master = object.master;

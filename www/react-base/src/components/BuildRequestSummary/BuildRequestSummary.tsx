@@ -44,7 +44,8 @@ export const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSumma
   const builder = builderQuery.getNthOrNull(0);
 
   const buildElements = builds.array.map(build => (
-    <BuildSummary build={build} condensed={true} parentBuild={null} parentRelationship={null}/>
+    <BuildSummary key={build.id} build={build} condensed={true} parentBuild={null}
+                  parentRelationship={null}/>
   ));
 
   const renderBuildRequestDetails = () => {

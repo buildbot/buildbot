@@ -142,7 +142,7 @@ export const BuildersView = observer(() => {
         .sort((a, b) => b.number - a.number)
         .slice(0, perBuilderBuildFetchLimit);
 
-      buildElements = builds.map(build => (<BuildLinkWithSummaryTooltip build={build}/>));
+      buildElements = builds.map(build => (<BuildLinkWithSummaryTooltip key={build.id} build={build}/>));
     }
 
     let workerElements: JSX.Element[] = [];

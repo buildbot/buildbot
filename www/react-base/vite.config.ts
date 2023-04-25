@@ -6,7 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { visualizer } from "rollup-plugin-visualizer";
 
-const proxyHost = 'buildbot.buildbot.net';
+const proxyHost = 'localhost:8011';
 const proxyTargetHttp = `http://${proxyHost}`;
 const proxyTargetWs = `ws://${proxyHost}`;
 const outDir = 'buildbot_www_react/static';
@@ -93,7 +93,10 @@ export default defineConfig({
     proxy: {
       '/auth': proxyTargetHttp,
       '/config': proxyTargetHttp,
-      '/api/v2': proxyTargetHttp,
+      '/api/v2': {
+        target: proxyTargetHttp,
+        headers: {'Origin': proxyTargetHttp},
+      },
       '/login': proxyTargetHttp,
       '/ws': {target: proxyTargetWs, ws: true},
       '/avatar': proxyTargetHttp,

@@ -5,23 +5,25 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
 
 export class Master extends BaseClass {
-  masterid!: number;
-  active!: boolean;
-  last_active!: number|null;
-  name!: string;
+  @observable masterid!: number;
+  @observable active!: boolean;
+  @observable last_active!: number|null;
+  @observable name!: string;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.masterid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.masterid = object.masterid;
     this.active = object.active;
     this.last_active = object.last_active;
