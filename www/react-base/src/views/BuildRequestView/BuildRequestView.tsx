@@ -17,6 +17,7 @@
 
 import {observer} from "mobx-react";
 import {FaSpinner, FaStop} from "react-icons/fa";
+import {Fragment, useContext, useState} from "react";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
@@ -31,7 +32,6 @@ import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import {Tab, Tabs} from "react-bootstrap";
 import {RawData} from "../../components/RawData/RawData";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
-import {useContext, useState} from "react";
 import {StoresContext} from "../../contexts/Stores";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {useTopbarItems} from "../../stores/TopbarStore";
@@ -135,16 +135,16 @@ export const BuildRequestView = observer(() => {
   useTopbarActions(stores.topbarActions, actions);
 
   const buildTabs = buildsQuery.array.map(build => (
-    <Tab eventKey={`build-${build.number}`} title={`build ${build.number}`}>
+    <Tab key={build.id} eventKey={`build-${build.number}`} title={`build ${build.number}`}>
       <BuildSummary build={build} parentBuild={null} parentRelationship={null} condensed={false}/>
     </Tab>
   ));
 
   const buildRawData = buildsQuery.array.map(build => (
-    <>
+    <Fragment key={build.id}>
       <TableHeading>Build {build.number}</TableHeading>
       <RawData data={build.toObject()}/>
-    </>
+    </Fragment>
   ));
 
   return (
