@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {Fragment} from "react";
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
 import {FaCheck, FaTimes} from "react-icons/fa";
@@ -57,7 +58,7 @@ export const MastersView = observer(() => {
       return <></>;
     }
     return masterIdToConnectedWorkers[master.id].map(worker => (
-      <span>
+      <span key={worker.id}>
         <Link to={`/workers/${worker.id}`}>
           <BadgeRound className="results_SUCCESS">
             {worker.name}
@@ -70,9 +71,9 @@ export const MastersView = observer(() => {
   const renderBuild = (build: Build) => {
     const builder = buildersQuery.getByIdOrNull(build.builderid.toString());
     if (builder === null) {
-      return <></>;
+      return <Fragment key={build.id}/>;
     }
-    return <BuildLinkWithSummaryTooltip build={build} builder={builder}/>
+    return <BuildLinkWithSummaryTooltip key={build.id} build={build} builder={builder}/>
   };
 
   const renderMaster = (master: Master) => {
