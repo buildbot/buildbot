@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
@@ -13,25 +14,26 @@ import {Change, changeDescriptor} from "./Change";
 import {Step, stepDescriptor} from "./Step";
 
 export class Build extends BaseClass {
-  buildid!: number;
-  number!: number;
-  builderid!: number;
-  buildrequestid!: number|null;
-  workerid!: number;
-  masterid!: number;
-  started_at!: number;
-  complete_at!: number|null;
-  complete!: boolean;
-  state_string!: string;
-  results!: number|null;
-  properties!: {[key: string]: any}; // for subscription to properties use getProperties()
+  @observable buildid!: number;
+  @observable number!: number;
+  @observable builderid!: number;
+  @observable buildrequestid!: number|null;
+  @observable workerid!: number;
+  @observable  masterid!: number;
+  @observable started_at!: number;
+  @observable complete_at!: number|null;
+  @observable complete!: boolean;
+  @observable state_string!: string;
+  @observable results!: number|null;
+  @observable properties!: {[key: string]: any}; // for subscription to properties use getProperties()
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.buildid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.buildid = object.buildid;
     this.number = object.number;
     this.builderid = object.builderid;

@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {Sourcestamp} from "./Sourcestamp";
@@ -13,28 +14,29 @@ import {RequestQuery} from "../DataQuery";
 import {Build, buildDescriptor} from "./Build";
 
 export class Change extends BaseClass {
-  changeid!: number;
-  author!: string;
-  branch!: string|null;
-  category!: string|null;
-  codebase!: string;
-  comments!: string;
-  files!: string[];
-  parent_changeids!: number[];
-  project!: string;
-  properties!: {[key: string]: any}; // for subscription to properties use getProperties
-  repository!: string;
-  revision!: string|null;
-  revlink!: string|null;
-  sourcestamp!: Sourcestamp;
-  when_timestamp!: number;
+  @observable changeid!: number;
+  @observable author!: string;
+  @observable branch!: string|null;
+  @observable category!: string|null;
+  @observable codebase!: string;
+  @observable comments!: string;
+  @observable files!: string[];
+  @observable parent_changeids!: number[];
+  @observable project!: string;
+  @observable properties!: {[key: string]: any}; // for subscription to properties use getProperties
+  @observable repository!: string;
+  @observable revision!: string|null;
+  @observable revlink!: string|null;
+  @observable sourcestamp!: Sourcestamp;
+  @observable when_timestamp!: number;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.changeid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.changeid = object.changeid;
     this.author = object.author;
     this.branch = object.branch;

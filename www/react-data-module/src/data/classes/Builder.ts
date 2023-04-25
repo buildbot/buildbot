@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
@@ -16,18 +17,19 @@ import {Worker, workerDescriptor} from "./Worker";
 import {Master, masterDescriptor} from "./Master";
 
 export class Builder extends BaseClass {
-  builderid!: number;
-  description!: string|null;
-  masterids!: string[];
-  name!: string;
-  tags!: string[];
+  @observable builderid!: number;
+  @observable description!: string|null;
+  @observable masterids!: string[];
+  @observable name!: string;
+  @observable tags!: string[];
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.builderid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.builderid = object.builderid;
     this.description = object.description;
     this.masterids = object.masterids;

@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
@@ -17,24 +18,25 @@ export type StepUrl = {
 }
 
 export class Step extends BaseClass {
-  stepid!: number;
-  buildid!: number;
-  complete!: boolean;
-  complete_at!: number|null;
-  hidden!: boolean;
-  name!: string;
-  number!: number;
-  results!: number;
-  started_at!: number|null;
-  state_string!: string;
-  urls!: StepUrl[];
+  @observable stepid!: number;
+  @observable buildid!: number;
+  @observable complete!: boolean;
+  @observable complete_at!: number|null;
+  @observable hidden!: boolean;
+  @observable name!: string;
+  @observable number!: number;
+  @observable results!: number;
+  @observable started_at!: number|null;
+  @observable state_string!: string;
+  @observable urls!: StepUrl[];
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.stepid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.stepid = object.stepid;
     this.buildid = object.buildid;
     this.complete = object.complete;

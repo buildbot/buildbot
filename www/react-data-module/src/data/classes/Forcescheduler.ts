@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
@@ -72,18 +73,19 @@ export type ForceSchedulerFieldNested = ForceSchedulerFieldBase & {
 }
 
 export class Forcescheduler extends BaseClass {
-  name!: string;
-  all_fields!: ForceSchedulerFieldBase[];
-  builder_names!: string[];
-  button_name!: string;
-  label!: string;
+  @observable name!: string;
+  @observable all_fields!: ForceSchedulerFieldBase[];
+  @observable builder_names!: string[];
+  @observable button_name!: string;
+  @observable label!: string;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, object.name);
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.name = object.name;
     this.all_fields = object.all_fields;
     this.builder_names = object.builder_names;

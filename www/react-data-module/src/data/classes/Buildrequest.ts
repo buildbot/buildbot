@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
@@ -12,26 +13,27 @@ import {RequestQuery} from "../DataQuery";
 import {Build, buildDescriptor} from "./Build";
 
 export class Buildrequest extends BaseClass {
-  buildrequestid!: number;
-  builderid!: number;
-  buildsetid!: number;
-  claimed!: boolean;
-  claimed_at!: number|null;
-  claimed_by_masterid!: number|null;
-  complete!: boolean;
-  complete_at!: number|null;
-  priority!: number;
-  properties!: {[key: string]: any}; // for subscription to properties use getProperties
-  results!: number|null;
-  submitted_at!: number;
-  waited_for!: boolean;
+  @observable buildrequestid!: number;
+  @observable builderid!: number;
+  @observable buildsetid!: number;
+  @observable claimed!: boolean;
+  @observable claimed_at!: number|null;
+  @observable claimed_by_masterid!: number|null;
+  @observable complete!: boolean;
+  @observable complete_at!: number|null;
+  @observable priority!: number;
+  @observable properties!: {[key: string]: any}; // for subscription to properties use getProperties
+  @observable results!: number|null;
+  @observable submitted_at!: number;
+  @observable waited_for!: boolean;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.buildrequestid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.buildrequestid = object.buildrequestid;
     this.builderid = object.builderid;
     this.buildsetid = object.buildsetid;

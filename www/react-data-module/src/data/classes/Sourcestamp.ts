@@ -5,27 +5,29 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
 
 export class Sourcestamp extends BaseClass {
-  ssid!: number;
-  branch!: string|null;
-  codebase!: string;
-  created_at!: number;
-  patch!: string|null; // TODO
-  project!: string;
-  repository!: string;
-  revision!: string|null;
+  @observable ssid!: number;
+  @observable branch!: string|null;
+  @observable codebase!: string;
+  @observable created_at!: number;
+  @observable patch!: string|null; // TODO
+  @observable project!: string;
+  @observable repository!: string;
+  @observable revision!: string|null;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.ssid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.ssid = object.ssid;
     this.branch = object.branch;
     this.codebase = object.codebase;

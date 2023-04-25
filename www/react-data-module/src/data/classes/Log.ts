@@ -5,26 +5,28 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
 
 export class Log extends BaseClass {
-  logid!: number;
-  complete!: boolean;
-  name!: string;
-  num_lines!: number;
-  slug!: string;
-  stepid!: number;
-  type!: string;
+  @observable logid!: number;
+  @observable complete!: boolean;
+  @observable name!: string;
+  @observable num_lines!: number;
+  @observable slug!: string;
+  @observable stepid!: number;
+  @observable type!: string;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.logid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.logid = object.logid;
     this.complete = object.complete;
     this.name = object.name;

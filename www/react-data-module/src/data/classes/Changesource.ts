@@ -7,22 +7,24 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
 
 export class Changesource extends BaseClass {
-  changesourceid!: number;
-  master!: any; // FIXME
-  name!: string;
+  @observable changesourceid!: number;
+  @observable master!: any; // FIXME
+  @observable name!: string;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.changesourceid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.changesourceid = object.changesourceid;
     this.master = object.master;
     this.name = object.name;

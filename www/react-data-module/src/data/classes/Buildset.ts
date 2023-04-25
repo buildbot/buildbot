@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {action, makeObservable, observable} from "mobx";
 import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
@@ -24,23 +25,24 @@ export type BuildsetSourcestamps = {
 }
 
 export class Buildset extends BaseClass {
-  bsid!: number;
-  complete!: boolean;
-  complete_at!: number|null;
-  external_idstring!: string|null;
-  parent_buildid!: number|null;
-  parent_relationship!: string|null;
-  reason!: string;
-  results!: number|null;
-  sourcestamps!: BuildsetSourcestamps[];
-  submitted_at!: number|null;
+  @observable bsid!: number;
+  @observable complete!: boolean;
+  @observable complete_at!: number|null;
+  @observable external_idstring!: string|null;
+  @observable parent_buildid!: number|null;
+  @observable parent_relationship!: string|null;
+  @observable reason!: string;
+  @observable results!: number|null;
+  @observable sourcestamps!: BuildsetSourcestamps[];
+  @observable submitted_at!: number|null;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.bsid));
     this.update(object);
+    makeObservable(this);
   }
 
-  update(object: any) {
+  @action update(object: any) {
     this.bsid = object.bsid;
     this.complete = object.complete;
     this.complete_at = object.complete_at;
