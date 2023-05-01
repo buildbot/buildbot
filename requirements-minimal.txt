@@ -42,7 +42,7 @@ lz4==4.3.2
 Mako==1.2.4
 MarkupSafe==2.1.2
 mccabe==0.6.1
-mock==4.0.3
+mock==5.0.2
 moto==4.0.1
 msgpack==1.0.5
 packaging==21.3
