@@ -4,7 +4,7 @@
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
 buildbot-www==3.8.0
 
-autobahn==22.7.1
+autobahn==23.1.2
 boto3==1.24.60
 flake8==5.0.4
 msgpack==1.0.4
