@@ -82,7 +82,7 @@ sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
 sphinxcontrib-spelling==7.6.0
 sphinxcontrib-websupport==1.2.4
-SQLAlchemy==1.4.40
+SQLAlchemy==2.0.12
 tomli==2.0.1
 towncrier==21.9.0
 treq==22.2.0
