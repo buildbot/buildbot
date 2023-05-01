@@ -37,7 +37,7 @@ incremental==22.10.0
 isort==5.12.0
 Jinja2==3.1.2
 jmespath==1.0.1
-lazy-object-proxy==1.7.1
+lazy-object-proxy==1.9.0
 lz4==4.3.2
 Mako==1.2.4
 MarkupSafe==2.1.2
