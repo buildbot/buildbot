@@ -116,7 +116,7 @@ txaio==23.1.1
 txrequests==0.9.6
 typing_extensions==4.5.0
 unidiff==0.7.5
-urllib3==1.26.11
+urllib3==2.0.1
 webcolors==1.12
 websocket-client==1.3.3
 Werkzeug==2.1.2  # pyup: ignore (moto 4.0.1 depends on werkzeug<2.2.0)
