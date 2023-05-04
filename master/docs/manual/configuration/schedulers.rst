@@ -641,17 +641,21 @@ The full list of parameters is:
 ``dayOfMonth`` (optional)
 
     The day of the month to start a build.
-    This defaults to ``*``, meaning every day.
+    This defaults to ``*``, meaning every day or ``L`` for last day.
+    Last day option respects leap years.
 
 ``month`` (optional)
 
     The month in which to start the build, with January = 1.
-    This defaults to ``*``, meaning every month.
+    This defaults to ``*``, meaning every month. Month or month
+    range / list as standard C abbreviated name ``jan-feb``, ``jan,dec``.
 
 ``dayOfWeek`` (optional)
 
     The day of the week to start a build, with Monday = 0.
-    This defaults to ``*``, meaning every day of the week.
+    This defaults to ``*``, meaning every day of the week or nth weekday of month.
+    Like first Monday of month ``1#1``, last Monday of month ``L1``,
+    Monday + Friday ``mon,fri`` or ranges Monday to Friday ``mon-fri``.
 
 For example, the following :file:`master.cfg` clause will cause a build to be started every night at 3:00am:
 
