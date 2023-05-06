@@ -59,7 +59,7 @@ export function getBuildOrStepResults(buildOrStep: Build | Step | null, unknownR
   return unknownResults;
 }
 
-export function results2class(buildOrStep: Build | Step, pulse: string | null) {
+export function results2class(buildOrStep: Build | Step | null, pulse: string | null) {
   const results = getBuildOrStepResults(buildOrStep, UNKNOWN);
   let ret = `results_${intToResultText[results]}`
   if (results === PENDING && pulse !== null) {
