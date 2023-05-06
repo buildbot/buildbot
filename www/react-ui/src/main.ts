@@ -25,6 +25,7 @@ export * from "./components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTool
 export * from "./components/BuildSummaryTooltip/BuildSummaryTooltip";
 export * from "./components/ChangeDetails/ChangeDetails";
 export * from "./components/ChangeUserAvatar/ChangeUserAvatar";
+export * from "./components/LoadingIndicator/LoadingIndicator";
 export * from "./components/WorkerBadge/WorkerBadge";
 
 export * from "./contexts/Config";

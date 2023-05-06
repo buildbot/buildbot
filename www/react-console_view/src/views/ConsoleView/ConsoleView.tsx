@@ -20,7 +20,6 @@ import {ObservableMap} from "mobx";
 import {observer, useLocalObservable} from "mobx-react";
 import {Link} from "react-router-dom";
 import {
-  FaCircleNotch,
   FaExclamationCircle,
   FaMinusCircle,
   FaPlusCircle
@@ -38,6 +37,7 @@ import {
 import {
   BuildLinkWithSummaryTooltip,
   ChangeDetails,
+  LoadingIndicator,
   pushIntoMapOfArrays,
   useWindowSize
 } from "buildbot-ui";
@@ -397,12 +397,7 @@ export const ConsoleView = observer(() => {
   if (!queriesResolved) {
     return (
       <div className="bb-console-container">
-        <div className="bb-console-load-indicator">
-          <div className="spinner">
-            <FaCircleNotch className="fa-spin"/>
-            <p>loading</p>
-          </div>
-        </div>
+        <LoadingIndicator/>
       </div>
     );
   }
