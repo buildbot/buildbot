@@ -29,6 +29,7 @@ export * from "./components/WorkerBadge/WorkerBadge";
 
 export * from "./contexts/Config";
 export * from "./contexts/Time";
+export * from "./contexts/Topbar";
 
 export * from "./stores/TimeStore";
 export * from "./stores/TopbarStore";

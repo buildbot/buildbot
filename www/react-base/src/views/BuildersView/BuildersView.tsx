@@ -17,7 +17,7 @@
 
 import './BuildersView.scss';
 import {observer} from "mobx-react";
-import {useContext, useState} from "react";
+import {useState} from "react";
 import {FaCogs} from "react-icons/fa";
 import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
@@ -39,7 +39,6 @@ import {
   useTopbarItems,
 } from "buildbot-ui";
 import {computed} from "mobx";
-import {StoresContext} from "../../contexts/Stores";
 import {Table} from "react-bootstrap";
 
 const hasActiveMaster = (builder: Builder, masters: DataCollection<Master>) => {
@@ -68,13 +67,12 @@ const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
 };
 
 export const BuildersView = observer(() => {
-  const stores = useContext(StoresContext);
   const accessor = useDataAccessor([]);
 
   const filterManager = useTagFilterManager("tags");
   const [builderNameFilter, setBuilderNameFilter] = useState("");
 
-  useTopbarItems(stores.topbar, [
+  useTopbarItems([
     {caption: "Builders", route: "/builders"}
   ]);
 

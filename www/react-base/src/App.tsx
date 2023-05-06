@@ -4,7 +4,7 @@ import './App.css';
 import './styles/styles.scss';
 import 'bootstrap';
 import {Routes, Route} from "react-router-dom";
-import {ConfigContext, useCurrentTimeSetupTimers} from "buildbot-ui";
+import {ConfigContext, TopbarContext, useCurrentTimeSetupTimers} from "buildbot-ui";
 
 import {PageWithSidebar} from "./components/PageWithSidebar/PageWithSidebar";
 import {StoresContext} from "./contexts/Stores";
@@ -35,6 +35,7 @@ import {UrlNotFoundView} from "./views/UrlNotFoundView/UrlNotFoundView";
 export const App = observer(() => {
   const stores = useContext(StoresContext);
   const config = useContext(ConfigContext);
+  const topbarStore = useContext(TopbarContext);
 
   useEffect(() => {
     globalMenuSettings.setAppTitle(config.title);
@@ -51,8 +52,8 @@ export const App = observer(() => {
 
   return (
     <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
-      <Topbar store={stores.topbar} appTitle={globalMenuSettings.appTitle}>
-        <TopbarActions store={stores.topbar}/>
+      <Topbar store={topbarStore} appTitle={globalMenuSettings.appTitle}>
+        <TopbarActions store={topbarStore}/>
         <Loginbar/>
       </Topbar>
       <Routes>

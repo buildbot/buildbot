@@ -14,7 +14,14 @@ import {
   getRestUrl,
   getWebSocketUrl,
 } from "buildbot-data-js";
-import {Config, ConfigContext, TimeContext, TimeStore, TopbarStore} from "buildbot-ui";
+import {
+  Config,
+  ConfigContext,
+  TimeContext,
+  TimeStore,
+  TopbarContext,
+  TopbarStore
+} from "buildbot-ui";
 import {HashRouter} from "react-router-dom";
 import {SidebarStore} from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';
@@ -60,14 +67,15 @@ const doRender = (buildbotFrontendConfig: Config) => {
     <DataClientContext.Provider value={dataClient}>
       <ConfigContext.Provider value={buildbotFrontendConfig}>
         <TimeContext.Provider value={timeStore}>
-          <StoresContext.Provider value={{
-            sidebar: sidebarStore,
-            topbar: topbarStore,
-          }}>
-            <HashRouter>
-              <App/>
-            </HashRouter>
-          </StoresContext.Provider>
+          <TopbarContext.Provider value={topbarStore}>
+            <StoresContext.Provider value={{
+              sidebar: sidebarStore,
+            }}>
+              <HashRouter>
+                <App/>
+              </HashRouter>
+            </StoresContext.Provider>
+          </TopbarContext.Provider>
         </TimeContext.Provider>
       </ConfigContext.Provider>
     </DataClientContext.Provider>

@@ -19,8 +19,7 @@ import './BuildView.scss';
 import {observer} from "mobx-react";
 import {FaSpinner} from "react-icons/fa";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
-import {useContext, useState} from "react";
-import {StoresContext} from "../../contexts/Stores";
+import {useState} from "react";
 import {Link, useNavigate, useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
@@ -129,7 +128,6 @@ const BuildView = observer(() => {
   const buildnumber = Number.parseInt(useParams<"buildnumber">().buildnumber ?? "");
   const navigate = useNavigate();
 
-  const stores = useContext(StoresContext);
   const accessor = useDataAccessor([builderid, buildnumber]);
 
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid.toString()}));
@@ -208,7 +206,7 @@ const BuildView = observer(() => {
     });
   };
 
-  useTopbarItems(stores.topbar, [
+  useTopbarItems([
     {caption: "Builders", route: "/builders"},
     {caption: builder === null ? "..." : builder.name, route: `/builders/${builderid}`},
     {caption: buildnumber.toString(), route: `/builders/${builderid}/builds/${buildnumber}`},
@@ -216,7 +214,7 @@ const BuildView = observer(() => {
 
   const actions = buildTopbarActions(build, isRebuilding, isStopping, doRebuild, doStop);
 
-  useTopbarActions(stores.topbar, actions);
+  useTopbarActions(actions);
   useFavIcon(getBuildOrStepResults(build, UNKNOWN));
 
   const renderPager = (build: Build|null) => {

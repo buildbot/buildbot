@@ -16,7 +16,7 @@
 */
 
 import {observer} from "mobx-react";
-import {useContext, useState} from "react";
+import {useState} from "react";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
@@ -28,7 +28,6 @@ import {
   useDataApiQuery
 } from "buildbot-data-js";
 import {TopbarAction, useTopbarItems, useTopbarActions} from "buildbot-ui";
-import {StoresContext} from "../../contexts/Stores";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
 import {useNavigate, useParams} from "react-router-dom";
@@ -93,7 +92,6 @@ export const BuilderView = observer(() => {
   const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
   const navigate = useNavigate();
 
-  const stores = useContext(StoresContext);
   const accessor = useDataAccessor([builderid]);
 
   const numBuilds = 200;
@@ -124,7 +122,7 @@ export const BuilderView = observer(() => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useTopbarItems(stores.topbar, builder === null ? [] : [
+  useTopbarItems(builder === null ? [] : [
     {caption: "Builders", route: "/builders"},
     {caption: builder.name, route: `/builders/${builderid}`},
   ]);
@@ -162,7 +160,7 @@ export const BuilderView = observer(() => {
   const actions = buildTopbarActions(builds, buildrequests, forceschedulers, isCancelling,
     cancelWholeQueue, (sch) => setShownForceScheduler(sch));
 
-  useTopbarActions(stores.topbar, actions);
+  useTopbarActions(actions);
 
   const onForceBuildModalClose = (buildRequestNumber: string | null) => {
     if (buildRequestNumber === null) {
