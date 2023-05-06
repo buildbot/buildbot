@@ -99,6 +99,14 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
     return !this.accessor.isOpen();
   }
 
+  isResolved() {
+    let resolved = true;
+    for (const collection of this.byParentId.values()) {
+      resolved = resolved && collection.isResolved();
+    }
+    return resolved;
+  }
+
   subscribe() {
     return Promise.resolve();
   }

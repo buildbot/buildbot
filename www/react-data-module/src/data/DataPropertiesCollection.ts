@@ -57,6 +57,10 @@ export class DataPropertiesCollection implements IDataCollection {
     return !this.accessor.isOpen();
   }
 
+  isResolved() {
+    return this.resolved;
+  }
+
   subscribe() {
     return this.webSocketClient.subscribe(this.socketPath, this);
   }

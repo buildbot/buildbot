@@ -18,6 +18,7 @@ import {DataMultiPropertiesCollection} from "./DataMultiPropertiesCollection";
 
 export interface IDataCollection {
   isExpired(): boolean;
+  isResolved(): boolean;
   subscribe(): Promise<void>;
   initial(data: any[]): void;
   close(): Promise<void>;
@@ -58,6 +59,10 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
       return false;
     }
     return !this.accessor.isOpen();
+  }
+
+  isResolved() {
+    return this.resolved;
   }
 
   subscribe() {
