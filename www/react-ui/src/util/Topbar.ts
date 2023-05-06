@@ -15,15 +15,17 @@
   Copyright Buildbot Team Members
 */
 
-import {SidebarStore} from "../stores/SidebarStore";
-import {createContext} from "react";
-import {TopbarStore} from "buildbot-ui";
-import {TopbarActionsStore} from "../stores/TopbarActionsStore";
+import {useEffect} from "react";
+import {TopbarItem, TopbarStore} from "../stores/TopbarStore";
 
-export type Stores = {
-  sidebar: SidebarStore,
-  topbar: TopbarStore,
-  topbarActions: TopbarActionsStore,
+export function useTopbarItems(store: TopbarStore, items: TopbarItem[]) {
+  useEffect(() => {
+    store.setItems(items);
+  }, [store, items]);
+
+  // We only want to clear the items once, thus the useEffect hook is split into two parts, one
+  // for updates, one for eventual cleanup when navigating out of view.
+  useEffect(() => {
+    return () => store.setItems([]);
+  }, [store])
 }
-
-export const StoresContext = createContext<Stores>(undefined as any);

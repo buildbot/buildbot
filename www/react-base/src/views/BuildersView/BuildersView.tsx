@@ -31,9 +31,14 @@ import {
   useDataApiQuery
 } from "buildbot-data-js";
 import {Link} from "react-router-dom";
-import {BuildLinkWithSummaryTooltip, WorkerBadge, TagFilterManager, useTagFilterManager} from "buildbot-ui";
+import {
+  BuildLinkWithSummaryTooltip,
+  WorkerBadge,
+  TagFilterManager,
+  useTagFilterManager,
+  useTopbarItems,
+} from "buildbot-ui";
 import {computed} from "mobx";
-import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import {Table} from "react-bootstrap";
 

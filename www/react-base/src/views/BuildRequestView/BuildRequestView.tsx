@@ -30,11 +30,11 @@ import {
 } from "buildbot-data-js";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import {Tab, Tabs} from "react-bootstrap";
+import {useTopbarItems} from "buildbot-ui";
 import {RawData} from "../../components/RawData/RawData";
 import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
 import {StoresContext} from "../../contexts/Stores";
 import {useTopbarActions} from "../../stores/TopbarActionsStore";
-import {useTopbarItems} from "../../stores/TopbarStore";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
 import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";

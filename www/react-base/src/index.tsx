@@ -14,11 +14,10 @@ import {
   getRestUrl,
   getWebSocketUrl,
 } from "buildbot-data-js";
-import {Config, ConfigContext, TimeContext, TimeStore} from "buildbot-ui";
+import {Config, ConfigContext, TimeContext, TimeStore, TopbarStore} from "buildbot-ui";
 import {HashRouter} from "react-router-dom";
 import {SidebarStore} from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';
-import {TopbarStore} from "./stores/TopbarStore";
 import {TopbarActionsStore} from "./stores/TopbarActionsStore";
 import {globalSettings} from "./plugins/GlobalSettings";
 import moment from "moment";

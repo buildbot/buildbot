@@ -20,7 +20,6 @@ import {observer} from "mobx-react";
 import {FaSpinner} from "react-icons/fa";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
 import {useContext, useState} from "react";
-import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import {Link, useNavigate, useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
@@ -53,7 +52,8 @@ import {
   dateFormat,
   durationFromNowFormat,
   useCurrentTime,
-  useFavIcon
+  useFavIcon,
+  useTopbarItems,
 } from "buildbot-ui";
 import {RawData} from "../../components/RawData/RawData";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";

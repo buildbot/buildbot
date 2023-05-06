@@ -18,11 +18,11 @@
 import './LogView.scss';
 import {observer} from "mobx-react";
 import {useContext} from "react";
-import {useTopbarItems} from "../../stores/TopbarStore";
 import {StoresContext} from "../../contexts/Stores";
 import {useNavigate, useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {Builder, Build, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
+import {useTopbarItems} from "buildbot-ui";
 import {LogViewer} from "../../components/LogViewer/LogViewer";
 
 const LogView = observer(() => {

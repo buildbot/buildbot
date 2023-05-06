@@ -27,7 +27,7 @@ import {
   useDataAccessor,
   useDataApiQuery
 } from "buildbot-data-js";
-import {useTopbarItems} from "../../stores/TopbarStore";
+import {useTopbarItems} from "buildbot-ui";
 import {StoresContext} from "../../contexts/Stores";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
