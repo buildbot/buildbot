@@ -32,7 +32,7 @@
   Copyright Buildbot Team Members
 */
 
-import {computeToggledTag3Way} from "./TagFilterManager";
+import {computeToggledTag3Way, computeToggledTagOnOff} from "./TagFilterManager";
 
 describe('TagFilterManager', () => {
   describe('computeToggledTag3Way', () => {
@@ -74,6 +74,28 @@ describe('TagFilterManager', () => {
       expect(computeToggledTag3Way(['other', '-tag'], 'tag')).toEqual(['other', 'tag']);
       expect(computeToggledTag3Way(['other', '-tag'], '+tag')).toEqual(['other', 'tag']);
       expect(computeToggledTag3Way(['other', '-tag'], '-tag')).toEqual(['other', 'tag']);
+    });
+  });
+
+  describe('computeToggledTagOnOff', () => {
+    it('empty', () => {
+      expect(computeToggledTagOnOff([], '')).toEqual([]);
+    });
+
+    it('toggle tag when empty', () => {
+      expect(computeToggledTagOnOff([], 'tag')).toEqual(['tag']);
+    });
+
+    it('toggle tag when other tag', () => {
+      expect(computeToggledTagOnOff(['other'], 'tag')).toEqual(['other', 'tag']);
+    });
+
+    it('toggle tag when same tag', () => {
+      expect(computeToggledTagOnOff(['tag'], 'tag')).toEqual([]);
+    });
+
+    it('toggle tag when same tag and other tag', () => {
+      expect(computeToggledTagOnOff(['other', 'tag'], 'tag')).toEqual(['other']);
     });
   });
 });

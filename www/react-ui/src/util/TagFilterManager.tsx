@@ -51,17 +51,41 @@ export const computeToggledTag3Way = (tags: string[], tag: string) => {
   return newTags;
 }
 
+export const computeToggledTagOnOff = (tags: string[], tag: string) => {
+  if (tag === '') {
+    return tags;
+  }
+
+  const i = tags.indexOf(tag);
+
+  const newTags = [...tags];
+  if (i < 0) {
+    newTags.push(tag);
+  } else {
+    newTags.splice(i, 1);
+  }
+  return newTags;
+}
+
+export enum TagFilterManagerTagMode {
+  Toggle3Way,
+  ToggleOnOff
+}
+
 export class TagFilterManager {
   tags: string[];
   searchParams: URLSearchParams;
   setSearchParams: (nextInit: URLSearchParamsInit) => void;
+  mode: TagFilterManagerTagMode;
 
   constructor(searchParams: URLSearchParams,
               setSearchParams: (nextInit: URLSearchParamsInit) => void,
-              urlParamName: string) {
+              urlParamName: string,
+              mode: TagFilterManagerTagMode) {
     this.tags = searchParams.getAll(urlParamName);
     this.searchParams = searchParams;
     this.setSearchParams = setSearchParams;
+    this.mode = mode;
   }
 
   shouldShowByTags(tags: string[]) {
@@ -109,8 +133,17 @@ export class TagFilterManager {
   }
 
   private toggleTag(tag: string) {
-    this.setTags(computeToggledTag3Way(this.tags, tag));
+    this.setTags(this.computeToggledTag(tag));
   };
+
+  private computeToggledTag(tag: string) {
+    switch (this.mode) {
+      case TagFilterManagerTagMode.Toggle3Way:
+        return computeToggledTag3Way(this.tags, tag);
+      case TagFilterManagerTagMode.ToggleOnOff:
+        return computeToggledTagOnOff(this.tags, tag);
+    }
+  }
 
   private isTagFiltered(tag: string) {
     return (
@@ -193,7 +226,10 @@ export class TagFilterManager {
   }
 }
 
-export const useTagFilterManager = (urlParamName: string) => {
+export const useTagFilterManager = (urlParamName: string, mode?: TagFilterManagerTagMode) => {
+  if (mode === undefined) {
+    mode = TagFilterManagerTagMode.Toggle3Way;
+  }
   const [searchParams, setSearchParams] = useSearchParams();
-  return new TagFilterManager(searchParams, setSearchParams, urlParamName);
+  return new TagFilterManager(searchParams, setSearchParams, urlParamName, mode);
 }
