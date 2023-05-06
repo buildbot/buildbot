@@ -35,7 +35,12 @@ import {
   Change,
   useDataAccessor, useDataApiQuery, IDataAccessor
 } from "buildbot-data-js";
-import {BuildLinkWithSummaryTooltip, ChangeDetails, useWindowSize} from "buildbot-ui";
+import {
+  BuildLinkWithSummaryTooltip,
+  ChangeDetails,
+  pushIntoMapOfArrays,
+  useWindowSize
+} from "buildbot-ui";
 
 type ChangeInfo = {
   change: Change;
@@ -54,16 +59,6 @@ export type TagItemConfig = {
 };
 
 export type TagLineConfig = TagItemConfig[];
-
-function pushIntoMapOfArrays<Key, ValueItem>(map: Map<Key, ValueItem[]>,
-                                             key: Key, value: ValueItem) {
-  const existingValues = map.get(key);
-  if (existingValues === undefined) {
-    map.set(key, [value]);
-    return;
-  }
-  existingValues.push(value);
-}
 
 export function buildTagTree(builders: Builder[])
 {
