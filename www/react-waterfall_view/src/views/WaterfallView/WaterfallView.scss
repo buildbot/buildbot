@@ -1,0 +1,199 @@
+
+$navbar-height: 52px;
+$main-color: #3498db;
+
+.bb-waterfall-view {
+  flex: 1;
+  width: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  .header {
+    position: relative;
+    z-index: 1;
+    height: 100px;
+    line-height: 100px;
+    margin-bottom: 2px;
+    // @FIXME: add a bit of margin-right in order to be able to see the rotated titles.
+    margin-right: -150px;
+    vertical-align: middle;
+
+    .header-content {
+      height: 100%;
+      overflow: hidden;
+
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .axis {
+        .domain {
+          fill: none;
+        }
+
+        &.x {
+          .tick {
+            a {
+              text-decoration: none;
+            }
+
+            text {
+              fill: $main-color;
+              font-size: 12px;
+            }
+
+            line {
+              stroke-width: 20px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .content {
+    position: relative;
+    height: 100%;
+
+    .inner-content {
+      position: absolute;
+      top: 0;
+      bottom: 110px;
+      overflow-y: auto;
+      overflow-x: visible;
+      width: 100%;
+
+      .svg-container {
+        position: relative;
+        width: 100%;
+        height: 16000px;
+
+        svg {
+          width: 100%;
+          height: 100%;
+
+          .chart {
+            .builder {
+              .build {
+                cursor: pointer;
+
+                rect, polygon {
+                  stroke: $main-color;
+                  stroke-width: 1px;
+                }
+
+                polygon {
+                  fill: #fff;
+                }
+
+                .buildstep {
+                  text {
+                    font-size: 12px;
+                  }
+                }
+              }
+
+              text.id {
+                fill: $main-color;
+                font-size: 12px;
+                text-anchor: middle;
+              }
+
+              circle {
+                stroke: $main-color;
+                stroke-width: 1px;
+              }
+            }
+          }
+
+          .axis {
+            .domain {
+              fill: none;
+            }
+
+            &.y {
+              .tick {
+                text {
+                  fill: $main-color;
+                  font-size: 10px;
+                }
+
+                line {
+                  stroke: $main-color;
+                  stroke-width: 1px;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .fill {
+    &.results_SUCCESS {
+      fill: #88DD33;
+    }
+    &.results_WARNINGS {
+      fill: #FFAA33;
+    }
+    &.results_FAILURE {
+      fill: #EE8888;
+    }
+    &.results_SKIPPED {
+      fill: #AADDEE;
+    }
+    &.results_EXCEPTION {
+      fill: #CC66CC;
+    }
+    &.results_RETRY {
+      fill: #EECCCC;
+    }
+    // ?
+    &.results_CANCELLED {
+      fill: #EECCCC;
+    }
+    &.results_PENDING {
+      fill: #E7D100;
+    }
+    &.results_UNKNOWN {
+      fill: #EEEEEE;
+    }
+  }
+
+  .stroke {
+    &.results_SUCCESS {
+      stroke: #88DD33;
+    }
+    &.results_WARNINGS {
+      stroke: #FFAA33;
+    }
+    &.results_FAILURE {
+      stroke: #EE8888;
+    }
+    &.results_SKIPPED {
+      stroke: #AADDEE;
+    }
+    &.results_EXCEPTION {
+      stroke: #CC66CC;
+    }
+    &.results_RETRY {
+      stroke: #EECCCC;
+    }
+    // ?
+    &.results_CANCELLED {
+      stroke: #EECCCC;
+    }
+    &.results_PENDING {
+      stroke: #E7D100;
+    }
+    &.results_UNKNOWN {
+      stroke: #EEEEEE;
+    }
+  }
+}
+
+.svg-tooltip {
+  pointer-events: none;
+}
