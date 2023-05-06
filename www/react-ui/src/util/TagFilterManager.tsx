@@ -20,6 +20,37 @@ import {Badge, OverlayTrigger, Popover} from "react-bootstrap";
 import {FaQuestionCircle} from "react-icons/fa";
 import {URLSearchParamsInit, useSearchParams} from "react-router-dom";
 
+export const computeToggledTag3Way = (tags: string[], tag: string) => {
+  if (tag === '') {
+    return tags;
+  }
+
+  if (tag.indexOf('+') === 0) {
+    tag = tag.slice(1);
+  }
+  if (tag.indexOf('-') === 0) {
+    tag = tag.slice(1);
+  }
+
+  const i = tags.indexOf(tag);
+  const iplus = tags.indexOf(`+${tag}`);
+  const iminus = tags.indexOf(`-${tag}`);
+
+  const newTags = [...tags];
+  if ((i < 0) && (iplus < 0) && (iminus < 0)) {
+    newTags.push(`+${tag}`);
+  } else if (iplus >= 0) {
+    newTags.splice(iplus, 1);
+    newTags.push(`-${tag}`);
+  } else if (iminus >= 0) {
+    newTags.splice(iminus, 1);
+    newTags.push(tag);
+  } else {
+    newTags.splice(i, 1);
+  }
+  return newTags;
+}
+
 export class TagFilterManager {
   tags: string[];
   searchParams: URLSearchParams;
@@ -78,31 +109,7 @@ export class TagFilterManager {
   }
 
   private toggleTag(tag: string) {
-    if (tag.indexOf('+') === 0) {
-      tag = tag.slice(1);
-    }
-    if (tag.indexOf('-') === 0) {
-      tag = tag.slice(1);
-    }
-
-    const i = this.tags.indexOf(tag);
-    const iplus = this.tags.indexOf(`+${tag}`);
-    const iminus = this.tags.indexOf(`-${tag}`);
-
-    const newTags = [...this.tags];
-    if ((i < 0) && (iplus < 0) && (iminus < 0)) {
-      newTags.push(`+${tag}`);
-    } else if (iplus >= 0) {
-      newTags.splice(iplus, 1);
-      newTags.push(`-${tag}`);
-    } else if (iminus >= 0) {
-      newTags.splice(iminus, 1);
-      newTags.push(tag);
-    } else {
-      newTags.splice(i, 1);
-    }
-
-    this.setTags(newTags);
+    this.setTags(computeToggledTag3Way(this.tags, tag));
   };
 
   private isTagFiltered(tag: string) {
