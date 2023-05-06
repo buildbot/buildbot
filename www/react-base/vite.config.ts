@@ -6,9 +6,11 @@ import path from 'path';
 import fs from 'fs';
 import { visualizer } from "rollup-plugin-visualizer";
 
-const proxyHost = 'localhost:8011';
-const proxyTargetHttp = `http://${proxyHost}`;
-const proxyTargetWs = `ws://${proxyHost}`;
+const proxy = new URL('https://buildbot.buildbot.net');
+
+const proxyTargetHttp = proxy.href.replace(/\/*$/, ''); // trim trailing slashes
+const proxyTargetWs = proxy.protocol === 'https:' ? `wss://${proxy.host}` : `ws://${proxy.host}`;
+
 const outDir = 'buildbot_www_react/static';
 
 const buildPluginsPathsMap = () => {
@@ -95,10 +97,18 @@ export default defineConfig({
       '/config': proxyTargetHttp,
       '/api/v2': {
         target: proxyTargetHttp,
-        headers: {'Origin': proxyTargetHttp},
+        headers: {
+          'Host': proxy.host,
+          'Origin': proxyTargetHttp,
+        },
+        // note that changeOrigin does not work for POST requests
       },
       '/login': proxyTargetHttp,
-      '/ws': {target: proxyTargetWs, ws: true},
+      '/ws': {
+        target: proxyTargetWs,
+        ws: true,
+        secure: false // the proxy attempts to verify certificate using localhost hostname
+      },
       '/avatar': proxyTargetHttp,
       '/img': proxyTargetHttp,
       '/browser-warning.js': proxyTargetHttp,
