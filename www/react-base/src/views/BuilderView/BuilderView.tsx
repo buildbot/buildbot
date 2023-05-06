@@ -27,12 +27,10 @@ import {
   useDataAccessor,
   useDataApiQuery
 } from "buildbot-data-js";
-import {useTopbarItems} from "buildbot-ui";
+import {TopbarAction, useTopbarItems, useTopbarActions} from "buildbot-ui";
 import {StoresContext} from "../../contexts/Stores";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
-import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
-import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {useNavigate, useParams} from "react-router-dom";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
 import {ForceBuildModal} from "../../components/ForceBuildModal/ForceBuildModal";
@@ -164,7 +162,7 @@ export const BuilderView = observer(() => {
   const actions = buildTopbarActions(builds, buildrequests, forceschedulers, isCancelling,
     cancelWholeQueue, (sch) => setShownForceScheduler(sch));
 
-  useTopbarActions(stores.topbarActions, actions);
+  useTopbarActions(stores.topbar, actions);
 
   const onForceBuildModalClose = (buildRequestNumber: string | null) => {
     if (buildRequestNumber === null) {

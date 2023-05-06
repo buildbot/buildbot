@@ -18,12 +18,10 @@
 import {SidebarStore} from "../stores/SidebarStore";
 import {createContext} from "react";
 import {TopbarStore} from "buildbot-ui";
-import {TopbarActionsStore} from "../stores/TopbarActionsStore";
 
 export type Stores = {
   sidebar: SidebarStore,
   topbar: TopbarStore,
-  topbarActions: TopbarActionsStore,
 }
 
 export const StoresContext = createContext<Stores>(undefined as any);

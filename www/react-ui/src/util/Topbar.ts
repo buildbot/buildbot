@@ -16,7 +16,7 @@
 */
 
 import {useEffect} from "react";
-import {TopbarItem, TopbarStore} from "../stores/TopbarStore";
+import {TopbarAction, TopbarItem, TopbarStore} from "../stores/TopbarStore";
 
 export function useTopbarItems(store: TopbarStore, items: TopbarItem[]) {
   useEffect(() => {
@@ -27,5 +27,17 @@ export function useTopbarItems(store: TopbarStore, items: TopbarItem[]) {
   // for updates, one for eventual cleanup when navigating out of view.
   useEffect(() => {
     return () => store.setItems([]);
+  }, [store])
+}
+
+export function useTopbarActions(store: TopbarStore, actions: TopbarAction[]) {
+  useEffect(() => {
+    store.setActions(actions);
+  }, [actions, store]);
+
+  // We only want to clear the items once, thus the useEffect hook is split into two parts, one
+  // for updates, one for eventual cleanup when navigating out of view.
+  useEffect(() => {
+    return () => store.setActions([]);
   }, [store])
 }

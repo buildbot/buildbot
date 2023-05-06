@@ -52,7 +52,7 @@ export const App = observer(() => {
   return (
     <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
       <Topbar store={stores.topbar} appTitle={globalMenuSettings.appTitle}>
-        <TopbarActions store={stores.topbarActions}/>
+        <TopbarActions store={stores.topbar}/>
         <Loginbar/>
       </Topbar>
       <Routes>

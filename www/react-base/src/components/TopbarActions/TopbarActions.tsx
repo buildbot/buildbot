@@ -15,22 +15,13 @@
   Copyright Buildbot Team Members
 */
 
-import {TopbarActionsStore} from "../../stores/TopbarActionsStore";
 import {observer} from "mobx-react";
 import {Button, Form} from "react-bootstrap";
-import {ButtonVariant} from "react-bootstrap/types";
 import React from "react";
-
-export type TopbarAction = {
-  caption: string;
-  icon?: JSX.Element;
-  help?: string;
-  variant?: ButtonVariant;
-  action: () => void;
-}
+import {TopbarStore} from "buildbot-ui";
 
 type TopbarActionsProps = {
-  store: TopbarActionsStore;
+  store: TopbarStore;
 }
 
 export const TopbarActions = observer(({store}: TopbarActionsProps) => {

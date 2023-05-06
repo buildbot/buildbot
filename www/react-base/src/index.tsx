@@ -18,7 +18,6 @@ import {Config, ConfigContext, TimeContext, TimeStore, TopbarStore} from "buildb
 import {HashRouter} from "react-router-dom";
 import {SidebarStore} from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';
-import {TopbarActionsStore} from "./stores/TopbarActionsStore";
 import {globalSettings} from "./plugins/GlobalSettings";
 import moment from "moment";
 import axios from "axios";
@@ -40,7 +39,6 @@ const doRender = (buildbotFrontendConfig: Config) => {
 
   const sidebarStore = new SidebarStore();
   const topbarStore = new TopbarStore();
-  const topbarActionsStore = new TopbarActionsStore();
   globalSettings.applyBuildbotConfig(buildbotFrontendConfig);
   globalSettings.load();
 
@@ -65,7 +63,6 @@ const doRender = (buildbotFrontendConfig: Config) => {
           <StoresContext.Provider value={{
             sidebar: sidebarStore,
             topbar: topbarStore,
-            topbarActions: topbarActionsStore,
           }}>
             <HashRouter>
               <App/>

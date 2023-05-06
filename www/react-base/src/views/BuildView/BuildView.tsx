@@ -43,17 +43,17 @@ import {
   useDataApiQuery,
   useDataApiSingleElementQuery
 } from "buildbot-data-js";
-import {useTopbarActions} from "../../stores/TopbarActionsStore";
-import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
 import {computed} from "mobx";
 import {
   BadgeRound,
   ChangeUserAvatar,
+  TopbarAction,
   dateFormat,
   durationFromNowFormat,
   useCurrentTime,
   useFavIcon,
   useTopbarItems,
+  useTopbarActions,
 } from "buildbot-ui";
 import {RawData} from "../../components/RawData/RawData";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
@@ -216,7 +216,7 @@ const BuildView = observer(() => {
 
   const actions = buildTopbarActions(build, isRebuilding, isStopping, doRebuild, doStop);
 
-  useTopbarActions(stores.topbarActions, actions);
+  useTopbarActions(stores.topbar, actions);
   useFavIcon(getBuildOrStepResults(build, UNKNOWN));
 
   const renderPager = (build: Build|null) => {

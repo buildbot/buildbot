@@ -16,14 +16,24 @@
 */
 
 import {action, IObservableArray, makeObservable, observable} from "mobx";
+import {ButtonVariant} from "react-bootstrap/types";
 
 export type TopbarItem = {
   route: string | null,
   caption: string
 }
 
+export type TopbarAction = {
+  caption: string;
+  icon?: JSX.Element;
+  help?: string;
+  variant?: ButtonVariant;
+  action: () => void;
+}
+
 export class TopbarStore {
   items: IObservableArray<TopbarItem> = observable<TopbarItem>([]);
+  actions: IObservableArray<TopbarAction> = observable<TopbarAction>([]);
 
   constructor() {
     makeObservable(this);
@@ -35,5 +45,13 @@ export class TopbarStore {
 
   @action clearItems() {
     this.items.clear();
+  }
+
+  @action setActions(actions: TopbarAction[]) {
+    this.actions.replace(actions);
+  }
+
+  @action clearActions() {
+    this.actions.clear();
   }
 }
