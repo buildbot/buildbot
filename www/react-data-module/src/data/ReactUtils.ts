@@ -86,6 +86,39 @@ export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
   return storedCollection.current;
 }
 
+// The difference between this function and useDataApiDynamicQuery() is that
+// useDataApiDynamicQuery() will return empty collection whenever it is refreshed whereas
+// this function will wait until the replacement query is resolved.
+export function useDataApiDynamicQueryResolved<T, Collection extends IDataCollection>(
+  dependency: (T|null)[], callback: () => Collection): Collection {
+  const storedDependency = useRef<(T|null)[]>([]);
+  let storedCollection = useRef<Collection|null>(null);
+  let storedNewCollection = useRef<Collection|null>(null);
+
+  if (storedCollection.current === null ||
+    !arrayElementsEqual(dependency, storedDependency.current) ||
+    storedCollection.current.isExpired()) {
+
+    if (storedCollection.current !== null) {
+      if (storedNewCollection.current !== null) {
+        storedNewCollection.current.close();
+      }
+      storedNewCollection.current = callback();
+    } else {
+      storedCollection.current = callback();
+    }
+    storedDependency.current = [...dependency];
+  } else if (storedNewCollection.current !== null && storedNewCollection.current.isResolved()) {
+    if (storedCollection.current !== null) {
+      storedCollection.current.close();
+    }
+    storedCollection.current = storedNewCollection.current;
+    storedNewCollection.current = null;
+  }
+
+  return storedCollection.current;
+}
+
 export function useDataApiSingleElementQuery<T extends BaseClass, U extends BaseClass>(
     el: T | null, callback: (el: T) => DataCollection<U>): DataCollection<U> {
   return useDataApiDynamicQuery([el === null],
