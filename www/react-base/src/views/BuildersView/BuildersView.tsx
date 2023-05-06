@@ -35,28 +35,12 @@ import {
   BuildLinkWithSummaryTooltip,
   WorkerBadge,
   TagFilterManager,
+  hasActiveMaster,
   useTagFilterManager,
   useTopbarItems,
 } from "buildbot-ui";
 import {computed} from "mobx";
 import {Table} from "react-bootstrap";
-
-const hasActiveMaster = (builder: Builder, masters: DataCollection<Master>) => {
-  if ((builder.masterids == null)) {
-    return false;
-  }
-  let active = false;
-  for (let mid of builder.masterids) {
-    const m = masters.getByIdOrNull(mid);
-    if (m !== null && m.active) {
-      active = true;
-    }
-  }
-  if (builder.tags.includes('_virtual_')) {
-    active = true;
-  }
-  return active;
-};
 
 const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
                            masters: DataCollection<Master>, showOldBuilders: boolean) => {

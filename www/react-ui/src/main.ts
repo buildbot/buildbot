@@ -35,6 +35,7 @@ export * from "./stores/TimeStore";
 export * from "./stores/TopbarStore";
 
 export * from "./util/Collections";
+export * from "./util/DataUtils";
 export * from "./util/FavIcon";
 export * from "./util/Moment";
 export * from "./util/React";
