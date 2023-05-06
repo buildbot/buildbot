@@ -50,7 +50,6 @@ export const LogSearchField = ({currentResult, totalResults,
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    console.log(e);
     if (hasFocus && e.key === "Enter") {
       e.preventDefault();
       onNextClicked();
