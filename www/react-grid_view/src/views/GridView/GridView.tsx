@@ -15,11 +15,10 @@
   Copyright Buildbot Team Members
 */
 
-import './GridView.scss'
 import {observer} from "mobx-react";
 import {useState} from "react";
 import {Link} from "react-router-dom";
-import {FaCircleNotch, FaCubes} from "react-icons/fa";
+import {FaCubes} from "react-icons/fa";
 import {Form} from "react-bootstrap";
 import {
   Build,
@@ -34,7 +33,12 @@ import {
   useDataAccessor,
   useDataApiQuery
 } from "buildbot-data-js";
-import {useTagFilterManager, BuildLinkWithSummaryTooltip, ChangeDetails} from "buildbot-ui";
+import {
+  useTagFilterManager,
+  BuildLinkWithSummaryTooltip,
+  ChangeDetails,
+  LoadingIndicator
+} from "buildbot-ui";
 import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 
 const RESULT_FILTER_ALL_TEXT = "(all)";
@@ -233,12 +237,7 @@ export const GridView = observer(() => {
   if (!queriesResolved) {
     return (
       <div className="bb-grid-container">
-        <div className="bb-grid-load-indicator">
-          <div className="spinner">
-            <FaCircleNotch className="fa-spin"/>
-            <p>loading</p>
-          </div>
-        </div>
+        <LoadingIndicator/>
       </div>
     );
   }

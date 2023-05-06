@@ -17,12 +17,10 @@
 
 import './LogView.scss';
 import {observer} from "mobx-react";
-import {useContext} from "react";
-import {useTopbarItems} from "../../stores/TopbarStore";
-import {StoresContext} from "../../contexts/Stores";
 import {useNavigate, useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {Builder, Build, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
+import {useTopbarItems} from "buildbot-ui";
 import {LogViewer} from "../../components/LogViewer/LogViewer";
 
 const LogView = observer(() => {
@@ -32,7 +30,6 @@ const LogView = observer(() => {
   const logSlug = useParams<"logslug">().logslug ?? "";
   const navigate = useNavigate();
 
-  const stores = useContext(StoresContext);
   const accessor = useDataAccessor([builderid, buildnumber, stepnumber]);
 
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid.toString()}));
@@ -57,7 +54,7 @@ const LogView = observer(() => {
     navigate(`/builders/${builderid}/builds/${buildnumber}`);
   }
 
-  useTopbarItems(stores.topbar, [
+  useTopbarItems([
     {caption: "Builders", route: "/builders"},
     {caption: builder === null ? "..." : builder.name, route: `/builders/${builderid}`},
     {caption: buildnumber.toString(), route: `/builders/${builderid}/builds/${buildnumber}`},

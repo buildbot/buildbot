@@ -17,15 +17,10 @@
 
 import './Topbar.scss'
 import {Link} from "react-router-dom";
-import {TopbarStore} from "../../stores/TopbarStore";
 import {computed} from "mobx";
 import {observer} from "mobx-react";
 import {Nav, Navbar} from "react-bootstrap";
-
-export type TopbarItem = {
-  route: string | null,
-  caption: string
-}
+import {TopbarStore} from "buildbot-ui";
 
 type TopbarProps = {
   store: TopbarStore,

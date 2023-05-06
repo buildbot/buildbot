@@ -16,7 +16,7 @@
 */
 
 import {observer} from "mobx-react";
-import {useContext, useState} from "react";
+import {useState} from "react";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
@@ -27,12 +27,9 @@ import {
   useDataAccessor,
   useDataApiQuery
 } from "buildbot-data-js";
-import {useTopbarItems} from "../../stores/TopbarStore";
-import {StoresContext} from "../../contexts/Stores";
+import {TopbarAction, useTopbarItems, useTopbarActions} from "buildbot-ui";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
-import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
-import {useTopbarActions} from "../../stores/TopbarActionsStore";
 import {useNavigate, useParams} from "react-router-dom";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
 import {ForceBuildModal} from "../../components/ForceBuildModal/ForceBuildModal";
@@ -95,7 +92,6 @@ export const BuilderView = observer(() => {
   const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
   const navigate = useNavigate();
 
-  const stores = useContext(StoresContext);
   const accessor = useDataAccessor([builderid]);
 
   const numBuilds = 200;
@@ -126,7 +122,7 @@ export const BuilderView = observer(() => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useTopbarItems(stores.topbar, builder === null ? [] : [
+  useTopbarItems(builder === null ? [] : [
     {caption: "Builders", route: "/builders"},
     {caption: builder.name, route: `/builders/${builderid}`},
   ]);
@@ -164,7 +160,7 @@ export const BuilderView = observer(() => {
   const actions = buildTopbarActions(builds, buildrequests, forceschedulers, isCancelling,
     cancelWholeQueue, (sch) => setShownForceScheduler(sch));
 
-  useTopbarActions(stores.topbarActions, actions);
+  useTopbarActions(actions);
 
   const onForceBuildModalClose = (buildRequestNumber: string | null) => {
     if (buildRequestNumber === null) {

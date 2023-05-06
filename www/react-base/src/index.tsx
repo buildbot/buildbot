@@ -14,12 +14,17 @@ import {
   getRestUrl,
   getWebSocketUrl,
 } from "buildbot-data-js";
-import {Config, ConfigContext, TimeContext, TimeStore} from "buildbot-ui";
+import {
+  Config,
+  ConfigContext,
+  TimeContext,
+  TimeStore,
+  TopbarContext,
+  TopbarStore
+} from "buildbot-ui";
 import {HashRouter} from "react-router-dom";
 import {SidebarStore} from "./stores/SidebarStore";
 import { StoresContext } from './contexts/Stores';
-import {TopbarStore} from "./stores/TopbarStore";
-import {TopbarActionsStore} from "./stores/TopbarActionsStore";
 import {globalSettings} from "./plugins/GlobalSettings";
 import moment from "moment";
 import axios from "axios";
@@ -41,7 +46,6 @@ const doRender = (buildbotFrontendConfig: Config) => {
 
   const sidebarStore = new SidebarStore();
   const topbarStore = new TopbarStore();
-  const topbarActionsStore = new TopbarActionsStore();
   globalSettings.applyBuildbotConfig(buildbotFrontendConfig);
   globalSettings.load();
 
@@ -63,15 +67,15 @@ const doRender = (buildbotFrontendConfig: Config) => {
     <DataClientContext.Provider value={dataClient}>
       <ConfigContext.Provider value={buildbotFrontendConfig}>
         <TimeContext.Provider value={timeStore}>
-          <StoresContext.Provider value={{
-            sidebar: sidebarStore,
-            topbar: topbarStore,
-            topbarActions: topbarActionsStore,
-          }}>
-            <HashRouter>
-              <App/>
-            </HashRouter>
-          </StoresContext.Provider>
+          <TopbarContext.Provider value={topbarStore}>
+            <StoresContext.Provider value={{
+              sidebar: sidebarStore,
+            }}>
+              <HashRouter>
+                <App/>
+              </HashRouter>
+            </StoresContext.Provider>
+          </TopbarContext.Provider>
         </TimeContext.Provider>
       </ConfigContext.Provider>
     </DataClientContext.Provider>

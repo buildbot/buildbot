@@ -15,31 +15,17 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {Button, Form} from "react-bootstrap";
-import React from "react";
-import {TopbarStore} from "buildbot-ui";
+import './LoadingIndicator.scss';
+import {FaCircleNotch} from "react-icons/fa";
 
-type TopbarActionsProps = {
-  store: TopbarStore;
-}
-
-export const TopbarActions = observer(({store}: TopbarActionsProps) => {
-  const elements = store.actions.map((action, index) => {
-    return (
-      <React.Fragment key={index}>
-        <Button variant={action.variant ?? "light"} onClick={action.action} title={action.help ?? ""}>
-          {action.icon ?  <>{action.icon}<span>&nbsp;</span></> : <></> }
-          {action.caption}
-        </Button>
-        &nbsp;
-      </React.Fragment>
-    );
-  });
-
+export const LoadingIndicator = () => {
+  // FIXME: implement spinning
   return (
-    <Form>
-      {elements}
-    </Form>
-  );
-});
+    <div className="bb-load-indicator">
+      <div className="spinner">
+        <FaCircleNotch className="fa-spin"/>
+        <p>loading</p>
+      </div>
+    </div>
+  )
+}

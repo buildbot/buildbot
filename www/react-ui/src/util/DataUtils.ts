@@ -15,12 +15,21 @@
   Copyright Buildbot Team Members
 */
 
-import {SidebarStore} from "../stores/SidebarStore";
-import {createContext} from "react";
-import {TopbarStore} from "buildbot-ui";
+import {Builder, DataCollection, Master} from "../../../react-data-module";
 
-export type Stores = {
-  sidebar: SidebarStore,
-}
-
-export const StoresContext = createContext<Stores>(undefined as any);
+export function hasActiveMaster(builder: Builder, masters: DataCollection<Master>) {
+  if ((builder.masterids == null)) {
+    return false;
+  }
+  let active = false;
+  for (let mid of builder.masterids) {
+    const m = masters.getByIdOrNull(mid);
+    if (m !== null && m.active) {
+      active = true;
+    }
+  }
+  if (builder.tags.includes('_virtual_')) {
+    active = true;
+  }
+  return active;
+};

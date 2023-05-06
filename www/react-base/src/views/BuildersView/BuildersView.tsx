@@ -17,7 +17,7 @@
 
 import './BuildersView.scss';
 import {observer} from "mobx-react";
-import {useContext, useState} from "react";
+import {useState} from "react";
 import {FaCogs} from "react-icons/fa";
 import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
@@ -31,28 +31,16 @@ import {
   useDataApiQuery
 } from "buildbot-data-js";
 import {Link} from "react-router-dom";
-import {BuildLinkWithSummaryTooltip, WorkerBadge, TagFilterManager, useTagFilterManager} from "buildbot-ui";
+import {
+  BuildLinkWithSummaryTooltip,
+  WorkerBadge,
+  TagFilterManager,
+  hasActiveMaster,
+  useTagFilterManager,
+  useTopbarItems,
+} from "buildbot-ui";
 import {computed} from "mobx";
-import {useTopbarItems} from "../../stores/TopbarStore";
-import {StoresContext} from "../../contexts/Stores";
 import {Table} from "react-bootstrap";
-
-const hasActiveMaster = (builder: Builder, masters: DataCollection<Master>) => {
-  if ((builder.masterids == null)) {
-    return false;
-  }
-  let active = false;
-  for (let mid of builder.masterids) {
-    const m = masters.getByIdOrNull(mid);
-    if (m !== null && m.active) {
-      active = true;
-    }
-  }
-  if (builder.tags.includes('_virtual_')) {
-    active = true;
-  }
-  return active;
-};
 
 const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
                            masters: DataCollection<Master>, showOldBuilders: boolean) => {
@@ -63,13 +51,12 @@ const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
 };
 
 export const BuildersView = observer(() => {
-  const stores = useContext(StoresContext);
   const accessor = useDataAccessor([]);
 
   const filterManager = useTagFilterManager("tags");
   const [builderNameFilter, setBuilderNameFilter] = useState("");
 
-  useTopbarItems(stores.topbar, [
+  useTopbarItems([
     {caption: "Builders", route: "/builders"}
   ]);
 

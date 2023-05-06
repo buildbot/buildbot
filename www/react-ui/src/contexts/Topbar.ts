@@ -15,12 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {SidebarStore} from "../stores/SidebarStore";
 import {createContext} from "react";
-import {TopbarStore} from "buildbot-ui";
+import {TopbarStore} from "../stores/TopbarStore";
 
-export type Stores = {
-  sidebar: SidebarStore,
-}
-
-export const StoresContext = createContext<Stores>(undefined as any);
+export const TopbarContext = createContext<TopbarStore>(undefined as any);

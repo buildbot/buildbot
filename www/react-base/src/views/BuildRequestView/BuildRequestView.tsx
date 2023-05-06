@@ -30,11 +30,8 @@ import {
 } from "buildbot-data-js";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import {Tab, Tabs} from "react-bootstrap";
+import {TopbarAction, useTopbarActions, useTopbarItems} from "buildbot-ui";
 import {RawData} from "../../components/RawData/RawData";
-import {TopbarAction} from "../../components/TopbarActions/TopbarActions";
-import {StoresContext} from "../../contexts/Stores";
-import {useTopbarActions} from "../../stores/TopbarActionsStore";
-import {useTopbarItems} from "../../stores/TopbarStore";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
 import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
@@ -76,8 +73,6 @@ export const BuildRequestView = observer(() => {
 
   const navigate = useNavigate();
 
-  const stores = useContext(StoresContext);
-
   const buildRequestsQuery = useDataApiQuery(() =>
     Buildrequest.getAll(accessor, {id: buildRequestId.toString()}));
 
@@ -102,7 +97,7 @@ export const BuildRequestView = observer(() => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useTopbarItems(stores.topbar, [
+  useTopbarItems([
     {caption: "Builders", route: "/builders"},
     {caption: "Build requests", route: null},
     {caption: buildRequestId.toString(), route: `/buildrequests/${buildRequestId}`},
@@ -132,7 +127,7 @@ export const BuildRequestView = observer(() => {
   };
 
   const actions = buildTopbarActions(builder, buildRequest, isCancelling, cancelBuildRequest);
-  useTopbarActions(stores.topbarActions, actions);
+  useTopbarActions(actions);
 
   const buildTabs = buildsQuery.array.map(build => (
     <Tab key={build.id} eventKey={`build-${build.number}`} title={`build ${build.number}`}>

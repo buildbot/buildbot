@@ -16,11 +16,24 @@
 */
 
 import {action, IObservableArray, makeObservable, observable} from "mobx";
-import {TopbarItem} from "../components/Topbar/Topbar";
-import {useEffect} from "react";
+import {ButtonVariant} from "react-bootstrap/types";
+
+export type TopbarItem = {
+  route: string | null,
+  caption: string
+}
+
+export type TopbarAction = {
+  caption: string;
+  icon?: JSX.Element;
+  help?: string;
+  variant?: ButtonVariant;
+  action: () => void;
+}
 
 export class TopbarStore {
   items: IObservableArray<TopbarItem> = observable<TopbarItem>([]);
+  actions: IObservableArray<TopbarAction> = observable<TopbarAction>([]);
 
   constructor() {
     makeObservable(this);
@@ -33,16 +46,12 @@ export class TopbarStore {
   @action clearItems() {
     this.items.clear();
   }
-}
 
-export function useTopbarItems(store: TopbarStore, items: TopbarItem[]) {
-  useEffect(() => {
-    store.setItems(items);
-  }, [store, items]);
+  @action setActions(actions: TopbarAction[]) {
+    this.actions.replace(actions);
+  }
 
-  // We only want to clear the items once, thus the useEffect hook is split into two parts, one
-  // for updates, one for eventual cleanup when navigating out of view.
-  useEffect(() => {
-    return () => store.setItems([]);
-  }, [store])
+  @action clearActions() {
+    this.actions.clear();
+  }
 }

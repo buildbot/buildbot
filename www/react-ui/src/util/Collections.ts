@@ -15,12 +15,12 @@
   Copyright Buildbot Team Members
 */
 
-import {SidebarStore} from "../stores/SidebarStore";
-import {createContext} from "react";
-import {TopbarStore} from "buildbot-ui";
-
-export type Stores = {
-  sidebar: SidebarStore,
+export function pushIntoMapOfArrays<Key, ValueItem>(map: Map<Key, ValueItem[]>,
+                                                    key: Key, value: ValueItem) {
+  const existingValues = map.get(key);
+  if (existingValues === undefined) {
+    map.set(key, [value]);
+    return;
+  }
+  existingValues.push(value);
 }
-
-export const StoresContext = createContext<Stores>(undefined as any);

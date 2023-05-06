@@ -15,27 +15,27 @@
   Copyright Buildbot Team Members
 */
 
-import {action, IObservableArray, makeObservable, observable} from "mobx";
-import {useEffect} from "react";
-import {TopbarAction} from "../components/TopbarActions/TopbarActions";
+import {useContext, useEffect} from "react";
+import {TopbarContext} from "../contexts/Topbar";
+import {TopbarAction, TopbarItem} from "../stores/TopbarStore";
 
-export class TopbarActionsStore {
-  actions: IObservableArray<TopbarAction> = observable<TopbarAction>([]);
+export function useTopbarItems(items: TopbarItem[]) {
+  const store = useContext(TopbarContext);
 
-  constructor() {
-    makeObservable(this);
-  }
+  useEffect(() => {
+    store.setItems(items);
+  }, [store, items]);
 
-  @action setActions(actions: TopbarAction[]) {
-    this.actions.replace(actions);
-  }
-
-  @action clearActions() {
-    this.actions.clear();
-  }
+  // We only want to clear the items once, thus the useEffect hook is split into two parts, one
+  // for updates, one for eventual cleanup when navigating out of view.
+  useEffect(() => {
+    return () => store.setItems([]);
+  }, [store])
 }
 
-export function useTopbarActions(store: TopbarActionsStore, actions: TopbarAction[]) {
+export function useTopbarActions(actions: TopbarAction[]) {
+  const store = useContext(TopbarContext);
+
   useEffect(() => {
     store.setActions(actions);
   }, [actions, store]);

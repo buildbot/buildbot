@@ -20,7 +20,6 @@ import {ObservableMap} from "mobx";
 import {observer, useLocalObservable} from "mobx-react";
 import {Link} from "react-router-dom";
 import {
-  FaCircleNotch,
   FaExclamationCircle,
   FaMinusCircle,
   FaPlusCircle
@@ -35,7 +34,13 @@ import {
   Change,
   useDataAccessor, useDataApiQuery, IDataAccessor
 } from "buildbot-data-js";
-import {BuildLinkWithSummaryTooltip, ChangeDetails, useWindowSize} from "buildbot-ui";
+import {
+  BuildLinkWithSummaryTooltip,
+  ChangeDetails,
+  LoadingIndicator,
+  pushIntoMapOfArrays,
+  useWindowSize
+} from "buildbot-ui";
 
 type ChangeInfo = {
   change: Change;
@@ -54,16 +59,6 @@ export type TagItemConfig = {
 };
 
 export type TagLineConfig = TagItemConfig[];
-
-function pushIntoMapOfArrays<Key, ValueItem>(map: Map<Key, ValueItem[]>,
-                                             key: Key, value: ValueItem) {
-  const existingValues = map.get(key);
-  if (existingValues === undefined) {
-    map.set(key, [value]);
-    return;
-  }
-  existingValues.push(value);
-}
 
 export function buildTagTree(builders: Builder[])
 {
@@ -402,12 +397,7 @@ export const ConsoleView = observer(() => {
   if (!queriesResolved) {
     return (
       <div className="bb-console-container">
-        <div className="bb-console-load-indicator">
-          <div className="spinner">
-            <FaCircleNotch className="fa-spin"/>
-            <p>loading</p>
-          </div>
-        </div>
+        <LoadingIndicator/>
       </div>
     );
   }
