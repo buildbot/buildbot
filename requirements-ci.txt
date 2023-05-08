@@ -104,7 +104,7 @@ six==1.16.0
 snowballstemmer==2.2.0
 SQLAlchemy==2.0.12
 sqlparse==0.4.4
-termcolor==1.1.0
+termcolor==2.3.0
 testtools==2.5.0
 toml==0.10.2
 tomli==2.0.1
