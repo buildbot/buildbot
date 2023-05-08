@@ -112,7 +112,7 @@ tomlkit==0.11.8
 towncrier==22.12.0
 treq==22.2.0
 Twisted==22.10.0
-txaio==22.2.1
+txaio==23.1.1
 txrequests==0.9.6
 typing_extensions==4.3.0
 unidiff==0.7.4
