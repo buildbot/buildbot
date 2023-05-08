@@ -94,5 +94,5 @@ urllib3==2.0.2
 Werkzeug==2.3.3
 wrapt==1.15.0
 xmltodict==0.13.0
-zipp==3.8.1
+zipp==3.15.0
 zope.interface==6.0
