@@ -36,7 +36,7 @@ configparser==5.3.0
 constantly==15.1.0
 cookies==2.2.1
 coverage==7.2.5
-cryptography==37.0.4
+cryptography==40.0.2
 decorator==5.1.1
 dicttoxml==1.7.4
 dill==0.3.6
