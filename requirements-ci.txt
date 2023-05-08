@@ -5,7 +5,7 @@
 buildbot-www==3.8.0
 
 autobahn==23.1.2
-boto3==1.24.60
+boto3==1.26.129
 flake8==5.0.4
 msgpack==1.0.4
 pylint==2.14.5
