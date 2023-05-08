@@ -7,7 +7,7 @@ buildbot-www==3.8.0
 autobahn==23.1.2
 boto3==1.26.129
 flake8==6.0.0
-msgpack==1.0.4
+msgpack==1.0.5
 pylint==2.14.5
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
