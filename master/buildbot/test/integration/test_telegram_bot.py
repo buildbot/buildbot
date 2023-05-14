@@ -88,7 +88,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         table_names = [
             'objects', 'object_state', 'masters',
             'workers', 'configured_workers', 'connected_workers',
-            'builder_masters', 'builders'
+            'builder_masters', 'builders', 'projects',
         ]
 
         master = fakemaster.make_master(self, wantRealReactor=True)

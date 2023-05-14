@@ -600,15 +600,22 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     """Tests that a reconfig properly updates all attributes"""
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.setUpBuilderMixin()
 
+        yield self.db.insert_test_data([
+            fakedb.Project(id=301, name='old_project'),
+            fakedb.Project(id=302, name='new_project'),
+        ])
+
     @defer.inlineCallbacks
     def test_reconfig(self):
-        yield self.makeBuilder(description="Old", tags=["OldTag"])
+        yield self.makeBuilder(description="Old", project="old_project", tags=["OldTag"])
         new_builder_config = config.BuilderConfig(**self.config_args)
         new_builder_config.description = "New"
+        new_builder_config.project = "new_project"
         new_builder_config.tags = ["NewTag"]
 
         mastercfg = MasterConfig()
@@ -620,34 +627,38 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
         builder_dict = yield self.master.data.get(('builders', self.bldr._builderid))
         self.assertEqual(builder_dict['description'], 'New')
+        self.assertEqual(builder_dict['projectid'], 302)
         self.assertEqual(builder_dict['tags'], ['NewTag'])
 
         self.assertIdentical(self.bldr.config, new_builder_config)
 
     @parameterized.expand([
-        ('only_description', 'New', ['OldTag']),
-        ('only_tags', 'Old', ['NewTag']),
+        ('only_description', 'New', 'old_project', ['OldTag'], 301),
+        ('only_project', 'Old', 'new_project', ['OldTag'], 302),
+        ('only_tags', 'Old', 'old_project', ['NewTag'], 301),
     ])
     @defer.inlineCallbacks
-    def test_reconfig_changed(self, name, new_desc, new_tags):
-        yield self.makeBuilder(description="Old", tags=["OldTag"])
+    def test_reconfig_changed(self, name, new_desc, new_project, new_tags, expect_project_id):
+        yield self.makeBuilder(description="Old", project='old_project', tags=["OldTag"])
         new_builder_config = config.BuilderConfig(**self.config_args)
         new_builder_config.description = new_desc
         new_builder_config.tags = new_tags
+        new_builder_config.project = new_project
 
         mastercfg = MasterConfig()
         mastercfg.builders = [new_builder_config]
 
         builder_updates = []
         self.master.data.updates.updateBuilderInfo = \
-            lambda builderid, desc, tags: builder_updates.append((builderid, desc, tags))
+            lambda builderid, desc, projectid, tags: \
+            builder_updates.append((builderid, desc, projectid, tags))
 
         yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
-        self.assertEqual(builder_updates, [(1, new_desc, new_tags)])
+        self.assertEqual(builder_updates, [(1, new_desc, expect_project_id, new_tags)])
 
     @defer.inlineCallbacks
     def test_does_not_reconfig_identical(self):
-        yield self.makeBuilder(description="Old", tags=["OldTag"])
+        yield self.makeBuilder(description="Old", project="old_project", tags=["OldTag"])
         new_builder_config = config.BuilderConfig(**self.config_args)
 
         mastercfg = MasterConfig()
@@ -655,7 +666,8 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
         builder_updates = []
         self.master.data.updates.updateBuilderInfo = \
-            lambda builderid, desc, tags: builder_updates.append((builderid, desc, tags))
+            lambda builderid, desc, projectid, tags: \
+            builder_updates.append((builderid, desc, projectid, tags))
 
         yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
         self.assertEqual(builder_updates, [])

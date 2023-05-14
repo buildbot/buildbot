@@ -31,7 +31,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
                  tags=None,
                  nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
-                 canStartBuild=None, defaultProperties=None
+                 canStartBuild=None, defaultProperties=None, project=None
                  ):
         # name is required, and can't start with '_'
         if not name or type(name) not in (bytes, str):
@@ -43,6 +43,11 @@ class BuilderConfig(util_config.ConfiguredMixin):
             self.name = bytes2unicode(name, encoding="ascii")
         except UnicodeDecodeError:
             error("builder names must be unicode or ASCII")
+
+        if not isinstance(project, (type(None), str)):
+            error("builder project must be None or str")
+            project = None
+        self.project = project
 
         # factory is required
         if factory is None:
@@ -137,6 +142,8 @@ class BuilderConfig(util_config.ConfiguredMixin):
             'builddir': self.builddir,
             'workerbuilddir': self.workerbuilddir,
         }
+        if self.project:
+            rv['project'] = self.project
         if self.tags:
             rv['tags'] = self.tags
         if self.nextWorker:

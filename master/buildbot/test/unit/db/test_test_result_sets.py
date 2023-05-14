@@ -231,7 +231,7 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         yield self.setUpConnectorComponent(
             table_names=['steps', 'builds', 'builders', 'masters', 'buildrequests', 'buildsets',
-                         'workers', 'test_result_sets'])
+                         'workers', 'test_result_sets', "projects"])
 
         self.db.test_result_sets = test_result_sets.TestResultSetsConnectorComponent(self.db)
 

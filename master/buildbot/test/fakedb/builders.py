@@ -26,8 +26,10 @@ class Builder(Row):
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
 
-    def __init__(self, id=None, name='some:builder', name_hash=None, description=None):
-        super().__init__(id=id, name=name, name_hash=name_hash, description=description)
+    def __init__(self, id=None, name='some:builder', name_hash=None, projectid=None,
+                 description=None):
+        super().__init__(id=id, name=name, name_hash=name_hash, projectid=projectid,
+                         description=description)
 
 
 class BuilderMaster(Row):
@@ -64,6 +66,7 @@ class FakeBuildersComponent(FakeDBComponent):
                 self.builders[row.id] = dict(
                     id=row.id,
                     name=row.name,
+                    projectid=row.projectid,
                     description=row.description)
             if isinstance(row, BuilderMaster):
                 self.builder_masters[row.id] = \
@@ -84,6 +87,7 @@ class FakeBuildersComponent(FakeDBComponent):
             id=id,
             name=name,
             description=None,
+            projectid=None,
             tags=[])
         return defer.succeed(id)
 
@@ -131,10 +135,11 @@ class FakeBuildersComponent(FakeDBComponent):
         ])
 
     @defer.inlineCallbacks
-    def updateBuilderInfo(self, builderid, description, tags):
+    def updateBuilderInfo(self, builderid, description, projectid, tags):
         if builderid in self.builders:
             tags = tags if tags else []
             self.builders[builderid]['description'] = description
+            self.builders[builderid]['projectid'] = projectid
 
             # add tags
             tagids = []

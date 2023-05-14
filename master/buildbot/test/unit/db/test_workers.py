@@ -663,7 +663,7 @@ class TestRealDB(unittest.TestCase,
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(
-            table_names=['workers', 'masters', 'builders',
+            table_names=['workers', 'masters', 'projects', 'builders',
                          'builder_masters', 'connected_workers',
                          'configured_workers'])
 

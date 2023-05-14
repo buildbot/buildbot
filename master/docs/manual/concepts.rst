@@ -14,6 +14,7 @@ You'll need to understand how Buildbot sees the world to configure it properly.
 .. index: source stamp
 
 .. _Source-Stamps:
+.. _Concepts-Project:
 
 Source identification
 ---------------------
@@ -147,6 +148,8 @@ This level of concurrency may be controlled by various kinds of :ref:`Interlocks
 At a low level, each builder has its own exclusive directory on the build master and one exclusive directory on each of the workers it is attached to.
 The directory on the master is used for keeping status information.
 The directories on the workers are used as a location where the actual checkout, compilation and testing steps happen.
+
+For easier management in the Web UI related builders may be grouped into projects.
 
 .. _Concepts-Build:
 

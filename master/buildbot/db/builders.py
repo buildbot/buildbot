@@ -37,7 +37,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             ), autoCreate=autoCreate)
 
     @defer.inlineCallbacks
-    def updateBuilderInfo(self, builderid, description, tags):
+    def updateBuilderInfo(self, builderid, description, projectid, tags):
         # convert to tag IDs first, as necessary
         def toTagid(tag):
             if isinstance(tag, type(1)):
@@ -57,7 +57,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
             q = builders_tbl.update(
                 whereclause=(builders_tbl.c.id == builderid))
-            conn.execute(q, description=description).close()
+            conn.execute(q, description=description, projectid=projectid).close()
             # remove previous builders_tags
             conn.execute(builders_tags_tbl.delete(
                 whereclause=((builders_tags_tbl.c.builderid == builderid)))).close()
@@ -119,7 +119,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                            onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
             q = sa.select(
                 [bldr_tbl.c.id, bldr_tbl.c.name,
-                    bldr_tbl.c.description, bm_tbl.c.masterid],
+                    bldr_tbl.c.description, bldr_tbl.c.projectid, bm_tbl.c.masterid],
                 from_obj=[j],
                 order_by=[bldr_tbl.c.id, bm_tbl.c.masterid])
             if masterid is not None:
@@ -143,7 +143,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 # pylint: disable=unsubscriptable-object
                 if not last or row['id'] != last['id']:
                     last = dict(id=row.id, name=row.name, masterids=[], description=row.description,
-                                tags=bldr_id_to_tags[row.id])
+                                projectid=row.projectid, tags=bldr_id_to_tags[row.id])
                     rv.append(last)
                 if row['masterid']:
                     last['masterids'].append(row['masterid'])

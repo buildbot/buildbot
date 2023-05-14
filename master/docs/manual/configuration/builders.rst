@@ -60,6 +60,9 @@ Other optional keys may be set on each ``BuilderConfig``:
     You can tag these new builders with a ``test`` tag, make your main status clients ignore them, and have only private status clients pick them up.
     As soon as they work, you can move them over to the active tag.
 
+``project``
+    If provided, the builder will be associated with the specific project.
+
 ``nextWorker``
      If provided, this is a function that controls which worker will be assigned future jobs.
      The function is passed three arguments, the :class:`Builder` object which is assigning a new job, a list of :class:`WorkerForBuilder` objects and the :class:`BuildRequest`.
@@ -210,6 +213,8 @@ The virtual builder metadata is configured with the following properties:
 * ``virtual_builder_name``: The name of the virtual builder.
 
 * ``virtual_builder_description``: The description of the virtual builder.
+
+* ``virtual_builder_project``: The project of the virtual builder.
 
 * ``virtual_builder_tags``: The tags for the virtual builder.
 

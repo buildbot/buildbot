@@ -378,6 +378,7 @@ class TestRealDB(unittest.TestCase,
         yield self.setUpConnectorComponent(
             table_names=['sourcestamps',
                          'patches',
+                         "projects",
                          'masters',
                          'workers',
                          'buildsets',

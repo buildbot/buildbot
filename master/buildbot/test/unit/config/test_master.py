@@ -1195,16 +1195,28 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             wrk.workername = 'xyz'
             self.cfg.workers = [wrk]
 
-            b1 = FakeBuilder(workernames=['xyz', 'abc'], builddir='x', name='b1')
+            b1 = FakeBuilder(workernames=['xyz', 'abc'], builddir='x', name='b1', project=None)
             self.cfg.builders = [b1]
 
             self.cfg.check_builders()
         self.assertConfigError(errors, "builder 'b1' uses unknown workers 'abc'")
 
+    def test_check_builders_unknown_project(self):
+        with capture_config_errors() as errors:
+            wrk = mock.Mock()
+            wrk.name = 'proj1'
+            self.cfg.projects = [wrk]
+
+            b1 = FakeBuilder(workernames=[], builddir='x', name='b1', project='proj_unknown')
+            self.cfg.builders = [b1]
+
+            self.cfg.check_builders()
+        self.assertConfigError(errors, "builder 'b1' uses unknown project name 'proj_unknown'")
+
     def test_check_builders_duplicate_name(self):
         with capture_config_errors() as errors:
-            b1 = FakeBuilder(workernames=[], name='b1', builddir='1')
-            b2 = FakeBuilder(workernames=[], name='b1', builddir='2')
+            b1 = FakeBuilder(workernames=[], name='b1', builddir='1', project=None)
+            b2 = FakeBuilder(workernames=[], name='b1', builddir='2', project=None)
             self.cfg.builders = [b1, b2]
 
             self.cfg.check_builders()
@@ -1213,8 +1225,8 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def test_check_builders_duplicate_builddir(self):
         with capture_config_errors() as errors:
-            b1 = FakeBuilder(workernames=[], name='b1', builddir='dir')
-            b2 = FakeBuilder(workernames=[], name='b2', builddir='dir')
+            b1 = FakeBuilder(workernames=[], name='b1', builddir='dir', project=None)
+            b2 = FakeBuilder(workernames=[], name='b2', builddir='dir', project=None)
             self.cfg.builders = [b1, b2]
 
             self.cfg.check_builders()
@@ -1227,13 +1239,29 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             wrk.workername = 'a'
             self.cfg.workers = [wrk]
 
-            b1 = FakeBuilder(workernames=['a'], name='b1', builddir='dir1')
-            b2 = FakeBuilder(workernames=['a'], name='b2', builddir='dir2')
+            project = mock.Mock()
+            project.name = 'proj1'
+            self.cfg.projects = [project]
+
+            b1 = FakeBuilder(workernames=['a'], name='b1', builddir='dir1', project='proj1')
+            b2 = FakeBuilder(workernames=['a'], name='b2', builddir='dir2', project=None)
             self.cfg.builders = [b1, b2]
 
             self.cfg.check_builders()
 
         self.assertNoConfigErrors(errors)
+
+    def test_check_duplicate_projects(self):
+        with capture_config_errors() as errors:
+            project1 = mock.Mock()
+            project1.name = 'proj1'
+            project2 = mock.Mock()
+            project2.name = 'proj1'
+            self.cfg.projects = [project1, project2]
+
+            self.cfg.check_projects()
+
+        self.assertConfigError(errors, "duplicate project name 'proj1'")
 
     def test_check_ports_protocols_set(self):
         with capture_config_errors() as errors:

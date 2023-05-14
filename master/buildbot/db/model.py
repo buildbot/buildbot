@@ -583,6 +583,22 @@ class Model(base.DBConnectorComponent):
         sa.Column('important', sa.Integer),
     )
 
+    # Tables related to projects
+    # --------------------------
+
+    projects = sautils.Table(
+        'projects', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        # project name
+        sa.Column('name', sa.Text, nullable=False),
+        # sha1 of name; used for a unique index
+        sa.Column('name_hash', sa.String(hash_length), nullable=False),
+        # project slug, potentially shown in the URLs
+        sa.Column('slug', sa.String(50), nullable=False),
+        # project description
+        sa.Column('description', sa.Text, nullable=True),
+    )
+
     # Tables related to builders
     # --------------------------
 
@@ -593,6 +609,11 @@ class Model(base.DBConnectorComponent):
         sa.Column('name', sa.Text, nullable=False),
         # builder's description
         sa.Column('description', sa.Text, nullable=True),
+        # builder's project
+        sa.Column('projectid', sa.Integer,
+                  sa.ForeignKey('projects.id', name="fk_builders_projectid",
+                                ondelete='SET NULL'),
+                  nullable=True),
         # sha1 of name; used for a unique index
         sa.Column('name_hash', sa.String(hash_length), nullable=False),
     )
@@ -864,7 +885,9 @@ class Model(base.DBConnectorComponent):
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
     sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
              scheduler_changes.c.changeid, unique=True)
+    sa.Index('projects_name_hash', projects.c.name_hash, unique=True)
     sa.Index('builder_name_hash', builders.c.name_hash, unique=True)
+    sa.Index('builders_projectid', builders.c.projectid)
     sa.Index('builder_masters_builderid', builder_masters.c.builderid)
     sa.Index('builder_masters_masterid', builder_masters.c.masterid)
     sa.Index('builder_masters_identity',

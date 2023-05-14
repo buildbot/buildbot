@@ -232,7 +232,7 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         yield self.setUpConnectorComponent(
             table_names=['builds', 'builders', 'masters', 'buildrequests', 'buildsets',
-                         'workers', 'build_data'])
+                         'workers', 'build_data', "projects"])
 
         self.db.build_data = build_data.BuildDataConnectorComponent(self.db)
 

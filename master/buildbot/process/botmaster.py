@@ -243,7 +243,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         timer = metrics.Timer("BotMaster.reconfigServiceWithBuildbotConfig")
         timer.start()
 
-        # reconfigure builders
+        yield self.reconfigProjects(new_config)
         yield self.reconfigServiceBuilders(new_config)
 
         # call up
@@ -254,6 +254,13 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.maybeStartBuildsForAllBuilders()
 
         timer.stop()
+
+    @defer.inlineCallbacks
+    def reconfigProjects(self, new_config):
+        for project_config in new_config.projects:
+            projectid = yield self.master.data.updates.find_project_id(project_config.name)
+            yield self.master.data.updates.update_project_info(projectid, project_config.slug,
+                                                               project_config.description)
 
     @defer.inlineCallbacks
     def reconfigServiceBuilders(self, new_config):

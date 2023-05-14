@@ -1,0 +1,86 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+
+from twisted.internet import defer
+
+from buildbot.test.fakedb.base import FakeDBComponent
+from buildbot.test.fakedb.row import Row
+
+
+class Project(Row):
+    table = "projects"
+
+    id_column = 'id'
+    hashedColumns = [('name_hash', ('name',))]
+
+    def __init__(self, id=None, name='fake_project', name_hash=None, slug=None, description=None):
+        if slug is None:
+            slug = name
+        super().__init__(id=id, name=name, name_hash=name_hash, slug=slug, description=description)
+
+
+class FakeProjectsComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.projects = {}
+
+    def insert_test_data(self, rows):
+        for row in rows:
+            if isinstance(row, Project):
+                self.projects[row.id] = {
+                    "id": row.id,
+                    "name": row.name,
+                    "slug": row.slug,
+                    "description": row.description
+                }
+
+    # Returns Deferred that yields a number
+    def find_project_id(self, name, auto_create=True):
+        for m in self.projects.values():
+            if m['name'] == name:
+                return defer.succeed(m['id'])
+        if not auto_create:
+            return defer.succeed(None)
+        id = len(self.projects) + 1
+        self.projects[id] = {
+            "id": id,
+            "name": name,
+            "slug": name,
+            "description": None,
+        }
+        return defer.succeed(id)
+
+    def get_project(self, projectid):
+        if projectid in self.projects:
+            return defer.succeed(self._row2dict(self.projects[projectid]))
+        return defer.succeed(None)
+
+    def get_projects(self):
+        rv = []
+        for project in self.projects.values():
+            rv.append(self._row2dict(project))
+        return rv
+
+    def update_project_info(self, projectid, slug, description):
+        if projectid not in self.projects:
+            return defer.succeed(None)
+        project = self.projects[projectid]
+        project['slug'] = slug
+        project['description'] = description
+        return defer.succeed(None)
+
+    def _row2dict(self, row):
+        return row.copy()

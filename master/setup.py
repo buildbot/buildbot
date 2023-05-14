@@ -389,6 +389,7 @@ setup_args = {
                 'BuildFactory', 'GNUAutoconf', 'CPAN', 'Distutils', 'Trial',
                 'BasicBuildFactory', 'QuickBuildFactory', 'BasicSVN']),
             ('buildbot.process.logobserver', ['LogLineObserver']),
+            ('buildbot.process.project', ['Project']),
             ('buildbot.process.properties', [
                 'FlattenList', 'Interpolate', 'Property', 'Transform',
                 'WithProperties', 'renderer', 'Secret']),

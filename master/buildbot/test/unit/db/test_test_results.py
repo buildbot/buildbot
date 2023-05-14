@@ -170,8 +170,8 @@ class TestRealDB(unittest.TestCase,
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(
-            table_names=['steps', 'builds', 'builders', 'masters', 'buildrequests', 'buildsets',
-                         'workers', 'test_names', 'test_code_paths', 'test_results',
+            table_names=['steps', 'builds', "projects", 'builders', 'masters', 'buildrequests',
+                         'buildsets', 'workers', 'test_names', 'test_code_paths', 'test_results',
                          'test_result_sets'])
 
         self.db.test_results = test_results.TestResultsConnectorComponent(self.db)
