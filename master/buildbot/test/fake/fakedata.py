@@ -41,7 +41,7 @@ class FakeUpdates(service.AsyncService):
         self.maybeBuildsetCompleteCalls = 0
         self.masterStateChanges = []  # dictionaries
         self.schedulerIds = {}  # { name : id }; users can add schedulers here
-        self.builderIds = {}  # { name : id }; users can add schedulers here
+        self.builderIds = {}  # { name : id }; users can add builders here
         self.schedulerMasters = {}  # { schedulerid : masterid }
         self.changesourceMasters = {}  # { changesourceid : masterid }
         self.workerIds = {}  # { name : id }; users can add workers here
