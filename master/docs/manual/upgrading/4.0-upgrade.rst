@@ -19,6 +19,52 @@ The recommended upgrade procedure is as follows:
   - (Optional) Upgrade to newest Buildbot 4.x.
     The newest point release will contain bug fixes and functionality improvements.
 
+Web frontend
+------------
+
+Buildbot 4.0 removes the legacy web frontend written in AngularJS.
+In simple Buildbot installations there is nothing that needs to be done except to install compatible versions of any www plugins that are used.
+The following plugins are maintained as part of Buildbot and can be upgraded seamlessly by just installing new, compatible version:
+
+ - ``buildbot-www`` (main web frontend)
+ - ``buildbot-console-view``
+ - ``buildbot-grid-view``
+ - ``buildbot-waterfall-view``
+
+Custom plugins
+~~~~~~~~~~~~~~
+
+If the Buildbot installation uses plugins that are developed outside Buildbot, these will need to be rewritten to use the new Buildbot plugin APIs that expect the plugin to be written in React.
+In such case the best approach is to rewrite any custom plugins into React while still using Buildbot 3.x and convert to 4.x once everything is ready.
+
+More specifically, the recommended approach is as follows:
+
+ - Upgrade to the last released BuildBot version in 3.x series.
+
+ - Prepare the development environment
+
+     - Install ``buildbot-www-react`` with the same version.
+
+     - Install any Buildbot plugins that already have a version that is compatible with React.
+       For example ``buildbot-console-view`` has a React equivalent ``buildbot-react-console-view``.
+
+     - Add ``'base_react': {}`` key-value pair to the www plugin dictionary.
+       For example, in the default installation the configuration would look like this:
+       ``c['www'] = {port: 8080, plugins={'base_react': {}}}``.
+
+       Other enabled plugins will need their keys in the dictionary changed.
+       For example, the compatibility Buildbot plugins will have the following names:
+
+         - ``console_view`` as ``react_console_view``
+         - ``grid_view`` as ``react_grid_view``
+         - ``waterfall_view`` as ``react_waterfall_view``
+
+ - Rewrite any custom Buildbot plugins into React and new Buildbot plugin APIs in the development environment.
+
+ - Replace the production setup with what was tested in the development environment section above.
+
+ - Upgrade to Buildbot 4.x series
+
 Build status generators
 -----------------------
 
