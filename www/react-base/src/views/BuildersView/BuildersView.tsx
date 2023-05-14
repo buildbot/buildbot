@@ -21,26 +21,20 @@ import {useState} from "react";
 import {FaCogs} from "react-icons/fa";
 import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
-  Build,
   Builder,
   DataCollection,
   Master,
   Worker,
   useDataAccessor,
-  useDataApiDynamicQuery,
   useDataApiQuery
 } from "buildbot-data-js";
-import {Link} from "react-router-dom";
 import {
-  BuildLinkWithSummaryTooltip,
-  WorkerBadge,
   TagFilterManager,
   hasActiveMaster,
   useTagFilterManager,
   useTopbarItems,
 } from "buildbot-ui";
-import {computed} from "mobx";
-import {Table} from "react-bootstrap";
+import {BuildersTable} from "../../components/BuildersTable/BuildersTable";
 
 const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
                            masters: DataCollection<Master>, showOldBuilders: boolean) => {
@@ -61,104 +55,18 @@ export const BuildersView = observer(() => {
   ]);
 
   const showOldBuilders = buildbotGetSettings().getBooleanSetting("Builders.show_old_builders");
-  const showWorkerName = buildbotGetSettings().getBooleanSetting("Builders.show_workers_name");
-  const buildFetchLimit = buildbotGetSettings().getIntegerSetting("Builders.buildFetchLimit");
-  const perBuilderBuildFetchLimit = 15;
 
   // as there is usually lots of builders, its better to get the overall
   // list of workers, masters, and builds and then associate by builder
-  const builders = useDataApiQuery(() => Builder.getAll(accessor));
-  const masters = useDataApiQuery(() => Master.getAll(accessor));
-  const workers = useDataApiQuery(() => Worker.getAll(accessor));
+  const builders= useDataApiQuery(() => Builder.getAll(accessor));
+  const masters= useDataApiQuery(() => Master.getAll(accessor));
+  const workers= useDataApiQuery(() => Worker.getAll(accessor));
 
   const filteredBuilders = builders.array.filter(builder => {
     return isBuilderFiltered(builder, filterManager, masters, showOldBuilders) &&
-      (builderNameFilter === null || builder.name.indexOf(builderNameFilter) >= 0)
+        (builderNameFilter === null || builder.name.indexOf(builderNameFilter) >= 0)
   }).sort((a, b) => a.name.localeCompare(b.name));
 
-  const filteredBuilderIds = filteredBuilders.map(builder => builder.builderid);
-
-  const buildsForFilteredBuilders = useDataApiDynamicQuery(filteredBuilderIds,
-    () => {
-      // Don't request builds when we haven't loaded builders yet
-      if (filteredBuilderIds.length === 0) {
-        return new DataCollection<Build>();
-      }
-      return Build.getAll(accessor, {query: {
-          limit: buildFetchLimit,
-          order: '-started_at',
-          builderid__eq: filteredBuilderIds,
-          property: 'branch',
-        }})
-    });
-
-  const buildsByFilteredBuilder = computed(() => {
-    const byBuilderId: {[builderid: string]: Build[]} = {};
-    for (const build of buildsForFilteredBuilders.array) {
-      const builderid = build.builderid.toString();
-      if (builderid in byBuilderId) {
-        byBuilderId[builderid].push(build);
-      } else {
-        byBuilderId[builderid] = [build];
-      }
-    }
-    return byBuilderId;
-  }).get();
-
-  const workersByFilteredBuilder = computed(() => {
-    const byBuilderId: {[builderid: string]: Worker[]} = {};
-    for (const worker of workers.array) {
-      for (const configured_on of worker.configured_on) {
-        const builderid = configured_on.builderid.toString();
-        if (builderid in byBuilderId) {
-          byBuilderId[builderid].push(worker);
-        } else {
-          byBuilderId[builderid] = [worker];
-        }
-      }
-    }
-    return byBuilderId;
-  }).get();
-
-  const builderRowElements = filteredBuilders.map(builder => {
-
-    let buildElements: JSX.Element[] = [];
-    if (builder.id in buildsByFilteredBuilder) {
-      let builds = [...buildsByFilteredBuilder[builder.id]];
-      builds = builds
-        .sort((a, b) => b.number - a.number)
-        .slice(0, perBuilderBuildFetchLimit);
-
-      buildElements = builds.map(build => (<BuildLinkWithSummaryTooltip key={build.id} build={build}/>));
-    }
-
-    let workerElements: JSX.Element[] = [];
-    if (builder.id in workersByFilteredBuilder) {
-      let workers = [...workersByFilteredBuilder[builder.id]];
-      workers.sort((a, b) => a.name.localeCompare(b.name));
-      workerElements = workers.map(worker => (
-        <WorkerBadge key={worker.name} worker={worker} showWorkerName={showWorkerName}/>
-      ));
-    }
-
-    return (
-      <tr key={builder.name}>
-        <td style={{width: "200px"}}>
-          <Link to={`/builders/${builder.builderid}`}>{builder.name}</Link></td>
-        <td>
-          {buildElements}
-        </td>
-        <td style={{width: "20%"}}>
-          {filterManager.getElementsForTags(builder.tags)}
-        </td>
-        <td style={{width: "20%"}}>
-          {workerElements}
-        </td>
-      </tr>
-    );
-  });
-
-  // FIXME: implement pagination
   return (
     <div className="bb-builders-view-container">
       <form role="search" style={{width: "150px"}}>
@@ -166,20 +74,7 @@ export const BuildersView = observer(() => {
                onChange={e => setBuilderNameFilter(e.target.value)}
                placeholder="Search for builders" className="bb-builders-view-form-control"/>
       </form>
-      <Table hover striped size="sm">
-        <tbody>
-          <tr>
-            <th>Builder Name</th>
-            <th>Builds</th>
-            <th>
-              {filterManager.getFiltersHelpElement()}
-              {filterManager.getEnabledFiltersElements()}
-            </th>
-            <th style={{width: "20%px"}}>Workers</th>
-          </tr>
-          {builderRowElements}
-        </tbody>
-      </Table>
+      <BuildersTable builders={filteredBuilders} allWorkers={workers} filterManager={filterManager}/>
       <div>
         <div className="form-group">
           <label className="checkbox-inline">
