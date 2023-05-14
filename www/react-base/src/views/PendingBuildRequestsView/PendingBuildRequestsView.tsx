@@ -16,21 +16,18 @@
 */
 
 import {observer} from "mobx-react";
-import {Table} from "react-bootstrap";
-import {Link} from "react-router-dom";
 import {
-  Builder,
   Buildrequest,
-  getPropertyValueOrDefault,
   useDataAccessor,
   useDataApiQuery
 } from "buildbot-data-js";
-import {BadgeRound, dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui";
 import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
+import {
+  PendingBuildRequestsTable
+} from "../../components/PendingBuildRequestsTable/PendingBuildRequestsTable";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 
 export const PendingBuildRequestsView = observer(() => {
-  const now = useCurrentTime();
   const accessor = useDataAccessor([]);
 
   const buildRequestFetchLimit = buildbotGetSettings().getIntegerSetting("BuildRequests.buildrequestFetchLimit");
@@ -41,54 +38,6 @@ export const PendingBuildRequestsView = observer(() => {
       claimed: false
     }}));
 
-  const propertiesQuery = useDataApiQuery(() =>
-    buildRequestsQuery.getRelatedProperties(br => br.getProperties()));
-  const buildersQuery = useDataApiQuery(() =>
-    buildRequestsQuery.getRelated(br => Builder.getAll(accessor, {id: br.builderid.toString()})));
-
-  const renderBuildRequests = () => {
-    return buildRequestsQuery.array.map(buildRequest => {
-      const builder = buildersQuery.getNthOfParentOrNull(buildRequest.id, 0);
-      const properties = propertiesQuery.getParentCollectionOrEmpty(buildRequest.id);
-
-      const propertiesElements = Array.from(properties.properties.entries()).map(([name, valueSource]) => {
-        return (
-          <li key={name}>{name} = {JSON.stringify(valueSource[0])}</li>
-        );
-      });
-
-      return (
-        <tr key={buildRequest.id}>
-          <td>
-            <Link to={`/buildrequests/${buildRequest.id}`}>
-              <BadgeRound className=''>{buildRequest.id.toString()}</BadgeRound>
-            </Link>
-          </td>
-          <td>
-            <Link to={`/builders/${buildRequest.builderid}`}>
-              <span>{builder !== null ? builder.name : "Loading ... "}</span>
-            </Link>
-          </td>
-          <td>
-            <span title={dateFormat(buildRequest.submitted_at)}>
-              {durationFromNowFormat(buildRequest.submitted_at, now)}
-            </span>
-          </td>
-          <td>
-            <span>
-              {getPropertyValueOrDefault(buildRequest.properties, "owner", "(none)")}
-            </span>
-          </td>
-          <td>
-            <ul>
-              {propertiesElements}
-            </ul>
-          </td>
-        </tr>
-      );
-    });
-  }
-
   const renderContents = () => {
     if (!buildRequestsQuery.resolved) {
       return <span>Loading ...</span>
@@ -98,19 +47,8 @@ export const PendingBuildRequestsView = observer(() => {
     }
 
     return (
-      <Table hover striped size="sm">
-        <tbody>
-          <tr>
-            <td width="100px">#</td>
-            <td width="150px">Builder</td>
-            <td width="150px">Submitted At</td>
-            <td width="150px">Owner</td>
-            <td width="150px">Properties</td>
-          </tr>
-          {renderBuildRequests()}
-        </tbody>
-      </Table>
-    )
+      <PendingBuildRequestsTable buildRequestsQuery={buildRequestsQuery}/>
+    );
   }
 
   return (
