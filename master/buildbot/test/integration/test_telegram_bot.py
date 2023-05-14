@@ -196,7 +196,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
     def testLoadState(self):
         tboid = yield self.master.db.state.getObjectId(
             'testbot', 'buildbot.reporters.telegram.TelegramWebhookBot')
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.ObjectState(objectid=tboid, name='notify_events',
                                value_json='[[123456789, ["started", "finished"]]]'),
             fakedb.ObjectState(objectid=tboid, name='missing_workers',
@@ -238,7 +238,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
 
     @defer.inlineCallbacks
     def testMissingWorker(self):
-        yield self.insertTestData([fakedb.Worker(id=1, name='local1')])
+        yield self.insert_test_data([fakedb.Worker(id=1, name='local1')])
 
         tb = self.master.config.services['TelegramBot']
         channel = tb.bot.getChannel(-123456)

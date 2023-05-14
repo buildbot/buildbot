@@ -64,7 +64,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 builderid += 1
                 dbBuilder.append(fakedb.Builder(id=builderid, name=builderName))
 
-            self.master.db.insertTestData(dbBuilder)
+            self.master.db.insert_test_data(dbBuilder)
 
         sched = self.attachScheduler(
             base.BaseScheduler(name=name, builderNames=builderNames,
@@ -451,7 +451,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_one_change(self):
         sched = self.makeScheduler(name='n', builderNames=['b'])
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Change(changeid=13, sourcestampid=234),
         ])
         bsid, brids = yield sched.addBuildsetForChanges(reason='power',
@@ -471,7 +471,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties(self):
         sched = self.makeScheduler(name='n', builderNames=['c'])
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Change(changeid=14, sourcestampid=234),
         ])
         bsid, brids = yield sched.addBuildsetForChanges(reason='downstream',
@@ -493,7 +493,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         sched = self.makeScheduler(name='n', builderNames=['c'], properties={
             'virtual_builder_name': Interpolate("myproject-%(src::branch)s")
         })
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=234, branch='dev1', project="linux"),
             fakedb.Change(changeid=14, sourcestampid=234, branch="dev1"),
         ])
@@ -519,7 +519,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         sched = self.makeScheduler(name='n', builderNames=['b', 'c'],
                                    codebases={'cb': {'repository': 'http://repo'}})
         # No codebaseGenerator means all changes have codebase == ''
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Change(changeid=13, codebase='cb', sourcestampid=12),
             fakedb.Change(changeid=14, codebase='cb', sourcestampid=11),
             fakedb.Change(changeid=15, codebase='cb', sourcestampid=10),
@@ -560,7 +560,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         # for repositories that have no changes
         sched = self.makeScheduler(name='n', builderNames=['b', 'c'],
                                    codebases=codebases)
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Change(changeid=12, codebase='cbA', sourcestampid=912),
             fakedb.Change(changeid=13, codebase='cbA', sourcestampid=913),
             fakedb.Change(changeid=14, codebase='cbA', sourcestampid=914),
@@ -655,7 +655,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     def test_addBuildsetForSourceStamp_combine_change_properties(self):
         sched = self.makeScheduler()
 
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.SourceStamp(id=98, branch='stable'),
             fakedb.Change(changeid=25, sourcestampid=98, branch='stable'),
             fakedb.ChangeProperty(changeid=25, property_name='color',
@@ -689,7 +689,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched = self.makeScheduler(name='n', builderNames=names)
 
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Builder(id=1, name='a'),
             fakedb.Builder(id=2, name='b'),
             fakedb.Builder(id=3, name='c'),
@@ -732,7 +732,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         names = ['a', 'b', properties.Interpolate('%(prop:extra_builder)s')]
         sched = self.makeScheduler(name='n', builderNames=names)
 
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Builder(id=1, name='a'),
             fakedb.Builder(id=2, name='b'),
             fakedb.Builder(id=3, name='c'),

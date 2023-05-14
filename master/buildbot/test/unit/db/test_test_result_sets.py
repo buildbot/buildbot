@@ -80,7 +80,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_add_set_get_set(self):
-        yield self.insertTestData(self.common_data)
+        yield self.insert_test_data(self.common_data)
         set_id = yield self.db.test_result_sets.addTestResultSet(builderid=88, buildid=30,
                                                                  stepid=131,
                                                                  description='desc', category='cat',
@@ -102,7 +102,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_sets(self):
-        yield self.insertTestData(self.common_data + [
+        yield self.insert_test_data(self.common_data + [
             fakedb.TestResultSet(id=91, builderid=88, buildid=30, stepid=131, description='desc1',
                                  category='cat', value_unit='ms', tests_failed=None,
                                  tests_passed=None,
@@ -147,7 +147,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_set_from_data(self):
-        yield self.insertTestData(self.common_data + self.common_test_result_set_data)
+        yield self.insert_test_data(self.common_data + self.common_test_result_set_data)
 
         set_dict = yield self.db.test_result_sets.getTestResultSet(91)
         self.assertEqual(set_dict, {
@@ -170,14 +170,14 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_complete_already_completed_set(self):
-        yield self.insertTestData(self.common_data + self.common_test_result_set_data)
+        yield self.insert_test_data(self.common_data + self.common_test_result_set_data)
         with self.assertRaises(test_result_sets.TestResultSetAlreadyCompleted):
             yield self.db.test_result_sets.completeTestResultSet(92)
         self.flushLoggedErrors(test_result_sets.TestResultSetAlreadyCompleted)
 
     @defer.inlineCallbacks
     def test_complete_set_with_test_counts(self):
-        yield self.insertTestData(self.common_data + self.common_test_result_set_data)
+        yield self.insert_test_data(self.common_data + self.common_test_result_set_data)
 
         yield self.db.test_result_sets.completeTestResultSet(91, tests_passed=12, tests_failed=2)
 
@@ -197,7 +197,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_complete_set_without_test_counts(self):
-        yield self.insertTestData(self.common_data + self.common_test_result_set_data)
+        yield self.insert_test_data(self.common_data + self.common_test_result_set_data)
 
         yield self.db.test_result_sets.completeTestResultSet(91)
 

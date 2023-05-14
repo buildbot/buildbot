@@ -132,7 +132,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSourceStamp_simple(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.SourceStamp(id=234, branch='br', revision='rv',
                                repository='rep', codebase='cb', project='prj',
                                created_at=CREATED_AT),
@@ -159,7 +159,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getSourceStamp_simple_None(self):
         "check that NULL branch and revision are handled correctly"
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.SourceStamp(id=234, branch=None, revision=None,
                                repository='rep', codebase='cb', project='prj'),
         ])
@@ -171,7 +171,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSourceStamp_patch(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
@@ -196,7 +196,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSourceStamps(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
@@ -253,7 +253,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def do_test_getSourceStampsForBuild(self, rows, buildid, expected):
-        yield self.insertTestData(rows)
+        yield self.insert_test_data(rows)
 
         sourcestamps = yield self.db.sourcestamps.getSourceStampsForBuild(buildid)
 

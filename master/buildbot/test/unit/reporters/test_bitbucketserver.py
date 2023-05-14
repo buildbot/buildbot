@@ -497,7 +497,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, set_pr=True):
-        yield super().insertTestData([buildResults], buildResults)
+        yield super().insert_test_data([buildResults], buildResults)
         build = yield self.master.data.get(('builds', 20))
         if set_pr:
             yield self.master.db.builds.setBuildProperty(

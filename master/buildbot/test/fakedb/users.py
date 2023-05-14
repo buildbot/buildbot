@@ -47,7 +47,7 @@ class FakeUsersComponent(FakeDBComponent):
         self.users_info = {}
         self.id_num = 0
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, User):
                 self.users[row.uid] = dict(identifier=row.identifier,
@@ -89,8 +89,8 @@ class FakeUsersComponent(FakeDBComponent):
                     return defer.succeed(uid)
 
         uid = self.nextId()
-        self.db.insertTestData([User(uid=uid, identifier=identifier)])
-        self.db.insertTestData([UserInfo(uid=uid,
+        self.db.insert_test_data([User(uid=uid, identifier=identifier)])
+        self.db.insert_test_data([UserInfo(uid=uid,
                                          attr_type=attr_type,
                                          attr_data=attr_data)])
         return defer.succeed(uid)

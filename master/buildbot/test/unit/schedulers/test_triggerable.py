@@ -49,7 +49,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         self.tearDownScheduler()
 
     def makeScheduler(self, overrideBuildsetMethods=False, **kwargs):
-        self.master.db.insertTestData([fakedb.Builder(id=77, name='b')])
+        self.master.db.insert_test_data([fakedb.Builder(id=77, name='b')])
 
         sched = self.attachScheduler(
             triggerable.Triggerable(name='n', builderNames=['b'], **kwargs),

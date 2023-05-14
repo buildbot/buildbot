@@ -84,7 +84,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
             rows.extend([fakedb.Builder(name=bname)
                          for bname in scheduler.builderNames])
 
-        db.insertTestData(rows)
+        db.insert_test_data(rows)
 
         if overrideBuildsetMethods:
             for method in (

@@ -28,7 +28,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=13, branch='oak'),
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
@@ -76,7 +76,7 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=13),
             fakedb.SourceStamp(id=14),
         ])

@@ -40,7 +40,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Buildset(id=13, reason='because I said so'),
             fakedb.SourceStamp(id=92),
             fakedb.SourceStamp(id=93),
@@ -81,7 +81,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=92),
             fakedb.Buildset(id=13, complete=True),
             fakedb.Buildset(id=14, complete=False),
@@ -130,7 +130,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = buildsets.Buildset(self.master)
-        return self.master.db.insertTestData([
+        return self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234, branch='br', codebase='cb',
                                project='pr', repository='rep', revision='rev',
                                created_at=89834834),
@@ -318,7 +318,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
                                        complete=buildRequestCompletions.get(
                                            brid),
                                        results=buildRequestResults.get(brid, SUCCESS))
-        yield self.master.db.insertTestData([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=42, name='bldr1'),
             fakedb.Buildset(id=72,
                             submitted_at=EARLIER,

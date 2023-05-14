@@ -193,7 +193,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
         self.master.mq.verifyMessages = False
 
     def setupBuild(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Build(id=1, masterid=1, workerid=1,
                          builderid=self.BUILDER_IDS[0],
                          buildrequestid=1, number=1),

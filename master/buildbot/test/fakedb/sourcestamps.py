@@ -54,7 +54,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
         self.sourcestamps = {}
         self.patches = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Patch):
                 self.patches[row.id] = dict(

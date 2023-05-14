@@ -114,7 +114,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getUserContact_found(self):
-        self.db.insertTestData([fakedb.User(uid=1, identifier='tdurden'),
+        self.db.insert_test_data([fakedb.User(uid=1, identifier='tdurden'),
                                 fakedb.UserInfo(uid=1, attr_type='svn',
                                                 attr_data='tdurden'),
                                 fakedb.UserInfo(uid=1, attr_type='email',
@@ -126,7 +126,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getUserContact_key_not_found(self):
-        self.db.insertTestData([fakedb.User(uid=1, identifier='tdurden'),
+        self.db.insert_test_data([fakedb.User(uid=1, identifier='tdurden'),
                                 fakedb.UserInfo(uid=1, attr_type='svn',
                                                 attr_data='tdurden'),
                                 fakedb.UserInfo(uid=1, attr_type='email',

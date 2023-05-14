@@ -93,7 +93,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                           )
         self.master = self.make_master(url='h:/a/b/', authz=authzcfg)
         self.authz = self.master.authz
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Builder(id=77, name="mybuilder"),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),

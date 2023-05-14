@@ -70,7 +70,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findMasterId_new_name_differs_only_by_case(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master'),
         ])
         id = yield self.db.masters.findMasterId('some:Master')
@@ -80,7 +80,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findMasterId_exists(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master'),
         ])
         id = yield self.db.masters.findMasterId('some:master')
@@ -94,7 +94,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setMasterState_true_when_active(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master',
                           active=1, last_active=OTHERTIME),
         ])
@@ -108,7 +108,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setMasterState_true_when_inactive(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master',
                           active=0, last_active=OTHERTIME),
         ])
@@ -122,7 +122,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_active(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master',
                           active=1, last_active=OTHERTIME),
         ])
@@ -136,7 +136,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_inactive(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master',
                           active=0, last_active=OTHERTIME),
         ])
@@ -150,7 +150,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getMaster(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master',
                           active=0, last_active=SOMETIME),
         ])
@@ -166,7 +166,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getMasters(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master',
                           active=0, last_active=SOMETIME),
             fakedb.Master(id=8, name='other:master',
@@ -194,7 +194,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_setMasterState_false_deletes_links(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master',
                           active=1, last_active=OTHERTIME),
             fakedb.Scheduler(id=21),

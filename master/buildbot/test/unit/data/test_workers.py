@@ -112,7 +112,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        return self.db.insertTestData(testData)
+        return self.db.insert_test_data(testData)
 
     def tearDown(self):
         self.tearDownEndpoint()
@@ -196,7 +196,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        return self.db.insertTestData(testData)
+        return self.db.insert_test_data(testData)
 
     def tearDown(self):
         self.tearDownEndpoint()
@@ -263,7 +263,7 @@ class Worker(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = workers.Worker(self.master)
-        return self.master.db.insertTestData([
+        return self.master.db.insert_test_data([
             fakedb.Master(id=13),
             fakedb.Master(id=14),
         ])

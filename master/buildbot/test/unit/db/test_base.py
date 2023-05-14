@@ -134,7 +134,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
 
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='somemaster', name_hash=hash),
         ])
 

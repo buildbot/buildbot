@@ -52,7 +52,7 @@ class FakeBuildsComponent(FakeDBComponent):
     def setUp(self):
         self.builds = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Build):
                 build = self.builds[row.id] = row.values.copy()

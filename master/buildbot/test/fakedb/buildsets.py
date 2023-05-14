@@ -68,7 +68,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.completed_bsids = set()
         self.buildset_sourcestamps = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Buildset):
                 bs = self.buildsets[row.id] = row.values.copy()
@@ -116,7 +116,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 BuildRequest(buildsetid=bsid, builderid=builderid, waited_for=waited_for,
                              submitted_at=submitted_at))
 
-        self.db.buildrequests.insertTestData(br_rows)
+        self.db.buildrequests.insert_test_data(br_rows)
 
         # make up a row and keep its dictionary, with the properties tacked on
         bsrow = Buildset(id=bsid, reason=reason,

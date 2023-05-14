@@ -33,7 +33,7 @@ class CommonStuffMixin:
                       builderNames=['tbuild'])
         kwargs.update(kwargs_override)
 
-        self.master.db.insertTestData(
+        self.master.db.insert_test_data(
             [fakedb.Builder(name=builderName) for builderName in kwargs['builderNames']])
         sched = self.attachScheduler(
             klass(**kwargs), self.OBJECTID, self.SCHEDULERID)
@@ -140,7 +140,7 @@ class BaseBasicScheduler(CommonStuffMixin,
             self.Subclass, treeStableTimer=10, change_filter=cf)
 
         self.db.schedulers.fakeClassifications(self.SCHEDULERID, {20: True})
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Change(changeid=20),
             fakedb.SchedulerChange(schedulerid=self.SCHEDULERID,
                                    changeid=20, important=1)
@@ -223,7 +223,7 @@ class BaseBasicScheduler(CommonStuffMixin,
     def test_gotChange_treeStableTimer_sequence(self):
         sched = self.makeScheduler(
             self.Subclass, treeStableTimer=9, branch='master')
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Change(changeid=1, branch='master', when_timestamp=1110),
             fakedb.ChangeFile(changeid=1, filename='readme.txt'),
             fakedb.Change(changeid=2, branch='master', when_timestamp=2220),
@@ -319,7 +319,7 @@ class SingleBranchScheduler(CommonStuffMixin,
                  'b': {'repository': "", 'branch': 'master'}}
 
     def makeFullScheduler(self, **kwargs):
-        self.master.db.insertTestData(
+        self.master.db.insert_test_data(
             [fakedb.Builder(name=builderName) for builderName in kwargs['builderNames']])
         sched = self.attachScheduler(basic.SingleBranchScheduler(**kwargs),
                                      self.OBJECTID, self.SCHEDULERID,
@@ -351,7 +351,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         # fakedb.Change requires changeid instead of number
         chd['changeid'] = chd['number']
         del chd['number']
-        self.db.insertTestData([fakedb.Change(**chd)])
+        self.db.insert_test_data([fakedb.Change(**chd)])
         return ch
 
     def setUp(self):
@@ -410,7 +410,7 @@ class SingleBranchScheduler(CommonStuffMixin,
                                        treeStableTimer=None, branch='master',
                                        codebases=self.codebases,
                                        createAbsoluteSourceStamps=True)
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler')])
 
         yield sched.activate()
@@ -435,7 +435,7 @@ class SingleBranchScheduler(CommonStuffMixin,
                                        treeStableTimer=None, branch='master',
                                        codebases=self.codebases,
                                        createAbsoluteSourceStamps=True)
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Object(id=self.OBJECTID, name='test',
                           class_name='SingleBranchScheduler'),
             fakedb.ObjectState(objectid=self.OBJECTID, name='lastCodebases',

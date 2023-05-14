@@ -79,7 +79,7 @@ class FakeChangesComponent(FakeDBComponent):
     def setUp(self):
         self.changes = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Change):
                 # copy this since we'll be modifying it (e.g., adding files)

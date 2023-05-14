@@ -634,7 +634,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_lineReceived_patchset_created(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Object(id=self.OBJECTID, name='GerritEventLogPoller:gerrit',
                           class_name='GerritEventLogPoller')])
         yield self.newChangeSource(get_files=True)

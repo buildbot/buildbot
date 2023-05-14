@@ -121,7 +121,7 @@ class ContactMixin(TestReactorMixin):
             self.reactor.pump(clock_ticks)
 
     def setupSomeBuilds(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             # Three builds on builder#0, One build on builder#1
             fakedb.Build(id=13, masterid=88, workerid=13,
                          builderid=self.BUILDER_IDS[0],
@@ -141,7 +141,7 @@ class ContactMixin(TestReactorMixin):
     def setup_multi_builders(self):
         # Make first builder configured, but not connected
         # Make second builder configured and connected
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Worker(id=1, name='linux1', info={}),  # connected one
             fakedb.Worker(id=2, name='linux2', info={}),  # disconnected one
             fakedb.BuilderMaster(
@@ -380,7 +380,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_list_workers(self):
         workers = ['worker1', 'worker2']
         for worker in workers:
-            self.master.db.workers.db.insertTestData([
+            self.master.db.workers.db.insert_test_data([
                 fakedb.Worker(name=worker)
             ])
         yield self.do_test_command('list', args='all workers')
@@ -392,7 +392,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_list_workers_online(self):
         self.setup_multi_builders()
         # Also set the connectedness:
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)
         ])
         yield self.do_test_command('list', args='all workers')
@@ -402,7 +402,7 @@ class TestContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_list_changes(self):
-        self.master.db.workers.db.insertTestData([
+        self.master.db.workers.db.insert_test_data([
             fakedb.Change()
         ])
         yield self.do_test_command('list', args='2 changes')
@@ -421,7 +421,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_list_builders_connected(self):
         self.setup_multi_builders()
         # Also set the connectedness:
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)
         ])
 
@@ -438,7 +438,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_status_online(self):
         # we are online and we have some finished builds
         self.setup_multi_builders()
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.ConfiguredWorker(id=14012,
                                     workerid=1, buildermasterid=4013),
             fakedb.ConnectedWorker(id=114, masterid=13, workerid=1)
@@ -480,7 +480,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.setupSomeBuilds()
         self.setup_multi_builders()
         # Also set the connectedness:
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.ConnectedWorker(id=113, masterid=13, workerid=2)
         ])
         yield self.do_test_command('last')
@@ -756,7 +756,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_bot_loadState(self):
         boid = yield self.bot._get_object_id()
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.ObjectState(objectid=boid, name='notify_events',
                                value_json='[["#channel1", ["warnings"]]]'),
         ])

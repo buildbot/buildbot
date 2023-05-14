@@ -43,7 +43,7 @@ class FakeStepsComponent(FakeDBComponent):
     def setUp(self):
         self.steps = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Step):
                 self.steps[row.id] = row.values.copy()

@@ -142,7 +142,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                 number=BRID_TO_BUILD_NUMBER(brid), masterid=9,
                 workerid=13, builderid=builderid)
 
-        m.db.insertTestData([
+        m.db.insert_test_data([
             fakedb.Builder(id=77, name='A'),
             fakedb.Builder(id=78, name='B'),
             fakedb.Builder(id=79, name='C1'),

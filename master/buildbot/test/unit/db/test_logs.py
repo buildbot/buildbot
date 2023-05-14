@@ -148,7 +148,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLog(self):
-        yield self.insertTestData(self.backgroundData + [
+        yield self.insert_test_data(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
                        complete=0, num_lines=200, type='s'),
         ])
@@ -171,7 +171,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLogBySlug(self):
-        yield self.insertTestData(self.backgroundData + [
+        yield self.insert_test_data(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
                        complete=0, num_lines=200, type='s'),
             fakedb.Log(id=202, stepid=101, name='dbg.log', slug='dbg_log',
@@ -183,7 +183,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLogBySlug_missing(self):
-        yield self.insertTestData(self.backgroundData + [
+        yield self.insert_test_data(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
                        complete=0, num_lines=200, type='s'),
         ])
@@ -192,7 +192,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLogs(self):
-        yield self.insertTestData(self.backgroundData + [
+        yield self.insert_test_data(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
                        complete=0, num_lines=200, type='s'),
             fakedb.Log(id=202, stepid=101, name='dbg.log', slug='dbg_log',
@@ -207,7 +207,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLogLines(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         yield self.checkTestLogLines()
 
         # check line number reversal
@@ -215,7 +215,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLogLines_empty(self):
-        yield self.insertTestData(self.backgroundData + [
+        yield self.insert_test_data(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
                        complete=0, num_lines=200, type='s'),
         ])
@@ -226,7 +226,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getLogLines_bug3101(self):
         # regression test for #3101
         content = self.bug3101Content
-        yield self.insertTestData(self.backgroundData + self.bug3101Rows)
+        yield self.insert_test_data(self.backgroundData + self.bug3101Rows)
         # overall content is the same, with '\n' padding at the end
         expected = bytes2unicode(self.bug3101Content + b'\n')
         self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 99)),
@@ -238,7 +238,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addLog_getLog(self):
-        yield self.insertTestData(self.backgroundData)
+        yield self.insert_test_data(self.backgroundData)
         logid = yield self.db.logs.addLog(
             stepid=101, name='config.log', slug='config_log', type='t')
         logdict = yield self.db.logs.getLog(logid)
@@ -255,7 +255,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_appendLog_getLogLines(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         logid = yield self.db.logs.addLog(
             stepid=102, name='another', slug='another', type='s')
         self.assertEqual((yield self.db.logs.appendLog(logid, 'xyz\n')),
@@ -284,14 +284,14 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_compressLog(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         yield self.db.logs.compressLog(201)
         # test log lines should still be readable just the same
         yield self.checkTestLogLines()
 
     @defer.inlineCallbacks
     def test_addLogLines_big_chunk(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         self.assertEqual(
             (yield self.db.logs.appendLog(201, 'abc\n' * 20000)),  # 80k
             (7, 20006))
@@ -301,7 +301,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addLogLines_big_chunk_big_lines(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'x' * 33000 + '\n'
         self.assertEqual((yield self.db.logs.appendLog(201, line * 3)),
                          (7, 9))  # three long lines, all truncated
@@ -314,7 +314,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_addLogLines_db(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         self.assertEqual(
             (yield self.db.logs.appendLog(201, 'abc\ndef\nghi\njkl\n')),
             (7, 10))
@@ -335,7 +335,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_addLogLines_huge_lines(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'xy' * 70000 + '\n'
         yield self.db.logs.appendLog(201, line * 3)
         for lineno in 7, 8, 9:
@@ -354,7 +354,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_no_compress_small_chunk(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         self.db.master.config.logCompressionMethod = "gz"
         self.assertEqual(
             (yield self.db.logs.appendLog(201, 'abc\n')),
@@ -377,7 +377,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_raw_compress_big_chunk(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "raw"
         self.assertEqual(
@@ -401,7 +401,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_gz_compress_big_chunk(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "gz"
         self.assertEqual(
@@ -425,7 +425,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_bz2_compress_big_chunk(self):
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "bz2"
         self.assertEqual(
@@ -454,7 +454,7 @@ class RealTests(Tests):
         except ImportError as e:
             raise unittest.SkipTest("lz4 not installed, skip the test") from e
 
-        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        yield self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "lz4"
         self.assertEqual(
@@ -486,7 +486,7 @@ class RealTests(Tests):
                             content=chunk)
             for i in range(NUM_CHUNKS)
         ]
-        yield self.insertTestData(
+        yield self.insert_test_data(
             self.backgroundData + [
                 fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
                            complete=0, num_lines=NUM_CHUNKS * 3, type='s')] +
@@ -526,7 +526,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_compressLog_empty_log(self):
-        yield self.insertTestData(self.backgroundData + [
+        yield self.insert_test_data(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
                        complete=1, num_lines=0, type='s'),
         ])
@@ -543,7 +543,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_deleteOldLogChunks_basic(self):
-        yield self.insertTestData(self.backgroundData)
+        yield self.insert_test_data(self.backgroundData)
         logids = []
         for stepid in (101, 102):
             for i in range(stepid):

@@ -98,7 +98,7 @@ class Change(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def test_fromChdict(self):
         # get a real honest-to-goodness chdict from the fake db
-        yield self.master.db.insertTestData(self.change23_rows)
+        yield self.master.db.insert_test_data(self.change23_rows)
         chdict = yield self.master.db.changes.getChange(23)
 
         exp = self.change23

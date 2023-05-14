@@ -154,7 +154,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_masters(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Master(id=7, name='some:master',
                           active=0, last_active=SOMETIME),
             fakedb.Master(id=8, name='other:master',

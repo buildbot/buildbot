@@ -533,7 +533,7 @@ class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin,
             fakedb.BuildRequest(id=555, submitted_at=2800,
                                 builderid=182, buildsetid=11),
         ]
-        yield self.db.insertTestData(self.base_rows)
+        yield self.db.insert_test_data(self.base_rows)
 
     @defer.inlineCallbacks
     def test_gort_unclaimed(self):
@@ -581,7 +581,7 @@ class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCas
             fakedb.BuildRequestClaim(brid=444, masterid=master_id,
                                      claimed_at=2501),
         ]
-        yield self.db.insertTestData(self.base_rows)
+        yield self.db.insert_test_data(self.base_rows)
 
     @defer.inlineCallbacks
     def test_gnct_completed(self):

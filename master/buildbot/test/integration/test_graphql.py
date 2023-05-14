@@ -100,7 +100,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
         yield self.master.stopService()
 
     def insert_initial_data(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=1),
             fakedb.Worker(id=1, name='example-worker'),
 
