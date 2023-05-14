@@ -588,7 +588,7 @@ class TestRealDB(unittest.TestCase,
         yield self.setUpConnectorComponent(
             table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                          'masters', 'buildrequests', 'buildsets',
-                         'workers'])
+                         'workers', "projects"])
 
         self.db.logs = logs.LogsConnectorComponent(self.db)
 

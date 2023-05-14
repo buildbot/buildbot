@@ -135,7 +135,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
         yield super().setUp()
 
         table_names = [
-            'logs', 'logchunks', 'steps', 'builds', 'builders',
+            'logs', 'logchunks', 'steps', 'builds', 'projects', 'builders',
             'masters', 'buildrequests', 'buildsets', 'workers'
         ]
 

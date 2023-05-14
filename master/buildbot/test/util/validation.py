@@ -369,6 +369,14 @@ dbdict['ssdict'] = DictValidator(
     created_at=DateTimeValidator(),
 )
 
+# project
+dbdict['projectdict'] = DictValidator(
+    id=IntValidator(),
+    name=StringValidator(),
+    slug=StringValidator(),
+    description=NoneOk(StringValidator()),
+)
+
 # builder
 
 message['builders'] = Selector()
@@ -386,6 +394,7 @@ dbdict['builderdict'] = DictValidator(
     masterids=ListValidator(IntValidator()),
     name=StringValidator(),
     description=NoneOk(StringValidator()),
+    projectid=NoneOk(IntValidator()),
     tags=ListValidator(StringValidator()),
 )
 

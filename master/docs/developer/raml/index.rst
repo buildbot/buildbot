@@ -21,6 +21,7 @@ This section documents the available REST APIs according to the RAML specificati
     log
     master
     patch
+    project
     rootlink
     scheduler
     sourcedproperties

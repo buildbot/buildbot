@@ -124,6 +124,9 @@ class FakeBuilder:
     def getBuilderIdForName(self, name):
         return defer.succeed(self._builders.get(name, None) or self.builderid)
 
+    def find_project_id(self, name):
+        return defer.succeed(None)
+
 
 @implementer(interfaces.IBuildStepFactory)
 class FakeStepFactory:

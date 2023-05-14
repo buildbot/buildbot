@@ -767,7 +767,7 @@ class TestRealDB(unittest.TestCase,
                          'sourcestampsets', 'sourcestamps', 'patches', 'change_users',
                          'users', 'buildsets', 'workers', 'builders', 'masters',
                          'buildrequests', 'builds', 'buildset_sourcestamps',
-                         'workers'])
+                         'workers', "projects"])
 
         self.db.changes = changes.ChangesConnectorComponent(self.db)
         self.db.builds = builds.BuildsConnectorComponent(self.db)

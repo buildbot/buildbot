@@ -507,7 +507,7 @@ class TestRealDB(db.TestCase,
             table_names=['patches', 'buildsets', 'buildset_properties',
                          'objects', 'buildrequests', 'sourcestamps',
                          'buildset_sourcestamps', 'builders',
-                         'builds', 'masters', 'workers'])
+                         'builds', 'masters', 'workers', "projects"])
 
         self.db.buildsets = buildsets.BuildsetsConnectorComponent(self.db)
         yield self.setUpTests()

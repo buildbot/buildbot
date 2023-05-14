@@ -33,6 +33,7 @@ from buildbot.config.errors import ConfigErrors
 from buildbot.config.errors import capture_config_errors
 from buildbot.config.errors import error
 from buildbot.interfaces import IRenderable
+from buildbot.process.project import Project
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import ComparableMixin
 from buildbot.util import identifiers as util_identifiers
@@ -171,6 +172,7 @@ class MasterConfig(util.ComparableMixin):
         self.workers = []
         self.change_sources = []
         self.machines = []
+        self.projects = []
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
@@ -209,6 +211,7 @@ class MasterConfig(util.ComparableMixin):
         "mq",
         "multiMaster",
         "prioritizeBuilders",
+        "projects",
         "projectName",
         "projectURL",
         "properties",
@@ -269,6 +272,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_secrets(filename, config_dict)
             config.load_caches(filename, config_dict)
             config.load_schedulers(filename, config_dict)
+            config.load_projects(filename, config_dict)
             config.load_builders(filename, config_dict)
             config.load_workers(filename, config_dict)
             config.load_change_sources(filename, config_dict)
@@ -281,6 +285,7 @@ class MasterConfig(util.ComparableMixin):
             config.check_single_master()
             config.check_schedulers()
             config.check_locks()
+            config.check_projects()
             config.check_builders()
             config.check_ports()
             config.check_machines()
@@ -551,6 +556,22 @@ class MasterConfig(util.ComparableMixin):
 
         self.schedulers = dict((s.name, s) for s in schedulers)
 
+    def load_projects(self, filename, config_dict):
+        if 'projects' not in config_dict:
+            return
+        projects = config_dict['projects']
+
+        if not isinstance(projects, (list, tuple)):
+            error("c['projects'] must be a list")
+            return
+
+        def mapper(p):
+            if isinstance(p, Project):
+                return p
+            error(f"{repr(p)} is not a project config (in c['projects']")
+            return None
+        self.projects = [mapper(p) for p in projects]
+
     def load_builders(self, filename, config_dict):
         if 'builders' not in config_dict:
             return
@@ -804,10 +825,19 @@ class MasterConfig(util.ComparableMixin):
                 for lock in b.locks:
                     check_lock(lock)
 
+    def check_projects(self):
+        seen_names = set()
+        for p in self.projects:
+            if p.name in seen_names:
+                error(f"duplicate project name '{p.name}'")
+            seen_names.add(p.name)
+
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
         # to unknown workers
         workernames = {w.workername for w in self.workers}
+        project_names = {p.name for p in self.projects}
+
         seen_names = set()
         seen_builddirs = set()
 
@@ -823,6 +853,10 @@ class MasterConfig(util.ComparableMixin):
             if b.builddir in seen_builddirs:
                 error(f"duplicate builder builddir '{b.builddir}'")
             seen_builddirs.add(b.builddir)
+
+            if b.project is not None:
+                if b.project not in project_names:
+                    error(f"builder '{b.name}' uses unknown project name '{b.project}'")
 
     def check_ports(self):
         ports = set()

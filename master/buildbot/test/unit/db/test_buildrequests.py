@@ -650,7 +650,7 @@ class TestRealDB(unittest.TestCase,
             table_names=['patches', 'changes', 'builders',
                          'buildsets', 'buildset_properties', 'buildrequests',
                          'buildset_sourcestamps', 'masters', 'buildrequest_claims',
-                         'sourcestamps', 'sourcestampsets', 'builds', 'workers',
+                         'sourcestamps', 'sourcestampsets', 'builds', 'workers', "projects",
                          ])
 
         self.db.buildrequests = \

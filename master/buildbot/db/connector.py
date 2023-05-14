@@ -34,6 +34,7 @@ from buildbot.db import logs
 from buildbot.db import masters
 from buildbot.db import model
 from buildbot.db import pool
+from buildbot.db import projects
 from buildbot.db import schedulers
 from buildbot.db import sourcestamps
 from buildbot.db import state
@@ -102,6 +103,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
         self.users = users.UsersConnectorComponent(self)
         self.masters = masters.MastersConnectorComponent(self)
         self.builders = builders.BuildersConnectorComponent(self)
+        self.projects = projects.ProjectsConnectorComponent(self)
         self.steps = steps.StepsConnectorComponent(self)
         self.tags = tags.TagsConnectorComponent(self)
         self.logs = logs.LogsConnectorComponent(self)

@@ -156,8 +156,7 @@ class Endpoint:
 class BuildNestingMixin:
 
     """
-    A mixin for methods to decipher the many ways a build, step, or log can be
-    specified.
+    A mixin for methods to decipher the many ways a various entities can be specified.
     """
 
     @defer.inlineCallbacks
@@ -198,6 +197,12 @@ class BuildNestingMixin:
         if 'buildername' in kwargs:
             return self.master.db.builders.findBuilderId(kwargs['buildername'], autoCreate=False)
         return defer.succeed(kwargs['builderid'])
+
+    # returns Deferred that yields a number
+    def get_project_id(self, kwargs):
+        if "projectname" in kwargs:
+            return self.master.db.projects.find_project_id(kwargs["projectname"], auto_create=False)
+        return defer.succeed(kwargs["projectid"])
 
 
 class ListResult(UserList):

@@ -24,6 +24,7 @@ from buildbot.test.fakedb.changes import FakeChangesComponent
 from buildbot.test.fakedb.changesources import FakeChangeSourcesComponent
 from buildbot.test.fakedb.logs import FakeLogsComponent
 from buildbot.test.fakedb.masters import FakeMastersComponent
+from buildbot.test.fakedb.projects import FakeProjectsComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.test.fakedb.schedulers import FakeSchedulersComponent
 from buildbot.test.fakedb.sourcestamps import FakeSourceStampsComponent
@@ -82,6 +83,8 @@ class FakeDBConnector(service.AsyncMultiService):
         self.users = comp = FakeUsersComponent(self, testcase)
         self._components.append(comp)
         self.masters = comp = FakeMastersComponent(self, testcase)
+        self._components.append(comp)
+        self.projects = comp = FakeProjectsComponent(self, testcase)
         self._components.append(comp)
         self.builders = comp = FakeBuildersComponent(self, testcase)
         self._components.append(comp)

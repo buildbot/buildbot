@@ -50,6 +50,8 @@ from .logs import Log
 from .logs import LogChunk
 from .masters import FakeMastersComponent
 from .masters import Master
+from .projects import FakeProjectsComponent
+from .projects import Project
 from .schedulers import FakeSchedulersComponent
 from .schedulers import Scheduler
 from .schedulers import SchedulerChange
@@ -109,6 +111,7 @@ __all__ = [
     'FakeDBConnector',
     'FakeLogsComponent',
     'FakeMastersComponent',
+    'FakeProjectsComponent',
     'FakeSchedulersComponent',
     'FakeSourceStampsComponent',
     'FakeStateComponent',
@@ -124,6 +127,7 @@ __all__ = [
     'Object',
     'ObjectState',
     'Patch',
+    'Project',
     'Scheduler',
     'SchedulerChange',
     'SchedulerMaster',

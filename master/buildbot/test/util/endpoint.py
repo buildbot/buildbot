@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+from twisted import trial
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -100,9 +101,14 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
     # interface tests
 
     def test_get_spec(self):
-        @self.assertArgSpecMatches(self.ep.get)
-        def get(self, resultSpec, kwargs):
-            pass
+        try:
+            @self.assertArgSpecMatches(self.ep.get)
+            def get(self, resultSpec, kwargs):
+                pass
+        except trial.unittest.FailTest:
+            @self.assertArgSpecMatches(self.ep.get)
+            def get(self, result_spec, kwargs):
+                pass
 
     def test_control_spec(self):
         @self.assertArgSpecMatches(self.ep.control)

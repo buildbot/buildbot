@@ -54,6 +54,7 @@ types:
     log: !include types/log.raml
     logchunk: !include types/logchunk.raml
     master: !include types/master.raml
+    project: !include types/project.raml
     rootlink: !include types/rootlink.raml
     scheduler: !include types/scheduler.raml
     sourcedproperties: !include types/sourcedproperties.raml
@@ -356,6 +357,27 @@ types:
             get:
                 is:
                 - bbget: {bbtype: string}
+
+/projects:
+    description: This path selects all projects
+    get:
+        is:
+        - bbget: {bbtype: project}
+
+    /{projectid_or_projectname}:
+        uriParameters:
+            projectid_or_projectname:
+                type: number|identifier
+                description: the ID or name of the project
+        description: This path selects a single project
+        get:
+            is:
+            - bbget: {bbtype: project}
+        /builders:
+            description: This path selects all builders for a project
+            get:
+                is:
+                - bbget: {bbtype: builder}
 
 /buildrequests:
     /{buildrequestid}:

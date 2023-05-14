@@ -41,7 +41,7 @@ class FakeUpdates(service.AsyncService):
         self.maybeBuildsetCompleteCalls = 0
         self.masterStateChanges = []  # dictionaries
         self.schedulerIds = {}  # { name : id }; users can add schedulers here
-        self.builderIds = {}  # { name : id }; users can add schedulers here
+        self.builderIds = {}  # { name : id }; users can add builders here
         self.schedulerMasters = {}  # { schedulerid : masterid }
         self.changesourceMasters = {}  # { changesourceid : masterid }
         self.workerIds = {}  # { name : id }; users can add workers here
@@ -210,6 +210,15 @@ class FakeUpdates(service.AsyncService):
     def rebuildBuildrequest(self, buildrequest):
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
+    def update_project_info(self, projectid, slug, description):
+        yield self.master.db.projects.update_project_info(projectid, slug, description)
+
+    def find_project_id(self, name):
+        validation.verifyType(self.testcase, 'project name', name,
+                              validation.StringValidator())
+        return self.master.db.projects.find_project_id(name)
+
     def updateBuilderList(self, masterid, builderNames):
         self.testcase.assertEqual(masterid, self.master.masterid)
         for n in builderNames:
@@ -218,8 +227,8 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def updateBuilderInfo(self, builderid, description, tags):
-        yield self.master.db.builders.updateBuilderInfo(builderid, description, tags)
+    def updateBuilderInfo(self, builderid, description, projectid, tags):
+        yield self.master.db.builders.updateBuilderInfo(builderid, description, projectid, tags)
 
     def masterDeactivated(self, masterid):
         return defer.succeed(None)

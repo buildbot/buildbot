@@ -62,6 +62,7 @@ class Build(properties.PropertiesMixin):
 
     VIRTUAL_BUILDERNAME_PROP = "virtual_builder_name"
     VIRTUAL_BUILDERDESCRIPTION_PROP = "virtual_builder_description"
+    VIRTUAL_BUILDER_PROJECT_PROP = "virtual_builder_project"
     VIRTUAL_BUILDERTAGS_PROP = "virtual_builder_tags"
     workdir = "build"
     reason = "changes"
@@ -275,15 +276,18 @@ class Build(properties.PropertiesMixin):
                 description = self.getProperty(
                     self.VIRTUAL_BUILDERDESCRIPTION_PROP,
                     self.builder.config.description)
+                project = self.getProperty(
+                    self.VIRTUAL_BUILDER_PROJECT_PROP,
+                    self.builder.config.project)
                 tags = self.getProperty(
                     self.VIRTUAL_BUILDERTAGS_PROP,
                     self.builder.config.tags)
                 if type(tags) == type([]) and '_virtual_' not in tags:
                     tags.append('_virtual_')
 
-                self.master.data.updates.updateBuilderInfo(self._builderid,
-                                                           description,
-                                                           tags)
+                projectid = yield self.builder.find_project_id(project)
+                self.master.data.updates.updateBuilderInfo(self._builderid, description,
+                                                           projectid, tags)
 
             else:
                 self._builderid = yield self.builder.getBuilderId()

@@ -86,6 +86,15 @@ class Builder(util_service.ReconfigurableServiceMixin,
         raise AssertionError(f"no config found for builder '{self.name}'")
 
     @defer.inlineCallbacks
+    def find_project_id(self, project):
+        if project is None:
+            return project
+        projectid = yield self.master.data.updates.find_project_id(project)
+        if projectid is None:
+            log.msg(f"{self} could not find project ID for project name {project}")
+        return projectid
+
+    @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         builder_config = self._find_builder_config_by_name(new_config)
         old_config = self.config
@@ -98,8 +107,10 @@ class Builder(util_service.ReconfigurableServiceMixin,
         builderid = yield self.getBuilderId()
 
         if self._has_updated_config_info(old_config, builder_config):
+            projectid = yield self.find_project_id(builder_config.project)
             yield self.master.data.updates.updateBuilderInfo(builderid,
                                                              builder_config.description,
+                                                             projectid,
                                                              builder_config.tags)
 
         # if we have any workers attached which are no longer configured,
@@ -112,6 +123,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if old_config is None:
             return True
         if old_config.description != new_config.description:
+            return True
+        if old_config.project != new_config.project:
             return True
         if old_config.tags != new_config.tags:
             return True
