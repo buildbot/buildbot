@@ -27,7 +27,6 @@ from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import pool
 from buildbot.db.connector import DBConnector
-from buildbot.util.sautils import sa_version
 from buildbot.util.sautils import withoutSqliteForeignKeys
 
 
@@ -125,24 +124,19 @@ class RealDatabaseMixin:
             # non-existent table in SQLite.
             meta.reflect()
 
-            # Table.foreign_key_constraints introduced in SQLAlchemy 1.0.
-            if sa_version()[:2] >= (1, 0):
-                # Restore `use_alter` settings to break known reference cycles.
-                # Main goal of this part is to remove SQLAlchemy warning
-                # about reference cycle.
-                # Looks like it's OK to do it only with SQLAlchemy >= 1.0.0,
-                # since it's not issued in SQLAlchemy == 0.8.0
+            # Restore `use_alter` settings to break known reference cycles.
+            # Main goal of this part is to remove SQLAlchemy warning
+            # about reference cycle.
 
-                # List of reference links (table_name, ref_table_name) that
-                # should be broken by adding use_alter=True.
-                table_referenced_table_links = [
-                    ('buildsets', 'builds'), ('builds', 'buildrequests')]
-                for table_name, ref_table_name in table_referenced_table_links:
-                    if table_name in meta.tables:
-                        table = meta.tables[table_name]
-                        for fkc in table.foreign_key_constraints:
-                            if fkc.referred_table.name == ref_table_name:
-                                fkc.use_alter = True
+            # List of reference links (table_name, ref_table_name) that
+            # should be broken by adding use_alter=True.
+            table_referenced_table_links = [('buildsets', 'builds'), ('builds', 'buildrequests')]
+            for table_name, ref_table_name in table_referenced_table_links:
+                if table_name in meta.tables:
+                    table = meta.tables[table_name]
+                    for fkc in table.foreign_key_constraints:
+                        if fkc.referred_table.name == ref_table_name:
+                            fkc.use_alter = True
 
             # Drop all reflected tables and indices. May fail, e.g. if
             # SQLAlchemy wouldn't be able to break circular references.
