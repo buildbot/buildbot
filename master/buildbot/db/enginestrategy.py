@@ -32,8 +32,6 @@ from sqlalchemy.pool import NullPool
 
 from twisted.python import log
 
-from buildbot.util import sautils
-
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 
 
@@ -115,16 +113,7 @@ class MySQLStrategy(Strategy):
                 log.msg(f'exception happened {ex}')
                 raise
 
-        # older versions of sqlalchemy require the listener to be specified
-        # in the kwargs, in a class instance
-        if sautils.sa_version() < (0, 7, 0):
-            class ReconnectingListener:
-                pass
-            rcl = ReconnectingListener()
-            rcl.checkout = checkout_listener
-            engine.pool.add_listener(rcl)
-        else:
-            sa.event.listen(engine.pool, 'checkout', checkout_listener)
+        sa.event.listen(engine.pool, 'checkout', checkout_listener)
 
     def should_retry(self, ex):
         return any([self.is_disconnect(ex.orig.args),
