@@ -1,0 +1,1 @@
+Fixed exception thrown when worker copies directories in Solaris operating system (:issue:`6870`).

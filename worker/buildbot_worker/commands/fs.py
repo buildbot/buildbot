@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import glob
 import os
+import platform
 import shutil
 import sys
 
@@ -194,7 +195,11 @@ class CopyDirectory(base.Command):
                 log.msg(("cp target '{0}' already exists -- cp will not do what you think!"
                          ).format(to_path))
 
-            command = ['cp', '-R', '-P', '-p', '-v', from_path, to_path]
+            if platform.system().lower().find('solaris') >= 0:
+                command = ['cp', '-R', '-P', '-p', from_path, to_path]
+            else:
+                command = ['cp', '-R', '-P', '-p', '-v', from_path, to_path]
+
             c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
                                       self.protocol_command.unicode_encoding,
                                       self.protocol_command.send_update,
