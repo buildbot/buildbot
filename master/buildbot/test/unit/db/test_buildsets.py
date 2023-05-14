@@ -40,7 +40,7 @@ class Tests(interfaces.InterfaceTests):
         self.reactor.advance(self.now)
 
         # set up a sourcestamp with id 234 for use below
-        return self.insertTestData([
+        return self.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Builder(id=1, name='bldr1'),
             fakedb.Builder(id=2, name='bldr2'),
@@ -116,7 +116,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def do_test_getBuildsetProperties(self, buildsetid, rows, expected):
-        yield self.insertTestData(rows)
+        yield self.insert_test_data(rows)
         props = yield self.db.buildsets.getBuildsetProperties(buildsetid)
 
         self.assertEqual(props, expected)
@@ -141,7 +141,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuildset_incomplete_zero(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Buildset(id=91, complete=0,
                             complete_at=0, results=-1, submitted_at=266761875,
                             external_idstring='extid', reason='rsn'),
@@ -161,7 +161,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuildset_complete(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Buildset(id=91, complete=1,
                             complete_at=298297875, results=-1, submitted_at=266761875,
                             external_idstring='extid', reason='rsn'),
@@ -188,7 +188,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(bsdict, None)
 
     def insert_test_getBuildsets_data(self):
-        return self.insertTestData([
+        return self.insert_test_data([
             fakedb.Buildset(id=91, complete=0,
                             complete_at=298297875, results=-1, submitted_at=266761875,
                             external_idstring='extid', reason='rsn1'),
@@ -308,7 +308,7 @@ class Tests(interfaces.InterfaceTests):
             (92, 1, 298297876, 7)]))
 
     def insert_test_getRecentBuildsets_data(self):
-        return self.insertTestData([
+        return self.insert_test_data([
             fakedb.SourceStamp(id=91, branch='branch_a', repository='repo_a'),
 
             fakedb.Buildset(id=91, complete=0,

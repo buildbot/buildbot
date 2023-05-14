@@ -42,7 +42,7 @@ class FakeDBConnector(service.AsyncMultiService):
     """
     A stand-in for C{master.db} that operates without an actual database
     backend.  This also implements a test-data interface similar to the
-    L{buildbot.test.util.db.RealDatabaseMixin.insertTestData} method.
+    L{buildbot.test.util.db.RealDatabaseMixin.insert_test_data} method.
 
     The child classes implement various useful assertions and faking methods;
     see their documentation for more.
@@ -96,12 +96,12 @@ class FakeDBConnector(service.AsyncMultiService):
         self.is_setup = True
         return defer.succeed(None)
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         """Insert a list of Row instances into the database; this method can be
         called synchronously or asynchronously (it completes immediately) """
         for row in rows:
             if self.checkForeignKeys:
                 row.checkForeignKeys(self, self.t)
             for comp in self._components:
-                comp.insertTestData([row])
+                comp.insert_test_data([row])
         return defer.succeed(None)

@@ -70,7 +70,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_updateBuilderInfo(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7, name='some:builder7'),
             fakedb.Builder(id=8, name='some:builder8'),
         ])
@@ -92,7 +92,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_update_builder_info_tags_case(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7, name='some:builder7'),
         ])
 
@@ -123,7 +123,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findBuilderId_exists(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7, name='some:builder'),
         ])
         id = yield self.db.builders.findBuilderId('some:builder')
@@ -131,7 +131,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addBuilderMaster(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7),
             fakedb.Master(id=9, name='abc'),
             fakedb.Master(id=10, name='def'),
@@ -146,7 +146,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addBuilderMaster_already_present(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7),
             fakedb.Master(id=9, name='abc'),
             fakedb.Master(id=10, name='def'),
@@ -161,7 +161,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_removeBuilderMaster(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7),
             fakedb.Master(id=9, name='some:master'),
             fakedb.Master(id=10, name='other:master'),
@@ -177,7 +177,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuilder_no_masters(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7, name='some:builder'),
         ])
         builderdict = yield self.db.builders.getBuilder(7)
@@ -188,7 +188,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuilder_with_masters(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7, name='some:builder'),
             fakedb.Master(id=3, name='m1'),
             fakedb.Master(id=4, name='m2'),
@@ -208,7 +208,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuilders(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7, name='some:builder'),
             fakedb.Builder(id=8, name='other:builder'),
             fakedb.Builder(id=9, name='third:builder'),
@@ -232,7 +232,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuilders_masterid(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Builder(id=7, name='some:builder'),
             fakedb.Builder(id=8, name='other:builder'),
             fakedb.Builder(id=9, name='third:builder'),

@@ -221,7 +221,7 @@ class RealDatabaseMixin:
             yield self.db_pool.shutdown()
 
     @defer.inlineCallbacks
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         """Insert test data into the database for use during the test.
 
         @param rows: be a sequence of L{fakedb.Row} instances.  These will be

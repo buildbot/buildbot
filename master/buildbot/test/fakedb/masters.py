@@ -39,7 +39,7 @@ class FakeMastersComponent(FakeDBComponent):
     def setUp(self):
         self.masters = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Master):
                 self.masters[row.id] = dict(

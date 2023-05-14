@@ -34,7 +34,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        return self.db.insertTestData([
+        return self.db.insert_test_data([
             fakedb.Builder(id=1, name='buildera'),
             fakedb.Builder(id=2, name='builderb'),
             fakedb.Master(id=13),
@@ -90,7 +90,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        return self.db.insertTestData([
+        return self.db.insert_test_data([
             fakedb.Builder(id=1, name='buildera'),
             fakedb.Builder(id=2, name='builderb'),
             fakedb.Builder(id=3, name='builderTagA'),
@@ -185,7 +185,7 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = builders.Builder(self.master)
-        return self.master.db.insertTestData([
+        return self.master.db.insert_test_data([
             fakedb.Master(id=13),
             fakedb.Master(id=14),
         ])

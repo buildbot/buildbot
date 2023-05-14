@@ -34,7 +34,7 @@ class FakeTagsComponent(FakeDBComponent):
     def setUp(self):
         self.tags = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Tag):
                 self.tags[row.id] = dict(

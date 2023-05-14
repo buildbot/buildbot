@@ -58,7 +58,7 @@ class FakeBuildersComponent(FakeDBComponent):
         self.builder_masters = {}
         self.builders_tags = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Builder):
                 self.builders[row.id] = dict(
@@ -89,7 +89,7 @@ class FakeBuildersComponent(FakeDBComponent):
 
     def addBuilderMaster(self, builderid=None, masterid=None):
         if (builderid, masterid) not in list(self.builder_masters.values()):
-            self.insertTestData([
+            self.insert_test_data([
                 BuilderMaster(builderid=builderid, masterid=masterid),
             ])
         return defer.succeed(None)
@@ -126,7 +126,7 @@ class FakeBuildersComponent(FakeDBComponent):
     def addTestBuilder(self, builderid, name=None):
         if name is None:
             name = f"SomeBuilder-{builderid}"
-        self.db.insertTestData([
+        self.db.insert_test_data([
             Builder(id=builderid, name=name),
         ])
 

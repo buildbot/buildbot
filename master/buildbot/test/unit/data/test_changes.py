@@ -37,7 +37,7 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
                           repository='svn://...', codebase='cbsvn',
@@ -68,7 +68,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=133),
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
                           repository='svn://...', codebase='cbsvn',

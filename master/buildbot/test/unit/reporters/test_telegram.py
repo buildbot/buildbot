@@ -264,7 +264,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
     def test_command_list_workers(self):
         workers = ['worker1', 'worker2']
         for worker in workers:
-            self.master.db.workers.db.insertTestData([
+            self.master.db.workers.db.insert_test_data([
                 fakedb.Worker(name=worker)
             ])
         yield self.do_test_command('list', args='all workers')
@@ -276,7 +276,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
     def test_command_list_workers_online(self):
         self.setup_multi_builders()
         # Also set the connectedness:
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)
         ])
         yield self.do_test_command('list', args='all workers')
@@ -286,7 +286,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_list_changes(self):
-        self.master.db.workers.db.insertTestData([
+        self.master.db.workers.db.insert_test_data([
             fakedb.Change()
         ])
         yield self.do_test_command('list', args='2 changes')
@@ -294,7 +294,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_list_changes_long(self):
-        self.master.db.workers.db.insertTestData([
+        self.master.db.workers.db.insert_test_data([
             fakedb.Change() for i in range(200)
         ])
         yield self.do_test_command('list', args='all changes')

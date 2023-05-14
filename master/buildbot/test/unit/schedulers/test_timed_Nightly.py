@@ -44,7 +44,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                                      self.OBJECTID, self.SCHEDULERID,
                                      overrideBuildsetMethods=True)
 
-        self.master.db.insertTestData(
+        self.master.db.insert_test_data(
             [fakedb.Builder(name=bname) for bname in kwargs.get("builderNames", [])])
 
         # add a Clock to help checking timing issues
@@ -99,7 +99,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         # fakedb.Change requires changeid instead of number
         chd['changeid'] = chd['number']
         del chd['number']
-        self.db.insertTestData([fakedb.Change(**chd)])
+        self.db.insert_test_data([fakedb.Change(**chd)])
         return ch
 
     def setUp(self):

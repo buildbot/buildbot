@@ -37,7 +37,7 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
@@ -122,7 +122,7 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),

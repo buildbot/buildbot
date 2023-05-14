@@ -129,7 +129,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched.activate()
 
         # announce a buildset with a matching name..
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=93, revision='555',
                                branch='master', project='proj', repository='repo',
                                codebase='cb'),
@@ -186,7 +186,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched = self.makeScheduler()
 
         # insert some state, with more bsids than exist
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=1234),
             fakedb.Buildset(id=11),
             fakedb.Buildset(id=13),

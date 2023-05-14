@@ -46,7 +46,7 @@ class FakeStateComponent(FakeDBComponent):
         self.objects = {}
         self.states = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Object):
                 self.objects[(row.name, row.class_name)] = row.id

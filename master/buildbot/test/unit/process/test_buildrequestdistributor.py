@@ -101,7 +101,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
     def createBuilder(self, name, builderid=None, builder_config=None):
         if builderid is None:
             b = fakedb.Builder(name=name)
-            yield self.master.db.insertTestData([b])
+            yield self.master.db.insert_test_data([b])
             builderid = b.id
 
         bldr = mock.Mock(name=name)
@@ -390,7 +390,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         rows = rows or []
         exp_claims = exp_claims or []
         exp_builds = exp_builds or []
-        yield self.master.db.insertTestData(rows)
+        yield self.master.db.insert_test_data(rows)
 
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
 
@@ -617,7 +617,7 @@ class TestMaybeStartBuilds(TestBRDBase):
                                 submitted_at=135000),
         ]
 
-        yield self.master.db.insertTestData(rows)
+        yield self.master.db.insert_test_data(rows)
 
         # first time around, only #11 stays claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)

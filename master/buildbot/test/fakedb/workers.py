@@ -62,7 +62,7 @@ class FakeWorkersComponent(FakeDBComponent):
         self.configured = {}
         self.connected = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Worker):
                 self.workers[row.id] = dict(
@@ -185,7 +185,7 @@ class FakeWorkersComponent(FakeDBComponent):
         for k, v in list(self.configured.items()):
             if v['buildermasterid'] in allbuildermasterids and v['workerid'] == workerid:
                 del self.configured[k]
-        self.insertTestData([ConfiguredWorker(workerid=workerid,
+        self.insert_test_data([ConfiguredWorker(workerid=workerid,
                                               buildermasterid=buildermasterid)
                              for buildermasterid in buildermasterids])
         return defer.succeed(None)

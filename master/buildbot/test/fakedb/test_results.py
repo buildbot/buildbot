@@ -62,7 +62,7 @@ class FakeTestResultsComponent(FakeDBComponent):
         self.code_paths = {}
         self.names = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, TestName):
                 self.names[row.id] = row.values.copy()

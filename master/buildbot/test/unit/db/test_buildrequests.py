@@ -50,7 +50,7 @@ class Tests(interfaces.InterfaceTests):
         self.OTHER_MASTER_ID = self.MASTER_ID + 1111
         self.db.master.masterid = self.MASTER_ID
 
-        return self.insertTestData([
+        return self.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Master(id=self.MASTER_ID, name="fake master"),
             fakedb.Master(id=self.OTHER_MASTER_ID, name="other"),
@@ -66,7 +66,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuildRequest(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1,
                                 complete=1, results=75, priority=7,
                                 submitted_at=self.SUBMITTED_AT_EPOCH,
@@ -95,7 +95,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def do_test_getBuildRequests_claim_args(self, **kwargs):
         expected = kwargs.pop('expected')
-        yield self.insertTestData([
+        yield self.insert_test_data([
             # 50: claimed by this master
             fakedb.BuildRequest(
                 id=50, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -143,7 +143,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def do_test_getBuildRequests_buildername_arg(self, **kwargs):
         expected = kwargs.pop('expected')
-        yield self.insertTestData([
+        yield self.insert_test_data([
             # 8: 'bb'
             fakedb.BuildRequest(
                 id=8, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -162,7 +162,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def do_test_getBuildRequests_complete_arg(self, **kwargs):
         expected = kwargs.pop('expected')
-        yield self.insertTestData([
+        yield self.insert_test_data([
             # 70: incomplete
             fakedb.BuildRequest(id=70, buildsetid=self.BSID,
                                 builderid=self.BLDRID1,
@@ -201,7 +201,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuildRequests_bsid_arg(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             # the buildset that we are *not* looking for
             fakedb.Buildset(id=self.BSID + 1),
 
@@ -219,7 +219,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuildRequests_combo(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             # 44: everything we want
             fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1,
                                 complete=1, results=92,
@@ -270,7 +270,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def do_test_getBuildRequests_branch_arg(self, **kwargs):
         expected = kwargs.pop('expected')
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Buildset(id=self.BSID + 1),
             fakedb.BuildRequest(
                 id=70, buildsetid=self.BSID + 1, builderid=self.BLDRID1),
@@ -342,7 +342,7 @@ class Tests(interfaces.InterfaceTests):
         self.reactor.advance(now)
 
         try:
-            yield self.insertTestData(rows)
+            yield self.insert_test_data(rows)
             yield self.db.buildrequests.claimBuildRequests(brids=brids,
                                                            claimed_at=claimed_at)
             results = yield self.db.buildrequests.getBuildRequests()
@@ -443,7 +443,7 @@ class Tests(interfaces.InterfaceTests):
         now = 120350934
         self.reactor.advance(now)
 
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.BuildRequest(
                 id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
             fakedb.BuildRequest(
@@ -464,7 +464,7 @@ class Tests(interfaces.InterfaceTests):
         self.reactor.advance(now)
 
         try:
-            yield self.insertTestData(rows)
+            yield self.insert_test_data(rows)
             yield self.db.buildrequests.completeBuildRequests(
                 brids=brids, results=7, complete_at=complete_at)
             results = yield self.db.buildrequests.getBuildRequests()
@@ -568,7 +568,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def do_test_unclaimMethod(self, method, expected):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             # 44: a complete build (should not be unclaimed)
             fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1,
                                 complete=1, results=92,

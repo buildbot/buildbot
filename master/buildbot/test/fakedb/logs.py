@@ -51,7 +51,7 @@ class FakeLogsComponent(FakeDBComponent):
         self.logs = {}
         self.log_lines = {}  # { logid : [ lines ] }
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Log):
                 self.logs[row.id] = row.values.copy()

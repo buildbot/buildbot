@@ -149,7 +149,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
     @defer.inlineCallbacks
     def test_cleanup(self):
         # we reuse the fake db background data from db.logs unit tests
-        yield self.insertTestData(test_logs.Tests.backgroundData)
+        yield self.insert_test_data(test_logs.Tests.backgroundData)
 
         # insert a log with lots of redundancy
         LOGDATA = "xx\n" * 2000

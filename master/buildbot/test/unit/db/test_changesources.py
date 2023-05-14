@@ -72,7 +72,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_fresh(self):
         """setChangeSourceMaster with a good pair"""
-        yield self.insertTestData([self.cs42, self.master13])
+        yield self.insert_test_data([self.cs42, self.master13])
         yield self.db.changesources.setChangeSourceMaster(42, 13)
         cs = yield self.db.changesources.getChangeSource(42)
         self.assertEqual(cs['masterid'], 13)
@@ -80,7 +80,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_inactive_but_linked(self):
         """Inactive changesource but already claimed by an active master"""
-        d = self.insertTestData([
+        d = self.insert_test_data([
             self.cs87,
             self.master13, self.master14,
             self.cs87master14,
@@ -92,7 +92,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_active(self):
         """Active changesource already claimed by an active master"""
-        d = self.insertTestData([
+        d = self.insert_test_data([
             self.cs42, self.master13, self.cs42master13,
         ])
         d.addCallback(lambda _:
@@ -102,7 +102,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_None(self):
         """A 'None' master disconnects the changesource"""
-        yield self.insertTestData([
+        yield self.insert_test_data([
             self.cs87, self.master14, self.cs87master14,
         ])
         yield self.db.changesources.setChangeSourceMaster(87, None)
@@ -112,7 +112,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_None_unowned(self):
         """A 'None' master for a disconnected changesource"""
-        yield self.insertTestData([self.cs87])
+        yield self.insert_test_data([self.cs87])
         yield self.db.changesources.setChangeSourceMaster(87, None)
         cs = yield self.db.changesources.getChangeSource(87)
         self.assertEqual(cs['masterid'], None)
@@ -126,7 +126,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSource(self):
         """getChangeSource for a changesource that exists"""
-        yield self.insertTestData([self.cs87])
+        yield self.insert_test_data([self.cs87])
         cs = yield self.db.changesources.getChangeSource(87)
         validation.verifyDbDict(self, 'changesourcedict', cs)
         self.assertEqual(cs, dict(
@@ -143,7 +143,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSource_active(self):
         """getChangeSource for a changesource that exists and is active"""
-        yield self.insertTestData([self.cs42, self.master13,
+        yield self.insert_test_data([self.cs42, self.master13,
                                    self.cs42master13])
         cs = yield self.db.changesources.getChangeSource(42)
         validation.verifyDbDict(self, 'changesourcedict', cs)
@@ -155,7 +155,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSource_inactive_but_linked(self):
         """getChangeSource for a changesource that is assigned but is inactive"""
-        yield self.insertTestData([self.cs87, self.master14,
+        yield self.insert_test_data([self.cs87, self.master14,
                                    self.cs87master14])
         cs = yield self.db.changesources.getChangeSource(87)
         validation.verifyDbDict(self, 'changesourcedict', cs)
@@ -173,7 +173,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSources(self):
         """getChangeSources returns all changesources"""
-        yield self.insertTestData([
+        yield self.insert_test_data([
             self.cs42, self.master13, self.cs42master13,
             self.cs87,
         ])
@@ -190,7 +190,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSources_masterid(self):
         """getChangeSources returns all changesources for a given master"""
-        yield self.insertTestData([
+        yield self.insert_test_data([
             self.cs42, self.master13, self.cs42master13,
             self.cs87,
         ])
@@ -206,7 +206,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSources_active(self):
         """getChangeSources for (active changesources, all masters)"""
-        yield self.insertTestData([
+        yield self.insert_test_data([
             self.cs42, self.master13, self.cs42master13,
             self.cs87
         ])
@@ -222,7 +222,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSources_active_masterid(self):
         """getChangeSources returns (active changesources, given masters)"""
-        yield self.insertTestData([
+        yield self.insert_test_data([
             self.cs42, self.master13, self.cs42master13,
             self.cs87
         ])
@@ -247,7 +247,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSources_inactive(self):
         """getChangeSources returns (inactive changesources, all masters)"""
-        yield self.insertTestData([
+        yield self.insert_test_data([
             self.cs42, self.master13, self.cs42master13,
             self.cs87
         ])
@@ -263,7 +263,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSources_inactive_masterid(self):
         """getChangeSources returns (active changesources, given masters)"""
-        yield self.insertTestData([
+        yield self.insert_test_data([
             self.cs42, self.master13, self.cs42master13,
             self.cs87
         ])

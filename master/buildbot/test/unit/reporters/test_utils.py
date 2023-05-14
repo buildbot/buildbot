@@ -44,7 +44,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     def setupDb(self):
         self.db = self.master.db
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=98, results=SUCCESS, reason="testReason1"),
@@ -77,7 +77,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             fakedb.SourceStamp(id=235, patchid=99),
         ])
         for _id in (20, 21):
-            self.db.insertTestData([
+            self.db.insert_test_data([
                 fakedb.BuildProperty(
                     buildid=_id, name="workername", value="wrk"),
                 fakedb.BuildProperty(
@@ -409,7 +409,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     def test_getResponsibleUsersForBuildWithBadOwner(self):
         self.setUpLogging()
         self.setupDb()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.BuildProperty(
                 buildid=20, name="owner", value=["him"]),
         ])
@@ -420,7 +420,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     @defer.inlineCallbacks
     def test_getResponsibleUsersForBuildWithOwners(self):
         self.setupDb()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.BuildProperty(
                 buildid=20, name="owners", value=["him", "her"]),
         ])

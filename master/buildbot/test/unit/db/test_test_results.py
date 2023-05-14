@@ -65,7 +65,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_add_set_results(self):
-        yield self.insertTestData(self.common_data)
+        yield self.insert_test_data(self.common_data)
 
         result_values = [
             {'test_name': 'name1', 'value': '1'},
@@ -111,7 +111,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_names(self):
-        yield self.insertTestData(self.common_data + [
+        yield self.insert_test_data(self.common_data + [
             fakedb.TestName(id=103, builderid=88, name='name103'),
             fakedb.TestName(id=104, builderid=88, name='name104'),
             fakedb.TestName(id=105, builderid=88, name='name105'),
@@ -134,7 +134,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_code_paths(self):
-        yield self.insertTestData(self.common_data + [
+        yield self.insert_test_data(self.common_data + [
             fakedb.TestCodePath(id=103, builderid=88, path='path103'),
             fakedb.TestCodePath(id=104, builderid=88, path='path104'),
             fakedb.TestCodePath(id=105, builderid=88, path='path105'),

@@ -71,7 +71,7 @@ class FakeSchedulersComponent(FakeDBComponent):
         self.classifications = {}
         self.enabled = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, SchedulerChange):
                 cls = self.classifications.setdefault(row.schedulerid, {})

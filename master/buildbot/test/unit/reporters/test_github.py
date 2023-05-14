@@ -107,7 +107,7 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixi
     def test_source_stamp_no_props_nightly_scheduler(self):
         # no status updates are expected
 
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
@@ -186,7 +186,7 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixi
 
         # note that the first sourcestamp only has revision, second only branch and only the third
         # has both
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
@@ -400,7 +400,7 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
 
         # note that the first sourcestamp only has revision, second only branch and only the third
         # has both
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
