@@ -35,6 +35,7 @@ import {
   useTopbarItems,
 } from "buildbot-ui";
 import {BuildersTable} from "../../components/BuildersTable/BuildersTable";
+import {SettingCheckbox} from "../../components/SettingCheckbox/SettingCheckbox";
 
 const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
                            masters: DataCollection<Master>, showOldBuilders: boolean) => {
@@ -76,18 +77,8 @@ export const BuildersView = observer(() => {
       </form>
       <BuildersTable builders={filteredBuilders} allWorkers={workers} filterManager={filterManager}/>
       <div>
-        <div className="form-group">
-          <label className="checkbox-inline">
-            <input type="checkbox" name="Show old builders"
-                   checked={showOldBuilders}
-                   onChange={event => {
-                     buildbotGetSettings().setSetting("Builders.show_old_builders",
-                       event.target.checked);
-                     buildbotGetSettings().save();
-                   }}/>
-            {' '}Show old builders
-          </label>
-        </div>
+        <SettingCheckbox value={showOldBuilders} label="Show old builders"
+                         settingSelector="Builders.show_old_builders"/>
       </div>
     </div>
   );
