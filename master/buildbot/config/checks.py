@@ -30,3 +30,18 @@ def check_param_length(value, name, max_length):
         if len(shortest_value) > max_length:
             error(f"{name} '{value}' (shortest interpolation) exceeds maximum length of "
                   f"{max_length}")
+
+
+def check_param_type(value, default_value, class_inst, name, types, types_msg):
+    if isinstance(value, types):
+        return value
+    error(f"{class_inst.__name__} argument {name} must be an instance of {types_msg}")
+    return default_value
+
+
+def check_param_str(value, class_inst, name):
+    return check_param_type(value, "(unknown)", class_inst, name, (str,), "str")
+
+
+def check_param_str_none(value, class_inst, name):
+    return check_param_type(value, "(unknown)", class_inst, name, (str, type(None)), "str or None")
