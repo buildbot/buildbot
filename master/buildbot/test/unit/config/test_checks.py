@@ -39,5 +39,5 @@ class TestCheckParamLength(unittest.TestCase, config.ConfigErrorsMixin):
         check_param_length(Interpolate('123456%(prop:xy)s7890', kw='arg'), 'Step name', 10)
 
     def test_long_interpolate(self):
-        with self.assertRaisesConfigError("xceeds maximum length of 10"):
+        with self.assertRaisesConfigError("exceeds maximum length of 10"):
             check_param_length(Interpolate('123456%(prop:xy)s78901'), 'Step name', 10)
