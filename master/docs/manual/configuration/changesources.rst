@@ -11,7 +11,9 @@ A *change source* is the mechanism which is used by Buildbot to get information 
 
 These change sources fall broadly into two categories: pollers which periodically check the repository for updates; and hooks, where the repository is configured to notify Buildbot whenever an update occurs.
 
-A :class:`Change` is an abstract way that Buildbot uses to represent changes in any of the Version Control Systems it supports. It contains just enough information needed to acquire specific version of the tree when needed. This usually happens as one of the first steps in a :class:`Build`.
+A :class:`Change` is an abstract way that Buildbot uses to represent changes in any of the Version Control Systems it supports.
+It contains just enough information needed to acquire specific version of the tree when needed.
+This usually happens as one of the first steps in a :class:`Build`.
 
 This concept does not map perfectly to every version control system.
 For example, for CVS, Buildbot must guess that version updates made to multiple files within a short time represent a single change.
@@ -270,7 +272,8 @@ Using Maildirs
 
 A `maildir` is a simple directory structure originally developed for qmail that allows safe atomic update without locking.
 Create a base directory with three subdirectories: :file:`new`, :file:`tmp`, and :file:`cur`.
-When messages arrive, they are put into a uniquely-named file (using pids, timestamps, and random numbers) in :file:`tmp`. When the file is complete, it is atomically renamed into :file:`new`. Eventually the buildmaster notices the file in :file:`new`, reads and parses the contents, then moves it into :file:`cur`. A cronjob can be used to delete files in :file:`cur` at leisure.
+When messages arrive, they are put into a uniquely-named file (using pids, timestamps, and random numbers) in :file:`tmp`.
+When the file is complete, it is atomically renamed into :file:`new`. Eventually the buildmaster notices the file in :file:`new`, reads and parses the contents, then moves it into :file:`cur`. A cronjob can be used to delete files in :file:`cur` at leisure.
 
 Maildirs are frequently created with the :command:`maildirmake` tool, but a simple :samp:`mkdir -p ~/{MAILDIR}/\{cur,new,tmp\}` is pretty much equivalent.
 
@@ -1084,7 +1087,9 @@ GitHubPullrequestPoller
 
 .. py:class:: buildbot.changes.github.GitHubPullrequestPoller
 
-This :bb:chsrc:`GitHubPullrequestPoller` periodically polls the GitHub API for new or updated pull requests. The `author`, `revision`, `revlink`, `branch` and `files` fields in the recorded changes are populated with information extracted from the pull request. This allows to filter for certain changes in files and create a blamelist based on the authors in the GitHub pull request.
+This :bb:chsrc:`GitHubPullrequestPoller` periodically polls the GitHub API for new or updated pull requests.
+The `author`, `revision`, `revlink`, `branch` and `files` fields in the recorded changes are populated with information extracted from the pull request.
+This allows to filter for certain changes in files and create a blamelist based on the authors in the GitHub pull request.
 
 The :bb:chsrc:`GitHubPullrequestPoller` accepts the following arguments:
 
@@ -1111,19 +1116,24 @@ The :bb:chsrc:`GitHubPullrequestPoller` accepts the following arguments:
     GitHub API endpoint. Default is ``https://api.github.com``.
 
 ``pullrequest_filter``
-    A callable which takes a `dict` which contains the decoded `JSON` object of the GitHub pull request as argument. All fields specified by the GitHub API are accessible. If the callable returns `False` the pull request is ignored. Default is `True` which does not filter any pull requests.
+    A callable which takes a `dict` which contains the decoded `JSON` object of the GitHub pull request as argument. All fields specified by the GitHub API are accessible.
+    If the callable returns `False` the pull request is ignored. Default is `True` which does not filter any pull requests.
 
 ``token``
-    A GitHub API token to execute all requests to the API authenticated. It is strongly recommended to use a API token since it increases GitHub API rate limits significantly.
+    A GitHub API token to execute all requests to the API authenticated.
+    It is strongly recommended to use a API token since it increases GitHub API rate limits significantly.
 
 ``repository_type``
-   Set which type of repository link will be in the `repository` property. Possible values ``https``, ``svn``, ``git`` or ``svn``. This link can then be used in a Source Step to checkout the source.
+   Set which type of repository link will be in the `repository` property. Possible values ``https``, ``svn``, ``git`` or ``svn``.
+   This link can then be used in a Source Step to checkout the source.
 
 ``magic_link``
-   Set to `True` if the changes should contain ``refs/pulls/<PR #>/merge`` in the `branch` property and a link to the base `repository` in the repository property. These properties can be used by the :bb:step:`GitHub` source to pull from the special branch in the base repository. Default is `False`.
+   Set to `True` if the changes should contain ``refs/pulls/<PR #>/merge`` in the `branch` property and a link to the base `repository` in the repository property.
+   These properties can be used by the :bb:step:`GitHub` source to pull from the special branch in the base repository. Default is `False`.
 
 ``github_property_whitelist``
-   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``github``. For example ``github.number`` represents the pull request number. Available entries can be looked up in the GitHub API Documentation or by examining the data returned for a pull request by the API.
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``github``. For example ``github.number`` represents the pull request number.
+   Available entries can be looked up in the GitHub API Documentation or by examining the data returned for a pull request by the API.
 
 .. bb:chsrc:: BitbucketPullrequestPoller
 
@@ -1180,7 +1190,9 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
     Parse each revision's commit timestamp (default is ``True``), or ignore it in favor of the current time, so that recently processed commits appear together in the waterfall page.
 
 ``bitbucket_property_whitelist``
-   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``bitbucket``. For example ``bitbucket.id`` represents the pull request ID. Available entries can be looked up in the BitBucket API Documentation or by examining the data returned for a pull request by the API.
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``bitbucket``.
+   For example ``bitbucket.id`` represents the pull request ID.
+   Available entries can be looked up in the BitBucket API Documentation or by examining the data returned for a pull request by the API.
 
 ``encoding``
     This parameter is deprecated and has no effects.
@@ -1239,7 +1251,8 @@ GerritChangeSource
 
 The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH interface and uses its event source mechanism, `gerrit stream-events <https://gerrit-documentation.storage.googleapis.com/Documentation/2.2.1/cmd-stream-events.html>`_.
 
-Note that the Gerrit event stream is stateless and any events that occur while buildbot is not connected to Gerrit will be lost. See :bb:chsrc:`GerritEventLogPoller` for a stateful change source.
+Note that the Gerrit event stream is stateless and any events that occur while buildbot is not connected to Gerrit will be lost.
+See :bb:chsrc:`GerritEventLogPoller` for a stateful change source.
 
 The ``patchset-created`` and ``ref-updated`` events will be deduplicated, that is, if multiple events related to the same revision are received, only the first will be acted upon.
 This allows ``GerritChangeSource`` to be used together with :bb:chsrc:`GerritEventLogPoller`.
@@ -1532,7 +1545,8 @@ Files
 ~~~~~
 
 It also has a list of :attr:`files`, which are just the tree-relative filenames of any files that were added, deleted, or modified for this :class:`Change`.
-These filenames are checked by the :func:`fileIsImportant` function of a scheduler to decide whether it should trigger a new build or not. For example, the scheduler could use the following function to only run a build if a C file was checked in:
+These filenames are checked by the :func:`fileIsImportant` function of a scheduler to decide whether it should trigger a new build or not.
+For example, the scheduler could use the following function to only run a build if a C file was checked in:
 
 .. code-block:: python
 
