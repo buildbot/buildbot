@@ -1085,7 +1085,12 @@ class Model(base.DBConnectorComponent):
                 self.alembic_stamp(conn, alembic_scripts, current_script_rev_head)
                 return
 
-            context = alembic.runtime.migration.MigrationContext.configure(conn)
+            def upgrade(rev, context):
+                log.msg(f'Upgrading from {rev} to {current_script_rev_head}')
+                return alembic_scripts._upgrade_revs(current_script_rev_head, rev)
+
+            context = alembic.runtime.migration.MigrationContext.configure(conn,
+                                                                           opts={'fn': upgrade})
             current_rev = context.get_current_revision()
 
             if current_rev == current_script_rev_head:
@@ -1094,8 +1099,9 @@ class Model(base.DBConnectorComponent):
 
             log.msg('Upgrading database')
             with sautils.withoutSqliteForeignKeys(conn):
-                with context.begin_transaction():
-                    context.run_migrations()
+                with alembic.operations.Operations.context(context):
+                    with context.begin_transaction():
+                        context.run_migrations()
 
             log.msg('Upgrading database: done')
 
