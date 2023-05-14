@@ -38,6 +38,7 @@ from buildbot.util import ComparableMixin
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import service as util_service
 from buildbot.warnings import ConfigWarning
+from buildbot.warnings import warn_deprecated
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -296,6 +297,10 @@ class MasterConfig(util.ComparableMixin):
             if name in config_dict:
                 v = config_dict[name]
             elif alt_key and alt_key in config_dict:
+                warn_deprecated(
+                    "3.9.0",
+                    f"Configuration dictionary key {alt_key} is deprecated. Use {name} instead."
+                )
                 v = config_dict[alt_key]
             else:
                 return
