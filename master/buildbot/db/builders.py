@@ -102,7 +102,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                              (tbl.c.masterid == masterid))))
         return self.db.pool.do(thd)
 
-    def getBuilders(self, masterid=None, _builderid=None):
+    def getBuilders(self, masterid=None, projectid=None, _builderid=None):
         def thd(conn):
             bldr_tbl = self.db.model.builders
             bm_tbl = self.db.model.builder_masters
@@ -125,6 +125,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             if masterid is not None:
                 # filter the masterid from the limiting table
                 q = q.where(limiting_bm_tbl.c.masterid == masterid)
+            if projectid is not None:
+                q = q.where(bldr_tbl.c.projectid == projectid)
             if _builderid is not None:
                 q = q.where(bldr_tbl.c.id == _builderid)
 

@@ -60,7 +60,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getBuilders(self):
         @self.assertArgSpecMatches(self.db.builders.getBuilders)
-        def getBuilders(self, masterid=None):
+        def getBuilders(self, masterid=None, projectid=None):
             pass
 
     def test_signature_updateBuilderInfo(self):
@@ -257,6 +257,44 @@ class Tests(interfaces.InterfaceTests):
                  3], tags=[], description=None, projectid=None),
             dict(id=8, name='other:builder', masterids=[
                  3, 4], tags=[], description=None, projectid=None),
+        ], key=builderKey))
+
+    @defer.inlineCallbacks
+    def test_getBuilders_projectid(self):
+        yield self.insert_test_data([
+            fakedb.Project(id=201, name="p201"),
+            fakedb.Project(id=202, name="p202"),
+            fakedb.Builder(id=101, name="b101"),
+            fakedb.Builder(id=102, name="b102", projectid=201),
+            fakedb.Builder(id=103, name="b103", projectid=201),
+            fakedb.Builder(id=104, name="b104", projectid=202),
+            fakedb.Master(id=3, name='m1'),
+            fakedb.Master(id=4, name='m2'),
+            fakedb.BuilderMaster(builderid=101, masterid=3),
+            fakedb.BuilderMaster(builderid=102, masterid=3),
+            fakedb.BuilderMaster(builderid=103, masterid=4),
+            fakedb.BuilderMaster(builderid=104, masterid=4),
+        ])
+        builderlist = yield self.db.builders.getBuilders(projectid=201)
+        for builderdict in builderlist:
+            validation.verifyDbDict(self, 'builderdict', builderdict)
+        self.assertEqual(sorted(builderlist, key=builderKey), sorted([
+            {
+                "id": 102,
+                "name": "b102",
+                "masterids": [3],
+                "tags": [],
+                "description": None,
+                "projectid": 201,
+            },
+            {
+                "id": 103,
+                "name": "b103",
+                "masterids": [4],
+                "tags": [],
+                "description": None,
+                "projectid": 201,
+            },
         ], key=builderKey))
 
     @defer.inlineCallbacks

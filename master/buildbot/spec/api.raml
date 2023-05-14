@@ -373,6 +373,11 @@ types:
         get:
             is:
             - bbget: {bbtype: project}
+        /builders:
+            description: This path selects all builders for a project
+            get:
+                is:
+                - bbget: {bbtype: builder}
 
 /buildrequests:
     /{buildrequestid}:

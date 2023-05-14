@@ -91,11 +91,13 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         return self.db.insert_test_data([
+            fakedb.Project(id=201, name='project201'),
+            fakedb.Project(id=202, name='project202'),
             fakedb.Builder(id=1, name='buildera'),
             fakedb.Builder(id=2, name='builderb'),
-            fakedb.Builder(id=3, name='builderTagA'),
-            fakedb.Builder(id=4, name='builderTagB'),
-            fakedb.Builder(id=5, name='builderTagAB'),
+            fakedb.Builder(id=3, name='builderTagA', projectid=201),
+            fakedb.Builder(id=4, name='builderTagB', projectid=201),
+            fakedb.Builder(id=5, name='builderTagAB', projectid=202),
             fakedb.Tag(id=3, name="tagA"),
             fakedb.Tag(id=4, name="tagB"),
             fakedb.BuildersTags(builderid=3, tagid=3),
@@ -128,6 +130,16 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         self.assertEqual(sorted([b['builderid'] for b in builders]),
                          [2])
+
+    @defer.inlineCallbacks
+    def test_get_projectid(self):
+        builders = yield self.callGet(('projects', 201, 'builders'))
+
+        for b in builders:
+            self.validateData(b)
+
+        self.assertEqual(sorted([b['builderid'] for b in builders]),
+                         [3, 4])
 
     @defer.inlineCallbacks
     def test_get_masterid_missing(self):

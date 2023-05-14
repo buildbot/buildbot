@@ -56,12 +56,15 @@ class BuildersEndpoint(base.Endpoint):
     pathPatterns = """
         /builders
         /masters/n:masterid/builders
+        /projects/n:projectid/builders
     """
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         bdicts = yield self.master.db.builders.getBuilders(
-            masterid=kwargs.get('masterid', None))
+            masterid=kwargs.get('masterid', None),
+            projectid=kwargs.get('projectid', None)
+        )
         return [dict(builderid=bd['id'],
                      name=bd['name'],
                      masterids=bd['masterids'],

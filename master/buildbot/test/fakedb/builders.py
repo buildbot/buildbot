@@ -114,7 +114,7 @@ class FakeBuildersComponent(FakeDBComponent):
             return defer.succeed(self._row2dict(bldr))
         return defer.succeed(None)
 
-    def getBuilders(self, masterid=None):
+    def getBuilders(self, masterid=None, projectid=None):
         rv = []
         for builderid, bldr in self.builders.items():
             masterids = [bm[1] for bm in self.builder_masters.values()
@@ -125,6 +125,8 @@ class FakeBuildersComponent(FakeDBComponent):
         if masterid is not None:
             rv = [bd for bd in rv
                   if masterid in bd['masterids']]
+        if projectid is not None:
+            rv = [bd for bd in rv if bd['projectid'] == projectid]
         return defer.succeed(rv)
 
     def addTestBuilder(self, builderid, name=None):
