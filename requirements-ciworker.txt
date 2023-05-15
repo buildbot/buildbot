@@ -10,7 +10,7 @@ funcsigs==1.0.2
 future==0.18.3
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
-incremental==21.3.0;  python_version >= "3.6"
+incremental==22.10.0;  python_version >= "3.6"
 incremental==17.5.0;  python_version < "3.0"  # pyup: ignore
 # pin mock, because 4.x no longer supports Python 3.5
 mock==3.0.5  # pyup: ignore
