@@ -99,7 +99,7 @@ s3transfer==0.6.1
 scandir==1.10.0
 service-identity==21.1.0
 setuptools-trial==0.6.0
-singledispatch==3.7.0
+singledispatch==4.0.0
 six==1.16.0
 snowballstemmer==2.2.0
 SQLAlchemy==1.4.40
