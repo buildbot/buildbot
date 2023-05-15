@@ -28,7 +28,7 @@ cryptography==40.0.2
 docutils==0.20
 flake8==6.0.0
 future==0.18.3
-greenlet==1.1.3
+greenlet==2.0.2
 hyperlink==21.0.0
 idna==3.3
 imagesize==1.4.1
