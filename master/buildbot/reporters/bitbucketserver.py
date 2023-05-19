@@ -27,6 +27,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.generators.build import BuildStatusGenerator
+from buildbot.reporters.generators.buildrequest import BuildRequestGenerator
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
@@ -222,8 +223,10 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
     def _create_default_generators(self):
         start_formatter = MessageFormatterRenderable('Build started.')
         end_formatter = MessageFormatterRenderable('Build done.')
+        pending_formatter = MessageFormatterRenderable('Build pending.')
 
         return [
+            BuildRequestGenerator(formatter=pending_formatter),
             BuildStartEndStatusGenerator(start_formatter=start_formatter,
                                          end_formatter=end_formatter)
         ]
@@ -267,7 +270,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             state = SUCCESSFUL if build['results'] == SUCCESS else FAILED
             if self.duration:
                 duration = yield props.render(self.duration)
-            else:
+            elif "complete_at" in build:
                 td = build['complete_at'] - build['started_at']
                 duration = int(td.seconds * 1000)
             if self.test_results:
@@ -276,7 +279,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             state = INPROGRESS
             duration = None
 
-        parent_name = (build['parentbuilder'] or {}).get('name')
+        parent_name = (build.get('parentbuilder') or {}).get('name')
         if self.parent_name:
             parent = yield props.render(self.parent_name)
         elif parent_name:
@@ -287,7 +290,8 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         if self.status_name:
             status_name = yield props.render(self.status_name)
         else:
-            status_name = f'{props.getProperty("buildername")} #{props.getProperty("buildnumber")}'
+            build_identifier = props.getProperty("buildnumber") or "(build request)"
+            status_name = f'{props.getProperty("buildername")} #{build_identifier}'
             if parent_name:
                 status_name = \
                     f"{parent_name} #{build['parentbuild']['number']} \u00BB {status_name}"
