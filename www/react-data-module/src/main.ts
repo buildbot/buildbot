@@ -16,6 +16,7 @@ export * from "./data/classes/DataDescriptor";
 export * from "./data/classes/Forcescheduler";
 export * from "./data/classes/Log";
 export * from "./data/classes/Master";
+export * from "./data/classes/Project";
 export * from "./data/classes/Properties";
 export * from "./data/classes/Scheduler";
 export * from "./data/classes/Sourcestamp";

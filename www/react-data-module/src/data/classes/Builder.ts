@@ -22,6 +22,7 @@ export class Builder extends BaseClass {
   @observable masterids!: string[];
   @observable name!: string;
   @observable tags!: string[];
+  @observable projectid!: string|null;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.builderid));
@@ -35,6 +36,7 @@ export class Builder extends BaseClass {
     this.masterids = object.masterids;
     this.name = object.name;
     this.tags = object.tags;
+    this.projectid = object.projectid;
   }
 
   toObject() {
@@ -44,6 +46,7 @@ export class Builder extends BaseClass {
       masterids: this.masterids,
       name: this.name,
       tags: this.tags,
+      projectid: this.projectid,
     };
   }
 
