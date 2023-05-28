@@ -714,6 +714,7 @@ class MasterConfig(util.ComparableMixin):
             'ui_default_config',
             'versions',
             'ws_ping_interval',
+            'project_widgets',
             'graphql',
         }
         unknown = set(list(www_cfg)) - allowed
