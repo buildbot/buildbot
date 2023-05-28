@@ -48,7 +48,19 @@ class FixerMixin:
                 del change['sourcestampid']
         return change
     fieldMapping = {
+        'author': 'changes.author',
+        'branch': 'changes.branch',
+        'category': 'changes.category',
         'changeid': 'changes.changeid',
+        'codebase': 'changes.codebase',
+        'comments': 'changes.comments',
+        'committer': 'changes.committer',
+        'project': 'changes.project',
+        'repository': 'changes.repository',
+        'revision': 'changes.revision',
+        'revlink': 'changes.revlink',
+        'sourcestampid': 'changes.sourcestampid',
+        'when_timestamp': 'changes.when_timestamp',
     }
 
 
