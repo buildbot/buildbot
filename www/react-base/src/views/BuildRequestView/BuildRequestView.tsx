@@ -38,6 +38,7 @@ import {AlertNotification} from "../../components/AlertNotification/AlertNotific
 import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
+import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 
 const buildTopbarActions = (builder: Builder | null,
                             buildRequest: Buildrequest | null,
@@ -106,17 +107,10 @@ export const BuildRequestView = observer(() => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const topbarItems: TopbarItem[] = [];
-  if (builder !== null) {
-    topbarItems.push({caption: "Builders", route: "/builders"});
-    if (project !== null) {
-      topbarItems.push({caption: project.name, route: `/projects/${builder.projectid}`});
-    }
-    topbarItems.push({caption: builder.name, route: `/builders/${builder.id}`});
-  }
-  topbarItems.push({caption: "Build requests", route: null});
-  topbarItems.push({caption: buildRequestId.toString(), route: `/buildrequests/${buildRequestId}`});
-  useTopbarItems(topbarItems);
+  useTopbarItems(buildTopbarItemsForBuilder(builder, project, [
+    {caption: "Build requests", route: null},
+    {caption: buildRequestId.toString(), route: `/buildrequests/${buildRequestId}`},
+  ]));
 
   if (buildsQuery.array.length > 0 && redirectToBuild) {
     const build = buildsQuery.getNthOrNull(0);

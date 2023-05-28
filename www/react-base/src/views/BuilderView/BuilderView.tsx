@@ -37,6 +37,7 @@ import {AlertNotification} from "../../components/AlertNotification/AlertNotific
 import {ForceBuildModal} from "../../components/ForceBuildModal/ForceBuildModal";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 import {FaStop, FaSpinner} from "react-icons/fa";
+import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 
 const anyCancellableBuilds = (builds: DataCollection<Build>,
                               buildrequests: DataCollection<Buildrequest>) => {
@@ -131,15 +132,7 @@ export const BuilderView = observer(() => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const topbarItems: TopbarItem[] = [];
-  if (builder !== null) {
-    topbarItems.push({caption: "Builders", route: "/builders"});
-    if (project !== null) {
-      topbarItems.push({caption: project.name, route: `/projects/${builder.projectid}`});
-    }
-    topbarItems.push({caption: builder.name, route: `/builders/${builderid}`});
-  }
-  useTopbarItems(topbarItems);
+  useTopbarItems(buildTopbarItemsForBuilder(builder, project, []));
 
   const cancelWholeQueue = () => {
     if (isCancelling) {

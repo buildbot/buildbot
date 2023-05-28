@@ -62,6 +62,7 @@ import {ChangesTable} from "../../components/ChangesTable/ChangesTable";
 import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
 import {Tab, Table, Tabs} from "react-bootstrap";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
+import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 
 const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStopping: boolean,
                             doRebuild: () => void, doStop: () => void) => {
@@ -215,17 +216,9 @@ const BuildView = observer(() => {
     });
   };
 
-  const topbarItems: TopbarItem[] = [];
-  if (builder !== null) {
-    topbarItems.push({caption: "Builders", route: "/builders"});
-    if (project !== null) {
-      topbarItems.push({caption: project.name, route: `/projects/${builder.projectid}`});
-    }
-    topbarItems.push({caption: builder.name, route: `/builders/${builder.id}`});
-    topbarItems.push({caption: buildnumber.toString(),
-      route: `/builders/${builderid}/builds/${buildnumber}`});
-  }
-  useTopbarItems(topbarItems);
+  useTopbarItems(buildTopbarItemsForBuilder(builder, project, [
+    {caption: buildnumber.toString(), route: `/builders/${builderid}/builds/${buildnumber}`}
+  ]));
 
   const actions = buildTopbarActions(build, isRebuilding, isStopping, doRebuild, doStop);
 
