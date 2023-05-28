@@ -17,20 +17,22 @@
 
 import {observer} from "mobx-react";
 import {FaSpinner, FaStop} from "react-icons/fa";
-import {Fragment, useContext, useState} from "react";
+import {Fragment, useState} from "react";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
   Builder,
   Buildrequest,
   Buildset,
+  DataCollection,
+  Project,
   useDataAccessor,
   useDataApiQuery,
   useDataApiSinglePropertiesQuery
 } from "buildbot-data-js";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import {Tab, Tabs} from "react-bootstrap";
-import {TopbarAction, useTopbarActions, useTopbarItems} from "buildbot-ui";
+import {TopbarAction, TopbarItem, useTopbarActions, useTopbarItems} from "buildbot-ui";
 import {RawData} from "../../components/RawData/RawData";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
 import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
@@ -80,6 +82,12 @@ export const BuildRequestView = observer(() => {
     buildRequestsQuery.getRelated(buildRequest =>
       Builder.getAll(accessor, {id: buildRequest.builderid.toString()})));
 
+  const projectsQuery = useDataApiQuery(() => builderQuery.getRelated(builder => {
+    return builder.projectid === null
+      ? new DataCollection<Project>()
+      : Project.getAll(accessor, {id: builder.projectid.toString()})
+  }));
+
   const buildsetQuery = useDataApiQuery(() =>
     buildRequestsQuery.getRelated(buildRequest =>
       Buildset.getAll(accessor, {id: buildRequest.buildsetid.toString()})));
@@ -89,6 +97,7 @@ export const BuildRequestView = observer(() => {
 
   const buildRequest = buildRequestsQuery.getNthOrNull(0);
   const builder = builderQuery.getNthOrNull(0);
+  const project = projectsQuery.getNthOrNull(0);
   const buildset = buildsetQuery.getNthOrNull(0);
 
   const buildsetPropertiesQuery = useDataApiSinglePropertiesQuery(buildset,
@@ -97,13 +106,17 @@ export const BuildRequestView = observer(() => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useTopbarItems([
-    {caption: "Builders", route: "/builders"},
-    {caption: builder === null ? "..." : builder.name,
-      route: builder === null ? null : `/builders/${builder.id}`},
-    {caption: "Build requests", route: null},
-    {caption: buildRequestId.toString(), route: `/buildrequests/${buildRequestId}`},
-  ]);
+  const topbarItems: TopbarItem[] = [];
+  if (builder !== null) {
+    topbarItems.push({caption: "Builders", route: "/builders"});
+    if (project !== null) {
+      topbarItems.push({caption: project.name, route: `/projects/${builder.projectid}`});
+    }
+    topbarItems.push({caption: builder.name, route: `/builders/${builder.id}`});
+  }
+  topbarItems.push({caption: "Build requests", route: null});
+  topbarItems.push({caption: buildRequestId.toString(), route: `/buildrequests/${buildRequestId}`});
+  useTopbarItems(topbarItems);
 
   if (buildsQuery.array.length > 0 && redirectToBuild) {
     const build = buildsQuery.getNthOrNull(0);
