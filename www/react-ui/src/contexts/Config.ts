@@ -35,6 +35,11 @@ export type UserConfig = {
   full_name?: string;
 }
 
+export type ProjectWidgetsConfig = {
+  project_name?: string;
+  widgets: string[];
+}
+
 export type Config = {
   title: string;
   titleURL: string;
@@ -47,6 +52,7 @@ export type Config = {
   avatar_methods: AvatarConfig[];
   plugins: {[key: string]: any};
   user: UserConfig;
+  project_widgets: ProjectWidgetsConfig[];
   port: string;
   // Added by the frontend itself if it's running via a proxy.
   isProxy?: boolean;

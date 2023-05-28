@@ -26,6 +26,8 @@ import './views/ChangesView/ChangesView';
 import './views/ChangeBuildsView/ChangeBuildsView';
 import './views/LogView/LogView';
 import './views/MastersView/MastersView';
+import './views/ProjectView/ProjectView';
+import './views/ProjectsView/ProjectsView';
 import './views/SettingsView/SettingsView';
 import './views/SchedulersView/SchedulersView';
 import './views/WorkersView/WorkersView';

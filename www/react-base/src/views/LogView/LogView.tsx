@@ -19,9 +19,17 @@ import './LogView.scss';
 import {observer} from "mobx-react";
 import {useNavigate, useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
-import {Builder, Build, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
+import {
+  Builder,
+  Build,
+  useDataAccessor,
+  useDataApiQuery,
+  DataCollection,
+  Project
+} from "buildbot-data-js";
 import {useTopbarItems} from "buildbot-ui";
 import {LogViewer} from "../../components/LogViewer/LogViewer";
+import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 
 const LogView = observer(() => {
   const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
@@ -45,23 +53,27 @@ const LogView = observer(() => {
   const logsQuery = useDataApiQuery(() => stepsQuery.getRelated(s => s.getLogs({query: {
     slug__eq: logSlug
   }})));
+  const projectsQuery = useDataApiQuery(() => buildersQuery.getRelated(builder => {
+    return builder.projectid === null
+      ? new DataCollection<Project>()
+      : Project.getAll(accessor, {id: builder.projectid.toString()})
+  }));
 
   const build = buildsQuery.getNthOrNull(0);
   const step = stepsQuery.getNthOrNull(0);
   const log = logsQuery.getNthOrNull(0);
+  const project = projectsQuery.getNthOrNull(0);
 
   if (buildsQuery.resolved && build === null) {
     navigate(`/builders/${builderid}/builds/${buildnumber}`);
   }
 
-  useTopbarItems([
-    {caption: "Builders", route: "/builders"},
-    {caption: builder === null ? "..." : builder.name, route: `/builders/${builderid}`},
+  useTopbarItems(buildTopbarItemsForBuilder(builder, project, [
     {caption: buildnumber.toString(), route: `/builders/${builderid}/builds/${buildnumber}`},
     {caption: step === null ? "" : step.name, route: null},
     {caption: log === null ? "" : log.name,
      route: `/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${logSlug}`},
-  ]);
+  ]));
 
   return (
     <div className="container bb-logview">

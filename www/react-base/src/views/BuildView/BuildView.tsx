@@ -30,6 +30,7 @@ import {
   Change,
   DataCollection,
   DataPropertiesCollection,
+  Project,
   Worker,
   UNKNOWN,
   findOrNull,
@@ -40,13 +41,14 @@ import {
   useDataAccessor,
   useDataApiDynamicQuery,
   useDataApiQuery,
-  useDataApiSingleElementQuery
+  useDataApiSingleElementQuery,
 } from "buildbot-data-js";
 import {computed} from "mobx";
 import {
   BadgeRound,
   ChangeUserAvatar,
   TopbarAction,
+  TopbarItem,
   dateFormat,
   durationFromNowFormat,
   useCurrentTime,
@@ -60,6 +62,7 @@ import {ChangesTable} from "../../components/ChangesTable/ChangesTable";
 import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
 import {Tab, Table, Tabs} from "react-bootstrap";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
+import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 
 const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStopping: boolean,
                             doRebuild: () => void, doStop: () => void) => {
@@ -165,10 +168,17 @@ const BuildView = observer(() => {
   const workersQuery = useDataApiSingleElementQuery(build,
     b => Worker.getAll(accessor, {id: b.workerid.toString()}));
 
+  const projectsQuery = useDataApiQuery(() => buildersQuery.getRelated(builder => {
+    return builder.projectid === null
+      ? new DataCollection<Project>()
+      : Project.getAll(accessor, {id: builder.projectid.toString()})
+  }));
+
   const buildrequest = buildrequestsQuery.getNthOrNull(0);
   const buildset = buildsetsQuery.getNthOrNull(0);
   const parentBuild = parentBuildQuery.getNthOrNull(0);
   const worker = workersQuery.getNthOrNull(0);
+  const project = projectsQuery.getNthOrNull(0);
 
   if (buildsQuery.resolved && build === null) {
     navigate(`/builders/${builderid}`);
@@ -206,11 +216,9 @@ const BuildView = observer(() => {
     });
   };
 
-  useTopbarItems([
-    {caption: "Builders", route: "/builders"},
-    {caption: builder === null ? "..." : builder.name, route: `/builders/${builderid}`},
-    {caption: buildnumber.toString(), route: `/builders/${builderid}/builds/${buildnumber}`},
-  ]);
+  useTopbarItems(buildTopbarItemsForBuilder(builder, project, [
+    {caption: buildnumber.toString(), route: `/builders/${builderid}/builds/${buildnumber}`}
+  ]));
 
   const actions = buildTopbarActions(build, isRebuilding, isStopping, doRebuild, doStop);
 
