@@ -22,6 +22,7 @@ import {useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {Project, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
 import {ProjectBuildersWidget} from "../../components/ProjectWidgets/ProjectBuildersWidget";
+import {ProjectChangesWidget} from "../../components/ProjectWidgets/ProjectChangesWidget";
 import {
   ProjectPendingBuildRequestsWidget
 } from "../../components/ProjectWidgets/ProjectPendingBuildRequestsWidget";
@@ -45,6 +46,7 @@ export const ProjectView = observer(() => {
     <div className="bb-project-view-container">
       <ProjectBuildersWidget projectid={projectid} filterManager={filterManager}/>
       <ProjectPendingBuildRequestsWidget projectid={projectid}/>
+      <ProjectChangesWidget projectid={projectid}/>
     </div>
   );
 });
