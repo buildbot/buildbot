@@ -16,6 +16,7 @@
 */
 
 import {observer} from "mobx-react";
+import {Card} from "react-bootstrap";
 import {
   Project,
   useDataAccessor,
@@ -61,9 +62,11 @@ export const ProjectPendingBuildRequestsWidget = observer(({projectid}: ProjectP
   }
 
   return (
-    <>
-      <h5>Pending Build Requests</h5>
-      {renderContent()}
-    </>
+    <Card>
+      <Card.Body>
+        <h5>Pending Build Requests</h5>
+        {renderContent()}
+      </Card.Body>
+    </Card>
   );
 });
