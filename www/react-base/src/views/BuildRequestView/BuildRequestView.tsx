@@ -99,6 +99,8 @@ export const BuildRequestView = observer(() => {
 
   useTopbarItems([
     {caption: "Builders", route: "/builders"},
+    {caption: builder === null ? "..." : builder.name,
+      route: builder === null ? null : `/builders/${builder.id}`},
     {caption: "Build requests", route: null},
     {caption: buildRequestId.toString(), route: `/buildrequests/${buildRequestId}`},
   ]);
