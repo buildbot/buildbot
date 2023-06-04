@@ -37,11 +37,13 @@ import {Table} from "react-bootstrap";
 
 export type BuildersTableProps = {
   builders: Builder[];
+  isLoading: boolean;
   allWorkers: DataCollection<Worker>;
   filterManager: TagFilterManager;
 };
 
-export const BuildersTable = observer(({builders, allWorkers, filterManager}: BuildersTableProps) => {
+export const BuildersTable = observer(
+    ({builders, allWorkers, isLoading, filterManager}: BuildersTableProps) => {
   const accessor = useDataAccessor([]);
 
   const showWorkerName= buildbotGetSettings().getBooleanSetting("Builders.show_workers_name");
@@ -95,6 +97,12 @@ export const BuildersTable = observer(({builders, allWorkers, filterManager}: Bu
   const builderRowElements = builders.map(builder => {
 
     let buildElements: JSX.Element[] = [];
+    if (!buildsForFilteredBuilders.isResolved()) {
+      buildElements = [
+        <>Loading...</>
+      ];
+    }
+
     if (builder.id in buildsByFilteredBuilder) {
       let builds = [...buildsByFilteredBuilder[builder.id]];
       builds = builds
@@ -130,6 +138,14 @@ export const BuildersTable = observer(({builders, allWorkers, filterManager}: Bu
     );
   });
 
+  if (builderRowElements.length === 0) {
+    const noBuildersText = isLoading ? "Loading..." : "No builders to show";
+    builderRowElements.push(
+        <tr>
+          <td colSpan={4}>{noBuildersText}</td>
+        </tr>
+    );
+  }
   // FIXME: implement pagination
   return (
     <Table hover striped size="sm">
