@@ -16,7 +16,7 @@
 */
 
 import {observer} from "mobx-react";
-import {useState} from "react";
+import {useContext, useState} from "react";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
@@ -29,7 +29,7 @@ import {
   useDataApiQuery,
   useDataApiSingleElementQuery
 } from "buildbot-data-js";
-import {TopbarAction, useTopbarItems, useTopbarActions, TopbarItem} from "buildbot-ui";
+import {TopbarAction, useTopbarItems, useTopbarActions, ConfigContext} from "buildbot-ui";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
 import {useNavigate, useParams} from "react-router-dom";
@@ -94,6 +94,7 @@ const buildTopbarActions = (builds: DataCollection<Build>,
 export const BuilderView = observer(() => {
   const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
   const navigate = useNavigate();
+  const config = useContext(ConfigContext);
 
   const accessor = useDataAccessor([builderid]);
 
@@ -177,11 +178,25 @@ export const BuilderView = observer(() => {
     }
   };
 
+  const renderDescription = (description: string) => {
+    if (config.descriptions_are_html) {
+      return (
+        <div><TableHeading>Description:</TableHeading>
+          <div dangerouslySetInnerHTML={{__html: description}}/>
+        </div>
+      )
+    } else {
+      return (
+        <div><TableHeading>Description:</TableHeading>{description}</div>
+      );
+    }
+  };
+
   return (
     <div className="container">
       <AlertNotification text={errorMsg}/>
       {builder !== null && builder.description !== null
-        ? <div><TableHeading>Description:</TableHeading>{builder.description}</div>
+        ? renderDescription(builder.description)
         : <></>
       }
       <BuildRequestsTable buildrequests={buildrequests}/>
