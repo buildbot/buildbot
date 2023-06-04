@@ -48,7 +48,6 @@ export const ProjectsView = observer(() => {
       <Link to={`/projects/${project.projectid}`}>
         <li key={project.projectid} className="list-group-item">
             {project.name}
-          &nbsp;&nbsp;{project.description}
         </li>
       </Link>
     );

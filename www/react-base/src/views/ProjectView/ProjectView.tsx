@@ -35,8 +35,14 @@ import {ProjectChangesWidget} from "../../components/ProjectWidgets/ProjectChang
 import {
   ProjectPendingBuildRequestsWidget
 } from "../../components/ProjectWidgets/ProjectPendingBuildRequestsWidget";
+import {ProjectDescriptionWidget} from "../../components/ProjectWidgets/ProjectDescriptionWidget";
 
-const defaultWidgetsConfig = ["builders", "pending_build_requests", "changes"];
+const defaultWidgetsConfig = [
+  "description",
+  "builders",
+  "pending_build_requests",
+  "changes"
+];
 
 function findProjectWidgetsConfig(config: Config, name: string) {
   if (config.project_widgets === undefined) {
@@ -64,6 +70,9 @@ type KnownWidgetsConfig = {[name: string]: WidgetCallback};
 const knownWidgets: KnownWidgetsConfig = {
   "builders": (projectid, filterManager) => (
     <ProjectBuildersWidget projectid={projectid} filterManager={filterManager}/>
+  ),
+  "description": (projectid, filterManager) => (
+    <ProjectDescriptionWidget projectid={projectid}/>
   ),
   "pending_build_requests": (projectid, filterManager) => (
     <ProjectPendingBuildRequestsWidget projectid={projectid}/>
