@@ -1,0 +1,11 @@
+
+.bb-project-builders-widget .card-body {
+  & > h5 {
+    display: inline;
+    margin-right: 1rem;
+  }
+  & > form {
+    display: inline-block;
+  }
+}
+
