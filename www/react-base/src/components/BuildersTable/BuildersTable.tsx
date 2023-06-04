@@ -95,6 +95,12 @@ export const BuildersTable = observer(({builders, allWorkers, filterManager}: Bu
   const builderRowElements = builders.map(builder => {
 
     let buildElements: JSX.Element[] = [];
+    if (!buildsForFilteredBuilders.isResolved()) {
+      buildElements = [
+        <>Loading...</>
+      ];
+    }
+
     if (builder.id in buildsByFilteredBuilder) {
       let builds = [...buildsByFilteredBuilder[builder.id]];
       builds = builds
