@@ -69,16 +69,16 @@ type KnownWidgetsConfig = {[name: string]: WidgetCallback};
 
 const knownWidgets: KnownWidgetsConfig = {
   "builders": (projectid, filterManager) => (
-    <ProjectBuildersWidget projectid={projectid} filterManager={filterManager}/>
+    <ProjectBuildersWidget key="builders" projectid={projectid} filterManager={filterManager}/>
   ),
   "description": (projectid, filterManager) => (
-    <ProjectDescriptionWidget projectid={projectid}/>
+    <ProjectDescriptionWidget key="description" projectid={projectid}/>
   ),
   "pending_build_requests": (projectid, filterManager) => (
-    <ProjectPendingBuildRequestsWidget projectid={projectid}/>
+    <ProjectPendingBuildRequestsWidget key="pending_build_requests" projectid={projectid}/>
   ),
   "changes": (projectid, filterManager) => (
-    <ProjectChangesWidget projectid={projectid}/>
+    <ProjectChangesWidget key="changes" projectid={projectid}/>
   ),
 }
 
