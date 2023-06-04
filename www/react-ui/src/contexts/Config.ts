@@ -45,6 +45,7 @@ export type Config = {
   titleURL: string;
   buildbotURL: string;
   buildbotURLs?: string[];
+  descriptions_are_html: boolean;
   multiMaster: boolean;
   ui_default_config: {[key: string]: any};
   versions: string[][];
