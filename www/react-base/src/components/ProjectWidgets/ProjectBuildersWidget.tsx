@@ -75,7 +75,9 @@ export const ProjectBuildersWidget = observer(({projectid, filterManager}: Proje
                  onChange={e => setBuilderNameFilter(e.target.value)}
                  placeholder="Search for builders" className="bb-builders-view-form-control"/>
         </form>
-        <BuildersTable builders={filteredBuilders} allWorkers={workers} filterManager={filterManager}/>
+        <BuildersTable builders={filteredBuilders} allWorkers={workers}
+                       isLoading={!builders.isResolved() || !workers.isResolved()}
+                       filterManager={filterManager}/>
         <div>
           <SettingCheckbox value={showOldBuilders} label="Show old builders"
                            settingSelector="Builders.show_old_builders"/>
