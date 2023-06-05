@@ -78,7 +78,7 @@ Pillow==9.5.0
 platformdirs==3.5.1
 psutil==5.9.5
 pyaml==23.5.9
-pyasn1-modules==0.2.8
+pyasn1-modules==0.3.0
 pyasn1==0.4.8
 pycodestyle==2.9.1
 pycparser==2.21
