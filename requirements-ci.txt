@@ -89,7 +89,7 @@ pyOpenSSL==23.2.0
 pyparsing==3.0.9
 pypugjs==5.9.12
 python-dateutil==2.8.2
-python-subunit==1.4.0
+python-subunit==1.4.2
 pytz==2022.2.1
 PyYAML==6.0
 requests==2.31.0
