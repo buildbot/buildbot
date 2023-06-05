@@ -122,4 +122,4 @@ websocket-client==1.5.2
 Werkzeug==2.1.2  # pyup: ignore (moto 4.0.1 depends on werkzeug<2.2.0)
 wrapt==1.15.0
 xmltodict==0.13.0
-zope.interface==5.4.0
+zope.interface==6.0
