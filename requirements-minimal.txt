@@ -10,7 +10,7 @@ buildbot_www==3.5.0
 # while to remove no longer needed dependencies.
 
 alabaster==0.7.13
-alembic==1.8.1
+alembic==1.11.1
 astroid==1.4.9
 attrs==22.1.0
 autobahn==23.6.1
