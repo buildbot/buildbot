@@ -90,7 +90,7 @@ Twisted==22.10.0
 txaio==23.1.1
 txrequests==0.9.6
 typing-extensions==4.3.0
-urllib3==1.26.12
+urllib3==2.0.2
 Werkzeug==2.1.2
 wrapt==1.14.1
 xmltodict==0.13.0
