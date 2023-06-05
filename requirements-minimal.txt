@@ -86,7 +86,7 @@ SQLAlchemy==2.0.15
 tomli==2.0.1
 towncrier==22.12.0
 treq==22.2.0
-Twisted==22.4.0
+Twisted==22.10.0
 txaio==22.2.1
 txrequests==0.9.6
 typing-extensions==4.3.0
