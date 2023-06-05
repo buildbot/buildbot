@@ -79,7 +79,7 @@ platformdirs==3.5.1
 psutil==5.9.5
 pyaml==23.5.9
 pyasn1-modules==0.3.0
-pyasn1==0.4.8
+pyasn1==0.5.0
 pycodestyle==2.9.1
 pycparser==2.21
 pyenchant==3.2.2
