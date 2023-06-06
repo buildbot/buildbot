@@ -2203,16 +2203,16 @@ buffer-from@^1.0.0:
   integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
 
 "buildbot-data-js@link:../react-data-module":
-  version "0.0.0"
-  uid ""
+  version "4.0.0"
 
 "buildbot-plugin-support@link:../plugin_support":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 "buildbot-ui@link:../react-ui":
-  version "0.0.0"
-  uid ""
+  version "0.1.0"
+  dependencies:
+    buildbot-data-js "link:../react-data-module"
+    react-icons "^4.8.0"
 
 cache-base@^1.0.1:
   version "1.0.1"
@@ -5619,10 +5619,10 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
 
-vite@^4.1.4:
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-4.2.1.tgz#6c2eb337b0dfd80a9ded5922163b94949d7fc254"
-  integrity sha512-7MKhqdy0ISo4wnvwtqZkjke6XN4taqQ2TBaTccLIpOKv7Vp2h4Y+NpmWCnGDeSvvn45KxvWgGyb0MkHvY1vgbg==
+vite@^4.2.3:
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-4.2.3.tgz#067ada47ebd52e078d014bf1f92badda9d10564d"
+  integrity sha512-kLU+m2q0Y434Y1kCy3TchefAdtFso0ILi0dLyFV8Us3InXTU11H/B5ZTqCKIQHzSKNxVG/yEx813EA9f1imQ9A==
   dependencies:
     esbuild "^0.17.5"
     postcss "^8.4.21"
