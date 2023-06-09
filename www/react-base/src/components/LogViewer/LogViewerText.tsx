@@ -16,7 +16,7 @@
 */
 
 import './LogViewerText.scss'
-import {forwardRef, useRef, useState} from 'react';
+import {forwardRef, useEffect, useRef, useState} from 'react';
 import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer} from "mobx-react";
 import {Log, useDataAccessor} from "buildbot-data-js";
@@ -108,7 +108,11 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
   const currentSearchResultLine = manager.getCurrentSearchResultLine();
   if (currentSearchResultLineRef.current !== currentSearchResultLine && listRef.current !== null) {
     currentSearchResultLineRef.current = currentSearchResultLine;
-    listRef.current.scrollToItem(currentSearchResultLine);
+    setRenderCounter(c => {
+      // scrollToItem will
+      listRef.current!.scrollToItem(currentSearchResultLine);
+      return c + 1;
+    });
   }
 
   const LogTextArea: React.FC<Size> = ({height, width}) => (
