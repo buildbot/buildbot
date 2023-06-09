@@ -87,6 +87,10 @@
   color: black;
 }
 
+.bb-logviewer-result.bb-logviewer-result-current {
+  background-color: yellow;
+}
+
 .bb-logviewer-result-begin {
   border-top-left-radius: 0.3rem;
   border-bottom-left-radius: 0.3rem;

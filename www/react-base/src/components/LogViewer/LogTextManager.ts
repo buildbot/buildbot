@@ -38,6 +38,7 @@ import {
   isRangeWithinAnother,
   limitRangeToSize
 } from "../../util/Math";
+import {LineCssClasses} from "../../util/LineCssClasses";
 
 export type PendingRequest = {
   promise: CancellablePromise<any>;
@@ -110,7 +111,7 @@ export class LogTextManager {
 
   // Current search string or null if no search is being performed at the moment
   searchString: string|null = null;
-  // Valid only if searchString !== null
+  // Valid only if searchString !== null. Indices are the same as this.chunks
   chunkSearchResults: ChunkSearchResults[] = [];
   // Valid only if searchString !== null
   currentSearchResultIndex: number = -1;
@@ -352,7 +353,8 @@ export class LogTextManager {
         if (renderedLine !== undefined) {
           return renderedLine;
         }
-      } else if (renderedLineForSearch !== undefined) {
+      } else if (renderedLineForSearch !== undefined &&
+          index !== this.getCurrentSearchResultLine()) {
         return renderedLineForSearch;
       }
     } else {
@@ -407,6 +409,24 @@ export class LogTextManager {
       const renderedContentForSearch = renderer(index, lineType, style, lineContentForSearch);
       if (index >= this.renderedLinesStartIndex) {
         this.renderedLinesForSearch[index - this.renderedLinesStartIndex] = renderedContentForSearch;
+      }
+
+      if (index === this.getCurrentSearchResultLine()) {
+        // render uncached contents with the current line highlighted
+        const fakeHighlightedChunkResult: ChunkSearchResults = {
+          results: [this.getCurrentSearchChunkResult()!],
+          lineIndexToFirstChunkIndex: new Map<number, number>([[index, 0]]),
+        }
+        const lineCssClassesForSearchHighlight =
+            overlaySearchResultsOnLine(this.searchString!, fakeHighlightedChunkResult, index,
+                lineLength, lineCssClassesForSearch,
+                "", "bb-logviewer-result-current", "");
+
+        const lineContentForSearchHighlight = escapeClassesToHtml(
+            chunk.text, lineStartInChunk, lineEndInChunk,
+            [lineCssClassesWithText === undefined ? null : lineCssClassesWithText[0],
+              lineCssClassesForSearchHighlight]);
+        return renderer(index, lineType, style, lineContentForSearchHighlight);
       }
       return renderedContentForSearch;
     }
@@ -467,6 +487,14 @@ export class LogTextManager {
     }
     const chunkResults = this.chunkSearchResults[this.currentSearchResultChunkIndex].results;
     return chunkResults[this.currentSearchResultIndexInChunk].lineIndex;
+  }
+
+  getCurrentSearchChunkResult() {
+    if (this.currentSearchResultChunkIndex < 0) {
+      return null;
+    }
+    const chunkResults = this.chunkSearchResults[this.currentSearchResultChunkIndex].results;
+    return chunkResults[this.currentSearchResultIndexInChunk];
   }
 
   setNextSearchResult() {
