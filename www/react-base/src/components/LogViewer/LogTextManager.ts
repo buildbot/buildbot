@@ -670,6 +670,7 @@ export class LogTextManager {
       this.addChunk(chunk);
       this.onStateChange();
       this.pendingRequest = null;
+      this.maybeUpdatePendingRequest(this.currVisibleStartIndex, this.currVisibleEndIndex);
     }).catch((e: Error) => {
       if (e.name === "CanceledError") {
         return;
