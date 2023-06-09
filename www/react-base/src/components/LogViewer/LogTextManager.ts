@@ -16,7 +16,7 @@
 */
 
 import {ListOnItemsRenderedProps} from "react-window";
-import {IDataAccessor, CancellablePromise} from "buildbot-data-js";
+import {CancellablePromise} from "buildbot-data-js";
 import {escapeClassesToHtml} from "../../util/AnsiEscapeCodes";
 import {repositionPositionedArray} from "../../util/Array";
 import {binarySearchGreater, binarySearchLessEqual} from "../../util/BinarySearch";
@@ -38,6 +38,7 @@ import {
   isRangeWithinAnother,
   limitRangeToSize
 } from "../../util/Math";
+import {LineCssClasses} from "../../util/LineCssClasses";
 
 export type PendingRequest = {
   promise: CancellablePromise<any>;
@@ -57,13 +58,24 @@ export class LogTextManager {
   // Valid only if searchString !== null
   renderedLinesForSearch: (JSX.Element|null|undefined)[] = [];
 
-  accessor: IDataAccessor;
-  logid: number;
+  dataGetter: (offset: number, limit: number) => CancellablePromise<any>;
   logType: string;
+
+  // Controls the number of additional downloaded lines that are maintained outside the visible
+  // range. If the number of additional lines becomes lower, a download is initiated.
   downloadInitiateOverscanRowCount: number;
+
+  // Controls the number of additional lines that are downloaded outside the visible range if a
+  // download is requested. This number is usually greater than downloadInitiateOverscanRowCount
+  // so that if a download is requested it retrieves more lines than needed.
   downloadOverscanRowCount: number;
+
+  // How many lines outside the visible range are cached in downloaded form.
   cachedDownloadOverscanRowCount: number;
+
+  // How many lines outside the visible range are cached as rendered form.
   cacheRenderedOverscanRowCount: number;
+
   onStateChange: () => void;
 
   logNumLines = 0; // kept up to date
@@ -99,7 +111,7 @@ export class LogTextManager {
 
   // Current search string or null if no search is being performed at the moment
   searchString: string|null = null;
-  // Valid only if searchString !== null
+  // Valid only if searchString !== null. Indices are the same as this.chunks
   chunkSearchResults: ChunkSearchResults[] = [];
   // Valid only if searchString !== null
   currentSearchResultIndex: number = -1;
@@ -119,14 +131,14 @@ export class LogTextManager {
   lastRenderStartIndex = 0;
   lastRenderEndIndex = 0;
 
-  constructor(accessor: IDataAccessor, logid: number, logType: string,
+  constructor(dataGetter: (offset: number, limit: number) => CancellablePromise<any>,
+              logType: string,
               downloadInitiateOverscanRowCount: number,
               downloadOverscanRowCount: number, cachedDownloadOverscanRowCount: number,
               cacheRenderedOverscanRowCount: number,
               maxChunkLinesCount: number,
               onStateChange: () => void) {
-    this.accessor = accessor;
-    this.logid = logid;
+    this.dataGetter = dataGetter;
     this.logType = logType;
     this.downloadInitiateOverscanRowCount = downloadInitiateOverscanRowCount;
     this.downloadOverscanRowCount = downloadOverscanRowCount;
@@ -341,7 +353,8 @@ export class LogTextManager {
         if (renderedLine !== undefined) {
           return renderedLine;
         }
-      } else if (renderedLineForSearch !== undefined) {
+      } else if (renderedLineForSearch !== undefined &&
+          index !== this.getCurrentSearchResultLine()) {
         return renderedLineForSearch;
       }
     } else {
@@ -396,6 +409,24 @@ export class LogTextManager {
       const renderedContentForSearch = renderer(index, lineType, style, lineContentForSearch);
       if (index >= this.renderedLinesStartIndex) {
         this.renderedLinesForSearch[index - this.renderedLinesStartIndex] = renderedContentForSearch;
+      }
+
+      if (index === this.getCurrentSearchResultLine()) {
+        // render uncached contents with the current line highlighted
+        const fakeHighlightedChunkResult: ChunkSearchResults = {
+          results: [this.getCurrentSearchChunkResult()!],
+          lineIndexToFirstChunkIndex: new Map<number, number>([[index, 0]]),
+        }
+        const lineCssClassesForSearchHighlight =
+            overlaySearchResultsOnLine(this.searchString!, fakeHighlightedChunkResult, index,
+                lineLength, lineCssClassesForSearch,
+                "", "bb-logviewer-result-current", "");
+
+        const lineContentForSearchHighlight = escapeClassesToHtml(
+            chunk.text, lineStartInChunk, lineEndInChunk,
+            [lineCssClassesWithText === undefined ? null : lineCssClassesWithText[0],
+              lineCssClassesForSearchHighlight]);
+        return renderer(index, lineType, style, lineContentForSearchHighlight);
       }
       return renderedContentForSearch;
     }
@@ -458,6 +489,14 @@ export class LogTextManager {
     return chunkResults[this.currentSearchResultIndexInChunk].lineIndex;
   }
 
+  getCurrentSearchChunkResult() {
+    if (this.currentSearchResultChunkIndex < 0) {
+      return null;
+    }
+    const chunkResults = this.chunkSearchResults[this.currentSearchResultChunkIndex].results;
+    return chunkResults[this.currentSearchResultIndexInChunk];
+  }
+
   setNextSearchResult() {
     if (this.currentSearchResultChunkIndex < 0 || this.totalSearchResultCount === 0) {
       return;
@@ -508,7 +547,7 @@ export class LogTextManager {
   }
 
   maybeMergeChunkSearchResults(mergeIndex: number, prepend: boolean) {
-    if (this.searchString !== null) {
+    if (this.searchString === null) {
       return;
     }
     const prevResult = this.chunkSearchResults[mergeIndex];
@@ -656,10 +695,8 @@ export class LogTextManager {
     }
 
     this.pendingRequest = {
-      promise: this.accessor.getRaw(`logs/${this.logid}/contents`, {
-        offset: chunkDownloadStartIndex,
-        limit: chunkDownloadEndIndex - chunkDownloadStartIndex
-      }),
+      promise: this.dataGetter(chunkDownloadStartIndex,
+          chunkDownloadEndIndex - chunkDownloadStartIndex),
       startIndex: chunkDownloadStartIndex,
       endIndex: chunkDownloadEndIndex,
     };
@@ -670,6 +707,7 @@ export class LogTextManager {
       this.addChunk(chunk);
       this.onStateChange();
       this.pendingRequest = null;
+      this.maybeUpdatePendingRequest(this.currVisibleStartIndex, this.currVisibleEndIndex);
     }).catch((e: Error) => {
       if (e.name === "CanceledError") {
         return;

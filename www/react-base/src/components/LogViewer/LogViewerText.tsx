@@ -16,9 +16,9 @@
 */
 
 import './LogViewerText.scss'
-import {forwardRef, useRef, useState} from 'react';
+import {forwardRef, useEffect, useRef, useState} from 'react';
 import {generateStyleElement} from "../../util/AnsiEscapeCodes";
-import {observer, useLocalObservable} from "mobx-react";
+import {observer} from "mobx-react";
 import {Log, useDataAccessor} from "buildbot-data-js";
 import {ListOnItemsRenderedProps} from 'react-window';
 import AutoSizer, {Size} from "react-virtualized-auto-sizer";
@@ -57,10 +57,18 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
   const accessor = useDataAccessor([]);
   const [, setRenderCounter] = useState(0);
 
-  const manager = useLocalObservable(() =>
-    new LogTextManager(accessor, log.logid, log.type, downloadInitiateOverscanRowCount,
-      downloadOverscanRowCount, cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
-      maxChunkLinesCount, () => setRenderCounter(c => c + 1)));
+  const managerRef = useRef<LogTextManager|null>(null);
+  if (managerRef.current === null) {
+    managerRef.current = new LogTextManager(
+        (offset, limit) => accessor.getRaw(`logs/${log.logid}/contents`, {
+          offset: offset,
+          limit: limit,
+        }),
+        log.type, downloadInitiateOverscanRowCount,
+        downloadOverscanRowCount, cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
+        maxChunkLinesCount, () => setRenderCounter(c => c + 1));
+  }
+  const manager = managerRef.current!;
 
   manager.setLogNumLines(log.num_lines);
 
@@ -100,7 +108,11 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
   const currentSearchResultLine = manager.getCurrentSearchResultLine();
   if (currentSearchResultLineRef.current !== currentSearchResultLine && listRef.current !== null) {
     currentSearchResultLineRef.current = currentSearchResultLine;
-    listRef.current.scrollToItem(currentSearchResultLine);
+    setRenderCounter(c => {
+      // scrollToItem will
+      listRef.current!.scrollToItem(currentSearchResultLine);
+      return c + 1;
+    });
   }
 
   const LogTextArea: React.FC<Size> = ({height, width}) => (
