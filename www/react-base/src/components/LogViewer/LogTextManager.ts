@@ -16,7 +16,7 @@
 */
 
 import {ListOnItemsRenderedProps} from "react-window";
-import {IDataAccessor, CancellablePromise} from "buildbot-data-js";
+import {CancellablePromise} from "buildbot-data-js";
 import {escapeClassesToHtml} from "../../util/AnsiEscapeCodes";
 import {repositionPositionedArray} from "../../util/Array";
 import {binarySearchGreater, binarySearchLessEqual} from "../../util/BinarySearch";
@@ -57,8 +57,7 @@ export class LogTextManager {
   // Valid only if searchString !== null
   renderedLinesForSearch: (JSX.Element|null|undefined)[] = [];
 
-  accessor: IDataAccessor;
-  logid: number;
+  dataGetter: (offset: number, limit: number) => CancellablePromise<any>;
   logType: string;
   downloadInitiateOverscanRowCount: number;
   downloadOverscanRowCount: number;
@@ -119,14 +118,14 @@ export class LogTextManager {
   lastRenderStartIndex = 0;
   lastRenderEndIndex = 0;
 
-  constructor(accessor: IDataAccessor, logid: number, logType: string,
+  constructor(dataGetter: (offset: number, limit: number) => CancellablePromise<any>,
+              logType: string,
               downloadInitiateOverscanRowCount: number,
               downloadOverscanRowCount: number, cachedDownloadOverscanRowCount: number,
               cacheRenderedOverscanRowCount: number,
               maxChunkLinesCount: number,
               onStateChange: () => void) {
-    this.accessor = accessor;
-    this.logid = logid;
+    this.dataGetter = dataGetter;
     this.logType = logType;
     this.downloadInitiateOverscanRowCount = downloadInitiateOverscanRowCount;
     this.downloadOverscanRowCount = downloadOverscanRowCount;
@@ -656,10 +655,8 @@ export class LogTextManager {
     }
 
     this.pendingRequest = {
-      promise: this.accessor.getRaw(`logs/${this.logid}/contents`, {
-        offset: chunkDownloadStartIndex,
-        limit: chunkDownloadEndIndex - chunkDownloadStartIndex
-      }),
+      promise: this.dataGetter(chunkDownloadStartIndex,
+          chunkDownloadEndIndex - chunkDownloadStartIndex),
       startIndex: chunkDownloadStartIndex,
       endIndex: chunkDownloadEndIndex,
     };

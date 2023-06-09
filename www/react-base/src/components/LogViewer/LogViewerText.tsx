@@ -60,7 +60,11 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
   const managerRef = useRef<LogTextManager|null>(null);
   if (managerRef.current === null) {
     managerRef.current = new LogTextManager(
-        accessor, log.logid, log.type, downloadInitiateOverscanRowCount,
+        (offset, limit) => accessor.getRaw(`logs/${log.logid}/contents`, {
+          offset: offset,
+          limit: limit,
+        }),
+        log.type, downloadInitiateOverscanRowCount,
         downloadOverscanRowCount, cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
         maxChunkLinesCount, () => setRenderCounter(c => c + 1));
   }
