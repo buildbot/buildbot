@@ -18,7 +18,7 @@
 import './LogViewerText.scss'
 import {forwardRef, useRef, useState} from 'react';
 import {generateStyleElement} from "../../util/AnsiEscapeCodes";
-import {observer, useLocalObservable} from "mobx-react";
+import {observer} from "mobx-react";
 import {Log, useDataAccessor} from "buildbot-data-js";
 import {ListOnItemsRenderedProps} from 'react-window';
 import AutoSizer, {Size} from "react-virtualized-auto-sizer";
@@ -57,10 +57,14 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
   const accessor = useDataAccessor([]);
   const [, setRenderCounter] = useState(0);
 
-  const manager = useLocalObservable(() =>
-    new LogTextManager(accessor, log.logid, log.type, downloadInitiateOverscanRowCount,
-      downloadOverscanRowCount, cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
-      maxChunkLinesCount, () => setRenderCounter(c => c + 1)));
+  const managerRef = useRef<LogTextManager|null>(null);
+  if (managerRef.current === null) {
+    managerRef.current = new LogTextManager(
+        accessor, log.logid, log.type, downloadInitiateOverscanRowCount,
+        downloadOverscanRowCount, cachedDownloadOverscanRowCount, cacheRenderedOverscanRowCount,
+        maxChunkLinesCount, () => setRenderCounter(c => c + 1));
+  }
+  const manager = managerRef.current!;
 
   manager.setLogNumLines(log.num_lines);
 
