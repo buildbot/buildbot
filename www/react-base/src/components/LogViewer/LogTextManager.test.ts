@@ -16,6 +16,34 @@
 */
 
 import {LogTextManager} from "./LogTextManager";
+import {CancellablePromise} from "buildbot-data-js";
+
+const getFakeData = (offset: number, limit: number) => {
+  return new CancellablePromise((resolve, reject, onCancel) => {
+    let resultString = '';
+    for (let i = 0; i < limit; ++i) {
+      resultString += "oaaaaa\n";
+    }
+    resolve({logchunks: [{content: resultString}]});
+  });
+}
+
+type DataRequest = {offset: number, limit: number};
+type GetFakeDataFn = (offest: number, limit: number) => CancellablePromise<any>;
+
+function flushPromisesAndTimers() {
+  jest.runAllTimers();
+  return new Promise(resolve => setImmediate(resolve));
+}
+
+const createRecordingGetFakeData = () : [DataRequest[], GetFakeDataFn] => {
+  const requests: DataRequest[] = [];
+  const getFakeDataWrapper = (offset: number, limit: number) => {
+    requests.push({offset: offset, limit: limit});
+    return getFakeData(offset, limit);
+  }
+  return [requests, getFakeDataWrapper]
+}
 
 describe('LogTextManager', () => {
   describe('selectChunkDownloadRange', () => {
@@ -121,6 +149,172 @@ describe('LogTextManager', () => {
         .toEqual(true);
       expect(LogTextManager.shouldKeepPendingRequest(100, 200, false, 80, 100, 20, 50))
         .toEqual(false);
+    });
+  });
+
+  describe("download", () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('empty', async () => {
+      const [dataRequests, getFakeDataWrapper] = createRecordingGetFakeData();
+
+      const manager = new LogTextManager(
+          getFakeDataWrapper, 's', 10, 20, 1000, 1000, 50, () => {});
+
+      manager.setLogNumLines(0);
+      manager.requestRows({
+        overscanStartIndex: 0,
+        overscanStopIndex: 20,
+        visibleStartIndex: 0,
+        visibleStopIndex: 20,
+      });
+
+      await flushPromisesAndTimers();
+      expect(dataRequests).toEqual([]);
+    });
+
+    it('less than overscan', async () => {
+      const [dataRequests, getFakeDataWrapper] = createRecordingGetFakeData();
+
+      const manager = new LogTextManager(
+          getFakeDataWrapper, 's', 10, 20, 1000, 1000, 50, () => {});
+
+      manager.setLogNumLines(10);
+      manager.requestRows({
+        overscanStartIndex: 0,
+        overscanStopIndex: 20,
+        visibleStartIndex: 0,
+        visibleStopIndex: 20,
+      });
+
+      await flushPromisesAndTimers();
+      expect(dataRequests).toEqual([{offset: 0, limit: 10}]);
+    });
+
+    it('more than overscan', async () => {
+      const [dataRequests, getFakeDataWrapper] = createRecordingGetFakeData();
+
+      const manager = new LogTextManager(
+          getFakeDataWrapper, 's', 10, 20, 1000, 1000, 50, () => {});
+
+      manager.setLogNumLines(100);
+      manager.requestRows({
+        overscanStartIndex: 0,
+        overscanStopIndex: 20,
+        visibleStartIndex: 0,
+        visibleStopIndex: 20,
+      });
+
+      await flushPromisesAndTimers();
+      expect(dataRequests).toEqual([{offset: 0, limit: 40}]);
+    });
+
+    it('request outside log', async () => {
+      const [dataRequests, getFakeDataWrapper] = createRecordingGetFakeData();
+
+      const manager = new LogTextManager(
+          getFakeDataWrapper, 's', 10, 20, 1000, 1000, 50, () => {});
+
+      manager.setLogNumLines(100);
+      manager.requestRows({
+        overscanStartIndex: 200,
+        overscanStopIndex: 220,
+        visibleStartIndex: 200,
+        visibleStopIndex: 220,
+      });
+
+      await flushPromisesAndTimers();
+      expect(dataRequests).toEqual([]);
+    });
+
+    it('more than one request', async () => {
+      const [dataRequests, getFakeDataWrapper] = createRecordingGetFakeData();
+
+      const manager = new LogTextManager(
+          getFakeDataWrapper, 's', 10, 20, 1000, 1000, 50, () => {});
+
+      manager.setLogNumLines(1000);
+      manager.requestRows({
+        overscanStartIndex: 100,
+        overscanStopIndex: 320,
+        visibleStartIndex: 100,
+        visibleStopIndex: 320,
+      });
+
+      await flushPromisesAndTimers();
+      expect(dataRequests).toEqual([
+          {offset: 185, limit: 50},
+          {offset: 235, limit: 50},
+          {offset: 285, limit: 50},
+          {offset: 135, limit: 50},
+          {offset: 85, limit: 50},
+      ]);
+    });
+  });
+
+  describe("search", () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('no occurrences', async () => {
+      const [dataRequests, getFakeDataWrapper] = createRecordingGetFakeData();
+
+      const manager = new LogTextManager(
+          getFakeDataWrapper, 's', 10, 20, 1000, 1000, 50, () => {});
+
+      manager.setLogNumLines(100);
+      manager.requestRows({
+        overscanStartIndex: 0,
+        overscanStopIndex: 20,
+        visibleStartIndex: 0,
+        visibleStopIndex: 20,
+      });
+      await flushPromisesAndTimers();
+      expect(dataRequests).toEqual([
+          {offset: 0, limit: 40}
+      ]);
+
+      manager.setSearchString("bbbbb");
+
+      await flushPromisesAndTimers();
+      expect(dataRequests).toEqual([
+        {offset: 0, limit: 40},
+        {offset: 40, limit: 50},
+        {offset: 90, limit: 10},
+      ]);
+      expect(manager.totalSearchResultCount).toEqual(0);
+    });
+
+    it('with occurrences', async () => {
+      const [dataRequests, getFakeDataWrapper] = createRecordingGetFakeData();
+
+      const manager = new LogTextManager(
+          getFakeDataWrapper, 's', 10, 20, 1000, 1000, 50, () => {});
+
+      manager.setLogNumLines(100);
+      manager.requestRows({
+        overscanStartIndex: 0,
+        overscanStopIndex: 20,
+        visibleStartIndex: 0,
+        visibleStopIndex: 20,
+      });
+      await flushPromisesAndTimers();
+      expect(dataRequests).toEqual([
+        {offset: 0, limit: 40}
+      ]);
+
+      manager.setSearchString("aaaaa");
+
+      await flushPromisesAndTimers();
+      expect(dataRequests).toEqual([
+        {offset: 0, limit: 40},
+        {offset: 40, limit: 50},
+        {offset: 90, limit: 10},
+      ]);
+      expect(manager.totalSearchResultCount).toEqual(100);
     });
   });
 });

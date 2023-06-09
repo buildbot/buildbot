@@ -59,10 +59,22 @@ export class LogTextManager {
 
   dataGetter: (offset: number, limit: number) => CancellablePromise<any>;
   logType: string;
+
+  // Controls the number of additional downloaded lines that are maintained outside the visible
+  // range. If the number of additional lines becomes lower, a download is initiated.
   downloadInitiateOverscanRowCount: number;
+
+  // Controls the number of additional lines that are downloaded outside the visible range if a
+  // download is requested. This number is usually greater than downloadInitiateOverscanRowCount
+  // so that if a download is requested it retrieves more lines than needed.
   downloadOverscanRowCount: number;
+
+  // How many lines outside the visible range are cached in downloaded form.
   cachedDownloadOverscanRowCount: number;
+
+  // How many lines outside the visible range are cached as rendered form.
   cacheRenderedOverscanRowCount: number;
+
   onStateChange: () => void;
 
   logNumLines = 0; // kept up to date
@@ -507,7 +519,7 @@ export class LogTextManager {
   }
 
   maybeMergeChunkSearchResults(mergeIndex: number, prepend: boolean) {
-    if (this.searchString !== null) {
+    if (this.searchString === null) {
       return;
     }
     const prevResult = this.chunkSearchResults[mergeIndex];
