@@ -84,6 +84,10 @@ class BuildbotSession(server.Session):
                                  SESSION_SECRET_ALGORITHM])
         except jwt.exceptions.ExpiredSignatureError as e:
             raise KeyError(str(e)) from e
+        except jwt.exceptions.InvalidSignatureError as e:
+            log.msg(e, "Web request has been rejected."
+                    "Signature verification failed while decoding JWT.")
+            raise KeyError(str(e)) from e
         except Exception as e:
             log.err(e, "while decoding JWT session")
             raise KeyError(str(e)) from e
