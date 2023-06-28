@@ -137,7 +137,7 @@ The GitHub hook has the following parameters:
 
 ``token``
     If your GitHub or GitHub Enterprise instance does not allow anonymous communication, you need to provide an access token.
-    Instructions can be found here <https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/>
+    Instructions can be found `here <https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/>`_.
 
 ``pullrequest_ref`` (default ``merge``)
     Remote ref to test if a pull request is sent to the endpoint.
