@@ -227,7 +227,7 @@ def create_engine(name_or_url, **kwargs):
         u, kwargs, max_conns = special_case_mysql(u, kwargs)
 
     # remove the basedir as it may confuse sqlalchemy
-    basedir = kwargs.pop('basedir')
+    kwargs.pop('basedir')
 
     # calculate the maximum number of connections from the pool parameters,
     # if it hasn't already been specified
@@ -242,6 +242,4 @@ def create_engine(name_or_url, **kwargs):
     # by DBConnector to configure the surrounding thread pool
     engine.optimal_thread_pool_size = max_conns
 
-    # keep the basedir
-    engine.buildbot_basedir = basedir
     return engine
