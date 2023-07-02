@@ -650,11 +650,11 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
         builder_updates = []
         self.master.data.updates.updateBuilderInfo = \
-            lambda builderid, desc, projectid, tags: \
-            builder_updates.append((builderid, desc, projectid, tags))
+            lambda builderid, desc, desc_format, desc_html, projectid, tags: \
+            builder_updates.append((builderid, desc, desc_format, desc_html, projectid, tags))
 
         yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
-        self.assertEqual(builder_updates, [(1, new_desc, expect_project_id, new_tags)])
+        self.assertEqual(builder_updates, [(1, new_desc, None, None, expect_project_id, new_tags)])
 
     @defer.inlineCallbacks
     def test_does_not_reconfig_identical(self):
@@ -666,8 +666,8 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
         builder_updates = []
         self.master.data.updates.updateBuilderInfo = \
-            lambda builderid, desc, projectid, tags: \
-            builder_updates.append((builderid, desc, projectid, tags))
+            lambda builderid, desc, desc_format, desc_html, projectid, tags: \
+            builder_updates.append((builderid, desc, desc_format, desc_html, projectid, tags))
 
         yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
         self.assertEqual(builder_updates, [])

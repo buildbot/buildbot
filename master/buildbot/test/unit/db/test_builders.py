@@ -65,7 +65,8 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_updateBuilderInfo(self):
         @self.assertArgSpecMatches(self.db.builders.updateBuilderInfo)
-        def updateBuilderInfo(self, builderid, description, projectid, tags):
+        def updateBuilderInfo(self, builderid, description, description_format, description_html,
+                              projectid, tags):
             pass
 
     @defer.inlineCallbacks
@@ -77,23 +78,54 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Builder(id=8, name='some:builder8'),
         ])
 
-        yield self.db.builders.updateBuilderInfo(7, 'a string which describe the builder',
-                                                 123, ['cat1', 'cat2'])
-        yield self.db.builders.updateBuilderInfo(8, 'a string which describe the builder',
-                                                 124, [])
+        yield self.db.builders.updateBuilderInfo(
+            7,
+            'a string which describe the builder',
+            None,
+            None,
+            123,
+            ['cat1', 'cat2']
+        )
+        yield self.db.builders.updateBuilderInfo(
+            8,
+            'a string which describe the builder',
+            None,
+            None,
+            124,
+            []
+        )
         builderdict7 = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict7)
         builderdict7['tags'].sort()  # order is unspecified
-        self.assertEqual(builderdict7,
-                         dict(id=7, name='some:builder7', tags=['cat1', 'cat2'],
-                              masterids=[], description='a string which describe the builder',
-                              projectid=123))
+        self.assertEqual(
+            builderdict7,
+            {
+                "id": 7,
+                "name": 'some:builder7',
+                "tags": ["cat1", "cat2"],
+                "masterids": [],
+                "description": "a string which describe the builder",
+                "description_format": None,
+                "description_html": None,
+                "projectid": 123,
+            }
+        )
+
         builderdict8 = yield self.db.builders.getBuilder(8)
         validation.verifyDbDict(self, 'builderdict', builderdict8)
-        self.assertEqual(builderdict8,
-                         dict(id=8, name='some:builder8', tags=[],
-                              masterids=[], description='a string which describe the builder',
-                              projectid=124))
+        self.assertEqual(
+            builderdict8,
+            {
+                "id": 8,
+                "name": 'some:builder8',
+                "tags": [],
+                "masterids": [],
+                "description": "a string which describe the builder",
+                "description_format": None,
+                "description_html": None,
+                "projectid": 124,
+            }
+        )
 
     @defer.inlineCallbacks
     def test_update_builder_info_tags_case(self):
@@ -102,7 +134,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Builder(id=7, name='some:builder7', projectid=107),
         ])
 
-        yield self.db.builders.updateBuilderInfo(7, 'builder_desc', 107, ['Cat', 'cat'])
+        yield self.db.builders.updateBuilderInfo(7, 'builder_desc', None, None, 107, ['Cat', 'cat'])
         builder_dict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builder_dict)
         builder_dict['tags'].sort()  # order is unspecified
@@ -112,6 +144,8 @@ class Tests(interfaces.InterfaceTests):
             'tags': ['Cat', 'cat'],
             'masterids': [],
             'description': 'builder_desc',
+            'description_format': None,
+            'description_html': None,
             'projectid': 107,
         })
 
@@ -119,9 +153,19 @@ class Tests(interfaces.InterfaceTests):
     def test_findBuilderId_new(self):
         id = yield self.db.builders.findBuilderId('some:builder')
         builderdict = yield self.db.builders.getBuilder(id)
-        self.assertEqual(builderdict,
-                         dict(id=id, name='some:builder', tags=[],
-                              masterids=[], description=None, projectid=None))
+        self.assertEqual(
+            builderdict,
+            {
+                "id": id,
+                "name": 'some:builder',
+                "tags": [],
+                "masterids": [],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            }
+        )
 
     @defer.inlineCallbacks
     def test_findBuilderId_new_no_autoCreate(self):
@@ -147,9 +191,19 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
-        self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder', tags=[],
-                              masterids=[9, 10], description=None, projectid=None))
+        self.assertEqual(
+            builderdict,
+            {
+                "id": 7,
+                "name": 'some:builder',
+                "tags": [],
+                "masterids": [9, 10],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            }
+        )
 
     @defer.inlineCallbacks
     def test_addBuilderMaster_already_present(self):
@@ -162,9 +216,19 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
-        self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder', tags=[],
-                              masterids=[9], description=None, projectid=None))
+        self.assertEqual(
+            builderdict,
+            {
+                "id": 7,
+                "name": 'some:builder',
+                "tags": [],
+                "masterids": [9],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            }
+        )
 
     @defer.inlineCallbacks
     def test_removeBuilderMaster(self):
@@ -178,9 +242,19 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.builders.removeBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
-        self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder', tags=[],
-                              masterids=[10], description=None, projectid=None))
+        self.assertEqual(
+            builderdict,
+            {
+                "id": 7,
+                "name": 'some:builder',
+                "tags": [],
+                "masterids": [10],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            }
+        )
 
     @defer.inlineCallbacks
     def test_getBuilder_no_masters(self):
@@ -189,9 +263,19 @@ class Tests(interfaces.InterfaceTests):
         ])
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
-        self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder', tags=[],
-                              masterids=[], description=None, projectid=None))
+        self.assertEqual(
+            builderdict,
+            {
+                "id": 7,
+                "name": 'some:builder',
+                "tags": [],
+                "masterids": [],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            }
+        )
 
     @defer.inlineCallbacks
     def test_getBuilder_with_masters(self):
@@ -204,9 +288,19 @@ class Tests(interfaces.InterfaceTests):
         ])
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
-        self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder', tags=[],
-                              masterids=[3, 4], description=None, projectid=None))
+        self.assertEqual(
+            builderdict,
+            {
+                "id": 7,
+                "name": 'some:builder',
+                "tags": [],
+                "masterids": [3, 4],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            }
+        )
 
     @defer.inlineCallbacks
     def test_getBuilder_missing(self):
@@ -229,12 +323,36 @@ class Tests(interfaces.InterfaceTests):
         for builderdict in builderlist:
             validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(sorted(builderlist, key=builderKey), sorted([
-            dict(id=7, name='some:builder', masterids=[
-                 3], tags=[], description=None, projectid=None),
-            dict(id=8, name='other:builder', masterids=[
-                 3, 4], tags=[], description=None, projectid=None),
-            dict(id=9, name='third:builder',
-                 masterids=[], tags=[], description=None, projectid=None),
+            {
+                "id": 7,
+                "name": 'some:builder',
+                "tags": [],
+                "masterids": [3],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            },
+            {
+                "id": 8,
+                "name": 'other:builder',
+                "tags": [],
+                "masterids": [3, 4],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            },
+            {
+                "id": 9,
+                "name": 'third:builder',
+                "tags": [],
+                "masterids": [],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            },
         ], key=builderKey))
 
     @defer.inlineCallbacks
@@ -253,10 +371,26 @@ class Tests(interfaces.InterfaceTests):
         for builderdict in builderlist:
             validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(sorted(builderlist, key=builderKey), sorted([
-            dict(id=7, name='some:builder', masterids=[
-                 3], tags=[], description=None, projectid=None),
-            dict(id=8, name='other:builder', masterids=[
-                 3, 4], tags=[], description=None, projectid=None),
+            {
+                "id": 7,
+                "name": 'some:builder',
+                "tags": [],
+                "masterids": [3],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            },
+            {
+                "id": 8,
+                "name": 'other:builder',
+                "tags": [],
+                "masterids": [3, 4],
+                "description": None,
+                "description_format": None,
+                "description_html": None,
+                "projectid": None
+            },
         ], key=builderKey))
 
     @defer.inlineCallbacks
@@ -285,6 +419,8 @@ class Tests(interfaces.InterfaceTests):
                 "masterids": [3],
                 "tags": [],
                 "description": None,
+                "description_format": None,
+                "description_html": None,
                 "projectid": 201,
             },
             {
@@ -293,6 +429,8 @@ class Tests(interfaces.InterfaceTests):
                 "masterids": [4],
                 "tags": [],
                 "description": None,
+                "description_format": None,
+                "description_html": None,
                 "projectid": 201,
             },
         ], key=builderKey))

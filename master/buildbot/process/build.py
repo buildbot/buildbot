@@ -286,8 +286,9 @@ class Build(properties.PropertiesMixin):
                     tags.append('_virtual_')
 
                 projectid = yield self.builder.find_project_id(project)
-                self.master.data.updates.updateBuilderInfo(self._builderid, description,
-                                                           projectid, tags)
+                # Note: not waiting for updateBuilderInfo to complete
+                self.master.data.updates.updateBuilderInfo(self._builderid, description, None,
+                                                           None, projectid, tags)
 
             else:
                 self._builderid = yield self.builder.getBuilderId()

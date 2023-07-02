@@ -609,6 +609,10 @@ class Model(base.DBConnectorComponent):
         sa.Column('name', sa.Text, nullable=False),
         # builder's description
         sa.Column('description', sa.Text, nullable=True),
+        # the format of builder description
+        sa.Column('description_format', sa.Text, nullable=True),
+        # builder description rendered as html if description_format is not NULL
+        sa.Column('description_html', sa.Text, nullable=True),
         # builder's project
         sa.Column('projectid', sa.Integer,
                   sa.ForeignKey('projects.id', name="fk_builders_projectid",

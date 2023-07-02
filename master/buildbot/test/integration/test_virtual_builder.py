@@ -60,5 +60,10 @@ class ShellMaster(RunMasterBase):
         self.assertEqual(builders[1], {
             'masterids': [], 'tags': ['virtual', '_virtual_'],
             'projectid': 1,
-            'description': 'I am a virtual builder', 'name': 'virtual_testy', 'builderid': 2})
+            'description': 'I am a virtual builder',
+            'description_format': None,
+            'description_html': None,
+            'name': 'virtual_testy',
+            'builderid': 2
+        })
         self.assertEqual(build['builderid'], builders[1]['builderid'])

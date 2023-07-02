@@ -110,6 +110,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             projectid = yield self.find_project_id(builder_config.project)
             yield self.master.data.updates.updateBuilderInfo(builderid,
                                                              builder_config.description,
+                                                             builder_config.description_format,
+                                                             None,
                                                              projectid,
                                                              builder_config.tags)
 
@@ -123,6 +125,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if old_config is None:
             return True
         if old_config.description != new_config.description:
+            return True
+        if old_config.description_format != new_config.description_format:
             return True
         if old_config.project != new_config.project:
             return True

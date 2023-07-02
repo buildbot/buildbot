@@ -32,6 +32,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
                  tags=None,
                  nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
+                 description_format=None,
                  canStartBuild=None, defaultProperties=None, project=None
                  ):
         # name is required, and can't start with '_'
@@ -132,6 +133,15 @@ class BuilderConfig(util_config.ConfiguredMixin):
         self.collapseRequests = collapseRequests
 
         self.description = check_param_str_none(description, self.__class__, "description")
+        self.description_format = check_param_str_none(
+            description_format,
+            self.__class__,
+            "description_format"
+        )
+
+        if self.description_format is not None:
+            error("builder description type must be None")
+            self.description_format = None
 
     def getConfigDict(self):
         # note: this method will disappear eventually - put your smarts in the
@@ -163,4 +173,6 @@ class BuilderConfig(util_config.ConfiguredMixin):
             rv['collapseRequests'] = self.collapseRequests
         if self.description:
             rv['description'] = self.description
+            if self.description_format:
+                rv['description_format'] = self.description_format
         return rv

@@ -162,6 +162,12 @@ Other optional keys may be set on each ``BuilderConfig``:
 
     A builder may be given an arbitrary description, which will show up in the web status on the builder's page.
 
+``description_format``
+    (string, optional)
+
+    The format of the ``description`` parameter.
+    By default, it is ``None`` and corresponds to plain text format.
+
 .. index:: Builds; merging
 
 .. _Collapsing-Build-Requests:

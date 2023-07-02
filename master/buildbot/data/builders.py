@@ -45,6 +45,8 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
                     name=bdict['name'],
                     masterids=bdict['masterids'],
                     description=bdict['description'],
+                    description_format=bdict["description_format"],
+                    description_html=bdict["description_html"],
                     projectid=bdict['projectid'],
                     tags=bdict['tags'])
 
@@ -69,6 +71,8 @@ class BuildersEndpoint(base.Endpoint):
                      name=bd['name'],
                      masterids=bd['masterids'],
                      description=bd['description'],
+                     description_format=bd['description_format'],
+                     description_html=bd['description_html'],
                      projectid=bd['projectid'],
                      tags=bd['tags'])
                for bd in bdicts]
@@ -95,6 +99,8 @@ class Builder(base.ResourceType):
         name = types.Identifier(70)
         masterids = types.List(of=types.Integer())
         description = types.NoneOk(types.String())
+        description_format = types.NoneOk(types.String())
+        description_html = types.NoneOk(types.String())
         projectid = types.NoneOk(types.Integer())
         tags = types.List(of=types.String())
     entityType = EntityType(name, 'Builder')
@@ -110,9 +116,10 @@ class Builder(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def updateBuilderInfo(self, builderid, description, projectid, tags):
+    def updateBuilderInfo(self, builderid, description, description_format, description_html,
+                          projectid, tags):
         ret = yield self.master.db.builders.updateBuilderInfo(
-            builderid, description, projectid, tags
+            builderid, description, description_format, description_html, projectid, tags
         )
         yield self.generateEvent(builderid, "update")
         return ret
