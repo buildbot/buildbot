@@ -357,6 +357,7 @@ credc
 creds
 cribed
 croniter
+crontab
 css
 ctime
 ctrl
@@ -741,6 +742,7 @@ ivars
 jã
 jacobs
 james
+jan
 jason
 java
 javascript
