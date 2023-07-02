@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+from buildbot.config.checks import check_markdown_support
 from buildbot.config.checks import check_param_length
 from buildbot.config.checks import check_param_str_none
 from buildbot.config.errors import error
@@ -139,8 +140,13 @@ class BuilderConfig(util_config.ConfiguredMixin):
             "description_format"
         )
 
-        if self.description_format is not None:
-            error("builder description type must be None")
+        if self.description_format is None:
+            pass
+        elif self.description_format == "markdown":
+            if not check_markdown_support(self.__class__):  # pragma: no cover
+                self.description_format = None
+        else:
+            error("builder description format must be None or \"markdown\"")
             self.description_format = None
 
     def getConfigDict(self):

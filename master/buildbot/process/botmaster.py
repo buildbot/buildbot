@@ -25,6 +25,7 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import RETRY
 from buildbot.process.workerforbuilder import States
 from buildbot.util import service
+from buildbot.util.render_description import render_description
 
 
 class LockRetrieverMixin:
@@ -264,7 +265,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                 project_config.slug,
                 project_config.description,
                 project_config.description_format,
-                None
+                render_description(
+                    project_config.description,
+                    project_config.description_format
+                ),
             )
 
     @defer.inlineCallbacks

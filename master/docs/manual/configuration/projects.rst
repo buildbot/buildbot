@@ -33,6 +33,7 @@ The following arguments are optional:
 
     The format of the ``description`` parameter.
     By default, it is ``None`` and corresponds to plain text format.
+    Allowed values: ``None``, ``markdown``.
 
 Example
 ~~~~~~~

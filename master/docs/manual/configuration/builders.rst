@@ -167,6 +167,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 
     The format of the ``description`` parameter.
     By default, it is ``None`` and corresponds to plain text format.
+    Allowed values: ``None``, ``markdown``.
 
 .. index:: Builds; merging
 

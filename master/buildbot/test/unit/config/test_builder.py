@@ -156,6 +156,11 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
             BuilderConfig(name="a", workernames=['a'], factory=self.factory,
                           defaultProperties={'a' * 257: 'value'})
 
+    def test_description_wrong_format(self):
+        with self.assertRaisesConfigError("builder description format must be None"):
+            BuilderConfig(name="a", workernames=['a'], factory=self.factory,
+                          description_format="unknown")
+
     def test_getConfigDict(self):
         ns = lambda: 'ns'
         nb = lambda: 'nb'

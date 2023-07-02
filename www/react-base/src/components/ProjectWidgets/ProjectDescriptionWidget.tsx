@@ -60,7 +60,7 @@ export const ProjectDescriptionWidget = observer(({projectid}: ProjectDescriptio
     <Card>
       <Card.Body>
         <h5>Description</h5>
-        {renderDescription(project === null ? "..." : project.description!)}
+        {project === null ? <>...</> : renderDescription(project)}
       </Card.Body>
     </Card>
   );
