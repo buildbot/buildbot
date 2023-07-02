@@ -78,7 +78,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     @defer.inlineCallbacks
     def test_upgradeMaster_success(self):
         self.patchFunctions()
-        rv = yield upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig())
 
         self.assertEqual(rv, 0)
         self.assertInStdout('upgrade complete')
@@ -86,7 +86,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     @defer.inlineCallbacks
     def test_upgradeMaster_quiet(self):
         self.patchFunctions()
-        rv = yield upgrade_master.upgradeMaster(mkconfig(quiet=True), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig(quiet=True))
 
         self.assertEqual(rv, 0)
         self.assertWasQuiet()
@@ -94,14 +94,14 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     @defer.inlineCallbacks
     def test_upgradeMaster_bad_basedir(self):
         self.patchFunctions(basedirOk=False)
-        rv = yield upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig())
 
         self.assertEqual(rv, 1)
 
     @defer.inlineCallbacks
     def test_upgradeMaster_bad_config(self):
         self.patchFunctions(configOk=False)
-        rv = yield upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig())
 
         self.assertEqual(rv, 1)
 

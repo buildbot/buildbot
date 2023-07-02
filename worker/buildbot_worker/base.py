@@ -29,7 +29,6 @@ from twisted.python import log
 from twisted.spread import pb
 
 import buildbot_worker
-from buildbot_worker import monkeypatches
 from buildbot_worker.commands import base
 from buildbot_worker.commands import registry
 from buildbot_worker.util import buffer_manager
@@ -270,9 +269,6 @@ class WorkerBase(service.MultiService):
         self.basedir = basedir
 
     def startService(self):
-        # first, apply all monkeypatches
-        monkeypatches.patch_all()
-
         log.msg("Starting Worker -- version: {0}".format(buildbot_worker.version))
 
         if self.umask is not None:

@@ -22,7 +22,6 @@ import traceback
 from twisted.internet import defer
 from twisted.python import util
 
-from buildbot import monkeypatches
 from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
@@ -109,10 +108,7 @@ def upgradeDatabase(config, master_cfg):
 
 
 @in_reactor
-def upgradeMaster(config, _noMonkey=False):
-    if not _noMonkey:  # pragma: no cover
-        monkeypatches.patch_all()
-
+def upgradeMaster(config):
     if not base.checkBasedir(config):
         return defer.succeed(1)
 

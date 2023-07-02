@@ -20,7 +20,6 @@ import sys
 from twisted.internet import defer
 
 from buildbot import config as config_module
-from buildbot import monkeypatches
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
@@ -71,16 +70,14 @@ def doCleanupDatabase(config, master_cfg):
 
 
 @in_reactor
-def cleanupDatabase(config, _noMonkey=False):  # pragma: no cover
+def cleanupDatabase(config):  # pragma: no cover
     # we separate the actual implementation to protect unit tests
     # from @in_reactor which stops the reactor
-    if not _noMonkey:
-        monkeypatches.patch_all()
-    return _cleanupDatabase(config, _noMonkey=False)
+    return _cleanupDatabase(config)
 
 
 @defer.inlineCallbacks
-def _cleanupDatabase(config, _noMonkey=False):
+def _cleanupDatabase(config):
 
     if not base.checkBasedir(config):
         return 1
