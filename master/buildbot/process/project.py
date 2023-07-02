@@ -21,7 +21,7 @@ from buildbot.config.checks import check_param_str_none
 
 class Project(util.ComparableMixin):
 
-    compare_attls = ("name", "slug", "description")
+    compare_attrs = ("name", "slug", "description")
 
     def __init__(self, name, slug=None, description=None):
         if slug is None:
