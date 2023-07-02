@@ -178,7 +178,7 @@ export const BuilderView = observer(() => {
   };
 
   const renderDescription = (builder: Builder) => {
-    if (builder.description_format === null && builder.description_html !== null) {
+    if (builder.description_format !== null && builder.description_html !== null) {
       return (
         <div><TableHeading>Description:</TableHeading>
           <div dangerouslySetInnerHTML={{__html: builder.description_html}}/>
