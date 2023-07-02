@@ -167,6 +167,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                 'builder': {
                     'builderid': 80,
                     'description': None,
+                    'description_format': None,
+                    'description_html': None,
                     'projectid': None,
                     'masterids': [],
                     'name': 'Builder1',
@@ -269,6 +271,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                 'builder': {
                     'builderid': 80,
                     'description': None,
+                    'description_format': None,
+                    'description_html': None,
                     'projectid': None,
                     'masterids': [],
                     'name': 'Builder1',

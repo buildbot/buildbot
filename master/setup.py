@@ -489,8 +489,6 @@ if 'a' in version or 'b' in version:
             raise RuntimeError(VERSION_MSG)
 
 twisted_ver = ">= 18.7.0"
-autobahn_ver = ">= 0.16.0"
-txaio_ver = ">= 2.2.2"
 
 bundle_version = version.split("-")[0]
 
@@ -505,8 +503,8 @@ setup_args['install_requires'] = [
     'sqlalchemy >= 1.3.0, < 1.5',
     'alembic >= 1.6.0',
     'python-dateutil>=1.5',
-    'txaio ' + txaio_ver,
-    'autobahn ' + autobahn_ver,
+    "txaio >= 2.2.2",
+    "autobahn >= 0.16.0",
     'PyJWT',
     'pyyaml'
 ]
@@ -526,6 +524,7 @@ test_deps = [
     'boto3',
     'moto',
     'mock>=2.0.0',
+    "Markdown>=3.0.0",
     'parameterized',
 ]
 if sys.platform != 'win32':

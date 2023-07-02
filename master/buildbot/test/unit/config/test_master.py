@@ -66,7 +66,6 @@ global_defaults = dict(
     www=dict(port=None, plugins={},
              auth={'name': 'NoAuth'}, authz={},
              avatar_methods={'name': 'gravatar'},
-             descriptions_are_html=False,
              logfileName='http.log'),
 )
 
@@ -877,7 +876,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(www=dict(port=None,
                                     plugins={}, auth={'name': 'NoAuth'},
                                     authz={},
-                                    descriptions_are_html=False,
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http.log'))
 
@@ -887,7 +885,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(www=dict(port=9888,
                                     plugins={}, auth={'name': 'NoAuth'},
                                     authz={},
-                                    descriptions_are_html=False,
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http.log'))
 
@@ -898,7 +895,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                     plugins={'waterfall': {'foo': 'bar'}},
                                     auth={'name': 'NoAuth'},
                                     authz={},
-                                    descriptions_are_html=False,
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http.log'))
 
@@ -909,7 +905,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                     allowed_origins=['a', 'b'],
                                     plugins={}, auth={'name': 'NoAuth'},
                                     authz={},
-                                    descriptions_are_html=False,
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http.log'))
 
@@ -919,7 +914,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(www=dict(port=None,
                                     plugins={}, auth={'name': 'NoAuth'},
                                     authz={},
-                                    descriptions_are_html=False,
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http-access.log'))
 
@@ -933,7 +927,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(www=dict(port=None,
                                     plugins={}, auth={'name': 'NoAuth'},
                                     authz={},
-                                    descriptions_are_html=False,
                                     avatar_methods={'name': 'gravatar'},
                                     versions=custom_versions,
                                     logfileName='http.log'))

@@ -26,6 +26,8 @@ def project_db_to_data(dbdict):
         "name": dbdict["name"],
         "slug": dbdict["slug"],
         "description": dbdict["description"],
+        "description_format": dbdict["description_format"],
+        "description_html": dbdict["description_html"],
     }
 
 
@@ -82,6 +84,8 @@ class Project(base.ResourceType):
         name = types.Identifier(70)
         slug = types.Identifier(70)
         description = types.NoneOk(types.String())
+        description_format = types.NoneOk(types.String())
+        description_html = types.NoneOk(types.String())
     entityType = EntityType(name, 'Project')
 
     @defer.inlineCallbacks
@@ -95,6 +99,19 @@ class Project(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def update_project_info(self, projectid, slug, description):
-        yield self.master.db.projects.update_project_info(projectid, slug, description)
+    def update_project_info(
+        self,
+        projectid,
+        slug,
+        description,
+        description_format,
+        description_html
+    ):
+        yield self.master.db.projects.update_project_info(
+            projectid,
+            slug,
+            description,
+            description_format,
+            description_html
+        )
         yield self.generate_event(projectid, "update")

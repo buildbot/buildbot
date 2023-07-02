@@ -19,6 +19,8 @@ import {Master, masterDescriptor} from "./Master";
 export class Builder extends BaseClass {
   @observable builderid!: number;
   @observable description!: string|null;
+  @observable description_format!: string|null;
+  @observable description_html!: string|null;
   @observable masterids!: string[];
   @observable name!: string;
   @observable tags!: string[];
@@ -33,6 +35,8 @@ export class Builder extends BaseClass {
   @action update(object: any) {
     this.builderid = object.builderid;
     this.description = object.description;
+    this.description_format = object.description_format;
+    this.description_html = object.description_html;
     this.masterids = object.masterids;
     this.name = object.name;
     this.tags = object.tags;

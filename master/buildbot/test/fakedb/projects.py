@@ -26,10 +26,27 @@ class Project(Row):
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
 
-    def __init__(self, id=None, name='fake_project', name_hash=None, slug=None, description=None):
+    def __init__(
+        self,
+        id=None,
+        name='fake_project',
+        name_hash=None,
+        slug=None,
+        description=None,
+        description_format=None,
+        description_html=None,
+    ):
         if slug is None:
             slug = name
-        super().__init__(id=id, name=name, name_hash=name_hash, slug=slug, description=description)
+        super().__init__(
+            id=id,
+            name=name,
+            name_hash=name_hash,
+            slug=slug,
+            description=description,
+            description_format=description_format,
+            description_html=description_html
+        )
 
 
 class FakeProjectsComponent(FakeDBComponent):
@@ -44,7 +61,9 @@ class FakeProjectsComponent(FakeDBComponent):
                     "id": row.id,
                     "name": row.name,
                     "slug": row.slug,
-                    "description": row.description
+                    "description": row.description,
+                    "description_format": row.description_format,
+                    "description_html": row.description_html,
                 }
 
     # Returns Deferred that yields a number
@@ -60,6 +79,8 @@ class FakeProjectsComponent(FakeDBComponent):
             "name": name,
             "slug": name,
             "description": None,
+            "description_format": None,
+            "description_html": None,
         }
         return defer.succeed(id)
 
@@ -74,12 +95,21 @@ class FakeProjectsComponent(FakeDBComponent):
             rv.append(self._row2dict(project))
         return rv
 
-    def update_project_info(self, projectid, slug, description):
+    def update_project_info(
+        self,
+        projectid,
+        slug,
+        description,
+        description_format,
+        description_html
+    ):
         if projectid not in self.projects:
             return defer.succeed(None)
         project = self.projects[projectid]
         project['slug'] = slug
         project['description'] = description
+        project["description_format"] = description_format
+        project["description_html"] = description_html
         return defer.succeed(None)
 
     def _row2dict(self, row):

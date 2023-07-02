@@ -45,3 +45,14 @@ def check_param_str(value, class_inst, name):
 
 def check_param_str_none(value, class_inst, name):
     return check_param_type(value, "(unknown)", class_inst, name, (str, type(None)), "str or None")
+
+
+def check_markdown_support(class_inst):
+    try:
+        import markdown  # pylint: disable=import-outside-toplevel
+        [markdown]
+        return True
+    except ImportError:  # pragma: no cover
+        error(f"{class_inst.__name__}: Markdown library is required in order to use "
+              "markdown format ('pip install Markdown')")
+        return False

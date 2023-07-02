@@ -26,10 +26,25 @@ class Builder(Row):
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
 
-    def __init__(self, id=None, name='some:builder', name_hash=None, projectid=None,
-                 description=None):
-        super().__init__(id=id, name=name, name_hash=name_hash, projectid=projectid,
-                         description=description)
+    def __init__(
+        self,
+        id=None,
+        name='some:builder',
+        name_hash=None,
+        projectid=None,
+        description=None,
+        description_format=None,
+        description_html=None
+    ):
+        super().__init__(
+            id=id,
+            name=name,
+            name_hash=name_hash,
+            projectid=projectid,
+            description=description,
+            description_format=description_format,
+            description_html=description_html,
+        )
 
 
 class BuilderMaster(Row):
@@ -63,11 +78,14 @@ class FakeBuildersComponent(FakeDBComponent):
     def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Builder):
-                self.builders[row.id] = dict(
-                    id=row.id,
-                    name=row.name,
-                    projectid=row.projectid,
-                    description=row.description)
+                self.builders[row.id] = {
+                    "id": row.id,
+                    "name": row.name,
+                    "projectid": row.projectid,
+                    "description": row.description,
+                    "description_format": row.description_format,
+                    "description_html": row.description_html,
+                }
             if isinstance(row, BuilderMaster):
                 self.builder_masters[row.id] = \
                     (row.builderid, row.masterid)
@@ -83,12 +101,15 @@ class FakeBuildersComponent(FakeDBComponent):
         if not autoCreate:
             return defer.succeed(None)
         id = len(self.builders) + 1
-        self.builders[id] = dict(
-            id=id,
-            name=name,
-            description=None,
-            projectid=None,
-            tags=[])
+        self.builders[id] = {
+            "id": id,
+            "name": name,
+            "description": None,
+            "description_format": None,
+            "description_html": None,
+            "projectid": None,
+            "tags": []
+        }
         return defer.succeed(id)
 
     def addBuilderMaster(self, builderid=None, masterid=None):
@@ -137,10 +158,13 @@ class FakeBuildersComponent(FakeDBComponent):
         ])
 
     @defer.inlineCallbacks
-    def updateBuilderInfo(self, builderid, description, projectid, tags):
+    def updateBuilderInfo(self, builderid, description, description_format, description_html,
+                          projectid, tags):
         if builderid in self.builders:
             tags = tags if tags else []
             self.builders[builderid]['description'] = description
+            self.builders[builderid]['description_format'] = description_format
+            self.builders[builderid]['description_html'] = description_html
             self.builders[builderid]['projectid'] = projectid
 
             # add tags

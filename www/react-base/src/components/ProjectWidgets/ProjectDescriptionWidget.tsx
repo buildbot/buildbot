@@ -15,7 +15,6 @@
   Copyright Buildbot Team Members
 */
 
-import {useContext} from "react";
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
 import {
@@ -23,7 +22,6 @@ import {
   useDataAccessor,
   useDataApiQuery,
 } from "buildbot-data-js";
-import {ConfigContext} from "buildbot-ui";
 import {TableHeading} from "../TableHeading/TableHeading";
 
 export type ProjectDescriptionWidgetProps = {
@@ -32,21 +30,22 @@ export type ProjectDescriptionWidgetProps = {
 
 export const ProjectDescriptionWidget = observer(({projectid}: ProjectDescriptionWidgetProps) => {
   const accessor = useDataAccessor([]);
-  const config = useContext(ConfigContext);
 
   const projectQuery = useDataApiQuery(() => Project.getAll(accessor, {query: {
       projectid: projectid
     }}));
   const project = projectQuery.getNthOrNull(0);
 
-  const renderDescription = (description: string) => {
-    if (config.descriptions_are_html) {
+  const renderDescription = (project: Project) => {
+    if (project.description_format === null && project.description_html !== null) {
       return (
-        <div dangerouslySetInnerHTML={{__html: description}}/>
-      );
+          <div><TableHeading>Description:</TableHeading>
+            <div dangerouslySetInnerHTML={{__html: project.description_html}}/>
+          </div>
+      )
     } else {
       return (
-        <div><TableHeading>Description:</TableHeading>{description}</div>
+          <div><TableHeading>Description:</TableHeading>{project.description}</div>
       );
     }
   };
@@ -61,7 +60,7 @@ export const ProjectDescriptionWidget = observer(({projectid}: ProjectDescriptio
     <Card>
       <Card.Body>
         <h5>Description</h5>
-        {renderDescription(project === null ? "..." : project.description!)}
+        {project === null ? <>...</> : renderDescription(project)}
       </Card.Body>
     </Card>
   );

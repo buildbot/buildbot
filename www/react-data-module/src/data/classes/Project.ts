@@ -15,6 +15,8 @@ import {RequestQuery} from "../DataQuery";
 export class Project extends BaseClass {
   @observable projectid!: number;
   @observable description!: string|null;
+  @observable description_format!: string|null;
+  @observable description_html!: string|null;
   @observable slug!: string[];
   @observable name!: string;
 
@@ -29,6 +31,8 @@ export class Project extends BaseClass {
     this.name = object.name;
     this.slug = object.slug;
     this.description = object.description;
+    this.description_format = object.description_format;
+    this.description_html = object.description_html;
   }
 
   toObject() {

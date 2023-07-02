@@ -31,6 +31,7 @@ from buildbot.process.results import RETRY
 from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
+from buildbot.util.render_description import render_description
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -108,10 +109,18 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         if self._has_updated_config_info(old_config, builder_config):
             projectid = yield self.find_project_id(builder_config.project)
-            yield self.master.data.updates.updateBuilderInfo(builderid,
-                                                             builder_config.description,
-                                                             projectid,
-                                                             builder_config.tags)
+
+            yield self.master.data.updates.updateBuilderInfo(
+                builderid,
+                builder_config.description,
+                builder_config.description_format,
+                render_description(
+                    builder_config.description,
+                    builder_config.description_format
+                ),
+                projectid,
+                builder_config.tags
+            )
 
         # if we have any workers attached which are no longer configured,
         # drop them.
@@ -123,6 +132,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if old_config is None:
             return True
         if old_config.description != new_config.description:
+            return True
+        if old_config.description_format != new_config.description_format:
             return True
         if old_config.project != new_config.project:
             return True

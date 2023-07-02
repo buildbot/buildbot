@@ -25,6 +25,7 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import RETRY
 from buildbot.process.workerforbuilder import States
 from buildbot.util import service
+from buildbot.util.render_description import render_description
 
 
 class LockRetrieverMixin:
@@ -259,8 +260,16 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     def reconfigProjects(self, new_config):
         for project_config in new_config.projects:
             projectid = yield self.master.data.updates.find_project_id(project_config.name)
-            yield self.master.data.updates.update_project_info(projectid, project_config.slug,
-                                                               project_config.description)
+            yield self.master.data.updates.update_project_info(
+                projectid,
+                project_config.slug,
+                project_config.description,
+                project_config.description_format,
+                render_description(
+                    project_config.description,
+                    project_config.description_format
+                ),
+            )
 
     @defer.inlineCallbacks
     def reconfigServiceBuilders(self, new_config):

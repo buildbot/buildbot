@@ -122,16 +122,31 @@ class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
 
     def test_signature_update_project_info(self):
         @self.assertArgSpecMatches(self.master.data.updates.update_project_info)
-        def update_project_info(self, projectid, slug, description):
+        def update_project_info(
+            self,
+            projectid,
+            slug,
+            description,
+            description_format,
+            description_html
+        ):
             pass
 
     @defer.inlineCallbacks
     def test_update_project_info(self):
-        yield self.master.data.updates.update_project_info(13, 'slug13', 'project13 desc')
+        yield self.master.data.updates.update_project_info(
+            13,
+            "slug13",
+            "project13 desc",
+            "format",
+            "html desc",
+        )
         projects = yield self.master.db.projects.get_projects()
         self.assertEqual(projects, [{
             "id": 13,
             "name": "fake_project",
             "slug": "slug13",
             "description": "project13 desc",
+            "description_format": "format",
+            "description_html": "html desc",
         }])
