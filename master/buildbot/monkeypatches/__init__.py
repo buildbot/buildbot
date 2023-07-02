@@ -66,9 +66,8 @@ def patch_config_for_unit_tests():
     set_is_in_unit_tests(True)
 
 
-def patch_all(for_tests=False):
-    if for_tests:
-        patch_servicechecks()
-        patch_testcase_timeout()
-        patch_decorators()
-        patch_config_for_unit_tests()
+def patch_all():
+    patch_servicechecks()
+    patch_testcase_timeout()
+    patch_decorators()
+    patch_config_for_unit_tests()

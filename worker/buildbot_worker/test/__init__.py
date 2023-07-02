@@ -21,7 +21,7 @@ from twisted.trial import unittest
 from buildbot_worker import monkeypatches
 
 # apply the same patches the worker does when it starts
-monkeypatches.patch_all(for_tests=True)
+monkeypatches.patch_all()
 
 
 def add_debugging_monkeypatches():
