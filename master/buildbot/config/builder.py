@@ -15,6 +15,7 @@
 
 
 from buildbot.config.checks import check_param_length
+from buildbot.config.checks import check_param_str_none
 from buildbot.config.errors import error
 from buildbot.db.model import Model
 from buildbot.util import bytes2unicode
@@ -130,7 +131,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         self.collapseRequests = collapseRequests
 
-        self.description = description
+        self.description = check_param_str_none(description, self.__class__, "description")
 
     def getConfigDict(self):
         # note: this method will disappear eventually - put your smarts in the
