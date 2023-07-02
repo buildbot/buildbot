@@ -719,6 +719,37 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     """)
 
 
+class CopyDBOptions(base.BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.copydb.copy_database"
+
+    optFlags = [
+        ('quiet', 'q', "Don't display error messages or tracebacks"),
+    ]
+
+    def getSynopsis(self):
+        return "Usage:    buildbot copydb <destination_url> [<basedir>]"
+
+    def parseArgs(self, *args):
+        if len(args) == 0:
+            raise usage.UsageError("incorrect number of arguments")
+
+        self['destination_url'] = args[0]
+        args = args[1:]
+        super().parseArgs(*args)
+
+    longdesc = textwrap.dedent("""
+    This command copies all buildbot data from source database configured in the buildbot
+    configuration file to the destination database. The URL of the destination database is
+    specified on the command line.
+
+    The destination database must be empty. The script will initialize it in the same way as if
+    a new Buildbot installation was created.
+
+    Source database must be already upgraded to the current Buildbot version by the "buildbot
+    upgrade-master" command.
+    """)
+
+
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
 
@@ -756,7 +787,8 @@ class Options(usage.Options):
          "Output graphql api schema"],
         ['cleanupdb', None, CleanupDBOptions,
          "cleanup the database"
-         ]
+         ],
+        ["copy-db", None, CopyDBOptions, "copy the database"],
     ]
 
     def opt_version(self):
