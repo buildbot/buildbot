@@ -59,12 +59,25 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def update_project_info(self, projectid, slug, description):
+    def update_project_info(
+        self,
+        projectid,
+        slug,
+        description,
+        description_format,
+        description_html
+    ):
         def thd(conn):
             q = self.db.model.projects.update(
                 whereclause=(self.db.model.projects.c.id == projectid)
             )
-            conn.execute(q, slug=slug, description=description).close()
+            conn.execute(
+                q,
+                slug=slug,
+                description=description,
+                description_format=description_format,
+                description_html=description_html,
+            ).close()
         return self.db.pool.do(thd)
 
     def _project_dict_from_row(self, row):
@@ -72,5 +85,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
             "id": row.id,
             "name": row.name,
             "slug": row.slug,
-            "description": row.description
+            "description": row.description,
+            "description_format": row.description_format,
+            "description_html": row.description_html,
         }

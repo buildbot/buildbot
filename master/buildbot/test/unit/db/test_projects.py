@@ -46,7 +46,14 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_update_project_info(self):
         @self.assertArgSpecMatches(self.db.projects.update_project_info)
-        def update_project_info(self, projectid, slug, description):
+        def update_project_info(
+            self,
+            projectid,
+            slug,
+            description,
+            description_format,
+            description_html,
+        ):
             pass
 
     @defer.inlineCallbacks
@@ -55,7 +62,13 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Project(id=7, name='fake_project7'),
         ])
 
-        yield self.db.projects.update_project_info(7, 'slug7', 'project7 desc')
+        yield self.db.projects.update_project_info(
+            7,
+            "slug7",
+            "project7 desc",
+            "format",
+            "html desc"
+        )
         dbdict = yield self.db.projects.get_project(7)
         validation.verifyDbDict(self, 'projectdict', dbdict)
         self.assertEqual(dbdict, {
@@ -63,6 +76,8 @@ class Tests(interfaces.InterfaceTests):
             "name": "fake_project7",
             "slug": "slug7",
             "description": "project7 desc",
+            "description_format": "format",
+            "description_html": "html desc",
         })
 
     @defer.inlineCallbacks
@@ -74,6 +89,8 @@ class Tests(interfaces.InterfaceTests):
             "name": "fake_project",
             "slug": "fake_project",
             "description": None,
+            "description_format": None,
+            "description_html": None,
         })
 
     @defer.inlineCallbacks
@@ -101,6 +118,8 @@ class Tests(interfaces.InterfaceTests):
             "name": "fake_project",
             "slug": "fake_project",
             "description": None,
+            "description_format": None,
+            "description_html": None,
         })
 
     @defer.inlineCallbacks
@@ -124,18 +143,24 @@ class Tests(interfaces.InterfaceTests):
                 "name": "fake_project7",
                 "slug": "fake_project7",
                 "description": None,
+                "description_format": None,
+                "description_html": None,
             },
             {
                 "id": 8,
                 "name": "fake_project8",
                 "slug": "fake_project8",
                 "description": None,
+                "description_format": None,
+                "description_html": None,
             },
             {
                 "id": 9,
                 "name": "fake_project9",
                 "slug": "fake_project9",
                 "description": None,
+                "description_format": None,
+                "description_html": None,
             },
         ], key=project_key))
 

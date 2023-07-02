@@ -211,8 +211,21 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def update_project_info(self, projectid, slug, description):
-        yield self.master.db.projects.update_project_info(projectid, slug, description)
+    def update_project_info(
+        self,
+        projectid,
+        slug,
+        description,
+        description_format,
+        description_html,
+    ):
+        yield self.master.db.projects.update_project_info(
+            projectid,
+            slug,
+            description,
+            description_format,
+            description_html
+        )
 
     def find_project_id(self, name):
         validation.verifyType(self.testcase, 'project name', name,

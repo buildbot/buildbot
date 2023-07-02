@@ -375,6 +375,8 @@ dbdict['projectdict'] = DictValidator(
     name=StringValidator(),
     slug=StringValidator(),
     description=NoneOk(StringValidator()),
+    description_format=NoneOk(StringValidator()),
+    description_html=NoneOk(StringValidator()),
 )
 
 # builder

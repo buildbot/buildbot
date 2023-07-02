@@ -259,8 +259,13 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     def reconfigProjects(self, new_config):
         for project_config in new_config.projects:
             projectid = yield self.master.data.updates.find_project_id(project_config.name)
-            yield self.master.data.updates.update_project_info(projectid, project_config.slug,
-                                                               project_config.description)
+            yield self.master.data.updates.update_project_info(
+                projectid,
+                project_config.slug,
+                project_config.description,
+                project_config.description_format,
+                None
+            )
 
     @defer.inlineCallbacks
     def reconfigServiceBuilders(self, new_config):
