@@ -21,10 +21,18 @@ For more information on the Project function in Buildbot, see :ref:`the Concepts
 The following arguments are optional:
 
 ``slug``
+    (string, optional)
     A short string that is used to refer to the project in the URLs of the Buildbot web UI.
 
 ``description``
+    (string, optional)
     A description of the project that appears in the Buildbot web UI.
+
+``description_format``
+    (string, optional)
+
+    The format of the ``description`` parameter.
+    By default, it is ``None`` and corresponds to plain text format.
 
 Example
 ~~~~~~~

@@ -48,11 +48,6 @@ This server is configured with the ``www`` configuration key, which specifies a 
     If true, then debugging information will be output to the browser.
     This is best set to false (the default) on production systems, to avoid the possibility of information leakage.
 
-``descriptions_are_html``
-    If ``True``, then builder and project descriptions are interpreted and rendered as HTML.
-    Use only if the builder and project descriptions are coming from a trusted source.
-    Otherwise this option introduces cross site scripting security vulnerability.
-
 ``allowed_origins``
     This gives a list of origins which are allowed to access the Buildbot API (including control via JSONRPC 2.0).
     It implements cross-origin request sharing (CORS), allowing pages at origins other than the Buildbot UI to use the API.

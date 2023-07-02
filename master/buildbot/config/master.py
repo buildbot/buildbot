@@ -183,7 +183,6 @@ class MasterConfig(util.ComparableMixin):
             authz=authz.Authz(),
             avatar_methods=avatar.AvatarGravatar(),
             logfileName='http.log',
-            descriptions_are_html=False,
         )
         self.services = {}
 
@@ -704,7 +703,6 @@ class MasterConfig(util.ComparableMixin):
             'custom_templates_dir',
             'debug',
             'default_page',
-            'descriptions_are_html',
             'json_cache_seconds',
             'jsonp',
             'logRotateLength',

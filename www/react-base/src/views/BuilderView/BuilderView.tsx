@@ -16,7 +16,7 @@
 */
 
 import {observer} from "mobx-react";
-import {useContext, useState} from "react";
+import {useState} from "react";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
@@ -29,7 +29,7 @@ import {
   useDataApiQuery,
   useDataApiSingleElementQuery
 } from "buildbot-data-js";
-import {TopbarAction, useTopbarItems, useTopbarActions, ConfigContext} from "buildbot-ui";
+import {TopbarAction, useTopbarItems, useTopbarActions, TopbarItem} from "buildbot-ui";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
 import {useNavigate, useParams} from "react-router-dom";
@@ -94,7 +94,6 @@ const buildTopbarActions = (builds: DataCollection<Build>,
 export const BuilderView = observer(() => {
   const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
   const navigate = useNavigate();
-  const config = useContext(ConfigContext);
 
   const accessor = useDataAccessor([builderid]);
 
@@ -178,16 +177,16 @@ export const BuilderView = observer(() => {
     }
   };
 
-  const renderDescription = (description: string) => {
-    if (config.descriptions_are_html) {
+  const renderDescription = (builder: Builder) => {
+    if (builder.description_format === null && builder.description_html !== null) {
       return (
         <div><TableHeading>Description:</TableHeading>
-          <div dangerouslySetInnerHTML={{__html: description}}/>
+          <div dangerouslySetInnerHTML={{__html: builder.description_html}}/>
         </div>
       )
     } else {
       return (
-        <div><TableHeading>Description:</TableHeading>{description}</div>
+        <div><TableHeading>Description:</TableHeading>{builder.description}</div>
       );
     }
   };
@@ -196,7 +195,7 @@ export const BuilderView = observer(() => {
     <div className="container">
       <AlertNotification text={errorMsg}/>
       {builder !== null && builder.description !== null
-        ? renderDescription(builder.description)
+        ? renderDescription(builder)
         : <></>
       }
       <BuildRequestsTable buildrequests={buildrequests}/>
