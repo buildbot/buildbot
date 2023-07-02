@@ -230,9 +230,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.patch(connector.DBConnector, 'setup', setup)
         upgrade = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(model.Model, 'upgrade', upgrade)
-        yield create_master.createDB(
-            mkconfig(basedir='test', quiet=True),
-            _noMonkey=True)
+        yield create_master.createDB(mkconfig(basedir='test', quiet=True))
         setup.asset_called_with(check_version=False, verbose=False)
         upgrade.assert_called_with()
         self.assertWasQuiet()

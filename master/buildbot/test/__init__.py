@@ -34,7 +34,7 @@ except ImportError as e:
                       "try 'pip install mock'") from e
 
 # apply the same patches the buildmaster does when it starts
-monkeypatches.patch_all(for_tests=True)
+monkeypatches.patch_all()
 
 # enable deprecation warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
