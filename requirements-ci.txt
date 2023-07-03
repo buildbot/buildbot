@@ -76,7 +76,7 @@ pathlib2==2.3.7.post1
 pbr==5.11.1
 pep8==1.7.1
 Pillow==10.0.0
-platformdirs==2.5.2
+platformdirs==3.8.0
 psutil==5.9.1
 pyaml==21.10.1
 pyasn1-modules==0.2.8
