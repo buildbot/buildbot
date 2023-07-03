@@ -8,7 +8,7 @@ autobahn==23.6.2
 boto3==1.26.165
 flake8==6.0.0
 msgpack==1.0.5
-Markdown==3.3.4
+Markdown==3.4.3
 pylint==2.14.5
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
