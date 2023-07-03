@@ -119,7 +119,7 @@ typing_extensions==4.7.1
 unidiff==0.7.5
 urllib3==2.0.3
 webcolors==1.13
-websocket-client==1.3.3
+websocket-client==1.6.1
 Werkzeug==2.1.2  # pyup: ignore (moto 4.0.1 depends on werkzeug<2.2.0)
 wrapt==1.14.1
 xmltodict==0.13.0
