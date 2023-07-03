@@ -40,7 +40,7 @@ jmespath==1.0.1
 lazy-object-proxy==1.7.1
 lz4==4.3.2
 Mako==1.2.4
-MarkupSafe==2.1.1
+MarkupSafe==2.1.3
 mccabe==0.6.1
 mock==4.0.3
 moto==4.0.1
