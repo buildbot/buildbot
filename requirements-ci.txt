@@ -47,7 +47,7 @@ extras==1.0.0
 fixtures==4.1.0
 funcsigs==1.0.2
 future==0.18.3
-graphql-core==3.2.1
+graphql-core==3.2.3
 greenlet==2.0.2
 hvac==0.11.2
 hyperlink==21.0.0
