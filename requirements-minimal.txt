@@ -15,7 +15,7 @@ astroid==2.15.5
 attrs==23.1.0
 autobahn==23.6.2
 Automat==22.10.0
-Babel==2.10.3
+Babel==2.12.1
 boto3==1.26.165
 botocore==1.27.59
 certifi==2022.12.7
