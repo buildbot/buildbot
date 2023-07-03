@@ -17,7 +17,7 @@ pylint==2.17.4
 # while to remove no longer needed dependencies.
 
 alabaster==0.7.13
-alembic==1.8.1
+alembic==1.11.1
 appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==2.11.7
