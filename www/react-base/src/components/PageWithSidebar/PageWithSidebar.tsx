@@ -18,9 +18,12 @@
 import './PageWithSidebar.scss';
 import {observer} from "mobx-react";
 import {FaAngleRight, FaBars, FaThumbtack} from "react-icons/fa";
-import {GlobalMenuSettings} from "../../plugins/GlobalMenuSettings";
+import {
+  getBestMatchingSettingsGroupRoute,
+  GlobalMenuSettings
+} from "../../plugins/GlobalMenuSettings";
 import {SidebarStore} from "../../stores/SidebarStore";
-import {Link} from "react-router-dom";
+import {Link, useLocation} from "react-router-dom";
 
 type PageWithSidebarProps = {
   menuSettings: GlobalMenuSettings,
@@ -47,11 +50,14 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
     );
   }
 
+  const matchingGroupRoute = getBestMatchingSettingsGroupRoute(useLocation().pathname, groups);
+
   const groupElements = groups.map((group, groupIndex) => {
     if (group.subGroups.length > 0) {
       const subGroups = group.subGroups.map(subGroup => {
           const subClassName = "sidebar-list subitem" +
-            (sidebarStore.activeGroup === group.name ? " active": "");
+            (sidebarStore.activeGroup === group.name ? " active": "") +
+            (subGroup.route === matchingGroupRoute ? " current": "");
 
           return (
             <li key={`group-${subGroup.name}`} className={subClassName}>
@@ -78,8 +84,12 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
     if (groupIndex > 0) {
       elements.push(<li key={`groupsep-${group.name}`} className="sidebar-separator"></li>);
     }
+
+    const groupClassName = "sidebar-list" +
+        (group.route === matchingGroupRoute ? " current": "");
+
     elements.push(
-      <li key={`group-${group.name}`} className="sidebar-list">
+      <li key={`group-${group.name}`} className={groupClassName}>
         {group.route === null
           ? <button onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
             <span className="menu-icon">{group.icon}</span>

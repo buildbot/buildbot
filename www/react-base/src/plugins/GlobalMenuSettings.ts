@@ -118,3 +118,23 @@ export class GlobalMenuSettings {
 };
 
 export const globalMenuSettings = new GlobalMenuSettings();
+
+export function getBestMatchingSettingsGroupRoute(path: string, groups: ResolvedGroupSettings[]) {
+  let bestRoute: string|null = null;
+
+  const checkGroup = (group: ResolvedGroupSettings) => {
+    if (group.route !== null && path.startsWith(group.route) &&
+        (path.length === group.route.length || path[group.route.length] === "/")) {
+      if (bestRoute === null || group.route.length > bestRoute.length) {
+        bestRoute = group.route;
+      }
+    }
+  }
+
+  groups.map(group => {
+    group.subGroups.map(subGroup => checkGroup(subGroup));
+    checkGroup(group);
+  });
+
+  return bestRoute;
+}
