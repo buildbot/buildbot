@@ -15,8 +15,16 @@ $gl-sidebar-width: 600px;
   /* theme */
   .sidebar.sidebar-blue {
     background: #30426a;
-    ul .sidebar-main, .sidebar-footer, a:hover, button:hover {
+    ul .sidebar-main, .sidebar-footer {
       background: #273759;
+    }
+    li.current a,
+    li.current button {
+      background: #273759;
+    }
+    a:hover,
+    button:hover {
+      background: #1b263d;
     }
     ul .sidebar-title {
       color: #627cb7;
@@ -149,6 +157,15 @@ $gl-sidebar-width: 600px;
           line-height: 40px;
           >svg {
             margin-left: -1em;
+          }
+        }
+        &.current {
+          a, button {
+            border-left: 3px solid #8c5e10;
+            text-indent: 22px;
+          }
+          .menu-icon {
+            text-indent: 25px;
           }
         }
         a:hover,

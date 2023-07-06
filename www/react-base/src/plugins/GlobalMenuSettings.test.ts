@@ -15,7 +15,11 @@
   Copyright Buildbot Team Members
 */
 
-import {GlobalMenuSettings} from "./GlobalMenuSettings";
+import {
+  getBestMatchingSettingsGroupRoute,
+  GlobalMenuSettings,
+  ResolvedGroupSettings
+} from "./GlobalMenuSettings";
 
 describe('GlobalMenuSettings', () => {
   it("group sorting", () => {
@@ -211,5 +215,53 @@ describe('GlobalMenuSettings', () => {
           }
         ]
       }]);
+  });
+
+  describe('getBestMatchingSettingsGroupRoute', () => {
+    const buildGroup = (route: string|null,
+                        subGroups: ResolvedGroupSettings[]) : ResolvedGroupSettings => {
+      return {
+        name: '',
+        caption: '',
+        route: route,
+        order: 0,
+        subGroups: subGroups
+      }
+    };
+
+    it('no groups', () => {
+      expect(getBestMatchingSettingsGroupRoute('/path', [])).toBeNull();
+    });
+
+    it('not matching groups', () => {
+      expect(getBestMatchingSettingsGroupRoute('/path', [
+        buildGroup('/', []),
+        buildGroup('/pa', []),
+        buildGroup('/path2', []),
+      ])).toBeNull();
+    });
+
+    it('matching group', () => {
+      expect(getBestMatchingSettingsGroupRoute('/path/path2/path3', [
+        buildGroup('/path', []),
+        buildGroup('/path/path2', []),
+        buildGroup('/path/path2/path3', []),
+      ])).toEqual('/path/path2/path3');
+
+      expect(getBestMatchingSettingsGroupRoute('/path/path2/path3', [
+        buildGroup('/path/path2/path3', []),
+        buildGroup('/path/path2', []),
+        buildGroup('/path', []),
+      ])).toEqual('/path/path2/path3');
+    });
+
+    it('matching sub group', () => {
+      expect(getBestMatchingSettingsGroupRoute('/path/path2/path3', [
+        buildGroup('/path', []),
+        buildGroup('/path/path2', [
+          buildGroup('/path/path2/path3', []),
+        ]),
+      ])).toEqual('/path/path2/path3');
+    });
   });
 });
