@@ -25,7 +25,7 @@ type FieldBooleanProps = {
 }
 
 export const FieldBoolean = observer(({field, fieldsState}: FieldBooleanProps) => {
-  const state = fieldsState.fields.get(field.name)!;
+  const state = fieldsState.fields.get(field.fullName)!;
 
   return (
     <div className="form-group">
@@ -33,7 +33,7 @@ export const FieldBoolean = observer(({field, fieldsState}: FieldBooleanProps) =
         <div className="checkbox">
           <label>
             <input type="checkbox" checked={state.value === 'true'}
-                   onChange={event => fieldsState.setValue(field.name,
+                   onChange={event => fieldsState.setValue(field.fullName,
                      event.target.checked ? 'true' : 'false')}/> {field.label}
           </label>
         </div>

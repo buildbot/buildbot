@@ -68,7 +68,7 @@ export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceB
 
   const fieldsState = useLocalObservable(() => new ForceBuildModalFieldsState());
   for (let field of fields) {
-    fieldsState.setupField(field.name, field.default);
+    fieldsState.setupField(field.fullName, field.default);
   }
 
   const rootField: ForceSchedulerFieldNested = {
@@ -100,9 +100,9 @@ export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceB
     };
 
     for (const field of fields) {
-      const value = fieldsState.getValue(field.name);
+      const value = fieldsState.getValue(field.fullName);
       if (value !== null) {
-        params[field.name] = value;
+        params[field.fullName] = value;
       }
     }
 

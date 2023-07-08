@@ -26,15 +26,15 @@ type FieldStringProps = {
 }
 
 export const FieldString = observer(({field, fieldsState}: FieldStringProps) => {
-  const state = fieldsState.fields.get(field.name)!;
+  const state = fieldsState.fields.get(field.fullName)!;
 
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
-      <label htmlFor={field.name} className="control-label col-sm-10">{field.label}</label>
+      <label htmlFor={field.fullName} className="control-label col-sm-10">{field.label}</label>
       <div className="col-sm-10">
-        <input type="text" id={field.name} autoComplete="on" className="form-control"
+        <input type="text" id={field.fullName} autoComplete="on" className="form-control"
                value={state.value}
-               onChange={event => fieldsState.setValue(field.name, event.target.value)}/>
+               onChange={event => fieldsState.setValue(field.fullName, event.target.value)}/>
       </div>
     </FieldBase>
   );

@@ -27,19 +27,19 @@ type FieldChoiceStringProps = {
 }
 
 export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStringProps) => {
-  const state = fieldsState.fields.get(field.name)!;
+  const state = fieldsState.fields.get(field.fullName)!;
 
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
       <Form.Label className="col-sm-10">{field.label}</Form.Label>
       <div className="col-sm-10">
         <Form.Control as="select" multiple={field.multiple} value={state.value}
-                      onChange={event => fieldsState.setValue(field.name, event.target.value)}>
+                      onChange={event => fieldsState.setValue(field.fullName, event.target.value)}>
           {field.choices.map(choice => (<option>{choice}</option>))}
         </Form.Control>
         { !field.strict && !field.multiple
           ? <input className="select-editable form-control" type="text" value={state.value}
-                   onChange={event => fieldsState.setValue(field.name, event.target.value)}/>
+                   onChange={event => fieldsState.setValue(field.fullName, event.target.value)}/>
           : <></>
         }
       </div>
