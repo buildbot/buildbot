@@ -1,0 +1,1 @@
+Fixed excessive messages in the logs when otherwise unsupported ``/auth/login`` endpoint is accessed when using ``RemoteUserAuth`` authentication plugin.
