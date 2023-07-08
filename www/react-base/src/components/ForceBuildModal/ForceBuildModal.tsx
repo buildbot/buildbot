@@ -102,7 +102,13 @@ export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceB
     for (const field of fields) {
       const value = fieldsState.getValue(field.fullName);
       if (value !== null) {
-        params[field.fullName] = value;
+        if (field.type === "int") {
+          params[field.fullName] = Number.parseInt(value);
+        } else if (field.type === "bool") {
+          params[field.fullName] = value === "true";
+        } else {
+          params[field.fullName] = value;
+        }
       }
     }
 
