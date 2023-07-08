@@ -26,7 +26,7 @@ type FieldBaseProps = {
 }
 
 export const FieldBase = observer(({field, fieldsState, children}: FieldBaseProps) => {
-  const state = fieldsState.fields.get(field.name)!;
+  const state = fieldsState.fields.get(field.fullName)!;
 
   let classNames = "form-group";
   if (state.errors.length > 0) {
