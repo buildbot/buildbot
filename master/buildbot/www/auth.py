@@ -30,6 +30,7 @@ from twisted.web.error import Error
 from twisted.web.guard import BasicCredentialFactory
 from twisted.web.guard import DigestCredentialFactory
 from twisted.web.guard import HTTPAuthSessionWrapper
+from twisted.web.resource import ForbiddenResource
 from twisted.web.resource import IResource
 from zope.interface import implementer
 
@@ -112,6 +113,9 @@ class RemoteUserAuth(AuthBase):
             self.header = unicode2bytes(header)
         if headerRegex is not None:
             self.headerRegex = re.compile(unicode2bytes(headerRegex))
+
+    def getLoginResource(self):
+        return ForbiddenResource(message="URL is not supported for authentication")
 
     @defer.inlineCallbacks
     def maybeAutoLogin(self, request):

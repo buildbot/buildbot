@@ -23,6 +23,7 @@ from twisted.trial import unittest
 from twisted.web.error import Error
 from twisted.web.guard import BasicCredentialFactory
 from twisted.web.guard import HTTPAuthSessionWrapper
+from twisted.web.resource import ForbiddenResource
 from twisted.web.resource import IResource
 
 from buildbot.test.reactor import TestReactorMixin
@@ -141,6 +142,9 @@ class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.assertEqual(int(e.status), 403)
         else:
             self.fail("403 expected")
+
+    def test_get_login_resource_does_not_throw(self):
+        self.assertIsInstance(self.auth.getLoginResource(), ForbiddenResource)
 
 
 class AuthRealm(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
