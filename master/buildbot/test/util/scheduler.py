@@ -87,15 +87,25 @@ class SchedulerMixin(interfaces.InterfaceTests):
         db.insert_test_data(rows)
 
         if overrideBuildsetMethods:
-            for method in (
-                    'addBuildsetForSourceStampsWithDefaults',
-                    'addBuildsetForChanges',
-                    'addBuildsetForSourceStamps'):
-                actual = getattr(scheduler, method)
-                fake = getattr(self, f'fake_{method}')
+            self.assertArgSpecMatches(
+                scheduler.addBuildsetForSourceStampsWithDefaults,
+                self.fake_addBuildsetForSourceStampsWithDefaults
+            )
+            scheduler.addBuildsetForSourceStampsWithDefaults = \
+                self.fake_addBuildsetForSourceStampsWithDefaults
 
-                self.assertArgSpecMatches(actual, fake)
-                setattr(scheduler, method, fake)
+            self.assertArgSpecMatches(
+                scheduler.addBuildsetForChanges,
+                self.fake_addBuildsetForChanges
+            )
+            scheduler.addBuildsetForChanges = self.fake_addBuildsetForChanges
+
+            self.assertArgSpecMatches(
+                scheduler.addBuildsetForSourceStamps,
+                self.fake_addBuildsetForSourceStamps
+            )
+            scheduler.addBuildsetForSourceStamps = self.fake_addBuildsetForSourceStamps
+
             self.addBuildsetCalls = []
             self._bsidGenerator = iter(range(500, 999))
             self._bridGenerator = iter(range(100, 999))
