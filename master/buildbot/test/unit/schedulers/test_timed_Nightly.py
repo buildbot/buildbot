@@ -253,7 +253,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                            fileIsImportant=fII, **kwargs)
 
         if last_only_if_changed is not None:
-            self.db.state.set_fake_state(self.sched, last_only_if_changed=last_only_if_changed)
+            self.db.state.set_fake_state(self.sched, 'last_only_if_changed', last_only_if_changed)
 
         return self.do_test_iterations_onlyIfChanged_test(fII, *changes_at)
 
@@ -448,7 +448,8 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                                       'b': {'repository': "", 'branch': 'master'}},
                            createAbsoluteSourceStamps=True)
 
-        self.db.state.set_fake_state(self.sched, last_only_if_changed=True, lastCodebases={
+        self.db.state.set_fake_state(self.sched, 'last_only_if_changed', True)
+        self.db.state.set_fake_state(self.sched, 'lastCodebases', {
             'b': {
                 'branch': 'master',
                 'repository': 'B',
