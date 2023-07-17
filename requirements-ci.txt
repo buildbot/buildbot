@@ -9,7 +9,7 @@ boto3==1.28.3
 flake8==6.0.0
 msgpack==1.0.5
 Markdown==3.4.3
-pylint==2.14.5
+pylint==2.17.4
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
