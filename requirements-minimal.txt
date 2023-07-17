@@ -89,7 +89,7 @@ treq==22.2.0
 Twisted==22.10.0
 txaio==23.1.1
 txrequests==0.9.6
-typing-extensions==4.3.0
+typing-extensions==4.7.1
 urllib3==2.0.3
 Werkzeug==2.1.2
 wrapt==1.15.0
