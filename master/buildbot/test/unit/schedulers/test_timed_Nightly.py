@@ -246,7 +246,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         d = sched.deactivate()
         return d
 
-    def do_test_iterations_onlyIfChanged(self, *changes_at, last_only_if_changed=None,
+    def do_test_iterations_onlyIfChanged(self, *changes_at, last_only_if_changed,
                                          is_new_scheduler=False, **kwargs):
         fII = mock.Mock(name='fII')
         self.makeScheduler(name='test', builderNames=['test'], branch=None,
@@ -286,7 +286,8 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_no_changes_new_scheduler(self):
-        yield self.do_test_iterations_onlyIfChanged(is_new_scheduler=True)
+        yield self.do_test_iterations_onlyIfChanged(last_only_if_changed=None,
+                                                    is_new_scheduler=True)
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
@@ -336,7 +337,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     def test_iterations_onlyIfChanged_no_changes_existing_scheduler_update_to_v3_5_0(self):
         # v3.4.0 have not had a variable last_only_if_changed yet therefore this case is tested
         # separately
-        yield self.do_test_iterations_onlyIfChanged()
+        yield self.do_test_iterations_onlyIfChanged(last_only_if_changed=None)
         self.assertEqual(self.addBuildsetCallTimes, [])
         self.assertEqual(self.addBuildsetCalls, [])
         self.db.state.assertStateByClass('test', 'Nightly',
@@ -348,6 +349,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         yield self.do_test_iterations_onlyIfChanged(
             (60, mock.Mock(), False),
             (600, mock.Mock(), False),
+            last_only_if_changed=None,
             is_new_scheduler=True)
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
@@ -403,6 +405,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             (120, self.makeFakeChange(number=1, branch=None), False),
             (1200, self.makeFakeChange(number=2, branch=None), True),
             (1201, self.makeFakeChange(number=3, branch=None), False),
+            last_only_if_changed=None,
             )
 
         self.assertEqual(self.addBuildsetCallTimes, [1500])
@@ -537,6 +540,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 number=4, codebase='b', revision='1234:abc'), True),
             codebases={'a': {'repository': "", 'branch': 'master'},
                        'b': {'repository': "", 'branch': 'master'}},
+            last_only_if_changed=None,
             createAbsoluteSourceStamps=True)
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
