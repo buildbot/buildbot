@@ -58,7 +58,7 @@ ipaddress==1.0.23
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
 Jinja2==3.1.2
 jmespath==1.0.1
-jsonref==0.2
+jsonref==1.1.0
 lazy-object-proxy==1.4.1  # pyup: ignore (required by astroid)
 ldap3==2.9.1
 lz4==4.0.2
