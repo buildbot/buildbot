@@ -2,7 +2,7 @@ attrs==23.1.0;  python_version < "3.6"
 attrs==23.1.0;  python_version >= "3.6"
 autobahn==23.6.2;  python_version >= "3.7"
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
-Automat==20.2.0
+Automat==22.10.0
 cffi==1.15.1;  python_version >= "3.6"
 constantly==15.1.0
 cryptography==41.0.2;  python_version >= "3.6"
