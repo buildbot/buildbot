@@ -246,11 +246,15 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         d = sched.deactivate()
         return d
 
-    def do_test_iterations_onlyIfChanged(self, *changes_at, last_only_if_changed=None, **kwargs):
+    def do_test_iterations_onlyIfChanged(self, *changes_at, last_only_if_changed=None,
+                                         is_new_scheduler=False, **kwargs):
         fII = mock.Mock(name='fII')
         self.makeScheduler(name='test', builderNames=['test'], branch=None,
                            minute=[5, 25, 45], onlyIfChanged=True,
                            fileIsImportant=fII, **kwargs)
+
+        if not is_new_scheduler:
+            self.db.state.set_fake_state(self.sched, 'last_build', -1)
 
         if last_only_if_changed is not None:
             self.db.state.set_fake_state(self.sched, 'last_only_if_changed', last_only_if_changed)
@@ -282,7 +286,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_no_changes_new_scheduler(self):
-        yield self.do_test_iterations_onlyIfChanged()
+        yield self.do_test_iterations_onlyIfChanged(is_new_scheduler=True)
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
@@ -329,10 +333,22 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
+    def test_iterations_onlyIfChanged_no_changes_existing_scheduler_update_to_v3_5_0(self):
+        # v3.4.0 have not had a variable last_only_if_changed yet therefore this case is tested
+        # separately
+        yield self.do_test_iterations_onlyIfChanged()
+        self.assertEqual(self.addBuildsetCallTimes, [])
+        self.assertEqual(self.addBuildsetCalls, [])
+        self.db.state.assertStateByClass('test', 'Nightly',
+                                         last_build=1500 + self.localtime_offset)
+        yield self.sched.deactivate()
+
+    @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_unimp_changes_calls_for_new_scheduler(self):
         yield self.do_test_iterations_onlyIfChanged(
             (60, mock.Mock(), False),
-            (600, mock.Mock(), False))
+            (600, mock.Mock(), False),
+            is_new_scheduler=True)
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
@@ -375,6 +391,30 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             last_only_if_changed=True)
         self.assertEqual(self.addBuildsetCalls, [])
 
+        self.db.state.assertStateByClass('test', 'Nightly',
+                                         last_build=1500 + self.localtime_offset)
+        yield self.sched.deactivate()
+
+    @defer.inlineCallbacks
+    def test_iterations_onlyIfChanged_changes_existing_scheduler_update_to_v3_5_0(self):
+        # v3.4.0 have not had a variable last_only_if_changed yet therefore this case is tested
+        # separately
+        yield self.do_test_iterations_onlyIfChanged(
+            (120, self.makeFakeChange(number=1, branch=None), False),
+            (1200, self.makeFakeChange(number=2, branch=None), True),
+            (1201, self.makeFakeChange(number=3, branch=None), False),
+            )
+
+        self.assertEqual(self.addBuildsetCallTimes, [1500])
+        self.assertEqual(self.addBuildsetCalls, [(
+            'addBuildsetForChanges', {
+                'waited_for': False,
+                'reason': "The Nightly scheduler named 'test' triggered this build",
+                'external_idstring': None,
+                'changeids': [1, 2, 3],
+                'properties': None, 'builderNames': None
+                }),
+            ])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
         yield self.sched.deactivate()

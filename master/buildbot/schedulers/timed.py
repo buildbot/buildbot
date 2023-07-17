@@ -73,6 +73,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
         self._reactor = reactor  # patched by tests
+        self.is_first_build = None
 
     @defer.inlineCallbacks
     def activate(self):
@@ -87,6 +88,10 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
         # get the scheduler's last_build time (note: only done at startup)
         self.lastActuated = yield self.getState('last_build', None)
+        if self.lastActuated is None:
+            self.is_first_build = True
+        else:
+            self.is_first_build = False
 
         # schedule the next build
         yield self.scheduleNextBuild()
@@ -152,10 +157,18 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         # occurred since the last invocation. Note that when the scheduler has just been started
         # there may not be any important changes yet and we should start the build for the
         # current state of the code whatever it is.
-        last_only_if_changed = yield self.getState('last_only_if_changed', False)
-        if last_only_if_changed and self.onlyIfChanged and not any(classifications.values()):
+        #
+        # Note that last_only_if_changed will always be set to the value of onlyIfChanged
+        # at the point when startBuild finishes (it is not obvious, that all code paths lead
+        # to this outcome)
+
+        last_only_if_changed = yield self.getState('last_only_if_changed', True)
+
+        if last_only_if_changed and self.onlyIfChanged and not any(classifications.values()) and \
+                not self.is_first_build:
             log.msg(("{} scheduler <{}>: skipping build " +
                      "- No important changes").format(self.__class__.__name__, self.name))
+            self.is_first_build = False
             return
 
         if last_only_if_changed != self.onlyIfChanged:
@@ -176,6 +189,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
             yield self.addBuildsetForSourceStampsWithDefaults(
                 reason=self.reason,
                 sourcestamps=sourcestamps)
+        self.is_first_build = False
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:

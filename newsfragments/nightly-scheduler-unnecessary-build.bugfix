@@ -1,0 +1,1 @@
+Fixed unnecessary build started under the following conditions: there is an existing Nightly scheduler, onlyIfChanged is set to true and there is version upgrade from v3.4.0 (:issue:`6793`).
