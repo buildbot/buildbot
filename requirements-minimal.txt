@@ -92,7 +92,7 @@ txrequests==0.9.6
 typing-extensions==4.3.0
 urllib3==2.0.3
 Werkzeug==2.1.2
-wrapt==1.14.1
+wrapt==1.15.0
 xmltodict==0.13.0
 zipp==3.8.1
 zope.interface==5.4.0
