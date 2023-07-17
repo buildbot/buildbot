@@ -348,7 +348,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_existing_scheduler(self):
+    def test_iterations_onlyIfChanged_unimp_changes_existing_sched_changed_only_if_changed(self):
         yield self.do_test_iterations_onlyIfChanged(
             (60, mock.Mock(), False),
             (600, mock.Mock(), False),
@@ -368,7 +368,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_existing_scheduler_setting_changed(self):
+    def test_iterations_onlyIfChanged_unimp_changes_existing_sched_same_only_if_changed(self):
         yield self.do_test_iterations_onlyIfChanged(
             (60, mock.Mock(), False),
             (600, mock.Mock(), False),
