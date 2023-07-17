@@ -25,7 +25,7 @@ click==8.1.5
 click-default-group==1.2.2
 constantly==15.1.0
 cryptography==41.0.2
-docutils==0.17.1
+docutils==0.20.1
 flake8==6.0.0
 future==0.18.3
 greenlet==1.1.3
