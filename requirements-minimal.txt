@@ -84,7 +84,7 @@ sphinxcontrib-spelling==7.6.0
 sphinxcontrib-websupport==1.2.4
 SQLAlchemy==2.0.19
 tomli==2.0.1
-towncrier==21.9.0
+towncrier==23.6.0
 treq==22.2.0
 Twisted==22.4.0
 txaio==22.2.1
