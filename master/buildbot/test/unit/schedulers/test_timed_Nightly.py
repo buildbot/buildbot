@@ -306,6 +306,14 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_no_changes_existing_scheduler_setting_changed(self):
+        # When onlyIfChanged==False, builds are run every time on the time set
+        # (changes or no changes). Changes are being recognized but do not have any effect on
+        # starting builds.
+        # It might happen that onlyIfChanged was False, then change happened, then setting was
+        # changed to onlyIfChanged==True.
+        # Because onlyIfChanged was False possibly important change will be missed.
+        # Therefore the first build should start immediately.
+
         yield self.do_test_iterations_onlyIfChanged(last_only_if_changed=False)
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
