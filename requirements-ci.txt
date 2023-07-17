@@ -86,7 +86,7 @@ pycparser==2.21
 pyenchant==3.2.2
 pyflakes==3.0.1
 PyJWT==2.7.0
-pyOpenSSL==22.0.0
+pyOpenSSL==23.2.0
 pyparsing==3.0.9
 pypugjs==5.9.12
 python-dateutil==2.8.2
