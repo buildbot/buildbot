@@ -110,8 +110,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             q = sa.select(
                 [sch_ch_tbl.c.changeid, sch_ch_tbl.c.important],
                 whereclause=wc)
-            return {r.changeid: [False, True][r.important]
-                    for r in conn.execute(q)}
+            return {r.changeid: bool(r.important) for r in conn.execute(q)}
         return self.db.pool.do(thd)
 
     def findSchedulerId(self, name):
