@@ -26,7 +26,6 @@ from buildbot.util import epoch2datetime
 
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     # returns a Deferred that returns a value
     def _getBuild(self, whereclause):

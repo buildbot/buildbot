@@ -41,7 +41,6 @@ class BrDict(dict):
 
 
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     def _saSelectQuery(self):
         reqs_tbl = self.db.model.buildrequests

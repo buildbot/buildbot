@@ -26,7 +26,6 @@ class UsDict(dict):
 
 
 class UsersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     # returns a Deferred that returns a value
     def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):

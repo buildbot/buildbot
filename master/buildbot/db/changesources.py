@@ -27,7 +27,6 @@ class ChangeSourceAlreadyClaimedError(Exception):
 
 
 class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     def findChangeSourceId(self, name):
         tbl = self.db.model.changesources

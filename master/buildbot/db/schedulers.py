@@ -27,7 +27,6 @@ class SchedulerAlreadyClaimedError(Exception):
 
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     # returns a Deferred that returns None
     def enable(self, schedulerid, v):
