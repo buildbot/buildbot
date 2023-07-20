@@ -13,7 +13,9 @@ alabaster==0.7.12
 alembic==1.10.0
 astroid==1.4.9
 attrs==22.1.0
-autobahn==23.1.2
+autobahn==23.6.2;  python_version >= "3.9"
+autobahn==22.7.1;  python_version < "3.9" and python_version >= "3.7"  # pyup: ignore
+autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
 Automat==22.10.0
 Babel==2.10.3
 boto3==1.24.59
