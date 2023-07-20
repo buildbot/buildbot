@@ -2,9 +2,9 @@
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==3.6.0
+buildbot-www==3.8.0
 
-autobahn==22.7.1
+autobahn==23.1.2
 boto3==1.24.60
 flake8==5.0.4
 msgpack==1.0.4
@@ -17,7 +17,7 @@ pylint==2.14.5
 # while to remove no longer needed dependencies.
 
 alabaster==0.7.12
-alembic==1.8.1
+alembic==1.10.0
 appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==2.11.7
@@ -37,7 +37,7 @@ configparser==5.2.0
 constantly==15.1.0
 cookies==2.2.1
 coverage==6.4.3
-cryptography==37.0.4
+cryptography==39.0.2
 decorator==5.1.1
 dicttoxml==1.7.4
 dill==0.3.6
@@ -86,7 +86,7 @@ pycparser==2.21
 pyenchant==3.2.2
 pyflakes==2.5.0
 PyJWT==2.4.0
-pyOpenSSL==22.0.0
+pyOpenSSL==23.0.0
 pyparsing==3.0.9
 pypugjs==5.9.12
 python-dateutil==2.8.2
@@ -113,7 +113,7 @@ tomlkit==0.11.4
 towncrier==22.8.0
 treq==22.2.0
 Twisted==22.4.0
-txaio==22.2.1
+txaio==23.1.1
 txrequests==0.9.6
 typing_extensions==4.3.0
 unidiff==0.7.4

@@ -84,21 +84,34 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         env['PYTHONPATH'] = os.pathsep.join(sys.path)
         return getProcessOutputAndValue(sys.executable, args=args, env=env)
 
+    def assert_stderr_ok(self, err):
+        lines = err.split(b'\n')
+        good_warning_parts = [b'32-bit Python on a 64-bit', b'cryptography.hazmat.bindings']
+        for line in lines:
+            is_line_good = False
+            if line == b'':
+                is_line_good = True
+            else:
+                for part in good_warning_parts:
+                    if part in line:
+                        is_line_good = True
+                        break
+            if not is_line_good:
+                self.assertEqual(err, b'')  # not valid warning
+
     @defer.inlineCallbacks
     def test_start_no_daemon(self):
         (_, err, rc) = yield self.runStart(nodaemon=True)
-
-        # on python 3.5, cryptography loudly complains to upgrade
-        if sys.version_info[:2] != (3, 5):
-            self.assertEqual((err, rc), (b'', 0))
+        self.assert_stderr_ok(err)
+        self.assertEqual(rc, 0)
 
     @defer.inlineCallbacks
     def test_start_quiet(self):
         res = yield self.runStart(quiet=True)
 
-        # on python 3.5, cryptography loudly complains to upgrade
-        if sys.version_info[:2] != (3, 5):
-            self.assertEqual(res, (b'', b'', 0))
+        self.assertEqual(res[0], b'')
+        self.assert_stderr_ok(res[1])
+        self.assertEqual(res[2], 0)
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
