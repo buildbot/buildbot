@@ -24,7 +24,7 @@ jobs:
           name: install dependencies
           command: |
             env
-            python3.7 -m venv .venv
+            python3.8 -m venv .venv
             . .venv/bin/activate
             pip install -U pip setuptools wheel
             pip install -r requirements-ci.txt
