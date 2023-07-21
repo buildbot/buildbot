@@ -36,7 +36,7 @@ class ReporterBase(service.BuildbotService):
         super().__init__(*args, **kwargs)
         self.generators = None
         self._event_consumers = []
-        self._pending_got_event_call = None
+        self._pending_got_event_calls = {}
 
     def checkConfig(self, generators):
         if not isinstance(generators, list):
@@ -57,10 +57,6 @@ class ReporterBase(service.BuildbotService):
             yield consumer.stopConsuming()
         self._event_consumers = []
 
-        if self._pending_got_event_call is not None:
-            yield self._pending_got_event_call
-        self._pending_got_event_call = None
-
         self.generators = generators
 
         wanted_event_keys = set()
@@ -76,9 +72,11 @@ class ReporterBase(service.BuildbotService):
         for consumer in self._event_consumers:
             yield consumer.stopConsuming()
         self._event_consumers = []
-        if self._pending_got_event_call is not None:
-            yield self._pending_got_event_call
-        self._pending_got_event_call = None
+
+        for pending_call in list(self._pending_got_event_calls.values()):
+            yield pending_call
+        self._pending_got_event_calls = {}
+
         yield super().stopService()
 
     def _does_generator_want_key(self, generator, key):
@@ -87,17 +85,22 @@ class ReporterBase(service.BuildbotService):
                 return True
         return False
 
+    def _get_chain_key_for_event(self, key, msg):
+        if key[0] in ["builds", "buildrequests"]:
+            return ("buildrequestid", msg["buildrequestid"])
+        return None
+
     @defer.inlineCallbacks
     def _got_event(self, key, msg):
-        pending_got_event_call = self._pending_got_event_call
-
-        # Mark this call as pending.
-        self._pending_got_event_call = d = defer.Deferred()
-
-        # Wait for previously pending call, if any, to ensure
-        # reports are sent out in the order events were queued.
-        if pending_got_event_call is not None:
-            yield pending_got_event_call
+        chain_key = self._get_chain_key_for_event(key, msg)
+        if chain_key is not None:
+            d = defer.Deferred()
+            pending_call = self._pending_got_event_calls.get(chain_key)
+            self._pending_got_event_calls[chain_key] = d
+            # Wait for previously pending call, if any, to ensure
+            # reports are sent out in the order events were queued.
+            if pending_call is not None:
+                yield pending_call
 
         try:
             reports = []
@@ -112,7 +115,10 @@ class ReporterBase(service.BuildbotService):
         except Exception as e:
             log.err(e, 'Got exception when handling reporter events')
 
-        d.callback(None)  # This event is now fully handled
+        if chain_key is not None:
+            if self._pending_got_event_calls.get(chain_key) == d:
+                del self._pending_got_event_calls[chain_key]
+            d.callback(None)  # This event is now fully handled
 
     def getResponsibleUsersForBuild(self, master, buildid):
         # Use library method but subclassers may want to override that
