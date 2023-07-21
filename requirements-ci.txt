@@ -9,7 +9,7 @@ autobahn==22.7.1;  python_version < "3.9" and python_version >= "3.7"  # pyup: i
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
 boto3==1.24.60
 flake8==5.0.4
-msgpack==1.0.4
+msgpack==1.0.5
 Markdown==3.3.4
 pylint==2.14.5
 
