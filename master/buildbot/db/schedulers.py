@@ -27,7 +27,6 @@ class SchedulerAlreadyClaimedError(Exception):
 
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     # returns a Deferred that returns None
     def enable(self, schedulerid, v):
@@ -111,8 +110,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             q = sa.select(
                 [sch_ch_tbl.c.changeid, sch_ch_tbl.c.important],
                 whereclause=wc)
-            return {r.changeid: [False, True][r.important]
-                    for r in conn.execute(q)}
+            return {r.changeid: bool(r.important) for r in conn.execute(q)}
         return self.db.pool.do(thd)
 
     def findSchedulerId(self, name):

@@ -25,7 +25,6 @@ from buildbot.util import epoch2datetime
 
 
 class StepsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
     url_lock = None
 
     @defer.inlineCallbacks

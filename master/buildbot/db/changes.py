@@ -34,7 +34,6 @@ class ChDict(dict):
 
 
 class ChangesConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     # returns a Deferred that returns a value
     def getParentChangeIds(self, branch, repository, project, codebase):

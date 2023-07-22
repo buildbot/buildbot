@@ -41,7 +41,6 @@ class AlreadyCompleteError(RuntimeError):
 
 
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     @defer.inlineCallbacks
     def addBuildset(self, sourcestamps, reason, properties, builderids,

@@ -27,7 +27,6 @@ class TestResultSetAlreadyCompleted(Exception):
 
 
 class TestResultSetsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     @defer.inlineCallbacks
     def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):

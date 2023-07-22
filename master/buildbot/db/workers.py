@@ -22,7 +22,6 @@ from buildbot.util import identifiers
 
 
 class WorkersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
 
     def findWorkerId(self, name):
         tbl = self.db.model.workers
