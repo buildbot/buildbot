@@ -64,7 +64,7 @@ jmespath==1.0.1
 jsonref==1.1.0
 lazy-object-proxy==1.4.1  # pyup: ignore (required by astroid)
 ldap3==2.9.1
-lz4==4.0.2
+lz4==4.3.2
 Mako==1.2.2
 markdown2==2.4.9
 MarkupSafe==2.1.1
