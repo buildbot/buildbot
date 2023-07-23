@@ -41,7 +41,7 @@ cookies==2.2.1
 coverage==6.4.3
 cryptography==39.0.2
 decorator==5.1.1
-dicttoxml==1.7.4
+dicttoxml==1.7.16
 dill==0.3.6
 docker==5.0.3;  python_version < "3.7" # pyup: ignore (6.0.0 droppeded support for < Python 3.7 see: https://docker-py.readthedocs.io/en/stable/change-log.html#id8)
 docker==6.1.2;  python_version >= "3.7"
