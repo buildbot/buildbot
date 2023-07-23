@@ -56,7 +56,7 @@ hvac==0.11.2
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.4.1
-incremental==21.3.0
+incremental==22.10.0
 ipaddress==1.0.23
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
 Jinja2==3.1.2
