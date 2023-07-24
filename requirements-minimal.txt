@@ -58,7 +58,7 @@ pycparser==2.21
 pyenchant==3.2.2
 pyflakes==2.3.1
 Pygments==2.13.0
-PyJWT==2.4.0
+PyJWT==2.7.0
 pylint==1.6.5
 pyOpenSSL==23.0.0
 pyparsing==3.0.9
