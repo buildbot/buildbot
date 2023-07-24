@@ -16,7 +16,7 @@ incremental==17.5.0;  python_version < "3.0"  # pyup: ignore
 # pin mock, because 4.x no longer supports Python 3.5
 mock==3.0.5  # pyup: ignore
 parameterized==0.8.1
-pbr==5.10.0
+pbr==5.11.1
 # pin PyHamcrest, because 2.x no longer supports Python 2.7
 PyHamcrest==1.9.0  # pyup: ignore
 psutil==5.9.5
