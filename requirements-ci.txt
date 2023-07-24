@@ -78,7 +78,8 @@ parameterized==0.8.1
 pathlib2==2.3.7.post1
 pbr==5.11.1
 pep8==1.7.1
-Pillow==9.3.0
+Pillow==9.3.0;  python_version < "3.8"  # pyup: ignore
+Pillow==10.0.0;  python_version >= "3.8"
 platformdirs==2.5.2
 psutil==5.9.5
 pyaml==21.10.1
