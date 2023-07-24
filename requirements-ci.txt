@@ -98,7 +98,7 @@ python-subunit==1.4.2
 pytz==2023.3
 PyYAML==6.0
 requests==2.31.0
-responses==0.21.0
+responses==0.23.1
 ruamel.yaml==0.17.21
 s3transfer==0.6.0
 scandir==1.10.0
@@ -119,6 +119,7 @@ treq==22.2.0
 Twisted==22.4.0
 txaio==23.1.1
 txrequests==0.9.6
+types-PyYAML==6.0.12.11
 typing_extensions==4.3.0
 unidiff==0.7.4
 urllib3==1.26.11
