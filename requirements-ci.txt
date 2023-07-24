@@ -74,7 +74,7 @@ more-itertools==8.14.0
 moto==4.0.1
 olefile==0.46
 packaging==21.3
-parameterized==0.8.1
+parameterized==0.9.0
 pathlib2==2.3.7.post1
 pbr==5.11.1
 pep8==1.7.1
