@@ -10,5 +10,5 @@ sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
 sphinxcontrib-spelling==8.0.0
 sphinxcontrib-websupport==1.2.4
-Pygments==2.13.0
+Pygments==2.15.0
 towncrier==21.9.0
