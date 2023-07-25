@@ -11,7 +11,7 @@ boto3==1.24.60
 flake8==5.0.4
 msgpack==1.0.5
 Markdown==3.3.4
-pylint==2.14.5
+pylint==2.17.4
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
@@ -22,7 +22,7 @@ alabaster==0.7.12
 alembic==1.10.0
 appdirs==1.4.4
 asn1crypto==1.5.1
-astroid==2.11.7
+astroid==2.15.6
 attrs==23.1.0
 Automat==22.10.0
 Babel==2.12.1
@@ -62,7 +62,7 @@ isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 
 Jinja2==3.1.2
 jmespath==1.0.1
 jsonref==1.1.0
-lazy-object-proxy==1.4.1  # pyup: ignore (required by astroid)
+lazy-object-proxy==1.9.0  # pyup: ignore (required by astroid)
 ldap3==2.9.1
 lz4==4.3.2
 Mako==1.2.2

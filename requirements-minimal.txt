@@ -11,7 +11,7 @@ buildbot_www==3.5.0
 
 alabaster==0.7.12
 alembic==1.10.0
-astroid==1.4.9
+astroid==2.15.6
 attrs==23.1.0
 autobahn==23.6.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" and python_version >= "3.7"  # pyup: ignore
@@ -59,7 +59,7 @@ pyenchant==3.2.2
 pyflakes==2.3.1
 Pygments==2.13.0
 PyJWT==2.7.0
-pylint==1.6.5
+pylint==2.17.4
 pyOpenSSL==23.0.0
 pyparsing==3.1.0
 pypugjs==5.9.12
