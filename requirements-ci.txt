@@ -82,7 +82,8 @@ Pillow==9.3.0;  python_version < "3.8"  # pyup: ignore
 Pillow==10.0.0;  python_version >= "3.8"
 platformdirs==2.5.2
 psutil==5.9.5
-pyaml==21.10.1
+pyaml==21.10.1;  python_version < "3.8"  # pyup: ignore
+pyaml==23.7.0;  python_version >= "3.8"
 pyasn1-modules==0.3.0
 pyasn1==0.5.0
 pycodestyle==2.9.1
