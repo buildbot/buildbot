@@ -69,7 +69,7 @@ PyYAML==6.0
 requests==2.31.0
 responses==0.23.1
 s3transfer==0.6.1
-service-identity==21.1.0
+service-identity==23.1.0
 setuptools-trial==0.6.0
 six==1.16.0
 snowballstemmer==2.2.0
