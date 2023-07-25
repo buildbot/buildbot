@@ -4,10 +4,12 @@
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
 buildbot-www==3.8.0
 
-autobahn==23.1.2
+autobahn==23.6.2;  python_version >= "3.9"
+autobahn==22.7.1;  python_version < "3.9" and python_version >= "3.7"  # pyup: ignore
+autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
 boto3==1.24.60
 flake8==5.0.4
-msgpack==1.0.4
+msgpack==1.0.5
 Markdown==3.3.4
 pylint==2.14.5
 
@@ -21,9 +23,9 @@ alembic==1.10.0
 appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==2.11.7
-attrs==22.1.0
+attrs==23.1.0
 Automat==22.10.0
-Babel==2.10.3
+Babel==2.12.1
 backports.functools-lru-cache==1.6.4
 boto==2.49.0
 botocore==1.27.60
@@ -39,7 +41,7 @@ cookies==2.2.1
 coverage==6.4.3
 cryptography==39.0.2
 decorator==5.1.1
-dicttoxml==1.7.4
+dicttoxml==1.7.16
 dill==0.3.6
 docker==5.0.3;  python_version < "3.7" # pyup: ignore (6.0.0 droppeded support for < Python 3.7 see: https://docker-py.readthedocs.io/en/stable/change-log.html#id8)
 docker==6.1.2;  python_version >= "3.7"
@@ -47,59 +49,62 @@ docutils==0.17.1  # pyup: ignore (sphinx-rtd-theme 1.0.0 requires docutils<0.18)
 extras==1.0.0
 fixtures==4.0.1
 funcsigs==1.0.2
-future==0.18.2
-graphql-core==3.2.1
+future==0.18.3
+graphql-core==3.2.3
 greenlet==2.0.2
 hvac==0.11.2
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.4.1
-incremental==21.3.0
+incremental==22.10.0
 ipaddress==1.0.23
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
 Jinja2==3.1.2
 jmespath==1.0.1
-jsonref==0.2
+jsonref==1.1.0
 lazy-object-proxy==1.4.1  # pyup: ignore (required by astroid)
 ldap3==2.9.1
-lz4==4.0.2
+lz4==4.3.2
 Mako==1.2.2
-markdown2==2.4.3
-MarkupSafe==2.1.1
+markdown2==2.4.9
+MarkupSafe==2.1.3
 mccabe==0.7.0
-mock==4.0.3
-more-itertools==8.14.0
+mock==5.1.0
+more-itertools==9.1.0
 moto==4.0.1
 olefile==0.46
 packaging==21.3
-parameterized==0.8.1
+parameterized==0.9.0
 pathlib2==2.3.7.post1
-pbr==5.10.0
+pbr==5.11.1
 pep8==1.7.1
-Pillow==9.3.0
+Pillow==9.3.0;  python_version < "3.8"  # pyup: ignore
+Pillow==10.0.0;  python_version >= "3.8"
 platformdirs==2.5.2
 psutil==5.9.5
-pyaml==21.10.1
-pyasn1-modules==0.2.8
-pyasn1==0.4.8
+pyaml==21.10.1;  python_version < "3.8"  # pyup: ignore
+pyaml==23.7.0;  python_version >= "3.8"
+pyasn1-modules==0.3.0
+pyasn1==0.5.0
 pycodestyle==2.9.1
 pycparser==2.21
 pyenchant==3.2.2
 pyflakes==2.5.0
-PyJWT==2.4.0
+PyJWT==2.7.0
 pyOpenSSL==23.0.0
-pyparsing==3.0.9
+pyparsing==3.1.0
 pypugjs==5.9.12
 python-dateutil==2.8.2
-python-subunit==1.4.0
-pytz==2022.2.1
+python-subunit==1.4.2
+pytz==2023.3
 PyYAML==6.0
 requests==2.31.0
-responses==0.21.0
-ruamel.yaml==0.17.21
-s3transfer==0.6.0
+responses==0.23.1
+ruamel.yaml==0.17.32
+s3transfer==0.6.1
 scandir==1.10.0
-service-identity==21.1.0
+service-identity==21.1.0;  python_version < "3.8"  # pyup: ignore
+service-identity==23.1.0;  python_version >= "3.8"
 setuptools-trial==0.6.0
 singledispatch==3.7.0
 six==1.16.0
@@ -116,10 +121,11 @@ treq==22.2.0
 Twisted==22.4.0
 txaio==23.1.1
 txrequests==0.9.6
-typing_extensions==4.3.0
-unidiff==0.7.4
+types-PyYAML==6.0.12.11
+typing_extensions==4.7.1
+unidiff==0.7.5
 urllib3==1.26.11
-webcolors==1.12
+webcolors==1.13
 websocket-client==1.3.3
 Werkzeug==2.1.2  # pyup: ignore (moto 4.0.1 depends on werkzeug<2.2.0)
 wrapt==1.14.1
