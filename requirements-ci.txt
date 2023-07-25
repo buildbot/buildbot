@@ -120,7 +120,7 @@ Twisted==22.4.0
 txaio==23.1.1
 txrequests==0.9.6
 types-PyYAML==6.0.12.11
-typing_extensions==4.3.0
+typing_extensions==4.7.1
 unidiff==0.7.4
 urllib3==1.26.11
 webcolors==1.13
