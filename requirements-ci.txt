@@ -100,7 +100,7 @@ PyYAML==6.0
 requests==2.31.0
 responses==0.23.1
 ruamel.yaml==0.17.32
-s3transfer==0.6.0
+s3transfer==0.6.1
 scandir==1.10.0
 service-identity==21.1.0
 setuptools-trial==0.6.0
