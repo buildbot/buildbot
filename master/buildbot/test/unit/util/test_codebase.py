@@ -62,7 +62,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_getCodebaseDict_existing(self):
-        self.db.state.set_fake_state(self.object, lastCodebases={'a': {
+        self.db.state.set_fake_state(self.object, 'lastCodebases', {'a': {
             'repository': 'A',
             'revision': '1234:abc',
             'branch': 'master',
@@ -83,7 +83,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_recordChange_older(self):
-        self.db.state.set_fake_state(self.object, lastCodebases={'a': {
+        self.db.state.set_fake_state(self.object, 'lastCodebases', {'a': {
             'repository': 'A',
             'revision': '2345:bcd',
             'branch': 'master',
@@ -97,7 +97,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_recordChange_newer(self):
-        self.db.state.set_fake_state(self.object, lastCodebases={'a': {
+        self.db.state.set_fake_state(self.object, 'lastCodebases', {'a': {
             'repository': 'A',
             'revision': '1234:abc',
             'branch': 'master',

@@ -39,7 +39,7 @@ class TestStateMixin(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getState(self):
-        self.master.db.state.set_fake_state(self.object, fav_color=['red', 'purple'])
+        self.master.db.state.set_fake_state(self.object, 'fav_color', ['red', 'purple'])
         res = yield self.object.getState('fav_color')
 
         self.assertEqual(res, ['red', 'purple'])
@@ -51,7 +51,7 @@ class TestStateMixin(TestReactorMixin, unittest.TestCase):
         self.assertEqual(res, 'black')
 
     def test_getState_KeyError(self):
-        self.master.db.state.set_fake_state(self.object, fav_color=['red', 'purple'])
+        self.master.db.state.set_fake_state(self.object, 'fav_color', ['red', 'purple'])
         d = self.object.getState('fav_book')
 
         def cb(_):
@@ -72,7 +72,7 @@ class TestStateMixin(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_setState_existing(self):
-        self.master.db.state.set_fake_state(self.object, x=13)
+        self.master.db.state.set_fake_state(self.object, 'x', 13)
         yield self.object.setState('x', 14)
 
         self.master.db.state.assertStateByClass('fake-name', 'FakeObject',

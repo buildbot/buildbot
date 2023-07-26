@@ -1493,8 +1493,7 @@ class TestGitPoller(TestGitPollerBase):
         yield self.poller.stopService()
 
         self.master.db.state.set_fake_state(
-            self.poller,
-            lastRev={"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"},
+            self.poller, 'lastRev', {"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"}
         )
 
         yield self.poller.startService()

@@ -28,6 +28,46 @@ from buildbot.schedulers import base
 from buildbot.util import croniter
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 
+# States of objects which have to be observed are registered in the data base table `object_state`.
+# `objectid` in the `object_state` refers to the object from the `object` table.
+# Schedulers use the following state keys:
+# - `last_only_if_changed` - bool, setting of `onlyIfChanged` when the scheduler checked whether to
+# run build the last time. Does not exist if there was no build before.
+# - `last_build` - timestamp, time when the last build was scheduled to run. If `onlyIfChanged` is
+# set to True, only when there are designated changes build will be started. If the build was not
+# started,
+# `last_build` means on what time build was scheduled to run ignoring the fact if it actually ran or
+# not.
+# Value of these state keys affects the decision whether to run a build.
+
+# When deciding whether to run the build or to skip it, several factors and their interactions are
+# evaluated:
+# - the value of `onlyIfChanged` (default is False);
+# - has the state of `onlyIfChanged` changed;
+# - whether this would be first build (True if `last_build` value was not detected). If there
+# already were builds in the past, it indicates that the scheduler is existing;
+# - were there any important changes after the last build.
+
+# If `onlyIfChanged` is not set or its setting changes to False, builds will always run on the time
+# set, ignoring the status of `last_only_if_changed` and `last_build` regardless of what the state
+# is or anything else.
+
+# If `onlyIfChanged` is True, then builds will be run when there are relevant changes.
+
+# If `onlyIfChanged` is True and even when there were no relevant changes, builds will run for the
+# the first time on specified time as well when the following condition holds:
+# - `last_only_if_changed` was set to False on previous build. This ensures that any changes that
+# happened while `onlyIfChanged` was still False are not missed. This may result in a single build
+# done unnecessarily, but it is accepted as a good compromise because it only happens when
+# `onlyIfChanged` is adjusted;
+# - `last_build` does not have a value yet meaning that it is a new scheduler and we should have
+# initial build to set a baseline.
+
+# There is an edge case, when upgrading to v3.5.0 and new object status variable
+# `last_only_if_changed` is introduced. If scheduler exists and had builds before
+# (`last_build` has a value), build should only be started if there are relevant changes.
+# Thus upgrading the version does not start unnecessary builds.
+
 
 class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
@@ -73,6 +113,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
         self._reactor = reactor  # patched by tests
+        self.is_first_build = None
 
     @defer.inlineCallbacks
     def activate(self):
@@ -87,6 +128,10 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
         # get the scheduler's last_build time (note: only done at startup)
         self.lastActuated = yield self.getState('last_build', None)
+        if self.lastActuated is None:
+            self.is_first_build = True
+        else:
+            self.is_first_build = False
 
         # schedule the next build
         yield self.scheduleNextBuild()
@@ -152,10 +197,18 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         # occurred since the last invocation. Note that when the scheduler has just been started
         # there may not be any important changes yet and we should start the build for the
         # current state of the code whatever it is.
-        last_only_if_changed = yield self.getState('last_only_if_changed', False)
-        if last_only_if_changed and self.onlyIfChanged and not any(classifications.values()):
+        #
+        # Note that last_only_if_changed will always be set to the value of onlyIfChanged
+        # at the point when startBuild finishes (it is not obvious, that all code paths lead
+        # to this outcome)
+
+        last_only_if_changed = yield self.getState('last_only_if_changed', True)
+
+        if last_only_if_changed and self.onlyIfChanged and not any(classifications.values()) and \
+                not self.is_first_build:
             log.msg(("{} scheduler <{}>: skipping build " +
                      "- No important changes").format(self.__class__.__name__, self.name))
+            self.is_first_build = False
             return
 
         if last_only_if_changed != self.onlyIfChanged:
@@ -176,6 +229,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
             yield self.addBuildsetForSourceStampsWithDefaults(
                 reason=self.reason,
                 sourcestamps=sourcestamps)
+        self.is_first_build = False
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
