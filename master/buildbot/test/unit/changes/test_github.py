@@ -254,13 +254,20 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         yield self.simple_pr()
 
     @defer.inlineCallbacks
+    def test_project(self):
+        yield self.newChangeSource(
+            'defunkt', 'defunkt', token='1234', project='tst_project',
+            github_property_whitelist=["github.*"])
+        yield self.simple_pr(project='tst_project')
+
+    @defer.inlineCallbacks
     def test_secret_token(self):
         yield self.newChangeSource(
             'defunkt', 'defunkt', token=Secret('token'), github_property_whitelist=["github.*"])
         yield self.simple_pr()
 
     @defer.inlineCallbacks
-    def simple_pr(self):
+    def simple_pr(self, project=None):
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
@@ -296,6 +303,9 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
                          'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
         self.assertEqual(change['committer'], 'defunktc <defunktc@defunkt.null>')
+        self.assertEqual(change['project'],
+                         project if project is not None
+                         else 'buildbot/buildbot')
 
         self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
         self.assertEqual(change["comments"],
