@@ -57,7 +57,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             transaction = conn.begin()
 
             q = builders_tbl.update(
-                whereclause=(builders_tbl.c.id == builderid))
+                whereclause=builders_tbl.c.id == builderid)
             conn.execute(q, description=description, description_format=description_format,
                          description_html=description_html, projectid=projectid).close()
             # remove previous builders_tags
@@ -118,7 +118,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             if masterid is not None:
                 limiting_bm_tbl = bm_tbl.alias('limiting_bm')
                 j = j.join(limiting_bm_tbl,
-                           onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
+                           onclause=bldr_tbl.c.id == limiting_bm_tbl.c.builderid)
             q = sa.select(
                 [
                     bldr_tbl.c.id,

@@ -171,7 +171,7 @@ class Bzr(Source):
             command.extend(['-r', self.revision])
 
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
 

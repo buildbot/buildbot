@@ -31,14 +31,14 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def getStep(self, stepid=None, buildid=None, number=None, name=None):
         tbl = self.db.model.steps
         if stepid is not None:
-            wc = (tbl.c.id == stepid)
+            wc = tbl.c.id == stepid
         else:
             if buildid is None:
                 raise RuntimeError('must supply either stepid or buildid')
             if number is not None:
-                wc = (tbl.c.number == number)
+                wc = tbl.c.number == number
             elif name is not None:
-                wc = (tbl.c.name == name)
+                wc = tbl.c.name == name
             else:
                 raise RuntimeError('must supply either number or name')
             wc = wc & (tbl.c.buildid == buildid)
@@ -72,7 +72,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.steps
             # get the highest current number
             r = conn.execute(sa.select([sa.func.max(tbl.c.number)],
-                                       whereclause=(tbl.c.buildid == buildid)))
+                                       whereclause=tbl.c.buildid == buildid))
             number = r.scalar()
             number = 0 if number is None else number + 1
 
@@ -117,7 +117,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=(tbl.c.id == stepid))
+            q = tbl.update(whereclause=tbl.c.id == stepid)
             conn.execute(q, started_at=started_at)
         yield self.db.pool.do(thd)
 
@@ -125,7 +125,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def setStepStateString(self, stepid, state_string):
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=(tbl.c.id == stepid))
+            q = tbl.update(whereclause=tbl.c.id == stepid)
             conn.execute(q, state_string=state_string)
         return self.db.pool.do(thd)
 
@@ -144,7 +144,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
 
             tbl = self.db.model.steps
-            wc = (tbl.c.id == stepid)
+            wc = tbl.c.id == stepid
             q = sa.select([tbl.c.urls_json],
                           whereclause=wc)
             res = conn.execute(q)
@@ -166,7 +166,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def finishStep(self, stepid, results, hidden):
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=(tbl.c.id == stepid))
+            q = tbl.update(whereclause=tbl.c.id == stepid)
             conn.execute(q,
                          complete_at=int(self.master.reactor.seconds()),
                          results=results,

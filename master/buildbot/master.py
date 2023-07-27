@@ -130,7 +130,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             self.hostname = socket.getfqdn()
 
         # public attributes
-        self.name = (f"{self.hostname}:{os.path.abspath(self.basedir or '.')}")
+        self.name = f"{self.hostname}:{os.path.abspath(self.basedir or '.')}"
         if isinstance(self.name, bytes):
             self.name = self.name.decode('ascii', 'replace')
         self.masterid = None

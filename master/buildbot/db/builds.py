@@ -159,7 +159,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
             # get the highest current number
             r = conn.execute(sa.select([sa.func.max(tbl.c.number)],
-                                       whereclause=(tbl.c.builderid == builderid)))
+                                       whereclause=tbl.c.builderid == builderid))
             number = r.scalar()
             new_number = 1 if number is None else number + 1
             # insert until we are successful..
@@ -188,7 +188,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.builds
 
-            q = tbl.update(whereclause=(tbl.c.id == buildid))
+            q = tbl.update(whereclause=tbl.c.id == buildid)
             conn.execute(q, state_string=state_string)
         return self.db.pool.do(thd)
 
@@ -196,7 +196,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
     def finishBuild(self, buildid, results):
         def thd(conn):
             tbl = self.db.model.builds
-            q = tbl.update(whereclause=(tbl.c.id == buildid))
+            q = tbl.update(whereclause=tbl.c.id == buildid)
             conn.execute(q,
                          complete_at=int(self.master.reactor.seconds()),
                          results=results)
@@ -208,7 +208,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             bp_tbl = self.db.model.build_properties
             q = sa.select(
                 [bp_tbl.c.name, bp_tbl.c.value, bp_tbl.c.source],
-                whereclause=(bp_tbl.c.buildid == bid))
+                whereclause=bp_tbl.c.buildid == bid)
             props = []
             if resultSpec is not None:
                 data = resultSpec.thd_execute(conn, q, lambda x: x)

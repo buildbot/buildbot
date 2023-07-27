@@ -60,7 +60,7 @@ class LineBoundaryFinder:
                     ret.append(text[:self.MAX_LINELENGTH])
                     text = text[self.MAX_LINELENGTH:]
                 ret.append(text)
-                result = ("\n".join(ret) + "\n")
+                result = "\n".join(ret) + "\n"
                 return result
             text = self.partialLine + text
             self.partialLine = None

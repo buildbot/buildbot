@@ -191,7 +191,7 @@ class CVS(Source):
             command += ['-D', self.revision]
         command += [self.cvsmodule]
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
         res = yield self._dovccmd(command, '', abandonOnFailure=abandonOnFailure)

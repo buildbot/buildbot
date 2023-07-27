@@ -157,7 +157,7 @@ class Darcs(Source):
     def _checkout(self):
 
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
 

@@ -153,7 +153,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     def getBuildset(self, bsid):
         def thd(conn):
             bs_tbl = self.db.model.buildsets
-            q = bs_tbl.select(whereclause=(bs_tbl.c.id == bsid))
+            q = bs_tbl.select(whereclause=bs_tbl.c.id == bsid)
             res = conn.execute(q)
             row = res.fetchone()
             if not row:
@@ -215,7 +215,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             bsp_tbl = self.db.model.buildset_properties
             q = sa.select(
                 [bsp_tbl.c.property_name, bsp_tbl.c.property_value],
-                whereclause=(bsp_tbl.c.buildsetid == bsid))
+                whereclause=bsp_tbl.c.buildsetid == bsid)
             ret = []
             for row in conn.execute(q):
                 try:

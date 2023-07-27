@@ -235,7 +235,7 @@ class Monotone(Source):
     @defer.inlineCallbacks
     def _retryPull(self):
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
 

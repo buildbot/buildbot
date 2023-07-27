@@ -219,7 +219,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 pass
 
             bs_tbl = self.db.model.workers
-            q = bs_tbl.update(whereclause=(bs_tbl.c.id == workerid))
+            q = bs_tbl.update(whereclause=bs_tbl.c.id == workerid)
             conn.execute(q, info=workerinfo)
         return self.db.pool.do(thd)
 
@@ -236,6 +236,6 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
     def setWorkerState(self, workerid, paused, graceful):
         def thd(conn):
             tbl = self.db.model.workers
-            q = tbl.update(whereclause=(tbl.c.id == workerid))
+            q = tbl.update(whereclause=tbl.c.id == workerid)
             conn.execute(q, paused=int(paused), graceful=int(graceful))
         return self.db.pool.do(thd)

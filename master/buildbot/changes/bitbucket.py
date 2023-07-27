@@ -66,7 +66,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         if hasattr(pullrequest_filter, '__call__'):
             self.pullrequest_filter = pullrequest_filter
         else:
-            self.pullrequest_filter = (lambda _: pullrequest_filter)
+            self.pullrequest_filter = lambda _: pullrequest_filter
 
         self.lastChange = time.time()
         self.lastPoll = time.time()

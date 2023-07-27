@@ -64,8 +64,7 @@ class DevProxy:
         self.jinja = jinja2.Environment(
             loader=loader, undefined=jinja2.StrictUndefined)
         app.router.add_static('/', staticdir)
-        conn = aiohttp.TCPConnector(
-            limit=self.MAX_CONNECTIONS, verify_ssl=(not self.unsafe_ssl))
+        conn = aiohttp.TCPConnector(limit=self.MAX_CONNECTIONS, verify_ssl=not self.unsafe_ssl)
         self.session = aiohttp.ClientSession(connector=conn, trust_env=True, cookies=cookies)
         self.config = None
         self.buildbotURL = f"http://localhost:{port}/"
