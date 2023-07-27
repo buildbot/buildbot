@@ -330,6 +330,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
                     f'{minutes // 60:02d}:{minutes % 60:02d}:{seconds:02d}']
         else:
             self.failed_to_start(instance.id, instance.status)
+            return None  # This is just to silence warning, above line throws an exception
 
     def stop_instance(self, fast=False):
         instance = self.instance

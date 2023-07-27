@@ -300,7 +300,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         """
 
         if not changeHorizon:
-            return None
+            return
 
         def thd(conn):
             changes_tbl = self.db.model.changes
