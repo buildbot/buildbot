@@ -39,7 +39,7 @@ class GenericLatentMachine(AbstractLatentMachine):
                                  (stop_action, 'stop_action')]:
             if not IMachineAction.providedBy(action):
                 msg = f"{arg_name} of {self.name} does not implement required interface"
-                raise Exception(msg)
+                raise RuntimeError(msg)
 
     @defer.inlineCallbacks
     def reconfigService(self, name, start_action, stop_action, **kwargs):

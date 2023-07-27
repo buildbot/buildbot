@@ -449,7 +449,7 @@ class croniter:
                 continue
             return mktime(dst.timetuple())
 
-        raise Exception("failed to find prev date")
+        raise RuntimeError("failed to find prev date")
 
     def _get_next_nearest(self, x, to_check):
         small = [item for item in to_check if item < x]

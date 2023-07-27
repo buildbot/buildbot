@@ -396,7 +396,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
                 brdict = yield self.master.db.buildrequests.getBuildRequest(id)
                 expected_productions.append((('buildrequests', str(id), 'cancel'), brdict))
             else:
-                raise Exception(f"Unknown cancellation type {kind}")
+                raise RuntimeError(f"Unknown cancellation type {kind}")
 
         self.master.mq.assertProductions(expected_productions)
 

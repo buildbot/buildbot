@@ -37,9 +37,9 @@ def main():
     os.makedirs('dist', exist_ok=True)
     for url in (a['browser_download_url'] for a in assets):
         if 'gitarchive' in url:
-            raise Exception('The git archive has already been uploaded. Are you trying to fix '
-                            'broken upload? If this is the case, delete the asset in the GitHub '
-                            'UI and retry this command')
+            raise RuntimeError('The git archive has already been uploaded. Are you trying to fix '
+                               'broken upload? If this is the case, delete the asset in the GitHub '
+                               'UI and retry this command')
         if url.endswith(".whl") or url.endswith(".tar.gz"):
             fn = os.path.join('dist', url.split('/')[-1])
             download(s, url, fn)

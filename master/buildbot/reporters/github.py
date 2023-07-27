@@ -219,7 +219,7 @@ class GitHubStatusPush(ReporterBase):
                     continue
 
                 if not self.is_status_2xx(response.code):
-                    raise Exception()
+                    raise RuntimeError()
 
                 if self.verbose:
                     log.msg(

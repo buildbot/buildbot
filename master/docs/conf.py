@@ -328,7 +328,7 @@ for raml_typename, raml_type in sorted(raml_spec.types.items()):
 
     doc_path = f'developer/raml/{raml_typename}.rst'
     if not os.path.exists(doc_path):
-        raise Exception(f'File {doc_path} for RAML type {raml_typename} does not exist')
+        raise RuntimeError(f'File {doc_path} for RAML type {raml_typename} does not exist')
 
 # Spell checker.
 try:

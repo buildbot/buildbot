@@ -83,9 +83,9 @@ def patchForDelay(target_name):
     original = getattr(target, attribute, default)
 
     if original is default:
-        raise Exception(f'Could not find name {target_name}')
+        raise RuntimeError(f'Could not find name {target_name}')
     if not callable(original):
-        raise Exception(f'{target_name} is not callable')
+        raise RuntimeError(f'{target_name} is not callable')
 
     delay = DelayWrapper()
 

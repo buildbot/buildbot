@@ -55,7 +55,7 @@ class AbstractLatentMachine(Machine):
 
         for worker in self.workers:
             if not interfaces.ILatentWorker.providedBy(worker):
-                raise Exception(f'Worker is not latent {worker.name}')
+                raise RuntimeError(f'Worker is not latent {worker.name}')
 
         self.state = States.STOPPED
         self._start_notifier = Notifier()

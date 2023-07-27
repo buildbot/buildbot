@@ -99,7 +99,7 @@ def masterConfig(num_concurrent, extra_steps=None):
     if creds is not None:
         user, password = creds.split(":")
     else:
-        raise Exception("Cannot run this test without credentials")
+        raise RuntimeError("Cannot run this test without credentials")
     masterFQDN = os.environ.get('masterFQDN', 'localhost')
     c['workers'] = []
     for i in range(num_concurrent):

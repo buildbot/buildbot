@@ -1353,7 +1353,7 @@ For example, a particular daily scheduler could be configured on multiple master
                     res = yield self._http.get("/")
                     # note that at this point, only the http response headers are received
                     if res.code != 200:
-                        raise Exception("%d: server did not succeed" % (res.code))
+                        raise RuntimeError("%d: server did not succeed" % (res.code))
                     res_json = yield res.json()
                     # res.json() returns a deferred to account for the time needed to fetch the
                     # entire body
