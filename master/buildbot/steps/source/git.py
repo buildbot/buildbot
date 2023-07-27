@@ -442,6 +442,8 @@ class Git(Source, GitStepMixin):
             cmdArgs = ["submodule", "update", "--init", "--recursive"]
             if self.remoteSubmodules:
                 cmdArgs.append("--remote")
+            if self.shallow:
+                cmdArgs.extend(["--depth", str(int(shallowClone))])
             res = yield self._dovccmd(cmdArgs, shallowClone)
 
         return res
