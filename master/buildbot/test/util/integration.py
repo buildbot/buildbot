@@ -201,12 +201,14 @@ class RunMasterBase(unittest.TestCase):
             if self.proto == 'pb':
                 proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
                 workerclass = worker.Worker
-            if self.proto == 'msgpack':
+            elif self.proto == 'msgpack':
                 proto = {"msgpack_experimental_v7": {"port": 0}}
                 workerclass = worker.Worker
             elif self.proto == 'null':
                 proto = {"null": {}}
                 workerclass = worker.LocalWorker
+            else:
+                raise RuntimeError(f"{self.proto} protocol is not supported.")
             config_dict['workers'] = [workerclass("local1", password=Interpolate("localpw"),
                                                   missing_timeout=0)]
             config_dict['protocols'] = proto
