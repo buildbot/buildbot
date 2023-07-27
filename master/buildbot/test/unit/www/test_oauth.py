@@ -584,7 +584,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin,
         listener = reactor.listenTCP(5000, site)
 
         def thd():
-            res = requests.get('http://localhost:5000/auth/login')
+            res = requests.get('http://localhost:5000/auth/login', timeout=30)
             content = bytes2unicode(res.content)
             webbrowser.open(content)
         threads.deferToThread(thd)
