@@ -76,7 +76,7 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
         if headers is not None:
             self.config['headers'] = headers
         if basicAuth and bearerToken:
-            raise Exception("set one of basicAuth and bearerToken, not both")
+            raise RuntimeError("set one of basicAuth and bearerToken, not both")
         self.basicAuth = basicAuth
         self.bearerToken = bearerToken
         if cert is not None:

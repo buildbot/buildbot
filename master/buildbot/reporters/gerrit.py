@@ -293,7 +293,7 @@ class GerritStatusPush(service.BuildbotService):
         if key[0] == 'buildsets' and key[2] == 'complete':  # pragma: no cover
             yield self.buildsetComplete(key, msg)
             return
-        raise Exception(f'Invalid key for _got_event: {key}')  # pragma: no cover
+        raise RuntimeError(f'Invalid key for _got_event: {key}')  # pragma: no cover
 
     @defer.inlineCallbacks
     def buildStarted(self, key, build):

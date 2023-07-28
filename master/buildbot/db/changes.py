@@ -157,7 +157,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
             q = changes_tbl.select(
-                whereclause=(changes_tbl.c.changeid == changeid))
+                whereclause=changes_tbl.c.changeid == changeid)
             rp = conn.execute(q)
             row = rp.fetchone()
             if not row:
@@ -216,7 +216,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
             q = changes_tbl.select(
-                whereclause=(changes_tbl.c.sourcestampid == sourcestampid))
+                whereclause=changes_tbl.c.sourcestampid == sourcestampid)
             # if there are multiple changes for this ssid, get the most recent one
             q = q.order_by(changes_tbl.c.changeid.desc())
             q = q.limit(1)
@@ -234,7 +234,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         def thd(conn):
             cu_tbl = self.db.model.change_users
-            q = cu_tbl.select(whereclause=(cu_tbl.c.changeid == changeid))
+            q = cu_tbl.select(whereclause=cu_tbl.c.changeid == changeid)
             res = conn.execute(q)
             rows = res.fetchall()
             row_uids = [row.uid for row in rows]
@@ -300,7 +300,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         """
 
         if not changeHorizon:
-            return None
+            return
 
         def thd(conn):
             changes_tbl = self.db.model.changes
@@ -357,7 +357,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             sourcestampid=int(ch_row.sourcestampid))
 
         query = change_files_tbl.select(
-            whereclause=(change_files_tbl.c.changeid == ch_row.changeid))
+            whereclause=change_files_tbl.c.changeid == ch_row.changeid)
         rows = conn.execute(query)
         for r in rows:
             chdict['files'].append(r.filename)
@@ -375,7 +375,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             return v, s
 
         query = change_properties_tbl.select(
-            whereclause=(change_properties_tbl.c.changeid == ch_row.changeid))
+            whereclause=change_properties_tbl.c.changeid == ch_row.changeid)
         rows = conn.execute(query)
         for r in rows:
             try:

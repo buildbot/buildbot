@@ -122,7 +122,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
     buildbot_cvs_mail_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), '../../../contrib/buildbot_cvs_mail.py'))
     if not os.path.exists(buildbot_cvs_mail_path):
-        skip = (f"'{buildbot_cvs_mail_path}' does not exist (normal unless run from git)")
+        skip = f"'{buildbot_cvs_mail_path}' does not exist (normal unless run from git)"
 
     def assertOutputOk(self, result, regexList):
         "assert that the output from getProcessOutputAndValueWithInput matches expectations"

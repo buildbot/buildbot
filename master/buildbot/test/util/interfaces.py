@@ -70,7 +70,7 @@ class InterfaceTests:
 
         def assert_same_argspec(expected, actual):
             if expected != actual:
-                msg = (f"Expected: {expected}; got: {actual}")
+                msg = f"Expected: {expected}; got: {actual}"
                 self.fail(msg)
 
         actual_argspec = filter_argspec(actualMethod)

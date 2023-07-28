@@ -73,7 +73,7 @@ VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 
 @implementer(interfaces.IEmailLookup)
 class Domain(util.ComparableMixin):
-    compare_attrs = ("domain")
+    compare_attrs = ("domain",)
 
     def __init__(self, domain):
         assert "@" not in domain

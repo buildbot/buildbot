@@ -399,7 +399,7 @@ class Git(Source, GitStepMixin):
             else:
                 log.msg("Git versions < 1.7.2 don't support progress")
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
         # If it's a shallow clone abort build step

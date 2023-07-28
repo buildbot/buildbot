@@ -32,7 +32,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def enable(self, schedulerid, v):
         def thd(conn):
             tbl = self.db.model.schedulers
-            q = tbl.update(whereclause=(tbl.c.id == schedulerid))
+            q = tbl.update(whereclause=tbl.c.id == schedulerid)
             conn.execute(q, enabled=int(v))
         return self.db.pool.do(thd)
 
@@ -70,7 +70,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def flushChangeClassifications(self, schedulerid, less_than=None):
         def thd(conn):
             sch_ch_tbl = self.db.model.scheduler_changes
-            wc = (sch_ch_tbl.c.schedulerid == schedulerid)
+            wc = sch_ch_tbl.c.schedulerid == schedulerid
             if less_than is not None:
                 wc = wc & (sch_ch_tbl.c.changeid < less_than)
             q = sch_ch_tbl.delete(whereclause=wc)
@@ -87,7 +87,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             sch_ch_tbl = self.db.model.scheduler_changes
             ch_tbl = self.db.model.changes
 
-            wc = (sch_ch_tbl.c.schedulerid == schedulerid)
+            wc = sch_ch_tbl.c.schedulerid == schedulerid
 
             # may need to filter further based on branch, etc
             extra_wheres = []
@@ -132,7 +132,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             # handle the masterid=None case to get it out of the way
             if masterid is None:
                 q = sch_mst_tbl.delete(
-                    whereclause=(sch_mst_tbl.c.schedulerid == schedulerid))
+                    whereclause=sch_mst_tbl.c.schedulerid == schedulerid)
                 conn.execute(q).close()
                 return None
 
@@ -182,15 +182,15 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             # if we're given a _schedulerid, select only that row
             wc = None
             if _schedulerid:
-                wc = (sch_tbl.c.id == _schedulerid)
+                wc = sch_tbl.c.id == _schedulerid
             else:
                 # otherwise, filter with active, if necessary
                 if masterid is not None:
-                    wc = (sch_mst_tbl.c.masterid == masterid)
+                    wc = sch_mst_tbl.c.masterid == masterid
                 elif active:
-                    wc = (sch_mst_tbl.c.masterid != NULL)
+                    wc = sch_mst_tbl.c.masterid != NULL
                 elif active is not None:
-                    wc = (sch_mst_tbl.c.masterid == NULL)
+                    wc = sch_mst_tbl.c.masterid == NULL
 
             q = sa.select([sch_tbl.c.id, sch_tbl.c.name, sch_tbl.c.enabled,
                            sch_mst_tbl.c.masterid],

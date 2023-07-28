@@ -364,7 +364,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         total = counts['total']
         failures = counts['failures']
         errors = counts['errors']
-        parsed = (total is not None)
+        parsed = total is not None
 
         desc_parts = []
 

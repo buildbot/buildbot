@@ -206,7 +206,7 @@ def _sendWithRequests(url, data):
         import requests  # pylint: disable=import-outside-toplevel
     except ImportError:
         return None
-    r = requests.post(url, json=data)
+    r = requests.post(url, json=data, timeout=30)
     return r.text
 
 

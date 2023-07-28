@@ -74,7 +74,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
 
     def libvirt_open(self, uri):
         if uri not in self.connections:
-            raise Exception('Could not find test connection')
+            raise RuntimeError('Could not find test connection')
         return self.connections[uri]
 
     def add_fake_conn(self, uri):

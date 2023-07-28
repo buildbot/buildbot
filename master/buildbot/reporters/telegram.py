@@ -515,8 +515,7 @@ class TelegramContact(Contact):
                                               **params)
                     except CollectedValidationError as e:
                         raise ValueError(e.errors) from e
-                    else:
-                        self.send("Force build successfully requested.")
+                    self.send("Force build successfully requested.")
                     return
 
             except (IndexError, ValueError) as e:

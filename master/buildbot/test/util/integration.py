@@ -201,12 +201,14 @@ class RunMasterBase(unittest.TestCase):
             if self.proto == 'pb':
                 proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
                 workerclass = worker.Worker
-            if self.proto == 'msgpack':
+            elif self.proto == 'msgpack':
                 proto = {"msgpack_experimental_v7": {"port": 0}}
                 workerclass = worker.Worker
             elif self.proto == 'null':
                 proto = {"null": {}}
                 workerclass = worker.LocalWorker
+            else:
+                raise RuntimeError(f"{self.proto} protocol is not supported.")
             config_dict['workers'] = [workerclass("local1", password=Interpolate("localpw"),
                                                   missing_timeout=0)]
             config_dict['protocols'] = proto
@@ -377,7 +379,8 @@ class RunMasterBase(unittest.TestCase):
         if isinstance(expectedLog, str):
             expectedLog = [expectedLog]
         if not isinstance(expectedLog, list):
-            raise Exception('The expectedLog argument must be either string or a list of strings')
+            raise RuntimeError('The expectedLog argument must be either string or a list of '
+                               'strings')
 
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
         for step in build['steps']:

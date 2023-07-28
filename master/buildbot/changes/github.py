@@ -113,7 +113,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         if callable(pullrequest_filter):
             self.pullrequest_filter = pullrequest_filter
         else:
-            self.pullrequest_filter = (lambda _: pullrequest_filter)
+            self.pullrequest_filter = lambda _: pullrequest_filter
 
         self.category = category if callable(category) else bytes2unicode(
             category)

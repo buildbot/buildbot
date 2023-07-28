@@ -31,7 +31,7 @@ from buildbot.test.util import sourcesteps
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
 
-_is_windows = (platform.system() == 'Windows')
+_is_windows = platform.system() == 'Windows'
 
 
 class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,

@@ -94,10 +94,10 @@ class Client:
         self.called_class_name = self.__class__.__name__
         name = kwargs.get('name', None)
         if 'buggy' in image:
-            raise Exception('we could not create this container')
+            raise RuntimeError('we could not create this container')
         for c in self._containers.values():
             if c['name'] == name:
-                raise Exception('cannot create with same name')
+                raise RuntimeError('cannot create with same name')
         ret = {
             'Id':
             '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',

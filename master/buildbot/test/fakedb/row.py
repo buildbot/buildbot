@@ -56,7 +56,8 @@ class Row:
 
     def __init__(self, **kwargs):
         if self.__init__.__func__ is Row.__init__:
-            raise Exception('Row.__init__ must be overridden to supply default values for columns')
+            raise RuntimeError('Row.__init__ must be overridden to supply default values for '
+                               'columns')
 
         self.values = kwargs.copy()
         if self.id_column:

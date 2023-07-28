@@ -247,7 +247,7 @@ class EndToEndHangCheckTests(TestCase):
         try:
             yield result
         except defer.CancelledError:
-            raise Exception('Timeout did not happen')
+            raise RuntimeError('Timeout did not happen')
         finally:
             d_connected.cancel()
             timer.cancel()

@@ -33,7 +33,7 @@ class myTestedService(service.BuildbotService):
         res = yield self._http.get("/")
         # note that at this point, only the http response headers are received
         if res.code != 200:
-            raise Exception(f"{res.code}: server did not succeed")
+            raise RuntimeError(f"{res.code}: server did not succeed")
         res_json = yield res.json()
         # res.json() returns a deferred to represent the time needed to fetch the entire body
         return res_json

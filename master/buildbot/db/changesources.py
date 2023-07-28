@@ -47,7 +47,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             # handle the masterid=None case to get it out of the way
             if masterid is None:
                 q = cs_mst_tbl.delete(
-                    whereclause=(cs_mst_tbl.c.changesourceid == changesourceid))
+                    whereclause=cs_mst_tbl.c.changesourceid == changesourceid)
                 conn.execute(q)
                 return
 
@@ -85,15 +85,15 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             # if we're given a _changesourceid, select only that row
             wc = None
             if _changesourceid:
-                wc = (cs_tbl.c.id == _changesourceid)
+                wc = cs_tbl.c.id == _changesourceid
             else:
                 # otherwise, filter with active, if necessary
                 if masterid is not None:
-                    wc = (cs_mst_tbl.c.masterid == masterid)
+                    wc = cs_mst_tbl.c.masterid == masterid
                 elif active:
-                    wc = (cs_mst_tbl.c.masterid != NULL)
+                    wc = cs_mst_tbl.c.masterid != NULL
                 elif active is not None:
-                    wc = (cs_mst_tbl.c.masterid == NULL)
+                    wc = cs_mst_tbl.c.masterid == NULL
 
             q = sa.select([cs_tbl.c.id, cs_tbl.c.name,
                            cs_mst_tbl.c.masterid],

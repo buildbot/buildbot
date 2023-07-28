@@ -171,7 +171,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
                                                   stderr_is_error=True)
         if rc != 0:
             msg = f'{self}: got error {rc} when getting details for revision {rev}'
-            raise Exception(msg)
+            raise RuntimeError(msg)
 
         # all file names are on one line
         output = output.decode(self.encoding, "replace")

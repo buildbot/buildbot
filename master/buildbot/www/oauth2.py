@@ -149,7 +149,7 @@ class OAuth2Auth(auth.AuthBase):
                     {'client_id': client_id, 'client_secret': client_secret})
             data.update(self.tokenUriAdditionalParams)
             response = requests.post(
-                url, data=data, auth=auth, verify=self.sslVerify)
+                url, data=data, timeout=30, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
             responseContent = bytes2unicode(response.content)
             try:

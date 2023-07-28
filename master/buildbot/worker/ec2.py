@@ -507,6 +507,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             return self.instance.id, start_time
         else:
             self.failed_to_start(self.instance.id, self.instance.state['Name'])
+            return None  # This is just to silence warning, above line throws an exception
 
     def _thd_wait_for_request(self, reservation):
         duration = 0

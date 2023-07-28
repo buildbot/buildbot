@@ -190,7 +190,7 @@ class Expect:
             name, streams = args
             for stream in streams:
                 if stream not in ['header', 'stdout', 'stderr']:
-                    raise Exception(f'Log stream {stream} is not recognized')
+                    raise RuntimeError(f'Log stream {stream} is not recognized')
 
             if name == command.stdioLogName:
                 if 'header' in streams:
@@ -201,10 +201,10 @@ class Expect:
                     command.remote_update([({"stderr": streams['stderr']}, 0)])
             else:
                 if 'header' in streams or 'stderr' in streams:
-                    raise Exception('Non stdio streams only support stdout')
+                    raise RuntimeError('Non stdio streams only support stdout')
                 yield command.addToLog(name, streams['stdout'])
                 if name not in command.logs:
-                    raise Exception(f"{command}.addToLog: no such log {name}")
+                    raise RuntimeError(f"{command}.addToLog: no such log {name}")
 
         elif behavior == 'callable':
             yield args[0](command)
@@ -609,7 +609,7 @@ class TestBuildStepMixin:
 
     def setup_test_build_step(self, want_data=True, want_db=False, want_mq=False):
         if not hasattr(self, 'reactor'):
-            raise Exception('Reactor has not yet been setup for step')
+            raise RuntimeError('Reactor has not yet been setup for step')
 
         self._interrupt_remote_command_numbers = []
 
@@ -697,7 +697,7 @@ class TestBuildStepMixin:
         def addCompleteLog(name, text):
             _log = logfile.FakeLogFile(name)
             if name in self.step.logs:
-                raise Exception(f'Attempt to add log {name} twice to the logs')
+                raise RuntimeError(f'Attempt to add log {name} twice to the logs')
             self.step.logs[name] = _log
             _log.addStdout(text)
             return defer.succeed(None)

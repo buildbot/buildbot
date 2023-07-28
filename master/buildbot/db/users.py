@@ -95,14 +95,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
-            q = tbl.select(whereclause=(tbl.c.uid == uid))
+            q = tbl.select(whereclause=tbl.c.uid == uid)
             users_row = conn.execute(q).fetchone()
 
             if not users_row:
                 return None
 
             # gather all attr_type and attr_data entries from users_info table
-            q = tbl_info.select(whereclause=(tbl_info.c.uid == uid))
+            q = tbl_info.select(whereclause=tbl_info.c.uid == uid)
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
@@ -129,14 +129,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
-            q = tbl.select(whereclause=(tbl.c.bb_username == username))
+            q = tbl.select(whereclause=tbl.c.bb_username == username)
             users_row = conn.execute(q).fetchone()
 
             if not users_row:
                 return None
 
             # gather all attr_type and attr_data entries from users_info table
-            q = tbl_info.select(whereclause=(tbl_info.c.uid == users_row.uid))
+            q = tbl_info.select(whereclause=tbl_info.c.uid == users_row.uid)
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
@@ -181,7 +181,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
             # update the users table if it needs to be updated
             if update_dict:
-                q = tbl.update(whereclause=(tbl.c.uid == uid))
+                q = tbl.update(whereclause=tbl.c.uid == uid)
                 res = conn.execute(q, update_dict)
 
             # then, update the attributes, carefully handling the potential
@@ -226,7 +226,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     self.db.model.users_info,
                     self.db.model.users,
             ]:
-                conn.execute(tbl.delete(whereclause=(tbl.c.uid == uid)))
+                conn.execute(tbl.delete(whereclause=tbl.c.uid == uid))
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
@@ -234,7 +234,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.users
 
-            q = tbl.select(whereclause=(tbl.c.identifier == identifier))
+            q = tbl.select(whereclause=tbl.c.identifier == identifier)
             row = conn.execute(q).fetchone()
             if not row:
                 return None
