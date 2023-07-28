@@ -35,7 +35,7 @@ class ReporterBase(service.BuildbotService):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.generators = None
-        self._event_consumers = []
+        self._event_consumers = {}
         self._pending_got_event_calls = {}
 
     def checkConfig(self, generators):
@@ -52,26 +52,29 @@ class ReporterBase(service.BuildbotService):
 
     @defer.inlineCallbacks
     def reconfigService(self, generators):
-
-        for consumer in self._event_consumers:
-            yield consumer.stopConsuming()
-        self._event_consumers = []
-
         self.generators = generators
 
         wanted_event_keys = set()
         for g in self.generators:
             wanted_event_keys.update(g.wanted_event_keys)
 
+        # Remove consumers for keys that are no longer wanted
+        for key in list(self._event_consumers.keys()):
+            if key not in wanted_event_keys:
+                yield self._event_consumers[key].stopConsuming()
+                del self._event_consumers[key]
+
+        # Add consumers for new keys
         for key in sorted(list(wanted_event_keys)):
-            consumer = yield self.master.mq.startConsuming(self._got_event, key)
-            self._event_consumers.append(consumer)
+            if key not in self._event_consumers:
+                self._event_consumers[key] = \
+                    yield self.master.mq.startConsuming(self._got_event, key)
 
     @defer.inlineCallbacks
     def stopService(self):
-        for consumer in self._event_consumers:
+        for consumer in self._event_consumers.values():
             yield consumer.stopConsuming()
-        self._event_consumers = []
+        self._event_consumers = {}
 
         for pending_call in list(self._pending_got_event_calls.values()):
             yield pending_call
