@@ -40,7 +40,7 @@ link_urls = {
 class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                               StateMixin, PullRequestMixin):
     compare_attrs = ("owner", "repo", "token", "branches", "pollInterval",
-                     "category", "pollAtLaunch", "name")
+                     "category", "project", "pollAtLaunch", "name")
     db_class_name = 'GitHubPullrequestPoller'
     property_basename = "github"
 
@@ -55,6 +55,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     repo,
                     branches=None,
                     category='pull',
+                    project=None,
                     baseURL=None,
                     pullrequest_filter=True,
                     token=None,
@@ -74,6 +75,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                         branches=None,
                         pollInterval=10 * 60,
                         category=None,
+                        project=None,
                         baseURL=None,
                         pullrequest_filter=True,
                         token=None,
@@ -117,6 +119,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
         self.category = category if callable(category) else bytes2unicode(
             category)
+        self.project = bytes2unicode(project)
 
     def describe(self):
         return ("GitHubPullrequestPoller watching the "
@@ -225,7 +228,9 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 # update database
                 yield self._setCurrentRev(prnumber, revision)
 
-                project = pr['base']['repo']['full_name']
+                project = self.project
+                if project is None:
+                    project = pr['base']['repo']['full_name']
                 commits = pr['commits']
 
                 dl = defer.DeferredList(
