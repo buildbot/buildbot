@@ -19,10 +19,6 @@ Support for running 'shell commands'
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import PY3
-from future.utils import iteritems
-from future.utils import string_types
-from future.utils import text_type
 
 import os
 import pprint
@@ -324,9 +320,9 @@ class RunProcess(object):
         def to_bytes(cmd):
             if isinstance(cmd, (tuple, list)):
                 for i, a in enumerate(cmd):
-                    if isinstance(a, text_type):
+                    if isinstance(a, str):
                         cmd[i] = a.encode(unicode_encoding)
-            elif isinstance(cmd, text_type):
+            elif isinstance(cmd, str):
                 cmd = cmd.encode(unicode_encoding)
             return cmd
 
@@ -344,7 +340,7 @@ class RunProcess(object):
         if not os.path.exists(workdir):
             os.makedirs(workdir)
         if environ:
-            for key, v in iteritems(environ):
+            for key, v in environ.items():
                 if isinstance(v, list):
                     # Need to do os.pathsep translation.  We could either do that
                     # by replacing all incoming ':'s with os.pathsep, or by
@@ -367,9 +363,9 @@ class RunProcess(object):
                 # environment
                 if key not in environ or environ[key] is not None:
                     newenv[key] = os.environ[key]
-            for key, v in iteritems(environ):
+            for key, v in environ.items():
                 if v is not None:
-                    if not isinstance(v, string_types):
+                    if not isinstance(v, str):
                         raise RuntimeError("'env' values must be strings or "
                                            "lists; key '{0}' is incorrect".format(key))
                     newenv[key] = p.sub(subst, v)
@@ -609,19 +605,12 @@ class RunProcess(object):
         """A cheat that routes around the impedance mismatch between
         twisted and cmd.exe with respect to escaping quotes"""
 
-        # NamedTemporaryFile differs in PY2 and PY3.
-        # In PY2, it needs encoded str and its encoding cannot be specified.
-        # In PY3, it needs str which is unicode and its encoding can be specified.
-        if PY3:
-            tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
-                                    delete=False, encoding=self.unicode_encoding)
-        else:
-            tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
-                                    delete=False)
+        tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
+                                delete=False, encoding=self.unicode_encoding)
 
         # echo off hides this cheat from the log files.
         tf.write(u"@echo off\n")
-        if isinstance(self.command, (string_types, bytes)):
+        if isinstance(self.command, (str, bytes)):
             tf.write(bytes2NativeString(self.command, self.unicode_encoding))
         else:
             tf.write(win32_batch_quote(self.command, self.unicode_encoding))

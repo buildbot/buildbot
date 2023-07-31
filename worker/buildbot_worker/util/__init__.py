@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import itertools
 import textwrap
 import time
@@ -72,7 +70,7 @@ class Obfuscated(object):
 
     @staticmethod
     def to_text(s):
-        if isinstance(s, (text_type, bytes)):
+        if isinstance(s, (str, bytes)):
             return s
         return str(s)
 
