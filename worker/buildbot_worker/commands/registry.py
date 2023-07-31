@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import buildbot_worker.commands.fs
 import buildbot_worker.commands.shell
 import buildbot_worker.commands.transfer

@@ -18,9 +18,6 @@
 # have access to any of the Buildbot source.  Functions here should be kept
 # very simple!
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import os
 import select
 import signal

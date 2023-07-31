@@ -7,9 +7,6 @@ server, neither side will talk, leading to a hung connection. This
 wrapper will disconnect in that case, and inform the caller.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet.interfaces import IProtocol
 from twisted.internet.interfaces import IProtocolFactory
 from twisted.python.components import proxyForInterface

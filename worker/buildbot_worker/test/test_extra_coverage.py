@@ -17,9 +17,6 @@
 # included in the coverage because none of the tests import
 # them; this results in a more accurate total coverage percent.
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from buildbot_worker.scripts import logwatcher
 
 modules = []  # for the benefit of pyflakes

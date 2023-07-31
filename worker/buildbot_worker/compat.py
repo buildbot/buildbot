@@ -19,9 +19,6 @@ Helpers for handling compatibility differences
 between Python 2 and Python 3.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 if str != bytes:
     # On Python 3 and higher, str and bytes
     # are not equivalent.  We must use StringIO for
