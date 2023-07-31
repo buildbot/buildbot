@@ -45,7 +45,7 @@ dicttoxml==1.7.16
 dill==0.3.6
 docker==5.0.3;  python_version < "3.7" # pyup: ignore (6.0.0 droppeded support for < Python 3.7 see: https://docker-py.readthedocs.io/en/stable/change-log.html#id8)
 docker==6.1.2;  python_version >= "3.7"
-docutils==0.17.1  # pyup: ignore (sphinx-rtd-theme 1.0.0 requires docutils<0.18)
+docutils==0.18.1  # pyup: ignore (sphinx-rtd-theme 1.2.0 requires docutils<0.19)
 extras==1.0.0
 fixtures==4.0.1
 funcsigs==1.0.2
@@ -116,7 +116,7 @@ testtools==2.5.0
 toml==0.10.2
 tomli==2.0.1
 tomlkit==0.11.4
-towncrier==22.8.0
+towncrier==21.9.0
 treq==22.2.0
 Twisted==22.4.0
 txaio==23.1.1
