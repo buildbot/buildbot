@@ -98,7 +98,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
     @defer.inlineCallbacks
     def addBuildset(self, sourcestamps, reason, properties, builderids, waited_for,
                     external_idstring=None, submitted_at=None,
-                    parent_buildid=None, parent_relationship=None):
+                    parent_buildid=None, parent_relationship=None, priority=0):
         # We've gotten this wrong a couple times.
         assert isinstance(
             waited_for, bool), f'waited_for should be boolean: {repr(waited_for)}'
