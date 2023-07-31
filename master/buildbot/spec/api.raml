@@ -627,6 +627,10 @@ types:
                                 type: string
                                 required: false
                                 description: The user who wants to create the buildrequest
+                            priority:
+                                type: integer
+                                required: false
+                                description: The build request priority. Defaults to 0.
                             '[]':
                                 description: content of the forcescheduler parameter is dependent on the configuration of the forcescheduler
 /logs/{logid}:
