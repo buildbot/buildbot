@@ -635,7 +635,8 @@ class ForceScheduler(base.BaseScheduler):
                  buttonName=None,
                  codebases=None,
                  label=None,
-                 properties=None):
+                 properties=None,
+                 priority=IntParameter(name="priority", default=0)):
         """
         Initialize a ForceScheduler.
 
@@ -702,6 +703,12 @@ class ForceScheduler(base.BaseScheduler):
             config.error(f"ForceScheduler '{name}': username must be a StringParameter: "
                          f"{repr(username)}")
 
+        if self.checkIfType(priority, IntParameter):
+            self.priority = priority
+        else:
+            config.error(f"ForceScheduler '{name}': priority must be a IntParameter: "
+                         f"{repr(priority)}")
+
         self.forcedProperties = []
         self.label = name if label is None else label
 
@@ -737,7 +744,8 @@ class ForceScheduler(base.BaseScheduler):
             self.forcedProperties.extend(properties)
 
         # this is used to simplify the template
-        self.all_fields = [NestedParameter(name='', fields=[username, reason])]
+        self.all_fields = [NestedParameter(name='',
+                                           fields=[username, reason, priority])]
         self.all_fields.extend(self.forcedProperties)
 
         self.reasonString = reasonString
@@ -818,6 +826,9 @@ class ForceScheduler(base.BaseScheduler):
             owner = yield collector.collectValidationErrors(self.username.fullName,
                                                             self.username.getFromKwargs, kwargs)
 
+        priority = yield collector.collectValidationErrors(self.priority.fullName,
+                                                           self.priority.getFromKwargs, kwargs)
+
         properties, _, sourcestamps = yield self.gatherPropertiesAndChanges(
             collector, **kwargs)
 
@@ -840,6 +851,7 @@ class ForceScheduler(base.BaseScheduler):
             sourcestamps=sourcestamps,
             properties=properties,
             builderNames=builderNames,
+            priority=priority,
         )
 
         return res
