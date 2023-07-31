@@ -466,7 +466,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             },
             reason='power',
             scheduler='n',
-            sourcestamps=[234])
+            sourcestamps=[234],
+            priority=0)
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties(self):
@@ -486,7 +487,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             },
             reason='downstream',
             scheduler='n',
-            sourcestamps=[234])
+            sourcestamps=[234],
+            priority=0)
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties_with_virtual_builders(self):
@@ -510,7 +512,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             },
             reason='downstream',
             scheduler='n',
-            sourcestamps=[234])
+            sourcestamps=[234],
+            priority=0)
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_multiple_changes_same_codebase(self):
@@ -539,7 +542,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             },
             reason='power',
             scheduler='n',
-            sourcestamps=[10])  # sourcestampid from greatest changeid
+            sourcestamps=[10],  # sourcestampid from greatest changeid
+            priority=0)
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_codebases_set_multiple_codebases(self):
@@ -591,7 +595,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                                codebase='cbC', project='', revision='12345'),
                           dict(branch=None, repository='svn://D..', codebase='cbD',
                                project='', revision=None)
-                          ]
+                          ],
+            priority=0
         )
 
     @defer.inlineCallbacks
@@ -610,7 +615,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             properties={
                 'scheduler': ('n', 'Scheduler'),
             },
-            sourcestamps=[91, {'sourcestamp': True}])
+            sourcestamps=[91, {'sourcestamp': True}],
+            priority=0)
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_explicit_builderNames(self):
@@ -630,7 +636,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             properties={
                 'scheduler': ('n', 'Scheduler'),
             },
-            sourcestamps=[91, {'sourcestamp': True}])
+            sourcestamps=[91, {'sourcestamp': True}],
+            priority=0)
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_properties(self):
@@ -649,7 +656,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 'scheduler': ('n', 'Scheduler')},
             reason='whynot',
             scheduler='n',
-            sourcestamps=[91])
+            sourcestamps=[91],
+            priority=0)
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_combine_change_properties(self):
@@ -675,7 +683,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 'color': ('pink', 'Change')},
             reason='whynot',
             scheduler='testsched',
-            sourcestamps=[98])
+            sourcestamps=[98],
+            priority=0)
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_renderable_builderNames(self):
@@ -711,7 +720,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 'scheduler': ('n', 'Scheduler')},
             reason='whynot',
             scheduler='n',
-            sourcestamps=[98])
+            sourcestamps=[98],
+            priority=0)
 
         bsid, brids = yield sched.addBuildsetForSourceStamps(reason='because',
                                                              waited_for=False,
@@ -725,7 +735,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 'scheduler': ('n', 'Scheduler')},
             reason='because',
             scheduler='n',
-            sourcestamps=[99])
+            sourcestamps=[99],
+            priority=0)
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_list_of_renderable_builderNames(self):
@@ -755,7 +766,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 'extra_builder': ('c', 'Change')},
             reason='whynot',
             scheduler='n',
-            sourcestamps=[98])
+            sourcestamps=[98],
+            priority=0)
 
     def test_signature_addBuildsetForChanges(self):
         sched = self.makeScheduler(builderNames=['xxx'])
@@ -779,7 +791,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         )
         def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
                                        reason='', external_idstring=None, properties=None,
-                                       builderNames=None, **kw):
+                                       builderNames=None, priority=0, **kw):
             pass
 
     def test_signature_addBuildsetForSourceStampsWithDefaults(self):
