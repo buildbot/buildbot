@@ -19,16 +19,7 @@ Helpers for handling compatibility differences
 between Python 2 and Python 3.
 """
 
-if str != bytes:
-    # On Python 3 and higher, str and bytes
-    # are not equivalent.  We must use StringIO for
-    # doing io on native strings.
-    from io import StringIO as NativeStringIO
-else:
-    # On Python 2 and older, str and bytes
-    # are equivalent.  We must use BytesIO for
-    # doing io on native strings.
-    from io import BytesIO as NativeStringIO
+from io import StringIO as NativeStringIO
 
 
 def bytes2NativeString(x, encoding='utf-8'):

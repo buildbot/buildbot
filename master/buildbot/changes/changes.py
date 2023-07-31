@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import html  # py2: via future
+import html
 import time
 
 from twisted.internet import defer

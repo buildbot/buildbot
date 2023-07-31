@@ -80,8 +80,6 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                     tf.extract(inf)
                     prefixes.add(inf.name.split('/', 1)[0])
 
-            # (note that tf.extractall isn't available in py2.4)
-
             # get the top-level dir from the tarball
             assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
             self.basedir = prefixes.pop()

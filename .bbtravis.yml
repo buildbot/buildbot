@@ -50,12 +50,10 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
 
     # Worker tests on python and twisted package combinations.
     # We support worker on Python 2.7, on which Twisted 20.3.0 is the last version that works
     - env: PYTHON=3.9 TWISTED=18.7.0 SQLALCHEMY=latest TESTS=trial_worker
-    - env: PYTHON=2.7 TWISTED=20.3.0 SQLALCHEMY=latest TESTS=trial_worker
 
     # Configuration when SQLite database is persistent between running tests
     # (by default in other tests in-memory SQLite database is used which is
