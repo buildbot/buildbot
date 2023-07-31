@@ -595,8 +595,7 @@ class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCas
         self.assertEqual(rqtime, None)
 
 
-class TestGetHighestPriority(TestReactorMixin, BuilderMixin,
-                               unittest.TestCase):
+class TestGetHighestPriority(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):

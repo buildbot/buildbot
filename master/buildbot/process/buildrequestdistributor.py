@@ -372,7 +372,12 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         @defer.inlineCallbacks
         def key(bldr):
-            # Sort by time of oldest build request
+            # Sort primarily highest priority of build requests
+            priority = yield bldr.get_highest_priority()
+            if priority is None:
+                # for builders that do not have pending buildrequest, we just use large number
+                priority = -math.inf
+            # Break ties using the time of oldest build request
             time = yield bldr.getOldestRequestTime()
             if time is None:
                 # for builders that do not have pending buildrequest, we just use large number
@@ -380,7 +385,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
             else:
                 if isinstance(time, datetime):
                     time = time.timestamp()
-            return (time, bldr.name)
+            return (-priority, time, bldr.name)
 
         yield async_sort(builders, key)
 
