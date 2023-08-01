@@ -61,6 +61,7 @@ def patch_decorators():
 @onlyOnce
 def patch_config_for_unit_tests():
     from buildbot.config.master import set_is_in_unit_tests
+
     # by default, buildbot.config warns about not configured buildbotNetUsageData.
     # its important for users to not leak information, but unneeded and painful for tests
     set_is_in_unit_tests(True)

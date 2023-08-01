@@ -29,6 +29,7 @@ class Follower(object):
 
     def follow(self):
         from twisted.internet import reactor
+
         from buildbot_worker.scripts.logwatcher import LogWatcher
         self.rc = 0
         print("Following twistd.log until startup finished..")
@@ -46,6 +47,7 @@ class Follower(object):
 
     def _failure(self, why):
         from twisted.internet import reactor
+
         from buildbot_worker.scripts.logwatcher import WorkerTimeoutError
         if why.check(WorkerTimeoutError):
             print(rewrap("""\

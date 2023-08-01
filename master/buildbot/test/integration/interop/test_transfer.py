@@ -46,8 +46,8 @@ class TransferStepsMasterPb(RunMasterBase):
     def setup_config(self, bigfilename):
         c = {}
         from buildbot.config import BuilderConfig
-        from buildbot.process.factory import BuildFactory
         from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
 
         c['schedulers'] = [
             schedulers.ForceScheduler(
@@ -76,8 +76,8 @@ class TransferStepsMasterPb(RunMasterBase):
     def setup_config_glob(self):
         c = {}
         from buildbot.config import BuilderConfig
-        from buildbot.process.factory import BuildFactory
         from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
 
         class CustomStep(BuildStep, CompositeStepMixin):
             @defer.inlineCallbacks
@@ -111,8 +111,8 @@ class TransferStepsMasterPb(RunMasterBase):
     def setup_config_single_step(self, step):
         c = {}
         from buildbot.config import BuilderConfig
-        from buildbot.process.factory import BuildFactory
         from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
 
         c['schedulers'] = [
             schedulers.ForceScheduler(

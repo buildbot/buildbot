@@ -51,8 +51,10 @@ class ShellMaster(RunMasterBase):
     def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.plugins import steps
+        from buildbot.plugins import util
         from buildbot.process.factory import BuildFactory
-        from buildbot.plugins import steps, schedulers, util
 
         c['schedulers'] = [
             schedulers.ForceScheduler(

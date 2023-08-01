@@ -30,8 +30,9 @@ class TryClientE2E(RunMasterBase):
     def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.plugins import steps
         from buildbot.process.factory import BuildFactory
-        from buildbot.plugins import steps, schedulers
 
         c['schedulers'] = [
             schedulers.Try_Userpass(name="try",

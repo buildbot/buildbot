@@ -23,13 +23,13 @@ import textwrap
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from buildbot.util.raml import RamlSpec
     from buildbot.reporters.telegram import TelegramContact
+    from buildbot.util.raml import RamlSpec
 except ImportError:
     sys.path.insert(2, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     os.pardir))
-    from buildbot.util.raml import RamlSpec
     from buildbot.reporters.telegram import TelegramContact
+    from buildbot.util.raml import RamlSpec
 
 # -- General configuration -----------------------------------------------
 try:

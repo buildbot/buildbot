@@ -30,9 +30,11 @@ from buildbot.www import resource
 
 
 def get_environment_versions():
-    import sys   # pylint: disable=import-outside-toplevel
-    import twisted   # pylint: disable=import-outside-toplevel
-    from buildbot import version as bbversion   # pylint: disable=import-outside-toplevel
+    import sys  # pylint: disable=import-outside-toplevel
+
+    import twisted  # pylint: disable=import-outside-toplevel
+
+    from buildbot import version as bbversion  # pylint: disable=import-outside-toplevel
 
     pyversion = '.'.join(map(str, sys.version_info[:3]))
 

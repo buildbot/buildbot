@@ -128,8 +128,8 @@ class MasterConfig(util.ComparableMixin):
     def __init__(self):
         # local import to avoid circular imports
         from buildbot.process import properties
-        # default values for all attributes
 
+        # default values for all attributes
         # global
         self.title = 'Buildbot'
         self.titleURL = 'http://buildbot.net'

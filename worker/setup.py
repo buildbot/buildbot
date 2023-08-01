@@ -31,9 +31,9 @@ try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
     import setuptools
+    from distutils.command.install_data import install_data
     from setuptools import setup
     from setuptools.command.sdist import sdist
-    from distutils.command.install_data import install_data
 except ImportError:
     setuptools = None
     from distutils.command.sdist import sdist

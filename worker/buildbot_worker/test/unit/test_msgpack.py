@@ -35,10 +35,11 @@ from buildbot_worker.test.util import command
 
 if sys.version_info >= (3, 6):
     import msgpack
+
     # pylint: disable=ungrouped-imports
+    from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
     from buildbot_worker.msgpack import decode_http_authorization_header
     from buildbot_worker.msgpack import encode_http_authorization_header
-    from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
     from buildbot_worker.pb import BotMsgpack  # pylint: disable=ungrouped-imports
 
 

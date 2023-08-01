@@ -23,8 +23,8 @@ from buildbot.process.buildstep import BuildStep
 
 # use the 'requests' lib: https://requests.readthedocs.io/en/master/
 try:
-    import txrequests
     import requests
+    import txrequests
 except ImportError:
     txrequests = None
 

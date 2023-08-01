@@ -28,8 +28,8 @@ class ShellMaster(RunMasterBase):
     def create_config(self):
         c = {}
         from buildbot.config import BuilderConfig
-        from buildbot.process.factory import BuildFactory
         from buildbot.plugins import steps
+        from buildbot.process.factory import BuildFactory
 
         c['schedulers'] = [
             schedulers.AnyBranchScheduler(

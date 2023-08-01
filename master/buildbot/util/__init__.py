@@ -360,7 +360,8 @@ def makeList(input):
 def in_reactor(f):
     """decorate a function by running it with maybeDeferred in a reactor"""
     def wrap(*args, **kwargs):
-        from twisted.internet import reactor, defer
+        from twisted.internet import defer
+        from twisted.internet import reactor
         result = []
 
         def _async():
