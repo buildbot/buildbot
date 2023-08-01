@@ -71,7 +71,7 @@ MarkupSafe==2.1.3
 mccabe==0.7.0
 mock==5.1.0
 more-itertools==9.1.0
-moto==4.0.1
+moto==4.1.0
 olefile==0.46
 packaging==21.3
 parameterized==0.9.0
@@ -127,7 +127,7 @@ unidiff==0.7.5
 urllib3==1.26.11
 webcolors==1.13
 websocket-client==1.3.3
-Werkzeug==2.1.2  # pyup: ignore (moto 4.0.1 depends on werkzeug<2.2.0)
+Werkzeug==2.2.3
 wrapt==1.14.1
 xmltodict==0.13.0
 zope.interface==5.4.0
