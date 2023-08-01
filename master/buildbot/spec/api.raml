@@ -404,6 +404,17 @@ types:
                                 type: string
                                 required: false
                                 description: The reason why the buildrequest was cancelled
+        /actions/set_priority:
+            post:
+                description: |
+                    Change a buildrequest's priority.
+                body:
+                    application/json:
+                        properties:
+                            priority:
+                                type: int
+                                required: true
+                                description: The new priority for the buildrequest
     get:
         is:
         - bbget: {bbtype: buildrequest}
