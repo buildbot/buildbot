@@ -344,20 +344,20 @@ class EC2LatentWorker(AbstractLatentWorker):
 
     def _start_instance(self):
         image = self.get_image()
-        launch_opts = dict(
-            ImageId=image.id, KeyName=self.keypair_name,
-            SecurityGroups=self.classic_security_groups,
-            InstanceType=self.instance_type, UserData=self.user_data,
-            Placement=self._remove_none_opts(
-                AvailabilityZone=self.placement,
-            ),
-            MinCount=1, MaxCount=1,
-            SubnetId=self.subnet_id, SecurityGroupIds=self.security_group_ids,
-            IamInstanceProfile=self._remove_none_opts(
-                Name=self.instance_profile_name,
-            ),
-            BlockDeviceMappings=self.block_device_map
-        )
+        launch_opts = {
+            "ImageId": image.id,
+            "KeyName": self.keypair_name,
+            "SecurityGroups": self.classic_security_groups,
+            "InstanceType": self.instance_type,
+            "UserData": self.user_data,
+            "Placement": self._remove_none_opts(AvailabilityZone=self.placement,),
+            "MinCount": 1,
+            "MaxCount": 1,
+            "SubnetId": self.subnet_id,
+            "SecurityGroupIds": self.security_group_ids,
+            "IamInstanceProfile": self._remove_none_opts(Name=self.instance_profile_name,),
+            "BlockDeviceMappings": self.block_device_map
+        }
         launch_opts = self._remove_none_opts(launch_opts)
         reservations = self.ec2.create_instances(
             **launch_opts
