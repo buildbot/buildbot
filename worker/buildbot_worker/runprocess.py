@@ -87,7 +87,7 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
         return win32_batch_quote(cmd_list, unicode_encoding)
 
     # only available on unix
-    import pipes   # pylint: disable=import-outside-toplevel
+    import pipes  # pylint: disable=import-outside-toplevel
 
     def quote(e):
         if not e:

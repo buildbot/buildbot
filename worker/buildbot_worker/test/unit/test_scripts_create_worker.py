@@ -583,6 +583,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         # import modules for mocking
         import twisted.application.service
         import twisted.python.logfile
+
         import buildbot_worker.bot
 
         # mock service.Application class

@@ -96,9 +96,9 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     def setup_config(self, extra_config):
         c = {}
         from buildbot.config import BuilderConfig
+        from buildbot.process import results
         from buildbot.process.buildstep import BuildStep
         from buildbot.process.factory import BuildFactory
-        from buildbot.process import results
 
         class MyBuildStep(BuildStep):
 

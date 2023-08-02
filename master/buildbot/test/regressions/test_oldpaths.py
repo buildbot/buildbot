@@ -105,8 +105,9 @@ class OldImportPaths(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecatedApiWarning)
             warnings.simplefilter("ignore", DeprecationWarning)
-            from buildbot.process.buildstep import RemoteCommand, \
-                LoggedRemoteCommand, RemoteShellCommand
+            from buildbot.process.buildstep import LoggedRemoteCommand
+            from buildbot.process.buildstep import RemoteCommand
+            from buildbot.process.buildstep import RemoteShellCommand
             assert RemoteCommand
             assert LoggedRemoteCommand
             assert RemoteShellCommand
@@ -115,8 +116,9 @@ class OldImportPaths(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecatedApiWarning)
             warnings.simplefilter("ignore", DeprecationWarning)
-            from buildbot.process.buildstep import LogObserver, \
-                LogLineObserver, OutputProgressObserver
+            from buildbot.process.buildstep import LogLineObserver
+            from buildbot.process.buildstep import LogObserver
+            from buildbot.process.buildstep import OutputProgressObserver
         assert LogObserver
         assert LogLineObserver
         assert OutputProgressObserver

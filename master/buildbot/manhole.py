@@ -34,7 +34,8 @@ from buildbot.util import service
 from buildbot.util import unicode2bytes
 
 try:
-    from twisted.conch import checkers as conchc, manhole_ssh
+    from twisted.conch import checkers as conchc
+    from twisted.conch import manhole_ssh
     from twisted.conch.openssh_compat.factory import OpenSSHFactory
     _hush_pyflakes = [manhole_ssh, conchc, OpenSSHFactory]
     del _hush_pyflakes

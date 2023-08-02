@@ -40,8 +40,8 @@ class WorkerReconnectPb(RunMasterBase):
     def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
-        from buildbot.process.factory import BuildFactory
         from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
 
         c['schedulers'] = [
             schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"]),

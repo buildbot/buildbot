@@ -117,6 +117,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         try:
             # Try to import
             import influxdb  # pylint: disable=import-outside-toplevel
+
             # consume it somehow to please pylint
             [influxdb]
         except ImportError:

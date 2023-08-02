@@ -26,8 +26,9 @@ class SecretsConfig(RunMasterBase):
     def setup_config(self, use_with=False):
         c = {}
         from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.plugins import steps
         from buildbot.process.factory import BuildFactory
-        from buildbot.plugins import schedulers, steps
 
         c['schedulers'] = [
             schedulers.ForceScheduler(
