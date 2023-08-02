@@ -118,7 +118,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             buildid = dbdict['id']
         self.master.mq.produce(("control", "builds",
                                 str(buildid), 'stop'),
-                               dict(reason=kwargs.get('reason', args.get('reason', 'no reason'))))
+                               {"reason": kwargs.get('reason', args.get('reason', 'no reason'))})
 
     @defer.inlineCallbacks
     def actionRebuild(self, args, kwargs):

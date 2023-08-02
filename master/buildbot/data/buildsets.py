@@ -169,16 +169,17 @@ class Buildset(base.ResourceType):
         brResource.generateEvent(list(brids.values()), 'new')
 
         # and the buildset itself
-        msg = dict(
-            bsid=bsid,
-            external_idstring=external_idstring,
-            reason=reason,
-            submitted_at=submitted_at,
-            complete=False,
-            complete_at=None,
-            results=None,
-            scheduler=scheduler,
-            sourcestamps=sourcestamps)
+        msg = {
+            "bsid": bsid,
+            "external_idstring": external_idstring,
+            "reason": reason,
+            "submitted_at": submitted_at,
+            "complete": False,
+            "complete_at": None,
+            "results": None,
+            "scheduler": scheduler,
+            "sourcestamps": sourcestamps
+        }
         # TODO: properties=properties)
         self.produceEvent(msg, "new")
 
@@ -239,14 +240,15 @@ class Buildset(base.ResourceType):
                 )
             )
 
-        msg = dict(
-            bsid=bsid,
-            external_idstring=bsdict['external_idstring'],
-            reason=bsdict['reason'],
-            sourcestamps=sourcestamps,
-            submitted_at=bsdict['submitted_at'],
-            complete=True,
-            complete_at=complete_at,
-            results=cumulative_results)
+        msg = {
+            "bsid": bsid,
+            "external_idstring": bsdict['external_idstring'],
+            "reason": bsdict['reason'],
+            "sourcestamps": sourcestamps,
+            "submitted_at": bsdict['submitted_at'],
+            "complete": True,
+            "complete_at": complete_at,
+            "results": cumulative_results
+        }
         # TODO: properties=properties)
         self.produceEvent(msg, "complete")

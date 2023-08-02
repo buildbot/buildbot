@@ -55,7 +55,7 @@ class Type:
         raise NotImplementedError
 
     def getSpec(self):
-        r = dict(name=self.name)
+        r = {"name": self.name}
         if self.doc is not None:
             r["doc"] = self.doc
         return r
@@ -266,8 +266,7 @@ class List(Type):
         return self.of.valueFromString(arg)
 
     def getSpec(self):
-        return dict(type=self.name,
-                    of=self.of.getSpec())
+        return {"type": self.name, "of": self.of.getSpec()}
 
     def toRaml(self):
         return {'type': 'array', 'items': self.of.name}
@@ -400,12 +399,17 @@ class Entity(Type):
                 yield msg
 
     def getSpec(self):
-        return dict(type=self.name,
-                    fields=[dict(name=k,
-                                 type=v.name,
-                                 type_spec=v.getSpec())
-                            for k, v in self.fields.items()
-                            ])
+        return {
+            "type": self.name,
+            "fields": [
+                {
+                    "name": k,
+                    "type": v.name,
+                    "type_spec": v.getSpec()
+                }
+                for k, v in self.fields.items()
+            ]
+        }
 
     def toRaml(self):
         return {'type': "object",
@@ -414,14 +418,19 @@ class Entity(Type):
                     for k, v in self.fields.items()}}
 
     def toGraphQL(self):
-        return dict(type=self.graphql_name,
-                    fields=[dict(name=k,
-                                 type=v.toGraphQL())
-                            for k, v in self.fields.items()
-                            # in graphql, we handle properties as queriable sub resources
-                            # instead of hardcoded attributes like in rest api
-                            if k != "properties"
-                            ])
+        return {
+            "type": self.graphql_name,
+            "fields": [
+                {
+                    "name": k,
+                    "type": v.toGraphQL()
+                }
+                for k, v in self.fields.items()
+                # in graphql, we handle properties as queriable sub resources
+                # instead of hardcoded attributes like in rest api
+                if k != "properties"
+            ]
+        }
 
     def toGraphQLTypeName(self):
         return self.graphql_name

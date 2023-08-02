@@ -41,14 +41,16 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
         if 'masterid' in kwargs:
             if kwargs['masterid'] not in bdict['masterids']:
                 return None
-        return dict(builderid=builderid,
-                    name=bdict['name'],
-                    masterids=bdict['masterids'],
-                    description=bdict['description'],
-                    description_format=bdict["description_format"],
-                    description_html=bdict["description_html"],
-                    projectid=bdict['projectid'],
-                    tags=bdict['tags'])
+        return {
+            "builderid": builderid,
+            "name": bdict['name'],
+            "masterids": bdict['masterids'],
+            "description": bdict['description'],
+            "description_format": bdict["description_format"],
+            "description_html": bdict["description_html"],
+            "projectid": bdict['projectid'],
+            "tags": bdict['tags']
+        }
 
 
 class BuildersEndpoint(base.Endpoint):
@@ -67,15 +69,19 @@ class BuildersEndpoint(base.Endpoint):
             masterid=kwargs.get('masterid', None),
             projectid=kwargs.get('projectid', None)
         )
-        return [dict(builderid=bd['id'],
-                     name=bd['name'],
-                     masterids=bd['masterids'],
-                     description=bd['description'],
-                     description_format=bd['description_format'],
-                     description_html=bd['description_html'],
-                     projectid=bd['projectid'],
-                     tags=bd['tags'])
-               for bd in bdicts]
+        return [
+            {
+                "builderid": bd['id'],
+                "name": bd['name'],
+                "masterids": bd['masterids'],
+                "description": bd['description'],
+                "description_format": bd['description_format'],
+                "description_html": bd['description_html'],
+                "projectid": bd['projectid'],
+                "tags": bd['tags']
+            }
+            for bd in bdicts
+        ]
 
     def get_kwargs_from_graphql(self, parent, resolve_info, args):
         if parent is not None:
@@ -139,9 +145,11 @@ class Builder(base.ResourceType):
                 builderid = bldr['id']
                 yield self.master.db.builders.removeBuilderMaster(
                     masterid=masterid, builderid=builderid)
-                self.master.mq.produce(('builders', str(builderid), 'stopped'),
-                                       dict(builderid=builderid, masterid=masterid,
-                                            name=bldr['name']))
+                self.master.mq.produce(('builders', str(builderid), 'stopped'), {
+                    "builderid": builderid,
+                    "masterid": masterid,
+                    "name": bldr['name']
+                })
             else:
                 builderNames_set.remove(bldr['name'])
 
@@ -151,7 +159,7 @@ class Builder(base.ResourceType):
             yield self.master.db.builders.addBuilderMaster(
                 masterid=masterid, builderid=builderid)
             self.master.mq.produce(('builders', str(builderid), 'started'),
-                                   dict(builderid=builderid, masterid=masterid, name=name))
+                                   {"builderid": builderid, "masterid": masterid, "name": name})
 
     # returns a Deferred that returns None
     def _masterDeactivated(self, masterid):
