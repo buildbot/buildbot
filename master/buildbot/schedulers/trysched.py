@@ -240,17 +240,19 @@ class Try_Jobdir(TryBase):
         if parsed_job['comment']:
             comment = parsed_job['comment']
 
-        sourcestamp = dict(branch=parsed_job['branch'],
-                           codebase='',
-                           revision=parsed_job['baserev'],
-                           patch_body=parsed_job['patch_body'],
-                           patch_level=parsed_job['patch_level'],
-                           patch_author=who,
-                           patch_comment=comment,
-                           # TODO: can't set this remotely - #1769
-                           patch_subdir='',
-                           project=parsed_job['project'],
-                           repository=parsed_job['repository'])
+        sourcestamp = {
+            "branch": parsed_job['branch'],
+            "codebase": '',
+            "revision": parsed_job['baserev'],
+            "patch_body": parsed_job['patch_body'],
+            "patch_level": parsed_job['patch_level'],
+            "patch_author": who,
+            "patch_comment": comment,
+            # TODO: can't set this remotely - #1769
+            "patch_subdir": '',
+            "project": parsed_job['project'],
+            "repository": parsed_job['repository']
+        }
         reason = "'try' job"
         if parsed_job['who']:
             reason += f" by user {bytes2unicode(parsed_job['who'])}"
@@ -425,12 +427,18 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if comment:
             reason += f" ({bytes2unicode(comment)})"
 
-        sourcestamp = dict(
-            branch=branch, revision=revision, repository=repository,
-            project=project, patch_level=patch_level, patch_body=patch_body,
-            patch_subdir='', patch_author=who or '',
-            patch_comment=comment or '', codebase='',
-        )           # note: no way to specify patch subdir - #1769
+        sourcestamp = {
+            "branch": branch,
+            "revision": revision,
+            "repository": repository,
+            "project": project,
+            "patch_level": patch_level,
+            "patch_body": patch_body,
+            "patch_subdir": '',
+            "patch_author": who or '',
+            "patch_comment": comment or '',
+            "codebase": '',
+        }         # note: no way to specify patch subdir - #1769
 
         requested_props = Properties()
         requested_props.update(properties, "try build")
