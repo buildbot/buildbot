@@ -283,16 +283,17 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         if 'patchset-created' in self.handled_events and ref['refName'].startswith('refs/changes/'):
             return None
 
-        return self.addChange(event['type'], dict(
-            author=author,
-            project=ref["project"],
-            repository=f'{self.gitBaseURL}/{ref["project"]}',
-            branch=self.strip_refs_heads_from_branch(ref["refName"]),
-            revision=ref["newRev"],
-            comments="Gerrit: commit(s) pushed.",
-            files=["unknown"],
-            category=event["type"],
-            properties=properties))
+        return self.addChange(event['type'], {
+            "author": author,
+            "project": ref["project"],
+            "repository": f'{self.gitBaseURL}/{ref["project"]}',
+            "branch": self.strip_refs_heads_from_branch(ref["refName"]),
+            "revision": ref["newRev"],
+            "comments": "Gerrit: commit(s) pushed.",
+            "files": ["unknown"],
+            "category": event["type"],
+            "properties": properties
+        })
 
 
 class GerritChangeSource(GerritChangeSourceBase):
@@ -522,7 +523,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             log.msg(f"{self.name}: Polling gerrit: {last_event_formatted}".encode("utf-8"))
 
         res = yield self._http.get("/plugins/events-log/events/",
-                                   params=dict(t1=last_event_formatted))
+                                   params={"t1": last_event_formatted})
         lines = yield res.content()
         for line in lines.splitlines():
             yield self.lineReceived(line)
