@@ -1,0 +1,1 @@
+Allowed a shallow submodule update using git.
