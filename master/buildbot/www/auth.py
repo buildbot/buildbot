@@ -224,7 +224,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     @defer.inlineCallbacks
     def renderLogin(self, request):
         session = request.getSession()
-        session.user_info = dict(username=bytes2unicode(self.username))
+        session.user_info = {"username": bytes2unicode(self.username)}
         yield self.master.www.auth.updateUserInfo(request)
         raise _redirect(self.master, request)
 

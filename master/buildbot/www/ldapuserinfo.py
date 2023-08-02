@@ -110,7 +110,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         def thd():
             c = self.connectLdap()
             infos = {'username': username}
-            pattern = self.accountPattern % dict(username=username)
+            pattern = self.accountPattern % {"username": username}
             res = self.search(c, self.accountBase, pattern,
                               attributes=[
                                   self.accountEmail, self.accountFullName] +
@@ -135,7 +135,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                 return infos
 
             # needs double quoting of backslashing
-            pattern = self.groupMemberPattern % dict(dn=ldap3.utils.conv.escape_filter_chars(dn))
+            pattern = self.groupMemberPattern % {"dn": ldap3.utils.conv.escape_filter_chars(dn)}
             res = self.search(c, self.groupBase, pattern,
                               attributes=[self.groupName])
             infos['groups'] = flatten([group_infos['attributes'][self.groupName]
@@ -164,9 +164,9 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         def thd():
             c = self.connectLdap()
             if username:
-                pattern = self.accountPattern % dict(username=username)
+                pattern = self.accountPattern % {"username": username}
             elif email:
-                pattern = self.avatarPattern % dict(email=email)
+                pattern = self.avatarPattern % {"email": email}
             else:
                 return None
             res = self.search(c, self.accountBase, pattern,
