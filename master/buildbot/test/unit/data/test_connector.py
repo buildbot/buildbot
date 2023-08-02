@@ -74,7 +74,8 @@ class Tests(interfaces.InterfaceTests):
         def addBuildset(self, waited_for, scheduler=None, sourcestamps=None,
                         reason='', properties=None, builderids=None,
                         external_idstring=None,
-                        parent_buildid=None, parent_relationship=None):
+                        parent_buildid=None, parent_relationship=None,
+                        priority=0):
             pass
 
     def test_signature_updates_maybeBuildsetComplete(self):
