@@ -68,7 +68,7 @@ class _SREPatternConfigured:
         self.value = value
 
     def getConfigDict(self):
-        return dict(name="re", pattern=self.value.pattern)
+        return {"name": 're', "pattern": self.value.pattern}
 
 
 registerAdapter(_SREPatternConfigured, type(re.compile("")), IConfigured)
