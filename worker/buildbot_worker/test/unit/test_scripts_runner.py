@@ -117,9 +117,11 @@ class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     def test_all_args(self):
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
-        self.assertOptions(opts,
-                           dict(quiet=True, nodaemon=True,
-                                basedir=self.ABSPATH_PREFIX + self.MY_BASEDIR))
+        self.assertOptions(opts, {
+            "quiet": True,
+            "nodaemon": True,
+            "basedir": self.ABSPATH_PREFIX + self.MY_BASEDIR
+        })
 
 
 class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
@@ -135,9 +137,11 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     def test_all_args(self):
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
-        self.assertOptions(opts,
-                           dict(quiet=True, nodaemon=True,
-                                basedir=self.ABSPATH_PREFIX + self.MY_BASEDIR))
+        self.assertOptions(opts, {
+            "quiet": True,
+            "nodaemon": True,
+            "basedir": self.ABSPATH_PREFIX + self.MY_BASEDIR
+        })
 
 
 class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
@@ -168,9 +172,13 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         # argument will not be converted to absolute path
         self.patch(runner.MakerBase, "postOptions", mock.Mock())
 
-        self.assertOptions(self.parse(*self.req_args),
-                           dict(basedir="bdir", host="mstr", port=5678,
-                                name="name", passwd="pswd"))
+        self.assertOptions(self.parse(*self.req_args), {
+            "basedir": "bdir",
+            "host": "mstr",
+            "port": 5678,
+            "name": "name",
+            "passwd": "pswd"
+        })
 
     def test_all_args(self):
 
