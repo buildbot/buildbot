@@ -52,7 +52,7 @@ funcsigs==1.0.2
 future==0.18.3
 graphql-core==3.2.3
 greenlet==2.0.2
-hvac==0.11.2
+hvac==1.1.1
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.4.1
