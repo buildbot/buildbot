@@ -51,7 +51,7 @@ def createUserObject(master, author, src=None):
         return defer.succeed(None)
 
     if src in srcs:
-        usdict = dict(identifier=author, attr_type=src, attr_data=author)
+        usdict = {"identifier": author, "attr_type": src, "attr_data": author}
     else:
         log.msg(f"Unrecognized source argument: {src}")
         return defer.succeed(None)
