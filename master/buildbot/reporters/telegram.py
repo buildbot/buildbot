@@ -769,9 +769,9 @@ class TelegramStatusBot(StatusBot):
 
     @defer.inlineCallbacks
     def answer_query(self, query_id, notify=None):
-        params = dict(callback_query_id=query_id)
+        params = {"callback_query_id": query_id}
         if notify is not None:
-            params.update(dict(text=notify))
+            params.update({"text": notify})
         return (yield self.post('/answerCallbackQuery', json=params))
 
     @defer.inlineCallbacks
@@ -782,7 +782,7 @@ class TelegramStatusBot(StatusBot):
 
         message = message.strip()
         while message:
-            params = dict(chat_id=chat)
+            params = {"chat_id": chat}
             if parse_mode is not None:
                 params['parse_mode'] = parse_mode
             if reply_to_message_id is not None:
@@ -807,7 +807,7 @@ class TelegramStatusBot(StatusBot):
 
     @defer.inlineCallbacks
     def edit_message(self, chat, msg, message, parse_mode='Markdown', **kwargs):
-        params = dict(chat_id=chat, message_id=msg, text=message)
+        params = {"chat_id": chat, "message_id": msg, "text": message}
         if parse_mode is not None:
             params['parse_mode'] = parse_mode
         params.update(kwargs)
@@ -815,19 +815,19 @@ class TelegramStatusBot(StatusBot):
 
     @defer.inlineCallbacks
     def edit_keyboard(self, chat, msg, keyboard=None):
-        params = dict(chat_id=chat, message_id=msg)
+        params = {"chat_id": chat, "message_id": msg}
         if keyboard is not None:
             params['reply_markup'] = {'inline_keyboard': keyboard}
         return (yield self.post('/editMessageReplyMarkup', json=params))
 
     @defer.inlineCallbacks
     def delete_message(self, chat, msg):
-        params = dict(chat_id=chat, message_id=msg)
+        params = {"chat_id": chat, "message_id": msg}
         return (yield self.post('/deleteMessage', json=params))
 
     @defer.inlineCallbacks
     def send_sticker(self, chat, sticker, **kwargs):
-        params = dict(chat_id=chat, sticker=sticker)
+        params = {"chat_id": chat, "sticker": sticker}
         params.update(kwargs)
         return (yield self.post('/sendSticker', json=params))
 
@@ -869,12 +869,12 @@ class TelegramWebhookBot(TelegramStatusBot):
     def set_webhook(self, url, certificate=None):
         if not certificate:
             self.log(f"Setting up webhook to: {url}")
-            yield self.post('/setWebhook', json=dict(url=url))
+            yield self.post('/setWebhook', json={"url": url})
         else:
             self.log(f"Setting up webhook to: {url} (custom certificate)")
             certificate = io.BytesIO(unicode2bytes(certificate))
-            yield self.post('/setWebhook', data=dict(url=url),
-                            files=dict(certificate=certificate))
+            yield self.post('/setWebhook', data={"url": url},
+                            files={"certificate": certificate})
 
 
 class TelegramPollingBot(TelegramStatusBot):
