@@ -168,12 +168,16 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     _race_hook(conn)
 
                 try:
-                    r = conn.execute(self.db.model.builds.insert(),
-                                     dict(number=new_number, builderid=builderid,
-                                          buildrequestid=buildrequestid,
-                                          workerid=workerid, masterid=masterid,
-                                          started_at=started_at, complete_at=None,
-                                          state_string=state_string))
+                    r = conn.execute(self.db.model.builds.insert(), {
+                        "number": new_number,
+                        "builderid": builderid,
+                        "buildrequestid": buildrequestid,
+                        "workerid": workerid,
+                        "masterid": masterid,
+                        "started_at": started_at,
+                        "complete_at": None,
+                        "state_string": state_string
+                    })
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                     # pg 9.5 gives this error which makes it pass some build
                     # numbers
@@ -236,23 +240,27 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             prop = conn.execute(q).fetchone()
             value_js = json.dumps(value)
             if prop is None:
-                conn.execute(bp_tbl.insert(),
-                             dict(buildid=bid, name=name, value=value_js,
-                                  source=source))
+                conn.execute(bp_tbl.insert(), {
+                    "buildid": bid,
+                    "name": name,
+                    "value": value_js,
+                    "source": source
+                })
             elif (prop.value != value_js) or (prop.source != source):
                 conn.execute(bp_tbl.update(whereclause=whereclause),
-                             dict(value=value_js, source=source))
+                             {"value": value_js, "source": source})
         yield self.db.pool.do(thd)
 
     def _builddictFromRow(self, row):
-        return dict(
-            id=row.id,
-            number=row.number,
-            builderid=row.builderid,
-            buildrequestid=row.buildrequestid,
-            workerid=row.workerid,
-            masterid=row.masterid,
-            started_at=epoch2datetime(row.started_at),
-            complete_at=epoch2datetime(row.complete_at),
-            state_string=row.state_string,
-            results=row.results)
+        return {
+            "id": row.id,
+            "number": row.number,
+            "builderid": row.builderid,
+            "buildrequestid": row.buildrequestid,
+            "workerid": row.workerid,
+            "masterid": row.masterid,
+            "started_at": epoch2datetime(row.started_at),
+            "complete_at": epoch2datetime(row.complete_at),
+            "state_string": row.state_string,
+            "results": row.results
+        }

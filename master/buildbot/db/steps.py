@@ -79,10 +79,15 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # note that there is no chance for a race condition here,
             # since only one master is inserting steps.  If there is a
             # conflict, then the name is likely already taken.
-            insert_row = dict(buildid=buildid, number=number,
-                              started_at=None, complete_at=None,
-                              state_string=state_string,
-                              urls_json='[]', name=name)
+            insert_row = {
+                "buildid": buildid,
+                "number": number,
+                "started_at": None,
+                "complete_at": None,
+                "state_string": state_string,
+                "urls_json": '[]',
+                "name": name
+            }
             try:
                 r = conn.execute(self.db.model.steps.insert(), insert_row)
                 got_id = r.inserted_primary_key[0]
@@ -153,7 +158,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 _racehook()
             urls = json.loads(row.urls_json)
 
-            url_item = dict(name=name, url=url)
+            url_item = {"name": name, "url": url}
 
             if url_item not in urls:
                 urls.append(url_item)
@@ -174,14 +179,15 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def _stepdictFromRow(self, row):
-        return dict(
-            id=row.id,
-            number=row.number,
-            name=row.name,
-            buildid=row.buildid,
-            started_at=epoch2datetime(row.started_at),
-            complete_at=epoch2datetime(row.complete_at),
-            state_string=row.state_string,
-            results=row.results,
-            urls=json.loads(row.urls_json),
-            hidden=bool(row.hidden))
+        return {
+            "id": row.id,
+            "number": row.number,
+            "name": row.name,
+            "buildid": row.buildid,
+            "started_at": epoch2datetime(row.started_at),
+            "complete_at": epoch2datetime(row.complete_at),
+            "state_string": row.state_string,
+            "results": row.results,
+            "urls": json.loads(row.urls_json),
+            "hidden": bool(row.hidden)
+        }

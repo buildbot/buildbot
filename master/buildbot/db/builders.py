@@ -31,10 +31,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
-            insert_values=dict(
-                name=name,
-                name_hash=name_hash,
-            ), autoCreate=autoCreate)
+            insert_values={"name": name, "name_hash": name_hash}, autoCreate=autoCreate)
 
     @defer.inlineCallbacks
     def updateBuilderInfo(self, builderid, description, description_format, description_html,
@@ -66,9 +63,13 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
             # add tag ids
             if tagsids:
-                conn.execute(builders_tags_tbl.insert(),
-                             [dict(builderid=builderid, tagid=tagid)
-                              for tagid in tagsids]).close()
+                conn.execute(builders_tags_tbl.insert(), [
+                    {
+                        "builderid": builderid,
+                        "tagid": tagid
+                    }
+                    for tagid in tagsids
+                ]).close()
 
             transaction.commit()
 

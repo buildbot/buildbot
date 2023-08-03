@@ -103,35 +103,41 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             transaction = conn.begin()
 
-            r = conn.execute(ch_tbl.insert(), dict(
-                author=author,
-                committer=committer,
-                comments=comments,
-                branch=branch,
-                revision=revision,
-                revlink=revlink,
-                when_timestamp=datetime2epoch(when_timestamp),
-                category=category,
-                repository=repository,
-                codebase=codebase,
-                project=project,
-                sourcestampid=ssid,
-                parent_changeids=parent_changeid))
+            r = conn.execute(ch_tbl.insert(), {
+                "author": author,
+                "committer": committer,
+                "comments": comments,
+                "branch": branch,
+                "revision": revision,
+                "revlink": revlink,
+                "when_timestamp": datetime2epoch(when_timestamp),
+                "category": category,
+                "repository": repository,
+                "codebase": codebase,
+                "project": project,
+                "sourcestampid": ssid,
+                "parent_changeids": parent_changeid
+            })
             changeid = r.inserted_primary_key[0]
             if files:
                 tbl = self.db.model.change_files
                 for f in files:
                     self.checkLength(tbl.c.filename, f)
                 conn.execute(tbl.insert(), [
-                    dict(changeid=changeid, filename=f)
+                    {
+                        "changeid": changeid,
+                        "filename": f
+                    }
                     for f in files
                 ])
             if properties:
                 tbl = self.db.model.change_properties
                 inserts = [
-                    dict(changeid=changeid,
-                         property_name=k,
-                         property_value=json.dumps(v))
+                    {
+                        "changeid": changeid,
+                        "property_name": k,
+                        "property_value": json.dumps(v)
+                    }
                     for k, v in properties.items()
                 ]
                 for i in inserts:
@@ -141,7 +147,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 conn.execute(tbl.insert(), inserts)
             if uid:
                 ins = self.db.model.change_users.insert()
-                conn.execute(ins, dict(changeid=changeid, uid=uid))
+                conn.execute(ins, {"changeid": changeid, "uid": uid})
 
             transaction.commit()
 

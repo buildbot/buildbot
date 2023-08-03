@@ -145,7 +145,7 @@ def special_case_sqlite(u, kwargs):
         kwargs.setdefault('poolclass', NullPool)
 
         database = u.database
-        database = database % dict(basedir=kwargs['basedir'])
+        database = database % {"basedir": kwargs['basedir']}
         if not os.path.isabs(database[0]):
             database = os.path.join(kwargs['basedir'], database)
 

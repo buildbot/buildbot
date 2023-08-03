@@ -30,12 +30,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name == name),
-            insert_values=dict(
-                name=name,
-                info={},
-                paused=0,
-                graceful=0,
-            ))
+            insert_values={"name": name, "info": {}, "paused": 0, "graceful": 0}
+        )
 
     def _deleteFromConfiguredWorkers_thd(self, conn, buildermasterids, workerid=None):
         cfg_tbl = self.db.model.configured_workers
