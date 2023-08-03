@@ -586,8 +586,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                                      sphinx="/path/to/sphinx-build",
                                      tags=['a', 'b'],
                                      strict_warnings=True,
-                                     defines=dict(
-                                         empty=None, t=True, f=False, s="str"),
+                                     defines={"empty": None, "t": True, "f": False, "s": 'str'},
                                      mode='full'))
         self.expect_commands(
             ExpectShell(workdir='wkdir',

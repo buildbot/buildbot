@@ -56,7 +56,7 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(repourl='git@gitlab.example.com:mmusterman/awesome_project.git',
                            mode='full', method='clean'),
-            dict(branch='master', revision='12345678'))
+            {"branch": 'master', "revision": '12345678'})
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',

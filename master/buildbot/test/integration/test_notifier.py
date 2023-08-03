@@ -105,14 +105,15 @@ class NotifierMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def doTest(self, what):
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="author@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="projectname"
-                      )
+        change = {
+            "branch": "master",
+            "files": ["foo.c"],
+            "author": "author@foo.com",
+            "committer": "me@foo.com",
+            "comments": "good stuff",
+            "revision": "HEAD",
+            "project": "projectname"
+        }
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         mail, recipients = yield self.mailDeferred

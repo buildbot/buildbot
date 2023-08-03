@@ -75,7 +75,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         # monkey-patch in a parse method
         def parse(message, prefix):
             assert 'this is a test' in message.get_payload()
-            return ('svn', dict(author='jimmy'))
+            return ('svn', {"author": 'jimmy'})
         mds.parse = parse
 
         yield mds.messageReceived('newmsg')
@@ -107,7 +107,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         # monkey-patch in a parse method
         def parse(message, prefix):
             assert 'this is a test' in message.get_payload()
-            return ('bzr', dict(author='jimmy'))
+            return ('bzr', {"author": 'jimmy'})
         mds.parse = parse
 
         yield mds.messageReceived('newmsg')

@@ -33,13 +33,15 @@ from buildbot.test.util.integration import RunMasterBase
 # so that we can reliably stop it recursively
 class TriggeringMaster(RunMasterBase):
     timeout = 120
-    change = dict(branch="master",
-                  files=["foo.c"],
-                  author="me@foo.com",
-                  committer="me@foo.com",
-                  comments="good stuff",
-                  revision="HEAD",
-                  project="none")
+    change = {
+        "branch": "master",
+        "files": ["foo.c"],
+        "author": "me@foo.com",
+        "committer": "me@foo.com",
+        "comments": "good stuff",
+        "revision": "HEAD",
+        "project": "none"
+    }
 
     @defer.inlineCallbacks
     def setup_trigger_config(self, triggeredFactory, nextBuild=None):

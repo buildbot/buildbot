@@ -129,10 +129,11 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data([self.cs87])
         cs = yield self.db.changesources.getChangeSource(87)
         validation.verifyDbDict(self, 'changesourcedict', cs)
-        self.assertEqual(cs, dict(
-            id=87,
-            name='lame_source',
-            masterid=None))
+        self.assertEqual(cs, {
+            "id": 87,
+            "name": 'lame_source',
+            "masterid": None
+        })
 
     @defer.inlineCallbacks
     def test_getChangeSource_missing(self):
@@ -147,10 +148,11 @@ class Tests(interfaces.InterfaceTests):
                                    self.cs42master13])
         cs = yield self.db.changesources.getChangeSource(42)
         validation.verifyDbDict(self, 'changesourcedict', cs)
-        self.assertEqual(cs, dict(
-            id=42,
-            name='cool_source',
-            masterid=13))
+        self.assertEqual(cs, {
+            "id": 42,
+            "name": 'cool_source',
+            "masterid": 13
+        })
 
     @defer.inlineCallbacks
     def test_getChangeSource_inactive_but_linked(self):
@@ -159,10 +161,11 @@ class Tests(interfaces.InterfaceTests):
                                    self.cs87master14])
         cs = yield self.db.changesources.getChangeSource(87)
         validation.verifyDbDict(self, 'changesourcedict', cs)
-        self.assertEqual(cs, dict(
-            id=87,
-            name='lame_source',
-            masterid=14))  # row exists, but marked inactive
+        self.assertEqual(cs, {
+            "id": 87,
+            "name": 'lame_source',
+            "masterid": 14
+        })  # row exists, but marked inactive
 
     def test_signature_getChangeSources(self):
         """getChangeSources has right signature"""
@@ -183,8 +186,8 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'changesourcedict', cs)
 
         self.assertEqual(sorted(cslist, key=changeSourceKey), sorted([
-            dict(id=42, name='cool_source', masterid=13),
-            dict(id=87, name='lame_source', masterid=None),
+            {"id": 42, "name": 'cool_source', "masterid": 13},
+            {"id": 87, "name": 'lame_source', "masterid": None},
         ], key=changeSourceKey))
 
     @defer.inlineCallbacks
@@ -200,7 +203,7 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'changesourcedict', cs)
 
         self.assertEqual(sorted(cslist, key=changeSourceKey), sorted([
-            dict(id=42, name='cool_source', masterid=13),
+            {"id": 42, "name": 'cool_source', "masterid": 13},
         ], key=changeSourceKey))
 
     @defer.inlineCallbacks
@@ -216,7 +219,7 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'changesourcedict', cs)
 
         self.assertEqual(sorted(cslist), sorted([
-            dict(id=42, name='cool_source', masterid=13),
+            {"id": 42, "name": 'cool_source', "masterid": 13},
         ]))
 
     @defer.inlineCallbacks
@@ -233,7 +236,7 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'changesourcedict', cs)
 
         self.assertEqual(sorted(cslist), sorted([
-            dict(id=42, name='cool_source', masterid=13),
+            {"id": 42, "name": 'cool_source', "masterid": 13},
         ]))
 
         cslist = yield self.db.changesources.getChangeSources(
@@ -257,7 +260,7 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'changesourcedict', cs)
 
         self.assertEqual(sorted(cslist), sorted([
-            dict(id=87, name='lame_source', masterid=None),
+            {"id": 87, "name": 'lame_source', "masterid": None},
         ]))
 
     @defer.inlineCallbacks

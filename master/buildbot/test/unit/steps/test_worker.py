@@ -341,7 +341,7 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin,
         @defer.inlineCallbacks
         def testFunc(x):
             yield x.runRemoteCommand(*cmd_args,
-                                     **dict(abandonOnFailure=False))
+                                     **{"abandonOnFailure": False})
             testFunc.ran = True
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(Expect(*cmd_args)

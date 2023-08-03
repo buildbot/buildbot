@@ -141,19 +141,20 @@ class Row:
 
     @defer.inlineCallbacks
     def checkForeignKeys(self, db, t):
-        accessors = dict(
-            buildsetid=db.buildsets.getBuildset,
-            workerid=db.workers.getWorker,
-            builderid=db.builders.getBuilder,
-            buildid=db.builds.getBuild,
-            changesourceid=db.changesources.getChangeSource,
-            changeid=db.changes.getChange,
-            buildrequestid=db.buildrequests.getBuildRequest,
-            sourcestampid=db.sourcestamps.getSourceStamp,
-            schedulerid=db.schedulers.getScheduler,
-            brid=db.buildrequests.getBuildRequest,
-            stepid=db.steps.getStep,
-            masterid=db.masters.getMaster)
+        accessors = {
+            "buildsetid": db.buildsets.getBuildset,
+            "workerid": db.workers.getWorker,
+            "builderid": db.builders.getBuilder,
+            "buildid": db.builds.getBuild,
+            "changesourceid": db.changesources.getChangeSource,
+            "changeid": db.changes.getChange,
+            "buildrequestid": db.buildrequests.getBuildRequest,
+            "sourcestampid": db.sourcestamps.getSourceStamp,
+            "schedulerid": db.schedulers.getScheduler,
+            "brid": db.buildrequests.getBuildRequest,
+            "stepid": db.steps.getStep,
+            "masterid": db.masters.getMaster
+        }
         for foreign_key in self.foreignKeys:
             if foreign_key in accessors:
                 key = getattr(self, foreign_key)

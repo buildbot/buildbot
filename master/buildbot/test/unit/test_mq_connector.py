@@ -78,7 +78,7 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
         self.mqconfig['type'] = 'fake'
         self.conn.setup()
         new_config = mock.Mock()
-        new_config.mq = dict(type='fake')
+        new_config.mq = {"type": 'fake'}
         yield self.conn.reconfigServiceWithBuildbotConfig(new_config)
 
         self.assertIdentical(self.conn.impl.new_config, new_config)
@@ -89,7 +89,7 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
         self.mqconfig['type'] = 'fake'
         yield self.conn.setup()
         new_config = mock.Mock()
-        new_config.mq = dict(type='other')
+        new_config.mq = {"type": 'other'}
         try:
             yield self.conn.reconfigServiceWithBuildbotConfig(new_config)
         except AssertionError:

@@ -165,18 +165,18 @@ class TestCheckconfig(unittest.TestCase):
                                            configFile='master.cfg', quiet=None)
 
     def test_checkconfig_given_dir(self):
-        self.assertEqual(checkconfig.checkconfig(dict(configFile='.')), 3)
+        self.assertEqual(checkconfig.checkconfig({"configFile": '.'}), 3)
         self.loadConfig.assert_called_with(basedir='.', configFile='master.cfg',
                                            quiet=None)
 
     def test_checkconfig_given_file(self):
-        config = dict(configFile='master.cfg')
+        config = {"configFile": 'master.cfg'}
         self.assertEqual(checkconfig.checkconfig(config), 3)
         self.loadConfig.assert_called_with(basedir=os.getcwd(),
                                            configFile='master.cfg', quiet=None)
 
     def test_checkconfig_quiet(self):
-        config = dict(configFile='master.cfg', quiet=True)
+        config = {"configFile": 'master.cfg', "quiet": True}
         self.assertEqual(checkconfig.checkconfig(config), 3)
         self.loadConfig.assert_called_with(basedir=os.getcwd(),
                                            configFile='master.cfg', quiet=True)
@@ -189,5 +189,5 @@ class TestCheckconfig(unittest.TestCase):
         mockGetConfig = mock.Mock(spec=base.getConfigFileFromTac,
                                   side_effect=SyntaxError)
         self.patch(checkconfig, 'getConfigFileFromTac', mockGetConfig)
-        config = dict(configFile='.', quiet=True)
+        config = {"configFile": '.', "quiet": True}
         self.assertEqual(checkconfig.checkconfig(config), 1)

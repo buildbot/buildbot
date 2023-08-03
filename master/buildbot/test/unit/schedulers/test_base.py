@@ -162,9 +162,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
         # set up a change message, a changedict, a change, and convince
         # getChange and fromChdict to convert one to the other
-        msg = dict(changeid=12934)
+        msg = {"changeid": 12934}
 
-        chdict = dict(changeid=12934, is_chdict=True)
+        chdict = {"changeid": 12934, "is_chdict": True}
 
         def getChange(changeid):
             assert changeid == 12934
@@ -208,18 +208,18 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
     def test_change_consumption_fileIsImportant_True(self):
         return self.do_test_change_consumption(
-            dict(fileIsImportant=lambda c: True),
+            {"fileIsImportant": lambda c: True},
             True)
 
     def test_change_consumption_fileIsImportant_False(self):
         return self.do_test_change_consumption(
-            dict(fileIsImportant=lambda c: False),
+            {"fileIsImportant": lambda c: False},
             False)
 
     @defer.inlineCallbacks
     def test_change_consumption_fileIsImportant_exception(self):
         yield self.do_test_change_consumption(
-            dict(fileIsImportant=lambda c: 1 / 0),
+            {"fileIsImportant": lambda c: 1 / 0},
             None)
 
         self.assertEqual(1, len(self.flushLoggedErrors(ZeroDivisionError)))
@@ -228,14 +228,14 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         cf = mock.Mock()
         cf.filter_change = lambda c: True
         return self.do_test_change_consumption(
-            dict(change_filter=cf),
+            {"change_filter": cf},
             True)
 
     def test_change_consumption_change_filter_False(self):
         cf = mock.Mock()
         cf.filter_change = lambda c: False
         return self.do_test_change_consumption(
-            dict(change_filter=cf),
+            {"change_filter": cf},
             None)
 
     def test_change_consumption_change_filter_gerrit_ref_updates(self):
@@ -298,12 +298,12 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
     def test_change_consumption_fileIsImportant_False_onlyImportant(self):
         return self.do_test_change_consumption(
-            dict(fileIsImportant=lambda c: False, onlyImportant=True),
+            {"fileIsImportant": lambda c: False, "onlyImportant": True},
             None)
 
     def test_change_consumption_fileIsImportant_True_onlyImportant(self):
         return self.do_test_change_consumption(
-            dict(fileIsImportant=lambda c: True, onlyImportant=True),
+            {"fileIsImportant": lambda c: True, "onlyImportant": True},
             True)
 
     @defer.inlineCallbacks
@@ -388,10 +388,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
     def test_addBuildsetForSourceStampsWithDefaults(self):
         codebases = {
-            'cbA': dict(repository='svn://A..', branch='stable',
-                        revision='13579'),
-            'cbB': dict(repository='svn://B..', branch='stable',
-                        revision='24680')
+            'cbA': {"repository": 'svn://A..', "branch": 'stable', "revision": '13579'},
+            'cbB': {"repository": 'svn://B..', "branch": 'stable', "revision": '24680'}
         }
         sourcestamps = [
             {'codebase': 'cbA', 'branch': 'AA'},
@@ -408,10 +406,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
     def test_addBuildsetForSourceStampsWithDefaults_fill_in_codebases(self):
         codebases = {
-            'cbA': dict(repository='svn://A..', branch='stable',
-                        revision='13579'),
-            'cbB': dict(repository='svn://B..', branch='stable',
-                        revision='24680')
+            'cbA': {"repository": 'svn://A..', "branch": 'stable', "revision": '13579'},
+            'cbB': {"repository": 'svn://B..', "branch": 'stable', "revision": '24680'}
         }
         sourcestamps = [
             {'codebase': 'cbA', 'branch': 'AA'},
@@ -547,19 +543,12 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_codebases_set_multiple_codebases(self):
-        codebases = {'cbA': dict(repository='svn://A..',
-                                 branch='stable',
-                                 revision='13579'),
-                     'cbB': dict(
-                         repository='svn://B..',
-                         branch='stable',
-                         revision='24680'),
-                     'cbC': dict(
-                         repository='svn://C..',
-                         branch='stable',
-                         revision='12345'),
-                     'cbD': dict(
-                         repository='svn://D..')}
+        codebases = {
+            'cbA': {"repository": 'svn://A..', "branch": 'stable', "revision": '13579'},
+            'cbB': {"repository": 'svn://B..', "branch": 'stable', "revision": '24680'},
+            'cbC': {"repository": 'svn://C..', "branch": 'stable', "revision": '12345'},
+            'cbD': {"repository": 'svn://D..'}
+        }
         # Scheduler gets codebases that can be used to create extra sourcestamps
         # for repositories that have no changes
         sched = self.makeScheduler(name='n', builderNames=['b', 'c'],
@@ -589,13 +578,22 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             properties={
                 'scheduler': ('n', 'Scheduler'),
             },
-            sourcestamps=[914,
-                          917,
-                          dict(branch='stable', repository='svn://C..',
-                               codebase='cbC', project='', revision='12345'),
-                          dict(branch=None, repository='svn://D..', codebase='cbD',
-                               project='', revision=None)
-                          ],
+
+            sourcestamps=[914, 917,
+                {
+                    "branch": 'stable',
+                    "repository": 'svn://C..',
+                    "codebase": 'cbC',
+                    "project": '',
+                    "revision": '12345'
+                }, {
+                    "branch": None,
+                    "repository": 'svn://D..',
+                    "codebase": 'cbD',
+                    "project": '',
+                    "revision": None
+                }
+            ],
             priority=0
         )
 

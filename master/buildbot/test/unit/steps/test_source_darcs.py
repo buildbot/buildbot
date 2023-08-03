@@ -284,7 +284,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'),
-            dict(revision='abcdef01'))
+            {"revision": 'abcdef01'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -316,7 +316,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'),
-            dict(revision='abcdef01'),
+            {"revision": 'abcdef01'},
             worker_version={'*': '2.16'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',

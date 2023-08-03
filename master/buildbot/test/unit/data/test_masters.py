@@ -164,11 +164,15 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         # initial checkin
         yield self.rtype.masterActive(name='myname', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
-        self.assertEqual(master, dict(id=13, name='myname',
-                                      active=True, last_active=epoch2datetime(60)))
+        self.assertEqual(master, {
+            "id": 13,
+            "name": 'myname',
+            "active": True,
+            "last_active": epoch2datetime(60)
+        })
         self.assertEqual(self.master.mq.productions, [
             (('masters', '13', 'started'),
-             dict(masterid=13, name='myname', active=True)),
+             {"masterid": 13, "name": 'myname', "active": True}),
         ])
         self.master.mq.productions = []
 
@@ -177,11 +181,15 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         yield self.master.db.masters.markMasterInactive(13)
         yield self.rtype.masterActive('myname', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
-        self.assertEqual(master, dict(id=13, name='myname',
-                                      active=True, last_active=epoch2datetime(120)))
+        self.assertEqual(master, {
+            "id": 13,
+            "name": 'myname',
+            "active": True,
+            "last_active": epoch2datetime(120)
+        })
         self.assertEqual(self.master.mq.productions, [
             (('masters', '13', 'started'),
-             dict(masterid=13, name='myname', active=True)),
+             {"masterid": 13, "name": 'myname', "active": True}),
         ])
         self.master.mq.productions = []
 
@@ -245,9 +253,12 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         yield self.master.db.masters.markMasterInactive(15)
         yield self.rtype.expireMasters()
         master = yield self.master.db.masters.getMaster(14)
-        self.assertEqual(master, dict(id=14, name='other',
-                                      active=False,
-                                      last_active=epoch2datetime(0)))
+        self.assertEqual(master, {
+            "id": 14,
+            "name": 'other',
+            "active": False,
+            "last_active": epoch2datetime(0)
+        })
         self.rtype._masterDeactivated. \
             assert_called_with(14, 'other')
 
@@ -304,5 +315,5 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
         self.assertEqual(self.master.mq.productions, [
             (('masters', '14', 'stopped'),
-             dict(masterid=14, name='other', active=False)),
+             {"masterid": 14, "name": 'other', "active": False}),
         ])

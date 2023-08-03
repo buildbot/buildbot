@@ -211,10 +211,14 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
     def test_GoogleVerifyCode(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
-            FakeResponse(dict(access_token="TOK3N"))]
-        self.googleAuth.get = mock.Mock(side_effect=[dict(
-            name="foo bar",
-            email="bar@foo", picture="http://pic")])
+            FakeResponse({"access_token": 'TOK3N'})]
+        self.googleAuth.get = mock.Mock(side_effect=[
+            {
+                "name": 'foo bar',
+                "email": 'bar@foo',
+                "picture": 'http://pic'
+            }
+        ])
         res = yield self.googleAuth.verifyCode("code!")
         self.assertEqual({'avatar_url': 'http://pic', 'email': 'bar@foo',
                           'full_name': 'foo bar', 'username': 'bar'}, res)
@@ -224,7 +228,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
         test = self
         requests.get.side_effect = []
         requests.post.side_effect = [
-            FakeResponse(dict(access_token="TOK3N"))]
+            FakeResponse({"access_token": 'TOK3N'})]
 
         def fake_get(self, ep, **kwargs):
             test.assertEqual(
@@ -234,18 +238,20 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                     'User-Agent': f'buildbot/{buildbot.version}',
                 })
             if ep == '/user':
-                return dict(
-                    login="bar",
-                    name="foo bar",
-                    email="buzz@bar")
+                return {
+                    "login": 'bar',
+                    "name": 'foo bar',
+                    "email": 'buzz@bar'
+                }
             if ep == '/user/emails':
                 return [
                     {'email': 'buzz@bar', 'verified': True, 'primary': False},
-                    {'email': 'bar@foo', 'verified': True, 'primary': True}]
+                    {'email': 'bar@foo', 'verified': True, 'primary': True}
+                ]
             if ep == '/user/orgs':
                 return [
-                    dict(login="hello"),
-                    dict(login="grp"),
+                    {"login": 'hello'},
+                    {"login": 'grp'},
                 ]
             return None
         self.githubAuth.get = fake_get
@@ -260,7 +266,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
     def test_GithubVerifyCode_v4(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
-            FakeResponse(dict(access_token="TOK3N"))]
+            FakeResponse({"access_token": 'TOK3N'})]
         self.githubAuth_v4.post = mock.Mock(side_effect=[
             {
                 'data': {
@@ -296,7 +302,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
     def test_GithubVerifyCode_v4_teams(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
-            FakeResponse(dict(access_token="TOK3N"))]
+            FakeResponse({"access_token": 'TOK3N'})]
         self.githubAuth_v4_teams.post = mock.Mock(side_effect=[
             {
                 'data': {
@@ -408,7 +414,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
     def test_GitlabVerifyCode(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
-            FakeResponse(dict(access_token="TOK3N"))]
+            FakeResponse({"access_token": 'TOK3N'})]
         self.gitlabAuth.get = mock.Mock(side_effect=[
             {  # /user
                 "name": "Foo Bar",
@@ -433,19 +439,23 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
     def test_BitbucketVerifyCode(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
-            FakeResponse(dict(access_token="TOK3N"))]
+            FakeResponse({"access_token": 'TOK3N'})]
         self.bitbucketAuth.get = mock.Mock(side_effect=[
-            dict(  # /user
-                username="bar",
-                display_name="foo bar"),
-            dict(  # /user/emails
-                values=[
+            {"username": 'bar', "display_name": 'foo bar'},  # /user
+            {
+                "values":
+                [
                     {'email': 'buzz@bar', 'is_primary': False},
-                    {'email': 'bar@foo', 'is_primary': True}]),
-            dict(  # /workspaces?role=member
-                values=[
+                    {'email': 'bar@foo', 'is_primary': True}
+                ]
+            },  # /user/emails
+            {
+                "values":
+                [
                     {'slug': 'hello'},
-                    {'slug': 'grp'}])
+                    {'slug': 'grp'}
+                ]
+            }  # /workspaces?role=member
         ])
         res = yield self.bitbucketAuth.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',

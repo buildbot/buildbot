@@ -73,17 +73,18 @@ class FakeBuildsComponent(FakeDBComponent):
         return id
 
     def _row2dict(self, row):
-        return dict(
-            id=row['id'],
-            number=row['number'],
-            buildrequestid=row['buildrequestid'],
-            builderid=row['builderid'],
-            masterid=row['masterid'],
-            workerid=row['workerid'],
-            started_at=epoch2datetime(row['started_at']),
-            complete_at=epoch2datetime(row['complete_at']),
-            state_string=row['state_string'],
-            results=row['results'])
+        return {
+            "id": row['id'],
+            "number": row['number'],
+            "buildrequestid": row['buildrequestid'],
+            "builderid": row['builderid'],
+            "masterid": row['masterid'],
+            "workerid": row['workerid'],
+            "started_at": epoch2datetime(row['started_at']),
+            "complete_at": epoch2datetime(row['complete_at']),
+            "state_string": row['state_string'],
+            "results": row['results']
+        }
 
     def getBuild(self, buildid):
         row = self.builds.get(buildid)
@@ -122,13 +123,17 @@ class FakeBuildsComponent(FakeDBComponent):
         id = self._newId()
         number = max([0] + [r['number'] for r in self.builds.values()
                             if r['builderid'] == builderid]) + 1
-        self.builds[id] = dict(id=id, number=number,
-                               buildrequestid=buildrequestid, builderid=builderid,
-                               workerid=workerid, masterid=masterid,
-                               state_string=state_string,
-                               started_at=self.reactor.seconds(),
-                               complete_at=None,
-                               results=None)
+        self.builds[id] = {
+            "id": id, "number": number,
+            "buildrequestid": buildrequestid,
+            "builderid": builderid,
+            "workerid": workerid,
+            "masterid": masterid,
+            "state_string": state_string,
+            "started_at": self.reactor.seconds(),
+            "complete_at": None,
+            "results": None
+        }
         return defer.succeed((id, number))
 
     def setBuildStateString(self, buildid, state_string):

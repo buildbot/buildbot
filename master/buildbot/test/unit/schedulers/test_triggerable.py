@@ -108,39 +108,39 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         for brid in brids.values():
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
-            self.assertEqual(
-                buildrequest,
-                {
-                    'buildrequestid': brid,
-                    'buildername': 'b',
-                    'builderid': 77,
-                    'buildsetid': bsid,
-                    'claimed': False,
-                    'claimed_at': None,
-                    'complete': False,
-                    'complete_at': None,
-                    'claimed_by_masterid': None,
-                    'priority': 0,
-                    'results': -1,
-                    'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
-                    'waited_for': waited_for
-                }
-            )
+            self.assertEqual(buildrequest,
+            {
+                'buildrequestid': brid,
+                'buildername': 'b',
+                'builderid': 77,
+                'buildsetid': bsid,
+                'claimed': False,
+                'claimed_at': None,
+                'complete': False,
+                'complete_at': None,
+                'claimed_by_masterid': None,
+                'priority': 0,
+                'results': -1,
+                'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
+                'waited_for': waited_for
+            })
 
     def sendCompletionMessage(self, bsid, results=3):
-        self.master.mq.callConsumer(('buildsets', str(bsid), 'complete'),
-                                    dict(
-                                        bsid=bsid,
-                                        submitted_at=100,
-                                        complete=True,
-                                        complete_at=200,
-                                        external_idstring=None,
-                                        reason='triggering',
-                                        results=results,
-                                        sourcestamps=[],
-                                        parent_buildid=None,
-                                        parent_relationship=None,
-        ))
+        self.master.mq.callConsumer(
+        ('buildsets', str(bsid), 'complete'),
+            {
+                "bsid": bsid,
+                "submitted_at": 100,
+                "complete": True,
+                "complete_at": 200,
+                "external_idstring": None,
+                "reason": 'triggering',
+                "results": results,
+                "sourcestamps": [],
+                "parent_buildid": None,
+                "parent_relationship": None,
+            }
+        )
 
     # tests
 
@@ -180,9 +180,12 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
             idsDeferred,
             waited_for,
             properties={'pr': ('op', 'test')},
-            sourcestamps=[
-                dict(branch='br', project='p', repository='r',
-                     codebase='cb', revision='myrev'),
+            sourcestamps=[{
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "codebase": 'cb',
+                "revision": 'myrev'},
             ])
 
         # set up a boolean so that we can know when the deferred fires
@@ -241,9 +244,12 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
-            sourcestamps=[
-                dict(branch='br', project='p', repository='r',
-                     codebase='cb', revision='myrev1'),
+            sourcestamps=[{
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "codebase": 'cb',
+                "revision": 'myrev1'},
             ])
         d.addCallback(lambda res_brids: self.assertEqual(res_brids[0], 11)
                       and self.assertEqual(res_brids[1], {77: 1000}))
@@ -256,9 +262,12 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
-            sourcestamps=[
-                dict(branch='br', project='p', repository='r',
-                     codebase='cb', revision='myrev2'),
+            sourcestamps=[{
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "codebase": 'cb',
+                "revision": 'myrev2'},
             ])
         d.addCallback(lambda res_brids1: self.assertEqual(res_brids1[0], 22)
                       and self.assertEqual(res_brids1[1], {77: 1001}))

@@ -277,7 +277,7 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, replace=False, basedir='test')
+    config = {"quiet": False, "replace": False, "basedir": 'test'}
     config.update(kwargs)
     return config
 

@@ -113,9 +113,14 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
-            insert_values=dict(name='somemaster', name_hash=hash,
-                               active=1, last_active=1),
-            _race_hook=race_thd)
+            insert_values={
+                "name": "somemaster",
+                "name_hash": hash,
+                "active": 1,
+                "last_active": 1,
+            },
+            _race_hook=race_thd,
+        )
         self.assertEqual(id, 5)
 
     @defer.inlineCallbacks
@@ -125,8 +130,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
-            insert_values=dict(name='somemaster', name_hash=hash,
-                               active=1, last_active=1))
+            insert_values={"name": 'somemaster', "name_hash": hash, "active": 1, "last_active": 1})
         self.assertEqual(id, 1)
 
     @defer.inlineCallbacks
@@ -141,8 +145,8 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
-            insert_values=dict(name='somemaster', name_hash=hash,
-                               active=1, last_active=1))
+            insert_values={"name": 'somemaster', "name_hash": hash, "active": 1, "last_active": 1}
+        )
         self.assertEqual(id, 7)
 
     @defer.inlineCallbacks
@@ -152,8 +156,8 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
-            insert_values=dict(name='somemaster', name_hash=hash,
-                               active=1, last_active=1), autoCreate=False)
+            insert_values={"name": 'somemaster', "name_hash": hash, "active": 1, "last_active": 1},
+            autoCreate=False)
         self.assertEqual(id, None)
 
 

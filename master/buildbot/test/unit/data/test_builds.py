@@ -339,9 +339,13 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     def test_addBuild(self):
         return self.do_test_callthrough('addBuild', self.rtype.addBuild,
                                         builderid=10, buildrequestid=13, workerid=20,
-                                        exp_kwargs=dict(builderid=10, buildrequestid=13,
-                                                        workerid=20, masterid=self.master.masterid,
-                                                        state_string='created'))
+                                        exp_kwargs={
+                                            "builderid": 10,
+                                            "buildrequestid": 13,
+                                            "workerid": 20,
+                                            "masterid": self.master.masterid,
+                                            "state_string": 'created'
+                                        })
 
     def test_addBuildEvent(self):
 

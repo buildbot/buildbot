@@ -137,8 +137,8 @@ class TestSecretInHashiCorpVaultKvSecretProvider(ConfigErrorsMixin, unittest.Tes
         if hvac is None:
             raise unittest.SkipTest(
                 "Need to install hvac to test HashiCorpVaultKvSecretProvider")
-        param = dict(vault_server="", authenticator=VaultAuthenticatorToken("mockToken"),
-                     path_delimiter='|', path_escape='\\', api_version=2)
+        param = {"vault_server": "", "authenticator": VaultAuthenticatorToken("mockToken"),
+                "path_delimiter": '|', "path_escape": '\\', "api_version": 2}
         self.provider = HashiCorpVaultKvSecretProvider(**param)
         self.provider.reconfigService(**param)
         self.provider.client = FakeHvacClient()

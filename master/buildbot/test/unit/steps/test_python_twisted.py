@@ -110,7 +110,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
-                        env=dict(PYTHONPATH='somepath'))
+                        env={"PYTHONPATH": 'somepath'})
             .stdout("Ran 0 tests\n")
             .exit(0)
         )
@@ -127,7 +127,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
-                        env=dict(PYTHONPATH=['path1', 'path2', 'path3']))
+                        env={"PYTHONPATH": ['path1', 'path2', 'path3']})
             .stdout("Ran 0 tests\n")
             .exit(0)
         )
@@ -144,7 +144,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
-                        env=dict(PYTHONPATH=['path1', 'path2']))
+                        env={"PYTHONPATH": ['path1', 'path2']})
             .stdout("Ran 0 tests\n")
             .exit(0)
         )

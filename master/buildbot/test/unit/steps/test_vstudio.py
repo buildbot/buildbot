@@ -113,13 +113,24 @@ class MSLogLineObserver(unittest.TestCase):
         if progress is None:
             progress = {}
         self.assertEqual(
-            dict(nbFiles=self.llo.nbFiles, nbProjects=self.llo.nbProjects,
-                 nbWarnings=self.llo.nbWarnings,
-                 nbErrors=self.llo.nbErrors, errors=self.errors,
-                 warnings=self.warnings, progress=self.progress),
-            dict(nbFiles=nbFiles, nbProjects=nbProjects, nbWarnings=nbWarnings,
-                 nbErrors=nbErrors, errors=errors,
-                 warnings=warnings, progress=progress))
+            {
+                "nbFiles": self.llo.nbFiles,
+                "nbProjects": self.llo.nbProjects,
+                "nbWarnings": self.llo.nbWarnings,
+                "nbErrors": self.llo.nbErrors,
+                "errors": self.errors,
+                "warnings": self.warnings,
+                "progress": self.progress
+            }, {
+                "nbFiles": nbFiles,
+                "nbProjects": nbProjects,
+                "nbWarnings": nbWarnings,
+                "nbErrors": nbErrors,
+                "errors": errors,
+                "warnings": warnings,
+                "progress": progress
+            }
+        )
 
     def test_outLineReceived_empty(self):
         self.llo.outLineReceived('abcd\r\n')
@@ -131,7 +142,7 @@ class MSLogLineObserver(unittest.TestCase):
             "123>----- some project 2 -----",
         ]
         self.receiveLines(*lines)
-        self.assertResult(nbProjects=2, progress=dict(projects=2),
+        self.assertResult(nbProjects=2, progress={"projects": 2},
                           errors=[('o', l) for l in lines],
                           warnings=lines)
 
@@ -142,7 +153,7 @@ class MSLogLineObserver(unittest.TestCase):
             "123>SomeStuff.h",  # .h files not recognized
         ]
         self.receiveLines(*lines)
-        self.assertResult(nbFiles=2, progress=dict(files=2))
+        self.assertResult(nbFiles=2, progress={"files": 2})
 
     def test_outLineReceived_warnings(self):
         lines = [
@@ -150,7 +161,7 @@ class MSLogLineObserver(unittest.TestCase):
             "def : warning DEF456: wxy!",
         ]
         self.receiveLines(*lines)
-        self.assertResult(nbWarnings=2, progress=dict(warnings=2),
+        self.assertResult(nbWarnings=2, progress={"warnings": 2},
                           warnings=lines)
 
     def test_outLineReceived_errors(self):
@@ -288,13 +299,15 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             LIB=[r'c:\LIB1', r'C:\LIB2'],
             PATH=[r'c:\P1', r'C:\P2']))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['command', 'here'],
-                        env=dict(
-                            INCLUDE=r'c:\INC1;c:\INC2;',
-                            LIB=r'c:\LIB1;C:\LIB2;',
-                            PATH=r'c:\P1;C:\P2;'))
-            .exit(0)
+            ExpectShell(
+                workdir="wkdir",
+                command=["command", "here"],
+                env={
+                    "INCLUDE": r"c:\INC1;c:\INC2;",
+                    "LIB": r"c:\LIB1;C:\LIB2;",
+                    "PATH": r"c:\P1;C:\P2;",
+                },
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
@@ -305,13 +318,15 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             LIB=[r'c:\LIB1', r'C:\LIB2'],
             PATH=[r'c:\P1', r'C:\P2']))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['command', 'here'],
-                        env=dict(
-                            INCLUDE=r'c:\INC1;c:\INC2;',
-                            LIB=r'c:\LIB1;C:\LIB2;',
-                            PATH=r'c:\P1;C:\P2;'))
-            .exit(0)
+            ExpectShell(
+                workdir="wkdir",
+                command=["command", "here"],
+                env={
+                    "INCLUDE": r"c:\INC1;c:\INC2;",
+                    "LIB": r"c:\LIB1;C:\LIB2;",
+                    "PATH": r"c:\P1;C:\P2;",
+                },
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
@@ -369,11 +384,11 @@ class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             include.insert(0, f'{i};')
         if LIB:
             lib.insert(0, f'{LIB};')
-        return dict(
-            INCLUDE=''.join(include),
-            LIB=''.join(lib),
-            PATH=''.join(path),
-        )
+        return {
+            "INCLUDE": ''.join(include),
+            "LIB": ''.join(lib),
+            "PATH": ''.join(path),
+        }
 
     def test_args(self):
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
@@ -469,11 +484,11 @@ class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             include.insert(0, f'{i};')
         if LIB:
             lib.insert(0, f'{LIB};')
-        return dict(
-            INCLUDE=''.join(include),
-            LIB=''.join(lib),
-            PATH=''.join(path),
-        )
+        return {
+            "INCLUDE": ''.join(include),
+            "LIB": ''.join(lib),
+            "PATH": ''.join(path),
+        }
 
     def test_args(self):
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
@@ -567,11 +582,11 @@ class VC8ExpectedEnvMixin:
             path.insert(0, f'{p};')
         if i:
             include.insert(0, f'{i};')
-        return dict(
-            INCLUDE=''.join(include),
-            LIB=''.join(lib),
-            PATH=''.join(path),
-        )
+        return {
+            "INCLUDE": ''.join(include),
+            "LIB": ''.join(lib),
+            "PATH": ''.join(path),
+        }
 
 
 class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,

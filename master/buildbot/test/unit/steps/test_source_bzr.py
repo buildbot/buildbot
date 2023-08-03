@@ -134,7 +134,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'),
-            args=dict(revision='3730'))
+            args={"revision": '3730'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
@@ -304,7 +304,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'),
-            args=dict(revision='2345'))
+            args={"revision": '2345'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
@@ -421,7 +421,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clobber'),
-            args=dict(revision='3730'))
+            args={"revision": '3730'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
@@ -474,7 +474,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(baseURL='http://bzr.squid-cache.org/bzr/squid3',
                     defaultBranch='trunk', mode='full', method='clobber'),
-            args=dict(branch='branches/SQUID_3_0'))
+            args={"branch": 'branches/SQUID_3_0'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
@@ -553,7 +553,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'),
-            args=dict(revision='9384'))
+            args={"revision": '9384'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])

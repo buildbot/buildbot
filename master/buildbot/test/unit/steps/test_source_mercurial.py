@@ -612,7 +612,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org/',
                                 mode='incremental', branchType='dirname', defaultBranch='devel'),
-            dict(branch='stable')
+            {"branch": 'stable'}
         )
         self.expect_commands(
             ExpectShell(workdir='wkdir',
@@ -806,9 +806,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
     def test_mode_incremental_given_revision(self):
         self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
-                                mode='incremental', branchType='inrepo'), dict(
-                revision='abcdef01',
-            ))
+                                mode='incremental', branchType='inrepo'), {"revision": 'abcdef01'})
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',
@@ -846,9 +844,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
     def test_mode_incremental_branch_change(self):
         self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
-                                mode='incremental', branchType='inrepo'), dict(
-                branch='stable',
-            ))
+                                mode='incremental', branchType='inrepo'), {"branch": 'stable'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
@@ -889,9 +885,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='inrepo',
-                                clobberOnBranchChange=False), dict(
-                branch='stable',
-            ))
+                                clobberOnBranchChange=False), {"branch": 'stable'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])

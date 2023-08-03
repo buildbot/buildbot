@@ -28,8 +28,8 @@ class TestStatusLog(unittest.TestCase):
         self.patch(tryclient, 'Try', Try)
         inst = Try.return_value = mock.Mock(name='Try-instance')
 
-        rc = trycmd.trycmd(dict(cfg=1))
+        rc = trycmd.trycmd({"cfg": 1})
 
-        Try.assert_called_with(dict(cfg=1))
+        Try.assert_called_with({"cfg": 1})
         inst.run.assert_called_with()
         self.assertEqual(rc, 0)

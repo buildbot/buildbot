@@ -140,7 +140,7 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin,
         self.master.db.builds.setBuildProperty = mock.Mock(
             wraps=self.master.db.builds.setBuildProperty)
         props = processProperties.fromDict(
-            dict(a=(1, 't'), b=(['abc', 9], 't')))
+            {"a": (1, 't'), "b": (['abc', 9], 't')})
         yield self.rtype.setBuildProperties(1234, props)
         setBuildPropertiesCalls = sorted(self.master.db.builds.setBuildProperty.mock_calls)
         self.assertEqual(setBuildPropertiesCalls, [

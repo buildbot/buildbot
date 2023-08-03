@@ -331,21 +331,21 @@ dbdict['masterdict'] = DictValidator(
 
 # sourcestamp
 
-_sourcestamp = dict(
-    ssid=IntValidator(),
-    branch=NoneOk(StringValidator()),
-    revision=NoneOk(StringValidator()),
-    repository=StringValidator(),
-    project=StringValidator(),
-    codebase=StringValidator(),
-    created_at=DateTimeValidator(),
-    patch=NoneOk(DictValidator(
+_sourcestamp = {
+    "ssid": IntValidator(),
+    "branch": NoneOk(StringValidator()),
+    "revision": NoneOk(StringValidator()),
+    "repository": StringValidator(),
+    "project": StringValidator(),
+    "codebase": StringValidator(),
+    "created_at": DateTimeValidator(),
+    "patch": NoneOk(DictValidator(
         body=NoneOk(BinaryValidator()),
         level=NoneOk(IntValidator()),
         subdir=NoneOk(StringValidator()),
         author=NoneOk(StringValidator()),
         comment=NoneOk(StringValidator()))),
-)
+}
 
 message['sourcestamps'] = Selector()
 message['sourcestamps'].add(None,
@@ -421,17 +421,17 @@ dbdict['workerdict'] = DictValidator(
 
 # buildset
 
-_buildset = dict(
-    bsid=IntValidator(),
-    external_idstring=NoneOk(StringValidator()),
-    reason=StringValidator(),
-    submitted_at=IntValidator(),
-    complete=BooleanValidator(),
-    complete_at=NoneOk(IntValidator()),
-    results=NoneOk(IntValidator()),
-    parent_buildid=NoneOk(IntValidator()),
-    parent_relationship=NoneOk(StringValidator()),
-)
+_buildset = {
+    "bsid": IntValidator(),
+    "external_idstring": NoneOk(StringValidator()),
+    "reason": StringValidator(),
+    "submitted_at": IntValidator(),
+    "complete": BooleanValidator(),
+    "complete_at": NoneOk(IntValidator()),
+    "results": NoneOk(IntValidator()),
+    "parent_buildid": NoneOk(IntValidator()),
+    "parent_relationship": NoneOk(StringValidator()),
+}
 _buildsetEvents = [b'new', b'complete']
 
 message['buildsets'] = Selector()
@@ -549,19 +549,19 @@ dbdict['schedulerdict'] = DictValidator(
 
 # builds
 
-_build = dict(
-    buildid=IntValidator(),
-    number=IntValidator(),
-    builderid=IntValidator(),
-    buildrequestid=IntValidator(),
-    workerid=IntValidator(),
-    masterid=IntValidator(),
-    started_at=IntValidator(),
-    complete=BooleanValidator(),
-    complete_at=NoneOk(IntValidator()),
-    state_string=StringValidator(),
-    results=NoneOk(IntValidator()),
-)
+_build = {
+    "buildid": IntValidator(),
+    "number": IntValidator(),
+    "builderid": IntValidator(),
+    "buildrequestid": IntValidator(),
+    "workerid": IntValidator(),
+    "masterid": IntValidator(),
+    "started_at": IntValidator(),
+    "complete": BooleanValidator(),
+    "complete_at": NoneOk(IntValidator()),
+    "state_string": StringValidator(),
+    "results": NoneOk(IntValidator()),
+}
 _buildEvents = [b'new', b'complete']
 
 message['builds'] = Selector()
@@ -617,19 +617,19 @@ dbdict['build_datadict'] = DictValidator(
 
 # steps
 
-_step = dict(
-    stepid=IntValidator(),
-    number=IntValidator(),
-    name=IdentifierValidator(50),
-    buildid=IntValidator(),
-    started_at=IntValidator(),
-    complete=BooleanValidator(),
-    complete_at=NoneOk(IntValidator()),
-    state_string=StringValidator(),
-    results=NoneOk(IntValidator()),
-    urls=ListValidator(StringValidator()),
-    hidden=BooleanValidator(),
-)
+_step = {
+    "stepid": IntValidator(),
+    "number": IntValidator(),
+    "name": IdentifierValidator(50),
+    "buildid": IntValidator(),
+    "started_at": IntValidator(),
+    "complete": BooleanValidator(),
+    "complete_at": NoneOk(IntValidator()),
+    "state_string": StringValidator(),
+    "results": NoneOk(IntValidator()),
+    "urls": ListValidator(StringValidator()),
+    "hidden": BooleanValidator(),
+}
 _stepEvents = [b'new', b'complete']
 
 message['steps'] = Selector()
@@ -655,13 +655,14 @@ dbdict['stepdict'] = DictValidator(
 
 # logs
 
-_log = dict(
-    logid=IntValidator(),
-    name=IdentifierValidator(50),
-    stepid=IntValidator(),
-    complete=BooleanValidator(),
-    num_lines=IntValidator(),
-    type=IdentifierValidator(1))
+_log = {
+    "logid": IntValidator(),
+    "name": IdentifierValidator(50),
+    "stepid": IntValidator(),
+    "complete": BooleanValidator(),
+    "num_lines": IntValidator(),
+    "type": IdentifierValidator(1)
+}
 _logEvents = ['new', 'complete', 'appended']
 
 # message['log']

@@ -86,7 +86,7 @@ class FakeRequest:
     def finish(self):
         self.finished = True
         if self.redirected_to is not None:
-            self.deferred.callback(dict(redirected=self.redirected_to))
+            self.deferred.callback({"redirected": self.redirected_to})
         else:
             self.deferred.callback(self.written)
 
@@ -140,7 +140,7 @@ class WwwTestMixin(RequiresWwwMixin):
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
         master.www.getUserInfos = lambda _: getattr(
             self.master.session, "user_info", {"anonymous": True})
-        cfg = dict(port=None, auth=auth.NoAuth(), authz=authz.Authz())
+        cfg = {"port": None, "auth": auth.NoAuth(), "authz": authz.Authz()}
         cfg.update(kwargs)
         master.config.www = cfg
         if url is not None:

@@ -77,14 +77,21 @@ class Tests(interfaces.InterfaceTests):
         ])
         brdict = yield self.db.buildrequests.getBuildRequest(44)
 
-        yield self.assertEqual(brdict,
-                             dict(buildrequestid=44, buildsetid=self.BSID,
-                                  builderid=self.BLDRID1, buildername="builder1",
-                                  priority=7, claimed=True,
-                                  claimed_by_masterid=self.MASTER_ID, complete=True,
-                                  results=75, claimed_at=self.CLAIMED_AT,
-                                  submitted_at=self.SUBMITTED_AT,
-                                  complete_at=self.COMPLETE_AT, waited_for=False))
+        yield self.assertEqual(brdict, {
+            "buildrequestid": 44,
+            "buildsetid": self.BSID,
+            "builderid": self.BLDRID1,
+            "buildername": "builder1",
+            "priority": 7,
+            "claimed": True,
+            "claimed_by_masterid": self.MASTER_ID,
+            "complete": True,
+            "results": 75,
+            "claimed_at": self.CLAIMED_AT,
+            "submitted_at": self.SUBMITTED_AT,
+            "complete_at": self.COMPLETE_AT,
+            "waited_for": False
+        })
 
     @defer.inlineCallbacks
     def test_getBuildRequest_missing(self):

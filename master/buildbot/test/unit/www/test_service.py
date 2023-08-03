@@ -69,7 +69,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         yield self.svc.setServiceParent(self.master)
 
     def makeConfig(self, **kwargs):
-        w = dict(port=None, auth=auth.NoAuth(), logfileName='l')
+        w = {"port": None, "auth": auth.NoAuth(), "logfileName": 'l'}
         w.update(kwargs)
         new_config = mock.Mock()
         new_config.www = w

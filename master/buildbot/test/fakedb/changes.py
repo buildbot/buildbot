@@ -123,24 +123,25 @@ class FakeChangesComponent(FakeDBComponent):
 
         parent_changeids = yield self.getParentChangeIds(branch, repository, project, codebase)
 
-        self.changes[changeid] = ch = dict(
-            changeid=changeid,
-            parent_changeids=parent_changeids,
-            author=author,
-            committer=committer,
-            comments=comments,
-            revision=revision,
-            when_timestamp=datetime2epoch(when_timestamp),
-            branch=branch,
-            category=category,
-            revlink=revlink,
-            repository=repository,
-            project=project,
-            codebase=codebase,
-            uids=[],
-            files=files,
-            properties=properties,
-            sourcestampid=ssid)
+        self.changes[changeid] = ch = {
+            "changeid": changeid,
+            "parent_changeids": parent_changeids,
+            "author": author,
+            "committer": committer,
+            "comments": comments,
+            "revision": revision,
+            "when_timestamp": datetime2epoch(when_timestamp),
+            "branch": branch,
+            "category": category,
+            "revlink": revlink,
+            "repository": repository,
+            "project": project,
+            "codebase": codebase,
+            "uids": [],
+            "files": files,
+            "properties": properties,
+            "sourcestampid": ssid
+        }
 
         if uid:
             ch['uids'].append(uid)
@@ -244,19 +245,20 @@ class FakeChangesComponent(FakeDBComponent):
             changeid = change.number
 
         # make a row from the change
-        row = dict(
-            changeid=changeid,
-            author=change.who,
-            files=change.files,
-            comments=change.comments,
-            revision=change.revision,
-            when_timestamp=change.when,
-            branch=change.branch,
-            category=change.category,
-            revlink=change.revlink,
-            properties=change.properties,
-            repository=change.repository,
-            codebase=change.codebase,
-            project=change.project,
-            uids=[])
+        row = {
+            "changeid": changeid,
+            "author": change.who,
+            "files": change.files,
+            "comments": change.comments,
+            "revision": change.revision,
+            "when_timestamp": change.when,
+            "branch": change.branch,
+            "category": change.category,
+            "revlink": change.revlink,
+            "properties": change.properties,
+            "repository": change.repository,
+            "codebase": change.codebase,
+            "project": change.project,
+            "uids": []
+        }
         self.changes[changeid] = row

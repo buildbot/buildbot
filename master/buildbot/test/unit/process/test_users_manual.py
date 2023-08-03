@@ -64,11 +64,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin,
 
         usdict = yield self.master.db.users.getUser(1)
 
-        self.assertEqual(usdict, dict(uid=1,
-                                      identifier='x',
-                                      bb_username=None,
-                                      bb_password=None,
-                                      git='x'))
+        self.assertEqual(usdict, {
+            "uid": 1,
+            "identifier": 'x',
+            "bb_username": None,
+            "bb_password": None,
+            "git": 'x'
+        })
 
     @defer.inlineCallbacks
     def test_perspective_commandline_update(self):
@@ -79,11 +81,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin,
 
         usdict = yield self.master.db.users.getUser(1)
 
-        self.assertEqual(usdict, dict(uid=1,
-                                      identifier='x',
-                                      bb_username=None,
-                                      bb_password=None,
-                                      svn='y'))
+        self.assertEqual(usdict, {
+            "uid": 1,
+            "identifier": 'x',
+            "bb_username": None,
+            "bb_password": None,
+            "svn": 'y'
+        })
 
     @defer.inlineCallbacks
     def test_perspective_commandline_update_bb(self):
@@ -96,11 +100,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin,
 
         usdict = yield self.master.db.users.getUser(1)
 
-        self.assertEqual(usdict, dict(uid=1,
-                                      identifier='x',
-                                      bb_username='bb_user',
-                                      bb_password='hashed_bb_pass',
-                                      svn='x'))
+        self.assertEqual(usdict, {
+            "uid": 1,
+            "identifier": 'x',
+            "bb_username": 'bb_user',
+            "bb_password": 'hashed_bb_pass',
+            "svn": 'x'
+        })
 
     @defer.inlineCallbacks
     def test_perspective_commandline_update_both(self):
@@ -113,11 +119,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin,
                                                   'svn': 'y'}])
 
         usdict = yield self.master.db.users.getUser(1)
-        self.assertEqual(usdict, dict(uid=1,
-                                      identifier='x',
-                                      bb_username='bb_user',
-                                      bb_password='hashed_bb_pass',
-                                      svn='y'))
+        self.assertEqual(usdict, {
+            "uid": 1,
+            "identifier": 'x',
+            "bb_username": 'bb_user',
+            "bb_password": 'hashed_bb_pass',
+            "svn": 'y'
+        })
 
     @defer.inlineCallbacks
     def test_perspective_commandline_remove(self):
@@ -138,8 +146,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin,
         yield self.call_perspective_commandline('get', None, None, ['x'], None)
 
         res = yield self.master.db.users.getUser(1)
-        self.assertEqual(res, dict(uid=1, identifier='x', bb_username=None,
-                                   bb_password=None, svn='x'))
+        self.assertEqual(res, {
+            "uid": 1,
+            "identifier": 'x',
+            "bb_username": None,
+            "bb_password": None,
+            "svn": 'x'
+        })
 
     @defer.inlineCallbacks
     def test_perspective_commandline_get_multiple_attrs(self):
@@ -150,8 +163,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin,
         yield self.call_perspective_commandline('get', None, None, ['x'], None)
 
         res = yield self.master.db.users.getUser(1)
-        self.assertEqual(res, dict(uid=1, identifier='x', bb_username=None,
-                                   bb_password=None, svn='x', git='x@c'))
+        self.assertEqual(res, {
+            "uid": 1,
+            "identifier": 'x',
+            "bb_username": None,
+            "bb_password": None,
+            "svn": 'x', "git": 'x@c'
+        })
 
     @defer.inlineCallbacks
     def test_perspective_commandline_add_format(self):

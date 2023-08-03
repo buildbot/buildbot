@@ -333,7 +333,7 @@ class TestIrcStatusBot(unittest.TestCase):
 
     def test_signedOn(self):
         b = self.makeBot('nick', 'pass',
-                         ['#ch1', dict(channel='#ch2', password='sekrits')],
+                         ['#ch1', {"channel": '#ch2', "password": 'sekrits'}],
                          ['jimmy', 'bobby'], False)
         events = []
 

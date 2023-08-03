@@ -150,7 +150,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         os.mkdir(self.jobdir)
 
         # build scheduler
-        kwargs = dict(name="tsched", builderNames=['a'], jobdir=self.jobdir)
+        kwargs = {"name": 'tsched', "builderNames": ['a'], "jobdir": self.jobdir}
         sched = self.attachScheduler(
             trysched.Try_Jobdir(**kwargs), self.OBJECTID, self.SCHEDULERID,
             overrideBuildsetMethods=True)
@@ -565,11 +565,19 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         return defer.maybeDeferred(sched.handleJobFile, 'fakefile', fakefile)
 
     def makeSampleParsedJob(self, **overrides):
-        pj = dict(baserev='1234', branch='trunk',
-                  builderNames=['buildera', 'builderb'],
-                  jobid='extid', patch_body=b'this is my diff, -- ++, etc.',
-                  patch_level=1, project='proj', repository='repo', who='who',
-                  comment='comment', properties={})
+        pj = {
+            "baserev": '1234',
+            "branch": 'trunk',
+            "builderNames": ['buildera', 'builderb'],
+            "jobid": 'extid',
+            "patch_body": b'this is my diff, -- ++, etc.',
+            "patch_level": 1,
+            "project": 'proj',
+            "repository": 'repo',
+            "who": 'who',
+            "comment": 'comment',
+            "properties": {}
+        }
         pj.update(overrides)
         return pj
 
@@ -578,24 +586,27 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob())
 
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStamps', dict(
-                builderNames=['buildera', 'builderb'],
-                external_idstring='extid',
-                properties={},
-                reason="'try' job by user who",
-                sourcestamps=[
-                    dict(
-                        branch='trunk',
-                        codebase='',
-                        patch_author='who',
-                        patch_body=b'this is my diff, -- ++, etc.',
-                        patch_comment='comment',
-                        patch_level=1,
-                        patch_subdir='',
-                        project='proj',
-                        repository='repo',
-                        revision='1234'),
-                ])),
+            ('addBuildsetForSourceStamps', {
+                "builderNames": ['buildera', 'builderb'],
+                "external_idstring": 'extid',
+                "properties": {},
+                "reason": "'try' job by user who",
+                "sourcestamps":
+                [
+                    {
+                        "branch": 'trunk',
+                        "codebase": '',
+                        "patch_author": 'who',
+                        "patch_body": b'this is my diff, -- ++, etc.',
+                        "patch_comment": 'comment',
+                        "patch_level": 1,
+                        "patch_subdir": '',
+                        "project": 'proj',
+                        "repository": 'repo',
+                        "revision": '1234'
+                    },
+                ]
+            }),
         ])
 
     @defer.inlineCallbacks
@@ -625,24 +636,27 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             lambda f: self.makeSampleParsedJob(builderNames=['buildera']))
 
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStamps', dict(
-                builderNames=['buildera'],
-                external_idstring='extid',
-                properties={},
-                reason="'try' job by user who",
-                sourcestamps=[
-                    dict(
-                        branch='trunk',
-                        codebase='',
-                        patch_author='who',
-                        patch_body=b'this is my diff, -- ++, etc.',
-                        patch_comment='comment',
-                        patch_level=1,
-                        patch_subdir='',
-                        project='proj',
-                        repository='repo',
-                        revision='1234'),
-                ])),
+            ('addBuildsetForSourceStamps', {
+                "builderNames": ['buildera'],
+                "external_idstring": 'extid',
+                "properties": {},
+                "reason": "'try' job by user who",
+                "sourcestamps":
+                [
+                    {
+                        "branch": 'trunk',
+                        "codebase": '',
+                        "patch_author": 'who',
+                        "patch_body": b'this is my diff, -- ++, etc.',
+                        "patch_comment": 'comment',
+                        "patch_level": 1,
+                        "patch_subdir": '',
+                        "project": 'proj',
+                        "repository": 'repo',
+                        "revision": '1234'
+                    },
+                ]
+            }),
         ])
 
     @defer.inlineCallbacks
@@ -651,24 +665,27 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 lambda f: self.makeSampleParsedJob(properties={'foo': 'bar'}))
 
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStamps', dict(
-                builderNames=['buildera', 'builderb'],
-                external_idstring='extid',
-                properties={'foo': ('bar', 'try build')},
-                reason="'try' job by user who",
-                sourcestamps=[
-                    dict(
-                        branch='trunk',
-                        codebase='',
-                        patch_author='who',
-                        patch_body=b'this is my diff, -- ++, etc.',
-                        patch_comment='comment',
-                        patch_level=1,
-                        patch_subdir='',
-                        project='proj',
-                        repository='repo',
-                        revision='1234'),
-                ])),
+            ('addBuildsetForSourceStamps', {
+                "builderNames": ['buildera', 'builderb'],
+                "external_idstring": 'extid',
+                "properties": {'foo': ('bar', 'try build')},
+                "reason": "'try' job by user who",
+                "sourcestamps":
+                [
+                    {
+                        "branch": 'trunk',
+                        "codebase": '',
+                        "patch_author": 'who',
+                        "patch_body": b'this is my diff, -- ++, etc.',
+                        "patch_comment": 'comment',
+                        "patch_level": 1,
+                        "patch_subdir": '',
+                        "project": 'proj',
+                        "repository": 'repo',
+                        "revision": '1234'
+                    },
+                ]
+            }),
         ])
 
     def test_handleJobFile_with_invalid_try_properties(self):
@@ -700,12 +717,12 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin,
     def call_perspective_try(self, *args, **kwargs):
         sched = self.makeScheduler(name='tsched', builderNames=['a', 'b'],
                                    port='xxx', userpass=[('a', 'b')],
-                                   properties=dict(frm='schd'))
+                                   properties={"frm": 'schd'})
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
 
         # patch out all of the handling after addBuildsetForSourceStamp
         def getBuildset(bsid):
-            return dict(bsid=bsid)
+            return {"bsid": bsid}
         self.db.buildsets.getBuildset = getBuildset
 
         rbss = yield persp.perspective_try(*args, **kwargs)
@@ -722,24 +739,27 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin,
 
         self.maxDiff = None
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStamps', dict(
-                builderNames=['a'],
-                external_idstring=None,
-                properties={'pr': ('op', 'try build')},
-                reason="'try' job",
-                sourcestamps=[
-                    dict(
-                        branch='default',
-                        codebase='',
-                        patch_author='',
-                        patch_body=b'-- ++',
-                        patch_comment='',
-                        patch_level=1,
-                        patch_subdir='',
-                        project='proj',
-                        repository='repo',
-                        revision='abcdef'),
-                ])),
+            ('addBuildsetForSourceStamps', {
+                "builderNames": ['a'],
+                "external_idstring": None,
+                "properties": {'pr': ('op', 'try build')},
+                "reason": "'try' job",
+                "sourcestamps":
+                [
+                    {
+                        "branch": 'default',
+                        "codebase": '',
+                        "patch_author": '',
+                        "patch_body": b'-- ++',
+                        "patch_comment": '',
+                        "patch_level": 1,
+                        "patch_subdir": '',
+                        "project": 'proj',
+                        "repository": 'repo',
+                        "revision": 'abcdef'
+                    },
+                ]
+            }),
         ])
 
     @defer.inlineCallbacks
@@ -778,24 +798,27 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin,
                 who='who', comment='comment', properties={'pr': 'op'})
 
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStamps', dict(
-                builderNames=['a'],
-                external_idstring=None,
-                properties={'pr': ('op', 'try build')},
-                reason="'try' job by user who (comment)",
-                sourcestamps=[
-                    dict(
-                        branch='default',
-                        codebase='',
-                        patch_author='who',
-                        patch_body=b'-- ++',
-                        patch_comment='comment',
-                        patch_level=1,
-                        patch_subdir='',
-                        project='proj',
-                        repository='repo',
-                        revision='abcdef'),
-                ])),
+            ('addBuildsetForSourceStamps', {
+                "builderNames": ['a'],
+                "external_idstring": None,
+                "properties": {'pr': ('op', 'try build')},
+                "reason": "'try' job by user who (comment)",
+                "sourcestamps":
+                [
+                    {
+                        "branch": 'default',
+                        "codebase": '',
+                        "patch_author": 'who',
+                        "patch_body": b'-- ++',
+                        "patch_comment": 'comment',
+                        "patch_level": 1,
+                        "patch_subdir": '',
+                        "project": 'proj',
+                        "repository": 'repo',
+                        "revision": 'abcdef'
+                    },
+                ]
+            }),
         ])
 
     @defer.inlineCallbacks

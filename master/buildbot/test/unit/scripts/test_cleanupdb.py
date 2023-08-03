@@ -38,7 +38,7 @@ except ImportError:
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, basedir=os.path.abspath('basedir'), force=True)
+    config = {"quiet": False, "basedir": os.path.abspath('basedir'), "force": True}
     config.update(kwargs)
     return config
 

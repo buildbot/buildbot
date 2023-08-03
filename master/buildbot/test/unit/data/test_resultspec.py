@@ -94,13 +94,13 @@ class ResultSpec(unittest.TestCase):
         self.assertEqual(resultspec.ResultSpec().apply(None), None)
 
     def test_apply_details_fields(self):
-        data = dict(name="clyde", id=14, favcolor="red")
+        data = {"name": 'clyde', "id": 14, "favcolor": 'red'}
         self.assertEqual(
             resultspec.ResultSpec(fields=['name']).apply(data),
-            dict(name="clyde"))
+            {"name": 'clyde'})
         self.assertEqual(
             resultspec.ResultSpec(fields=['name', 'id']).apply(data),
-            dict(name="clyde", id=14))
+            {"name": 'clyde', "id": 14})
 
     def test_apply_collection_fields(self):
         data = mklist(('a', 'b', 'c'),

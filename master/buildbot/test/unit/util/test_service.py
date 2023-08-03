@@ -582,7 +582,7 @@ class BuildbotService(unittest.TestCase):
     def testNominal(self):
         yield self.prepareService()
         self.assertEqual(
-            self.master.namedServices["basic"].config, ((1,), dict(a=2)))
+            self.master.namedServices["basic"].config, ((1,), {"a": 2}))
 
     @defer.inlineCallbacks
     def testConfigDict(self):
@@ -622,7 +622,7 @@ class BuildbotServiceManager(unittest.TestCase):
     def testNominal(self):
         yield self.prepareService()
         self.assertEqual(
-            self.manager.namedServices["basic"].config, ((1,), dict(a=2)))
+            self.manager.namedServices["basic"].config, ((1,), {"a": 2}))
 
     @defer.inlineCallbacks
     def testReconfigNoChange(self):
@@ -659,7 +659,7 @@ class BuildbotServiceManager(unittest.TestCase):
         self.assertNotIdentical(self.manager.namedServices["basic"], serv2)
 
         # reconfigServiceWithConstructorArgs was called with new config
-        self.assertEqual(serv.config, ((1,), dict(a=4)))
+        self.assertEqual(serv.config, ((1,), {"a": 4}))
 
     def testNoName(self):
         with self.assertRaises(ValueError):
@@ -689,7 +689,7 @@ class BuildbotServiceManager(unittest.TestCase):
         self.assertIdentical(self.manager.namedServices["basic2"], serv2)
 
         # reconfigServiceWithConstructorArgs was called with new config
-        self.assertEqual(serv2.config, ((1,), dict(a=4)))
+        self.assertEqual(serv2.config, ((1,), {"a": 4}))
 
     @defer.inlineCallbacks
     def testReconfigWithDeleted(self):

@@ -62,10 +62,10 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
         master = fakemaster.make_master(self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = cls(master)
-        inst.produceEvent(dict(fooid=10, barid='20'),  # note integer vs. string
+        inst.produceEvent({"fooid": 10, "barid": '20'},  # note integer vs. string
                           'tested')
         master.mq.assertProductions([
-            (('foo', '10', 'bar', '20', 'tested'), dict(fooid=10, barid='20'))
+            (('foo', '10', 'bar', '20', 'tested'), {"fooid": 10, "barid": '20'})
         ])
 
     def test_compilePatterns(self):

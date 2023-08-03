@@ -45,7 +45,7 @@ class subscriptions(unittest.TestCase):
 
         # deliver
         self.subpt.deliver(1, 2, a=3, b=4)
-        self.assertEqual(state, [((1, 2), dict(a=3, b=4))])
+        self.assertEqual(state, [((1, 2), {"a": 3, "b": 4})])
         state.pop()
 
         # unsubscribe

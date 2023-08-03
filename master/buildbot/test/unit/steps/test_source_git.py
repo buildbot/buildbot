@@ -339,8 +339,8 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.assertEqual(b''.join(read), unicode2bytes(expected))
 
     @parameterized.expand([
-        ('host_key', dict(sshHostKey='sshhostkey')),
-        ('known_hosts', dict(sshKnownHosts='known_hosts')),
+        ('host_key', {"sshHostKey": 'sshhostkey'}),
+        ('known_hosts', {"sshKnownHosts": 'known_hosts'}),
     ])
     def test_mode_full_clean_ssh_host_key_2_10(self, name, class_params):
         self.setup_step(
@@ -1784,9 +1784,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     def test_mode_incremental_given_revision(self):
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
-                           mode='incremental'), dict(
-                revision='abcdef01',
-            ))
+                           mode='incremental'), {"revision": 'abcdef01'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -1816,9 +1814,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     def test_mode_incremental_given_revision_not_exists(self):
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
-                           mode='incremental'), dict(
-                revision='abcdef01',
-            ))
+                           mode='incremental'), {"revision": 'abcdef01'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -2403,9 +2399,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     def test_mode_full_clobber_given_revision(self):
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
-                           mode='full', method='clobber', progress=True), dict(
-                revision='abcdef01',
-            ))
+                           mode='full', method='clobber', progress=True), {"revision": 'abcdef01'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -2436,9 +2430,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     def test_revparse_failure(self):
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
-                           mode='full', method='clobber', progress=True), dict(
-                revision='abcdef01',
-            ))
+                           mode='full', method='clobber', progress=True), {"revision": 'abcdef01'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -2538,9 +2530,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     def test_mode_full_fresh_revision(self):
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
-                           mode='full', method='fresh', progress=True), dict(
-                revision='abcdef01',
-            ))
+                           mode='full', method='fresh', progress=True), {"revision": 'abcdef01'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])

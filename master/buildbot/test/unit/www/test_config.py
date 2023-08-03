@@ -107,7 +107,7 @@ class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         }
         self.assertEqual(res, exp)
 
-        master.session.user_info = dict(name="me", email="me@me.org")
+        master.session.user_info = {"name": 'me', "email": 'me@me.org'}
         res = yield self.render_resource(rsrc, b'/')
         res = json.loads(bytes2unicode(res))
         exp = {

@@ -47,22 +47,22 @@ class Matcher(unittest.TestCase):
     def test_pattern_variables(self):
         self.m[('A', ':a', 'B', ':b')] = 'AB'
         self.assertEqual(self.m[('A', 'a', 'B', 'b')],
-                         ('AB', dict(a='a', b='b')))
+                         ('AB', {"a": 'a', "b": 'b'}))
 
     def test_pattern_variables_underscore(self):
         self.m[('A', ':a_a_a')] = 'AB'
         self.assertEqual(self.m[('A', 'a')],
-                         ('AB', dict(a_a_a='a')))
+                         ('AB', {"a_a_a": 'a'}))
 
     def test_pattern_variables_num(self):
         self.m[('A', 'n:a', 'B', 'n:b')] = 'AB'
         self.assertEqual(self.m[('A', '10', 'B', '-20')],
-                         ('AB', dict(a=10, b=-20)))
+                         ('AB', {"a": 10, "b": -20}))
 
     def test_pattern_variables_ident(self):
         self.m[('A', 'i:a', 'B', 'i:b')] = 'AB'
         self.assertEqual(self.m[('A', 'abc', 'B', 'x-z-B')],
-                         ('AB', dict(a='abc', b='x-z-B')))
+                         ('AB', {"a": 'abc', "b": 'x-z-B'}))
 
     def test_pattern_variables_num_invalid(self):
         self.m[('A', 'n:a')] = 'AB'
@@ -77,15 +77,15 @@ class Matcher(unittest.TestCase):
     def test_pattern_variables_ident_num_distinguised(self):
         self.m[('A', 'n:a')] = 'num'
         self.m[('A', 'i:a')] = 'ident'
-        self.assertEqual(self.m[('A', '123')], ('num', dict(a=123)))
-        self.assertEqual(self.m[('A', 'abc')], ('ident', dict(a='abc')))
+        self.assertEqual(self.m[('A', '123')], ('num', {"a": 123}))
+        self.assertEqual(self.m[('A', 'abc')], ('ident', {"a": 'abc'}))
 
     def test_prefix_matching(self):
         self.m[('A', ':a')] = 'A'
         self.m[('A', ':a', 'B', ':b')] = 'AB'
         self.assertEqual(
             (self.m[('A', 'a1', 'B', 'b')], self.m['A', 'a2']),
-            (('AB', dict(a='a1', b='b')), ('A', dict(a='a2'))))
+            (('AB', {"a": 'a1', "b": 'b'}), ('A', {"a": 'a2'})))
 
     def test_dirty_again(self):
         self.m[('abc', 'def')] = 2

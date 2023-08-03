@@ -71,12 +71,12 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         master = fakemaster.FakeMaster(reactor)
 
-        master.config.db = dict(db_url=self.db_url)
+        master.config.db = {"db_url": self.db_url}
         master.db = dbconnector.DBConnector('basedir')
         yield master.db.setServiceParent(master)
         yield master.db.setup(check_version=False)
 
-        master.config.mq = dict(type='simple')
+        master.config.mq = {"type": 'simple'}
         master.mq = mqconnector.MQConnector()
         yield master.mq.setServiceParent(master)
         yield master.mq.setup()
@@ -84,13 +84,14 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         master.data = dataconnector.DataConnector()
         yield master.data.setServiceParent(master)
 
-        master.config.www = dict(
-            port='tcp:0:interface=127.0.0.1',
-            debug=True,
-            auth=auth.NoAuth(),
-            authz=authz.Authz(),
-            avatar_methods=[],
-            logfileName='http.log')
+        master.config.www = {
+            "port": 'tcp:0:interface=127.0.0.1',
+            "debug": True,
+            "auth": auth.NoAuth(),
+            "authz": authz.Authz(),
+            "avatar_methods": [],
+            "logfileName": 'http.log'
+        }
         master.www = wwwservice.WWWService()
         yield master.www.setServiceParent(master)
         yield master.www.startService()

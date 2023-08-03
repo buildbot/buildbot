@@ -386,8 +386,7 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'type', type,
                               validation.IdentifierValidator(1))
         logid = max([0] + list(self.logs)) + 1
-        self.logs[logid] = dict(
-            name=name, type=type, content=[], finished=False)
+        self.logs[logid] = {"name": name, "type": type, "content": [], "finished": False}
         return defer.succeed(logid)
 
     def finishLog(self, logid):

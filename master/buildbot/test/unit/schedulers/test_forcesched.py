@@ -149,18 +149,22 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
         # only one builder forced, so there should only be one brid
         self.assertEqual(res, (500, {1000: 100}))
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStampsWithDefaults', dict(
-                builderNames=['a'],
-                waited_for=False,
-                properties={
-                    'owner': ('user', 'Force Build Form'),
-                    'reason': ('because', 'Force Build Form'),
-                },
-                reason="A build was forced by 'user': because",
-                sourcestamps=[
-                    {'codebase': '', 'branch': 'a', 'revision': 'c',
-                     'repository': 'd', 'project': 'p'},
-                ])),
+            (
+                'addBuildsetForSourceStampsWithDefaults',
+                {
+                    "builderNames": ['a'],
+                    "waited_for": False,
+                    "properties": {
+                        'owner': ('user', 'Force Build Form'),
+                        'reason': ('because', 'Force Build Form'),
+                    },
+                    "reason": "A build was forced by 'user': because",
+                    "sourcestamps": [
+                        {'codebase': '', 'branch': 'a', 'revision': 'c',
+                         'repository': 'd', 'project': 'p'},
+                    ]
+                }
+            ),
         ])
 
     @defer.inlineCallbacks
@@ -177,17 +181,21 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
         self.assertEqual(len(brids), 1)
 
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStampsWithDefaults', {
-                'builderNames': ['a'],
-                'properties': {'owner': ('user', 'Force Build Form'),
-                               'reason': ('because', 'Force Build Form')},
-                'reason': 'user wants it because',
-                'sourcestamps': [{'branch': 'a',
-                                  'codebase': '',
-                                  'project': 'p',
-                                  'repository': 'd',
-                                  'revision': 'c'}],
-                'waited_for': False}),
+            (
+                'addBuildsetForSourceStampsWithDefaults',
+                {
+                    'builderNames': ['a'],
+                    'properties': {'owner': ('user', 'Force Build Form'),
+                        'reason': ('because', 'Force Build Form')},
+                    'reason': 'user wants it because',
+                    'sourcestamps': [{'branch': 'a',
+                                    'codebase': '',
+                                    'project': 'p',
+                                    'repository': 'd',
+                                    'revision': 'c'}],
+                    'waited_for': False
+                }
+            ),
         ])
 
     @defer.inlineCallbacks
@@ -199,18 +207,22 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                                 )
         self.assertEqual(res, (500, {1000: 100, 1001: 101}))
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStampsWithDefaults', dict(
-                builderNames=['a', 'b'],
-                waited_for=False,
-                properties={
-                    'owner': ('user', 'Force Build Form'),
-                    'reason': ('because', 'Force Build Form'),
-                },
-                reason="A build was forced by 'user': because",
-                sourcestamps=[
-                    {'codebase': '', 'branch': 'a', 'revision': 'c',
-                     'repository': 'd', 'project': 'p'},
-                ])),
+            (
+                'addBuildsetForSourceStampsWithDefaults',
+                {
+                    "builderNames": ['a', 'b'],
+                    "waited_for": False,
+                    "properties": {
+                        'owner': ('user', 'Force Build Form'),
+                        'reason': ('because', 'Force Build Form'),
+                    },
+                    "reason": "A build was forced by 'user': because",
+                    "sourcestamps": [
+                        {'codebase': '', 'branch': 'a', 'revision': 'c',
+                         'repository': 'd', 'project': 'p'},
+                    ]
+                }
+            ),
         ])
 
     @defer.inlineCallbacks
@@ -223,18 +235,22 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                                 )
         self.assertEqual(res, (500, {1000: 100, 1001: 101}))
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStampsWithDefaults', dict(
-                builderNames=['a', 'b'],
-                waited_for=False,
-                properties={
-                    'owner': ('user', 'Force Build Form'),
-                    'reason': ('because', 'Force Build Form'),
-                },
-                reason="A build was forced by 'user': because",
-                sourcestamps=[
-                    {'codebase': '', 'branch': 'a', 'revision': 'c',
-                     'repository': 'd', 'project': 'p'},
-                ])),
+            (
+                'addBuildsetForSourceStampsWithDefaults',
+                {
+                    "builderNames": ['a', 'b'],
+                    "waited_for": False,
+                    "properties": {
+                        'owner': ('user', 'Force Build Form'),
+                        'reason': ('because', 'Force Build Form'),
+                    },
+                    "reason": "A build was forced by 'user': because",
+                    "sourcestamps": [
+                        {'codebase': '', 'branch': 'a', 'revision': 'c',
+                         'repository': 'd', 'project': 'p'},
+                    ]
+                }
+            ),
         ])
 
     def test_bad_codebases(self):
@@ -283,17 +299,21 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
             'reason': ('because', 'Force Build Form'),
         }
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStampsWithDefaults', dict(
-                builderNames=['a'],
-                waited_for=False,
-                properties=expProperties,
-                reason="A build was forced by 'user': because",
-                sourcestamps=[
-                    {'branch': 'a2', 'project': 'p2', 'repository': 'd2',
-                        'revision': 'c2', 'codebase': 'bar'},
-                    {'branch': 'a', 'project': 'p', 'repository': 'd',
-                        'revision': 'c', 'codebase': 'foo'},
-                ])),
+            (
+                'addBuildsetForSourceStampsWithDefaults',
+                {
+                    "builderNames": ['a'],
+                    "waited_for": False,
+                    "properties": expProperties,
+                    "reason": "A build was forced by 'user': because",
+                    "sourcestamps": [
+                        {'branch': 'a2', 'project': 'p2', 'repository': 'd2',
+                            'revision': 'c2', 'codebase': 'bar'},
+                        {'branch': 'a', 'project': 'p', 'repository': 'd',
+                            'revision': 'c', 'codebase': 'foo'},
+                    ]
+                }
+            ),
         ])
 
     @defer.inlineCallbacks
@@ -311,19 +331,23 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
         }
 
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStampsWithDefaults', dict(
-                builderNames=['a'],
-                waited_for=False,
-                properties=expProperties,
-                reason="A build was forced by 'user': because",
-                sourcestamps=[
-                    {'branch': 'a2', 'project': 'p2', 'repository': 'd2',
-                        'revision': 'c2', 'codebase': 'bar',
-                        'patch_body': b'xxx', 'patch_author': '', 'patch_subdir': '.',
-                        'patch_comment': '', 'patch_level': 1},
-                    {'branch': 'a', 'project': 'p', 'repository': 'd',
-                        'revision': 'c', 'codebase': 'foo'},
-                ])),
+            (
+                'addBuildsetForSourceStampsWithDefaults',
+                {
+                    "builderNames": ['a'],
+                    "waited_for": False,
+                    "properties": expProperties,
+                    "reason": "A build was forced by 'user': because",
+                    "sourcestamps": [
+                        {'branch': 'a2', 'project': 'p2', 'repository': 'd2',
+                            'revision': 'c2', 'codebase': 'bar',
+                            'patch_body': b'xxx', 'patch_author': '', 'patch_subdir': '.',
+                            'patch_comment': '', 'patch_level': 1},
+                        {'branch': 'a', 'project': 'p', 'repository': 'd',
+                            'revision': 'c', 'codebase': 'foo'},
+                    ]
+                }
+            ),
         ])
 
     def formatJsonForTest(self, gotJson):
@@ -413,15 +437,19 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
         # only forced on 'a'
         self.assertEqual((bsid, brids), (500, {1000: 100}))
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStampsWithDefaults', dict(
-                builderNames=['a'],
-                waited_for=False,
-                properties=expect_props,
-                reason="A build was forced by 'user': because",
-                sourcestamps=[
-                    {'branch': '', 'project': '', 'repository': '',
-                     'revision': '', 'codebase': ''},
-                ])),
+            (
+                'addBuildsetForSourceStampsWithDefaults',
+                {
+                    "builderNames": ['a'],
+                    "waited_for": False,
+                    "properties": expect_props,
+                    "reason": "A build was forced by 'user': because",
+                    "sourcestamps": [
+                        {'branch': '', 'project': '', 'repository': '',
+                         'revision': '', 'codebase': ''},
+                    ]
+                }
+            ),
         ])
         return None
 
@@ -481,7 +509,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
             '"maxsize": null, "size": 10}]}'
         )
 
-        self.do_ParameterTest(req=dict(p1_author='me', reason="because"), expect={
+        self.do_ParameterTest(req={"p1_author": 'me', "reason": 'because'}, expect={
                                    'author': 'me',
                                    'body': '',
                                    'comment': '',
@@ -506,7 +534,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                               '"maxsize": null, "autopopulate": null}')
 
     def test_BooleanParameter_True(self):
-        req = dict(p1=True, reason='because')
+        req = {"p1": True, "reason": 'because'}
         self.do_ParameterTest(value="123", expect=True, klass=BooleanParameter,
                               req=req,
                               expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
@@ -515,7 +543,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                               '"maxsize": null, "autopopulate": null}')
 
     def test_BooleanParameter_False(self):
-        req = dict(p2=True, reason='because')
+        req = {"p2": True, "reason": 'because'}
         self.do_ParameterTest(value="123", expect=False,
                               klass=BooleanParameter, req=req)
 
@@ -612,8 +640,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
             '"type": "int", "default": 0, "required": false, "multiple": false, '
             '"regex": null, "hide": false, "maxsize": null, "size": 10}]}'
         )
-        self.do_ParameterTest(req=dict(p1_foo='123', reason="because"),
-                              expect=dict(foo=123),
+        self.do_ParameterTest(req={"p1_foo": '123', "reason": 'because'},
+                              expect={"foo": 123},
                               klass=NestedParameter, fields=fields,
                               expectJson=expect_json)
 
@@ -625,14 +653,19 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
             ]),
             IntParameter(name="foo")
         ]
-        self.do_ParameterTest(req=dict(p1_foo='123',
-                                       p1_inner_str="bar",
-                                       p1_inner_any_name="hello",
-                                       p1_inner_any_value="world",
-                                       reason="because"),
-                              expect=dict(
-                                  foo=123, inner=dict(str="bar", hello="world")),
-                              klass=NestedParameter, fields=fields)
+        self.do_ParameterTest(
+            req={
+                "p1_foo": '123',
+                "p1_inner_str": "bar",
+                "p1_inner_any_name": "hello",
+                "p1_inner_any_value": "world",
+                "reason": "because"
+                }, expect={
+                    "foo": 123,
+                    "inner": {"str": 'bar', "hello": 'world'}
+                },
+            klass=NestedParameter, fields=fields
+        )
 
     def test_NestedParameter_nullname(self):
         # same as above except "p1" and "any" are skipped
@@ -649,20 +682,24 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                     name='', fields=[AnyPropertyParameter(name='b')])
             ])
         ]
-        self.do_ParameterTest(req=dict(foo='123',
-                                       inner_str="bar",
-                                       inner_name="hello",
-                                       inner_value="world",
-                                       reason="because",
-                                       bar_a_name="a",
-                                       bar_a_value="7",
-                                       bar_b_name="b",
-                                       bar_b_value="8"),
-                              expect=dict(foo=123,
-                                          inner=dict(str="bar", hello="world"),
-                                          bar={'a': '7', 'b': '8'}),
-                              expectKind=dict,
-                              klass=NestedParameter, fields=fields, name='')
+        self.do_ParameterTest(
+            req={
+                "foo": '123',
+                "inner_str": "bar",
+                "inner_name": "hello",
+                "inner_value": "world",
+                "reason": "because",
+                "bar_a_name": "a",
+                "bar_a_value": "7",
+                "bar_b_name": "b",
+                "bar_b_value": "8"
+            }, expect={
+                "foo": 123,
+                "inner": {"str": 'bar', "hello": 'world'},
+                "bar": {'a': '7', 'b': '8'}
+            },
+            expectKind=dict, klass=NestedParameter, fields=fields, name=''
+        )
 
     def test_bad_reason(self):
         with self.assertRaisesConfigError(
