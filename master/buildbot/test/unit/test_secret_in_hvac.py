@@ -57,7 +57,7 @@ class FakeHvacKvV1:
 class FakeHvacKvV2:
     token = None
 
-    def read_secret_version(self, path, mount_point):
+    def read_secret_version(self, path, mount_point, raise_on_deleted_version=True):
         if self.token is None:
             raise hvac.exceptions.Unauthorized(message="Fake Unauthorized exception")
         if path == "wrong/path":
