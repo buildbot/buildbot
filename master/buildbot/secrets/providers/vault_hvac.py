@@ -144,7 +144,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         if self.api_version == 1:
             return self.client.secrets.kv.v1.read_secret(path=path, mount_point=self.secrets_mount)
         else:
-            if self.version >= pkg_resources.parse_version("3.0.0"):
+            if self.version >= pkg_resources.parse_version("1.1.1"):
                 return self.client.secrets.kv.v2.read_secret_version(path=path,
                                                                      mount_point=self.secrets_mount,
                                                                      raise_on_deleted_version=True)
