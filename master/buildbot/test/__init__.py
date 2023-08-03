@@ -147,3 +147,9 @@ warnings.filterwarnings('ignore', "'pipes' is deprecated and slated for removal 
 # shown on Python 3.7 on Windows
 warnings.filterwarnings('ignore', "SelectableGroups dict interface is deprecated. Use select.",
                         category=DeprecationWarning)
+
+# shown on Python 3.11
+warnings.filterwarnings('ignore', ".*pkg_resources is deprecated as an API.*",
+                        category=DeprecationWarning)
+warnings.filterwarnings('ignore', ".*Deprecated call to `pkg_resources.declare_namespace.*",
+                        category=DeprecationWarning)
