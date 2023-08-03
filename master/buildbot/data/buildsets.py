@@ -138,7 +138,7 @@ class Buildset(base.ResourceType):
     @defer.inlineCallbacks
     def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
                     properties=None, builderids=None, external_idstring=None,
-                    parent_buildid=None, parent_relationship=None):
+                    parent_buildid=None, parent_relationship=None, priority=0):
         if sourcestamps is None:
             sourcestamps = []
         if properties is None:
@@ -151,7 +151,8 @@ class Buildset(base.ResourceType):
             properties=properties, builderids=builderids,
             waited_for=waited_for, external_idstring=external_idstring,
             submitted_at=epoch2datetime(submitted_at),
-            parent_buildid=parent_buildid, parent_relationship=parent_relationship)
+            parent_buildid=parent_buildid, parent_relationship=parent_relationship,
+            priority=priority)
 
         yield BuildRequestCollapser(self.master, list(brids.values())).collapse()
 

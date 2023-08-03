@@ -148,7 +148,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             self.rtype.addBuildset)  # real
         def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
                         properties=None, builderids=None, external_idstring=None,
-                        parent_buildid=None, parent_relationship=None):
+                        parent_buildid=None, parent_relationship=None, priority=0):
             pass
 
     @defer.inlineCallbacks

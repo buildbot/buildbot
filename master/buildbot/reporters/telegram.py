@@ -538,7 +538,9 @@ class TelegramContact(Contact):
                         msg += f"\n{field['label']}"
                     else:
                         field_name = field['fullName']
-                        value = params.get(field_name, field['default']).strip()
+                        value = params.get(field_name, field['default'])
+                        if isinstance(value, str):
+                            value = value.strip()
                         msg += f"\n    {field['label']} `{value}`"
                         if value:
                             key = "Change "
