@@ -223,6 +223,36 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
         yield self.db.pool.do(thd)
 
+    def set_build_requests_priority(self, brids, priority):
+        def thd(conn):
+            transaction = conn.begin()
+
+            # the update here is simple, but a number of conditions are
+            # attached to ensure that we do not update a row inappropriately,
+            # Note that checking that the request is mine would require a
+            # subquery, so for efficiency that is not checked.
+
+            reqs_tbl = self.db.model.buildrequests
+
+            # we'll need to batch the brids into groups of 100, so that the
+            # parameter lists supported by the DBAPI aren't exhausted
+            for batch in self.doBatch(brids, 100):
+
+                q = reqs_tbl.update()
+                q = q.where(reqs_tbl.c.id.in_(batch))
+                q = q.where(reqs_tbl.c.complete != 1)
+                res = conn.execute(q,
+                                   priority=priority)
+
+                # if an incorrect number of rows were updated, then we failed.
+                if res.rowcount != len(batch):
+                    log.msg(f"tried to complete {len(batch)} buildrequests, "
+                            f"but only completed {res.rowcount}")
+                    transaction.rollback()
+                    raise NotClaimedError
+            transaction.commit()
+        return self.db.pool.do(thd)
+
     @staticmethod
     def _brdictFromRow(row, master_masterid):
         claimed = False
