@@ -146,8 +146,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             try:
                 q = tbl.insert()
                 conn.execute(q, [
-                    dict(brid=id, masterid=self.db.master.masterid,
-                         claimed_at=claimed_at)
+                    {"brid": id, "masterid": self.db.master.masterid, "claimed_at": claimed_at}
                     for id in brids])
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 transaction.rollback()

@@ -84,15 +84,17 @@ class RestRootResource(resource.Resource):
         api_versions = dict((f'v{v}', f'{self.base_url}api/v{v}')
                             for v in self.version_classes
                             if v > min_vers)
-        data = json.dumps(dict(api_versions=api_versions))
+        data = json.dumps({"api_versions": api_versions})
         return unicode2bytes(data)
 
 
-JSONRPC_CODES = dict(parse_error=-32700,
-                     invalid_request=-32600,
-                     method_not_found=-32601,
-                     invalid_params=-32602,
-                     internal_error=-32603)
+JSONRPC_CODES = {
+    "parse_error": -32700,
+    "invalid_request": -32600,
+    "method_not_found": -32601,
+    "invalid_params": -32602,
+    "internal_error": -32603
+}
 
 
 class V2RootResource(resource.Resource):
@@ -211,7 +213,7 @@ class V2RootResource(resource.Resource):
             request.setResponseCode(errcode)
             request.setHeader(b'content-type', JSON_ENCODED)
             if "error" not in jsonRpcReply:  # already filled in by caller
-                jsonRpcReply['error'] = dict(code=jsonrpccode, message=msg)
+                jsonRpcReply['error'] = {"code": jsonrpccode, "message": msg}
             data = json.dumps(jsonRpcReply)
             data = unicode2bytes(data)
             request.write(data)
@@ -265,7 +267,7 @@ class V2RootResource(resource.Resource):
             request.setResponseCode(errcode)
             request.setHeader(b'content-type', b'text/plain; charset=utf-8')
             msg = bytes2unicode(msg)
-            data = json.dumps(dict(error=msg))
+            data = json.dumps({"error": msg})
             data = unicode2bytes(data)
             request.write(data)
 
@@ -370,11 +372,11 @@ class V2RootResource(resource.Resource):
             request.setHeader(b'content-type', b'text/plain; charset=utf-8')
             if request.method == b'POST':
                 # jsonRPC callers want the error message in error.message
-                data = json.dumps(dict(error=dict(message=msg)))
+                data = json.dumps({"error": {"message": msg}})
                 data = unicode2bytes(data)
                 request.write(data)
             else:
-                data = json.dumps(dict(error=msg))
+                data = json.dumps({"error": msg})
                 data = unicode2bytes(data)
                 request.write(data)
             request.finish()

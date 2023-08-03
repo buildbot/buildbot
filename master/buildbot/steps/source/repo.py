@@ -461,9 +461,9 @@ class Repo(Source):
              repo forall -c git clean -f -d -x 2>/dev/null
              repo forall -c git reset --hard HEAD 2>/dev/null
              rm -f %(workdir)s/.repo/project.list
-             """) % dict(manifestBranch=self.manifestBranch,
-                         manifestFile=self.manifestFile,
-                         workdir=self.workdir)
+             """) % {"manifestBranch": self.manifestBranch,
+                     "manifestFile": self.manifestFile,
+                     "workdir": self.workdir}
 
     def doCleanup(self):
         command = self._getCleanupCommand()

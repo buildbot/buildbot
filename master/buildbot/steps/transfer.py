@@ -579,11 +579,12 @@ class JSONPropertiesDownload(StringDownload):
         for key, value, _ in properties.asList():
             props[key] = value
 
-        self.s = json.dumps(dict(
-            properties=props,
-            sourcestamps=[ss.asDict()
-                          for ss in self.build.getAllSourceStamps()],
-        ),
-        )
+        self.s = json.dumps({
+            "properties": props,
+            "sourcestamps": [
+                ss.asDict()
+                for ss in self.build.getAllSourceStamps()
+            ],
+        },)
         res = yield super().run()
         return res

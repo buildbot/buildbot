@@ -60,11 +60,24 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_sendchange_config(self):
-        rc = yield sendchange.sendchange(dict(encoding='utf16', who='me',
-                                       auth=['a', 'b'], master='m', branch='br', category='cat',
-                                       revision='rr', properties={'a': 'b'}, repository='rep',
-                                       project='prj', vc='git', revlink='rl', when=1234.0,
-                                       comments='comm', files=('a', 'b'), codebase='cb'))
+        rc = yield sendchange.sendchange({
+            "encoding": 'utf16',
+            "who": 'me',
+            "auth": ['a', 'b'],
+            "master": 'm',
+            "branch": 'br',
+            "category": 'cat',
+            "revision": 'rr',
+            "properties": {'a': 'b'},
+            "repository": 'rep',
+            "project": 'prj',
+            "vc": 'git',
+            "revlink": 'rl',
+            "when": 1234.0,
+            "comments": 'comm',
+            "files": ('a', 'b'),
+            "codebase": 'cb'
+        })
 
         self.assertEqual((self.sender.master, self.sender.auth,
                           self.sender.encoding, self.sender.send_kwargs,
@@ -87,11 +100,23 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_sendchange_config_no_codebase(self):
-        rc = yield sendchange.sendchange(dict(encoding='utf16', who='me',
-                                       auth=['a', 'b'], master='m', branch='br', category='cat',
-                                       revision='rr', properties={'a': 'b'}, repository='rep',
-                                       project='prj', vc='git', revlink='rl', when=1234.0,
-                                       comments='comm', files=('a', 'b')))
+        rc = yield sendchange.sendchange({
+            "encoding": 'utf16',
+            "who": 'me',
+            "auth": ['a', 'b'],
+            "master": 'm',
+            "branch": 'br',
+            "category": 'cat',
+            "revision": 'rr',
+            "properties": {'a': 'b'},
+            "repository": 'rep',
+            "project": 'prj',
+            "vc": 'git',
+            "revlink": 'rl',
+            "when": 1234.0,
+            "comments": 'comm',
+            "files": ('a', 'b')
+        })
 
         self.assertEqual((self.sender.master, self.sender.auth,
                           self.sender.encoding, self.sender.send_kwargs,

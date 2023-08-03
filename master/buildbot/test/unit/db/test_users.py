@@ -261,7 +261,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
         res = yield self.db.users.getUsers()
 
-        self.assertEqual(res, [dict(uid=1, identifier='soap')])
+        self.assertEqual(res, [{"uid": 1, "identifier": 'soap'}])
 
     @defer.inlineCallbacks
     def test_getUsers_multiple(self):
@@ -269,8 +269,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
         res = yield self.db.users.getUsers()
 
-        self.assertEqual(res, [dict(uid=1, identifier='soap'),
-                         dict(uid=2, identifier='lye')])
+        self.assertEqual(res, [{"uid": 1, "identifier": 'soap'},
+                         {"uid": 2, "identifier": 'lye'}])
 
     @defer.inlineCallbacks
     def test_getUserByUsername(self):

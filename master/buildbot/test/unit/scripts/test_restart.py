@@ -25,7 +25,7 @@ from buildbot.test.util import misc
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, basedir=os.path.abspath('basedir'))
+    config = {"quiet": False, "basedir": os.path.abspath('basedir')}
     config.update(kwargs)
     return config
 

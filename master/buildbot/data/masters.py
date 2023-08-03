@@ -29,10 +29,12 @@ EXPIRE_MINUTES = 10
 
 
 def _db2data(master):
-    return dict(masterid=master['id'],
-                name=master['name'],
-                active=master['active'],
-                last_active=master['last_active'])
+    return {
+        "masterid": master['id'],
+        "name": master['name'],
+        "active": master['active'],
+        "last_active": master['last_active']
+    }
 
 
 class MasterEndpoint(base.Endpoint):
@@ -103,9 +105,7 @@ class Master(base.ResourceType):
         activated = yield self.master.db.masters.setMasterState(
             masterid=masterid, active=True)
         if activated:
-            self.produceEvent(
-                dict(masterid=masterid, name=name, active=True),
-                'started')
+            self.produceEvent({"masterid": masterid, "name": name, "active": True}, 'started')
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -181,6 +181,4 @@ class Master(base.ResourceType):
     def _masterDeactivated(self, masterid, name):
         yield self._masterDeactivatedHousekeeping(masterid, name)
 
-        self.produceEvent(
-            dict(masterid=masterid, name=name, active=False),
-            'stopped')
+        self.produceEvent({"masterid": masterid, "name": name, "active": False}, 'stopped')

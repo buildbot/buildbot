@@ -47,52 +47,55 @@ class Change(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True)
-        self.change23 = changes.Change(**dict(  # using **dict(..) forces kwargs
-            category='devel',
-            repository='git://warner',
-            codebase='mainapp',
-            who='dustin',
-            committer='dustin',
-            when=266738404,
-            comments='fix whitespace',
-            project='Buildbot',
-            branch='warnerdb',
-            revlink='http://warner/0e92a098b',
-            properties={'notest': "no"},
-            files=['master/README.txt', 'worker/README.txt'],
-            revision='deadbeef'))
+        self.change23 = changes.Change(**{  # using **dict(..) forces kwargs
+            "category": 'devel',
+            "repository": 'git://warner',
+            "codebase": 'mainapp',
+            "who": 'dustin',
+            "committer": 'dustin',
+            "when": 266738404,
+            "comments": 'fix whitespace',
+            "project": 'Buildbot',
+            "branch": 'warnerdb',
+            "revlink": 'http://warner/0e92a098b',
+            "properties": {'notest': "no"},
+            "files": ['master/README.txt', 'worker/README.txt'],
+            "revision": 'deadbeef'
+        })
         self.change23.number = 23
 
-        self.change24 = changes.Change(**dict(
-            category='devel',
-            repository='git://warner',
-            codebase='mainapp',
-            who='dustin',
-            committer='dustin',
-            when=266738405,
-            comments='fix whitespace again',
-            project='Buildbot',
-            branch='warnerdb',
-            revlink='http://warner/0e92a098c',
-            properties={'notest': "no"},
-            files=['master/README.txt', 'worker/README.txt'],
-            revision='deadbeef'))
+        self.change24 = changes.Change(**{
+            "category": 'devel',
+            "repository": 'git://warner',
+            "codebase": 'mainapp',
+            "who": 'dustin',
+            "committer": 'dustin',
+            "when": 266738405,
+            "comments": 'fix whitespace again',
+            "project": 'Buildbot',
+            "branch": 'warnerdb',
+            "revlink": 'http://warner/0e92a098c',
+            "properties": {'notest': "no"},
+            "files": ['master/README.txt', 'worker/README.txt'],
+            "revision": 'deadbeef'
+        })
         self.change24.number = 24
 
-        self.change25 = changes.Change(**dict(
-            category='devel',
-            repository='git://warner',
-            codebase='mainapp',
-            who='dustin',
-            committer='dustin',
-            when=266738406,
-            comments='fix whitespace again',
-            project='Buildbot',
-            branch='warnerdb',
-            revlink='http://warner/0e92a098d',
-            properties={'notest': "no"},
-            files=['master/README.txt', 'worker/README.txt'],
-            revision='deadbeef'))
+        self.change25 = changes.Change(**{
+            "category": 'devel',
+            "repository": 'git://warner',
+            "codebase": 'mainapp',
+            "who": 'dustin',
+            "committer": 'dustin',
+            "when": 266738406,
+            "comments": 'fix whitespace again',
+            "project": 'Buildbot',
+            "branch": 'warnerdb',
+            "revlink": 'http://warner/0e92a098d',
+            "properties": {'notest': "no"},
+            "files": ['master/README.txt', 'worker/README.txt'],
+            "revision": 'deadbeef'
+        })
         self.change25.number = 25
 
     @defer.inlineCallbacks

@@ -102,13 +102,17 @@ VERSION_ID="1"
         # remove any os_ fields as they are dependent on the test environment
         info = {k: v for k, v in info.items() if not k.startswith("os_")}
 
-        self.assertEqual(info, dict(
-            admin='testy!', foo='bar',
-            environ=os.environ, system=os.name, basedir=self.basedir,
-            worker_commands=self.real_bot.remote_getCommands(),
-            version=self.real_bot.remote_getVersion(),
-            numcpus=multiprocessing.cpu_count(),
-            delete_leftover_dirs=False))
+        self.assertEqual(info, {
+            "admin": 'testy!',
+            "foo": 'bar',
+            "environ": os.environ,
+            "system": os.name,
+            "basedir": self.basedir,
+            "worker_commands": self.real_bot.remote_getCommands(),
+            "version": self.real_bot.remote_getVersion(),
+            "numcpus": multiprocessing.cpu_count(),
+            "delete_leftover_dirs": False
+            })
 
     @defer.inlineCallbacks
     def test_getWorkerInfo_nodir(self):
@@ -214,8 +218,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         )
 
         yield self.wfb.callRemote("startCommand", FakeRemote(st),
-                                  "13", "shell", dict(command=['echo', 'hello'],
-                                                      workdir='workdir'))
+                                  "13", "shell",
+                                  {"command": ['echo', 'hello'], "workdir": 'workdir'})
         yield st.wait_for_finish()
         self.assertEqual(st.actions, [
             ['update', [[{'stdout': 'hello\n'}, 0]]],
@@ -239,8 +243,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         )
 
         yield self.wfb.callRemote("startCommand", FakeRemote(st),
-                                  "13", "shell", dict(command=['sleep', '10'],
-                                                      workdir='workdir'))
+                                  "13", "shell", {"command": ['sleep', '10'], "workdir": 'workdir'})
 
         # wait a jiffy..
         d = defer.Deferred()
@@ -273,8 +276,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         self.patch(log, "err", lambda f: None)
 
         yield self.wfb.callRemote("startCommand", FakeRemote(st),
-                                  "13", "shell", dict(command=['sleep', '10'],
-                                                      workdir='workdir'))
+                                  "13", "shell", {"command": ['sleep', '10'], "workdir": 'workdir'})
 
         yield st.wait_for_finish()
 

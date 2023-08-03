@@ -245,9 +245,9 @@ def make_logentry_elements(maxrevision):
 def split_file(path):
     pieces = path.split("/")
     if pieces[0] == "branch":
-        return dict(branch="branch", path="/".join(pieces[1:]))
+        return {"branch": 'branch', "path": '/'.join(pieces[1:])}
     if pieces[0] == "trunk":
-        return dict(path="/".join(pieces[1:]))
+        return {"path": '/'.join(pieces[1:])}
     raise RuntimeError(f"there shouldn't be any files like {repr(path)}")
 
 
@@ -665,7 +665,7 @@ class TestSplitFile(unittest.TestCase):
 
     def test_split_file_alwaystrunk(self):
         self.assertEqual(
-            svnpoller.split_file_alwaystrunk('foo'), dict(path='foo'))
+            svnpoller.split_file_alwaystrunk('foo'), {"path": 'foo'})
 
     def test_split_file_branches_trunk(self):
         self.assertEqual(
@@ -725,11 +725,11 @@ class TestSplitFile(unittest.TestCase):
         self.assertEqual(
             svnpoller.split_file_projects_branches(
                 'buildbot/trunk/subdir/file.c'),
-            dict(project='buildbot', path='subdir/file.c'))
+            {"project": 'buildbot', "path": 'subdir/file.c'})
         self.assertEqual(
             svnpoller.split_file_projects_branches(
                 'buildbot/branches/1.5.x/subdir/file.c'),
-            dict(project='buildbot', branch='branches/1.5.x', path='subdir/file.c'))
+            {"project": 'buildbot', "branch": 'branches/1.5.x', "path": 'subdir/file.c'})
         # tags are ignored:
         self.assertEqual(
             svnpoller.split_file_projects_branches(

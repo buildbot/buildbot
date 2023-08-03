@@ -73,14 +73,15 @@ class FakeLogsComponent(FakeDBComponent):
         return id
 
     def _row2dict(self, row):
-        return dict(
-            id=row['id'],
-            stepid=row['stepid'],
-            name=row['name'],
-            slug=row['slug'],
-            complete=bool(row['complete']),
-            num_lines=row['num_lines'],
-            type=row['type'])
+        return {
+            "id": row['id'],
+            "stepid": row['stepid'],
+            "name": row['name'],
+            "slug": row['slug'],
+            "complete": bool(row['complete']),
+            "num_lines": row['num_lines'],
+            "type": row['type']
+        }
 
     def getLog(self, logid):
         row = self.logs.get(logid)
@@ -112,9 +113,15 @@ class FakeLogsComponent(FakeDBComponent):
 
     def addLog(self, stepid, name, slug, type):
         id = self._newId()
-        self.logs[id] = dict(id=id, stepid=stepid,
-                             name=name, slug=slug, type=type,
-                             complete=0, num_lines=0)
+        self.logs[id] = {
+            "id": id,
+            "stepid": stepid,
+            "name": name,
+            "slug": slug,
+            "type": type,
+            "complete": 0,
+            "num_lines": 0
+        }
         self.log_lines[id] = []
         return defer.succeed(id)
 

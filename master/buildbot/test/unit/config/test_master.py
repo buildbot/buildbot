@@ -47,27 +47,33 @@ from buildbot.util import service
 from buildbot.warnings import ConfigWarning
 from buildbot.warnings import DeprecatedApiWarning
 
-global_defaults = dict(
-    title='Buildbot',
-    titleURL='http://buildbot.net',
-    buildbotURL='http://localhost:8080/',
-    logCompressionLimit=4096,
-    logCompressionMethod='gz',
-    logEncoding='utf-8',
-    logMaxTailSize=None,
-    logMaxSize=None,
-    properties=properties.Properties(),
-    collapseRequests=None,
-    prioritizeBuilders=None,
-    protocols={},
-    multiMaster=False,
-    manhole=None,
-    buildbotNetUsageData=None,  # in unit tests we default to None, but normally defaults to 'basic'
-    www=dict(port=None, plugins={},
-             auth={'name': 'NoAuth'}, authz={},
-             avatar_methods={'name': 'gravatar'},
-             logfileName='http.log'),
-)
+global_defaults = {
+    "title": 'Buildbot',
+    "titleURL": 'http://buildbot.net',
+    "buildbotURL": 'http://localhost:8080/',
+    "logCompressionLimit": 4096,
+    "logCompressionMethod": 'gz',
+    "logEncoding": 'utf-8',
+    "logMaxTailSize": None,
+    "logMaxSize": None,
+    "properties": properties.Properties(),
+    "collapseRequests": None,
+    "prioritizeBuilders": None,
+    "protocols": {},
+    "multiMaster": False,
+    "manhole": None,
+    # in unit tests we default to None, but normally defaults to 'basic'
+    "buildbotNetUsageData": None,
+    "www":
+    {
+        "port": None,
+        "plugins": {},
+        "auth": {'name': 'NoAuth'},
+        "authz": {},
+        "avatar_methods": {'name': 'gravatar'},
+        "logfileName": 'http.log'
+    },
+}
 
 
 class FakeChangeSource(changes_base.ChangeSource):
@@ -241,21 +247,20 @@ class MasterConfigTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def test_defaults(self):
         cfg = config.master.MasterConfig()
-        expected = dict(
+        expected = {
             # validation,
-            db=dict(
-                db_url='sqlite:///state.sqlite'),
-            mq=dict(type='simple'),
-            metrics=None,
-            caches=dict(Changes=10, Builds=15),
-            schedulers={},
-            builders=[],
-            workers=[],
-            change_sources=[],
-            status=[],
-            user_managers=[],
-            revlink=revlinks.default_revlink_matcher
-        )
+            "db": {"db_url": 'sqlite:///state.sqlite'},
+            "mq": {"type": 'simple'},
+            "metrics": None,
+            "caches": {"Changes": 10, "Builds": 15},
+            "schedulers": {},
+            "builders": [],
+            "workers": [],
+            "change_sources": [],
+            "status": [],
+            "user_managers": [],
+            "revlink": revlinks.default_revlink_matcher
+        }
         expected.update(global_defaults)
         expected['buildbotNetUsageData'] = 'basic'
         got = {
@@ -411,37 +416,37 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(**expected)
 
     def test_load_global_title(self):
-        self.do_test_load_global(dict(title='hi'), title='hi')
+        self.do_test_load_global({"title": 'hi'}, title='hi')
 
     def test_load_global_title_too_long(self):
         with assertProducesWarning(ConfigWarning, message_pattern=r"Title is too long"):
-            self.do_test_load_global(dict(title="Very very very very very long title"))
+            self.do_test_load_global({"title": "Very very very very very long title"})
 
     def test_load_global_projectName(self):
         with assertProducesWarning(
             DeprecatedApiWarning,
             message_pattern=r"Configuration dictionary key projectName is deprecated"
         ):
-            self.do_test_load_global(dict(projectName='hey'), title='hey')
+            self.do_test_load_global({"projectName": 'hey'}, title='hey')
 
     def test_load_global_projectURL(self):
         with assertProducesWarning(
             DeprecatedApiWarning,
             message_pattern=r"Configuration dictionary key projectURL is deprecated"
         ):
-            self.do_test_load_global(dict(projectURL='hey'), titleURL='hey')
+            self.do_test_load_global({"projectURL": 'hey'}, titleURL='hey')
 
     def test_load_global_titleURL(self):
-        self.do_test_load_global(dict(titleURL='hi'), titleURL='hi')
+        self.do_test_load_global({"titleURL": 'hi'}, titleURL='hi')
 
     def test_load_global_buildbotURL(self):
-        self.do_test_load_global(dict(buildbotURL='hey'), buildbotURL='hey')
+        self.do_test_load_global({"buildbotURL": 'hey'}, buildbotURL='hey')
 
     def test_load_global_changeHorizon(self):
-        self.do_test_load_global(dict(changeHorizon=10), changeHorizon=10)
+        self.do_test_load_global({"changeHorizon": 10}, changeHorizon=10)
 
     def test_load_global_changeHorizon_none(self):
-        self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
+        self.do_test_load_global({"changeHorizo": None}, changeHorizon=None)
 
     def test_load_global_buildbotNetUsageData(self):
         self.patch(config.master, "get_is_in_unit_tests", lambda: False)
@@ -452,11 +457,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 {})
 
     def test_load_global_logCompressionLimit(self):
-        self.do_test_load_global(dict(logCompressionLimit=10),
+        self.do_test_load_global({"logCompressionLimit": 10},
                                  logCompressionLimit=10)
 
     def test_load_global_logCompressionMethod(self):
-        self.do_test_load_global(dict(logCompressionMethod='bz2'),
+        self.do_test_load_global({"logCompressionMethod": 'bz2'},
                                  logCompressionMethod='bz2')
 
     def test_load_global_logCompressionMethod_invalid(self):
@@ -468,7 +473,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_codebaseGenerator(self):
         func = lambda _: "dummy"
-        self.do_test_load_global(dict(codebaseGenerator=func),
+        self.do_test_load_global({"codebaseGenerator": func},
                                  codebaseGenerator=func)
 
     def test_load_global_codebaseGenerator_invalid(self):
@@ -480,19 +485,18 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                "accepting a dict and returning a str")
 
     def test_load_global_logMaxSize(self):
-        self.do_test_load_global(dict(logMaxSize=123), logMaxSize=123)
+        self.do_test_load_global({"logMaxSize": 123}, logMaxSize=123)
 
     def test_load_global_logMaxTailSize(self):
-        self.do_test_load_global(dict(logMaxTailSize=123), logMaxTailSize=123)
+        self.do_test_load_global({"logMaxTailSize": 123}, logMaxTailSize=123)
 
     def test_load_global_logEncoding(self):
-        self.do_test_load_global(
-            dict(logEncoding='latin-2'), logEncoding='latin-2')
+        self.do_test_load_global({"logEncoding": 'latin-2'}, logEncoding='latin-2')
 
     def test_load_global_properties(self):
         exp = properties.Properties()
         exp.setProperty('x', 10, self.filename)
-        self.do_test_load_global(dict(properties=dict(x=10)), properties=exp)
+        self.do_test_load_global({"properties": {"x": 10}}, properties=exp)
 
     def test_load_global_properties_invalid(self):
         with capture_config_errors() as errors:
@@ -501,12 +505,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "must be a dictionary")
 
     def test_load_global_collapseRequests_bool(self):
-        self.do_test_load_global(dict(collapseRequests=False),
+        self.do_test_load_global({"collapseRequests": False},
                                  collapseRequests=False)
 
     def test_load_global_collapseRequests_callable(self):
         callable = lambda: None
-        self.do_test_load_global(dict(collapseRequests=callable),
+        self.do_test_load_global({"collapseRequests": callable},
                                  collapseRequests=callable)
 
     def test_load_global_collapseRequests_invalid(self):
@@ -518,7 +522,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_prioritizeBuilders_callable(self):
         callable = lambda: None
-        self.do_test_load_global(dict(prioritizeBuilders=callable),
+        self.do_test_load_global({"prioritizeBuilders": callable},
                                  prioritizeBuilders=callable)
 
     def test_load_global_prioritizeBuilders_invalid(self):
@@ -528,19 +532,19 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "must be a callable")
 
     def test_load_global_protocols_str(self):
-        self.do_test_load_global(dict(protocols={'pb': {'port': 'udp:123'}}),
+        self.do_test_load_global({"protocols": {'pb': {'port': 'udp:123'}}},
                                  protocols={'pb': {'port': 'udp:123'}})
 
     def test_load_global_multiMaster(self):
-        self.do_test_load_global(dict(multiMaster=1), multiMaster=1)
+        self.do_test_load_global({"multiMaster": 1}, multiMaster=1)
 
     def test_load_global_manhole(self):
         mh = mock.Mock(name='manhole')
-        self.do_test_load_global(dict(manhole=mh), manhole=mh)
+        self.do_test_load_global({"manhole": mh}, manhole=mh)
 
     def test_load_global_revlink_callable(self):
         callable = lambda: None
-        self.do_test_load_global(dict(revlink=callable),
+        self.do_test_load_global({"revlink": callable},
                                  revlink=callable)
 
     def test_load_global_revlink_invalid(self):
@@ -570,8 +574,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_validation(self):
         r = re.compile('.*')
-        self.cfg.load_validation(self.filename,
-                                 dict(validation=dict(branch=r)))
+        self.cfg.load_validation(self.filename, {"validation": {"branch": r}})
         self.assertEqual(self.cfg.validation['branch'], r)
         # check that defaults are still around
         self.assertIn('revision', self.cfg.validation)
@@ -579,15 +582,15 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_db_defaults(self):
         self.cfg.load_db(self.filename, {})
         self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite'))
+            db={"db_url": 'sqlite:///state.sqlite'})
 
     def test_load_db_db_url(self):
-        self.cfg.load_db(self.filename, dict(db_url='abcd'))
-        self.assertResults(db=dict(db_url='abcd'))
+        self.cfg.load_db(self.filename, {"db_url": 'abcd'})
+        self.assertResults(db={"db_url": 'abcd'})
 
     def test_load_db_dict(self):
         self.cfg.load_db(self.filename, {'db': {'db_url': 'abcd'}})
-        self.assertResults(db=dict(db_url='abcd'))
+        self.assertResults(db={"db_url": 'abcd'})
 
     def test_load_db_unk_keys(self):
         with capture_config_errors() as errors:
@@ -597,12 +600,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_mq_defaults(self):
         self.cfg.load_mq(self.filename, {})
-        self.assertResults(mq=dict(type='simple'))
+        self.assertResults(mq={"type": 'simple'})
 
     def test_load_mq_explicit_type(self):
-        self.cfg.load_mq(self.filename,
-                         dict(mq=dict(type='simple')))
-        self.assertResults(mq=dict(type='simple'))
+        self.cfg.load_mq(self.filename, {"mq": {"type": 'simple'}})
+        self.assertResults(mq={"type": 'simple'})
 
     def test_load_mq_unk_type(self):
         with capture_config_errors() as errors:
@@ -627,13 +629,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "must be a dictionary")
 
     def test_load_metrics(self):
-        self.cfg.load_metrics(self.filename,
-                              dict(metrics=dict(foo=1)))
-        self.assertResults(metrics=dict(foo=1))
+        self.cfg.load_metrics(self.filename, {"metrics": {"foo": 1}})
+        self.assertResults(metrics={"foo": 1})
 
     def test_load_caches_defaults(self):
         self.cfg.load_caches(self.filename, {})
-        self.assertResults(caches=dict(Changes=10, Builds=15))
+        self.assertResults(caches={"Changes": 10, "Builds": 15})
 
     def test_load_caches_invalid(self):
         with capture_config_errors() as errors:
@@ -642,9 +643,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "must be a dictionary")
 
     def test_load_caches_buildCacheSize(self):
-        self.cfg.load_caches(self.filename,
-                             dict(buildCacheSize=13))
-        self.assertResults(caches=dict(Builds=13, Changes=10))
+        self.cfg.load_caches(self.filename, {"buildCacheSize": 13})
+        self.assertResults(caches={"Builds": 13, "Changes": 10})
 
     def test_load_caches_buildCacheSize_and_caches(self):
         with capture_config_errors() as errors:
@@ -653,9 +653,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "cannot specify")
 
     def test_load_caches_changeCacheSize(self):
-        self.cfg.load_caches(self.filename,
-                             dict(changeCacheSize=13))
-        self.assertResults(caches=dict(Changes=13, Builds=15))
+        self.cfg.load_caches(self.filename, {"changeCacheSize": 13})
+        self.assertResults(caches={"Changes": 13, "Builds": 15})
 
     def test_load_caches_changeCacheSize_and_caches(self):
         with capture_config_errors() as errors:
@@ -664,9 +663,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "cannot specify")
 
     def test_load_caches(self):
-        self.cfg.load_caches(self.filename,
-                             dict(caches=dict(foo=1)))
-        self.assertResults(caches=dict(Changes=10, Builds=15, foo=1))
+        self.cfg.load_caches(self.filename, {"caches": {"foo": 1}})
+        self.assertResults(caches={"Changes": 10, "Builds": 15, "foo": 1})
 
     def test_load_caches_not_int_err(self):
         """
@@ -711,9 +709,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_schedulers(self):
         sch = schedulers_base.BaseScheduler('sch', [""])
-        self.cfg.load_schedulers(self.filename,
-                                 dict(schedulers=[sch]))
-        self.assertResults(schedulers=dict(sch=sch))
+        self.cfg.load_schedulers(self.filename, {"schedulers": [sch]})
+        self.assertResults(schedulers={"sch": sch})
 
     def test_load_builders_defaults(self):
         self.cfg.load_builders(self.filename, {})
@@ -733,22 +730,23 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_builders(self):
         bldr = config.BuilderConfig(name='x',
                                     factory=factory.BuildFactory(), workername='x')
-        self.cfg.load_builders(self.filename,
-                               dict(builders=[bldr]))
+        self.cfg.load_builders(self.filename, {"builders": [bldr]})
         self.assertResults(builders=[bldr])
 
     def test_load_builders_dict(self):
-        bldr = dict(name='x', factory=factory.BuildFactory(), workername='x')
-        self.cfg.load_builders(self.filename,
-                               dict(builders=[bldr]))
+        bldr = {"name": 'x', "factory": factory.BuildFactory(), "workername": 'x'}
+        self.cfg.load_builders(self.filename, {"builders": [bldr]})
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
 
     def test_load_builders_abs_builddir(self):
-        bldr = dict(name='x', factory=factory.BuildFactory(), workername='x',
-                    builddir=os.path.abspath('.'))
-        self.cfg.load_builders(self.filename,
-                               dict(builders=[bldr]))
+        bldr = {
+            "name": 'x',
+            "factory": factory.BuildFactory(),
+            "workername": 'x',
+            "builddir": os.path.abspath('.')
+        }
+        self.cfg.load_builders(self.filename, {"builders": [bldr]})
         self.assertEqual(
             len(self.flushWarnings([self.cfg.load_builders])),
             1)
@@ -806,8 +804,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_workers(self):
         wrk = worker.Worker('foo', 'x')
-        self.cfg.load_workers(self.filename,
-                              dict(workers=[wrk]))
+        self.cfg.load_workers(self.filename, {"workers": [wrk]})
         self.assertResults(workers=[wrk])
 
     def test_load_change_sources_defaults(self):
@@ -822,14 +819,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_change_sources_single(self):
         chsrc = FakeChangeSource()
-        self.cfg.load_change_sources(self.filename,
-                                     dict(change_source=chsrc))
+        self.cfg.load_change_sources(self.filename, {"change_source": chsrc})
         self.assertResults(change_sources=[chsrc])
 
     def test_load_change_sources_list(self):
         chsrc = FakeChangeSource()
-        self.cfg.load_change_sources(self.filename,
-                                     dict(change_source=[chsrc]))
+        self.cfg.load_change_sources(self.filename, {"change_source": [chsrc]})
         self.assertResults(change_sources=[chsrc])
 
     def test_load_machines_defaults(self):
@@ -851,8 +846,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_machines_list(self):
         mm = FakeMachine()
-        self.cfg.load_machines(self.filename,
-                               dict(machines=[mm]))
+        self.cfg.load_machines(self.filename, {"machines": [mm]})
         self.assertResults(machines=[mm])
 
     def test_load_user_managers_defaults(self):
@@ -867,55 +861,67 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_user_managers(self):
         um = mock.Mock()
-        self.cfg.load_user_managers(self.filename,
-                                    dict(user_managers=[um]))
+        self.cfg.load_user_managers(self.filename, {"user_managers": [um]})
         self.assertResults(user_managers=[um])
 
     def test_load_www_default(self):
         self.cfg.load_www(self.filename, {})
-        self.assertResults(www=dict(port=None,
-                                    plugins={}, auth={'name': 'NoAuth'},
-                                    authz={},
-                                    avatar_methods={'name': 'gravatar'},
-                                    logfileName='http.log'))
+        self.assertResults(www={
+            "port": None,
+            "plugins": {},
+            "auth": {'name': 'NoAuth'},
+            "authz": {},
+            "avatar_methods": {'name': 'gravatar'},
+            "logfileName": 'http.log'
+        })
 
     def test_load_www_port(self):
-        self.cfg.load_www(self.filename,
-                          dict(www=dict(port=9888)))
-        self.assertResults(www=dict(port=9888,
-                                    plugins={}, auth={'name': 'NoAuth'},
-                                    authz={},
-                                    avatar_methods={'name': 'gravatar'},
-                                    logfileName='http.log'))
+        self.cfg.load_www(self.filename, {"www": {"port": 9888}})
+        self.assertResults(www={
+            "port": 9888,
+            "plugins": {},
+            "auth": {'name': 'NoAuth'},
+            "authz": {},
+            "avatar_methods": {'name': 'gravatar'},
+            "logfileName": 'http.log'
+        })
 
     def test_load_www_plugin(self):
         self.cfg.load_www(self.filename,
-                          dict(www=dict(plugins={'waterfall': {'foo': 'bar'}})))
-        self.assertResults(www=dict(port=None,
-                                    plugins={'waterfall': {'foo': 'bar'}},
-                                    auth={'name': 'NoAuth'},
-                                    authz={},
-                                    avatar_methods={'name': 'gravatar'},
-                                    logfileName='http.log'))
+                          {"www": {"plugins": {'waterfall': {'foo': 'bar'}}}})
+        self.assertResults(www={
+            "port": None,
+            "plugins": {'waterfall': {'foo': 'bar'}},
+            "auth": {'name': 'NoAuth'},
+            "authz": {},
+            "avatar_methods": {'name': 'gravatar'},
+            "logfileName": 'http.log'
+        })
 
     def test_load_www_allowed_origins(self):
         self.cfg.load_www(self.filename,
-                          dict(www=dict(allowed_origins=['a', 'b'])))
-        self.assertResults(www=dict(port=None,
-                                    allowed_origins=['a', 'b'],
-                                    plugins={}, auth={'name': 'NoAuth'},
-                                    authz={},
-                                    avatar_methods={'name': 'gravatar'},
-                                    logfileName='http.log'))
+                          {"www": {"allowed_origins": ['a', 'b']}})
+        self.assertResults(www={
+            "port": None,
+            "allowed_origins": ['a', 'b'],
+            "plugins": {},
+            "auth": {'name': 'NoAuth'},
+            "authz": {},
+            "avatar_methods": {'name': 'gravatar'},
+            "logfileName": 'http.log'
+        })
 
     def test_load_www_logfileName(self):
         self.cfg.load_www(self.filename,
-                          dict(www=dict(logfileName='http-access.log')))
-        self.assertResults(www=dict(port=None,
-                                    plugins={}, auth={'name': 'NoAuth'},
-                                    authz={},
-                                    avatar_methods={'name': 'gravatar'},
-                                    logfileName='http-access.log'))
+                          {"www": {"logfileName": 'http-access.log'}})
+        self.assertResults(www={
+            "port": None,
+            "plugins": {},
+            "auth": {'name': 'NoAuth'},
+            "authz": {},
+            "avatar_methods": {'name': 'gravatar'},
+            "logfileName": 'http-access.log'
+        })
 
     def test_load_www_versions(self):
         custom_versions = [
@@ -923,13 +929,16 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             ('Test Custom Component 2', '0.1.0'),
         ]
         self.cfg.load_www(
-            self.filename, {'www': dict(versions=custom_versions)})
-        self.assertResults(www=dict(port=None,
-                                    plugins={}, auth={'name': 'NoAuth'},
-                                    authz={},
-                                    avatar_methods={'name': 'gravatar'},
-                                    versions=custom_versions,
-                                    logfileName='http.log'))
+            self.filename, {'www': {"versions": custom_versions}})
+        self.assertResults(www={
+            "port": None,
+            "plugins": {},
+            "auth": {'name': 'NoAuth'},
+            "authz": {},
+            "avatar_methods": {'name': 'gravatar'},
+            "versions": custom_versions,
+            "logfileName": 'http.log'
+        })
 
     def test_load_www_versions_not_list(self):
         with capture_config_errors() as errors:
@@ -969,8 +978,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
         myService = MyService(foo="bar", name="foo")
 
-        self.cfg.load_services(self.filename, dict(
-            services=[myService]))
+        self.cfg.load_services(self.filename, {"services": [myService]})
         self.assertResults(services={"foo": myService})
 
     def test_load_services_badservice(self):
@@ -996,8 +1004,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 def reconfigService(self, x=None):
                     self.x = x
 
-            self.cfg.load_services(self.filename, dict(
-                services=[MyService(x='a'), MyService(x='b')]))
+            self.cfg.load_services(self.filename, {
+                "services": [MyService(x='a'), MyService(x='b')]})
 
         self.assertConfigError(errors, f'Duplicate service name {repr(MyService.name)}')
 
@@ -1007,7 +1015,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
             def configure(self, config_dict):
                 config_dict['foo'] = 'bar'
-        c = dict(configurators=[MyConfigurator()])
+        c = {"configurators": [MyConfigurator()]}
         self.cfg.run_configurators(self.filename, c)
         self.assertEqual(c['foo'], 'bar')
 
@@ -1031,7 +1039,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         b2 = mock.Mock()
         b2.name = 'b2'
 
-        self.cfg.schedulers = dict(sch=sch)
+        self.cfg.schedulers = {"sch": sch}
         self.cfg.workers = [mock.Mock()]
         self.cfg.builders = [b1, b2]
 
@@ -1057,7 +1065,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             b = mock.Mock()
             b.name = name
             b.locks = []
-            b.factory.steps = [('cls', (), dict(locks=[]))]
+            b.factory.steps = [('cls', (), {"locks": []})]
             return b
 
         def lock(name):

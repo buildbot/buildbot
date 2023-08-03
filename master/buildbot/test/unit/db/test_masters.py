@@ -64,9 +64,12 @@ class Tests(interfaces.InterfaceTests):
     def test_findMasterId_new(self):
         id = yield self.db.masters.findMasterId('some:master')
         masterdict = yield self.db.masters.getMaster(id)
-        self.assertEqual(masterdict,
-                         dict(id=id, name='some:master', active=False,
-                              last_active=SOMETIME_DT))
+        self.assertEqual(masterdict, {
+            "id": id,
+            "name": 'some:master',
+            "active": False,
+            "last_active": SOMETIME_DT
+        })
 
     @defer.inlineCallbacks
     def test_findMasterId_new_name_differs_only_by_case(self):
@@ -75,8 +78,12 @@ class Tests(interfaces.InterfaceTests):
         ])
         id = yield self.db.masters.findMasterId('some:Master')
         masterdict = yield self.db.masters.getMaster(id)
-        self.assertEqual(masterdict, {'id': id, 'name': 'some:Master', 'active': False,
-                                      'last_active': SOMETIME_DT})
+        self.assertEqual(masterdict, {
+            'id': id,
+            'name': 'some:Master',
+            'active': False,
+            'last_active': SOMETIME_DT
+        })
 
     @defer.inlineCallbacks
     def test_findMasterId_exists(self):
@@ -102,9 +109,12 @@ class Tests(interfaces.InterfaceTests):
             masterid=7, active=True)
         self.assertFalse(activated)  # it was already active
         masterdict = yield self.db.masters.getMaster(7)
-        self.assertEqual(masterdict,
-                         dict(id=7, name='some:master', active=True,
-                              last_active=SOMETIME_DT))  # timestamp updated
+        self.assertEqual(masterdict, {
+            "id": 7,
+            "name": 'some:master',
+            "active": True,
+            "last_active": SOMETIME_DT
+        })  # timestamp updated
 
     @defer.inlineCallbacks
     def test_setMasterState_true_when_inactive(self):
@@ -116,9 +126,12 @@ class Tests(interfaces.InterfaceTests):
             masterid=7, active=True)
         self.assertTrue(activated)
         masterdict = yield self.db.masters.getMaster(7)
-        self.assertEqual(masterdict,
-                         dict(id=7, name='some:master', active=True,
-                              last_active=SOMETIME_DT))
+        self.assertEqual(masterdict, {
+            "id": 7,
+            "name": 'some:master',
+            "active": True,
+            "last_active": SOMETIME_DT
+        })
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_active(self):
@@ -130,9 +143,12 @@ class Tests(interfaces.InterfaceTests):
             masterid=7, active=False)
         self.assertTrue(deactivated)
         masterdict = yield self.db.masters.getMaster(7)
-        self.assertEqual(masterdict,
-                         dict(id=7, name='some:master', active=False,
-                              last_active=OTHERTIME_DT))
+        self.assertEqual(masterdict, {
+            "id": 7,
+            "name": 'some:master',
+            "active": False,
+            "last_active": OTHERTIME_DT
+        })
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_inactive(self):
@@ -144,9 +160,12 @@ class Tests(interfaces.InterfaceTests):
             masterid=7, active=False)
         self.assertFalse(deactivated)
         masterdict = yield self.db.masters.getMaster(7)
-        self.assertEqual(masterdict,
-                         dict(id=7, name='some:master', active=False,
-                              last_active=OTHERTIME_DT))
+        self.assertEqual(masterdict, {
+            "id": 7,
+            "name": 'some:master',
+            "active": False,
+            "last_active": OTHERTIME_DT
+        })
 
     @defer.inlineCallbacks
     def test_getMaster(self):
@@ -156,8 +175,12 @@ class Tests(interfaces.InterfaceTests):
         ])
         masterdict = yield self.db.masters.getMaster(7)
         validation.verifyDbDict(self, 'masterdict', masterdict)
-        self.assertEqual(masterdict, dict(id=7, name='some:master',
-                                          active=False, last_active=SOMETIME_DT))
+        self.assertEqual(masterdict, {
+            "id": 7,
+            "name": 'some:master',
+            "active": False,
+            "last_active": SOMETIME_DT
+        })
 
     @defer.inlineCallbacks
     def test_getMaster_missing(self):
@@ -180,10 +203,8 @@ class Tests(interfaces.InterfaceTests):
             return master['id']
 
         expected = sorted([
-            dict(id=7, name='some:master',
-                 active=0, last_active=SOMETIME_DT),
-            dict(id=8, name='other:master',
-                 active=1, last_active=OTHERTIME_DT),
+            {"id": 7, "name": 'some:master', "active": 0, "last_active": SOMETIME_DT},
+            {"id": 8, "name": 'other:master', "active": 1, "last_active": OTHERTIME_DT},
         ], key=masterKey)
         self.assertEqual(sorted(masterlist, key=masterKey), expected)
 

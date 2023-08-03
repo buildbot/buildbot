@@ -43,7 +43,7 @@ class Consumer:
     def onMessage(self, event, data):
         request = self.request
         key = [bytes2unicode(e) for e in event]
-        msg = dict(key=key, message=data)
+        msg = {"key": key, "message": data}
         request.write(b"event: " + b"event" + b"\n")
         request.write(
             b"data: " + unicode2bytes(json.dumps(msg, default=toJson)) + b"\n")

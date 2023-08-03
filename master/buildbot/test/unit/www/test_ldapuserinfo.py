@@ -227,7 +227,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
         mimeTypeAndData = (b'', b'unknown image format')
         res = yield self._getUserAvatar(mimeTypeAndData)
         # Unknown format means data won't be sent
-        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+        self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
     def test_getUsernameAvatar(self):
@@ -249,7 +249,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
         self.assertSearchCalledWith([
             (('accbase', 'accpattern=other', ['picture']), {}),
         ])
-        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+        self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
 
 class LdapUserInfoNotEscCharsDn(CommonTestCase):
@@ -267,7 +267,7 @@ class LdapUserInfoNotEscCharsDn(CommonTestCase):
     @defer.inlineCallbacks
     def test_getUserInfoGroupsNotEscCharsDn(self):
         dn = "cn=Lastname, Firstname \28UIDxxx\29,dc=example,dc=org"
-        pattern = self.userInfoProvider.groupMemberPattern % dict(dn=dn)
+        pattern = self.userInfoProvider.groupMemberPattern % {"dn": dn}
         self.makeSearchSideEffect([[(dn, {"accountFullName": "Lastname, Firstname (UIDxxx)",
                                           "accountEmail": "mee@too"})],
                                    [("cn", {"groupName": ["group"]}),

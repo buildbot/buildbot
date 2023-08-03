@@ -488,9 +488,8 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def test_mode_incremental_given_revision(self):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
-                    mode='incremental'), dict(
-                revision='100',
-            ))
+                    mode='incremental'), {"revision": '100'}
+        )
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -660,9 +659,8 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def test_mode_full_clobber_given_revision(self):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
-                    mode='full', method='clobber'), dict(
-                revision='100',
-            ))
+                    mode='full', method='clobber'), {"revision": '100'}
+        )
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -769,9 +767,8 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def test_mode_full_fresh_given_revision(self):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
-                    mode='full', method='fresh', depth='infinite'), dict(
-                revision='100',
-            ))
+                    mode='full', method='fresh', depth='infinite'), {"revision": '100'}
+        )
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -892,9 +889,8 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def test_mode_full_clean_given_revision(self):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
-                    mode='full', method='clean'), dict(
-                revision='100',
-            ))
+                    mode='full', method='clean'), {"revision": '100'}
+        )
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -959,9 +955,8 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def test_mode_full_not_updatable_given_revision(self):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
-                    mode='full', method='clean'), dict(
-                revision='100',
-            ))
+                    mode='full', method='clean'), {"revision": '100'}
+        )
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -1115,9 +1110,8 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def test_mode_full_copy_given_revision(self):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
-                    mode='full', method='copy'), dict(
-                revision='100',
-            ))
+                    mode='full', method='copy'), {"revision": '100'}
+        )
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -1358,9 +1352,8 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def test_mode_full_export_given_revision(self):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
-                    mode='full', method='export'), dict(
-                revision='100',
-            ))
+                    mode='full', method='export'), {"revision": '100'}
+        )
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])

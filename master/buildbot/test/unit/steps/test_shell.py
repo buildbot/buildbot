@@ -135,10 +135,10 @@ class TestShellCommandExecution(TestBuildStepMixin,
 
     def test_run_env(self):
         self.setup_step(shell.ShellCommand(workdir='build', command="echo hello"),
-                       worker_env=dict(DEF='HERE'))
+                       worker_env={"DEF": 'HERE'})
         self.expect_commands(
             ExpectShell(workdir='build', command='echo hello',
-                        env=dict(DEF='HERE'))
+                        env={"DEF": 'HERE'})
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -147,10 +147,10 @@ class TestShellCommandExecution(TestBuildStepMixin,
     def test_run_env_override(self):
         self.setup_step(shell.ShellCommand(workdir='build', env={'ABC': '123'},
                                           command="echo hello"),
-                       worker_env=dict(ABC='XXX', DEF='HERE'))
+                       worker_env={"ABC": 'XXX', "DEF": 'HERE'})
         self.expect_commands(
             ExpectShell(workdir='build', command='echo hello',
-                        env=dict(ABC='123', DEF='HERE'))
+                        env={"ABC": '123', "DEF": 'HERE'})
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
@@ -168,7 +168,7 @@ class TestShellCommandExecution(TestBuildStepMixin,
     def test_run_usePTY_old_worker(self):
         self.setup_step(
             shell.ShellCommand(workdir='build', command="echo hello", usePTY=True),
-            worker_version=dict(shell='1.1'))
+            worker_version={"shell": '1.1'})
         self.expect_commands(
             ExpectShell(workdir='build', command='echo hello')
             .exit(0)
@@ -324,7 +324,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin,
         def extract_fn(rc, stdout, stderr):
             self.assertEqual(
                 (rc, stdout, stderr), (0, 'startend\n', 'STARTEND\n'))
-            return dict(a=1, b=2)
+            return {"a": 1, "b": 2}
         self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expect_commands(
@@ -346,7 +346,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin,
     def test_run_extract_fn_cmdfail(self):
         def extract_fn(rc, stdout, stderr):
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
-            return dict(a=1, b=2)
+            return {"a": 1, "b": 2}
         self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expect_commands(

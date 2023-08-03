@@ -230,7 +230,7 @@ class WampMQ(TestReactorMixin, unittest.TestCase):
 
 
 class FakeConfig:
-    mq = dict(type='wamp', router_url="wss://foo", realm="realm1")
+    mq = {"type": 'wamp', "router_url": 'wss://foo', "realm": 'realm1'}
 
 
 class WampMQReal(TestReactorMixin, unittest.TestCase):

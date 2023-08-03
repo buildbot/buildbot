@@ -40,7 +40,7 @@ class Expect(object):
     """
 
     def __init__(self, command, workdir, **kwargs):
-        self.kwargs = dict(command=command, workdir=workdir)
+        self.kwargs = {"command": command, "workdir": workdir}
         self.kwargs.update(kwargs)
 
         self.result = None
@@ -111,11 +111,21 @@ class FakeRunProcess(object):
 
         # the default values for the constructor kwargs; if we got a default
         # value in **kwargs and didn't expect anything, well count that as OK
-        default_values = dict(environ=None,
-                              sendStdout=True, sendStderr=True, sendRC=True,
-                              timeout=None, maxTime=None, sigtermTime=None, initialStdin=None,
-                              keepStdout=False, keepStderr=False,
-                              logEnviron=True, logfiles={}, usePTY=False)
+        default_values = {
+            "environ": None,
+            "sendStdout": True,
+            "sendStderr": True,
+            "sendRC": True,
+            "timeout": None,
+            "maxTime": None,
+            "sigtermTime": None,
+            "initialStdin": None,
+            "keepStdout": False,
+            "keepStderr": False,
+            "logEnviron": True,
+            "logfiles": {},
+            "usePTY": False
+        }
 
         if not self._expectations:
             raise AssertionError("unexpected instantiation: {0}".format(kwargs))

@@ -144,5 +144,5 @@ class Properties(base.ResourceType):
     def setBuildProperty(self, buildid, name, value, source):
         res = yield self.master.db.builds.setBuildProperty(
             buildid, name, value, source)
-        yield self.generateUpdateEvent(buildid, dict(name=(value, source)))
+        yield self.generateUpdateEvent(buildid, {"name": (value, source)})
         return res

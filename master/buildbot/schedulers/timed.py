@@ -225,7 +225,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         else:
             # There are no changes, but onlyIfChanged is False, so start
             # a build of the latest revision, whatever that is
-            sourcestamps = [dict(codebase=cb) for cb in self.codebases]
+            sourcestamps = [{"codebase": cb} for cb in self.codebases]
             yield self.addBuildsetForSourceStampsWithDefaults(
                 reason=self.reason,
                 sourcestamps=sourcestamps)

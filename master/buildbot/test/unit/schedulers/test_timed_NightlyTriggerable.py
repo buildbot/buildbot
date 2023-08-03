@@ -56,13 +56,16 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
             properties = {}
         properties['scheduler'] = ('test', 'Scheduler')
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStampsWithDefaults', dict(
-                builderNames=None,  # uses the default
-                properties=properties,
-                reason="The NightlyTriggerable scheduler named 'test' "
-                       "triggered this build",
-                sourcestamps=sourcestamps,
-                waited_for=False)),
+            (
+                'addBuildsetForSourceStampsWithDefaults',
+                {
+                    "builderNames": None,  # uses the default
+                    "properties": properties,
+                    "reason": "The NightlyTriggerable scheduler named 'test' triggered this build",
+                    "sourcestamps": sourcestamps,
+                    "waited_for": False
+                }
+            ),
         ])
         self.addBuildsetCalls = []
 
@@ -102,15 +105,25 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
         sched.activate()
 
         sched.trigger(False, [
-            dict(revision='myrev', branch='br', project='p',
-                 repository='r', codebase='cb'),
+            {
+                "revision": 'myrev',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "codebase": 'cb'
+            },
         ], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(sourcestamps=[
-            dict(codebase='cb', branch='br', project='p', repository='r',
-                 revision='myrev'),
+            {
+                "codebase": 'cb',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "revision": 'myrev'
+            },
         ])
 
     def test_timer_twoTriggers(self):
@@ -120,20 +133,35 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
         sched.activate()
 
         sched.trigger(False, [
-            dict(codebase='cb', revision='myrev1', branch='br', project='p',
-                 repository='r')
+            {
+                "codebase": 'cb',
+                "revision": 'myrev1',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r'
+            }
         ], set_props=None)
         sched.trigger(False, [
-            dict(codebase='cb', revision='myrev2', branch='br', project='p',
-                 repository='r')
+            {
+                "codebase": 'cb',
+                "revision": 'myrev2',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r'
+            }
         ], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(sourcestamps=[
-            dict(codebase='cb', branch='br', project='p', repository='r',
-                 # builds the second trigger's revision
-                 revision='myrev2'),
+            {
+                "codebase": 'cb',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                # builds the second trigger's revision
+                "revision": 'myrev2'
+            },
         ])
 
     def test_timer_oneTrigger_then_noBuild(self):
@@ -142,16 +170,24 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched.activate()
 
-        sched.trigger(False, [
-            dict(codebase='cb', revision='myrev', branch='br', project='p',
-                 repository='r')
-        ], set_props=None)
+        sched.trigger(False, [{
+            "codebase": 'cb',
+            "revision": 'myrev',
+            "branch": 'br',
+            "project": 'p',
+            "repository": 'r'
+        }], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(sourcestamps=[
-            dict(codebase='cb', branch='br', project='p', repository='r',
-                 revision='myrev'),
+            {
+                "codebase": 'cb',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "revision": 'myrev'
+            },
         ])
 
         self.clock.advance(60 * 60)  # Run for 1h
@@ -165,28 +201,44 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched.activate()
 
-        sched.trigger(False, [
-            dict(codebase='cb', revision='myrev1', branch='br', project='p',
-                 repository='r')
-        ], set_props=None)
+        sched.trigger(False, [{
+            "codebase": 'cb',
+            "revision": 'myrev1',
+            "branch": 'br',
+            "project": 'p',
+            "repository": 'r'
+        }], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(sourcestamps=[
-            dict(codebase='cb', branch='br', project='p', repository='r',
-                 revision='myrev1'),
+            {
+                "codebase": 'cb',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "revision": 'myrev1'
+            },
         ])
 
-        sched.trigger(False, [
-            dict(codebase='cb', revision='myrev2', branch='br', project='p',
-                 repository='r')
-        ], set_props=None)
+        sched.trigger(False, [{
+            "codebase": 'cb',
+            "revision": 'myrev2',
+            "branch": 'br',
+            "project": 'p',
+            "repository": 'r'
+        }], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(sourcestamps=[
-            dict(codebase='cb', branch='br', project='p', repository='r',
-                 revision='myrev2'),
+            {
+                "codebase": 'cb',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "revision": 'myrev2'
+            },
         ])
 
     def test_savedTrigger(self):
@@ -209,8 +261,13 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
         self.clock.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(sourcestamps=[
-            dict(codebase='cb', branch='br', project='p', repository='r',
-                 revision='myrev'),
+            {
+                "codebase": 'cb',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "revision": 'myrev'
+            },
         ])
 
     def test_savedTrigger_dict(self):
@@ -232,8 +289,13 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
         self.clock.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(sourcestamps=[
-            dict(codebase='cb', branch='br', project='p', repository='r',
-                 revision='myrev'),
+            {
+                "codebase": 'cb',
+                "branch": 'br',
+                "project": 'p',
+                "repository": 'r',
+                "revision": 'myrev'
+            },
         ])
 
     def test_saveTrigger(self):
@@ -246,17 +308,30 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched.activate()
 
-        _, d = sched.trigger(False, [
-            dict(codebase='cb', revision='myrev', branch='br', project='p',
-                 repository='r'),
+        _, d = sched.trigger(False, [{
+            "codebase": 'cb',
+            "revision": 'myrev',
+            "branch": 'br',
+            "project": 'p',
+            "repository": 'r'},
         ], set_props=None)
 
         @d.addCallback
         def cb(_):
-            self.db.state.assertState(self.SCHEDULERID, lastTrigger=[[
-                dict(codebase='cb', revision='myrev',
-                     branch='br', project='p', repository='r'),
-            ], {}, None, None])
+            self.db.state.assertState(
+                self.SCHEDULERID,
+                lastTrigger=[
+                    [
+                        {
+                            "codebase": 'cb',
+                            "revision": 'myrev',
+                            "branch": 'br',
+                            "project": 'p',
+                            "repository": 'r'
+                        },
+                    ], {}, None, None
+                ]
+            )
 
         return d
 
@@ -270,9 +345,12 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched.activate()
 
-        _, d = sched.trigger(False, [
-            dict(codebase='cb', revision='myrev', branch='br', project='p',
-                 repository='r'),
+        _, d = sched.trigger(False, [{
+            "codebase": 'cb',
+            "revision": 'myrev',
+            "branch": 'br',
+            "project": 'p',
+            "repository": 'r'},
         ], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
@@ -293,23 +371,42 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
 
         sched.activate()
 
-        sched.trigger(False, [
-            dict(codebase='cb', revision='myrev', branch='br', project='p',
-                 repository='r'),
+        sched.trigger(False, [{
+            "codebase": 'cb',
+            "revision": 'myrev',
+            "branch": 'br',
+            "project": 'p',
+            "repository": 'r'},
         ], properties.Properties(testprop='test'))
 
-        self.db.state.assertState(self.SCHEDULERID, lastTrigger=[[
-            dict(codebase='cb', revision='myrev',
-                 branch='br', project='p', repository='r'),
-        ], {'testprop': ['test', 'TEST']}, None, None])
+        self.db.state.assertState(
+            self.SCHEDULERID,
+            lastTrigger=[
+                [
+                    {
+                        "codebase": 'cb',
+                        "revision": 'myrev',
+                        "branch": 'br',
+                        "project": 'p',
+                        "repository": 'r'
+                    },
+                ],
+                {'testprop': ['test', 'TEST']}, None, None
+            ]
+        )
 
         self.clock.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
-            properties=dict(testprop=('test', 'TEST')),
+            properties={"testprop": ('test', 'TEST')},
             sourcestamps=[
-                dict(codebase='cb', branch='br', project='p', repository='r',
-                     revision='myrev'),
+                {
+                    "codebase": 'cb',
+                    "branch": 'br',
+                    "project": 'p',
+                    "repository": 'r',
+                    "revision": 'myrev'
+                },
             ])
 
     def test_savedProperties(self):
@@ -334,6 +431,11 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
         self.assertBuildsetAdded(
             properties={'testprop': ('test', 'TEST')},
             sourcestamps=[
-                dict(codebase='cb', branch='br', project='p', repository='r',
-                     revision='myrev'),
+                {
+                    "codebase": 'cb',
+                    "branch": 'br',
+                    "project": 'p',
+                    "repository": 'r',
+                    "revision": 'myrev'
+                },
             ])

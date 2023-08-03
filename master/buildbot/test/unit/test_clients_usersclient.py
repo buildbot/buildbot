@@ -56,8 +56,13 @@ class TestUsersClient(unittest.TestCase):
 
     def _fake_callRemote(self, method, op, bb_username, bb_password, ids, info):
         self.assertEqual(method, 'commandline')
-        self.called_with = dict(op=op, bb_username=bb_username,
-                                bb_password=bb_password, ids=ids, info=info)
+        self.called_with = {
+            "op": op,
+            "bb_username": bb_username,
+            "bb_password": bb_password,
+            "ids": ids,
+            "info": info
+        }
         return defer.succeed(None)
 
     def _fake_loseConnection(self):
@@ -74,9 +79,14 @@ class TestUsersClient(unittest.TestCase):
                     [{'identifier': 'x', 'svn': 'x'}])
 
         self.assertProcess('localhost', 1234,
-                           dict(op='update', bb_username='bb_user',
-                                bb_password='hashed_bb_pass', ids=None,
-                                info=[dict(identifier='x', svn='x')]))
+            {
+                "op": 'update',
+                "bb_username": 'bb_user',
+                "bb_password": 'hashed_bb_pass',
+                "ids": None,
+                "info": [{"identifier": 'x', "svn": 'x'}]
+            }
+        )
 
     @defer.inlineCallbacks
     def test_usersclient_ids(self):
@@ -84,5 +94,5 @@ class TestUsersClient(unittest.TestCase):
         yield uc.send('remove', None, None, ['x'], None)
 
         self.assertProcess('localhost', 1234,
-                           dict(op='remove', bb_username=None,
-                           bb_password=None, ids=['x'], info=None))
+                           {"op": 'remove', "bb_username": None,
+                           "bb_password": None, "ids": ['x'], "info": None})

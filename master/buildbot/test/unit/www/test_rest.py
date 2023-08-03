@@ -317,7 +317,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_not_found(self):
         yield self.render_resource(self.rsrc, b'/not/found')
         self.assertRequest(
-            contentJson=dict(error='Invalid path: not/found'),
+            contentJson={"error": 'Invalid path: not/found'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=404)
 
@@ -325,7 +325,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_invalid_query(self):
         yield self.render_resource(self.rsrc, b'/test?huh=1')
         self.assertRequest(
-            contentJson=dict(error="unrecognized query parameter 'huh'"),
+            contentJson={"error": "unrecognized query parameter 'huh'"},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -412,7 +412,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_limit(self):
         yield self.render_resource(self.rsrc, b'/test?limit=foo!')
         self.assertRequest(
-            contentJson=dict(error="invalid limit"),
+            contentJson={"error": 'invalid limit'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -420,7 +420,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_offset(self):
         yield self.render_resource(self.rsrc, b'/test?offset=foo!')
         self.assertRequest(
-            contentJson=dict(error="invalid offset"),
+            contentJson={"error": 'invalid offset'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -428,7 +428,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_simple_filter_value(self):
         yield self.render_resource(self.rsrc, b'/test?success=sorta')
         self.assertRequest(
-            contentJson=dict(error="invalid filter value for success"),
+            contentJson={"error": 'invalid filter value for success'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -436,7 +436,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_filter_value(self):
         yield self.render_resource(self.rsrc, b'/test?testid__lt=fifteen')
         self.assertRequest(
-            contentJson=dict(error="invalid filter value for testid__lt"),
+            contentJson={"error": 'invalid filter value for testid__lt'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -452,7 +452,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_field(self):
         yield self.render_resource(self.rsrc, b'/test?field=success&field=WTF')
         self.assertRequest(
-            contentJson=dict(error="no such field 'WTF'"),
+            contentJson={"error": "no such field 'WTF'"},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -560,7 +560,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_details_filter_fails(self):
         yield self.render_resource(self.rsrc, b'/test/13?success=false')
         self.assertRequest(
-            contentJson=dict(error="this is not a collection"),
+            contentJson={"error": 'this is not a collection'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 

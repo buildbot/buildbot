@@ -150,7 +150,7 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         # check that it discovered MyResourceType and updated endpoints
         match = self.data.matcher[('test', '10')]
         self.assertIsInstance(match[0], TestEndpoint)
-        self.assertEqual(match[1], dict(testid=10))
+        self.assertEqual(match[1], {"testid": 10})
         match = self.data.matcher[('test', '10', 'p1')]
         self.assertIsInstance(match[0], TestEndpoint)
         match = self.data.matcher[('test', '10', 'p2')]

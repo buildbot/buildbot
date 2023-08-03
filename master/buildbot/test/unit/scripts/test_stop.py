@@ -26,7 +26,7 @@ from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, clean=False, basedir=os.path.abspath('basedir'))
+    config = {"quiet": False, "clean": False, "basedir": os.path.abspath('basedir')}
     config['no-wait'] = kwargs.pop('no_wait', False)
     config.update(kwargs)
     return config

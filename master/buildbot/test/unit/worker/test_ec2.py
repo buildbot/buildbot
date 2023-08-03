@@ -75,10 +75,12 @@ class TestEC2LatentWorker(unittest.TestCase):
             if env in os.environ:
                 del os.environ[env]
         # create key pair is not correctly mocked and need to have fake aws creds configured
-        kw = dict(region_name='us-east-1',
-                  aws_access_key_id='ACCESS_KEY',
-                  aws_secret_access_key='SECRET_KEY',
-                  aws_session_token='SESSION_TOKEN')
+        kw = {
+            "region_name": 'us-east-1',
+            "aws_access_key_id": 'ACCESS_KEY',
+            "aws_secret_access_key": 'SECRET_KEY',
+            "aws_session_token": 'SESSION_TOKEN'
+        }
         c = boto3.client('ec2', **kw)
         r = boto3.resource('ec2', **kw)
         try:

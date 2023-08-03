@@ -88,13 +88,18 @@ class Tests(interfaces.InterfaceTests):
         # TODO: verify buildrequests too
         bsdict = yield self.db.buildsets.getBuildset(bsid)
         validation.verifyDbDict(self, 'bsdict', bsdict)
-        self.assertEqual(bsdict, dict(external_idstring='extid',
-                                      reason='because', sourcestamps=[234],
-                                      submitted_at=datetime.datetime(1970, 4, 18, 7, 39, 19,
-                                                                     tzinfo=UTC),
-                                      complete=False, complete_at=None, results=-1,
-                                      parent_buildid=None, parent_relationship=None,
-                                      bsid=bsid))
+        self.assertEqual(bsdict, {
+            "external_idstring": 'extid',
+            "reason": 'because',
+            "sourcestamps": [234],
+            "submitted_at": datetime.datetime(1970, 4, 18, 7, 39, 19, tzinfo=UTC),
+            "complete": False,
+            "complete_at": None,
+            "results": -1,
+            "parent_buildid": None,
+            "parent_relationship": None,
+            "bsid": bsid
+        })
 
     @defer.inlineCallbacks
     def test_addBuildset_getBuildset_explicit_submitted_at(self):
@@ -106,13 +111,18 @@ class Tests(interfaces.InterfaceTests):
         bsdict = yield self.db.buildsets.getBuildset(bsid_brids[0])
 
         validation.verifyDbDict(self, 'bsdict', bsdict)
-        self.assertEqual(bsdict, dict(external_idstring='extid',
-                                      reason='because', sourcestamps=[234],
-                                      submitted_at=datetime.datetime(1970, 4, 13, 21, 8, 8,
-                                                                     tzinfo=UTC),
-                                      complete=False, complete_at=None, results=-1,
-                                      parent_buildid=None, parent_relationship=None,
-                                      bsid=bsdict['bsid']))
+        self.assertEqual(bsdict, {
+            "external_idstring": 'extid',
+            "reason": 'because',
+            "sourcestamps": [234],
+            "submitted_at": datetime.datetime(1970, 4, 13, 21, 8, 8, tzinfo=UTC),
+            "complete": False,
+            "complete_at": None,
+            "results": -1,
+            "parent_buildid": None,
+            "parent_relationship": None,
+            "bsid": bsdict['bsid']
+        })
 
     @defer.inlineCallbacks
     def do_test_getBuildsetProperties(self, buildsetid, rows, expected):
@@ -128,7 +138,7 @@ class Tests(interfaces.InterfaceTests):
                                     property_value='["one", "fake1"]'),
             fakedb.BuildsetProperty(buildsetid=91, property_name='prop2',
                                     property_value='["two", "fake2"]'),
-        ], dict(prop1=("one", "fake1"), prop2=("two", "fake2")))
+        ], {"prop1": ('one', 'fake1'), "prop2": ('two', 'fake2')})
 
     def test_getBuildsetProperties_empty(self):
         return self.do_test_getBuildsetProperties(91, [
@@ -150,14 +160,18 @@ class Tests(interfaces.InterfaceTests):
         bsdict = yield self.db.buildsets.getBuildset(91)
 
         validation.verifyDbDict(self, 'bsdict', bsdict)
-        self.assertEqual(bsdict, dict(external_idstring='extid',
-                                      reason='rsn', sourcestamps=[234],
-                                      submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
-                                                                     tzinfo=UTC),
-                                      complete=False,
-                                      complete_at=epoch2datetime(0), results=-1,
-                                      bsid=91,
-                                      parent_buildid=None, parent_relationship=None))
+        self.assertEqual(bsdict, {
+            "external_idstring": 'extid',
+            "reason": 'rsn',
+            "sourcestamps": [234],
+            "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+            "complete": False,
+            "complete_at": epoch2datetime(0),
+            "results": -1,
+            "bsid": 91,
+            "parent_buildid": None,
+            "parent_relationship": None
+        })
 
     @defer.inlineCallbacks
     def test_getBuildset_complete(self):
@@ -170,16 +184,18 @@ class Tests(interfaces.InterfaceTests):
         bsdict = yield self.db.buildsets.getBuildset(91)
 
         validation.verifyDbDict(self, 'bsdict', bsdict)
-        self.assertEqual(bsdict, dict(external_idstring='extid',
-                                      reason='rsn', sourcestamps=[234],
-                                      submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
-                                                                     tzinfo=UTC),
-                                      complete=True,
-                                      complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
-                                                                    tzinfo=UTC),
-                                      results=-1,
-                                      bsid=91,
-                                      parent_buildid=None, parent_relationship=None))
+        self.assertEqual(bsdict, {
+            "external_idstring": 'extid',
+            "reason": 'rsn',
+            "sourcestamps": [234],
+            "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+            "complete": True,
+            "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
+            "results": -1,
+            "bsid": 91,
+            "parent_buildid": None,
+            "parent_relationship": None
+        })
 
     @defer.inlineCallbacks
     def test_getBuildset_nosuch(self):
@@ -216,20 +232,29 @@ class Tests(interfaces.InterfaceTests):
         for bsdict in bsdictlist:
             validation.verifyDbDict(self, 'bsdict', bsdict)
         self.assertEqual(sorted(bsdictlist, key=bsdictKey), sorted([
-            dict(external_idstring='extid', reason='rsn1', sourcestamps=[234],
-                 submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
-                                                tzinfo=UTC),
-                 complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
-                                               tzinfo=UTC),
-                 complete=False, results=-1, bsid=91,
-                 parent_buildid=None, parent_relationship=None),
-            dict(external_idstring='extid', reason='rsn2', sourcestamps=[234],
-                 submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16,
-                                                tzinfo=UTC),
-                 complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
-                                               tzinfo=UTC),
-                 complete=True, results=7, bsid=92,
-                 parent_buildid=None, parent_relationship=None),
+            {
+                "external_idstring": 'extid',
+                "reason": 'rsn1',
+                "sourcestamps": [234],
+                "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+                "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
+                "complete": False,
+                "results": -1,
+                "bsid": 91,
+                "parent_buildid": None,
+                "parent_relationship": None
+            }, {
+                "external_idstring": 'extid',
+                "reason": 'rsn2',
+                "sourcestamps": [234],
+                "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
+                "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
+                "complete": True,
+                "results": 7,
+                "bsid": 92,
+                "parent_buildid": None,
+                "parent_relationship": None
+            },
         ], key=bsdictKey))
 
     @defer.inlineCallbacks
@@ -240,13 +265,18 @@ class Tests(interfaces.InterfaceTests):
         for bsdict in bsdictlist:
             validation.verifyDbDict(self, 'bsdict', bsdict)
         self.assertEqual(bsdictlist, [
-            dict(external_idstring='extid', reason='rsn2', sourcestamps=[234],
-                 submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16,
-                                                tzinfo=UTC),
-                 complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
-                                               tzinfo=UTC),
-                 complete=True, results=7, bsid=92,
-                 parent_buildid=None, parent_relationship=None),
+            {
+                "external_idstring": 'extid',
+                "reason": 'rsn2',
+                "sourcestamps": [234],
+                "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
+                "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
+                "complete": True,
+                "results": 7,
+                "bsid": 92,
+                "parent_buildid": None,
+                "parent_relationship": None
+            },
         ])
 
     @defer.inlineCallbacks
@@ -257,13 +287,18 @@ class Tests(interfaces.InterfaceTests):
         for bsdict in bsdictlist:
             validation.verifyDbDict(self, 'bsdict', bsdict)
         self.assertEqual(bsdictlist, [
-            dict(external_idstring='extid', reason='rsn1', sourcestamps=[234],
-                 submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
-                                                tzinfo=UTC),
-                 complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
-                                               tzinfo=UTC),
-                 complete=False, results=-1, bsid=91,
-                 parent_buildid=None, parent_relationship=None),
+            {
+                "external_idstring": 'extid',
+                "reason": 'rsn1',
+                "sourcestamps": [234],
+                "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+                "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
+                "complete": False,
+                "results": -1,
+                "bsid": 91,
+                "parent_buildid": None,
+                "parent_relationship": None
+            },
         ])
 
     def test_completeBuildset_already_completed(self):
@@ -334,20 +369,29 @@ class Tests(interfaces.InterfaceTests):
                                                             repository='repo_a')
 
         self.assertEqual(bsdictlist, [
-            dict(external_idstring='extid', reason='rsn1', sourcestamps=[91],
-                 submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
-                                                tzinfo=UTC),
-                 complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
-                                               tzinfo=UTC),
-                 complete=False, results=-1, bsid=91,
-                 parent_buildid=None, parent_relationship=None),
-            dict(external_idstring='extid', reason='rsn2', sourcestamps=[91],
-                 submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16,
-                                                tzinfo=UTC),
-                 complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
-                                               tzinfo=UTC),
-                 complete=True, results=7, bsid=92,
-                 parent_buildid=None, parent_relationship=None)
+            {
+                "external_idstring": 'extid',
+                "reason": 'rsn1',
+                "sourcestamps": [91],
+                "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+                "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
+                "complete": False,
+                "results": -1,
+                "bsid": 91,
+                "parent_buildid": None,
+                "parent_relationship": None
+            }, {
+                "external_idstring": 'extid',
+                "reason": 'rsn2',
+                "sourcestamps": [91],
+                "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
+                "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
+                "complete": True,
+                "results": 7,
+                "bsid": 92,
+                "parent_buildid": None,
+                "parent_relationship": None
+            }
         ])
 
     @defer.inlineCallbacks
@@ -358,13 +402,18 @@ class Tests(interfaces.InterfaceTests):
                                                             repository='repo_a')
 
         self.assertEqual(bsdictlist, [
-            dict(external_idstring='extid', reason='rsn2', sourcestamps=[91],
-                 submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16,
-                                                tzinfo=UTC),
-                 complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
-                                               tzinfo=UTC),
-                 complete=True, results=7, bsid=92,
-                 parent_buildid=None, parent_relationship=None),
+            {
+                "external_idstring": 'extid',
+                "reason": 'rsn2',
+                "sourcestamps": [91],
+                "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
+                "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
+                "complete": True,
+                "results": 7,
+                "bsid": 92,
+                "parent_buildid": None,
+                "parent_relationship": None
+            },
         ])
 
     @defer.inlineCallbacks
@@ -434,7 +483,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_addBuildset_bigger(self):
-        props = dict(prop=(['list'], 'test'))
+        props = {"prop": (['list'], 'test')}
         yield defer.succeed(None)
         xxx_todo_changeme1 = yield self.db.buildsets.addBuildset(
                                         sourcestamps=[234], reason='because',
@@ -529,7 +578,7 @@ class TestRealDB(db.TestCase,
             "put", mockedCachePut)
 
         # Setup a dummy set of properties to insert with the buildset.
-        props = dict(prop=(['list'], 'test'))
+        props = {"prop": (['list'], 'test')}
 
         # Now, call `addBuildset`, and verify that the above properties
         # were seed in the `getBuildsetProperties` cache.

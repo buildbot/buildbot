@@ -29,8 +29,7 @@ from buildbot.test.util import scheduler
 class CommonStuffMixin:
 
     def makeScheduler(self, klass, **kwargs_override):
-        kwargs = dict(name="tsched", treeStableTimer=60,
-                      builderNames=['tbuild'])
+        kwargs = {"name": "tsched", "treeStableTimer": 60, "builderNames": ['tbuild']}
         kwargs.update(kwargs_override)
 
         self.master.db.insert_test_data(
@@ -331,21 +330,29 @@ class SingleBranchScheduler(CommonStuffMixin,
 
     def mkbs(self, **kwargs):
         # create buildset for expected_buildset in assertBuildset.
-        bs = dict(reason=self.sched.reason, external_idstring=None, sourcestampsetid=100,
-                  properties=[('scheduler', ('test', 'Scheduler'))])
+        bs = {
+            "reason": self.sched.reason,
+            "external_idstring": None,
+            "sourcestampsetid": 100,
+            "properties": [('scheduler', ('test', 'Scheduler'))]
+        }
         bs.update(kwargs)
         return bs
 
     def mkss(self, **kwargs):
         # create sourcestamp for expected_sourcestamps in assertBuildset.
-        ss = dict(
-            branch='master', project='', repository='', sourcestampsetid=100)
+        ss = {
+            "branch": 'master',
+            "project": '',
+            "repository": '',
+            "sourcestampsetid": 100
+        }
         ss.update(kwargs)
         return ss
 
     def mkch(self, **kwargs):
         # create changeset and insert in database.
-        chd = dict(branch='master', project='', repository='')
+        chd = {"branch": 'master', "project": '', "repository": ''}
         chd.update(kwargs)
         ch = self.makeFakeChange(**chd)
         # fakedb.Change requires changeid instead of number
@@ -423,8 +430,9 @@ class SingleBranchScheduler(CommonStuffMixin,
                               True)
 
         self.db.state.assertState(self.OBJECTID, lastCodebases={
-            'a': dict(branch='master', repository='A', revision='1234:abc', lastChange=0),
-            'b': dict(branch='master', repository='B', revision='2345:bcd', lastChange=1)})
+            'a': {"branch": 'master', "repository": 'A', "revision": '1234:abc', "lastChange": 0},
+            'b': {"branch": 'master', "repository": 'B', "revision": '2345:bcd', "lastChange": 1}
+        })
 
         yield sched.deactivate()
 
@@ -451,7 +459,13 @@ class SingleBranchScheduler(CommonStuffMixin,
                               True)
 
         self.db.state.assertState(self.OBJECTID, lastCodebases={
-            'a': dict(branch='master', repository='A', revision='5555:def', lastChange=20)})
+            'a': {
+                "branch": 'master',
+                "repository": 'A',
+                "revision": '5555:def',
+                "lastChange": 20
+            }
+        })
 
         yield sched.deactivate()
 
@@ -461,12 +475,21 @@ class SingleBranchScheduler(CommonStuffMixin,
                                        treeStableTimer=None, branch='master',
                                        codebases=self.codebases,
                                        createAbsoluteSourceStamps=True)
-        sched._lastCodebases = {'a': dict(branch='master', repository='A',
-                                          revision='5555:def', lastChange=20)}
+        sched._lastCodebases = {
+            'a': {
+                "branch": 'master',
+                "repository": 'A',
+                "revision": '5555:def',
+                "lastChange": 20
+        }}
 
         cbd = yield sched.getCodebaseDict('a')
-        self.assertEqual(cbd, dict(branch='master', repository='A',
-                                   revision='5555:def', lastChange=20))
+        self.assertEqual(cbd, {
+            "branch": 'master',
+            "repository": 'A',
+            "revision": '5555:def',
+            "lastChange": 20
+        })
 
     @defer.inlineCallbacks
     def test_getCodebaseDict_no_createAbsoluteSourceStamps(self):
@@ -474,8 +497,9 @@ class SingleBranchScheduler(CommonStuffMixin,
                                        treeStableTimer=None, branch='master',
                                        codebases=self.codebases,
                                        createAbsoluteSourceStamps=False)
-        sched._lastCodebases = {'a': dict(branch='master', repository='A',
-                                          revision='5555:def', lastChange=20)}
+        sched._lastCodebases = {
+            'a': {"branch": 'master', "repository": 'A', "revision": '5555:def', "lastChange": 20}
+        }
 
         cbd = yield sched.getCodebaseDict('a')
         # _lastCodebases is ignored

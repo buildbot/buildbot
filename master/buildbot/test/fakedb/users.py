@@ -50,19 +50,28 @@ class FakeUsersComponent(FakeDBComponent):
     def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, User):
-                self.users[row.uid] = dict(identifier=row.identifier,
-                                           bb_username=row.bb_username,
-                                           bb_password=row.bb_password)
+                self.users[row.uid] = {
+                    "identifier": row.identifier,
+                    "bb_username": row.bb_username,
+                    "bb_password": row.bb_password
+                }
 
             if isinstance(row, UserInfo):
                 assert row.uid in self.users
                 if row.uid not in self.users_info:
-                    self.users_info[row.uid] = [dict(attr_type=row.attr_type,
-                                                     attr_data=row.attr_data)]
+                    self.users_info[row.uid] = [
+                        {
+                            "attr_type": row.attr_type,
+                            "attr_data": row.attr_data
+                        }
+                    ]
                 else:
                     self.users_info[row.uid].append(
-                        dict(attr_type=row.attr_type,
-                             attr_data=row.attr_data))
+                        {
+                            "attr_type": row.attr_type,
+                            "attr_data": row.attr_data
+                        }
+                    )
 
     def _user2dict(self, uid):
         usdict = None
@@ -133,8 +142,7 @@ class FakeUsersComponent(FakeDBComponent):
                         attr['attr_data'] = attr_data
                         break
                 else:
-                    infos.append(dict(attr_type=attr_type,
-                                      attr_data=attr_data))
+                    infos.append({"attr_type": attr_type, "attr_data": attr_data})
             except KeyError:
                 pass
 

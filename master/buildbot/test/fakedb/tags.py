@@ -37,16 +37,12 @@ class FakeTagsComponent(FakeDBComponent):
     def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Tag):
-                self.tags[row.id] = dict(
-                    id=row.id,
-                    name=row.name)
+                self.tags[row.id] = {"id": row.id, "name": row.name}
 
     def findTagId(self, name):
         for m in self.tags.values():
             if m['name'] == name:
                 return defer.succeed(m['id'])
         id = len(self.tags) + 1
-        self.tags[id] = dict(
-            id=id,
-            name=name)
+        self.tags[id] = {"id": id, "name": name}
         return defer.succeed(id)

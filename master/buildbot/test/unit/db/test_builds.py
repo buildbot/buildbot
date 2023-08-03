@@ -130,10 +130,18 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.backgroundData + [self.threeBuilds[0]])
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
-        self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
-                                     masterid=88, builderid=77, workerid=13,
-                                     started_at=epoch2datetime(TIME1), complete_at=None,
-                                     state_string='build 5', results=None))
+        self.assertEqual(bdict, {
+            "id": 50,
+            "number": 5,
+            "buildrequestid": 42,
+            "masterid": 88,
+            "builderid": 77,
+            "workerid": 13,
+            "started_at": epoch2datetime(TIME1),
+            "complete_at": None,
+            "state_string": 'build 5',
+            "results": None
+        })
 
     @defer.inlineCallbacks
     def test_getBuild_missing(self):
@@ -280,10 +288,18 @@ class Tests(interfaces.InterfaceTests):
                                                  state_string='test test2')
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
-        self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
-                                     masterid=88, builderid=77, workerid=13,
-                                     started_at=epoch2datetime(TIME1), complete_at=None,
-                                     state_string='test test2', results=None))
+        self.assertEqual(bdict, {
+            "id": 50,
+            "number": 5,
+            "buildrequestid": 42,
+            "masterid": 88,
+            "builderid": 77,
+            "workerid": 13,
+            "started_at": epoch2datetime(TIME1),
+            "complete_at": None,
+            "state_string": 'test test2',
+            "results": None
+        })
 
     @defer.inlineCallbacks
     def test_finishBuild(self):
@@ -292,12 +308,18 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.builds.finishBuild(buildid=50, results=7)
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
-        self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
-                                     masterid=88, builderid=77, workerid=13,
-                                     started_at=epoch2datetime(TIME1),
-                                     complete_at=epoch2datetime(TIME4),
-                                     state_string='build 5',
-                                     results=7))
+        self.assertEqual(bdict, {
+            "id": 50,
+            "number": 5,
+            "buildrequestid": 42,
+            "masterid": 88,
+            "builderid": 77,
+            "workerid": 13,
+            "started_at": epoch2datetime(TIME1),
+            "complete_at": epoch2datetime(TIME4),
+            "state_string": 'build 5',
+            "results": 7
+        })
 
     @defer.inlineCallbacks
     def testgetBuildPropertiesEmpty(self):

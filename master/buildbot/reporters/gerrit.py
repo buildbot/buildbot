@@ -46,7 +46,7 @@ def makeReviewResult(message, *labels):
     """
     helper to produce a review result
     """
-    return dict(message=message, labels=dict(labels))
+    return {"message": message, "labels": dict(labels)}
 
 
 def _handleLegacyResult(result):

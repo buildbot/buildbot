@@ -111,14 +111,15 @@ class CompositeStepMixinMaster(RunMasterBase):
     def do_compositemixin_test(self, is_list_mkdir, is_list_rmdir):
         yield self.setup_config(is_list_mkdir=is_list_mkdir, is_list_rmdir=is_list_rmdir)
 
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none"
-                      )
+        change = {
+            "branch": "master",
+            "files": ["foo.c"],
+            "author": "me@foo.com",
+            "committer": "me@foo.com",
+            "comments": "good stuff",
+            "revision": "HEAD",
+            "project": "none"
+        }
         build = yield self.doForceBuild(wantSteps=True, useChange=change,
                                         wantLogs=True)
         self.assertEqual(build['buildid'], 1)

@@ -545,8 +545,12 @@ class CodebaseParameter(NestedParameter):
         if label is None and codebase:
             label = "Codebase: " + codebase
 
-        fields_dict = dict(branch=branch, revision=revision,
-                           repository=repository, project=project)
+        fields_dict = {
+            "branch": branch,
+            "revision": revision,
+            "repository": repository,
+            "project": project
+        }
         for k, v in fields_dict.items():
             if v is DefaultField:
                 v = StringParameter(name=k, label=k.capitalize() + ":")
@@ -732,8 +736,7 @@ class ForceScheduler(base.BaseScheduler):
                              f"or CodebaseParameter objects: {repr(codebases)}")
 
             self.forcedProperties.append(codebase)
-            codebase_dict[codebase.codebase] = dict(
-                branch='', repository='', revision='')
+            codebase_dict[codebase.codebase] = {"branch": '', "repository": '', "revision": ''}
 
         super().__init__(name=name,
                          builderNames=builderNames,

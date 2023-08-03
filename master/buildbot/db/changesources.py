@@ -34,10 +34,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
-            insert_values=dict(
-                name=name,
-                name_hash=name_hash,
-            ))
+            insert_values={"name": name, "name_hash": name_hash})
 
     # returns a Deferred that returns None
     def setChangeSourceMaster(self, changesourceid, masterid):
@@ -55,7 +52,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             try:
                 q = cs_mst_tbl.insert()
                 conn.execute(q,
-                             dict(changesourceid=changesourceid, masterid=masterid))
+                             {"changesourceid": changesourceid, "masterid": masterid})
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this changesource.
                 raise ChangeSourceAlreadyClaimedError from e
@@ -99,7 +96,6 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                            cs_mst_tbl.c.masterid],
                           from_obj=join, whereclause=wc)
 
-            return [dict(id=row.id, name=row.name,
-                         masterid=row.masterid)
+            return [{"id": row.id, "name": row.name, "masterid": row.masterid}
                     for row in conn.execute(q).fetchall()]
         return self.db.pool.do(thd)

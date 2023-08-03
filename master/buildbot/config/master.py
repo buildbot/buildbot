@@ -149,23 +149,16 @@ class MasterConfig(util.ComparableMixin):
         self.protocols = {}
         self.buildbotNetUsageData = "basic"
 
-        self.validation = dict(
-            branch=re.compile(r'^[\w.+/~-]*$'),
-            revision=re.compile(r'^[ \w\.\-/]*$'),
-            property_name=re.compile(r'^[\w\.\-/~:]*$'),
-            property_value=re.compile(r'^[\w\.\-/~:]*$'),
-        )
-        self.db = dict(
-            db_url=DEFAULT_DB_URL,
-        )
-        self.mq = dict(
-            type='simple',
-        )
+        self.validation = {
+            "branch": re.compile(r'^[\w.+/~-]*$'),
+            "revision": re.compile(r'^[ \w\.\-/]*$'),
+            "property_name": re.compile(r'^[\w\.\-/~:]*$'),
+            "property_value": re.compile(r'^[\w\.\-/~:]*$'),
+        }
+        self.db = {"db_url": DEFAULT_DB_URL}
+        self.mq = {"type": 'simple'}
         self.metrics = None
-        self.caches = dict(
-            Builds=15,
-            Changes=10,
-        )
+        self.caches = {"Builds": 15, "Changes": 10}
         self.schedulers = {}
         self.secretsProviders = []
         self.builders = []
@@ -176,14 +169,14 @@ class MasterConfig(util.ComparableMixin):
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
-        self.www = dict(
-            port=None,
-            plugins={},
-            auth=auth.NoAuth(),
-            authz=authz.Authz(),
-            avatar_methods=avatar.AvatarGravatar(),
-            logfileName='http.log',
-        )
+        self.www = {
+            "port": None,
+            "plugins": {},
+            "auth": auth.NoAuth(),
+            "authz": authz.Authz(),
+            "avatar_methods": avatar.AvatarGravatar(),
+            "logfileName": 'http.log',
+        }
         self.services = {}
 
     _known_config_keys = set([
@@ -469,7 +462,7 @@ class MasterConfig(util.ComparableMixin):
         return DEFAULT_DB_URL
 
     def load_db(self, filename, config_dict):
-        self.db = dict(db_url=self.getDbUrlFromConfig(config_dict))
+        self.db = {"db_url": self.getDbUrlFromConfig(config_dict)}
 
     def load_mq(self, filename, config_dict):
         from buildbot.mq import connector  # avoid circular imports

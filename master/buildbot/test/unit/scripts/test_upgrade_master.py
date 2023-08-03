@@ -35,7 +35,7 @@ from buildbot.test.util import www
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, replace=False, basedir='test')
+    config = {"quiet": False, "replace": False, "basedir": 'test'}
     config.update(kwargs)
     return config
 

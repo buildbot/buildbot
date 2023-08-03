@@ -127,7 +127,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         build['properties']['hhh'] = ('vvv', 'fake')
         msgdict = create_msgdict()
         mn = yield self.setupMailNotifier('from@example.org',
-                                          extraHeaders=dict(hhh=properties.Property('hhh')))
+            extraHeaders={"hhh": properties.Property('hhh')})
         # add some Unicode to detect encoding problems
         m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, [build])
 
@@ -143,7 +143,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         builds = [build, copy.deepcopy(build)]
         builds[1]['builder']['name'] = 'builder2'
         msgdict = create_msgdict()
-        mn = yield self.setupMailNotifier('from@example.org', extraHeaders=dict(hhh='vvv'))
+        mn = yield self.setupMailNotifier('from@example.org', extraHeaders={"hhh": 'vvv'})
         m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, builds)
 
         txt = m.as_string()

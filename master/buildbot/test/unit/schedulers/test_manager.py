@@ -43,7 +43,7 @@ class SchedulerManager(unittest.TestCase):
         self.master.db.state.getObjectId = getObjectId
 
         def getScheduler(sched_id):
-            return defer.succeed(dict(enabled=True))
+            return defer.succeed({"enabled": True})
 
         self.master.db.schedulers.getScheduler = getScheduler
 
@@ -102,7 +102,7 @@ class SchedulerManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigService_add_and_change_and_remove(self):
         sch1 = self.makeSched(self.ReconfigSched, 'sch1', attr='alpha')
-        self.new_config.schedulers = dict(sch1=sch1)
+        self.new_config.schedulers = {"sch1": sch1}
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
@@ -112,7 +112,7 @@ class SchedulerManager(unittest.TestCase):
 
         sch1_new = self.makeSched(self.ReconfigSched, 'sch1', attr='beta')
         sch2 = self.makeSched(self.ReconfigSched, 'sch2', attr='alpha')
-        self.new_config.schedulers = dict(sch1=sch1_new, sch2=sch2)
+        self.new_config.schedulers = {"sch1": sch1_new, "sch2": sch2}
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
@@ -137,7 +137,7 @@ class SchedulerManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigService_class_name_change(self):
         sch1 = self.makeSched(self.ReconfigSched, 'sch1')
-        self.new_config.schedulers = dict(sch1=sch1)
+        self.new_config.schedulers = {"sch1": sch1}
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
@@ -146,7 +146,7 @@ class SchedulerManager(unittest.TestCase):
         self.assertEqual(sch1.reconfig_count, 1)
 
         sch1_new = self.makeSched(self.ReconfigSched2, 'sch1')
-        self.new_config.schedulers = dict(sch1=sch1_new)
+        self.new_config.schedulers = {"sch1": sch1_new}
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
@@ -158,7 +158,7 @@ class SchedulerManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigService_not_reconfigurable(self):
         sch1 = self.makeSched(self.Sched, 'sch1', attr='beta')
-        self.new_config.schedulers = dict(sch1=sch1)
+        self.new_config.schedulers = {"sch1": sch1}
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
@@ -166,7 +166,7 @@ class SchedulerManager(unittest.TestCase):
         self.assertIdentical(sch1.master, self.master)
 
         sch1_new = self.makeSched(self.Sched, 'sch1', attr='alpha')
-        self.new_config.schedulers = dict(sch1=sch1_new)
+        self.new_config.schedulers = {"sch1": sch1_new}
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
@@ -180,7 +180,7 @@ class SchedulerManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigService_not_reconfigurable_no_change(self):
         sch1 = self.makeSched(self.Sched, 'sch1', attr='beta')
-        self.new_config.schedulers = dict(sch1=sch1)
+        self.new_config.schedulers = {"sch1": sch1}
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
@@ -188,7 +188,7 @@ class SchedulerManager(unittest.TestCase):
         self.assertIdentical(sch1.master, self.master)
 
         sch1_new = self.makeSched(self.Sched, 'sch1', attr='beta')
-        self.new_config.schedulers = dict(sch1=sch1_new)
+        self.new_config.schedulers = {"sch1": sch1_new}
 
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 

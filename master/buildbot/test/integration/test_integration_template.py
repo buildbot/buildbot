@@ -53,14 +53,15 @@ class ShellMaster(RunMasterBase):
     def test_shell(self):
         yield self.setup_config()
         # if you don't need change, you can just remove this change, and useChange parameter
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none"
-                      )
+        change = {
+            "branch": "master",
+            "files": ["foo.c"],
+            "author": "me@foo.com",
+            "committer": "me@foo.com",
+            "comments": "good stuff",
+            "revision": "HEAD",
+            "project": "none"
+        }
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True,
                                         wantProperties=True)
         self.assertEqual(build['buildid'], 1)

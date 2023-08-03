@@ -73,9 +73,10 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 
         worker = yield self.get(None, kwargs)
         if worker is not None:
-            self.master.mq.produce(("control", "worker",
-                                    str(worker['workerid']), action),
-                                dict(reason=kwargs.get('reason', args.get('reason', 'no reason'))))
+            self.master.mq.produce(
+            ("control", "worker", str(worker["workerid"]), action),
+            {"reason": kwargs.get("reason", args.get("reason", "no reason"))},
+        )
         else:
             raise exceptions.exceptions.InvalidPathError("worker not found")
 

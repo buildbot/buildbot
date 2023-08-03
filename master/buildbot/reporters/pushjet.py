@@ -97,5 +97,5 @@ class PushjetNotifier(ReporterBase):
 
     def sendNotification(self, params):
         twlog.msg("sending pushjet notification")
-        params.update(dict(secret=self.secret))
+        params.update({"secret": self.secret})
         return self._http.post('/message', data=params)

@@ -180,13 +180,16 @@ class Tests(interfaces.InterfaceTests):
         ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
         validation.verifyDbDict(self, 'ssdict', ssdict)
-        self.assertEqual(dict((k, v) for k, v in ssdict.items()
-                              if k.startswith('patch_')),
-                         dict(patch_body=b'hello, world',
-                              patch_level=3,
-                              patch_author='bar',
-                              patch_comment='foo',
-                              patch_subdir='/foo'))
+        self.assertEqual(
+            {k: v for k, v in ssdict.items() if k.startswith('patch_')},
+            {
+                "patch_body": b'hello, world',
+                "patch_level": 3,
+                "patch_author": 'bar',
+                "patch_comment": 'foo',
+                "patch_subdir": '/foo'
+            }
+        )
 
     @defer.inlineCallbacks
     def test_getSourceStamp_nosuch(self):

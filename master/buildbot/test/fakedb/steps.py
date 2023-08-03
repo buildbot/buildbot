@@ -57,17 +57,18 @@ class FakeStepsComponent(FakeDBComponent):
         return id
 
     def _row2dict(self, row):
-        return dict(
-            id=row['id'],
-            buildid=row['buildid'],
-            number=row['number'],
-            name=row['name'],
-            started_at=epoch2datetime(row['started_at']),
-            complete_at=epoch2datetime(row['complete_at']),
-            state_string=row['state_string'],
-            results=row['results'],
-            urls=json.loads(row['urls_json']),
-            hidden=bool(row['hidden']))
+        return {
+            "id": row['id'],
+            "buildid": row['buildid'],
+            "number": row['number'],
+            "name": row['name'],
+            "started_at": epoch2datetime(row['started_at']),
+            "complete_at": epoch2datetime(row['complete_at']),
+            "state_string": row['state_string'],
+            "results": row['results'],
+            "urls": json.loads(row['urls_json']),
+            "hidden": bool(row['hidden'])
+        }
 
     def getStep(self, stepid=None, buildid=None, number=None, name=None):
         if stepid is not None:
@@ -157,7 +158,7 @@ class FakeStepsComponent(FakeDBComponent):
         b = self.steps.get(stepid)
         if b:
             urls = json.loads(b['urls_json'])
-            url_item = dict(name=name, url=url)
+            url_item = {"name": name, "url": url}
             if url_item not in urls:
                 urls.append(url_item)
             b['urls_json'] = json.dumps(urls)

@@ -29,7 +29,7 @@ class TestGitHub(test_source_git.TestGit):
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'),
-            dict(branch='refs/pull/1234/merge', revision='12345678'))
+            {"branch": 'refs/pull/1234/merge', "revision": '12345678'})
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',
@@ -70,7 +70,7 @@ class TestGitHub(test_source_git.TestGit):
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'),
-            dict(branch='refs/pull/1234/head', revision='12345678'))
+            {"branch": 'refs/pull/1234/head', "revision": '12345678'})
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',

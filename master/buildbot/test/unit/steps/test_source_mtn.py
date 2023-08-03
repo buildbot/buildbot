@@ -708,7 +708,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'),
-            dict(revision='abcdef01',))
+            {"revision": 'abcdef01'})
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',

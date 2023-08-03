@@ -57,13 +57,12 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             transaction = conn.begin()
             inserted_user = False
             try:
-                r = conn.execute(tbl.insert(), dict(identifier=identifier))
+                r = conn.execute(tbl.insert(), {"identifier": identifier})
                 uid = r.inserted_primary_key[0]
                 inserted_user = True
 
                 conn.execute(tbl_info.insert(),
-                             dict(uid=uid, attr_type=attr_type,
-                                  attr_data=attr_data))
+                             {"uid": uid, "attr_type": attr_type, "attr_data": attr_data})
 
                 transaction.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
@@ -151,7 +150,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             dicts = []
             if rows:
                 for row in rows:
-                    ud = dict(uid=row.uid, identifier=row.identifier)
+                    ud = {"uid": row.uid, "identifier": row.identifier}
                     dicts.append(ud)
             return dicts
         return self.db.pool.do(thd)

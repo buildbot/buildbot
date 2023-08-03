@@ -32,21 +32,24 @@ from buildbot.worker import openstack
 
 
 class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
-    os_auth = dict(
-        os_username='user',
-        os_password='pass',
-        os_tenant_name='tenant',
-        os_auth_url='auth')
+    os_auth = {
+        "os_username": 'user',
+        "os_password": 'pass',
+        "os_tenant_name": 'tenant',
+        "os_auth_url": 'auth'
+    }
 
-    os_auth_custom = dict(
-        token='openstack-token',
-        auth_type='token',
-        auth_url='auth')
+    os_auth_custom = {
+        "token": 'openstack-token',
+        "auth_type": 'token',
+        "auth_url": 'auth'
+    }
 
-    bs_image_args = dict(
-        flavor=1,
-        image='image-uuid',
-        **os_auth)
+    bs_image_args = {
+        "flavor": 1,
+        "image": 'image-uuid',
+        **os_auth
+    }
 
     def setUp(self):
         self.setup_test_reactor()

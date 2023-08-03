@@ -96,11 +96,12 @@ class OAuth2Auth(auth.AuthBase):
         self.homeUri = new_config.buildbotURL
 
     def getConfigDict(self):
-        return dict(name=self.name,
-                    oauth2=True,
-                    fa_icon=self.faIcon,
-                    autologin=self.autologin
-                    )
+        return {
+            "name": self.name,
+            "oauth2": True,
+            "fa_icon": self.faIcon,
+            "autologin": self.autologin
+        }
 
     def getLoginResource(self):
         return OAuth2LoginResource(self.master, self)
@@ -116,7 +117,7 @@ class OAuth2Auth(auth.AuthBase):
         oauth_params = {'redirect_uri': self.loginUri,
                         'client_id': clientId, 'response_type': 'code'}
         if redirect_url is not None:
-            oauth_params['state'] = urlencode(dict(redirect=redirect_url))
+            oauth_params['state'] = urlencode({"redirect": redirect_url})
         oauth_params.update(self.authUriAdditionalParams)
         sorted_oauth_params = sorted(oauth_params.items(), key=lambda val: val[0])
         return f"{self.authUri}?{urlencode(sorted_oauth_params)}"
@@ -180,17 +181,19 @@ class GoogleAuth(OAuth2Auth):
     resourceEndpoint = "https://www.googleapis.com/oauth2/v1"
     authUri = 'https://accounts.google.com/o/oauth2/auth'
     tokenUri = 'https://accounts.google.com/o/oauth2/token'
-    authUriAdditionalParams = dict(scope=" ".join([
+    authUriAdditionalParams = {"scope": ' '.join([
                                    'https://www.googleapis.com/auth/userinfo.email',
                                    'https://www.googleapis.com/auth/userinfo.profile'
-                                   ]))
+                                ])}
 
     def getUserInfoFromOAuthClient(self, c):
         data = self.get(c, '/userinfo')
-        return dict(full_name=data["name"],
-                    username=data['email'].split("@")[0],
-                    email=data["email"],
-                    avatar_url=data["picture"])
+        return {
+            "full_name": data["name"],
+            "username": data['email'].split("@")[0],
+            "email": data["email"],
+            "avatar_url": data["picture"]
+        }
 
 
 class GitHubAuth(OAuth2Auth):
@@ -281,10 +284,12 @@ class GitHubAuth(OAuth2Auth):
                 user['email'] = email['email']
                 break
         orgs = self.get(c, '/user/orgs')
-        return dict(full_name=user['name'],
-                    email=user['email'],
-                    username=user['login'],
-                    groups=[org['login'] for org in orgs])
+        return {
+            "full_name": user['name'],
+            "email": user['email'],
+            "username": user['login'],
+            "groups": [org['login'] for org in orgs]
+        }
 
     def createSessionFromToken(self, token):
         s = requests.Session()
@@ -318,11 +323,13 @@ class GitHubAuth(OAuth2Auth):
             log.info('{klass} GraphQL Response: {response}',
                      klass=self.__class__.__name__,
                      response=data)
-        user_info = dict(full_name=data['viewer']['name'],
-                         email=data['viewer']['email'],
-                         username=data['viewer']['login'],
-                         groups=[org['node']['login'] for org in
-                                 data['viewer']['organizations']['edges']])
+        user_info = {
+            "full_name": data['viewer']['name'],
+            "email": data['viewer']['email'],
+            "username": data['viewer']['login'],
+            "groups": [org['node']['login'] for org in
+                data['viewer']['organizations']['edges']]
+        }
         if self.getTeamsMembership:
             orgs_name_slug_mapping = {
                 self._orgname_slug_sub_re.sub('_', n): n
@@ -372,11 +379,13 @@ class GitLabAuth(OAuth2Auth):
     def getUserInfoFromOAuthClient(self, c):
         user = self.get(c, "/user")
         groups = self.get(c, "/groups")
-        return dict(full_name=user["name"],
-                    username=user["username"],
-                    email=user["email"],
-                    avatar_url=user["avatar_url"],
-                    groups=[g["path"] for g in groups])
+        return {
+            "full_name": user["name"],
+            "username": user["username"],
+            "email": user["email"],
+            "avatar_url": user["avatar_url"],
+            "groups": [g["path"] for g in groups]
+        }
 
 
 class BitbucketAuth(OAuth2Auth):
@@ -394,7 +403,9 @@ class BitbucketAuth(OAuth2Auth):
                 user['email'] = email['email']
                 break
         orgs = self.get(c, '/workspaces?role=member')
-        return dict(full_name=user['display_name'],
-                    email=user['email'],
-                    username=user['username'],
-                    groups=[org['slug'] for org in orgs["values"]])
+        return {
+            "full_name": user['display_name'],
+            "email": user['email'],
+            "username": user['username'],
+            "groups": [org['slug'] for org in orgs["values"]]
+        }

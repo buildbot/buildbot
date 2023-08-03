@@ -45,7 +45,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         res = yield self.render_resource(rsrc, b'/')
         self.assertEqual(
-            res, dict(redirected=avatar.AvatarResource.defaultAvatarUrl))
+            res, {"redirected": avatar.AvatarResource.defaultAvatarUrl})
 
     @defer.inlineCallbacks
     def test_gravatar(self):
@@ -55,8 +55,11 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, b'/?email=foo')
-        self.assertEqual(res, dict(redirected=b'//www.gravatar.com/avatar/acbd18db4cc2f85ce'
-                                   b'def654fccc4a4d8?d=retro&s=32'))
+        self.assertEqual(
+            res,
+            {"redirected": b'//www.gravatar.com/avatar/acbd18db4cc2f85ce'
+                b'def654fccc4a4d8?d=retro&s=32'}
+        )
 
     @defer.inlineCallbacks
     def test_avatar_call(self):
@@ -102,8 +105,8 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, b'/?email=foo')
-        self.assertEqual(res, dict(redirected=b'//www.gravatar.com/avatar/acbd18db4cc2f85ce'
-                         b'def654fccc4a4d8?d=retro&s=32'))
+        self.assertEqual(res, {"redirected": b'//www.gravatar.com/avatar/acbd18db4cc2f85ce'
+                         b'def654fccc4a4d8?d=retro&s=32'})
 
 
 github_username_search_reply = {
@@ -564,8 +567,8 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             content_json=github_username_search_reply,
             headers={'Accept': 'application/vnd.github.v3+json'})
         res = yield self.render_resource(self.rsrc, b'/?username=defunkt')
-        self.assertEqual(res, dict(redirected=b'https://avatars3.githubusercontent.com/'
-            b'u/42424242?v=4&s=32'))
+        self.assertEqual(res, {"redirected": b'https://avatars3.githubusercontent.com/'
+            b'u/42424242?v=4&s=32'})
 
     @defer.inlineCallbacks
     def test_username_not_found(self):
@@ -574,7 +577,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             content_json=github_username_not_found_reply,
             headers={'Accept': 'application/vnd.github.v3+json'})
         res = yield self.render_resource(self.rsrc, b'/?username=inexistent')
-        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+        self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
     def test_username_error(self):
@@ -582,7 +585,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self._http.expect('get', username_search_endpoint, code=500,
             headers={'Accept': 'application/vnd.github.v3+json'})
         res = yield self.render_resource(self.rsrc, b'/?username=error')
-        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+        self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
     def test_username_cached(self):
@@ -591,12 +594,13 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             content_json=github_username_search_reply,
             headers={'Accept': 'application/vnd.github.v3+json'})
         res = yield self.render_resource(self.rsrc, b'/?username=defunkt')
-        self.assertEqual(res, dict(redirected=b'https://avatars3.githubusercontent.com/'
-            b'u/42424242?v=4&s=32'))
+        self.assertEqual(res, {"redirected": b'https://avatars3.githubusercontent.com/'
+            b'u/42424242?v=4&s=32'})
         # Second request will give same result but without an HTTP request
         res = yield self.render_resource(self.rsrc, b'/?username=defunkt')
-        self.assertEqual(res, dict(redirected=b'https://avatars3.githubusercontent.com/'
-            b'u/42424242?v=4&s=32'))
+        self.assertEqual(res, {
+            "redirected": b'https://avatars3.githubusercontent.com/'
+            b'u/42424242?v=4&s=32'})
 
     @defer.inlineCallbacks
     def test_email(self):
@@ -604,8 +608,10 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self._http.expect('get', email_search_endpoint, content_json=github_email_search_reply,
             headers={'Accept': 'application/vnd.github.v3+json'})
         res = yield self.render_resource(self.rsrc, b'/?email=defunkt@defunkt.com')
-        self.assertEqual(res, dict(redirected=b'https://avatars3.githubusercontent.com/'
-            b'u/42424242?v=4&s=32'))
+        self.assertEqual(res, {
+            "redirected": b'https://avatars3.githubusercontent.com/'
+            b'u/42424242?v=4&s=32'
+        })
 
     @defer.inlineCallbacks
     def test_email_commit(self):
@@ -619,8 +625,8 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             headers={'Accept': 'application/vnd.github.v3+json,'
                 'application/vnd.github.cloak-preview'})
         res = yield self.render_resource(self.rsrc, b'/?email=defunkt@defunkt.com')
-        self.assertEqual(res, dict(redirected=b'https://avatars3.githubusercontent.com/'
-            b'u/42424242?v=4&s=32'))
+        self.assertEqual(res, {"redirected": b'https://avatars3.githubusercontent.com/'
+            b'u/42424242?v=4&s=32'})
 
     @defer.inlineCallbacks
     def test_email_commit_no_user(self):
@@ -635,7 +641,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             headers={'Accept': 'application/vnd.github.v3+json,'
                 'application/vnd.github.cloak-preview'})
         res = yield self.render_resource(self.rsrc, b'/?email=defunkt@defunkt.com')
-        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+        self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
     def test_email_not_found(self):
@@ -650,7 +656,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             headers={'Accept': 'application/vnd.github.v3+json,'
                 'application/vnd.github.cloak-preview'})
         res = yield self.render_resource(self.rsrc, b'/?email=notfound@defunkt.com')
-        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+        self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
     def test_email_error(self):
@@ -663,7 +669,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             headers={'Accept': 'application/vnd.github.v3+json,'
                 'application/vnd.github.cloak-preview'})
         res = yield self.render_resource(self.rsrc, b'/?email=error@defunkt.com')
-        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+        self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
 
 class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):

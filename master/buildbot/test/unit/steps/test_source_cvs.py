@@ -720,7 +720,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental',
                     branch='HEAD'),
-            args=dict(revision='2012-08-16 16:05:16 +0000'))
+            args={"revision": '2012-08-16 16:05:16 +0000'})
         self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])

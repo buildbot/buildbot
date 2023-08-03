@@ -114,7 +114,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'),
-                       dict(revision='100',))
+                       {"revision": '100'})
 
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
@@ -972,7 +972,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'),
-                       dict(revision='100',))
+                       {"revision": '100'})
 
         self.expect_commands(
             ExpectShell(workdir='wkdir',

@@ -41,7 +41,7 @@ class CustomServiceMaster(RunFakeMasterTestCase):
 
             def getResultSummary(self):
                 service = self.master.service_manager.namedServices['myService']
-                return dict(step=f"num reconfig: {service.num_reconfig}")
+                return {"step": f'num reconfig: {service.num_reconfig}'}
 
         class MyService(BuildbotService):
             name = "myService"

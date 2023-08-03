@@ -78,22 +78,24 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     def mkbs(self, **kwargs):
         # create buildset for expected_buildset in assertBuildset.
-        bs = dict(reason="The Nightly scheduler named 'test' triggered this build",
-                  external_idstring='', sourcestampsetid=100,
-                  properties=[('scheduler', ('test', 'Scheduler'))])
+        bs = {
+            "reason": "The Nightly scheduler named 'test' triggered this build",
+            "external_idstring": '',
+            "sourcestampsetid": 100,
+            "properties": [('scheduler', ('test', 'Scheduler'))]
+        }
         bs.update(kwargs)
         return bs
 
     def mkss(self, **kwargs):
         # create sourcestamp for expected_sourcestamps in assertBuildset.
-        ss = dict(
-            branch='master', project='', repository='', sourcestampsetid=100)
+        ss = {"branch": 'master', "project": '', "repository": '', "sourcestampsetid": 100}
         ss.update(kwargs)
         return ss
 
     def mkch(self, **kwargs):
         # create changeset and insert in database.
-        chd = dict(branch='master', project='', repository='')
+        chd = {"branch": 'master', "project": '', "repository": ''}
         chd.update(kwargs)
         ch = self.makeFakeChange(**chd)
         # fakedb.Change requires changeid instead of number
@@ -484,7 +486,8 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly', lastCodebases={
-            'a': dict(revision='2345:bcd', branch=None, repository='', lastChange=3)})
+            'a': {"revision": '2345:bcd', "branch": None, "repository": '', "lastChange": 3}
+        })
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
@@ -526,8 +529,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly', lastCodebases={
-            'a': dict(revision='2345:bcd', branch=None, repository='', lastChange=3),
-            'b': dict(revision='1234:abc', branch="master", repository='B', lastChange=2)})
+            'a': {"revision": '2345:bcd', "branch": None, "repository": '', "lastChange": 3},
+            'b': {"revision": '1234:abc', "branch": "master", "repository": 'B', "lastChange": 2}
+        })
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
@@ -556,6 +560,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly', lastCodebases={
-            'a': dict(revision='2345:bcd', branch=None, repository='', lastChange=3),
-            'b': dict(revision='1234:abc', branch=None, repository='', lastChange=4)})
+            'a': {"revision": '2345:bcd', "branch": None, "repository": '', "lastChange": 3},
+            'b': {"revision": '1234:abc', "branch": None, "repository": '', "lastChange": 4}
+        })
         yield self.sched.deactivate()

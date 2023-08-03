@@ -64,7 +64,7 @@ def getDetailsForBuildset(master, bsid, want_properties=False, want_steps=False,
                                   want_logs=want_logs,
                                   want_logs_content=want_logs_content)
 
-    return dict(buildset=buildset, builds=builds)
+    return {"buildset": buildset, "builds": builds}
 
 
 @defer.inlineCallbacks

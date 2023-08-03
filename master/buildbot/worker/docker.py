@@ -255,7 +255,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         # cleanup the old instances
         instances = docker_client.containers(
             all=1,
-            filters=dict(name=container_name))
+            filters={"name": container_name})
         container_name = f"/{container_name}"
         for instance in instances:
             if container_name not in instance['Names']:

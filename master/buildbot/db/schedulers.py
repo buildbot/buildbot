@@ -119,10 +119,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
-            insert_values=dict(
-                name=name,
-                name_hash=name_hash,
-            ))
+            insert_values={"name": name, "name_hash": name_hash}
+        )
 
     # returns a Deferred that returns None
     def setSchedulerMaster(self, schedulerid, masterid):
@@ -139,8 +137,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             # try a blind insert..
             try:
                 q = sch_mst_tbl.insert()
-                conn.execute(q,
-                             dict(schedulerid=schedulerid, masterid=masterid)).close()
+                conn.execute(q, {"schedulerid": schedulerid, "masterid": masterid}).close()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this scheduler, but who?
                 join = self.db.model.masters.outerjoin(
@@ -196,7 +193,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                            sch_mst_tbl.c.masterid],
                           from_obj=join, whereclause=wc)
 
-            return [dict(id=row.id, name=row.name, enabled=bool(row.enabled),
-                         masterid=row.masterid)
-                    for row in conn.execute(q).fetchall()]
+            return [
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "enabled": bool(row.enabled),
+                    "masterid": row.masterid
+                }
+                for row in conn.execute(q).fetchall()
+            ]
         return self.db.pool.do(thd)

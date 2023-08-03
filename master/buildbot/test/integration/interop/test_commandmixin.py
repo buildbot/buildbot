@@ -48,14 +48,15 @@ class CommandMixinMaster(RunMasterBase):
     def test_commandmixin(self):
         yield self.setup_config()
 
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none"
-                      )
+        change = {
+            "branch": "master",
+            "files": ["foo.c"],
+            "author": "me@foo.com",
+            "committer": "me@foo.com",
+            "comments": "good stuff",
+            "revision": "HEAD",
+            "project": "none"
+        }
         build = yield self.doForceBuild(wantSteps=True, useChange=change,
                                         wantLogs=True)
         self.assertEqual(build['buildid'], 1)

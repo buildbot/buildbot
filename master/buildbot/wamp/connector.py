@@ -157,7 +157,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
         self.app = self.serviceClass(
             url=self.router_url,
-            extra=dict(master=self.master, parent=self),
+            extra={"master": self.master, "parent": self},
             realm=realm,
             make=make
         )

@@ -167,10 +167,12 @@ class DataConnector(service.AsyncService):
         """
         paths = []
         for k, v in sorted(self.matcher.iterPatterns()):
-            paths.append(dict(path="/".join(k),
-                              plural=str(v.rtype.plural),
-                              type=str(v.rtype.entityType.name),
-                              type_spec=v.rtype.entityType.getSpec()))
+            paths.append({
+                "path": '/'.join(k),
+                "plural": str(v.rtype.plural),
+                "type": str(v.rtype.entityType.name),
+                "type_spec": v.rtype.entityType.getSpec()
+            })
         return paths
 
     def resultspec_from_jsonapi(self, req_args, entityType, is_collection):

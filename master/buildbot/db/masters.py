@@ -33,12 +33,13 @@ class MastersConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
-            insert_values=dict(
-                name=name,
-                name_hash=name_hash,
-                active=0,  # initially inactive
-                last_active=int(self.master.reactor.seconds())
-            ))
+            insert_values={
+                "name": name,
+                "name_hash": name_hash,
+                "active": 0,  # initially inactive
+                "last_active": int(self.master.reactor.seconds())
+            }
+        )
 
     # returns a Deferred that returns a value
     def setMasterState(self, masterid, active):
