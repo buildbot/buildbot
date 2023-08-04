@@ -194,7 +194,7 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
     def getResultSummary(self):
         if self.logobserver is None:
             # step was skipped or log observer was not created due to another reason
-            return {"step": results.Results[self.results]}
+            return {"step": results.statusToString(self.results)}
 
         description = (f'compile {self.logobserver.nbProjects} projects {self.logobserver.nbFiles} '
                        'files')
@@ -205,7 +205,7 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
             description += f' {self.logobserver.nbErrors} errors'
 
         if self.results != results.SUCCESS:
-            description += f' ({results.Results[self.results]})'
+            description += f' ({results.statusToString(self.results)})'
 
         return {'step': description}
 
