@@ -16,12 +16,15 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import mock
-
 from twisted.trial import unittest
 
 from buildbot_worker.scripts import start
 from buildbot_worker.test.util import misc
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 
 class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):

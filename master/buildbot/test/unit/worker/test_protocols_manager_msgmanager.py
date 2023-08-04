@@ -14,11 +14,10 @@
 # Copyright Buildbot Team Members
 
 import base64
+from unittest import mock
 
 import msgpack
 from parameterized import parameterized
-
-import mock
 
 from autobahn.websocket.types import ConnectionDeny
 from twisted.internet import defer
@@ -92,7 +91,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         protocol.onMessage(msgpack.packb(msg), True)
         yield protocol._deferwaiter.wait()
-        args_tuple = protocol.sendMessage.call_args.args
+        args_tuple, _ = protocol.sendMessage.call_args
         result = msgpack.unpackb(args_tuple[0], raw=False)
         self.assertEqual(result, expected)
 
@@ -103,7 +102,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         self.protocol.onMessage(msgpack.packb(msg), True)
 
-        args_tuple = self.protocol.sendMessage.call_args.args
+        args_tuple, _ = self.protocol.sendMessage.call_args
         return msgpack.unpackb(args_tuple[0], raw=False)['result']
 
     @defer.inlineCallbacks

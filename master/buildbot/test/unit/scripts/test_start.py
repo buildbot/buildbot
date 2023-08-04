@@ -16,8 +16,7 @@
 import os
 import sys
 import time
-
-import mock
+from unittest import mock
 
 import twisted
 from twisted.internet import defer

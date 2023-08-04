@@ -18,11 +18,10 @@ import os
 import pkg_resources
 from io import BytesIO
 from io import StringIO
+from unittest import mock
 from urllib.parse import parse_qs
 from urllib.parse import unquote as urlunquote
 from uuid import uuid1
-
-import mock
 
 from twisted.internet import defer
 from twisted.web import server

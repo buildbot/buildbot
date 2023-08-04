@@ -20,8 +20,6 @@ import time
 
 from parameterized import parameterized
 
-import mock
-
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -32,6 +30,11 @@ from buildbot_worker import pb
 from buildbot_worker import util
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util import command
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 if sys.version_info >= (3, 6):
     import msgpack

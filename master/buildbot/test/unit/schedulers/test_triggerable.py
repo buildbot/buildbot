@@ -73,6 +73,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         buildset = yield self.master.db.buildsets.getBuildset(bsid)
 
         from datetime import datetime
+
         from buildbot.util import UTC
         ssids = buildset.pop('sourcestamps')
 

@@ -16,8 +16,7 @@
 import os
 import sys
 from io import StringIO
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

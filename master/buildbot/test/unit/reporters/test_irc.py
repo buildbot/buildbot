@@ -15,8 +15,7 @@
 
 
 import sys
-
-import mock
+from unittest import mock
 
 from twisted.application import internet
 from twisted.internet import defer

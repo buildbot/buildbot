@@ -17,8 +17,7 @@ import getpass
 import os
 import sys
 from io import StringIO
-
-import mock
+from unittest import mock
 
 from twisted.python import log
 from twisted.python import runtime

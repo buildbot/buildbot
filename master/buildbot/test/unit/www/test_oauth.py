@@ -16,8 +16,7 @@
 import json
 import os
 import webbrowser
-
-import mock
+from unittest import mock
 
 import twisted
 from twisted.internet import defer
@@ -558,6 +557,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin,
 
     def tearDown(self):
         from twisted.internet.tcp import Server
+
         # browsers has the bad habit on not closing the persistent
         # connections, so we need to hack them away to make trial happy
         f = failure.Failure(Exception("test end"))

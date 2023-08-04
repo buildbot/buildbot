@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 import textwrap
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

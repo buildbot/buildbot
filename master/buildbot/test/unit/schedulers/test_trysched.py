@@ -18,8 +18,7 @@ import os
 import shutil
 import sys
 from io import StringIO
-
-import mock
+from unittest import mock
 
 import twisted
 from twisted.internet import defer

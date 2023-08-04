@@ -16,8 +16,7 @@
 import stat
 import tarfile
 from io import BytesIO
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.python import log

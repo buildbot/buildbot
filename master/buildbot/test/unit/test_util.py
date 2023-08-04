@@ -17,8 +17,7 @@ import datetime
 import locale
 import os
 import sys
-
-import mock
+from unittest import mock
 
 from twisted.internet import reactor
 from twisted.internet import task

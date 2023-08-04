@@ -17,9 +17,8 @@ import os
 import re
 import sys
 from io import StringIO
+from unittest import mock
 from unittest.case import SkipTest
-
-import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor

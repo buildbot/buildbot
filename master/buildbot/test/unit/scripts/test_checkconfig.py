@@ -18,8 +18,7 @@ import re
 import sys
 import textwrap
 from io import StringIO
-
-import mock
+from unittest import mock
 
 from twisted.trial import unittest
 

@@ -20,8 +20,6 @@ import os
 import shutil
 import socket
 
-from mock import Mock
-
 from twisted.cred import checkers
 from twisted.cred import portal
 from twisted.internet import defer
@@ -32,6 +30,12 @@ from zope.interface import implementer
 
 from buildbot_worker import bot
 from buildbot_worker.test.util import misc
+
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
+
 
 # I don't see any simple way to test the PB equipment without actually setting
 # up a TCP connection.  This just tests that the PB code will connect and can

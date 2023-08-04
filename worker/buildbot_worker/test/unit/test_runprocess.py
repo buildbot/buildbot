@@ -26,8 +26,6 @@ import time
 
 import psutil
 
-from mock import Mock
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -42,6 +40,11 @@ from buildbot_worker.exceptions import AbandonChain
 from buildbot_worker.test.util import compat
 from buildbot_worker.test.util.misc import BasedirMixin
 from buildbot_worker.test.util.misc import nl
+
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 
 
 def catCommand():

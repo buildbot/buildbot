@@ -14,10 +14,9 @@
 # Copyright Buildbot Team Members
 
 import datetime
+from unittest.mock import Mock
 
 from dateutil.tz import tzutc
-
-from mock import Mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

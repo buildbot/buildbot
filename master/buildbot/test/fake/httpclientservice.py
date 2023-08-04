@@ -15,8 +15,7 @@
 
 
 import json as jsonmodule
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.logger import Logger

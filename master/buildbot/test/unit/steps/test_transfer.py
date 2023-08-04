@@ -17,8 +17,7 @@ import json
 import os
 import shutil
 import tempfile
-
-from mock import Mock
+from unittest.mock import Mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
