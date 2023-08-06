@@ -47,6 +47,14 @@ def check_param_str_none(value, class_inst, name):
     return check_param_type(value, "(unknown)", class_inst, name, (str, type(None)), "str or None")
 
 
+def check_param_int(value, class_inst, name):
+    return check_param_type(value, 0, class_inst, name, (int,), "int")
+
+
+def check_param_int_none(value, class_inst, name):
+    return check_param_type(value, None, class_inst, name, (int, type(None)), "int or None")
+
+
 def check_markdown_support(class_inst):
     try:
         import markdown  # pylint: disable=import-outside-toplevel

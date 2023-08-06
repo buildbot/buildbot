@@ -1,0 +1,3 @@
+Improved stale connection handling in ``GerritChangeSource``.
+``GerritChangeSource`` will instruct the ssh client to send periodic keepalive messages and will reconnect if the server does not reply for 45 seconds (default).
+``GerritChangeSource`` now has ``ssh_server_alive_interval_s`` and ``ssh_server_alive_count_max`` options to control this behavior.

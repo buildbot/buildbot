@@ -496,8 +496,20 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
     def test_startStreamProcess_bytes_output(self):
         s = yield self.newChangeSource('somehost', 'some_choosy_user', debug=True)
 
-        exp_argv = ['ssh', '-o', 'BatchMode=yes', 'some_choosy_user@somehost', '-p', '29418']
-        exp_argv += ['gerrit', 'stream-events']
+        exp_argv = [
+            "ssh",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "ServerAliveInterval=15",
+            "-o",
+            "ServerAliveCountMax=3",
+            "some_choosy_user@somehost",
+            "-p",
+            "29418",
+            "gerrit",
+            "stream-events",
+        ]
 
         def spawnProcess(pp, cmd, argv, env):
             self.assertEqual([cmd, argv], [exp_argv[0], exp_argv])
@@ -546,8 +558,23 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
     def test_getFiles(self):
         s = yield self.newChangeSource('host', 'user', gerritport=2222)
         exp_argv = [
-            'ssh', '-o', 'BatchMode=yes', 'user@host', '-p', '2222',
-            'gerrit', 'query', '1000', '--format', 'JSON', '--files', '--patch-sets'
+            "ssh",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "ServerAliveInterval=15",
+            "-o",
+            "ServerAliveCountMax=3",
+            "user@host",
+            "-p",
+            "2222",
+            "gerrit",
+            "query",
+            "1000",
+            "--format",
+            "JSON",
+            "--files",
+            "--patch-sets",
         ]
 
         self.expect_commands(
@@ -568,8 +595,27 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
     @defer.inlineCallbacks
     def test_getFilesFromEvent(self):
         self.expect_commands(
-            ExpectMasterShell(['ssh', '-o', 'BatchMode=yes', 'user@host', '-p', '29418', 'gerrit',
-                          'query', '4321', '--format', 'JSON', '--files', '--patch-sets'])
+            ExpectMasterShell(
+                [
+                    "ssh",
+                    "-o",
+                    "BatchMode=yes",
+                    "-o",
+                    "ServerAliveInterval=15",
+                    "-o",
+                    "ServerAliveCountMax=3",
+                    "user@host",
+                    "-p",
+                    "29418",
+                    "gerrit",
+                    "query",
+                    "4321",
+                    "--format",
+                    "JSON",
+                    "--files",
+                    "--patch-sets",
+                ]
+            )
             .stdout(self.query_files_success)
         )
 

@@ -25,6 +25,7 @@ from buildbot import config
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
+from buildbot.config.checks import check_param_int_none
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import runprocess
@@ -325,11 +326,17 @@ class GerritChangeSource(GerritChangeSourceBase):
                     username,
                     gerritport=29418,
                     identity_file=None,
+                    ssh_server_alive_interval_s=15,
+                    ssh_server_alive_count_max=3,
                     **kwargs):
         if self.name is None:
             self.name = f"GerritChangeSource:{username}@{gerritserver}:{gerritport}"
         if 'gitBaseURL' not in kwargs:
             kwargs['gitBaseURL'] = "automatic at reconfigure"
+        check_param_int_none(ssh_server_alive_interval_s, self.__class__,
+                             "ssh_server_alive_interval_s")
+        check_param_int_none(ssh_server_alive_count_max, self.__class__,
+                             "ssh_server_alive_count_max")
         super().checkConfig(**kwargs)
 
     def reconfigService(self,
@@ -338,6 +345,8 @@ class GerritChangeSource(GerritChangeSourceBase):
                         gerritport=29418,
                         identity_file=None,
                         name=None,
+                        ssh_server_alive_interval_s=15,
+                        ssh_server_alive_count_max=3,
                         **kwargs):
         if 'gitBaseURL' not in kwargs:
             kwargs['gitBaseURL'] = f"ssh://{username}@{gerritserver}:{gerritport}"
@@ -348,6 +357,8 @@ class GerritChangeSource(GerritChangeSourceBase):
         self.process = None
         self.wantProcess = False
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
+        self.ssh_server_alive_interval_s = ssh_server_alive_interval_s
+        self.ssh_server_alive_count_max = ssh_server_alive_count_max
         self._last_lines_for_debug = []
         return super().reconfigService(**kwargs)
 
@@ -421,9 +432,15 @@ class GerritChangeSource(GerritChangeSourceBase):
         '''Get an ssh command list which invokes gerrit with the given args on the
         remote host'''
 
-        cmd = [
-            "ssh",
+        options = [
             "-o", "BatchMode=yes",
+        ]
+        if self.ssh_server_alive_interval_s is not None:
+            options += ["-o", f"ServerAliveInterval={self.ssh_server_alive_interval_s}"]
+        if self.ssh_server_alive_count_max is not None:
+            options += ["-o", f"ServerAliveCountMax={self.ssh_server_alive_count_max}"]
+
+        cmd = ["ssh"] + options + [
             f"{self.username}@{self.gerritserver}",
             "-p", str(self.gerritport)
         ]
