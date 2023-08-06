@@ -7,16 +7,19 @@
       tr
         td(width='100px') #
         td(width='150px') Builder
+        td(width='100px') Priority
         td(width='150px') Submitted At
         td(width='150px') Owner
         td(ng-repeat="(k,v) in properties") {{k}}
-      tr(ng-repeat='br in buildrequests | orderBy:"-submitted_at"' )
+      tr(ng-repeat='br in buildrequests | orderBy:["-priority","-submitted_at"]' )
           td
             a(ui-sref="buildrequest({buildrequest:br.buildrequestid})")
               span.badge-status {{br.buildrequestid}}
           td
             a(ui-sref="builder({builder:br.builderid})")
               span {{br.builder.name}}
+          td
+            span {{br.priority}}
           td
             span(title="{{br.submitted_at | dateformat:'LLL'}}")
               | {{br.submitted_at | timeago }}

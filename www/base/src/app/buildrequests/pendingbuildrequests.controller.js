@@ -9,7 +9,7 @@ class Pendingbuildrequests {
         const buildrequestFetchLimit = $scope.settings.buildrequestFetchLimit.value;
 
         const data = dataService.open().closeOnDestroy($scope);
-        $scope.buildrequests = data.getBuildrequests({limit: buildrequestFetchLimit, order:'-submitted_at', claimed:false});
+        $scope.buildrequests = data.getBuildrequests({limit: buildrequestFetchLimit, order:'-priority', claimed:false});
         $scope.properties = {};
         $scope.buildrequests.onNew = function(buildrequest) {
             restService.get(`buildsets/${buildrequest.buildsetid}/properties`).then(function(response) {
