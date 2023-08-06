@@ -315,6 +315,9 @@ class GerritChangeSource(GerritChangeSourceBase):
     STREAM_BACKOFF_MAX = 60
     "(seconds) maximum time to wait before retrying a failed connection"
 
+    # The number of gerrit output lines to print in case of a failure
+    MAX_STORED_OUTPUT_DEBUG_LINES = 20
+
     name = None
 
     def checkConfig(self,
@@ -345,9 +348,17 @@ class GerritChangeSource(GerritChangeSourceBase):
         self.process = None
         self.wantProcess = False
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
+        self._last_lines_for_debug = []
         return super().reconfigService(**kwargs)
 
+    def _append_line_for_debug(self, line):
+        self._last_lines_for_debug.append(line)
+        while len(self._last_lines_for_debug) > self.MAX_STORED_OUTPUT_DEBUG_LINES:
+            self._last_lines_for_debug.pop(0)
+
     class LocalPP(LineProcessProtocol):
+
+        MAX_STORED_OUTPUT_DEBUG_LINES = 20
 
         def __init__(self, change_source):
             super().__init__()
@@ -358,12 +369,15 @@ class GerritChangeSource(GerritChangeSourceBase):
             if self.change_source.debug:
                 log.msg(f"{self.change_source.name} "
                         f"stdout: {line.decode('utf-8', errors='replace')}")
+
+            self.change_source._append_line_for_debug(line)
             yield self.change_source.lineReceived(line)
 
         def errLineReceived(self, line):
             if self.change_source.debug:
                 log.msg(f"{self.change_source.name} "
                         f"stderr: {line.decode('utf-8', errors='replace')}")
+            self.change_source._append_line_for_debug(line)
 
         def processEnded(self, status):
             super().processEnded(status)
@@ -381,8 +395,13 @@ class GerritChangeSource(GerritChangeSourceBase):
            self.STREAM_GOOD_CONNECTION_TIME:
             # bad startup; start the stream process again after a timeout,
             # and then increase the timeout
+            log_lines = "\n".join([l.decode("utf-8", errors="ignore")
+                                   for l in self._last_lines_for_debug])
+
             log.msg(f"{self.name}: stream-events failed; restarting after "
-                    f"{round(self.streamProcessTimeout)}s")
+                    f"{round(self.streamProcessTimeout)}s.\n"
+                    f"{len(self._last_lines_for_debug)} log lines follow:\n{log_lines}")
+
             self.master.reactor.callLater(
                 self.streamProcessTimeout, self.startStreamProcess)
             self.streamProcessTimeout *= self.STREAM_BACKOFF_EXPONENT
@@ -423,6 +442,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         cmd = self._buildGerritCommand("stream-events")
         self.lastStreamProcessStart = util.now()
         self.process = reactor.spawnProcess(self.LocalPP(self), "ssh", cmd, env=None)
+        self._last_lines_for_debug = []
 
     @defer.inlineCallbacks
     def getFiles(self, change, patchset):
