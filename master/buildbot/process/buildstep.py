@@ -50,7 +50,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.process.results import Results
+from buildbot.process.results import statusToString
 from buildbot.util import bytes2unicode
 from buildbot.util import debounce
 from buildbot.util import flatten
@@ -370,7 +370,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             stepsumm = 'finished'
 
         if self.results != SUCCESS:
-            stepsumm += f' ({Results[self.results]})'
+            stepsumm += f' ({statusToString(self.results)})'
 
         return {'step': stepsumm}
 
@@ -958,7 +958,7 @@ class ShellMixin:
         summary = util.command_to_string(self.command)
         if summary:
             if self.results != SUCCESS:
-                summary += f' ({Results[self.results]})'
+                summary += f' ({statusToString(self.results)})'
             return {'step': summary}
         return super().getResultSummary()
 
