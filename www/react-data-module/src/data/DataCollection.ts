@@ -17,7 +17,10 @@ import {DataPropertiesCollection} from "./DataPropertiesCollection";
 import {DataMultiPropertiesCollection} from "./DataMultiPropertiesCollection";
 
 export interface IDataCollection {
-  isExpired(): boolean;
+  // A valid data collection is one that listens to data changes from the API. The initial set of data objects may
+  // not have been acquired yet, isResolved() tracks this. Invalid data collections are the ones that are constructed
+  // without an accessor and the ones whose accessor has expired.
+  isValid(): boolean;
   isResolved(): boolean;
   subscribe(): Promise<void>;
   initial(data: any[]): void;
@@ -54,11 +57,11 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     }
   }
 
-  isExpired() {
+  isValid() {
     if (this.accessor === undefined) {
       return false;
     }
-    return !this.accessor.isOpen();
+    return this.accessor.isOpen();
   }
 
   isResolved() {

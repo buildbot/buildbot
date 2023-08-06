@@ -50,11 +50,11 @@ export class DataPropertiesCollection implements IDataCollection {
     }
   }
 
-  isExpired() {
+  isValid() {
     if (this.accessor === undefined) {
       return false;
     }
-    return !this.accessor.isOpen();
+    return this.accessor.isOpen();
   }
 
   isResolved() {
