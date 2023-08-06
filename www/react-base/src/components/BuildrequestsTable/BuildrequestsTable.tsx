@@ -42,7 +42,13 @@ export const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableP
   const tableElement = () => {
 
     const sortedBuildrequests = buildrequests.array.slice()
-      .sort((a, b) => a.submitted_at - b.submitted_at);
+      .sort((a, b) => {
+        const byPriority = a.priority - b.priority;
+        if (byPriority !== 0) {
+          return byPriority;
+        }
+        return a.submitted_at - b.submitted_at;
+      });
 
     const rowElements = sortedBuildrequests.filter(br => !br.claimed).map(br => {
       const owners = [
@@ -58,6 +64,9 @@ export const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableP
             <Link to={`/buildrequests/${br.buildrequestid}`}>
               <BadgeRound className=''>{br.buildrequestid.toString()}</BadgeRound>
             </Link>
+          </td>
+          <td>
+            {br.priority}
           </td>
           <td>
             <span title={dateFormat(br.submitted_at)}>
@@ -77,6 +86,7 @@ export const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableP
         <tbody>
           <tr>
             <td width="100px">#</td>
+            <td width="100px">Priority</td>
             <td width="150px">Submitted At</td>
             <td width="150px">Owners</td>
             <td>Properties</td>

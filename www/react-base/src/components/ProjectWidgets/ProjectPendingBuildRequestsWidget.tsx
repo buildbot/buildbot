@@ -44,7 +44,7 @@ export const ProjectPendingBuildRequestsWidget = observer(({projectid}: ProjectP
   const buildRequestsQuery = useDataApiDynamicQuery(builderIds,
     () => Buildrequest.getAll(accessor, {query: {
         limit: buildRequestFetchLimit,
-        order: '-submitted_at',
+        order: ['-priority', '-submitted_at'],
         claimed: false,
         builderid__eq: builderIds,
       }}));
