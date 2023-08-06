@@ -46,8 +46,7 @@ export function useDataAccessor<T>(dependency: (T|null)[]): IDataAccessor {
 export function useDataApiQuery<Collection extends IDataCollection>(
     callback: () => Collection): Collection {
   let storedCollection = useRef<Collection|null>(null);
-  if (storedCollection.current === null ||
-      storedCollection.current.isExpired()) {
+  if (storedCollection.current === null || !storedCollection.current.isValid()) {
     if (storedCollection.current !== null) {
       storedCollection.current.close();
     }
@@ -74,8 +73,8 @@ export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
   let storedCollection = useRef<Collection|null>(null);
 
   if (storedCollection.current === null ||
-      !arrayElementsEqual(dependency, storedDependency.current) ||
-      storedCollection.current.isExpired()) {
+      !storedCollection.current.isValid() ||
+      !arrayElementsEqual(dependency, storedDependency.current)) {
     if (storedCollection.current !== null) {
       storedCollection.current.close();
     }
@@ -96,8 +95,8 @@ export function useDataApiDynamicQueryResolved<T, Collection extends IDataCollec
   let storedNewCollection = useRef<Collection|null>(null);
 
   if (storedCollection.current === null ||
-    !arrayElementsEqual(dependency, storedDependency.current) ||
-    storedCollection.current.isExpired()) {
+      !storedCollection.current.isValid() ||
+      !arrayElementsEqual(dependency, storedDependency.current)) {
 
     if (storedCollection.current !== null) {
       if (storedNewCollection.current !== null) {
