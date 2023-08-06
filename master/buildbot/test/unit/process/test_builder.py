@@ -595,6 +595,51 @@ class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCas
         self.assertEqual(rqtime, None)
 
 
+class TestGetHighestPriority(TestReactorMixin, BuilderMixin, unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setup_test_reactor()
+        self.setUpBuilderMixin()
+
+        # a collection of rows that would otherwise clutter up every test
+        master_id = fakedb.FakeBuildRequestsComponent.MASTER_ID
+        self.base_rows = [
+            fakedb.SourceStamp(id=21),
+            fakedb.Buildset(id=11, reason='because'),
+            fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
+            fakedb.Builder(id=77, name='bldr1'),
+            fakedb.Builder(id=78, name='bldr2'),
+            fakedb.BuildRequest(id=111, submitted_at=1000,
+                                builderid=77, buildsetid=11, priority=0),
+            fakedb.BuildRequest(id=222, submitted_at=2000,
+                                builderid=77, buildsetid=11, priority=10),
+            fakedb.BuildRequestClaim(brid=222, masterid=master_id,
+                                     claimed_at=2001),
+            fakedb.BuildRequest(id=333, submitted_at=3000,
+                                builderid=77, buildsetid=11, priority=5),
+            fakedb.BuildRequest(id=444, submitted_at=3001,
+                                builderid=77, buildsetid=11, priority=3),
+            fakedb.BuildRequest(id=555, submitted_at=2500,
+                                builderid=78, buildsetid=11),
+            fakedb.BuildRequestClaim(brid=555, masterid=master_id,
+                                     claimed_at=2501),
+        ]
+        yield self.db.insert_test_data(self.base_rows)
+
+    @defer.inlineCallbacks
+    def test_ghp_unclaimed(self):
+        yield self.makeBuilder(name='bldr1')
+        priority = yield self.bldr.get_highest_priority()
+        self.assertEqual(priority, 5)
+
+    @defer.inlineCallbacks
+    def test_ghp_all_claimed(self):
+        yield self.makeBuilder(name='bldr2')
+        priority = yield self.bldr.get_highest_priority()
+        self.assertEqual(priority, None)
+
+
 class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     """Tests that a reconfig properly updates all attributes"""

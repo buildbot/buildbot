@@ -197,6 +197,22 @@ class Builder(util_service.ReconfigurableServiceMixin,
         else:
             return None
 
+    @defer.inlineCallbacks
+    def get_highest_priority(self):
+        """Returns the priority of the highest priority unclaimed build request
+        for this builder, or None if there are no build requests.
+
+        @returns: priority or None, via Deferred
+        """
+        bldrid = yield self.getBuilderId()
+        unclaimed = yield self.master.data.get(
+            ('builders', bldrid, 'buildrequests'),
+            [resultspec.Filter('claimed', 'eq', [False])],
+            order=['-priority'], limit=1)
+        if unclaimed:
+            return unclaimed[0]['priority']
+        return None
+
     def getBuild(self, number):
         for b in self.building:
             if b.number == number:
