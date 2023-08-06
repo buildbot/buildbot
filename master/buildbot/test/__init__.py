@@ -143,3 +143,7 @@ warnings.filterwarnings('ignore', ".*pkg_resources is deprecated as an API.*",
                         category=DeprecationWarning)
 warnings.filterwarnings('ignore', ".*Deprecated call to `pkg_resources.declare_namespace.*",
                         category=DeprecationWarning)
+
+# boto3 shows this warning when on old Python
+warnings.filterwarnings('ignore', ".*Boto3 will no longer support Python .*",
+                        category=Warning)
