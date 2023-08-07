@@ -99,7 +99,7 @@ pypugjs==5.9.12
 python-dateutil==2.8.2
 python-subunit==1.4.2
 pytz==2023.3
-PyYAML==6.0
+PyYAML==6.0.1
 requests==2.31.0
 responses==0.23.1
 ruamel.yaml==0.17.32
