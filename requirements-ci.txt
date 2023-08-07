@@ -132,6 +132,6 @@ urllib3==2.0.4
 webcolors==1.13
 websocket-client==1.6.1
 Werkzeug==2.3.6
-wrapt==1.14.1
+wrapt==1.15.0
 xmltodict==0.13.0
 zope.interface==5.4.0
