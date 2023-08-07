@@ -28,6 +28,6 @@ Twisted==22.10.0;  python_version >= "3.6"
 Twisted==20.3.0;  python_version < "3.6"  # pyup: ignore
 txaio==23.1.1;  python_version >= "3.6"
 typing-extensions==4.7.1;  python_version >= "3.7"
-typing-extensions==4.3.0;  python_version < "3.7" and python_version >= "3.5"
+typing-extensions==4.7.1;  python_version < "3.7" and python_version >= "3.5"
 zope.interface==6.0
 -e worker
