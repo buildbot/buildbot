@@ -34,7 +34,7 @@ export const PendingBuildRequestsView = observer(() => {
   const buildRequestsQuery = useDataApiQuery(
     () => Buildrequest.getAll(accessor, {query: {
       limit: buildRequestFetchLimit,
-      order: '-submitted_at',
+      order: ['-priority', '-submitted_at'],
       claimed: false
     }}));
 

@@ -64,6 +64,9 @@ export const PendingBuildRequestsTable = observer(({buildRequestsQuery}: Pending
             </Link>
           </td>
           <td>
+            {buildRequest.priority}
+          </td>
+          <td>
             <span title={dateFormat(buildRequest.submitted_at)}>
               {durationFromNowFormat(buildRequest.submitted_at, now)}
             </span>
@@ -89,6 +92,7 @@ export const PendingBuildRequestsTable = observer(({buildRequestsQuery}: Pending
       <tr>
         <td width="100px">#</td>
         <td width="150px">Builder</td>
+        <td width="100px">Priority</td>
         <td width="150px">Submitted At</td>
         <td width="150px">Owner</td>
         <td width="150px">Properties</td>

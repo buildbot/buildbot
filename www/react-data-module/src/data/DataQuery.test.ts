@@ -166,6 +166,11 @@ describe('dataquery service', () => {
       expect(result[1]).toEqual(testArray[2]);
       expect(result[2]).toEqual(testArray[1]);
     });
+
+    it('exception if wrong order', () => {
+      expect(() => wrappedDataQuery.sort(testArray, {test: 2}))
+        .toThrowError(/.*Unsupported order parameter.*/);
+    });
   });
 
   describe('limit(array, limit)', () => {

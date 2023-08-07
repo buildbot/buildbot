@@ -140,6 +140,8 @@ export class DataQuery {
         }
         return 0;
       });
+    } else {
+      throw Error(`Unsupported order parameter for query {order}`)
     }
   }
 
