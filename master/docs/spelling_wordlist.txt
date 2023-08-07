@@ -450,7 +450,7 @@ Json
 jsonable
 JUnit
 kB
-Keepalive
+keepalive
 keepalives
 kerberos
 Kerberos

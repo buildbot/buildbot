@@ -1285,6 +1285,19 @@ The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
     Populate the `files` attribute of emitted changes (default `False`).
     Buildbot will run an extra query command for each handled event to determine the changed files.
 
+``ssh_server_alive_interval_s``
+    Sets the ``ServerAliveInterval`` option of the ssh client (default `15`).
+    This causes client to emit periodic keepalive messages in case the connection is not otherwise active.
+    If the server does not respond at least ``ssh_server_alive_count_max`` times, a reconnection is forced.
+    This helps to avoid stuck connections in case network link is severed without notification in the TCP layer.
+    Specifying ``None`` will omit the option from the ssh client command line.
+
+``ssh_server_alive_count_max``
+    Sets the ``ServerAliveCountMax`` option of the ssh client (default `3`).
+    If the server does not respond at least ``ssh_server_alive_count_max`` times, a reconnection is forced.
+    This helps to avoid stuck connections in case network link is severed without notification in the TCP layer.
+    Specifying ``None`` will omit the option from the ssh client command line.
+
 ``debug``
     Print Gerrit event in the log (default `False`).
     This allows to debug event content, but will eventually fill your logs with useless Gerrit event logs.
