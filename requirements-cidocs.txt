@@ -11,4 +11,4 @@ sphinxcontrib-serializinghtml==1.1.5
 sphinxcontrib-spelling==8.0.0
 sphinxcontrib-websupport==1.2.4
 Pygments==2.15.0
-towncrier==21.9.0
+towncrier==23.6.0
