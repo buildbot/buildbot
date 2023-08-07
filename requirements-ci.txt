@@ -131,7 +131,8 @@ unidiff==0.7.5
 urllib3==1.26.11
 webcolors==1.13
 websocket-client==1.6.1
-Werkzeug==2.2.3
+Werkzeug==2.2.3;  python_version < "3.8"  # pyup: ignore
+Werkzeug==2.3.6;  python_version >= "3.8"
 wrapt==1.15.0
 xmltodict==0.13.0
 zope.interface==6.0
