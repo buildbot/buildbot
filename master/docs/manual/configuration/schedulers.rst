@@ -208,6 +208,14 @@ There are several common arguments for schedulers, although not all are availabl
     A string that will be used as the reason for the triggered build.
     By default it lists the type and name of the scheduler triggering the build.
 
+.. _Scheduler-Attr-Priority:
+
+``priority`` (optional)
+
+    Specifies the default priority for :class:`BuildRequests` created by this scheduler.
+    It can either be an integer or a function (see :ref:`Scheduler-Priority-Functions`).
+    By default it creates :class:`BuildRequests` with priority 0.
+
 The remaining subsections represent a catalog of the available scheduler types.
 All these schedulers are defined in modules under :mod:`buildbot.schedulers`, and their docstrings are the best source of documentation on the arguments each one takes.
 

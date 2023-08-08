@@ -254,6 +254,40 @@ The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`:
 
     ... BuilderConfig(..., nextBuild=nextBuild, ...) ...
 
+.. index:: Schedulers; priority
+
+.. _Scheduler-Priority-Functions:
+
+Scheduler Priority Functions
+----------------------------
+When a :class:`Scheduler` is creating a a new :class:`BuildRequest` from a (list of) :class:`Change` (s),it is possible to set the :class:`BuildRequest` priority.
+This can either be an integer or a function, which receives a list of builder names and a dictionary of :class:`Change`, grouped by their codebase.
+
+A simple implementation might look like this:
+
+.. code-block:: python
+
+   def scheduler_priority(builderNames, changesByCodebase):
+        priority = 0
+
+        for codebase, changes in changesByCodebase.items():
+            for chg in changes:
+                if chg["branch"].startswith("dev/"):
+                        priority = max(priority, 0)
+                elif chg["branch"].startswith("bugfix/"):
+                        priority = max(priority, 5)
+                elif chg["branch"] == "main":
+                        priority = max(priority, 10)
+
+        return priority
+
+The priority function/integer can be passed as a parameter to :class:`Scheduler`:
+
+.. code-block:: python
+
+   ... schedulers.SingleBranchScheduler(..., priority=scheduler_priority, ...) ...
+
+
 .. _canStartBuild-Functions:
 
 ``canStartBuild`` Functions
