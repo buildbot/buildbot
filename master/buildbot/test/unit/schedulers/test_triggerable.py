@@ -159,6 +159,20 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         sched = self.makeScheduler(reason="Because I said so")
         self.assertEqual(sched.reason, "Because I said so")
 
+    def test_constructor_priority_none(self):
+        sched = self.makeScheduler(priority=None)
+        self.assertEqual(sched.priority, None)
+
+    def test_constructor_priority_int(self):
+        sched = self.makeScheduler(priority=8)
+        self.assertEqual(sched.priority, 8)
+
+    def test_constructor_priority_function(self):
+        def sched_priority(builderNames, changesByCodebase):
+            return 0
+        sched = self.makeScheduler(priority=sched_priority)
+        self.assertEqual(sched.priority, sched_priority)
+
     def test_trigger(self):
         sched = self.makeScheduler(codebases={'cb': {'repository': 'r'}})
         # no subscription should be in place yet

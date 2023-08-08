@@ -137,6 +137,23 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             name='test', builderNames=['test'], branch='default', month='1')
         self.assertEqual(sched.month, "1")
 
+    def test_constructor_priority_none(self):
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default', priority=None)
+        self.assertEqual(sched.priority, None)
+
+    def test_constructor_priority_int(self):
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default', priority=8)
+        self.assertEqual(sched.priority, 8)
+
+    def test_constructor_priority_function(self):
+        def sched_priority(builderNames, changesByCodebase):
+            return 0
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default', priority=sched_priority)
+        self.assertEqual(sched.priority, sched_priority)
+
     @defer.inlineCallbacks
     def test_enabled_callback(self):
         sched = self.makeScheduler(
