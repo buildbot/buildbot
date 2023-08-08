@@ -424,7 +424,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'external_idstring': None,
                 'changeids': [1, 2, 3],
-                'properties': None, 'builderNames': None
+                'priority': None,
+                'properties': None,
+                'builderNames': None,
                 }),
             ])
         self.db.state.assertStateByClass('test', 'Nightly',
@@ -461,6 +463,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'builderNames': None,
                 'changeids': [3, 5, 6],
                 'external_idstring': None,
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
@@ -489,6 +492,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'builderNames': None,
                 'changeids': [3],
                 'external_idstring': None,
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
@@ -532,6 +536,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'builderNames': None,
                 'changeids': [3],
                 'external_idstring': None,
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
@@ -563,6 +568,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'builderNames': None,
                 'changeids': [3, 4],
                 'external_idstring': None,
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])

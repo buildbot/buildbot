@@ -776,7 +776,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         )
         def addBuildsetForChanges(self, waited_for=False, reason='',
                                   external_idstring=None, changeids=None, builderNames=None,
-                                  properties=None,
+                                  properties=None, priority=None,
                                   **kw):
             pass
 

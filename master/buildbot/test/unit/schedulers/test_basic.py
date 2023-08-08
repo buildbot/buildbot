@@ -46,7 +46,7 @@ class CommonStuffMixin:
         @self.assertArgSpecMatches(sched.addBuildsetForChanges)
         def addBuildsetForChanges(
                 waited_for=False, reason='', external_idstring=None, changeids=None,
-                builderNames=None, properties=None, **kw):
+                builderNames=None, properties=None, priority=None, **kw):
             self.assertEqual(external_idstring, None)
             self.assertEqual(reason, sched.reason)
             self.events.append(f"B{repr(changeids).replace(' ', '')}@{int(self.clock.seconds())}")

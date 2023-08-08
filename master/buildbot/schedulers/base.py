@@ -37,7 +37,8 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     compare_attrs = ClusteredBuildbotService.compare_attrs + \
         ('builderNames', 'properties', 'codebases')
 
-    def __init__(self, name, builderNames, properties=None, codebases=None):
+    def __init__(self, name, builderNames, properties=None, codebases=None,
+                 priority=None):
         super().__init__(name=name)
         if codebases is None:
             codebases = self.DEFAULT_CODEBASES.copy()
@@ -96,6 +97,10 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         self._change_consumption_lock = defer.DeferredLock()
 
         self.enabled = True
+        if priority and not isinstance(priority, int) and not callable(priority):
+            config.error(f"Invalid type for priority: {type(priority)}. "
+                         "It must either be an integer or a function")
+        self.priority = priority
 
     def __repr__(self):
         """
@@ -343,7 +348,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, waited_for=False, reason='',
                               external_idstring=None, changeids=None, builderNames=None,
-                              properties=None,
+                              properties=None, priority=None,
                               **kw):
         if changeids is None:
             changeids = []
@@ -376,11 +381,19 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                 ss = lastChange['sourcestampid']
             sourcestamps.append(ss)
 
+        if priority is None:
+            priority = self.priority
+
+        if callable(priority):
+            priority = priority(builderNames or self.builderNames, changesByCodebase)
+        elif priority is None:
+            priority = 0
+
         # add one buildset, using the calculated sourcestamps
         bsid, brids = yield self.addBuildsetForSourceStamps(
             waited_for, sourcestamps=sourcestamps, reason=reason,
             external_idstring=external_idstring, builderNames=builderNames,
-            properties=properties, **kw)
+            properties=properties, priority=priority, **kw)
 
         return (bsid, brids)
 

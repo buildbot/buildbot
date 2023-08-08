@@ -224,7 +224,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForChanges(self, waited_for=False, reason='', external_idstring=None,
-                                   changeids=None, builderNames=None, properties=None, **kw):
+                                   changeids=None, builderNames=None, properties=None,
+                                   priority=None, **kw):
         if changeids is None:
             changeids = []
         properties = properties.asDict() if properties is not None else None
@@ -238,6 +239,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
                     "changeids": changeids,
                     "properties": properties,
                     "builderNames": builderNames,
+                    "priority": priority,
                 }
             )
         )
