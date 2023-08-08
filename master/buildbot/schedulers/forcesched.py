@@ -707,12 +707,6 @@ class ForceScheduler(base.BaseScheduler):
             config.error(f"ForceScheduler '{name}': username must be a StringParameter: "
                          f"{repr(username)}")
 
-        if self.checkIfType(priority, IntParameter):
-            self.priority = priority
-        else:
-            config.error(f"ForceScheduler '{name}': priority must be a IntParameter: "
-                         f"{repr(priority)}")
-
         self.forcedProperties = []
         self.label = name if label is None else label
 
@@ -742,6 +736,12 @@ class ForceScheduler(base.BaseScheduler):
                          builderNames=builderNames,
                          properties={},
                          codebases=codebase_dict)
+
+        if self.checkIfType(priority, IntParameter):
+            self.priority = priority
+        else:
+            config.error(f"ForceScheduler '{name}': priority must be a IntParameter: "
+                         f"{repr(priority)}")
 
         if properties:
             self.forcedProperties.extend(properties)
