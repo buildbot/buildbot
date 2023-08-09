@@ -245,7 +245,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
     def fake_addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
                                         reason='', external_idstring=None, properties=None,
-                                        builderNames=None, priority=0, **kw):
+                                        builderNames=None, priority=None, **kw):
         if sourcestamps is None:
             sourcestamps = []
         properties = properties.asDict() if properties is not None else None

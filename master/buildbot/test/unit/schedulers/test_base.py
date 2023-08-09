@@ -789,7 +789,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         )
         def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
                                        reason='', external_idstring=None, properties=None,
-                                       builderNames=None, priority=0, **kw):
+                                       builderNames=None, priority=None, **kw):
             pass
 
     def test_signature_addBuildsetForSourceStampsWithDefaults(self):

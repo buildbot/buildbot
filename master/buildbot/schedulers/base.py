@@ -387,7 +387,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
                                    reason='', external_idstring=None, properties=None,
-                                   builderNames=None, priority=0, **kw):
+                                   builderNames=None, priority=None, **kw):
         if sourcestamps is None:
             sourcestamps = []
         # combine properties
@@ -437,6 +437,9 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         # translate properties object into a dict as required by the
         # addBuildset method
         properties_dict = yield properties.render(properties.asDict())
+
+        if priority is None:
+            priority = 0
 
         bsid, brids = yield self.master.data.updates.addBuildset(
             scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
