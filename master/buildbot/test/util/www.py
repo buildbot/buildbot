@@ -15,7 +15,7 @@
 
 import json
 import os
-import pkg_resources
+from importlib.metadata import entry_points
 from io import BytesIO
 from io import StringIO
 from unittest import mock
@@ -123,7 +123,7 @@ class FakeRequest:
 class RequiresWwwMixin:
     # mix this into a TestCase to skip if buildbot-www is not installed
 
-    if not list(pkg_resources.iter_entry_points('buildbot.www', 'base')):
+    if not [ep for ep in entry_points().get('buildbot.www', []) if ep.name == 'base']:
         if 'BUILDBOT_TEST_REQUIRE_WWW' in os.environ:
             raise RuntimeError('$BUILDBOT_TEST_REQUIRE_WWW is set but '
                                'buildbot-www is not installed')

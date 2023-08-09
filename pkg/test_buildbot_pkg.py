@@ -29,10 +29,10 @@ class BuildbotWWWPkg(unittest.TestCase):
     epName = "base"
 
     loadTestScript = dedent("""
-        import pkg_resources
+        from importlib.metadata import entry_points
         import re
         apps = {}
-        for ep in pkg_resources.iter_entry_points('buildbot.www'):
+        for ep in entry_points().get('buildbot.www', []):
             apps[ep.name] = ep.load()
 
         print(apps["%(epName)s"])

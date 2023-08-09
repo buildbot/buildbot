@@ -221,7 +221,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         # Now verify that are no unregistered plugins left.
         existing_classes = self.get_existing_classes(module_name, interface)
 
-        exported_classes = {f'{plugins._get_entry(name)._entry.module_name}.{name}'
+        exported_classes = {f'{plugins._get_entry(name)._entry.module}.{name}'
                             for name in plugins.names}
         if known_not_exported is None:
             known_not_exported = set()

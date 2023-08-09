@@ -38,24 +38,20 @@ class FakeEntry:
     An entry suitable for unit tests
     """
 
-    def __init__(self, name, project_name, version, fail_require, value, warnings=None):
+    def __init__(self, name, group, fail_require, value, warnings=None):
         self._name = name
-        self._dist = mock.Mock(spec_set=['project_name', 'version'])
-        self._dist.project_name = project_name
-        self._dist.version = version
+        self._group = group
         self._fail_require = fail_require
         self._value = value
         self._warnings = [] if warnings is None else warnings
 
     @property
     def name(self):
-        "entry name"
         return self._name
 
     @property
-    def dist(self):
-        "dist thingie"
-        return self._dist
+    def group(self):
+        return self._group
 
     def require(self):
         """
@@ -71,6 +67,21 @@ class FakeEntry:
         for w in self._warnings:
             warnings.warn(w, DeprecationWarning)
         return self._value
+
+
+class FakeDistribution():
+    def __init__(self, name, version, fake_entries_distribution):
+        self.entry_points = fake_entries_distribution
+        self.version = version
+        self.metadata = {}
+        self.metadata['Name'] = name
+        self.metadata['Version'] = version
+
+
+class FakeDistributionNoMetadata():
+    def __init__(self, name, version, fake_entries_distribution):
+        self.entry_points = fake_entries_distribution
+        self.metadata = {}
 
 
 class ITestInterface(IPlugin):
@@ -108,50 +119,241 @@ class ClassWithNoInterface:
 # 'buildbot.'
 _FAKE_ENTRIES = {
     'buildbot.interface': [
-        FakeEntry('good', 'non-existent', 'irrelevant', False,
-                  ClassWithInterface),
-        FakeEntry('deep.path', 'non-existent', 'irrelevant', False,
-                  ClassWithInterface)
+        FakeEntry('good', 'buildbot.interface', False, ClassWithInterface),
+        FakeEntry('deep.path', 'buildbot.interface', False, ClassWithInterface)
     ],
     'buildbot.interface_warnings': [
-        FakeEntry('good', 'non-existent', 'irrelevant', False,
-                  ClassWithInterface, warnings=['test warning']),
-        FakeEntry('deep.path', 'non-existent', 'irrelevant', False,
-                  ClassWithInterface, warnings=['test warning'])
+        FakeEntry('good', 'buildbot.interface_warnings', False, ClassWithInterface,
+                  warnings=['test warning']),
+        FakeEntry('deep.path', 'buildbot.interface_warnings', False, ClassWithInterface,
+                  warnings=['test warning'])
     ],
     'buildbot.interface_failed': [
-        FakeEntry('good', 'non-existent', 'irrelevant', True,
-                  ClassWithInterface)
+        FakeEntry('good', 'buildbot.interface_failed', True, ClassWithInterface)
     ],
     'buildbot.no_interface': [
-        FakeEntry('good', 'non-existent', 'irrelevant', False,
-                  ClassWithNoInterface)
+        FakeEntry('good', 'buildbot.no_interface', False, ClassWithNoInterface)
     ],
     'buildbot.no_interface_again': [
-        FakeEntry('good', 'non-existent', 'irrelevant', False,
-                  ClassWithNoInterface)
+        FakeEntry('good', 'buildbot.no_interface_again', False, ClassWithNoInterface)
     ],
     'buildbot.no_interface_failed': [
-        FakeEntry('good', 'non-existent', 'irrelevant', True,
-                  ClassWithNoInterface)
+        FakeEntry('good', 'buildbot.no_interface_failed', True, ClassWithNoInterface)
     ],
     'buildbot.duplicates': [
-        FakeEntry('good', 'non-existent', 'first', False,
-                  ClassWithNoInterface),
-        FakeEntry('good', 'non-existent', 'second', False,
-                  ClassWithNoInterface)
+        FakeEntry('good', 'buildbot.duplicates', False, ClassWithNoInterface),
+        FakeEntry('good', 'buildbot.duplicates', False, ClassWithNoInterface)
     ]
 }
 
 
-def provide_fake_entries(group):
-    """
-    give a set of fake entries for known groups
-    """
-    return _FAKE_ENTRIES.get(group, [])
+def fake_find_distribution_info(entry_name, entry_group):
+    return ('non-existent', 'irrelevant')
 
 
-@mock.patch('buildbot.plugins.db.iter_entry_points', provide_fake_entries)
+class TestFindDistributionInfo(unittest.TestCase):
+    def test_exists_in_1st_ep(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]
+            )
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            result = buildbot.plugins.db.find_distribution_info('ep1', 'group_ep1')
+            self.assertEqual(('name_1', 'version_1'), result)
+
+    def test_exists_in_last_ep(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                    FakeEntry('ep2', 'group_ep2', False, ClassWithNoInterface)
+                ]
+            )
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            result = buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
+            self.assertEqual(('name_1', 'version_1'), result)
+
+    def test_no_group(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]
+            )
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            with self.assertRaises(PluginDBError):
+                buildbot.plugins.db.find_distribution_info('ep1', 'no_group')
+
+    def test_no_name(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]
+            )
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            with self.assertRaises(PluginDBError):
+                buildbot.plugins.db.find_distribution_info('no_name', 'group_ep1')
+
+    def test_no_name_no_group(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]
+            )
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            with self.assertRaises(PluginDBError):
+                buildbot.plugins.db.find_distribution_info('no_name', 'no_group')
+
+    def test_no_metadata_error_in_1st_dist(self):
+        distributions = [
+            FakeDistributionNoMetadata('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]
+            )
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            with self.assertRaises(PluginDBError):
+                buildbot.plugins.db.find_distribution_info('ep1', 'group_ep1')
+
+    def test_no_metadata_error_in_last_dist(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]
+            ),
+            FakeDistributionNoMetadata('name_2', 'version_2',
+                [
+                    FakeEntry('ep2', 'group_ep2', False, ClassWithInterface),
+                ]
+            )
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            with self.assertRaises(PluginDBError):
+                buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
+
+    def test_exists_in_last_dist_1st_ep(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]),
+            FakeDistribution('name_2', 'version_2',
+                [
+                    FakeEntry('ep2', 'group_ep2', False, ClassWithInterface),
+                    FakeEntry('ep3', 'group_ep3', False, ClassWithNoInterface)
+                ])
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            result = buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
+            self.assertEqual(('name_2', 'version_2'), result)
+
+    def test_exists_in_last_dist_last_ep(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]),
+            FakeDistribution('name_2', 'version_2',
+                [
+                    FakeEntry('ep2', 'group_ep2', False, ClassWithInterface),
+                    FakeEntry('ep3', 'group_ep3', False, ClassWithNoInterface)
+                ])
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            result = buildbot.plugins.db.find_distribution_info('ep3', 'group_ep3')
+            self.assertEqual(('name_2', 'version_2'), result)
+
+    def test_1st_dist_no_ep(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1', []),
+            FakeDistribution('name_2', 'version_2',
+                [
+                    FakeEntry('ep2', 'group_ep2', False, ClassWithInterface),
+                ])
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            result = buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
+            self.assertEqual(('name_2', 'version_2'), result)
+
+    def test_exists_in_2nd_dist_ep_no_metadada(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]),
+            FakeDistributionNoMetadata('name_2', 'version_2',
+                [
+                    FakeEntry('ep2', 'group_ep2', False, ClassWithInterface),
+                ]
+            )
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            with self.assertRaises(PluginDBError):
+                buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
+
+    def test_same_groups_different_ep(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]
+            ),
+            FakeDistribution('name_2', 'version_2',
+                [
+                    FakeEntry('ep2', 'group_ep1', False, ClassWithInterface),
+                ])
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            result = buildbot.plugins.db.find_distribution_info('ep2', 'group_ep1')
+            self.assertEqual(('name_2', 'version_2'), result)
+
+    def test_same_ep_different_groups(self):
+        distributions = [
+            FakeDistribution('name_1', 'version_1',
+                [
+                    FakeEntry('ep1', 'group_ep1', False, ClassWithInterface),
+                ]
+            ),
+            FakeDistribution('name_2', 'version_2',
+                [
+                    FakeEntry('ep1', 'group_ep2', False, ClassWithInterface),
+                ])
+        ]
+        with mock.patch('buildbot.plugins.db.distributions', return_value=distributions):
+            result = buildbot.plugins.db.find_distribution_info('ep1', 'group_ep2')
+            self.assertEqual(('name_2', 'version_2'), result)
+
+
+def provide_fake_entry_points():
+    return _FAKE_ENTRIES
+
+
+_fake_find_distribution_info_dups_counter = 0
+
+
+def fake_find_distribution_info_dups(entry_name, entry_group):
+    # entry_name is always 'good'
+    global _fake_find_distribution_info_dups_counter
+    if _fake_find_distribution_info_dups_counter == 0:
+        _fake_find_distribution_info_dups_counter += 1
+        return ('non-existent', 'module_first')
+    else:  # _fake_find_distribution_info_dups_counter == 1:
+        _fake_find_distribution_info_dups_counter = 0
+        return ('non-existent', 'module_second')
+
+
+@mock.patch('buildbot.plugins.db.entry_points', provide_fake_entry_points)
 class TestBuildbotPlugins(unittest.TestCase):
 
     def setUp(self):
@@ -169,6 +371,7 @@ class TestBuildbotPlugins(unittest.TestCase):
             self.assertEqual(registered, groups)
             self.assertEqual(registered, set(db.namespaces()))
 
+    @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info)
     def test_interface_provided_simple(self):
         # Basic check before the actual test
         self.assertTrue(ITestInterface.implementedBy(ClassWithInterface))
@@ -197,6 +400,7 @@ class TestBuildbotPlugins(unittest.TestCase):
         with self.assertRaises(PluginDBError):
             plugins.get('good.extra')
 
+    @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info)
     def test_interface_provided_deep(self):
         # Basic check before the actual test
         self.assertTrue(ITestInterface.implementedBy(ClassWithInterface))
@@ -218,6 +422,7 @@ class TestBuildbotPlugins(unittest.TestCase):
         self.assertEqual('yes', greeter.hello())
         self.assertEqual('no', greeter.hello('no'))
 
+    @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info)
     def test_interface_warnings(self):
         # we should not get no warnings when not trying to access the plugin
         plugins = db.get_plugins('interface_warnings', interface=ITestInterface)
@@ -245,10 +450,12 @@ class TestBuildbotPlugins(unittest.TestCase):
         plugins = db.get_plugins('no_interface')
         self.assertFalse(plugins.get('good') is None)
 
+    @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info_dups)
     def test_failure_on_dups(self):
         with self.assertRaises(PluginDBError):
             db.get_plugins('duplicates', load_now=True)
 
+    @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info)
     def test_get_info_on_a_known_plugin(self):
         plugins = db.get_plugins('interface')
         self.assertEqual(('non-existent', 'irrelevant'), plugins.info('good'))
@@ -267,7 +474,7 @@ class TestBuildbotPlugins(unittest.TestCase):
 class SimpleFakeEntry(FakeEntry):
 
     def __init__(self, name, value):
-        super().__init__(name, 'non-existent', 'irrelevant', False, value)
+        super().__init__(name, 'group', False, value)
 
 
 _WORKER_FAKE_ENTRIES = {

@@ -17,7 +17,8 @@
 
 import traceback
 import warnings
-from pkg_resources import iter_entry_points
+from importlib.metadata import distributions
+from importlib.metadata import entry_points
 
 from zope.interface import Invalid
 from zope.interface.verify import verifyClass
@@ -29,6 +30,18 @@ from buildbot.interfaces import IPlugin
 _NAMESPACE_BASE = 'buildbot'
 
 
+def find_distribution_info(entry_point_name, entry_point_group):
+    for distribution in distributions():
+        # each distribution can have many entry points
+        try:
+            for ep in distribution.entry_points:
+                if ep.name == entry_point_name and ep.group == entry_point_group:
+                    return (distribution.metadata['Name'], distribution.metadata['Version'])
+        except KeyError as exc:
+            raise PluginDBError("Plugin info was found, but it is invalid.") from exc
+    raise PluginDBError("Plugin info not found.")
+
+
 class _PluginEntry:
 
     def __init__(self, group, entry, loader):
@@ -37,6 +50,7 @@ class _PluginEntry:
         self._value = None
         self._loader = loader
         self._load_warnings = []
+        self._info = None
 
     def load(self):
         if self._value is None:
@@ -55,11 +69,15 @@ class _PluginEntry:
 
     @property
     def info(self):
-        dist = self._entry.dist
-        return (dist.project_name, dist.version)
+        if self._info is None:
+            self._info = find_distribution_info(self._entry.name, self._group)
+        return self._info
+
+    def __eq__(self, other):
+        return self.info == other.info
 
     def __ne__(self, other):
-        return self.info != other.info
+        return not self.__eq__(other)
 
     @property
     def value(self):
@@ -224,7 +242,8 @@ class _Plugins:
     def _tree(self):
         if self._real_tree is None:
             self._real_tree = _NSNode()
-            for entry in iter_entry_points(self._group):
+            entries = entry_points().get(self._group, [])
+            for entry in entries:
                 self._real_tree.add(entry.name,
                                     _PluginEntry(self._group, entry,
                                                  self._load_entry))
