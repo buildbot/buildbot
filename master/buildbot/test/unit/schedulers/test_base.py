@@ -801,5 +801,5 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         )
         def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
                                                    waited_for=False, properties=None,
-                                                   builderNames=None, **kw):
+                                                   builderNames=None, priority=None, **kw):
             pass

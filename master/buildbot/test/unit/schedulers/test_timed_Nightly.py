@@ -203,18 +203,21 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
                 'sourcestamps': [{'codebase': ''}],
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False}),
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
                 'sourcestamps': [{'codebase': ''}],
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False}),
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
                 'sourcestamps': [{'codebase': ''}],
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
@@ -238,6 +241,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
                 'sourcestamps': [{'codebase': ''}],
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
@@ -292,6 +296,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'sourcestamps': [{'codebase': ''}],
@@ -324,6 +329,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'sourcestamps': [{'codebase': ''}],
@@ -355,6 +361,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'sourcestamps': [{'codebase': ''}],
@@ -375,6 +382,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
+                'priority': None,
                 'properties': None,
                 'reason': "The Nightly scheduler named 'test' triggered this build",
                 'sourcestamps': [{'codebase': ''}],

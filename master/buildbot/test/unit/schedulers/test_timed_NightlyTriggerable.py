@@ -60,6 +60,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
                 'addBuildsetForSourceStampsWithDefaults',
                 {
                     "builderNames": None,  # uses the default
+                    "priority": None,
                     "properties": properties,
                     "reason": "The NightlyTriggerable scheduler named 'test' triggered this build",
                     "sourcestamps": sourcestamps,

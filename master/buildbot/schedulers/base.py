@@ -284,7 +284,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
                                                waited_for=False, properties=None, builderNames=None,
-                                               **kw):
+                                               priority=None, **kw):
         if sourcestamps is None:
             sourcestamps = []
 
@@ -329,7 +329,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         rv = yield self.addBuildsetForSourceStamps(
             sourcestamps=stampsWithDefaults, reason=reason,
             waited_for=waited_for, properties=properties,
-            builderNames=builderNames, **kw)
+            builderNames=builderNames, priority=priority, **kw)
         return rv
 
     def getCodebaseDict(self, codebase):

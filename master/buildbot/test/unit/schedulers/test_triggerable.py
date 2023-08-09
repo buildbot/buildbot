@@ -304,6 +304,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
+                'priority': None,
                 'properties': {'scheduler': ('n', 'Scheduler')},
                 'reason': "The Triggerable scheduler named 'n' triggered "
                           "this build",
@@ -329,6 +330,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
+                'priority': None,
                 'properties': {'scheduler': ('n', 'Scheduler')},
                 'reason': "The Triggerable scheduler named 'n' triggered "
                           "this build",
@@ -351,6 +353,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
+                'priority': None,
                 'properties': {'scheduler': ('n', 'Scheduler'), 'reason': ('test1', 'test')},
                 'reason': "test1",
                 'sourcestamps': [],
