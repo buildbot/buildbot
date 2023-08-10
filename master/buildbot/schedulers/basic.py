@@ -131,7 +131,8 @@ class BaseBasicScheduler(base.BaseScheduler):
                 return defer.succeed(None)
             # otherwise, we'll build it right away
             return self.addBuildsetForChanges(reason=self.reason,
-                                              changeids=[change.number])
+                                              changeids=[change.number],
+                                              priority=self.priority)
 
         timer_name = self.getTimerNameForChange(change)
 
@@ -199,7 +200,8 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         changeids = sorted(classifications.keys())
         yield self.addBuildsetForChanges(reason=self.reason,
-                                         changeids=changeids)
+                                         changeids=changeids,
+                                         priority=self.priority)
 
         max_changeid = changeids[-1]  # (changeids are sorted)
         yield self.master.db.schedulers.flushChangeClassifications(
