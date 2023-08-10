@@ -265,6 +265,7 @@ class Try_Jobdir(TryBase):
             reason=reason,
             external_idstring=bytes2unicode(parsed_job['jobid']),
             builderNames=builderNames,
+            priority=self.priority,
             properties=requested_props)
 
 
