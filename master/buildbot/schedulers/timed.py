@@ -219,7 +219,8 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         if changeids:
             max_changeid = changeids[-1]  # (changeids are sorted)
             yield self.addBuildsetForChanges(reason=self.reason,
-                                             changeids=changeids)
+                                             changeids=changeids,
+                                             priority=self.priority)
             yield scheds.flushChangeClassifications(self.serviceid,
                                                     less_than=max_changeid + 1)
         else:
@@ -228,7 +229,8 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
             sourcestamps = [{"codebase": cb} for cb in self.codebases]
             yield self.addBuildsetForSourceStampsWithDefaults(
                 reason=self.reason,
-                sourcestamps=sourcestamps)
+                sourcestamps=sourcestamps,
+                priority=self.priority)
         self.is_first_build = False
 
     def getCodebaseDict(self, codebase):
@@ -505,4 +507,5 @@ class NightlyTriggerable(NightlyBase):
             sourcestamps=sourcestamps,
             properties=props,
             parent_buildid=parent_buildid,
-            parent_relationship=parent_relationship)
+            parent_relationship=parent_relationship,
+            priority=self.priority)
