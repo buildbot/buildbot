@@ -99,7 +99,7 @@ PyYAML==6.0.1
 requests==2.31.0
 responses==0.23.3
 ruamel.yaml==0.17.33
-ruamel.yaml.clib==0.2.7
+ruamel.yaml.clib==0.2.8
 s3transfer==0.7.0
 scandir==1.10.0
 service-identity==23.1.0
