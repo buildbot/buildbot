@@ -776,7 +776,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         )
         def addBuildsetForChanges(self, waited_for=False, reason='',
                                   external_idstring=None, changeids=None, builderNames=None,
-                                  properties=None,
+                                  properties=None, priority=None,
                                   **kw):
             pass
 
@@ -789,7 +789,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         )
         def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
                                        reason='', external_idstring=None, properties=None,
-                                       builderNames=None, priority=0, **kw):
+                                       builderNames=None, priority=None, **kw):
             pass
 
     def test_signature_addBuildsetForSourceStampsWithDefaults(self):
@@ -801,5 +801,5 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         )
         def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
                                                    waited_for=False, properties=None,
-                                                   builderNames=None, **kw):
+                                                   builderNames=None, priority=None, **kw):
             pass

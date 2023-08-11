@@ -209,7 +209,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
                                                     waited_for=False, properties=None,
-                                                    builderNames=None, **kw):
+                                                    builderNames=None, priority=None, **kw):
         properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
 
@@ -220,11 +220,12 @@ class SchedulerMixin(interfaces.InterfaceTests):
         self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
                                       {"reason": reason, "sourcestamps": sourcestamps,
                                        "waited_for": waited_for, "properties": properties,
-                                       "builderNames": builderNames}))
+                                       "builderNames": builderNames, "priority": priority}))
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForChanges(self, waited_for=False, reason='', external_idstring=None,
-                                   changeids=None, builderNames=None, properties=None, **kw):
+                                   changeids=None, builderNames=None, properties=None,
+                                   priority=None, **kw):
         if changeids is None:
             changeids = []
         properties = properties.asDict() if properties is not None else None
@@ -238,6 +239,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
                     "changeids": changeids,
                     "properties": properties,
                     "builderNames": builderNames,
+                    "priority": priority,
                 }
             )
         )
@@ -245,7 +247,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
     def fake_addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
                                         reason='', external_idstring=None, properties=None,
-                                        builderNames=None, priority=0, **kw):
+                                        builderNames=None, priority=None, **kw):
         if sourcestamps is None:
             sourcestamps = []
         properties = properties.asDict() if properties is not None else None

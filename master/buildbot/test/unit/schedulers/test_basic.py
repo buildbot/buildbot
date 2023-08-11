@@ -46,7 +46,7 @@ class CommonStuffMixin:
         @self.assertArgSpecMatches(sched.addBuildsetForChanges)
         def addBuildsetForChanges(
                 waited_for=False, reason='', external_idstring=None, changeids=None,
-                builderNames=None, properties=None, **kw):
+                builderNames=None, properties=None, priority=None, **kw):
             self.assertEqual(external_idstring, None)
             self.assertEqual(reason, sched.reason)
             self.events.append(f"B{repr(changeids).replace(' ', '')}@{int(self.clock.seconds())}")
@@ -393,6 +393,23 @@ class SingleBranchScheduler(CommonStuffMixin,
             basic.SingleBranchScheduler(name="tsched", treeStableTimer=60,
                                         branches='x')
 
+    def test_constructor_priority_none(self):
+        sched = self.makeScheduler(
+            basic.SingleBranchScheduler, branch="master", priority=None)
+        self.assertEqual(sched.priority, None)
+
+    def test_constructor_priority_int(self):
+        sched = self.makeScheduler(
+            basic.SingleBranchScheduler, branch="master", priority=8)
+        self.assertEqual(sched.priority, 8)
+
+    def test_constructor_priority_function(self):
+        def sched_priority(builderNames, changesByCodebase):
+            return 0
+        sched = self.makeScheduler(
+            basic.SingleBranchScheduler, branch="master", priority=sched_priority)
+        self.assertEqual(sched.priority, sched_priority)
+
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_important(self):
         # this looks suspiciously like the same test above, because SingleBranchScheduler
@@ -504,6 +521,32 @@ class SingleBranchScheduler(CommonStuffMixin,
         cbd = yield sched.getCodebaseDict('a')
         # _lastCodebases is ignored
         self.assertEqual(cbd, {'branch': 'master', 'repository': ''})
+
+    @defer.inlineCallbacks
+    def test_gotChange_with_priority(self):
+        sched = self.makeFullScheduler(name='test', builderNames=['test'],
+                                       branch='master', priority=8)
+        self.db.insert_test_data([
+            fakedb.Object(id=self.OBJECTID, name='test',
+                          class_name='SingleBranchScheduler')])
+
+        yield sched.activate()
+
+        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A',
+                                        number=10),
+                              True)
+
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForChanges', {
+                'waited_for': False,
+                'external_idstring': None,
+                'changeids': [10],
+                'properties': None,
+                'reason': "The SingleBranchScheduler scheduler named 'test' triggered this build",
+                'builderNames': None,
+                'priority': 8})])
+
+        yield sched.deactivate()
 
 
 class AnyBranchScheduler(CommonStuffMixin,

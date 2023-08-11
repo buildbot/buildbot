@@ -37,7 +37,8 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     compare_attrs = ClusteredBuildbotService.compare_attrs + \
         ('builderNames', 'properties', 'codebases')
 
-    def __init__(self, name, builderNames, properties=None, codebases=None):
+    def __init__(self, name, builderNames, properties=None, codebases=None,
+                 priority=None):
         super().__init__(name=name)
         if codebases is None:
             codebases = self.DEFAULT_CODEBASES.copy()
@@ -96,6 +97,10 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         self._change_consumption_lock = defer.DeferredLock()
 
         self.enabled = True
+        if priority and not isinstance(priority, int) and not callable(priority):
+            config.error(f"Invalid type for priority: {type(priority)}. "
+                         "It must either be an integer or a function")
+        self.priority = priority
 
     def __repr__(self):
         """
@@ -284,7 +289,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
                                                waited_for=False, properties=None, builderNames=None,
-                                               **kw):
+                                               priority=None, **kw):
         if sourcestamps is None:
             sourcestamps = []
 
@@ -329,7 +334,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         rv = yield self.addBuildsetForSourceStamps(
             sourcestamps=stampsWithDefaults, reason=reason,
             waited_for=waited_for, properties=properties,
-            builderNames=builderNames, **kw)
+            builderNames=builderNames, priority=priority, **kw)
         return rv
 
     def getCodebaseDict(self, codebase):
@@ -343,7 +348,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, waited_for=False, reason='',
                               external_idstring=None, changeids=None, builderNames=None,
-                              properties=None,
+                              properties=None, priority=None,
                               **kw):
         if changeids is None:
             changeids = []
@@ -376,18 +381,26 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                 ss = lastChange['sourcestampid']
             sourcestamps.append(ss)
 
+        if priority is None:
+            priority = self.priority
+
+        if callable(priority):
+            priority = priority(builderNames or self.builderNames, changesByCodebase)
+        elif priority is None:
+            priority = 0
+
         # add one buildset, using the calculated sourcestamps
         bsid, brids = yield self.addBuildsetForSourceStamps(
             waited_for, sourcestamps=sourcestamps, reason=reason,
             external_idstring=external_idstring, builderNames=builderNames,
-            properties=properties, **kw)
+            properties=properties, priority=priority, **kw)
 
         return (bsid, brids)
 
     @defer.inlineCallbacks
     def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
                                    reason='', external_idstring=None, properties=None,
-                                   builderNames=None, priority=0, **kw):
+                                   builderNames=None, priority=None, **kw):
         if sourcestamps is None:
             sourcestamps = []
         # combine properties
@@ -437,6 +450,9 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         # translate properties object into a dict as required by the
         # addBuildset method
         properties_dict = yield properties.render(properties.asDict())
+
+        if priority is None:
+            priority = 0
 
         bsid, brids = yield self.master.data.updates.addBuildset(
             scheduler=self.name, sourcestamps=sourcestamps, reason=reason,

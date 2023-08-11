@@ -154,6 +154,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                 {
                     "builderNames": ['a'],
                     "waited_for": False,
+                    "priority": 0,
                     "properties": {
                         'owner': ('user', 'Force Build Form'),
                         'reason': ('because', 'Force Build Form'),
@@ -185,6 +186,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                 'addBuildsetForSourceStampsWithDefaults',
                 {
                     'builderNames': ['a'],
+                    'priority': 0,
                     'properties': {'owner': ('user', 'Force Build Form'),
                         'reason': ('because', 'Force Build Form')},
                     'reason': 'user wants it because',
@@ -212,6 +214,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                 {
                     "builderNames": ['a', 'b'],
                     "waited_for": False,
+                    "priority": 0,
                     "properties": {
                         'owner': ('user', 'Force Build Form'),
                         'reason': ('because', 'Force Build Form'),
@@ -240,6 +243,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                 {
                     "builderNames": ['a', 'b'],
                     "waited_for": False,
+                    "priority": 0,
                     "properties": {
                         'owner': ('user', 'Force Build Form'),
                         'reason': ('because', 'Force Build Form'),
@@ -304,6 +308,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                 {
                     "builderNames": ['a'],
                     "waited_for": False,
+                    "priority": 0,
                     "properties": expProperties,
                     "reason": "A build was forced by 'user': because",
                     "sourcestamps": [
@@ -336,6 +341,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                 {
                     "builderNames": ['a'],
                     "waited_for": False,
+                    "priority": 0,
                     "properties": expProperties,
                     "reason": "A build was forced by 'user': because",
                     "sourcestamps": [
@@ -442,6 +448,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                 {
                     "builderNames": ['a'],
                     "waited_for": False,
+                    "priority": 0,
                     "properties": expect_props,
                     "reason": "A build was forced by 'user': because",
                     "sourcestamps": [
