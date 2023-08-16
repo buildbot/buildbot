@@ -1,1 +1,0 @@
-Fixed missed invocations of methods decorated with ``util.debounce`` when debouncer was being stopped under certain conditions. This caused step and build state string updates to be sometimes missed.

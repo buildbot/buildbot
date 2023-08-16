@@ -8,6 +8,57 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.9.0`` ( ``2023-08-16`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed missed invocations of methods decorated with ``util.debounce`` when debouncer was being stopped under certain conditions.
+  This caused step and build state string updates to be sometimes missed.
+- Improved stale connection handling in ``GerritChangeSource``.
+  ``GerritChangeSource`` will instruct the ssh client to send periodic keepalive messages and will reconnect if the server does not reply for 45 seconds (default).
+  ``GerritChangeSource`` now has ``ssh_server_alive_interval_s`` and ``ssh_server_alive_count_max`` options to control this behavior.
+- Fixed unnecessary build started under the following conditions: there is an existing Nightly scheduler, ``onlyIfChanged`` is set to true and there is version upgrade from v3.4.0 (:issue:`6793`).
+- Fixed performance of changes data API queries with custom filters.
+- Prevent possible event loss during reconfig of reporters (:issue:`6982`).
+- Fixed exception thrown when worker copies directories in Solaris operating system (:issue:`6870`).
+- Fixed excessive log messages due to JWT token decoding error (:issue:`6872`).
+- Fixed excessive log messages when otherwise unsupported ``/auth/login`` endpoint is accessed when using ``RemoteUserAuth`` authentication plugin.
+
+Features
+--------
+
+- Introduce a way to group builders by project.
+  A new ``projects`` list is added to the configuration dictionary.
+  Builders can be associated to the entries in that list by the new ``project`` argument.
+
+  Grouping builders by project allows to significantly clean up the UI in larger Buildbot installations that contain hundreds or thousands of builders for a smaller number of unrelated codebases.
+  This is currently implemented only in experimental React UI.
+- Added support specifying the project in ``GitHubPullrequestPoller``.
+  Previously it was forced to be equal to GitHub's repository full name.
+- Reporter ``BitbucketServerCoreAPIStatusPush`` now supports ``BuildRequestGenerator`` and generates build status for build requests (by default).
+- Buildbot now has ``copy-db`` script migrate all data stored in the database from one database to another.
+  This may be used to change database engine types.
+  For example a sqlite database may be migrated to Postgres or MySQL when the load and data size grows.
+- Added cron features like last day of month to ``Nightly`` Scheduler.
+- Buildrequests can now have their priority changed, using the ``/buildrequests`` API.
+- The force scheduler can now set a build request priority.
+- Added support for specifying builder descriptions in markdown which is later rendered to HTML for presentation in the web frontend.
+- Build requests are now sorted according to their buildrequest.
+  Request time is now used as a secondary sort key.
+- Significantly improved performance of reporters or reporters with slower generators which is important on larger Buildbot installations.
+- Schedulers can now set a default priority for the buildrequests that it creates.
+  It can either be an integer or a function.
+- Implement support for shallow submodule update using git.
+- ``GerritChangeSource`` will now log a small number of previous log lines coming from ``ssh`` process in case of connection failure.
+
+Deprecations and Removals
+-------------------------
+
+- Deprecated ``projectName`` and ``projectURL`` configuration dictionary keys.
+
+
 Buildbot ``3.8.0`` ( ``2023-04-16`` )
 =====================================
 
