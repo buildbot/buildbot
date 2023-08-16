@@ -273,6 +273,11 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             self.base_plugin_name = 'base'
 
     def configPlugins(self, root, new_config):
+        plugin_root = root
+        if self.base_plugin_name == 'base_react':
+            plugin_root = resource.NoResource()
+            root.putChild(b"plugins", plugin_root)
+
         known_plugins = set(new_config.www.get('plugins', {})) | set([self.base_plugin_name])
         for key, plugin in list(new_config.www.get('plugins', {}).items()):
             log.msg(f"initializing www plugin {repr(key)}")
@@ -281,7 +286,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             app = self.apps.get(key)
             app.setMaster(self.master)
             app.setConfiguration(plugin)
-            root.putChild(unicode2bytes(key), app.resource)
+            plugin_root.putChild(unicode2bytes(key), app.resource)
+
             if not app.ui:
                 del new_config.www['plugins'][key]
         for plugin_name in set(self.apps.names) - known_plugins:

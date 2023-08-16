@@ -53,13 +53,13 @@ const doRender = (buildbotFrontendConfig: Config) => {
     // TODO: in production this could be added to the document by buildbot backend
     const pluginScript = document.createElement('script');
     pluginScript.type = 'text/javascript';
-    pluginScript.src = `/plugins/${pluginKey}.js`;
+    pluginScript.src = `/plugins/${pluginKey}/scripts.js`;
     document.head.appendChild(pluginScript);
 
     const pluginCss = document.createElement('link');
     pluginCss.rel = 'stylesheet';
     pluginCss.type = 'text/css';
-    pluginCss.href = `/plugins/${pluginKey}.css`;
+    pluginCss.href = `/plugins/${pluginKey}/styles.css`;
     document.head.appendChild(pluginCss);
   }
 
