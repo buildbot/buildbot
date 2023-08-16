@@ -19,14 +19,14 @@ const buildPluginsPathsMap = () => {
 
   const addPlugin = (pluginName: string, pluginOutputRoot: string) => {
     const knownPaths = [
-      ['js', 'scripts.js', 'text/javascript'],
-      ['css', 'styles.css', 'text/css']
+      ['scripts.js', 'text/javascript'],
+      ['styles.css', 'text/css']
     ];
 
-    for (const [type, filename, mimeType] of knownPaths) {
+    for (const [filename, mimeType] of knownPaths) {
       const pluginOutputFile = path.join(pluginOutputRoot, filename);
       if (fs.existsSync(pluginOutputFile)) {
-        aliases[`/plugins/${pluginName}.${type}`] = [pluginOutputFile, mimeType];
+        aliases[`/plugins/${pluginName}/${filename}`] = [pluginOutputFile, mimeType];
       }
     }
   }
