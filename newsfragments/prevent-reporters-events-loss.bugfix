@@ -1,1 +1,0 @@
-Prevent possible event loss during reconfig of reporters (:issue:`6982`).
