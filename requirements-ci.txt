@@ -77,7 +77,7 @@ MarkupSafe==2.1.3
 mccabe==0.7.0
 more-itertools==9.1.0;  python_version < "3.8" # pyup: ignore (see: https://pyup.io/packages/pypi/more-itertools/changelog)
 more-itertools==10.1.0;  python_version >= "3.8"
-moto==4.1.13
+moto==4.1.14
 olefile==0.46
 packaging==23.1
 parameterized==0.9.0
