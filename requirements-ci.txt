@@ -31,7 +31,7 @@ boto==2.49.0
 botocore==1.31.3
 certifi==2023.7.22
 cffi==1.15.1
-chardet==5.1.0
+chardet==5.2.0
 charset-normalizer==3.2.0
 click-default-group==1.2.2
 click==8.1.5
