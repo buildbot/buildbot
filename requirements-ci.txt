@@ -93,7 +93,8 @@ pyasn1==0.5.0
 pycodestyle==2.11.0;  python_version >= "3.8.1"
 pycparser==2.21
 pyenchant==3.2.2
-pyflakes==3.0.1;  python_version >= "3.8.1"
+pyflakes==3.0.1;  python_version < "3.8" # pyup: ignore (see: https://pyup.io/packages/pypi/pyflakes/changelog)
+pyflakes==3.1.0;  python_version >= "3.8"
 PyJWT==2.7.0
 pyOpenSSL==23.2.0
 pyparsing==3.1.0
