@@ -194,25 +194,17 @@ class _Plugins:
     represent plugins within a namespace
     """
 
-    def __init__(self, namespace, interface=None, check_extras=True):
+    def __init__(self, namespace, interface=None):
         if interface is not None:
             assert interface.isOrExtends(IPlugin)
 
         self._group = f'{_NAMESPACE_BASE}.{namespace}'
 
         self._interface = interface
-        self._check_extras = check_extras
-
         self._real_tree = None
 
     def _load_entry(self, entry):
         # pylint: disable=W0703
-        if self._check_extras:
-            try:
-                entry.require()
-            except Exception as e:
-                raise PluginDBError('Requirements are not satisfied '
-                                    f'for {self._group}:{entry.name}: {str(e)}') from e
         try:
             result = entry.load()
         except Exception as e:
@@ -289,8 +281,7 @@ class _PluginDB:
     def __init__(self):
         self._namespaces = {}
 
-    def add_namespace(self, namespace, interface=None, check_extras=True,
-                      load_now=False):
+    def add_namespace(self, namespace, interface=None, load_now=False):
         """
         register given namespace in global database of plugins
 
@@ -299,7 +290,7 @@ class _PluginDB:
         tempo = self._namespaces.get(namespace)
 
         if tempo is None:
-            tempo = _Plugins(namespace, interface, check_extras)
+            tempo = _Plugins(namespace, interface)
             self._namespaces[namespace] = tempo
 
         if load_now:
@@ -349,8 +340,8 @@ def info():
     return _DB.info()
 
 
-def get_plugins(namespace, interface=None, check_extras=True, load_now=False):
+def get_plugins(namespace, interface=None, load_now=False):
     """
     helper to get a direct interface to _Plugins
     """
-    return _DB.add_namespace(namespace, interface, check_extras, load_now)
+    return _DB.add_namespace(namespace, interface, load_now)
