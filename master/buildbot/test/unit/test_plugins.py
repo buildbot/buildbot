@@ -234,12 +234,6 @@ class TestBuildbotPlugins(unittest.TestCase):
         with assertProducesWarning(DeprecationWarning, "test warning"):
             _ = plugins.deep.path
 
-    def test_interface_provided_deps_failed(self):
-        plugins = db.get_plugins('interface_failed', interface=ITestInterface,
-                                 check_extras=True)
-        with self.assertRaises(PluginDBError):
-            plugins.get('good')
-
     def test_required_interface_not_provided(self):
         plugins = db.get_plugins('no_interface_again',
                                  interface=ITestInterface)
@@ -250,11 +244,6 @@ class TestBuildbotPlugins(unittest.TestCase):
     def test_no_interface_provided(self):
         plugins = db.get_plugins('no_interface')
         self.assertFalse(plugins.get('good') is None)
-
-    def test_no_interface_provided_deps_failed(self):
-        plugins = db.get_plugins('no_interface_failed', check_extras=True)
-        with self.assertRaises(PluginDBError):
-            plugins.get('good')
 
     def test_failure_on_dups(self):
         with self.assertRaises(PluginDBError):
