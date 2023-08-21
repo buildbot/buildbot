@@ -62,7 +62,7 @@ idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.4.1
 importlib-metadata==4.13.0;  python_version < "3.8"  # pyup: ignore
 importlib-metadata==6.8.0;  python_version >= "3.8"
-importlib-resources==5.12.0;  python_version < "3.8"
+importlib-resources==6.0.1;  python_version < "3.8"
 incremental==22.10.0
 ipaddress==1.0.23
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
