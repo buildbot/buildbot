@@ -9,6 +9,6 @@ sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.6
 sphinxcontrib-serializinghtml==1.1.9
 sphinxcontrib-spelling==8.0.0
-sphinxcontrib-websupport==1.2.4
+sphinxcontrib-websupport==1.2.6
 Pygments==2.15.1
 towncrier==23.6.0
