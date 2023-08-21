@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+import datetime
+
+import croniter
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -25,7 +29,6 @@ from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.schedulers import base
-from buildbot.util import croniter
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 
 # States of objects which have to be observed are registered in the data base table `object_state`.
@@ -269,6 +272,11 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         "Similar to util.now, but patchable by tests"
         return util.now(self._reactor)
 
+    def current_utc_offset(self, tm):
+        return (
+            datetime.datetime.fromtimestamp(tm) - datetime.datetime.utcfromtimestamp(tm)
+        ).total_seconds()
+
     @defer.inlineCallbacks
     def _scheduleNextBuild_locked(self):
         # clear out the existing timer
@@ -382,11 +390,17 @@ class NightlyBase(Timed):
         return ','.join([str(s) for s in time])  # Convert the list to a string
 
     def getNextBuildTime(self, lastActuated):
-        dateTime = lastActuated or self.now()
+        ts = lastActuated or self.now()
         sched = (f'{self._timeToCron(self.minute)} {self._timeToCron(self.hour)} '
                  f'{self._timeToCron(self.dayOfMonth)} {self._timeToCron(self.month)} '
                  f'{self._timeToCron(self.dayOfWeek, True)}')
-        cron = croniter.croniter(sched, dateTime)
+
+        # By default croniter interprets input timestamp in UTC timezone. However, the scheduler
+        # works in local timezone, so appropriate timezone information needs to be passed
+        tz = datetime.timezone(datetime.timedelta(seconds=self.current_utc_offset(ts)))
+        dt_with_tz = datetime.datetime.fromtimestamp(ts, tz)
+
+        cron = croniter.croniter(sched, dt_with_tz)
         nextdate = cron.get_next(float)
         return defer.succeed(nextdate)
 
