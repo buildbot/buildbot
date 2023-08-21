@@ -111,7 +111,7 @@ requests==2.31.0
 responses==0.23.1
 ruamel.yaml==0.17.32
 ruamel.yaml.clib==0.2.7
-s3transfer==0.6.1
+s3transfer==0.6.2
 scandir==1.10.0
 service-identity==21.1.0;  python_version < "3.8"  # pyup: ignore
 service-identity==23.1.0;  python_version >= "3.8"
