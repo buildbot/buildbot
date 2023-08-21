@@ -8,7 +8,7 @@ autobahn==23.6.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" and python_version >= "3.7"  # pyup: ignore
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
 boto3==1.28.3
-flake8==6.0.0;  python_version >= "3.8.1"
+flake8==6.1.0;  python_version >= "3.8.1"
 msgpack==1.0.5
 Markdown==3.4.4
 pylint==2.17.5
@@ -19,7 +19,7 @@ pylint==2.17.5
 # while to remove no longer needed dependencies.
 
 alabaster==0.7.13
-alembic==1.11.1
+alembic==1.11.3
 appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==2.15.6
@@ -31,11 +31,12 @@ boto==2.49.0
 botocore==1.31.3
 certifi==2023.7.22
 cffi==1.15.1
-chardet==5.1.0
+chardet==5.2.0
 charset-normalizer==3.2.0
-click-default-group==1.2.2
-click==8.1.5
-configparser==5.2.0;  python_version < "3.8"
+click-default-group==1.2.4
+click==8.1.6
+configparser==5.2.0;  python_version < "3.7" # pyup: ignore (see: https://configparser.readthedocs.io/en/latest/history.html)
+configparser==5.3.0;  python_version >= "3.7" and python_version < "3.8" # pyup: ignore (see: https://configparser.readthedocs.io/en/latest/history.html)
 configparser==6.0.0;  python_version >= "3.8"
 constantly==15.1.0
 cookies==2.2.1
@@ -43,7 +44,8 @@ coverage==7.2.7
 cryptography==41.0.3
 decorator==5.1.1
 dicttoxml==1.7.16
-dill==0.3.6
+dill==0.3.6;  python_version < "3.7" # pyup: ignore (see: https://github.com/uqfoundation/dill/releases/tag/dill-0.3.7)
+dill==0.3.7;  python_version >= "3.7"
 docker==5.0.3;  python_version < "3.7" # pyup: ignore (6.0.0 droppeded support for < Python 3.7 see: https://docker-py.readthedocs.io/en/stable/change-log.html#id8)
 docker==6.1.3;  python_version >= "3.7"
 docutils==0.18.1  # pyup: ignore (sphinx-rtd-theme 1.2.0 requires docutils<0.19)
@@ -70,11 +72,12 @@ lazy-object-proxy==1.9.0  # pyup: ignore (required by astroid)
 ldap3==2.9.1
 lz4==4.3.2
 Mako==1.2.4
-markdown2==2.4.9
+markdown2==2.4.10
 MarkupSafe==2.1.3
 mccabe==0.7.0
-more-itertools==9.1.0
-moto==4.1.13
+more-itertools==9.1.0;  python_version < "3.8" # pyup: ignore (see: https://pyup.io/packages/pypi/more-itertools/changelog)
+more-itertools==10.1.0;  python_version >= "3.8"
+moto==4.1.14
 olefile==0.46
 packaging==23.1
 parameterized==0.9.0
@@ -83,24 +86,25 @@ pbr==5.11.1
 pep8==1.7.1
 Pillow==9.3.0;  python_version < "3.8"  # pyup: ignore
 Pillow==10.0.0;  python_version >= "3.8"
-platformdirs==3.9.1
+platformdirs==3.10.0
 psutil==5.9.5
 pyaml==21.10.1;  python_version < "3.8"  # pyup: ignore
 pyaml==23.7.0;  python_version >= "3.8"
 pyasn1-modules==0.3.0
 pyasn1==0.5.0
-pycodestyle==2.10.0;  python_version >= "3.8.1"
+pycodestyle==2.11.0;  python_version >= "3.8.1"
 pycparser==2.21
 pyenchant==3.2.2
-pyflakes==3.0.1;  python_version >= "3.8.1"
-PyJWT==2.7.0
+pyflakes==3.0.1;  python_version < "3.8" # pyup: ignore (see: https://pyup.io/packages/pypi/pyflakes/changelog)
+pyflakes==3.1.0;  python_version >= "3.8"
+PyJWT==2.8.0
 pyOpenSSL==23.2.0
-pyparsing==3.1.0
+pyparsing==3.1.1
 pypugjs==5.9.12
 python-dateutil==2.8.2
 python-subunit==1.4.2
 pytz==2023.3
-PyYAML==6.0
+PyYAML==6.0.1
 requests==2.31.0
 responses==0.23.1
 ruamel.yaml==0.17.32
