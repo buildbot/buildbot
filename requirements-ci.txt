@@ -107,7 +107,7 @@ python-subunit==1.4.2
 pytz==2023.3
 PyYAML==6.0.1
 requests==2.31.0
-responses==0.23.1
+responses==0.23.3
 ruamel.yaml==0.17.32
 ruamel.yaml.clib==0.2.7
 s3transfer==0.6.1
