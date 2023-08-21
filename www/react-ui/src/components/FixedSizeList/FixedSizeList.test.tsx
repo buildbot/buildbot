@@ -177,23 +177,6 @@ describe('FixedSizeList', () => {
     expect(itemRenderer).toHaveBeenCalled();
   });
 
-  // TODO Deprecate direction "horizontal"
-  it('should re-render items if direction changes', () => {
-    jest.spyOn(console, 'warn').mockImplementation(() => {}); // Ingore legacy prop warning
-
-    const rendered = renderer.create(<FixedSizeList {...defaultProps} direction="vertical" />);
-    expect(itemRenderer).toHaveBeenCalled();
-    itemRenderer.mockClear();
-
-    // Re-rendering should not affect pure sCU children:
-    rendered.update(<FixedSizeList {...defaultProps} direction="vertical" />);
-    expect(itemRenderer).not.toHaveBeenCalled();
-
-    // Re-rendering with new layout should re-render children:
-    rendered.update(<FixedSizeList {...defaultProps} direction="horizontal" />);
-    expect(itemRenderer).toHaveBeenCalled();
-  });
-
   describe('scrollbar handling', () => {
     it('should set width to "100%" for vertical lists to avoid unnecessary horizontal scrollbar',
         async () => {
@@ -877,39 +860,6 @@ describe('FixedSizeList', () => {
       expect((container.firstChild as HTMLElement).id).toBe('outer');
       expect((container.firstChild!.firstChild! as HTMLElement).id).toBe('inner');
     });*/
-
-    it('should warn if legacy direction "horizontal" value is used', () => {
-      jest.spyOn(console, 'warn');
-
-      const rendered = renderer.create(<FixedSizeList {...defaultProps} direction="horizontal" />);
-
-      expect(console.warn).toHaveBeenCalledTimes(1);
-      expect(console.warn).toHaveBeenLastCalledWith(
-        'The direction prop should be either "ltr" (default) or "rtl". ' +
-        'Please use the layout prop to specify "vertical" (default) or "horizontal" orientation.'
-      );
-
-      rendered.update(<FixedSizeList {...defaultProps} direction="horizontal" />);
-
-      // But it should only warn once.
-      expect(console.warn).toHaveBeenCalledTimes(1);
-    });
-
-    it('should warn if legacy direction "vertical" value is used', () => {
-      jest.spyOn(console, 'warn');
-
-      const rendered = renderer.create(<FixedSizeList {...defaultProps} direction="vertical" />);
-      expect(console.warn).toHaveBeenCalledTimes(1);
-      expect(console.warn).toHaveBeenLastCalledWith(
-        'The direction prop should be either "ltr" (default) or "rtl". ' +
-        'Please use the layout prop to specify "vertical" (default) or "horizontal" orientation.'
-      );
-
-      rendered.update(<FixedSizeList {...defaultProps} direction="vertical" />);
-
-      // But it should only warn once.
-      expect(console.warn).toHaveBeenCalledTimes(1);
-    });
   });
 
   describe('itemData', () => {

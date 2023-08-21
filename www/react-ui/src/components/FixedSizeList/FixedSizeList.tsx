@@ -58,7 +58,7 @@ import type { TimeoutID } from './timer';
 export type ScrollToAlign = 'auto' | 'smart' | 'center' | 'start' | 'end';
 
 // TODO Deprecate directions "horizontal" and "vertical"
-type Direction = 'ltr' | 'rtl' | 'horizontal' | 'vertical';
+type Direction = 'ltr' | 'rtl';
 type Layout = 'horizontal' | 'vertical';
 
 type RenderComponentProps<T> = {
@@ -175,24 +175,12 @@ const validateSharedProps = (
     height,
     layout,
     width,
-  }: FixedSizeListProps<any>,
-  { instance }: State
+  }: FixedSizeListProps<any>
 ): void => {
   if (process.env.NODE_ENV !== 'production') {
-    // TODO Deprecate direction "horizontal"
-    const isHorizontal = direction === 'horizontal' || layout === 'horizontal';
+    const isHorizontal = layout === 'horizontal';
 
     switch (direction) {
-      case 'horizontal':
-      case 'vertical':
-        if (devWarningsDirection && !devWarningsDirection.has(instance)) {
-          devWarningsDirection.add(instance);
-          console.warn(
-            'The direction prop should be either "ltr" (default) or "rtl". ' +
-            'Please use the layout prop to specify "vertical" (default) or "horizontal" orientation.'
-          );
-        }
-        break;
       case 'ltr':
       case 'rtl':
         // Valid values
@@ -291,8 +279,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
                                 scrollOffset: number,
                                 instanceProps: InstanceProps,
                                 scrollbarSize: number): number {
-    // TODO Deprecate direction "horizontal"
-    const isHorizontal = direction === 'horizontal' || layout === 'horizontal';
+    const isHorizontal = layout === 'horizontal';
     const size = (isHorizontal ? width : height) as number;
     const lastItemOffset = Math.max(0, itemCount * itemSize - size);
     const maxOffset = Math.min(lastItemOffset, index * itemSize);
@@ -351,8 +338,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
   getStopIndexForStartIndex({ direction, height, itemCount, itemSize, layout, width }: FixedSizeListProps<any>,
                             startIndex: number,
                             scrollOffset: number): number {
-    // TODO Deprecate direction "horizontal"
-    const isHorizontal = direction === 'horizontal' || layout === 'horizontal';
+    const isHorizontal = layout === 'horizontal';
     const offset = startIndex * itemSize;
     const size = (isHorizontal ? width : height) as number;
     const numVisibleItems = Math.ceil((size + scrollOffset - offset) / itemSize);
@@ -365,7 +351,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     nextProps: FixedSizeListProps<any>,
     prevState: State
   ): null {
-    validateSharedProps(nextProps, prevState);
+    validateSharedProps(nextProps);
     return null;
   }
 
@@ -428,7 +414,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     if (typeof initialScrollOffset === 'number' && this._outerRef != null) {
       const outerRef = this._outerRef;
       // TODO Deprecate direction "horizontal"
-      if (direction === 'horizontal' || layout === 'horizontal') {
+      if (layout === 'horizontal') {
         outerRef.scrollLeft = initialScrollOffset;
       } else {
         outerRef.scrollTop = initialScrollOffset;
@@ -445,8 +431,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     if (scrollUpdateWasRequested && this._outerRef != null) {
       const outerRef = this._outerRef;
 
-      // TODO Deprecate direction "horizontal"
-      if (direction === 'horizontal' || layout === 'horizontal') {
+      if (layout === 'horizontal') {
         if (direction === 'rtl') {
           // TRICKY According to the spec, scrollLeft should be negative for RTL aligned elements.
           // This is not the case for all browsers though (e.g. Chrome reports values as positive, measured relative to the left).
@@ -499,9 +484,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     } = this.props;
     const { isScrolling } = this.state;
 
-    // TODO Deprecate direction "horizontal"
-    const isHorizontal =
-      direction === 'horizontal' || layout === 'horizontal';
+    const isHorizontal = layout === 'horizontal';
 
     const onScroll = isHorizontal
       ? (e: ScrollEvent) => this._onScrollHorizontal(e)
@@ -667,9 +650,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
       const offset = this.getItemOffset(this.props, index);
       const size = this.props.itemSize;
 
-      // TODO Deprecate direction "horizontal"
-      const isHorizontal =
-        direction === 'horizontal' || layout === 'horizontal';
+      const isHorizontal = layout === 'horizontal';
 
       const isRtl = direction === 'rtl';
       const offsetHorizontal = isHorizontal ? offset : 0;
