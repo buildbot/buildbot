@@ -92,19 +92,21 @@ type ScrollEvent = SyntheticEvent<HTMLDivElement>;
 type ItemStyleCache = {[index: number]: Object};
 
 type OuterProps = {
-  children: React.Component,
-  className: string | void,
+  children: React.ReactNode,
+  className: string | undefined,
   onScroll: (e: ScrollEvent) => void,
   style: {
     [key: string]: any,
   },
+  ref?: Ref<any>;
 };
 
 type InnerProps = {
-  children: React.Component,
+  children: React.ReactNode,
   style: {
     [key: string]: any,
   },
+  ref?: Ref<any>;
 };
 
 export type FixedSizeListProps<T> = {
@@ -114,7 +116,7 @@ export type FixedSizeListProps<T> = {
   height: number | string,
   initialScrollOffset?: number,
   innerRef?: Ref<HTMLElement>,
-  innerElementType?: string | React.FunctionComponent<InnerProps> | React.ComponentClass<InnerProps>,
+  innerElementType?: string | React.ComponentType<InnerProps>,
   itemCount: number,
   itemData: T,
   itemKey?: (index: number, data: T) => any,
@@ -123,7 +125,7 @@ export type FixedSizeListProps<T> = {
   onItemsRendered?: onItemsRenderedCallback,
   onScroll?: onScrollCallback,
   outerRef?: Ref<HTMLElement>,
-  outerElementType?: string | React.FunctionComponent<OuterProps> | React.ComponentClass<OuterProps>,
+  outerElementType?: string | React.ComponentType<OuterProps>,
   overscanCount: number,
   style?: Object,
   useIsScrolling: boolean,
@@ -236,7 +238,7 @@ const validateSharedProps = (
 
 export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State> {
   _instanceProps: any = {};
-  _outerRef?: HTMLDivElement;
+  _outerRef?: HTMLElement;
   _resetIsScrollingTimeoutId: TimeoutID | null = null;
 
   static defaultProps = {
@@ -504,14 +506,15 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     const items: ReactElement[] = [];
     if (itemCount > 0) {
       for (let index = startIndex; index <= stopIndex; index++) {
+        const Children = children;
         items.push(
-          createElement(children, {
-            data: itemData,
-            key: itemKey(index, itemData),
-            index,
-            isScrolling: useIsScrolling ? isScrolling : undefined,
-            style: this._getItemStyle(index),
-          })
+          <Children
+            data={itemData}
+            key={itemKey(index, itemData)}
+            index={index}
+            isScrolling={useIsScrolling ? isScrolling : undefined}
+            style={this._getItemStyle(index)}
+          />
         );
       }
     }
@@ -523,11 +526,11 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     );
 
     return createElement(
-      outerElementType || 'div', {
+      outerElementType || "div",
+      {
         className,
         onScroll,
-        // @ts-ignore
-        ref: ref => this._outerRefSetter(ref),
+        ref: (ref: HTMLElement) => this._outerRefSetter(ref),
         style: {
           position: 'relative',
           height,
@@ -538,17 +541,19 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
           direction,
           ...style,
         },
+        children: createElement(
+          innerElementType || "div",
+          {
+            ref: innerRef,
+            style: {
+              height: isHorizontal ? '100%' : estimatedTotalSize,
+              pointerEvents: isScrolling ? 'none' : undefined,
+              width: isHorizontal ? estimatedTotalSize : '100%',
+            },
+            children: items
+          }
+        )
       },
-      createElement(innerElementType || 'div', {
-        // @ts-ignore
-        children: items,
-        ref: innerRef,
-        style: {
-          height: isHorizontal ? '100%' : estimatedTotalSize,
-          pointerEvents: isScrolling ? 'none' : undefined,
-          width: isHorizontal ? estimatedTotalSize : '100%',
-        },
-      })
     );
   }
 
@@ -800,7 +805,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     }, () => this._resetIsScrollingDebounced());
   }
 
-  _outerRefSetter(ref: HTMLDivElement): void {
+  _outerRefSetter(ref: HTMLElement): void {
     const { outerRef } = this.props;
 
     this._outerRef = ref;

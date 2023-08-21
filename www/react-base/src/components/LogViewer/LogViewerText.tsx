@@ -16,11 +16,11 @@
 */
 
 import './LogViewerText.scss'
-import {forwardRef, useEffect, useRef, useState} from 'react';
+import {ForwardedRef, forwardRef, useRef, useState} from 'react';
 import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer} from "mobx-react";
 import {Log, useDataAccessor} from "buildbot-data-js";
-import {ListOnItemsRenderedProps} from 'react-window';
+import {ListOnItemsRenderedProps} from 'buildbot-ui';
 import AutoSizer, {Size} from "react-virtualized-auto-sizer";
 import {digitCount} from "../../util/Math";
 import {LogDownloadButton} from "../LogDownloadButton/LogDownloadButton";
@@ -136,7 +136,7 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
         width={width}
         itemSize={18}
         getRangeToRenderOverride={getRangeToRenderOverride}
-        outerElementType={forwardRef((props, ref) => (
+        outerElementType={forwardRef((props, ref: ForwardedRef<HTMLDivElement>) => (
           <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props}/>
         ))}
       >

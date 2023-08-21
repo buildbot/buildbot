@@ -15,8 +15,8 @@
   Copyright Buildbot Team Members
 */
 
-import {FixedSizeListProps} from "react-window";
-import {FixedSizeList} from 'react-window';
+import {FixedSizeListProps} from "buildbot-ui";
+import {FixedSizeList} from 'buildbot-ui';
 
 export type CustomFixedSizeListProps<T = any> = FixedSizeListProps<T> & {
   getRangeToRenderOverride: (overscanStartIndex: number,
