@@ -42,7 +42,7 @@ from buildbot.util.codebase import AbsoluteSourceStampsMixin
 # `last_build` means on what time build was scheduled to run ignoring the fact if it actually ran or
 # not.
 # Value of these state keys affects the decision whether to run a build.
-
+#
 # When deciding whether to run the build or to skip it, several factors and their interactions are
 # evaluated:
 # - the value of `onlyIfChanged` (default is False);
@@ -50,13 +50,13 @@ from buildbot.util.codebase import AbsoluteSourceStampsMixin
 # - whether this would be first build (True if `last_build` value was not detected). If there
 # already were builds in the past, it indicates that the scheduler is existing;
 # - were there any important changes after the last build.
-
+#
 # If `onlyIfChanged` is not set or its setting changes to False, builds will always run on the time
 # set, ignoring the status of `last_only_if_changed` and `last_build` regardless of what the state
 # is or anything else.
-
+#
 # If `onlyIfChanged` is True, then builds will be run when there are relevant changes.
-
+#
 # If `onlyIfChanged` is True and even when there were no relevant changes, builds will run for the
 # the first time on specified time as well when the following condition holds:
 # - `last_only_if_changed` was set to False on previous build. This ensures that any changes that
@@ -65,7 +65,7 @@ from buildbot.util.codebase import AbsoluteSourceStampsMixin
 # `onlyIfChanged` is adjusted;
 # - `last_build` does not have a value yet meaning that it is a new scheduler and we should have
 # initial build to set a baseline.
-
+#
 # There is an edge case, when upgrading to v3.5.0 and new object status variable
 # `last_only_if_changed` is introduced. If scheduler exists and had builds before
 # (`last_build` has a value), build should only be started if there are relevant changes.
