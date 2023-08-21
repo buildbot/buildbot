@@ -16,7 +16,7 @@
 */
 
 import './LogViewerText.scss'
-import {ForwardedRef, forwardRef, useRef, useState} from 'react';
+import {forwardRef, useCallback, useMemo, useRef, useState} from 'react';
 import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer} from "mobx-react";
 import {Log, useDataAccessor} from "buildbot-data-js";
@@ -78,9 +78,9 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const checkSelection = () => {
+  const checkSelection = useCallback(() => {
     manager.setIsSelectionActive(isSelectionActiveWithinElement(containerRef.current));
-  };
+  }, []);
 
   const getRangeToRenderOverride = (overscanStartIndex: number,
                                     overscanStopIndex: number,
@@ -114,6 +114,10 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
     });
   }
 
+  const outerElementType = useMemo(() => forwardRef<HTMLDivElement>((props, ref) => (
+    <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props}/>
+  )), []);
+
   const LogTextArea: React.FC<Size> = ({height, width}) => (
     <div className="bb-logviewer-text-area" ref={containerRef}>
       <div className="bb-logviewer-text-download-log">
@@ -135,9 +139,7 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
         width={width}
         itemSize={18}
         getRangeToRenderOverride={getRangeToRenderOverride}
-        outerElementType={forwardRef((props, ref: ForwardedRef<HTMLDivElement>) => (
-          <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props}/>
-        ))}
+        outerElementType={outerElementType}
       >
         {({index, style}) => (
           LogViewerTextLineRenderer({manager: manager, logLineDigitCount: logLineDigitCount,
