@@ -34,7 +34,7 @@ cffi==1.15.1
 chardet==5.2.0
 charset-normalizer==3.2.0
 click-default-group==1.2.4
-click==8.1.6
+click==8.1.7
 configparser==5.2.0;  python_version < "3.7" # pyup: ignore (see: https://configparser.readthedocs.io/en/latest/history.html)
 configparser==5.3.0;  python_version >= "3.7" and python_version < "3.8" # pyup: ignore (see: https://configparser.readthedocs.io/en/latest/history.html)
 configparser==6.0.0;  python_version >= "3.8"
