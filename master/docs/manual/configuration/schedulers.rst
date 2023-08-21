@@ -649,7 +649,8 @@ The full list of parameters is:
 ``dayOfMonth`` (optional)
 
     The day of the month to start a build.
-    This defaults to ``*``, meaning every day or ``L`` for last day.
+    This defaults to ``*``, meaning every day.
+    Use ``L`` to specify last day of the month.
     Last day option respects leap years.
 
 ``month`` (optional)
@@ -664,6 +665,48 @@ The full list of parameters is:
     This defaults to ``*``, meaning every day of the week or nth weekday of month.
     Like first Monday of month ``1#1``, last Monday of month ``L1``,
     Monday + Friday ``mon,fri`` or ranges Monday to Friday ``mon-fri``.
+
+Forcing builds when there are no changes
+........................................
+
+Nightly scheduler supports scheduling builds even in there were no important changes and ``onlyIfChanged`` was set to ``True``.
+This is controlled by ``force_at_*`` parameters.
+The feature is enabled if least one of them is set.
+
+The time interval identified by ``force_at_minute``, ``force_at_hour``, ``force_at_day_of_month``, ``force_at_month`` and ``force_at_day_of_week`` must be subset of time interval identified by ``minute``, ``hour``, ``dayOfMonth``, ``month``, ``dayOfWeek``.
+
+``force_at_minute`` (optional)
+
+    The minute of the hour on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``0`` meaning builds will run every hour.
+
+``force_at_hour`` (optional)
+
+    The hour of the day on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``*`` meaning builds will run each hour.
+
+``force_at_day_of_month`` (optional)
+
+    The day of the month on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``*`` meaning builds will run each day.
+
+``force_at_month`` (optional)
+
+    The month of the year on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``*`` meaning builds will run each month.
+
+``force_at_day_of_week`` (optional)
+
+    The day of the week on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``*`` meaning builds will run each day of the week.
+
+Example
+.......
 
 For example, the following :file:`master.cfg` clause will cause a build to be started every night at 3:00am:
 
