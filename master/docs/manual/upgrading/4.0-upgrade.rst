@@ -78,3 +78,14 @@ The ``wantLogs`` argument to message formatters has been removed.
 The equivalent is setting both ``want_logs`` and ``want_logs_content`` to the previous value of ``wantLogs``.
 
 The ``wantSteps`` and ``wantProperties`` arguments have been renamed to ``want_steps`` and ``want_properties`` respectively.
+
+buildbot.util.croniter
+----------------------
+
+``buildbot.util.croniter`` module has been removed.
+The replacement is ``croniter`` package from Pypi.
+
+Migration to ``croniter`` involves ensuring that the input times are passed as time-aware ``datetime`` objects.
+
+The original ``buildbot.util.croniter`` code always assumed the input time is in the current timezone.
+The ``croniter`` package assumes the input time is in UTC timezone.

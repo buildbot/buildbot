@@ -15,6 +15,8 @@ from time import time
 
 from dateutil.relativedelta import relativedelta
 
+from buildbot.warnings import warn_deprecated
+
 search_re = re.compile(r'^([^-]+)-([^-/]+)(/(.*))?$')
 only_int_re = re.compile(r'^\d+$')
 any_int_re = re.compile(r'^\d+')
@@ -40,6 +42,14 @@ special_day_of_week_or_month_re = re.compile(
 )
 
 __all__ = ('croniter',)
+
+
+warn_deprecated(
+    "3.10.0",
+    "buildbot.util.croniter has been deprecated. Use croniter Pypi package as a replacement. "
+    "Note that croniter assumes that the input times in UTC timezone whereas "
+    "buildbot.util.croniter assumed that the input times are in local timezone."
+)
 
 
 class croniter:

@@ -762,6 +762,8 @@ In the near future, all uses of this module will be replaced with message-queuei
 :py:mod:`buildbot.util.croniter`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+(deprecated)
+
 This module is a copy of https://github.com/taichino/croniter, and provides support for converting cron-like time specifications to actual times.
 
 :py:mod:`buildbot.util.state`
