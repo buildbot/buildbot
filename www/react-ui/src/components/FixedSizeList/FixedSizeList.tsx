@@ -88,6 +88,11 @@ export type ListOnScrollProps = {
 type onItemsRenderedCallback = (info: ListOnItemsRenderedProps) => void;
 type onScrollCallback = (info: ListOnScrollProps) => void;
 
+type GetRangeToRenderOverrideCallback = (overscanStartIndex: number,
+                                         overscanStopIndex: number,
+                                         visibleStartIndex: number,
+                                         visibleStopIndex: number) => [number, number, number, number];
+
 type ScrollEvent = SyntheticEvent<HTMLDivElement>;
 type ItemStyleCache = {[index: number]: Object};
 
@@ -124,6 +129,7 @@ export type FixedSizeListProps<T> = {
   layout: Layout,
   onItemsRendered?: onItemsRenderedCallback,
   onScroll?: onScrollCallback,
+  getRangeToRenderOverride?: GetRangeToRenderOverrideCallback,
   outerRef?: Ref<HTMLElement>,
   outerElementType?: string | React.ComponentType<OuterProps>,
   overscanCount: number,
@@ -698,7 +704,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     return this._itemStyleCache;
   }
 
-  _getRangeToRender(): [number, number, number, number] {
+  _getRangeToRenderImpl(): [number, number, number, number] {
     const { itemCount, overscanCount } = this.props;
     const { isScrolling, scrollDirection, scrollOffset } = this.state;
 
@@ -732,6 +738,30 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
       Math.max(0, Math.min(itemCount - 1, stopIndex + overscanForward)),
       startIndex,
       stopIndex,
+    ];
+  }
+
+  _getRangeToRender(): [number, number, number, number] {
+    const [
+      overscanStartIndex,
+      overscanStopIndex,
+      visibleStartIndex,
+      visibleStopIndex,
+    ] = this._getRangeToRenderImpl();
+
+    if (this.props.getRangeToRenderOverride !== undefined) {
+      return this.props.getRangeToRenderOverride(
+        overscanStartIndex,
+        overscanStopIndex,
+        visibleStartIndex,
+        visibleStopIndex);
+    }
+
+    return [
+      overscanStartIndex,
+      overscanStopIndex,
+      visibleStartIndex,
+      visibleStopIndex,
     ];
   }
 
