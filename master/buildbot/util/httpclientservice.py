@@ -143,7 +143,7 @@ class HTTPClientService(service.SharedService):
         if self._auth is not None and not isinstance(self._auth, tuple):
             self.PREFER_TREQ = False
         if txrequests is not None and not self.PREFER_TREQ:
-            self._session = txrequests.Session()
+            self._session = txrequests.Session(maxthreads=self.MAX_THREADS)
             self._doRequest = self._doTxRequest
         elif treq is None:
             raise ImportError("{classname} requires either txrequest or treq install."
