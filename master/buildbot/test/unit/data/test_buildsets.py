@@ -243,7 +243,9 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             "reason": reason,
             "results": results,
             "submitted_at": submitted_at,
-            "sourcestamps": [ssmap[ssid] for ssid in sourcestampids]
+            "sourcestamps": [ssmap[ssid] for ssid in sourcestampids],
+            "parent_buildid": None,
+            "parent_relationship": None,
         })
 
     def test_addBuildset_two_builderNames(self):

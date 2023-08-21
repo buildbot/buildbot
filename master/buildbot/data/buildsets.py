@@ -248,7 +248,9 @@ class Buildset(base.ResourceType):
             "submitted_at": bsdict['submitted_at'],
             "complete": True,
             "complete_at": complete_at,
-            "results": cumulative_results
+            "results": cumulative_results,
+            "parent_buildid": bsdict["parent_buildid"],
+            "parent_relationship": bsdict["parent_relationship"],
         }
         # TODO: properties=properties)
         self.produceEvent(msg, "complete")
