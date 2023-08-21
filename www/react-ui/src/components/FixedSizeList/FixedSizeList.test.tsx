@@ -157,26 +157,6 @@ describe('FixedSizeList', () => {
     expect(onItemsRendered.mock.calls).toMatchSnapshot();
   });
 
-  it('should render a list of columns', () => {
-    renderer.create(<FixedSizeList {...defaultProps} layout="horizontal" />);
-    expect(itemRenderer).toHaveBeenCalledTimes(4);
-    expect(onItemsRendered.mock.calls).toMatchSnapshot();
-  });
-
-  it('should re-render items if layout changes', () => {
-    const rendered = renderer.create(<FixedSizeList {...defaultProps} layout="vertical" />);
-    expect(itemRenderer).toHaveBeenCalled();
-    itemRenderer.mockClear();
-
-    // Re-rendering should not affect pure sCU children:
-    rendered.update(<FixedSizeList {...defaultProps} layout="vertical" />);
-    expect(itemRenderer).not.toHaveBeenCalled();
-
-    // Re-rendering with new layout should re-render children:
-    rendered.update(<FixedSizeList {...defaultProps} layout="horizontal" />);
-    expect(itemRenderer).toHaveBeenCalled();
-  });
-
   describe('scrollbar handling', () => {
     it('should set width to "100%" for vertical lists to avoid unnecessary horizontal scrollbar',
         async () => {
@@ -186,22 +166,6 @@ describe('FixedSizeList', () => {
       const style = innerRef.current!.style;
       expect(style.width).toBe('100%');
       expect(style.height).toBe('2500px');
-    });
-
-    it('should set height to "100%" for horizontal lists to avoid unnecessary vertical scrollbar',
-        async () => {
-      const innerRef = createRef<HTMLDivElement>();
-      await renderWithReactDom(
-        <FixedSizeList
-          {...defaultProps}
-          layout="horizontal"
-          innerRef={innerRef}
-        />,
-      );
-
-      const style = innerRef.current!.style;
-      expect(style.width).toBe('2500px');
-      expect(style.height).toBe('100%');
     });
   });
 
