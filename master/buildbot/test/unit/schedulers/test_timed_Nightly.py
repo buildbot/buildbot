@@ -374,6 +374,26 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
+    def test_iterations_onlyIfChanged_no_changes_force_at(self):
+        yield self.do_test_iterations_onlyIfChanged([], last_only_if_changed=True,
+                                                    force_at_minute=[23, 25, 27])
+
+        self.assertEqual(self.addBuildsetCallTimes, [1500])
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampsWithDefaults', {
+                'builderNames': None,
+                'priority': None,
+                'properties': None,
+                'reason': "The Nightly scheduler named 'test' triggered this build",
+                'sourcestamps': [{'codebase': ''}],
+                'waited_for': False
+            })
+        ])
+        self.db.state.assertStateByClass('test', 'Nightly',
+                                         last_build=1500 + self.time_offset)
+        yield self.sched.deactivate()
+
+    @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_unimp_changes_calls_for_new_scheduler(self):
         yield self.do_test_iterations_onlyIfChanged(
             [
@@ -465,6 +485,33 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'builderNames': None,
                 }),
             ])
+        self.db.state.assertStateByClass('test', 'Nightly',
+                                         last_build=1500 + self.time_offset)
+        yield self.sched.deactivate()
+
+    @defer.inlineCallbacks
+    def test_iterations_onlyIfChanged_unimp_changes_force_at(self):
+        yield self.do_test_iterations_onlyIfChanged(
+            [
+                (60, self.makeFakeChange(number=1, branch=None), False),
+                (600, self.makeFakeChange(number=2, branch=None), False),
+            ],
+            last_only_if_changed=True,
+            force_at_minute=[23, 25, 27]
+        )
+
+        self.assertEqual(self.addBuildsetCallTimes, [1500])
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForChanges', {
+                'builderNames': None,
+                'changeids': [1, 2],
+                'external_idstring': None,
+                'priority': None,
+                'properties': None,
+                'reason': "The Nightly scheduler named 'test' triggered this build",
+                'waited_for': False
+            })
+        ])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.time_offset)
         yield self.sched.deactivate()

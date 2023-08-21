@@ -207,8 +207,13 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
         last_only_if_changed = yield self.getState('last_only_if_changed', True)
 
-        if last_only_if_changed and self.onlyIfChanged and not any(classifications.values()) and \
-                not self.is_first_build:
+        if (
+            last_only_if_changed
+            and self.onlyIfChanged
+            and not any(classifications.values())
+            and not self.is_first_build
+            and not self.maybe_force_build_on_unimportant_changes(self.lastActuated)
+        ):
             log.msg(("{} scheduler <{}>: skipping build " +
                      "- No important changes").format(self.__class__.__name__, self.name))
             self.is_first_build = False
@@ -265,6 +270,13 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         @returns: Deferred
         """
         return self.actuationLock.run(self._scheduleNextBuild_locked)
+
+    def maybe_force_build_on_unimportant_changes(self, current_actuation_time):
+        """
+        Allows forcing a build in cases when there are no important changes and onlyIfChanged is
+        enabled.
+        """
+        return False
 
     # utilities
 
@@ -345,10 +357,26 @@ class Periodic(Timed):
 
 
 class NightlyBase(Timed):
-    compare_attrs = ('minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek')
+    compare_attrs = (
+        "minute",
+        "hour",
+        "dayOfMonth",
+        "month",
+        "dayOfWeek",
+        "force_at_minute",
+        "force_at_hour",
+        "force_at_day_of_month",
+        "force_at_month",
+        "force_at_day_of_week",
+    )
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
+                 force_at_minute=None,
+                 force_at_hour=None,
+                 force_at_day_of_month=None,
+                 force_at_month=None,
+                 force_at_day_of_week=None,
                  **kwargs):
         super().__init__(name, builderNames, **kwargs)
 
@@ -357,6 +385,25 @@ class NightlyBase(Timed):
         self.dayOfMonth = dayOfMonth
         self.month = month
         self.dayOfWeek = dayOfWeek
+
+        self.force_at_enabled = (
+            force_at_minute is not None
+            or force_at_hour is not None
+            or force_at_day_of_month is not None
+            or force_at_month is not None
+            or force_at_day_of_week is not None
+        )
+
+        def default_if_none(value, default):
+            if value is None:
+                return default
+            return value
+
+        self.force_at_minute = default_if_none(force_at_minute, 0)
+        self.force_at_hour = default_if_none(force_at_hour, "*")
+        self.force_at_day_of_month = default_if_none(force_at_day_of_month, "*")
+        self.force_at_month = default_if_none(force_at_month, "*")
+        self.force_at_day_of_week = default_if_none(force_at_day_of_week, "*")
 
     def _timeToCron(self, time, isDayOfWeek=False):
         if isinstance(time, int):
@@ -389,20 +436,50 @@ class NightlyBase(Timed):
 
         return ','.join([str(s) for s in time])  # Convert the list to a string
 
-    def getNextBuildTime(self, lastActuated):
-        ts = lastActuated or self.now()
-        sched = (f'{self._timeToCron(self.minute)} {self._timeToCron(self.hour)} '
-                 f'{self._timeToCron(self.dayOfMonth)} {self._timeToCron(self.month)} '
-                 f'{self._timeToCron(self.dayOfWeek, True)}')
+    def _times_to_cron_line(self, minute, hour, day_of_month, month, day_of_week):
+        return " ".join([
+            str(self._timeToCron(minute)),
+            str(self._timeToCron(hour)),
+            str(self._timeToCron(day_of_month)),
+            str(self._timeToCron(month)),
+            str(self._timeToCron(day_of_week, True)),
+        ])
 
+    def _time_to_croniter_tz_time(self, ts):
         # By default croniter interprets input timestamp in UTC timezone. However, the scheduler
         # works in local timezone, so appropriate timezone information needs to be passed
         tz = datetime.timezone(datetime.timedelta(seconds=self.current_utc_offset(ts)))
-        dt_with_tz = datetime.datetime.fromtimestamp(ts, tz)
+        return datetime.datetime.fromtimestamp(ts, tz)
 
-        cron = croniter.croniter(sched, dt_with_tz)
+    def getNextBuildTime(self, lastActuated):
+        ts = lastActuated or self.now()
+        sched = self._times_to_cron_line(
+            self.minute,
+            self.hour,
+            self.dayOfMonth,
+            self.month,
+            self.dayOfWeek,
+        )
+
+        cron = croniter.croniter(sched, self._time_to_croniter_tz_time(ts))
         nextdate = cron.get_next(float)
         return defer.succeed(nextdate)
+
+    def maybe_force_build_on_unimportant_changes(self, current_actuation_time):
+        if not self.force_at_enabled:
+            return False
+        cron_string = self._times_to_cron_line(
+            self.force_at_minute,
+            self.force_at_hour,
+            self.force_at_day_of_month,
+            self.force_at_month,
+            self.force_at_day_of_week,
+        )
+
+        return croniter.croniter.match(
+            cron_string,
+            self._time_to_croniter_tz_time(current_actuation_time)
+        )
 
 
 class Nightly(NightlyBase):
@@ -410,10 +487,20 @@ class Nightly(NightlyBase):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
+                 force_at_minute=None,
+                 force_at_hour=None,
+                 force_at_day_of_month=None,
+                 force_at_month=None,
+                 force_at_day_of_week=None,
                  **kwargs):
         super().__init__(name=name, builderNames=builderNames,
                          minute=minute, hour=hour, dayOfMonth=dayOfMonth,
                          month=month, dayOfWeek=dayOfWeek, reason=reason,
+                         force_at_minute=force_at_minute,
+                         force_at_hour=force_at_hour,
+                         force_at_day_of_month=force_at_day_of_month,
+                         force_at_month=force_at_month,
+                         force_at_day_of_week=force_at_day_of_week,
                          **kwargs)
 
 
@@ -423,10 +510,20 @@ class NightlyTriggerable(NightlyBase):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
+                 force_at_minute=None,
+                 force_at_hour=None,
+                 force_at_day_of_month=None,
+                 force_at_month=None,
+                 force_at_day_of_week=None,
                  **kwargs):
         super().__init__(name=name, builderNames=builderNames,
                          minute=minute, hour=hour, dayOfMonth=dayOfMonth,
                          month=month, dayOfWeek=dayOfWeek, reason=reason,
+                         force_at_minute=force_at_minute,
+                         force_at_hour=force_at_hour,
+                         force_at_day_of_month=force_at_day_of_month,
+                         force_at_month=force_at_month,
+                         force_at_day_of_week=force_at_day_of_week,
                          **kwargs)
 
         self._lastTrigger = None
