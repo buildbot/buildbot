@@ -30,6 +30,9 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=smokes NUM_CPU=4 MEMORY_SIZE=4G
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_whl NUM_CPU=2 MEMORY_SIZE=4G
+    # Re-enable once #7058 is fixed
+    #- env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_tgz NUM_CPU=2 MEMORY_SIZE=4G
 
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
@@ -81,7 +84,7 @@ install:
         python$PYTHON -m venv /tmp/bbvenv
       fi
   - /tmp/bbvenv/bin/pip install -U pip wheel
-  - condition: TESTS not in ("dev_virtualenv", "smokes", "trial_worker")
+  - condition: TESTS not in ("dev_virtualenv", "smokes", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt
   - condition: TESTS == "dev_virtualenv"
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
@@ -216,7 +219,7 @@ script:
       make docs-release-spelling
 
   - title: maketarballs
-    condition: TESTS == "smokes"
+    condition: TESTS in ("smokes", "e2e_react_whl", "e2e_react_tgz")
     cmd:  |
       export NODE_OPTIONS=--openssl-legacy-provider
       export PATH=/tmp/bbvenv/bin/:$PATH
@@ -235,6 +238,14 @@ script:
       export NODE_OPTIONS=--openssl-legacy-provider
       export PATH=/tmp/bbvenv/bin/:$PATH
       ./common/smokedist.sh tar.gz
+
+  - title: end to end tests
+    condition: TESTS == "e2e_react_whl"
+    cmd: ./common/smokedist-react.sh whl
+
+  - title: tarballs end to end tests
+    condition: TESTS == "e2e_react_tgz"
+    cmd: ./common/smokedist-react.sh tar.gz
 
 notifications:
   email: false
