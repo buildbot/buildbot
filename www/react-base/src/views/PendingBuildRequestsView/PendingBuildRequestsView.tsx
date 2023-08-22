@@ -22,6 +22,7 @@ import {
   useDataApiQuery
 } from "buildbot-data-js";
 import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
+import {LoadingSpan} from "../../components/LoadingSpan/LoadingSpan";
 import {
   PendingBuildRequestsTable
 } from "../../components/PendingBuildRequestsTable/PendingBuildRequestsTable";
@@ -40,7 +41,7 @@ export const PendingBuildRequestsView = observer(() => {
 
   const renderContents = () => {
     if (!buildRequestsQuery.resolved) {
-      return <span>Loading ...</span>
+      return <LoadingSpan/>;
     }
     if (buildRequestsQuery.array.length === 0) {
       return <span>None</span>
