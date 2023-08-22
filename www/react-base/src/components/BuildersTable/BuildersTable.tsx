@@ -34,6 +34,7 @@ import {
 } from "buildbot-ui";
 import {computed} from "mobx";
 import {Table} from "react-bootstrap";
+import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 
 export type BuildersTableProps = {
   builders: Builder[];
@@ -99,7 +100,7 @@ export const BuildersTable = observer(
     let buildElements: JSX.Element[] = [];
     if (!buildsForFilteredBuilders.isResolved()) {
       buildElements = [
-        <>Loading...</>
+        <LoadingSpan/>
       ];
     }
 
@@ -139,7 +140,7 @@ export const BuildersTable = observer(
   });
 
   if (builderRowElements.length === 0) {
-    const noBuildersText = isLoading ? "Loading..." : "No builders to show";
+    const noBuildersText = isLoading ? <LoadingSpan/> : "No builders to show";
     builderRowElements.push(
         <tr>
           <td colSpan={4}>{noBuildersText}</td>
