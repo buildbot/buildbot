@@ -98,6 +98,7 @@ type OuterProps = {
   children: React.ReactNode,
   className: string | undefined,
   onScroll: (e: ScrollEvent) => void,
+  onWheel: (e: WheelEvent) => void,
   style: {
     [key: string]: any,
   },
@@ -124,8 +125,13 @@ export type FixedSizeListProps<T> = {
   itemData: T,
   itemKey?: (index: number, data: T) => any,
   itemSize: number,
+  largeListSizeLimit?: number;
+  largeListScrollbarInaccuracyNotScrolling?: number;
+  largeListScrollbarInaccuracyScrolling?: number;
+  largeListEndsBufferRelSize?: number;
   onItemsRendered?: onItemsRenderedCallback,
   onScroll?: onScrollCallback,
+  onCacheClear?: () => void;
   getRangeToRenderOverride?: GetRangeToRenderOverrideCallback,
   outerRef?: Ref<HTMLElement>,
   outerElementType?: string | React.ComponentType<OuterProps>,
@@ -136,14 +142,18 @@ export type FixedSizeListProps<T> = {
 };
 
 type State = {
-  instance: any,
   isScrolling: boolean,
+  isScrollingByMouse: boolean,
   scrollDirection: ScrollDirection,
   scrollOffset: number,
   scrollUpdateWasRequested: boolean,
+  largeListModeEnabled: boolean;
+  largeListLastTotalHeight: number;
+  largeListLastSubWindowOffset: number;
 };
 
 const IS_SCROLLING_DEBOUNCE_INTERVAL = 150;
+const WHEEL_TO_SCROLL_EVENT_MS = 1000;
 
 const defaultItemKey = (index: number, data: any) => index;
 
@@ -193,23 +203,31 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
   _instanceProps: any = {};
   _outerRef?: HTMLElement;
   _resetIsScrollingTimeoutId: TimeoutID | null = null;
+  _lastWheelEvent: number = 0;
 
   static defaultProps = {
     direction: 'ltr',
     itemData: undefined,
     overscanCount: 2,
     useIsScrolling: false,
+    largeListSizeLimit: 1000000,
+    largeListScrollbarInaccuracyNotScrolling: 0.005,
+    largeListScrollbarInaccuracyScrolling: 0.01,
+    largeListEndsBufferRelSize: 0.01,
   };
 
   state: State = {
-    instance: this,
     isScrolling: false,
+    isScrollingByMouse: false,
     scrollDirection: 'forward',
     scrollOffset:
       typeof this.props.initialScrollOffset === 'number'
         ? this.props.initialScrollOffset
         : 0,
     scrollUpdateWasRequested: false,
+    largeListModeEnabled: false,
+    largeListLastTotalHeight: -1,
+    largeListLastSubWindowOffset: 0,
   };
 
   // Always use explicit constructor for React components.
@@ -227,14 +245,24 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     return itemSize;
   }
 
-  getEstimatedTotalSize({ itemCount, itemSize }: FixedSizeListProps<any>) {
-    return itemSize * itemCount;
+  getEstimatedTotalSize({itemCount, itemSize, largeListSizeLimit}: FixedSizeListProps<any>,
+                        {largeListModeEnabled}: State) {
+    return largeListModeEnabled ? largeListSizeLimit : itemSize * itemCount;
+  }
+
+  getGlobalScrollOffset() {
+    const {
+      scrollOffset,
+      largeListLastSubWindowOffset
+    } = this.state;
+
+    return scrollOffset + largeListLastSubWindowOffset;
   }
 
   getOffsetForIndexAndAlignment({ direction, height, itemCount, itemSize, width }: FixedSizeListProps<any>,
                                 index: number,
                                 align: ScrollToAlign,
-                                scrollOffset: number,
+                                globalScrollOffset: number,
                                 instanceProps: InstanceProps,
                                 scrollbarSize: number): number {
     const size = height;
@@ -247,7 +275,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     );
 
     if (align === 'smart') {
-      if (scrollOffset >= minOffset - size && scrollOffset <= maxOffset + size) {
+      if (globalScrollOffset >= minOffset - size && globalScrollOffset <= maxOffset + size) {
         align = 'auto';
       } else {
         align = 'center';
@@ -275,9 +303,9 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
       }
       case 'auto':
       default:
-        if (scrollOffset >= minOffset && scrollOffset <= maxOffset) {
-          return scrollOffset;
-        } else if (scrollOffset < minOffset) {
+        if (globalScrollOffset >= minOffset && globalScrollOffset <= maxOffset) {
+          return globalScrollOffset;
+        } else if (globalScrollOffset < minOffset) {
           return minOffset;
         } else {
           return maxOffset;
@@ -294,10 +322,10 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
 
   getStopIndexForStartIndex({ direction, height, itemCount, itemSize, width }: FixedSizeListProps<any>,
                             startIndex: number,
-                            scrollOffset: number): number {
+                            globalScrollOffset: number): number {
     const offset = startIndex * itemSize;
     const size = height;
-    const numVisibleItems = Math.ceil((size + scrollOffset - offset) / itemSize);
+    const numVisibleItems = Math.ceil((size + globalScrollOffset - offset) / itemSize);
 
     return Math.max(0, Math.min(itemCount - 1, startIndex + numVisibleItems - 1 // -1 is because stop index is inclusive
       ));
@@ -306,30 +334,86 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
   static getDerivedStateFromProps(
     nextProps: FixedSizeListProps<any>,
     prevState: State
-  ): null {
+  ): State|null {
     validateSharedProps(nextProps);
-    return null;
+
+    const totalHeight = nextProps.itemCount * nextProps.itemSize;
+    const useLargeListMode = (totalHeight > nextProps.largeListSizeLimit!);
+    const largeListModeEnabled = prevState.largeListModeEnabled;
+
+    if (useLargeListMode === largeListModeEnabled) {
+      return null;
+    }
+
+    if (useLargeListMode) {
+      const [scrollOffset, subWindowOffset] = FixedSizeList._calculateSubWindowOffset(
+        nextProps,
+        prevState.scrollOffset
+      );
+
+      return {
+        ...prevState,
+        largeListModeEnabled: true,
+        scrollOffset,
+        largeListLastSubWindowOffset: subWindowOffset,
+      }
+    } else {
+      return {
+        ...prevState,
+        largeListModeEnabled: false,
+        scrollOffset: prevState.scrollOffset + prevState.largeListLastSubWindowOffset,
+        largeListLastSubWindowOffset: 0,
+      }
+    }
   }
 
-  scrollTo(scrollOffset: number): void {
-    scrollOffset = Math.max(0, scrollOffset);
+  scrollTo(globalScrollOffset: number): void {
+    globalScrollOffset = Math.max(0, globalScrollOffset);
 
     this.setState(prevState => {
-      if (prevState.scrollOffset === scrollOffset) {
+      if (!prevState.largeListModeEnabled) {
+        const scrollOffset = globalScrollOffset;
+        if (prevState.scrollOffset === scrollOffset) {
+          return null;
+        }
+
+        return {
+          ...prevState,
+          isScrolling: false,
+          isScrollingByMouse: false,
+          scrollDirection:
+            prevState.scrollOffset < scrollOffset ? 'forward' : 'backward',
+          scrollOffset: scrollOffset,
+          scrollUpdateWasRequested: true,
+        };
+      }
+
+      const [scrollOffset, subWindowOffset] = FixedSizeList._calculateSubWindowOffset(
+        this.props,
+        globalScrollOffset
+      );
+
+      if (prevState.scrollOffset === scrollOffset &&
+        prevState.largeListLastSubWindowOffset === subWindowOffset) {
         return null;
       }
+
       return {
+        ...prevState,
+        isScrolling: false,
+        isScrollingByMouse: false,
         scrollDirection:
           prevState.scrollOffset < scrollOffset ? 'forward' : 'backward',
         scrollOffset: scrollOffset,
         scrollUpdateWasRequested: true,
+        largeListLastSubWindowOffset: subWindowOffset,
       };
     }, () => this._resetIsScrollingDebounced());
   }
 
   scrollToItem(index: number, align: ScrollToAlign = 'auto'): void {
     const { itemCount } = this.props;
-    const { scrollOffset } = this.state;
+    const globalScrollOffset = this.getGlobalScrollOffset();
 
     index = Math.max(0, Math.min(index, itemCount - 1));
 
@@ -350,7 +434,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
         this.props,
         index,
         align,
-        scrollOffset,
+        globalScrollOffset,
         this._instanceProps,
         scrollbarSize
       )
@@ -368,12 +452,20 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     this._callPropsCallbacks();
   }
 
+  _onCacheClearLargeListLastSubWindowOffset: number = -1;
+
   componentDidUpdate() {
-    const { direction } = this.props;
     const { scrollOffset, scrollUpdateWasRequested } = this.state;
 
     if (scrollUpdateWasRequested && this._outerRef != null) {
       this._outerRef.scrollTop = scrollOffset;
+    }
+
+    if (this.state.largeListLastSubWindowOffset !== this._onCacheClearLargeListLastSubWindowOffset) {
+      this._onCacheClearLargeListLastSubWindowOffset = this.state.largeListLastSubWindowOffset;
+      if (this.props.onCacheClear !== undefined) {
+        this.props.onCacheClear();
+      }
     }
 
     this._callPropsCallbacks();
@@ -423,15 +515,14 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
 
     // Read this value AFTER items have been created,
     // So their actual sizes (if variable) are taken into consideration.
-    const estimatedTotalSize = this.getEstimatedTotalSize(
-      this.props,
-    );
+    const estimatedTotalSize = this.getEstimatedTotalSize(this.props, this.state);
 
     return createElement(
       outerElementType || "div",
       {
         className,
         onScroll: (e) => this._onScrollVertical(e),
+        onWheel: (e) => this._onWheel(),
         ref: (ref: HTMLElement) => this._outerRefSetter(ref),
         style: {
           position: 'relative',
@@ -489,23 +580,31 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
 
   private lastScrollDirection?: ScrollDirection = undefined;
   private lastScrollOffset?: number = undefined;
+  private lastScrollLargeListLastSubWindowOffset?: number = undefined;
   private lastScrollUpdateWasRequested?: boolean = undefined;
 
-  _callOnScroll(scrollDirection: ScrollDirection,
-                scrollOffset: number,
-                scrollUpdateWasRequested: boolean) {
+  _callOnScroll() {
+    const {
+      scrollDirection,
+      scrollOffset,
+      scrollUpdateWasRequested,
+      largeListLastSubWindowOffset,
+    } = this.state;
+
     if (this.lastScrollDirection !== scrollDirection ||
       this.lastScrollOffset !== scrollOffset ||
-      this.lastScrollUpdateWasRequested !== scrollUpdateWasRequested) {
+      this.lastScrollUpdateWasRequested !== scrollUpdateWasRequested ||
+      this.lastScrollLargeListLastSubWindowOffset !== largeListLastSubWindowOffset) {
 
       this.lastScrollDirection = scrollDirection;
       this.lastScrollOffset = scrollOffset;
       this.lastScrollUpdateWasRequested = scrollUpdateWasRequested;
+      this.lastScrollLargeListLastSubWindowOffset = largeListLastSubWindowOffset;
 
       this.props.onScroll!({
         scrollDirection,
-        scrollOffset,
-        scrollUpdateWasRequested,
+        scrollOffset: this.getGlobalScrollOffset(),
+        scrollUpdateWasRequested
       });
     }
   }
@@ -530,16 +629,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     }
 
     if (typeof this.props.onScroll === 'function') {
-      const {
-        scrollDirection,
-        scrollOffset,
-        scrollUpdateWasRequested,
-      } = this.state;
-      this._callOnScroll(
-        scrollDirection,
-        scrollOffset,
-        scrollUpdateWasRequested
-      );
+      this._callOnScroll();
     }
   }
 
@@ -552,15 +642,16 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
 
     const itemStyleCache = this._getItemStyleCache(
       itemSize,
-      direction
+      direction,
+      this.state.largeListLastSubWindowOffset,
     );
 
     let style;
     if (itemStyleCache.hasOwnProperty(index)) {
       style = itemStyleCache[index];
     } else {
-      const offset = this.getItemOffset(this.props, index);
-      const size = this.props.itemSize;
+      const offset = this.getItemOffset(this.props, index) - this.state.largeListLastSubWindowOffset;
+        const size = this.props.itemSize;
 
       const isRtl = direction === 'rtl';
       itemStyleCache[index] = style = {
@@ -577,15 +668,23 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
   };
 
   private _itemStyleCache: ItemStyleCache = {}
+  private _itemStyleCacheShouldClear: boolean = false;
   private _itemStyleCacheLastItemSize?: number = undefined;
   private _itemStyleCacheLastDirection?: Direction = undefined;
+  private _itemStyleCacheLargeListSubWindowOffset?: number = undefined;
 
-  private _getItemStyleCache(itemSize: number, direction: Direction): ItemStyleCache {
-    if (this._itemStyleCacheLastItemSize !== itemSize ||
-      this._itemStyleCacheLastDirection !== direction) {
+  private _getItemStyleCache(itemSize: number, direction: Direction,
+                             largeListSubWindowOffset: number): ItemStyleCache {
+    if (this._itemStyleCacheShouldClear ||
+      this._itemStyleCacheLastItemSize !== itemSize ||
+      this._itemStyleCacheLastDirection !== direction ||
+      this._itemStyleCacheLargeListSubWindowOffset !== largeListSubWindowOffset) {
 
+      this._itemStyleCacheShouldClear = false;
       this._itemStyleCacheLastItemSize = itemSize;
       this._itemStyleCacheLastDirection = direction;
+      this._itemStyleCacheLargeListSubWindowOffset = largeListSubWindowOffset;
+
       this._itemStyleCache = {};
     }
     return this._itemStyleCache;
@@ -593,20 +692,21 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
 
   _getRangeToRenderImpl(): [number, number, number, number] {
     const { itemCount, overscanCount } = this.props;
-    const { isScrolling, scrollDirection, scrollOffset } = this.state;
+    const { isScrolling, scrollDirection } = this.state;
 
     if (itemCount === 0) {
       return [0, 0, 0, 0];
     }
 
+    const globalScrollOffset = this.getGlobalScrollOffset();
     const startIndex = this.getStartIndexForOffset(
       this.props,
-      scrollOffset,
+      globalScrollOffset,
     );
     const stopIndex = this.getStopIndexForStartIndex(
       this.props,
       startIndex,
-      scrollOffset,
+      globalScrollOffset,
     );
 
     // Overscan by one item in each direction so that tab/focus works.
@@ -654,6 +754,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
 
   _onScrollVertical(event: ScrollEvent): void {
     const { clientHeight, scrollHeight, scrollTop } = event.currentTarget;
+    const thisScrollByMouse = (Date.now() - this._lastWheelEvent) < WHEEL_TO_SCROLL_EVENT_MS;
     this.setState(prevState => {
       if (prevState.scrollOffset === scrollTop) {
         // Scroll position may have been updated by cDM/cDU,
@@ -662,20 +763,39 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
         return null;
       }
 
+      const isScrollingByMouse = prevState.isScrolling
+        ? prevState.isScrollingByMouse
+        : thisScrollByMouse;
+
       // Prevent Safari's elastic scrolling from causing visual shaking when scrolling past bounds.
-      const scrollOffset = Math.max(
+      const scrollOffsetUnadjusted = Math.max(
         0,
         Math.min(scrollTop, scrollHeight - clientHeight)
       );
 
+      const [changed, scrollOffset, subWindowOffset] =
+        this._maybeAdjustSubWindowOffset(
+          prevState.largeListModeEnabled,
+          scrollOffsetUnadjusted,
+          prevState.largeListLastSubWindowOffset,
+          true,
+          isScrollingByMouse);
+
       return {
         isScrolling: true,
+        isScrollingByMouse,
         scrollDirection:
           prevState.scrollOffset < scrollOffset ? 'forward' : 'backward',
         scrollOffset,
-        scrollUpdateWasRequested: false,
+        scrollUpdateWasRequested: changed,
+        largeListLastTotalHeight: prevState.largeListLastTotalHeight,
+        largeListLastSubWindowOffset: subWindowOffset,
       };
     }, () => this._resetIsScrollingDebounced());
+  }
+
+  _onWheel(): void {
+    this._lastWheelEvent = Date.now();
   }
 
   _outerRefSetter(ref: HTMLElement): void {
@@ -709,10 +829,113 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
   _resetIsScrolling() {
     this._resetIsScrollingTimeoutId = null;
 
-    this.setState({ isScrolling: false }, () => {
-      // Clear style cache after state update has been committed.
-      // This way we don't break pure sCU for items that don't use isScrolling param.
-      this._itemStyleCache = {};
+    this.setState(prevState => {
+      const [changed, scrollOffset, subWindowOffset] =
+        this._maybeAdjustSubWindowOffset(
+          prevState.largeListModeEnabled,
+          prevState.scrollOffset,
+          prevState.largeListLastSubWindowOffset,
+          false,
+          false);
+
+      // Item style cache is used only during scrolling. Clear it so that items that don't use
+      // isScrolling param are updated
+      this._itemStyleCacheShouldClear = true;
+
+      if (prevState.isScrollingByMouse) {
+        // Sometimes scrolling resets and in such case any subsequest scroll events should
+        // continue using previous scroll type.
+        this._lastWheelEvent = Date.now();
+      }
+
+      return {
+        ...prevState,
+        isScrolling: false,
+        isScrollingByMouse: false,
+        scrollOffset,
+        scrollUpdateWasRequested: changed,
+        largeListLastSubWindowOffset: subWindowOffset,
+      };
     });
+  }
+
+  _maybeAdjustSubWindowOffset(largeListModeEnabled: boolean,
+                              scrollOffset: number,
+                              lastSubWindowOffset: number,
+                              isScrolling: boolean,
+                              isScrollingByMouse: boolean): [boolean, number, number] {
+    if (!largeListModeEnabled) {
+      return [false, scrollOffset, lastSubWindowOffset];
+    }
+
+    const totalHeight = this.props.itemCount * this.props.itemSize;
+    const viewportHeight = this.props.height;
+    const forcedHeight = this.props.largeListSizeLimit!;
+    const endsBufferRelSize = this.props.largeListEndsBufferRelSize!
+      * (forcedHeight - viewportHeight) / (totalHeight - viewportHeight);
+
+    const currentScrollbarRelPos = scrollOffset / (forcedHeight - viewportHeight);
+
+    if (isScrolling && !isScrollingByMouse) {
+      // When scrolling is done by mouse the scrollbar position needs to be updated according
+      // to the contents on the screen.
+      // When scrolling is done by scrollbar the contents on the screen need to be updated
+      // according to the scrollbar position.
+      const rawNewSubWindowOffset = Math.floor(currentScrollbarRelPos * (totalHeight - viewportHeight))
+        - scrollOffset;
+      const newSubWindowOffset = Math.max(0, Math.min(rawNewSubWindowOffset, totalHeight - forcedHeight));
+
+      return [true, scrollOffset, newSubWindowOffset];
+    }
+
+    const targetRelPos = (lastSubWindowOffset + scrollOffset) / (totalHeight - viewportHeight);
+
+    if (targetRelPos < endsBufferRelSize || currentScrollbarRelPos < endsBufferRelSize) {
+      return [lastSubWindowOffset !== 0, scrollOffset + lastSubWindowOffset, 0];
+    }
+
+    if (targetRelPos > (1 - endsBufferRelSize) || currentScrollbarRelPos > (1 - endsBufferRelSize)) {
+      const newSubWindowOffset = totalHeight - forcedHeight;
+      return [lastSubWindowOffset !== newSubWindowOffset, scrollOffset + lastSubWindowOffset - newSubWindowOffset, newSubWindowOffset];
+    }
+
+    const relPosDiffLimit = isScrolling
+      ? this.props.largeListScrollbarInaccuracyScrolling!
+      : this.props.largeListScrollbarInaccuracyNotScrolling!
+
+    if (Math.abs(targetRelPos - currentScrollbarRelPos) <= relPosDiffLimit) {
+      return [false, scrollOffset, lastSubWindowOffset];
+    }
+
+    const newScrollOffset = Math.floor(targetRelPos * (forcedHeight - viewportHeight));
+    const newSubWindowOffset = lastSubWindowOffset + scrollOffset - newScrollOffset;
+    // Note that subWindowOffset + scrollOffset does not change, thus the new values match the
+    // current targetRelPos exactly.
+
+    return [true, newScrollOffset, newSubWindowOffset];
+  }
+
+  static _calculateSubWindowOffset(props: FixedSizeListProps<any>,
+                                   globalScrollOffset: number): [number, number] {
+    const totalHeight = props.itemCount * props.itemSize;
+    const viewportHeight = props.height;
+    const forcedHeight = props.largeListSizeLimit!;
+    const endsBufferRelSize = props.largeListEndsBufferRelSize!
+      * (forcedHeight - viewportHeight) / (totalHeight - viewportHeight);
+
+    const targetRelPos = globalScrollOffset / (totalHeight - viewportHeight);
+
+    if (targetRelPos < endsBufferRelSize) {
+      return [globalScrollOffset, 0];
+    }
+    if (targetRelPos > (1 - endsBufferRelSize)) {
+      const newSubWindowOffset = totalHeight - forcedHeight;
+      return [globalScrollOffset - newSubWindowOffset, newSubWindowOffset];
+    }
+
+    const newScrollOffset = Math.floor(targetRelPos * (forcedHeight - viewportHeight));
+    const newSubWindowOffset = globalScrollOffset - newScrollOffset;
+
+    return [newScrollOffset, newSubWindowOffset];
   }
 };

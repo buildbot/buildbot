@@ -589,19 +589,6 @@ Array [
 ]
 `;
 
-exports[`FixedSizeList should render a list of columns 1`] = `
-Array [
-  Array [
-    Object {
-      "overscanStartIndex": 0,
-      "overscanStopIndex": 3,
-      "visibleStartIndex": 0,
-      "visibleStopIndex": 1,
-    },
-  ],
-]
-`;
-
 exports[`FixedSizeList should render a list of rows 1`] = `
 Array [
   Array [

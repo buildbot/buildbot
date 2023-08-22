@@ -563,7 +563,7 @@ describe('FixedSizeList', () => {
       ref.current!.scrollToItem(15);
       await waitForAnimationFrame();
 
-      expect(itemRenderer.mock.calls[0][0].isScrolling).toBe(false);
+      expect(itemRenderer.mock.calls[itemRenderer.mock.calls.length - 1][0].isScrolling).toBe(false);
     });
 
     it('should ignore indexes less than zero', async () => {

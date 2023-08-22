@@ -48,79 +48,89 @@ const createRecordingGetFakeData = () : [DataRequest[], GetFakeDataFn] => {
 describe('LogTextManager', () => {
   describe('selectChunkDownloadRange', () => {
     it('empty downloaded range', () => {
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 150, 160, 0, 200))
         .toEqual([100, 200]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 20, 20, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 20, 20, 150, 160, 0, 200))
         .toEqual([100, 200]);
     });
     it('empty downloaded range exceeds chunk limit', () => {
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 155, 160, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 155, 160, 0, 10))
         .toEqual([152, 162]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 150, 160, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 150, 160, 0, 10))
         .toEqual([150, 160]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 140, 170, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 140, 170, 0, 10))
         .toEqual([150, 160]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 10, 30, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 10, 30, 0, 10))
         .toEqual([100, 110]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 220, 240, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 0, 220, 240, 0, 10))
         .toEqual([190, 200]);
     });
     it('non-overlapping ranges', () => {
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 20, 30, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 20, 30, 150, 160, 0, 200))
         .toEqual([100, 200]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 200, 230, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 200, 230, 150, 160, 0, 200))
         .toEqual([100, 200]);
     });
+    it('non-overlapping ranges, but overlaps caching', () => {
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 20, 30, 150, 160, 200, 200))
+        .toEqual([30, 200]);
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 20, 30, 150, 160, 200, 10))
+        .toEqual([30, 40]);
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 200, 230, 150, 160, 200, 200))
+        .toEqual([100, 200]);
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 200, 230, 150, 160, 200, 10))
+        .toEqual([190, 200]);
+    });
     it('non-overlapping ranges, range exceeds chunk limit', () => {
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 155, 160, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 155, 160, 0, 10))
         .toEqual([152, 162]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 150, 160, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 150, 160, 0, 10))
         .toEqual([150, 160]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 140, 170, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 140, 170, 0, 10))
         .toEqual([150, 160]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 10, 30, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 10, 30, 0, 10))
         .toEqual([100, 110]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 220, 240, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 0, 10, 220, 240, 0, 10))
         .toEqual([190, 200]);
     });
     it('download range in downloaded', () => {
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 90, 230, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 90, 230, 150, 160, 0, 200))
         .toEqual([0, 0]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 100, 230, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 100, 230, 150, 160, 0, 200))
         .toEqual([0, 0]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 90, 200, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 90, 200, 150, 160, 0, 200))
         .toEqual([0, 0]);
     });
     it('ranges partially overlap', () => {
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 140, 210, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 140, 210, 150, 160, 0, 200))
         .toEqual([100, 140]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 90, 160, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 90, 160, 150, 160, 0, 200))
         .toEqual([160, 200]);
     });
     it('ranges partially overlap, download range exceeds chunk limit', () => {
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 140, 210, 150, 160, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 140, 210, 150, 160, 0, 10))
         .toEqual([130, 140]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 90, 160, 150, 160, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 90, 160, 150, 160, 0, 10))
         .toEqual([160, 170]);
     });
     it('downloaded range in middle', () => {
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 150, 160, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 150, 160, 0, 200))
         .toEqual([180, 200]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 175, 195, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 175, 195, 0, 200))
         .toEqual([180, 200]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 105, 125, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 105, 125, 0, 200))
         .toEqual([100, 120]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 105, 195, 200))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 105, 195, 0, 200))
         .toEqual([180, 200]);
     });
     it('downloaded range in middle, parts exceed limit', () => {
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 150, 160, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 150, 160, 0, 10))
         .toEqual([180, 190]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 175, 195, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 175, 195, 0, 10))
         .toEqual([180, 190]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 105, 125, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 105, 125, 0, 10))
         .toEqual([110, 120]);
-      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 105, 195, 10))
+      expect(LogTextManager.selectChunkDownloadRange(100, 200, 120, 180, 105, 195, 0, 10))
         .toEqual([180, 190]);
     });
   });
