@@ -602,14 +602,24 @@ export class LogTextManager {
   static selectChunkDownloadRange(downloadStart: number, downloadEnd: number,
                                   downloadedStart: number, downloadedEnd: number,
                                   visibleStart: number, visibleEnd: number,
+                                  cachedDownloadOverscanRowCount: number,
                                   maxSizeLimit: number): [number, number] {
     const visibleCenter = Math.floor((visibleStart + visibleEnd) / 2);
     if (downloadedStart >= downloadedEnd) {
       return limitRangeToSize(downloadStart, downloadEnd, maxSizeLimit, visibleCenter);
     }
 
-    if (!areRangesOverlapping(downloadStart, downloadEnd, downloadedStart, downloadedEnd)) {
-      // In case of pinned downloaded range, the download range must extend the downloaded range
+    // During caching calculations existing downloaded data is not discarded until it's
+    // too far away from visible data by cachedDownloadOverscanRowCount. To avoid gaps in
+    // downloaded data, downloaded range needs to be expanded for the case when existing
+    // data is thrown away.
+    const expandedDownloadedStart = downloadedStart - cachedDownloadOverscanRowCount;
+    const expandedDownloadedEnd = downloadedEnd + cachedDownloadOverscanRowCount;
+
+    if (!areRangesOverlapping(downloadStart, downloadEnd,
+        expandedDownloadedStart, expandedDownloadedEnd)) {
+      // In case of pinned downloaded range, the download range must extend the downloaded range,
+      // so there's guarantee that there are no gaps.
       return limitRangeToSize(downloadStart, downloadEnd, maxSizeLimit, visibleCenter);
     }
 
@@ -695,7 +705,8 @@ export class LogTextManager {
     const [chunkDownloadStartIndex, chunkDownloadEndIndex] =
       LogTextManager.selectChunkDownloadRange(downloadStartIndex, downloadEndIndex,
         downloadedStartIndex, downloadedEndIndex,
-        this.currVisibleStartIndex, this.currVisibleEndIndex, this.maxChunkLinesCount);
+        this.currVisibleStartIndex, this.currVisibleEndIndex, this.cachedDownloadOverscanRowCount,
+        this.maxChunkLinesCount);
 
     if (chunkDownloadStartIndex >= chunkDownloadEndIndex) {
       return;
