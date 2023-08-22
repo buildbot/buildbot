@@ -33,6 +33,7 @@ import {
   useCurrentTime
 } from "buildbot-ui";
 import {Link} from "react-router-dom";
+import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 import {TableHeading} from "../TableHeading/TableHeading";
 
 type BuildsTableProps = {
@@ -113,7 +114,11 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
     <div className="bb-build-table-container">
       <>
         <TableHeading>Builds:</TableHeading>
-        { builds.array.length === 0 ? <span>None</span> : tableElement() }
+        { !builds.isResolved()
+          ? <LoadingSpan/>
+          : builds.array.length === 0
+            ? <span>None</span>
+            : tableElement() }
       </>
     </div>
   );
