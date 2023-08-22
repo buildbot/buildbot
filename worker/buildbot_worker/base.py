@@ -25,12 +25,14 @@ import time
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import failure
 from twisted.python import log
 from twisted.spread import pb
 
 import buildbot_worker
 from buildbot_worker.commands import base
 from buildbot_worker.commands import registry
+from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.util import buffer_manager
 from buildbot_worker.util import lineboundaries
 
@@ -218,7 +220,11 @@ class BotBase(service.MultiService):
                 filename = os.path.join(basedir, f)
                 if os.path.isfile(filename):
                     with open(filename, "r") as fin:
-                        files[f] = fin.read()
+                        try:
+                            files[f] = bytes2unicode(fin.read())
+                        except UnicodeDecodeError:
+                            log.err(failure.Failure(),
+                                    'error while reading file: %s' % (filename))
 
         self._read_os_release(self.os_release_file, files)
 
