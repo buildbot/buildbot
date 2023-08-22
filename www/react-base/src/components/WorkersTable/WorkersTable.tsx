@@ -128,7 +128,7 @@ export const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
         <td key="state">{getWorkerStatusIcon(worker, () => onWorkerIconClick(worker))}</td>
         <td key="masters">{renderConnectedMasters(worker)}</td>
         <td key="name"><Link to={`/workers/${worker.workerid}`}>{worker.name}</Link></td>
-        <td key="builds">{renderWorkerRecentBuilds(worker)}</td>
+        { buildsForWorker === null ? <></> : <td key="builds">{renderWorkerRecentBuilds(worker)}</td> }
         {renderWorkerInfos(worker)}
       </tr>
     );
