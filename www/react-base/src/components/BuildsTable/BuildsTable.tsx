@@ -76,17 +76,17 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
           <span key={index}>{owner}</span>
         ))}
         </td>
-    <td>
-      <Link to={`/workers/${build.workerid}`}>
-        {getPropertyValueOrDefault(build.properties, 'workername', '(unknown)')}
-      </Link>
-    </td>
-    <td>
-      <ul className="list-inline">
-        <li>{build.state_string}</li>
-      </ul>
-    </td>
-  </tr>
+        <td>
+          <Link to={`/workers/${build.workerid}`}>
+            {getPropertyValueOrDefault(build.properties, 'workername', '(unknown)')}
+          </Link>
+        </td>
+        <td>
+          <ul className="list-inline">
+            <li>{build.state_string}</li>
+          </ul>
+        </td>
+      </tr>
     );
   });
 
