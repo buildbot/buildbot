@@ -139,6 +139,7 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
         width={width}
         itemSize={18}
         getRangeToRenderOverride={getRangeToRenderOverride}
+        onCacheClear={() => manager.clearCache()}
         outerElementType={outerElementType}
       >
         {({index, style}) => (

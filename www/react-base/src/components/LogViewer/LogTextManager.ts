@@ -344,6 +344,13 @@ export class LogTextManager {
     return true;
   }
 
+  clearCache() {
+    this.renderedLines = [];
+    this.renderedLines[this.renderedLines.length] = undefined; // preallocate
+    this.renderedLinesForSearch = [];
+    this.renderedLinesForSearch[this.renderedLines.length] = undefined; // preallocate
+  }
+
   getRenderedLineContent(index: number, style: React.CSSProperties,
                          renderer: LineRenderer, emptyRenderer: EmptyLineRenderer) {
     if (this.searchString !== null) {
