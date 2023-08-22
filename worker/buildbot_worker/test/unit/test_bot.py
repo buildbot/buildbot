@@ -127,6 +127,41 @@ VERSION_ID="1"
             ['environ', 'system', 'numcpus', 'basedir', 'worker_commands', 'version',
              'delete_leftover_dirs']))
 
+    @defer.inlineCallbacks
+    def test_getWorkerInfo_decode_error(self):
+        infodir = os.path.join(self.basedir, "info")
+        os.makedirs(infodir)
+        with open(os.path.join(infodir, "admin"), "w") as f:
+            f.write("testy!")
+        with open(os.path.join(infodir, "foo"), "w") as f:
+            f.write("bar")
+        with open(os.path.join(infodir, "environ"), "w") as f:
+            f.write("something else")
+        # This will not be part of worker info
+        with open(os.path.join(infodir, "binary"), "wb") as f:
+            f.write(b"\x90")
+
+        # patch the log.err, otherwise trial will think something *actually*
+        # failed
+        self.patch(log, "err", lambda f, x: None)
+
+        info = yield self.bot.callRemote("getWorkerInfo")
+
+        # remove any os_ fields as they are dependent on the test environment
+        info = {k: v for k, v in info.items() if not k.startswith("os_")}
+
+        self.assertEqual(info, {
+            "admin": 'testy!',
+            "foo": 'bar',
+            "environ": os.environ,
+            "system": os.name,
+            "basedir": self.basedir,
+            "worker_commands": self.real_bot.remote_getCommands(),
+            "version": self.real_bot.remote_getVersion(),
+            "numcpus": multiprocessing.cpu_count(),
+            "delete_leftover_dirs": False
+            })
+
     def test_shutdown(self):
         d1 = defer.Deferred()
         self.patch(reactor, "stop", lambda: d1.callback(None))
