@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import hashlib
 from urllib.parse import urlparse
 
 from twisted.internet import defer
@@ -112,9 +113,16 @@ class BitbucketStatusPush(ReporterBase):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
+        def key_hash(key):
+            sha_obj = hashlib.sha1()
+            sha_obj.update(key.encode('utf-8'))
+            return sha_obj.hexdigest()
+
+        status_key = yield props.render(self.status_key)
+
         body = {
             'state': status,
-            'key': (yield props.render(self.status_key)),
+            'key': key_hash(status_key),
             'name': (yield props.render(self.status_name)),
             'description': reports[0]['subject'],
             'url': build['url']

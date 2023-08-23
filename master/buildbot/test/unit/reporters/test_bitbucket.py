@@ -73,7 +73,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
             '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'state': 'INPROGRESS',
-                'key': 'Builder0',
+                'key': '0550a051225ac4ea91a92c9c94d41dfe6fa9f428',  # sha1("Builder0")
                 'name': 'Builder0',
                 'description': '',
                 'url': 'http://localhost:8080/#/builders/79/builds/0',
@@ -87,7 +87,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
             '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'state': 'SUCCESSFUL',
-                'key': 'Builder0',
+                'key': '0550a051225ac4ea91a92c9c94d41dfe6fa9f428',  # sha1("Builder0")
                 'name': 'Builder0',
                 'description': '',
                 'url': 'http://localhost:8080/#/builders/79/builds/0',
@@ -101,7 +101,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
             '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'state': 'FAILED',
-                'key': 'Builder0',
+                'key': '0550a051225ac4ea91a92c9c94d41dfe6fa9f428',  # sha1("Builder0")
                 'name': 'Builder0',
                 'description': '',
                 'url': 'http://localhost:8080/#/builders/79/builds/0',
@@ -129,7 +129,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
             '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'state': 'SUCCESSFUL',
-                'key': 'Builder0',
+                'key': '0550a051225ac4ea91a92c9c94d41dfe6fa9f428',  # sha1("Builder0")
                 'name': 'Builder0',
                 'description': '',
                 'url': 'http://localhost:8080/#/builders/79/builds/0',
@@ -148,7 +148,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
             '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'state': 'SUCCESSFUL',
-                'key': 'Builder0',
+                'key': '0550a051225ac4ea91a92c9c94d41dfe6fa9f428',  # sha1("Builder0")
                 'name': 'Builder0',
                 'description': '',
                 'url': 'http://localhost:8080/#/builders/79/builds/0',
@@ -185,7 +185,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
             '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'state': 'INPROGRESS',
-                'key': 'Builder0',
+                'key': '0550a051225ac4ea91a92c9c94d41dfe6fa9f428',  # sha1("Builder0")
                 'name': 'Builder0',
                 'description': '',
                 'url': 'http://localhost:8080/#/builders/79/builds/0',
@@ -264,7 +264,7 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
             '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'state': 'INPROGRESS',
-                'key': 'Builder0/0',
+                'key': '84f9e75c46896d56da4fd75e096d24ec62f76f33',  # sha1("Builder0/0")
                 'name': 'Builder0-0',
                 'description': 'not finished build',
                 'url': 'http://localhost:8080/#/builders/79/builds/0',
@@ -278,7 +278,7 @@ class TestBitbucketStatusPushProperties(TestReactorMixin, unittest.TestCase,
             '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'state': 'SUCCESSFUL',
-                'key': 'Builder0/0',
+                'key': '84f9e75c46896d56da4fd75e096d24ec62f76f33',  # sha1("Builder0/0")
                 'name': 'Builder0-0',
                 'description': 'Build succeeded!',
                 'url': 'http://localhost:8080/#/builders/79/builds/0',
