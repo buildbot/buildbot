@@ -28,6 +28,8 @@ from buildbot.util import epoch2datetime
 from buildbot.util import httpclientservice
 from buildbot.util.pullrequest import PullRequestMixin
 
+from unidiff import PatchSet
+
 
 class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullRequestMixin):
 
@@ -159,6 +161,18 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                     revision = commit_json['hash']
                     revlink = commit_json['links']['html']['href']
 
+                    # Retrieve the list of added/modified files in the commit
+                    response = yield self._http.get(
+                        str(commit_json['links']['diff']['href'])
+                    )
+                    content = yield response.content()
+                    patchset = PatchSet(content.decode())
+                    files = [
+                        file.path
+                        for file in patchset
+                        if file.is_added_file or file.is_modified_file
+                    ]
+
                     # parse repo api page
                     response = yield self._http.get(
                         str(pr['source']['repository']['links']['self']['href'])
@@ -185,6 +199,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                                     **self.extractProperties(pr),
                                     },
                         src='bitbucket',
+                        files=files,
                     )
 
     def _getCurrentRev(self, pr_id):
