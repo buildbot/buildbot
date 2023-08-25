@@ -31,11 +31,13 @@ class SourceRest():
     """https://api.bitbucket.org/2.0/repositories/{owner}/{slug}"""
     template = """\
 {
-
     "hash": "%(hash)s",
     "links": {
         "html": {
             "href": "https://bitbucket.org/%(owner)s/%(slug)s/commits/%(short_hash)s"
+        },
+        "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/%(owner)s/%(slug)s/diff/%(hash)s"
         }
     },
     "repository": {
@@ -79,6 +81,17 @@ class SourceRest():
             "owner": self.owner,
             "slug": self.slug,
         }
+
+    def diff_response(self):
+        return """
+diff --git a/path/to/a/file.txt b/path/to/a/file.txt
+index 3e59caa..be38dcf 100644
+--- a/path/to/a/file.txt
++++ b/path/to/a/file.txt
+@@ -1 +1 @@
+-// header
++// Header
+"""
 
 
 class PullRequestRest():
@@ -377,6 +390,12 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self._http.expect(
             'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/diff/1111111111111111111111111111111111111111', # noqa pylint: disable=line-too-long
+            content=self.rest_src.diff_response()
+        )
+
+        self._http.expect(
+            'get',
             'https://api.bitbucket.org/2.0/repositories/contributor/slug',
             content=self.rest_src.repo_response())
 
@@ -389,7 +408,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'category': None,
             'codebase': None,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
-            'files': None,
+            'files': ['path/to/a/file.txt'],
             'project': '',
             'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
@@ -420,6 +439,12 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self._http.expect(
             'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/diff/1111111111111111111111111111111111111111', # noqa pylint: disable=line-too-long
+            content=self.rest_src.diff_response()
+        )
+
+        self._http.expect(
+            'get',
             'https://api.bitbucket.org/2.0/repositories/contributor/slug',
             content=self.rest_src.repo_response())
 
@@ -437,7 +462,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'category': None,
             'codebase': None,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
-            'files': None,
+            'files': ['path/to/a/file.txt'],
             'project': '',
             'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
@@ -493,6 +518,12 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self._http.expect(
             'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/diff/1111111111111111111111111111111111111111', # noqa pylint: disable=line-too-long
+            content=self.rest_src.diff_response()
+        )
+
+        self._http.expect(
+            'get',
             'https://api.bitbucket.org/2.0/repositories/contributor/slug',
             content=self.rest_src.repo_response())
 
@@ -513,6 +544,11 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self._http.expect(
             'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/diff/2222222222222222222222222222222222222222', # noqa pylint: disable=line-too-long
+            content=self.rest_src.diff_response())
+
+        self._http.expect(
+            'get',
             'https://api.bitbucket.org/2.0/repositories/contributor/slug',
             content=rest_src2.repo_response())
 
@@ -525,7 +561,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'category': None,
             'codebase': None,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
-            'files': None,
+            'files': ['path/to/a/file.txt'],
             'project': '',
             'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
@@ -547,7 +583,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                 'codebase': None,
                 'comments':
                     'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
-                'files': None,
+                'files': ['path/to/a/file.txt'],
                 'project': '',
                 'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
                 'repository': 'https://bitbucket.org/contributor/slug',
@@ -564,7 +600,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                 'codebase': None,
                 'comments':
                     'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
-                'files': None,
+                'files': ['path/to/a/file.txt'],
                 'project': '',
                 'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
                 'repository': 'https://bitbucket.org/contributor/slug',
@@ -615,6 +651,12 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self._http.expect(
             'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/diff/1111111111111111111111111111111111111111', # noqa pylint: disable=line-too-long
+            content=self.rest_src.diff_response()
+        )
+
+        self._http.expect(
+            'get',
             'https://api.bitbucket.org/2.0/repositories/contributor/slug',
             content=self.rest_src.repo_response())
 
@@ -627,7 +669,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'category': None,
             'codebase': None,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
-            'files': None,
+            'files': ['path/to/a/file.txt'],
             'project': '',
             'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
@@ -658,6 +700,12 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self._http.expect(
             'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/diff/1111111111111111111111111111111111111111', # noqa pylint: disable=line-too-long
+            content=self.rest_src.diff_response()
+        )
+
+        self._http.expect(
+            'get',
             'https://api.bitbucket.org/2.0/repositories/contributor/slug',
             content=self.rest_src.repo_response())
 
@@ -671,7 +719,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'category': None,
             'codebase': None,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
-            'files': None,
+            'files': ['path/to/a/file.txt'],
             'project': '',
             'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
@@ -703,6 +751,12 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self._http.expect(
             'get',
+            'https://api.bitbucket.org/2.0/repositories/contributor/slug/diff/1111111111111111111111111111111111111111', # noqa pylint: disable=line-too-long
+            content=self.rest_src.diff_response()
+        )
+
+        self._http.expect(
+            'get',
             'https://api.bitbucket.org/2.0/repositories/contributor/slug',
             content=self.rest_src.repo_response())
 
@@ -714,7 +768,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'category': None,
             'codebase': None,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
-            'files': None,
+            'files': ['path/to/a/file.txt'],
             'project': '',
             'properties': {
                 'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1',
