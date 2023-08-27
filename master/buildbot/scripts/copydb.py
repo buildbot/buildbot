@@ -91,17 +91,39 @@ def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_bui
     written_count = [0]
     total_count = [0]
 
+    autoincrement_foreign_key_column = None
+    for column_name, column in table.columns.items():
+        if not column.foreign_keys and column.primary_key and isinstance(column.type, sa.Integer):
+            autoincrement_foreign_key_column = column_name
+
     def thd_write(conn):
+        max_column_id = 0
         while True:
             try:
                 rows = rows_queue.get(timeout=1)
                 if rows is None:
+
+                    if autoincrement_foreign_key_column is not None and max_column_id != 0:
+                        if dst_db.pool.engine.dialect.name == 'postgresql':
+                            # Explicitly inserting primary row IDs does not bump the primary key
+                            # sequence on Postgres
+                            seq_name = f"{table_name}_{autoincrement_foreign_key_column}_seq"
+                            transaction = conn.begin()
+                            conn.execute(
+                                f"ALTER SEQUENCE {seq_name} RESTART WITH {max_column_id + 1}"
+                            )
+                            transaction.commit()
+
                     rows_queue.task_done()
                     return
 
                 row_dicts = [
                     {k: getattr(row, k) for k in column_keys} for row in rows
                 ]
+
+                if autoincrement_foreign_key_column is not None:
+                    for row in row_dicts:
+                        max_column_id = max(max_column_id, row[autoincrement_foreign_key_column])
 
                 if table_name == "buildsets":
                     for row_dict in row_dicts:
