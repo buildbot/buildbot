@@ -223,7 +223,7 @@ def _copy_database_with_db(src_db, dst_db, print_log):
 
     for table_name in table_names:
         table = metadata.tables[table_name]
-        _copy_single_table(
+        yield _copy_single_table(
             src_db,
             dst_db,
             table,
