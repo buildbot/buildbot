@@ -80,6 +80,18 @@ class CreateWorkerError(Exception):
     """
 
 
+def _make_tac(config):
+    if config['relocatable']:
+        config['basedir'] = '.'
+
+    if config['no-logrotate']:
+        workerTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
+    else:
+        workerTAC = "".join(workerTACTemplate)
+
+    return workerTAC % config
+
+
 def _makeBaseDir(basedir, quiet):
     """
     Make worker base directory if needed.
@@ -205,14 +217,7 @@ def createWorker(config):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if config['relocatable']:
-        config['basedir'] = '.'
-
-    if config['no-logrotate']:
-        workerTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
-    else:
-        workerTAC = "".join(workerTACTemplate)
-    contents = workerTAC % config
+    contents = _make_tac(config)
 
     try:
         _makeBaseDir(basedir, quiet)
