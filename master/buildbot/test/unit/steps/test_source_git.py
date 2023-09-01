@@ -1712,6 +1712,38 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.run_step()
 
+    def test_mode_incremental_no_existing_repo_shallow_submodules(self):
+        self.setup_step(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental', shallow=True, submodules=True))
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            .stdout('git version 1.7.5')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True)
+            .exit(1),
+            ExpectListdir(dir='wkdir')
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clone',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 '.', '--progress'])
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'submodule', 'update', '--init', '--recursive'])
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.run_step()
+
     def test_mode_full_fresh(self):
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
