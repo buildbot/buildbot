@@ -37,7 +37,7 @@ The Git step takes the following arguments:
 ``shallow`` (optional)
    Instructs Git to attempt shallow clones (``--depth 1``).
    The depth defaults to 1 and can be changed by passing an integer instead of ``True``.
-   This option can be used only in full builds with clobber method.
+   This option can be used only in incremental builds, or full builds with clobber method.
 
 ``reference`` (optional)
    Use the specified string as a path to a reference repository on the local machine.
