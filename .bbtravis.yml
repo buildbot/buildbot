@@ -46,8 +46,6 @@ matrix:
     # that the codecov.io service would wait until this build is finished before creating report.
     - python: "3.9"
       env: TWISTED=18.7.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
-    - python: "3.7"
-      env: TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
     - python: "3.9"
