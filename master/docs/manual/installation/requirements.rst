@@ -71,7 +71,7 @@ sqlite3: http://www.sqlite.org
   Version 3.7.0 or higher is recommended, although Buildbot will run down to 3.6.16 -- at the risk of "Database is locked" errors.
   The minimum version is 3.4.0, below which parallel database queries and schema introspection fail.
 
-  Please note that Python ships with sqlite3 by default since Python 2.6.
+  Please note that Python ships with sqlite3 by default.
 
   If you configure a different database engine, then SQLite is not required.
   however note that Buildbot's own unit tests require SQLite.

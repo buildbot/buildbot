@@ -207,7 +207,6 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         return branch
 
     def _trackerBranch(self, branch):
-        # manually quote tilde for Python 3.7
         url = urlquote(self.repourl, '').replace('~', '%7E')
         return f"refs/buildbot/{url}/{self._removeHeads(branch)}"
 
