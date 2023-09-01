@@ -60,7 +60,7 @@ allow_shutdown = %(allow-shutdown)r
 maxretries = %(maxretries)s
 use_tls = %(use-tls)s
 delete_leftover_dirs = %(delete-leftover-dirs)s
-proxy_connection_string = %(proxy-connection-string)s
+proxy_connection_string = %(proxy-connection-string)r
 protocol = %(protocol)r
 
 s = Worker(buildmaster_host, port, workername, passwd, basedir,
