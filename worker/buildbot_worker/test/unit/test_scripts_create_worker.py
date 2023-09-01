@@ -779,7 +779,6 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
                          "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
-        options["allow-shutdown"] = "'signal'"
         expected_tac_contents = \
             "".join(create_worker.workerTACTemplate) % options
         self.assertMakeFunctionsCalls(self.options["basedir"],

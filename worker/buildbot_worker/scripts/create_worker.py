@@ -56,7 +56,7 @@ keepalive = %(keepalive)d
 umask = %(umask)s
 maxdelay = %(maxdelay)d
 numcpus = %(numcpus)s
-allow_shutdown = %(allow-shutdown)s
+allow_shutdown = %(allow-shutdown)r
 maxretries = %(maxretries)s
 use_tls = %(use-tls)s
 delete_leftover_dirs = %(delete-leftover-dirs)s
@@ -207,10 +207,6 @@ def createWorker(config):
 
     if config['relocatable']:
         config['basedir'] = '.'
-
-    asd = config['allow-shutdown']
-    if asd:
-        config['allow-shutdown'] = repr(asd)
 
     if config['no-logrotate']:
         workerTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
