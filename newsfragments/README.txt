@@ -8,6 +8,8 @@ towncrier has a few standard types of news fragments, signified by the file exte
 .bugfix: Signifying a bug fix.
 .doc: Signifying a documentation improvement.
 .removal: Signifying a deprecation or removal of public API.
+.change: Signifying a change of behavior
+.misc: Miscellaneous change
 
 The core of the filename can be the fixed issue number of any unique text relative to your work.
 Buildbot project does not require a tracking ticket to be made for each contribution even if this is appreciated.
