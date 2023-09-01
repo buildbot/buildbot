@@ -114,7 +114,7 @@ class Git(Source, GitStepMixin):
                     bbconfig.error("Git: invalid method for mode 'full'.")
                 if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
                     bbconfig.error(
-                        "Git: shallow only possible with mode 'full' and method 'clobber'.")
+                        "Git: in mode 'full' shallow only possible with method 'clobber'.")
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 

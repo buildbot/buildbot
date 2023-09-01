@@ -2366,7 +2366,7 @@ class TestGit(sourcesteps.SourceStepMixin,
 
     def test_mode_full_copy_shallow(self):
         with self.assertRaisesConfigError(
-                "shallow only possible with mode 'full' and method 'clobber'"):
+                "in mode 'full' shallow only possible with method 'clobber'"):
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                         mode='full', method='copy', shallow=True)
 
