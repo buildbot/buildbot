@@ -45,13 +45,13 @@ matrix:
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
     - python: "3.9"
-      env: TWISTED=18.7.0 SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=18.7.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - python: "3.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=ci/coverage
+      env: TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
     - python: "3.8"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=ci/coverage
+      env: TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
     - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
 
     - python: "3.9"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=dev_virtualenv
@@ -154,8 +154,12 @@ script:
     cmd: make frontend_tests_headless
 
   - title: master and worker tests
-    condition: TESTS in ("dev_virtualenv", "trial")
-    cmd: trial  --reporter=text --rterrors buildbot.test buildbot_worker.test
+    condition: TESTS in ("dev_virtualenv", "trial") and BUILDBOT_TEST_DB_URL == "sqlite://"
+    cmd: trial -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
+
+  - title: master and worker tests
+    condition: TESTS in ("dev_virtualenv", "trial") and BUILDBOT_TEST_DB_URL != "sqlite://"
+    cmd: trial --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   - title: interop tests
     condition: TESTS == "interop"
@@ -168,7 +172,7 @@ script:
   # run tests under coverage for latest only (it's slower..)
   - title: coverage tests
     condition: TESTS == "ci/coverage"
-    cmd: coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
+    cmd: coverage run --rcfile=.coveragerc $(which trial) -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   # Run additional tests in their separate job
   - title: pylint
