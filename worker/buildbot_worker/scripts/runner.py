@@ -217,7 +217,7 @@ class CreateWorkerOptions(MakerBase):
                                        argument))
 
         for argument in ["log-count", "maxretries", "umask", "numcpus"]:
-            if not re.match(r'^(0o)?\d+$', self[argument]) and \
+            if not re.match(r'^((0o)\d+|0|[1-9]\d*)$', self[argument]) and \
                     self[argument] != 'None':
                 raise usage.UsageError("{} parameter needs to be a number"
                                     " or None".format(argument))
