@@ -56,11 +56,11 @@ keepalive = %(keepalive)d
 umask = %(umask)s
 maxdelay = %(maxdelay)d
 numcpus = %(numcpus)s
-allow_shutdown = %(allow-shutdown)s
+allow_shutdown = %(allow-shutdown)r
 maxretries = %(maxretries)s
 use_tls = %(use-tls)s
 delete_leftover_dirs = %(delete-leftover-dirs)s
-proxy_connection_string = %(proxy-connection-string)s
+proxy_connection_string = %(proxy-connection-string)r
 protocol = %(protocol)r
 
 s = Worker(buildmaster_host, port, workername, passwd, basedir,
@@ -78,6 +78,18 @@ class CreateWorkerError(Exception):
     """
     Raised on errors while setting up worker directory.
     """
+
+
+def _make_tac(config):
+    if config['relocatable']:
+        config['basedir'] = '.'
+
+    if config['no-logrotate']:
+        workerTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
+    else:
+        workerTAC = "".join(workerTACTemplate)
+
+    return workerTAC % config
 
 
 def _makeBaseDir(basedir, quiet):
@@ -205,18 +217,7 @@ def createWorker(config):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if config['relocatable']:
-        config['basedir'] = '.'
-
-    asd = config['allow-shutdown']
-    if asd:
-        config['allow-shutdown'] = repr(asd)
-
-    if config['no-logrotate']:
-        workerTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
-    else:
-        workerTAC = "".join(workerTACTemplate)
-    contents = workerTAC % config
+    contents = _make_tac(config)
 
     try:
         _makeBaseDir(basedir, quiet)

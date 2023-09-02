@@ -37,6 +37,302 @@ def _regexp_path(name, *names):
     return os.path.join(name, *names).replace("\\", "\\\\")
 
 
+class TestDefaultOptionsMixin:
+    # default options and required arguments
+    options = {
+        # flags
+        "no-logrotate": False,
+        "relocatable": False,
+        "quiet": False,
+        "use-tls": False,
+        "delete-leftover-dirs": False,
+        # options
+        "basedir": "bdir",
+        "allow-shutdown": None,
+        "umask": None,
+        "log-size": 16,
+        "log-count": 8,
+        "keepalive": 4,
+        "maxdelay": 2,
+        "numcpus": None,
+        "protocol": "pb",
+        "maxretries": None,
+        "proxy-connection-string": None,
+
+        # arguments
+        "host": "masterhost",
+        "port": 1234,
+        "name": "workername",
+        "passwd": "orange"
+    }
+
+
+class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
+
+    """
+    Test buildbot_worker.scripts.create_worker._make_tac()
+    """
+
+    def assert_tac_file_contents(self, tac_contents, expected_args, relocate=None):
+        """
+        Check that generated TAC file is a valid Python script and it does what
+        is typical for TAC file logic. Mainly create instance of Worker with
+        expected arguments.
+        """
+
+        # pylint: disable=import-outside-toplevel
+        # import modules for mocking
+        import twisted.application.service
+        import twisted.python.logfile
+
+        import buildbot_worker.bot
+
+        # mock service.Application class
+        application_mock = mock.Mock()
+        application_class_mock = mock.Mock(return_value=application_mock)
+        self.patch(twisted.application.service, "Application",
+                   application_class_mock)
+
+        # mock logging stuff
+        logfile_mock = mock.Mock()
+        self.patch(twisted.python.logfile.LogFile, "fromFullPath",
+                   logfile_mock)
+
+        # mock Worker class
+        worker_mock = mock.Mock()
+        worker_class_mock = mock.Mock(return_value=worker_mock)
+        self.patch(buildbot_worker.bot, "Worker", worker_class_mock)
+
+        # Executed .tac file with mocked functions with side effect.
+        # This will raise exception if .tac file is not valid Python file.
+        globals_dict = {}
+        if relocate:
+            globals_dict["__file__"] = os.path.join(relocate, "buildbot.tac")
+        exec(tac_contents, globals_dict, globals_dict)  # pylint: disable=exec-used
+
+        # only one Application must be created in .tac
+        application_class_mock.assert_called_once_with("buildbot-worker")
+
+        # check that Worker created with passed options
+        worker_class_mock.assert_called_once_with(
+            expected_args["host"],
+            expected_args["port"],
+            expected_args["name"],
+            expected_args["passwd"],
+            expected_args["basedir"],
+            expected_args["keepalive"],
+            umask=expected_args["umask"],
+            numcpus=expected_args["numcpus"],
+            protocol=expected_args["protocol"],
+            maxdelay=expected_args["maxdelay"],
+            allow_shutdown=expected_args["allow-shutdown"],
+            maxRetries=expected_args["maxretries"],
+            useTls=expected_args["use-tls"],
+            delete_leftover_dirs=expected_args["delete-leftover-dirs"],
+            proxy_connection_string=expected_args["proxy-connection-string"],
+            )
+
+        # check that Worker instance attached to application
+        self.assertEqual(worker_mock.method_calls,
+                         [mock.call.setServiceParent(application_mock)])
+
+        # .tac file must define global variable "application", instance of
+        # Application
+        self.assertTrue('application' in globals_dict,
+                        ".tac file doesn't define \"application\" variable")
+        self.assertTrue(globals_dict['application'] is application_mock,
+                        "defined \"application\" variable in .tac file is not "
+                        "Application instance")
+
+    def test_default_tac_contents(self):
+        """
+        test that with default options generated TAC file is valid.
+        """
+        tac_contents = create_worker._make_tac(self.options.copy())
+
+        self.assert_tac_file_contents(tac_contents, self.options)
+
+    def test_backslash_in_basedir(self):
+        """
+        test that using backslash (typical for Windows platform) in basedir
+        won't break generated TAC file.
+        """
+        options = self.options.copy()
+        options["basedir"] = r"C:\buildbot-worker dir\\"
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assert_tac_file_contents(tac_contents, options)
+
+    def test_quotes_in_basedir(self):
+        """
+        test that using quotes in basedir won't break generated TAC file.
+        """
+        options = self.options.copy()
+        options["basedir"] = r"Buildbot's \"dir"
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assert_tac_file_contents(tac_contents, options)
+
+    def test_double_quotes_in_basedir(self):
+        """
+        test that using double quotes at begin and end of basedir won't break
+        generated TAC file.
+        """
+        options = self.options.copy()
+        options["basedir"] = r"\"\"Buildbot''"
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assert_tac_file_contents(tac_contents, options)
+
+    def test_special_characters_in_options(self):
+        """
+        test that using special characters in options strings won't break
+        generated TAC file.
+        """
+        test_string = ("\"\" & | ^ # @ \\& \\| \\^ \\# \\@ \\n"
+                       " \x07 \" \\\" ' \\' ''")
+        options = self.options.copy()
+        options["basedir"] = test_string
+        options["host"] = test_string
+        options["passwd"] = test_string
+        options["name"] = test_string
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assert_tac_file_contents(tac_contents, options)
+
+    def test_flags_with_non_default_values(self):
+        """
+        test that flags with non-default values will be correctly written to
+        generated TAC file.
+        """
+        options = self.options.copy()
+        options["quiet"] = True
+        options["use-tls"] = True
+        options["delete-leftover-dirs"] = True
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assert_tac_file_contents(tac_contents, options)
+
+    def test_log_rotate(self):
+        """
+        test that when --no-logrotate options is not used, correct tac file
+        is generated.
+        """
+        options = self.options.copy()
+        options["no-logrotate"] = False
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assertIn("from twisted.python.logfile import LogFile",
+                      tac_contents)
+        self.assert_tac_file_contents(tac_contents, options)
+
+    def test_no_log_rotate(self):
+        """
+        test that when --no-logrotate options is used, correct tac file
+        is generated.
+        """
+        options = self.options.copy()
+        options["no-logrotate"] = True
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assertNotIn("from twisted.python.logfile import LogFile",
+                         tac_contents)
+        self.assert_tac_file_contents(tac_contents, options)
+
+    def test_relocatable_true(self):
+        """
+        test that when --relocatable option is True, worker is created from
+        generated TAC file with correct basedir argument before and after
+        relocation.
+        """
+        options = self.options.copy()
+        options["relocatable"] = True
+        options["basedir"] = os.path.join(os.getcwd(), "worker1")
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assert_tac_file_contents(tac_contents, options,
+                                   relocate=options["basedir"])
+
+        _relocate = os.path.join(os.getcwd(), "worker2")
+        options["basedir"] = _relocate
+        self.assert_tac_file_contents(tac_contents, options, relocate=_relocate)
+
+    def test_relocatable_false(self):
+        """
+        test that when --relocatable option is False, worker is created from
+        generated TAC file with the same basedir argument before and after
+        relocation.
+        """
+        options = self.options.copy()
+        options["relocatable"] = False
+        options["basedir"] = os.path.join(os.getcwd(), "worker1")
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assert_tac_file_contents(tac_contents, options,
+                                   relocate=options["basedir"])
+
+        _relocate = os.path.join(os.getcwd(), "worker2")
+        self.assert_tac_file_contents(tac_contents, options, relocate=_relocate)
+
+    def test_options_with_non_default_values(self):
+        """
+        test that options with non-default values will be correctly written to
+        generated TAC file and used as argument of Worker.
+        """
+        options = self.options.copy()
+        options["allow-shutdown"] = "signal"
+        options["umask"] = "18"
+        options["log-size"] = 160
+        options["log-count"] = "80"
+        options["keepalive"] = 40
+        options["maxdelay"] = 20
+        options["numcpus"] = "10"
+        options["protocol"] = "null"
+        options["maxretries"] = "1"
+        options["proxy-connection-string"] = "TCP:proxy.com:8080"
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        # These values are expected to be used as non-string literals in
+        # generated TAC file.
+        self.assertIn("rotateLength = 160", tac_contents)
+        self.assertIn("maxRotatedFiles = 80", tac_contents)
+        self.assertIn("keepalive = 40", tac_contents)
+        self.assertIn("maxdelay = 20", tac_contents)
+        self.assertIn("umask = 18", tac_contents)
+        self.assertIn("numcpus = 10", tac_contents)
+        self.assertIn("maxretries = 1", tac_contents)
+
+        # Check also as arguments used in Worker initialization.
+        options["umask"] = 18
+        options["numcpus"] = 10
+        options["maxretries"] = 1
+        self.assert_tac_file_contents(tac_contents, options)
+
+    def test_umask_octal_value(self):
+        """
+        test that option umask with octal value will be correctly written to
+        generated TAC file and used as argument of Worker.
+        """
+        options = self.options.copy()
+        options["umask"] = "0o22"
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        self.assertIn("umask = 0o22", tac_contents)
+        options["umask"] = 18
+        self.assert_tac_file_contents(tac_contents, options)
+
+
 class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     """
@@ -471,38 +767,12 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
         self.assertWasQuiet()
 
 
-class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
+class TestCreateWorker(misc.StdoutAssertionsMixin, TestDefaultOptionsMixin,
+                       unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.create_worker.createWorker()
     """
-    # default options and required arguments
-    options = {
-        # flags
-        "no-logrotate": False,
-        "relocatable": False,
-        "quiet": False,
-        "use-tls": False,
-        "delete-leftover-dirs": False,
-        # options
-        "basedir": "bdir",
-        "allow-shutdown": None,
-        "umask": None,
-        "log-size": 16,
-        "log-count": 8,
-        "keepalive": 4,
-        "maxdelay": 2,
-        "numcpus": None,
-        "protocol": "pb",
-        "maxretries": None,
-        "proxy-connection-string": None,
-
-        # arguments
-        "host": "masterhost",
-        "port": 1234,
-        "name": "workername",
-        "passwd": "orange"
-    }
 
     def setUp(self):
         # capture stdout
@@ -567,224 +837,10 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
                          "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
-        expected_tac_contents = \
-            "".join(create_worker.workerTACTemplate) % self.options
+        expected_tac_contents = create_worker._make_tac(self.options.copy())
         self.assertMakeFunctionsCalls(self.options["basedir"],
                                       expected_tac_contents,
                                       self.options["quiet"])
-
-        # check that correct info message was printed
-        self.assertStdoutEqual("worker configured in bdir\n")
-
-    def assertTACFileContents(self, options):
-        """
-        Check that TAC file generated with provided options is valid Python
-        script and does typical for TAC file logic.
-        """
-
-        # pylint: disable=import-outside-toplevel
-        # import modules for mocking
-        import twisted.application.service
-        import twisted.python.logfile
-
-        import buildbot_worker.bot
-
-        # mock service.Application class
-        application_mock = mock.Mock()
-        application_class_mock = mock.Mock(return_value=application_mock)
-        self.patch(twisted.application.service, "Application",
-                   application_class_mock)
-
-        # mock logging stuff
-        logfile_mock = mock.Mock()
-        self.patch(twisted.python.logfile.LogFile, "fromFullPath",
-                   logfile_mock)
-
-        # mock Worker class
-        worker_mock = mock.Mock()
-        worker_class_mock = mock.Mock(return_value=worker_mock)
-        self.patch(buildbot_worker.bot, "Worker", worker_class_mock)
-
-        expected_tac_contents = \
-            "".join(create_worker.workerTACTemplate) % options
-
-        # Executed .tac file with mocked functions with side effect.
-        # This will raise exception if .tac file is not valid Python file.
-        glb = {}
-        exec(expected_tac_contents, glb, glb)  # pylint: disable=exec-used
-
-        # only one Application must be created in .tac
-        application_class_mock.assert_called_once_with("buildbot-worker")
-
-        # check that Worker created with passed options
-        worker_class_mock.assert_called_once_with(
-            options["host"],
-            options["port"],
-            options["name"],
-            options["passwd"],
-            options["basedir"],
-            options["keepalive"],
-            umask=options["umask"],
-            numcpus=options["numcpus"],
-            protocol=options["protocol"],
-            maxdelay=options["maxdelay"],
-            allow_shutdown=options["allow-shutdown"],
-            maxRetries=options["maxretries"],
-            useTls=options["use-tls"],
-            delete_leftover_dirs=options["delete-leftover-dirs"],
-            proxy_connection_string=options["proxy-connection-string"],
-            )
-
-        # check that Worker instance attached to application
-        self.assertEqual(worker_mock.method_calls,
-                         [mock.call.setServiceParent(application_mock)])
-
-        # .tac file must define global variable "application", instance of
-        # Application
-        self.assertTrue('application' in glb,
-                        ".tac file doesn't define \"application\" variable")
-        self.assertTrue(glb['application'] is application_mock,
-                        "defined \"application\" variable in .tac file is not "
-                        "Application instance")
-
-    def testDefaultTACContents(self):
-        """
-        test that with default options generated TAC file is valid.
-        """
-
-        self.assertTACFileContents(self.options)
-
-    def testBackslashInBasedir(self):
-        """
-        test that using backslash (typical for Windows platform) in basedir
-        won't break generated TAC file.
-        """
-
-        p = mock.patch.dict(
-            self.options, {"basedir": r"C:\buildbot-worker dir\\"})
-        p.start()
-        try:
-            self.assertTACFileContents(self.options)
-        finally:
-            p.stop()
-
-    def testQuotesInBasedir(self):
-        """
-        test that using quotes in basedir won't break generated TAC file.
-        """
-
-        p = mock.patch.dict(self.options, {"basedir": r"Buildbot's \"dir"})
-        p.start()
-        try:
-            self.assertTACFileContents(self.options)
-        finally:
-            p.stop()
-
-    def testDoubleQuotesInBasedir(self):
-        """
-        test that using double quotes at begin and end of basedir won't break
-        generated TAC file.
-        """
-
-        p = mock.patch.dict(self.options, {"basedir": r"\"\"Buildbot''"})
-        p.start()
-        try:
-            self.assertTACFileContents(self.options)
-        finally:
-            p.stop()
-
-    def testSpecialCharactersInOptions(self):
-        """
-        test that using special characters in options strings won't break
-        generated TAC file.
-        """
-
-        test_string = ("\"\" & | ^ # @ \\& \\| \\^ \\# \\@ \\n"
-                       " \x07 \" \\\" ' \\' ''")
-        p = mock.patch.dict(self.options, {
-            "basedir": test_string,
-            "host": test_string,
-            "passwd": test_string,
-            "name": test_string,
-        })
-        p.start()
-        try:
-            self.assertTACFileContents(self.options)
-        finally:
-            p.stop()
-
-    def testNoLogRotate(self):
-        """
-        test that when --no-logrotate options is used, correct tac file
-        is generated.
-        """
-        options = self.options.copy()
-        options["no-logrotate"] = True
-
-        # patch _make*() functions to do nothing
-        self.setUpMakeFunctions()
-
-        # call createWorker() and check that we get success exit code
-        self.assertEqual(create_worker.createWorker(options), 0,
-                         "unexpected exit code")
-
-        # check _make*() functions were called with correct arguments
-        expected_tac_contents = (create_worker.workerTACTemplate[0] +
-                                 create_worker.workerTACTemplate[2]) % options
-        self.assertMakeFunctionsCalls(self.options["basedir"],
-                                      expected_tac_contents,
-                                      self.options["quiet"])
-
-        # check that correct info message was printed
-        self.assertStdoutEqual("worker configured in bdir\n")
-
-    def testUseTLS(self):
-        """
-        test that when --use-tls options is used, correct connection_string
-        is generated
-        """
-        options = self.options.copy()
-        options["use-tls"] = True
-
-        # patch _make*() functions to do nothing
-        self.setUpMakeFunctions()
-
-        # call createWorker() and check that we get success exit code
-        self.assertEqual(create_worker.createWorker(options), 0,
-                         "unexpected exit code")
-
-        # check _make*() functions were called with correct arguments
-        expected_tac_contents = ("".join(create_worker.workerTACTemplate)) % options
-        self.assertMakeFunctionsCalls(self.options["basedir"],
-                                      expected_tac_contents,
-                                      self.options["quiet"])
-
-        # check that correct info message was printed
-        self.assertStdoutEqual("worker configured in bdir\n")
-
-    def testWithOpts(self):
-        """
-        test calling createWorker() with --relocatable and --allow-shutdown
-        options specified.
-        """
-        options = self.options.copy()
-        options["relocatable"] = True
-        options["allow-shutdown"] = "signal"
-
-        # patch _make*() functions to do nothing
-        self.setUpMakeFunctions()
-
-        # call createWorker() and check that we get success exit code
-        self.assertEqual(create_worker.createWorker(options), 0,
-                         "unexpected exit code")
-
-        # check _make*() functions were called with correct arguments
-        options["allow-shutdown"] = "'signal'"
-        expected_tac_contents = \
-            "".join(create_worker.workerTACTemplate) % options
-        self.assertMakeFunctionsCalls(self.options["basedir"],
-                                      expected_tac_contents,
-                                      options["quiet"])
 
         # check that correct info message was printed
         self.assertStdoutEqual("worker configured in bdir\n")
@@ -804,34 +860,10 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
                          "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
-        expected_tac_contents = \
-            "".join(create_worker.workerTACTemplate) % options
+        expected_tac_contents = create_worker._make_tac(self.options)
         self.assertMakeFunctionsCalls(options["basedir"],
                                       expected_tac_contents,
                                       options["quiet"])
 
         # there should be no output on stdout
         self.assertWasQuiet()
-
-    def testDeleteLeftoverDirs(self):
-        """
-        test calling createWorker() with --delete-leftover-dirs flag
-        """
-        options = self.options.copy()
-        options["delete-leftover-dirs"] = True
-
-        # patch _make*() functions to do nothing
-        self.setUpMakeFunctions()
-
-        # call createWorker() and check that we get success exit code
-        self.assertEqual(create_worker.createWorker(options), 0,
-                         "unexpected exit code")
-
-        # check _make*() functions were called with correct arguments
-        expected_tac_contents = ("".join(create_worker.workerTACTemplate)) % options
-        self.assertMakeFunctionsCalls(self.options["basedir"],
-                                      expected_tac_contents,
-                                      self.options["quiet"])
-
-        # check that correct info message was printed
-        self.assertStdoutEqual("worker configured in bdir\n")
