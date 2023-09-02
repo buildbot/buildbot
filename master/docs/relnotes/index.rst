@@ -9,6 +9,16 @@ Release Notes
 .. towncrier release notes start
 
 
+Buildbot ``3.9.2`` ( ``2023-09-02`` )
+=====================================
+
+Bug fixes
+---------
+
+- Work around requirements parsing error for the Twisted dependency by pinning Twisted to 22.10 or older.
+  This fixes buildbot crash on startup when newest Twisted is installed.
+
+
 Buildbot ``3.9.1`` ( ``2023-09-02`` )
 =====================================
 
