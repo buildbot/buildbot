@@ -1,0 +1,1 @@
+Options for `create-worker` that are converted to numbers are now also checked to be valid Python literals. This will prevent creating invalid worker configurations, e.g.: when using option ``--umask=022`` instead of ``--umask=0o022`` or ``--umask=18``. (:issue:`7047`)

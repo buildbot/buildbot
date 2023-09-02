@@ -1,0 +1,1 @@
+Fix worker not connecting error when there are files in WORKER/info folder that can not be decoded. (:issue:`3585`) (:issue:`4758`) (:issue:`6932`)
