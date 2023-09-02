@@ -87,10 +87,7 @@ else:
 # The full version, including alpha/beta/rc tags.
 release = version
 
-# add a loud note about python 2
-rst_prolog = textwrap.dedent("""\
-.. caution:: Buildbot no longer supports Python 2.7 on the Buildbot master.
-""")
+rst_prolog = ""
 
 # add a loud note for anyone looking at the latest docs
 if release == 'latest':

@@ -1,1 +1,0 @@
-Fixed a race condition in the ``copy-db`` script which sometimes lead to no data being copied.
