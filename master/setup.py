@@ -24,11 +24,9 @@ from setuptools import setup  # isort:skip
 import glob
 import inspect
 import os
-import pkg_resources
 import sys
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
-from pkg_resources import parse_version
 
 from buildbot import version
 
@@ -468,24 +466,6 @@ py_38 = sys.version_info[0] > 3 or (
     sys.version_info[0] == 3 and sys.version_info[1] >= 8)
 if not py_38:
     raise RuntimeError("Buildbot master requires at least Python-3.8")
-
-# pip<1.4 doesn't have the --pre flag, and will thus attempt to install alpha
-# and beta versions of Buildbot.  Prevent that from happening.
-VERSION_MSG = """
-This is a pre-release version of Buildbot, which can only be installed with
-pip-1.4 or later Try installing the latest stable version of Buildbot instead:
-    pip install buildbot==0.8.12
-See https://pypi.python.org/pypi/buildbot to verify the current stable version.
-"""
-if 'a' in version or 'b' in version:
-    try:
-        pip_dist = pkg_resources.get_distribution('pip')
-    except pkg_resources.DistributionNotFound:
-        pip_dist = None
-
-    if pip_dist:
-        if parse_version(pip_dist.version) < parse_version('1.4'):
-            raise RuntimeError(VERSION_MSG)
 
 twisted_ver = ">= 18.7.0, <=22.10.0"
 
