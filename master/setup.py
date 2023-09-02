@@ -488,7 +488,7 @@ if 'a' in version or 'b' in version:
         if parse_version(pip_dist.version) < parse_version('1.4'):
             raise RuntimeError(VERSION_MSG)
 
-twisted_ver = ">= 18.7.0"
+twisted_ver = ">= 18.7.0, <=22.10.0"
 
 bundle_version = version.split("-")[0]
 
