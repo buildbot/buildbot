@@ -1,0 +1,1 @@
+Clarified that ``shallow`` option for the ``Git`` source step is also supported in ``incremental`` mode.

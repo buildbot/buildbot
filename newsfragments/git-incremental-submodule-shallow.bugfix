@@ -1,0 +1,1 @@
+Fix incorrect git command line parameters when using ``Git`` source step with ``mode="incremental"``, ``shallow=True``, ``submodules=True`` (regression since Buildbot 3.9) (:issue:`7054`).
