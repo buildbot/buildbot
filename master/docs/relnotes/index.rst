@@ -8,6 +8,26 @@ Release Notes
 
 .. towncrier release notes start
 
+
+Buildbot ``3.9.1`` ( ``2023-09-02`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed handling of primary key columns on Postgres in the ``copy-db`` script.
+- Fixed a race condition in the ``copy-db`` script which sometimes lead to no data being copied.
+- Options for `create-worker` that are converted to numbers are now also checked to be valid Python literals.
+  This will prevent creating invalid worker configurations, e.g.: when using option ``--umask=022`` instead of ``--umask=0o022`` or ``--umask=18``. (:issue:`7047`)
+- Fixed worker not connecting error when there are files in WORKER/info folder that can not be decoded. (:issue:`3585`) (:issue:`4758`) (:issue:`6932`)
+- Fixed incorrect git command line parameters when using ``Git`` source step with ``mode="incremental"``, ``shallow=True``, ``submodules=True`` (regression since Buildbot 3.9.0) (:issue:`7054`).
+
+Improved Documentation
+----------------------
+
+- Clarified that ``shallow`` option for the ``Git`` source step is also supported in ``incremental`` mode.
+
+
 Buildbot ``3.9.0`` ( ``2023-08-16`` )
 =====================================
 
