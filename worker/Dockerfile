@@ -3,10 +3,9 @@
 # please follow docker best practices
 # https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/
 
-# Provides a base Ubuntu (20.04) image with latest buildbot worker installed
-# the worker image is not optimized for size, but rather uses ubuntu for wider package availability
+# Provides a base Debian image with latest buildbot worker installed
 
-FROM        ubuntu:20.04
+FROM debian:11
 MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
