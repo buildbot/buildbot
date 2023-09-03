@@ -12,8 +12,8 @@
 # serve to show the default.
 
 
+import importlib.metadata
 import os
-import pkg_resources
 import sys
 import textwrap
 
@@ -33,9 +33,9 @@ except ImportError:
 
 # -- General configuration -----------------------------------------------
 try:
-    pkg_resources.require('docutils>=0.8')
-except pkg_resources.ResolutionError as e:
-    raise RuntimeError("docutils is not installed or has incompatible version. "
+    importlib.metadata.distribution('docutils')
+except importlib.metadata.PackageNotFoundError as e:
+    raise RuntimeError("docutils is not installed. "
                        "Please install documentation dependencies with `pip "
                        "install buildbot[docs]`") from e
 # If your documentation needs a minimal Sphinx version, state it here.
