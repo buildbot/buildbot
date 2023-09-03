@@ -17,8 +17,9 @@
 import importlib
 import inspect
 import os
-import pkg_resources
 import warnings
+
+from packaging.version import parse as parse_version
 
 import twisted
 from twisted.trial import unittest
@@ -96,7 +97,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
 
     def test_util(self):
         # work around Twisted bug 9384.
-        if pkg_resources.parse_version(twisted.__version__) < pkg_resources.parse_version("18.9.0"):
+        if parse_version(twisted.__version__) < parse_version("18.9.0"):
             raise SkipTest('manhole.py can not be imported on old twisted and new python')
 
         known_not_exported = {

@@ -485,6 +485,7 @@ setup_args['install_requires'] = [
     'python-dateutil>=1.5',
     "txaio >= 2.2.2",
     "autobahn >= 0.16.0",
+    'packaging',
     'PyJWT',
     'pyyaml',
     'unidiff >= 0.7.5',

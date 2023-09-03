@@ -17,6 +17,7 @@
 import inspect
 import pkg_resources
 from collections import OrderedDict
+from packaging.version import parse as parse_version
 
 import zope.interface.interface
 from twisted.trial import unittest
@@ -92,7 +93,7 @@ class InterfaceTests:
         # see if this version of zope.interface is too old to run these tests
         zi_vers = pkg_resources.working_set.find(
             pkg_resources.Requirement.parse('zope.interface')).version
-        if pkg_resources.parse_version(zi_vers) < pkg_resources.parse_version('4.1.1'):
+        if parse_version(zi_vers) < parse_version('4.1.1'):
             raise unittest.SkipTest(
                 "zope.interfaces is too old to run this test")
 

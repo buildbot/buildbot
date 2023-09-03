@@ -14,9 +14,10 @@
 # Copyright Buildbot Team Members
 
 import warnings
-from pkg_resources import parse_version
 from unittest.mock import Mock
 from unittest.mock import call
+
+from packaging.version import parse as parse_version
 
 from twisted.internet import defer
 from twisted.internet import error

@@ -21,7 +21,6 @@ import re
 import shutil
 import subprocess
 import sys
-from pkg_resources import parse_version
 from subprocess import PIPE
 from subprocess import STDOUT
 from subprocess import Popen
