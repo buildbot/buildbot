@@ -175,13 +175,19 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
     Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
     If set, the generated connection string starts with ``tls`` instead of with ``tcp``, allowing encrypted connection to the buildmaster.
-    Make sure the worker trusts the buildmasters certificate. If you have an non-authoritative certificate (CA is self-signed) see ``connection_string`` below.
+    Make sure the worker trusts the buildmasters certificate. If you have an non-authoritative certificate (CA is self-signed) see option ``--connection-string`` and also Worker-TLS-Config_ below.
 
 .. option:: --delete-leftover-dirs
 
     Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
     If set, unexpected directories in worker base directory will be removed.
     Otherwise, a warning will be displayed in :file:`twistd.log` so that you can manually remove them.
+
+.. option:: --connection-string
+
+    Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
+    If set, the worker connection to master will be made using this ``connection_string``. See Worker-TLS-Config_ below for more details.
+    Note that this option will override required positional argument ``masterhost[:port]`` and also option ``--use-tls``.
 
 .. option:: --proxy-connection-string
 
@@ -293,5 +299,5 @@ Worker TLS Configuration
 
 
 
-.. _ConnectionStrings: https://twistedmatrix.com/documents/current/core/howto/endpoints.html
-.. _clientFromString: https://twistedmatrix.com/documents/current/api/twisted.internet.endpoints.clientFromString.html
+.. _ConnectionStrings: https://docs.twistedmatrix.com/en/stable/core/howto/endpoints.html
+.. _clientFromString: https://docs.twistedmatrix.com/en/stable/api/twisted.internet.endpoints.html#clientFromString

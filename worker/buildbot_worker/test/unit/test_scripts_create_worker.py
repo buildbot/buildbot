@@ -57,6 +57,7 @@ class TestDefaultOptionsMixin:
         "numcpus": None,
         "protocol": "pb",
         "maxretries": None,
+        "connection-string": None,
         "proxy-connection-string": None,
 
         # arguments
@@ -129,6 +130,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
             maxRetries=expected_args["maxretries"],
             useTls=expected_args["use-tls"],
             delete_leftover_dirs=expected_args["delete-leftover-dirs"],
+            connection_string=expected_args["connection-string"],
             proxy_connection_string=expected_args["proxy-connection-string"],
             )
 
@@ -330,6 +332,20 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
 
         self.assertIn("umask = 0o22", tac_contents)
         options["umask"] = 18
+        self.assert_tac_file_contents(tac_contents, options)
+
+    def test_connection_string(self):
+        """
+        test that when --connection-string options is used, correct tac file
+        is generated.
+        """
+        options = self.options.copy()
+        options["connection-string"] = "TLS:buildbot-master.com:9989"
+
+        tac_contents = create_worker._make_tac(options.copy())
+
+        options["host"] = None
+        options["port"] = None
         self.assert_tac_file_contents(tac_contents, options)
 
 

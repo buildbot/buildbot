@@ -50,6 +50,14 @@ application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
     """
 buildmaster_host = %(host)r
 port = %(port)d
+connection_string = None
+""",
+    """
+buildmaster_host = None  # %(host)r
+port = None  # %(port)d
+connection_string = %(connection-string)r
+""",
+    """
 workername = %(name)r
 passwd = %(passwd)r
 keepalive = %(keepalive)d
@@ -68,6 +76,7 @@ s = Worker(buildmaster_host, port, workername, passwd, basedir,
            numcpus=numcpus, allow_shutdown=allow_shutdown,
            maxRetries=maxretries, protocol=protocol, useTls=use_tls,
            delete_leftover_dirs=delete_leftover_dirs,
+           connection_string=connection_string,
            proxy_connection_string=proxy_connection_string)
 s.setServiceParent(application)
 """]
@@ -84,12 +93,19 @@ def _make_tac(config):
     if config['relocatable']:
         config['basedir'] = '.'
 
-    if config['no-logrotate']:
-        workerTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
-    else:
-        workerTAC = "".join(workerTACTemplate)
+    workerTAC = [workerTACTemplate[0]]
 
-    return workerTAC % config
+    if not config['no-logrotate']:
+        workerTAC.append(workerTACTemplate[1])
+
+    if not config['connection-string']:
+        workerTAC.append(workerTACTemplate[2])
+    else:
+        workerTAC.append(workerTACTemplate[3])
+
+    workerTAC.extend(workerTACTemplate[4:])
+
+    return "".join(workerTAC) % config
 
 
 def _makeBaseDir(basedir, quiet):
