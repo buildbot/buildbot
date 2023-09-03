@@ -1,16 +1,12 @@
 # BBTravis CI configuration file
+language: unknown
 
-language: python
-
-# Available Python versions:
-python:
-  - "3.9"
 label_mapping:
   TWISTED: tw
   SQLALCHEMY: sqla
   SQLALCHEMY_MIGRATE: sqlam
   latest: l
-  python: py
+  PYTHON: py
   TESTS: t
   DB_TYPE: db
   WORKER_PYTHON: wp
@@ -25,100 +21,100 @@ matrix:
   fast_finish: true
   include:
     # flake8, isort, pylint, docs first as they're more likely to find issues
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=isort
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=pylint NUM_CPU=2 MEMORY_SIZE=4G
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=flake8
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=isort
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=pylint NUM_CPU=2 MEMORY_SIZE=4G
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
     # add js tests in separate job. Start it early because it is quite long
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=2G
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=2G
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes NUM_CPU=4 MEMORY_SIZE=4G
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=2G
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=2G
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=smokes NUM_CPU=4 MEMORY_SIZE=4G
 
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
-    - python: "3.9"
-      env: TWISTED=18.7.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
-    - python: "3.8"
-      env: TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.9 TWISTED=18.7.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.8 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
 
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=dev_virtualenv
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=dev_virtualenv
 
     # Worker-master interoperability tests
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.9
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.9
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
 
     # Worker tests on python and twisted package combinations.
     # We support worker on Python 2.7, on which Twisted 20.3.0 is the last version that works
-    - python: "3.9"
-      env: TWISTED=18.7.0 SQLALCHEMY=latest TESTS=trial_worker
-    - python: "2.7"
-      env: TWISTED=20.3.0 SQLALCHEMY=latest TESTS=trial_worker
+    - env: PYTHON=3.9 TWISTED=18.7.0 SQLALCHEMY=latest TESTS=trial_worker
+    - env: PYTHON=2.7 TWISTED=20.3.0 SQLALCHEMY=latest TESTS=trial_worker
 
     # Configuration when SQLite database is persistent between running tests
     # (by default in other tests in-memory SQLite database is used which is
     # recreated for each test).
     # Helps to detect issues with incorrect database setup/cleanup in tests.
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite DB_TYPE=sqlite
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite DB_TYPE=sqlite
     # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest DB_TYPE=mysql
-    - python: "3.9"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest DB_TYPE=mysql
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
 
     # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
     # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
-    #- env: TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest
-    #- env: TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
+    #- env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest
+    #- env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
 
 # Dependencies installation commands
 install:
-  - pip install -U pip wheel
+  - title: setup virtualenv
+    cmd: |
+      rm -rf /tmp/bbvenv
+      if [ "$PYTHON" = "2.7" ]; then
+        # system virtualenv doesn't work properly with python installed via pyenv
+        virtualenv --python=python2.7 --pip=20.3.0 /tmp/bbvenv
+        /tmp/bbvenv/bin/pip install -U --force-reinstall pip setuptools
+      else
+        python$PYTHON -m venv /tmp/bbvenv
+      fi
+  - /tmp/bbvenv/bin/pip install -U pip wheel
   - condition: TESTS not in ("dev_virtualenv", "smokes", "trial_worker")
-    cmd: pip install -r requirements-ci.txt
+    cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt
   - condition: TESTS == "dev_virtualenv"
-    cmd: pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
+    cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
   - condition: TESTS == "trial_worker"
-    cmd: pip install -r requirements-ciworker.txt
+    cmd: /tmp/bbvenv/bin/pip install -r requirements-ciworker.txt
   - condition: TESTS == "docs"
-    cmd: pip install -r requirements-cidocs.txt
+    cmd: /tmp/bbvenv/bin/pip install -r requirements-cidocs.txt
   - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
-    cmd: pip install -r requirements-cidb.txt
+    cmd: /tmp/bbvenv/bin/pip install -r requirements-cidb.txt
   - condition: TESTS == "interop"
     cmd: |
-      virtualenv -p python$WORKER_PYTHON /tmp/workerenv
-      /tmp/workerenv/bin/pip install -e worker
-  - |
-      # pip installs for backward compat
       set -e
-      if [ $TWISTED = trunk ]; then
-          pip install git+https://github.com/twisted/twisted
+      rm -rf /tmp/bbworkervenv
+      if [ "$PYTHON" = "2.7" ]; then
+        # system virtualenv doesn't work properly with python installed via pyenv
+        virtualenv --python=python2.7 --pip=20.3.0 /tmp/bbworkervenv
+        /tmp/bbworkervenv/bin/pip install -U --force-reinstall pip setuptools
+      else
+        python$PYTHON -m venv /tmp/bbworkervenv
       fi
-      if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
-      if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
+      /tmp/bbworkervenv/bin/pip install -e worker
+  - title: pip installs for backward compat
+    cmd: |
+      # pip installs for backward compat
+      if [ $TWISTED = trunk ]; then
+          /tmp/bbvenv/bin/pip install git+https://github.com/twisted/twisted
+      fi
+      if [ $TWISTED != latest -a  $TWISTED != trunk ]; then
+        /tmp/bbvenv/bin/pip install Twisted==$TWISTED
+      fi
+      if [ $SQLALCHEMY != latest ]; then
+        /tmp/bbvenv/bin/pip install sqlalchemy==$SQLALCHEMY
+      fi
   - step: !ShellCommand
-        command: "/buildbot/buildbot-job/build/sandbox/bin/pip check"
+        command: "/tmp/bbvenv/bin/pip check"
         warnOnFailure: True
         flunkOnFailure: False
         haltOnFailure: False
@@ -141,71 +137,102 @@ script:
   # make frontend_install_tests takes 17 min, so we only do it post submit
   - title: frontend build tests
     condition: TESTS == "js_build" and TRAVIS_PULL_REQUEST
-    cmd: make frontend
+    cmd: |
+      export NODE_OPTIONS=--openssl-legacy-provider
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make frontend
 
   - title: full frontend tests
     condition: TESTS == "js_build" and not TRAVIS_PULL_REQUEST
-    cmd: make frontend_install_tests
+    cmd: |
+      export NODE_OPTIONS=--openssl-legacy-provider
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make frontend_install_tests
 
   - title: frontend unit tests
     condition: TESTS == "js_unit"
-    cmd: make frontend_tests_headless
+    cmd: |
+      export NODE_OPTIONS=--openssl-legacy-provider
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make frontend_tests_headless
 
   - title: master and worker tests
     condition: TESTS in ("dev_virtualenv", "trial") and BUILDBOT_TEST_DB_URL == "sqlite://"
-    cmd: trial -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
+    cmd: /tmp/bbvenv/bin/trial -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   - title: master and worker tests
     condition: TESTS in ("dev_virtualenv", "trial") and BUILDBOT_TEST_DB_URL != "sqlite://"
-    cmd: trial --reporter=text --rterrors buildbot.test buildbot_worker.test
+    cmd: /tmp/bbvenv/bin/trial --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   - title: interop tests
     condition: TESTS == "interop"
-    cmd: SANDBOXED_WORKER_PATH=/tmp/workerenv/bin/buildbot-worker coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test.integration.interop
+    cmd: |
+      SANDBOXED_WORKER_PATH=/tmp/bbworkervenv/bin/buildbot-worker \
+        /tmp/bbvenv/bin/coverage run --rcfile=.coveragerc \
+          /tmp/bbvenv/bin/trial --reporter=text --rterrors buildbot.test.integration.interop
 
   - title: worker tests
     condition: TESTS == "trial_worker"
-    cmd: trial  --reporter=text --rterrors buildbot_worker.test
+    cmd: /tmp/bbvenv/bin/trial  --reporter=text --rterrors buildbot_worker.test
 
   # run tests under coverage for latest only (it's slower..)
   - title: coverage tests
     condition: TESTS == "ci/coverage"
-    cmd: coverage run --rcfile=.coveragerc $(which trial) -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
+    cmd: /tmp/bbvenv/bin/coverage run --rcfile=.coveragerc /tmp/bbvenv/bin/trial -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   # Run additional tests in their separate job
   - title: pylint
     condition: TESTS == "pylint"
-    cmd: make pylint
+    cmd:  |
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make pylint
 
   - title: flake8
     condition: TESTS == "flake8"
-    cmd: make flake8
+    cmd:  |
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make flake8
 
   - title: isort
     condition: TESTS == "isort"
-    cmd: isort --check -df `git ls-files |grep '.py$'`
+    cmd:  |
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      isort --check -df `git ls-files |grep '.py$'`
 
   # Build documentation
   - title: docs
     condition: TESTS == "docs"
-    cmd: make docs-release
+    cmd:  |
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make docs-release
 
   # Run spell checker on documentation
   - title: spelling
     condition: TESTS == "docs"
-    cmd: make docs-release-spelling
+    cmd:  |
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make docs-release-spelling
 
   - title: maketarballs
     condition: TESTS == "smokes"
-    cmd: make tarballs
+    cmd:  |
+      export NODE_OPTIONS=--openssl-legacy-provider
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make tarballs
 
   - title: protractor tests
     condition: TESTS == "smokes"
-    cmd: ./common/smokedist.sh whl
+    cmd:  |
+      export NODE_OPTIONS=--openssl-legacy-provider
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      ./common/smokedist.sh whl
 
   - title: tarballs protractor tests
     condition: TESTS == "smokes" and not TRAVIS_PULL_REQUEST
-    cmd: ./common/smokedist.sh tar.gz
+    cmd:  |
+      export NODE_OPTIONS=--openssl-legacy-provider
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      ./common/smokedist.sh tar.gz
 
 notifications:
   email: false
