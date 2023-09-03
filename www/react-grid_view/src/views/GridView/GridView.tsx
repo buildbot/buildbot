@@ -294,7 +294,7 @@ export const GridView = observer(() => {
     return (
       <tr key={builder.name}>
         <th>
-          <Link to={`/builders/{builder.builderid}`}>{builder.name}</Link>
+          <Link to={`/builders/${builder.builderid}`}>{builder.name}</Link>
         </th>
         <td>
           {filterManager.getElementsForTags(builder.tags)}
