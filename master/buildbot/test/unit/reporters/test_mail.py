@@ -395,6 +395,82 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         self.assertIn(('connectSSL', ('localhost', 25, None, fakereactor.connectSSL.call_args[
                       0][3]), {}), fakereactor.method_calls)
 
+    @ssl.skipUnless
+    @defer.inlineCallbacks
+    def test_hostname_for_client_context_for_tcp_over_tls(self):
+        fakeSenderFactory = Mock()
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
+            5].callback(True)
+        self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+        msg = Mock()
+        msg.as_string = Mock(return_value='<email>')
+
+        mn = yield self.setupMailNotifier('John Doe <john.doe@domain.tld>',
+                                          useTls=True)
+        yield mn.sendMail(msg, ['Jane Doe <jane.doe@domain.tld>'])
+
+        self.assertEqual(mn.useTls, True)
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
+                      fakereactor.method_calls)
+
+        self.assertEqual("localhost",
+                         fakeSenderFactory.call_args.kwargs.get("hostname"))
+
+    @ssl.skipUnless
+    @defer.inlineCallbacks
+    def test_hostname_for_client_context_for_tcp_over_tls_auth(self):
+        fakeSenderFactory = Mock()
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
+            5].callback(True)
+        self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+        msg = Mock()
+        msg.as_string = Mock(return_value='<email>')
+
+        mn = yield self.setupMailNotifier('John Doe <john.doe@domain.tld>',
+                                          smtpUser="u$er",
+                                          smtpPassword="pa$$word",
+                                          useTls=False)
+        yield mn.sendMail(msg, ['Jane Doe <jane.doe@domain.tld>'])
+
+        self.assertEqual(mn.smtpUser, "u$er")
+        self.assertEqual(mn.smtpPassword, "pa$$word")
+        self.assertEqual(mn.useTls, False)
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
+                      fakereactor.method_calls)
+
+        self.assertEqual("localhost",
+                         fakeSenderFactory.call_args.kwargs.get("hostname"))
+
+    @ssl.skipUnless
+    @defer.inlineCallbacks
+    def test_hostname_for_client_context_for_plan_tcp(self):
+        fakeSenderFactory = Mock()
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
+            5].callback(True)
+        self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+        msg = Mock()
+        msg.as_string = Mock(return_value='<email>')
+
+        mn = yield self.setupMailNotifier('John Doe <john.doe@domain.tld>',
+                                          useTls=False)
+        yield mn.sendMail(msg, ['Jane Doe <jane.doe@domain.tld>'])
+
+        self.assertEqual(mn.useTls, False)
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
+                      fakereactor.method_calls)
+
+        self.assertEqual(None,
+                         fakeSenderFactory.call_args.kwargs.get("hostname"))
+
 
 def create_msgdict(funny_chars='\u00E5\u00E4\u00F6'):
     unibody = f'Unicode body with non-ascii ({funny_chars}).'
