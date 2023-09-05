@@ -19,6 +19,7 @@ import os
 from twisted.internet import defer
 from twisted.internet import reactor
 
+from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
 
@@ -48,6 +49,7 @@ class TryClientE2E(RunMasterBase):
                           factory=f)]
         yield self.setup_master(c)
 
+    @flaky(bugNumber=7084)
     @defer.inlineCallbacks
     def test_shell(self):
         yield self.setup_config()
