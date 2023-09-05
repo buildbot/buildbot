@@ -61,7 +61,8 @@ export const SettingsView = observer(() => {
       return (
         <div className="form-group">
           <label className="checkbox-inline">
-            <input type="checkbox" name={item.name} checked={item.value as boolean}
+            <input data-bb-test-id={`settings-field-${item.name}`}
+                   type="checkbox" name={item.name} checked={item.value as boolean}
                    onChange={event => setSetting(event.target.checked)}
             /> {item.caption}
           </label>
@@ -73,7 +74,8 @@ export const SettingsView = observer(() => {
       return (
         <div className="form-group">
           <label>{item.caption}</label>
-          <input type="number" name={item.name} className="form-control" value={item.value as number}
+          <input data-bb-test-id={`settings-field-${item.name}`}
+                 type="number" name={item.name} className="form-control" value={item.value as number}
                  onChange={event => setSetting(event.target.value)}/>
         </div>
       );
@@ -83,7 +85,8 @@ export const SettingsView = observer(() => {
       return (
         <div className="form-group">
           <label>{item.caption}</label>
-          <input type="text" name={item.name} className="form-control" value={item.value as string}
+          <input data-bb-test-id={`settings-field-${item.name}`}
+                 type="text" name={item.name} className="form-control" value={item.value as string}
                  onChange={event => setSetting(event.target.value)}/>
         </div>
       );
@@ -102,7 +105,8 @@ export const SettingsView = observer(() => {
           <Card.Title>{group.caption}</Card.Title>
         </Card.Header>
         <Card.Body>
-          <form name={group.name}>
+          <form data-bb-test-id={`settings-group-${group.name}`}
+                name={group.name}>
             {Object.values(group.items).map(item => (
               <div key={item.name}>
                 <div className="col-md-12">

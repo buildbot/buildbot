@@ -33,6 +33,7 @@ import {
   useCurrentTime
 } from "buildbot-ui";
 import {Link} from "react-router-dom";
+import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 import {TableHeading} from "../TableHeading/TableHeading";
 
 type BuildsTableProps = {
@@ -76,17 +77,17 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
           <span key={index}>{owner}</span>
         ))}
         </td>
-    <td>
-      <Link to={`/workers/${build.workerid}`}>
-        {getPropertyValueOrDefault(build.properties, 'workername', '(unknown)')}
-      </Link>
-    </td>
-    <td>
-      <ul className="list-inline">
-        <li>{build.state_string}</li>
-      </ul>
-    </td>
-  </tr>
+        <td>
+          <Link to={`/workers/${build.workerid}`}>
+            {getPropertyValueOrDefault(build.properties, 'workername', '(unknown)')}
+          </Link>
+        </td>
+        <td>
+          <ul className="list-inline">
+            <li>{build.state_string}</li>
+          </ul>
+        </td>
+      </tr>
     );
   });
 
@@ -113,7 +114,11 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
     <div className="bb-build-table-container">
       <>
         <TableHeading>Builds:</TableHeading>
-        { builds.array.length === 0 ? <span>None</span> : tableElement() }
+        { !builds.isResolved()
+          ? <LoadingSpan/>
+          : builds.array.length === 0
+            ? <span>None</span>
+            : tableElement() }
       </>
     </div>
   );

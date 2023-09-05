@@ -24,6 +24,7 @@ import {Build, Builder, Master, Worker, useDataAccessor, useDataApiQuery} from "
 import {computed} from "mobx";
 import {Link} from "react-router-dom";
 import {BadgeRound, BuildLinkWithSummaryTooltip, durationFromNowFormat, useCurrentTime} from "buildbot-ui";
+import {LoadingSpan} from "../../components/LoadingSpan/LoadingSpan";
 
 export const MastersView = observer(() => {
   const now = useCurrentTime();
@@ -92,13 +93,13 @@ export const MastersView = observer(() => {
               .filter(build => build.masterid === master.masterid)
               .slice(0, 20)
               .map(build => renderBuild(build))
-            : <span>Loading...</span>
+            : <LoadingSpan/>
           }
         </td>
         <td>
           {workersQuery.resolved
             ? renderWorkersForMaster(master)
-            : <span>Loading...</span>
+            : <LoadingSpan/>
           }
         </td>
         <td>

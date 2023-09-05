@@ -32,7 +32,8 @@ export const FieldString = observer(({field, fieldsState}: FieldStringProps) => 
     <FieldBase field={field} fieldsState={fieldsState}>
       <label htmlFor={field.fullName} className="control-label col-sm-10">{field.label}</label>
       <div className="col-sm-10">
-        <input type="text" id={field.fullName} autoComplete="on" className="form-control"
+        <input data-bb-test-id={`force-field-${field.fullName}`}
+               type="text" id={field.fullName} autoComplete="on" className="form-control"
                value={state.value}
                onChange={event => fieldsState.setValue(field.fullName, event.target.value)}/>
       </div>

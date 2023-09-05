@@ -1,0 +1,80 @@
+<div class="container mydashboard">
+    <style>
+    /* only modify th from this dashboard! */
+    .mydashboard table th {
+        font-size: 24pt;
+    }
+    </style>
+    <!-- Create a table of builds organised by builders in columns -->
+    <table class="table">
+        <tr>
+            <!-- Generate the table header with name of builders -->
+            {% for builder in builders %}
+            <th>
+                {{builder.name}}
+            </th>
+            {% endfor %}
+        </tr>
+        {% for build in builds %}
+        <tr>
+            {% for builder in builders %}
+            <th>
+                <!-- If this build is from this builderid, then we render it in this cell -->
+                {% if build.builderid == builder.builderid %}
+                <!-- for representing a build, you can choose one of those three forms -->
+                    <!-- 1) We use buildbot internal CSS styles display our builds, with links
+                            to the standard UI  -->
+                        <a class="badge-status badge results_{{build.results_text | upper}}"
+                           href="#/builders/{{build.builderid}}/builds/{{build.number}}"
+                        >
+                           {{build.number}}
+                        </a>
+                    <!-- 2) The buildsummary directive is very powerful and will display
+                            steps, sub-builds, logs, urls. -->
+                       <buildsummary buildid="{{build.buildid}}" condensed="1"/>
+                    <!-- 3) If you need something lighter, there is the build sticker
+                            directive -->
+                       <buildsticker buildid="{{build.buildid}}"/>
+                    <!-- Note that those two directives will make additional HTTP requests
+                         from the browser in order to fetch the necessary data they need
+                         to be rendered.
+                    -->
+
+               {% endif %}
+            </th>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    <!-- Example of line chart using Chart.js -->
+    <canvas id="myChart" width="400" height="400"></canvas>
+        <script>
+        // We use Chart.js for rendering a chart, we first have to download it
+        // from internet (will be cached by the browser)
+        $.getScript("https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.min.js",
+        // See http://www.chartjs.org/docs/ for more details
+        function createChart() {
+            var scatterChart = new Chart("myChart", {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Github statistics',
+                    // Here the data from the python is passed to the javascript via
+                    // tojson and safe jinja filters
+                    // http://flask.pocoo.org/docs/0.12/templating/#standard-filters
+                    data: {{graph_data | tojson |safe }}
+                }]
+            },
+            options: {
+                scales: {
+                    xAxes: [{
+                        type: 'linear',
+                        position: 'bottom'
+                    }]
+                }
+            }
+        });
+    });
+    </script>
+
+</div>

@@ -32,7 +32,8 @@ export const FieldText = observer(({field, fieldsState}: FieldTextProps) => {
     <FieldBase field={field} fieldsState={fieldsState}>
       <label htmlFor={field.fullName} className="control-label col-sm-10">{field.label}</label>
       <div className="col-sm-10">
-        <textarea className="form-control" rows={field.rows} value={state.value}
+        <textarea data-bb-test-id={`force-field-${field.fullName}`}
+                  className="form-control" rows={field.rows} value={state.value}
                   onChange={event => fieldsState.setValue(field.fullName, event.target.value)}/>
       </div>
     </FieldBase>

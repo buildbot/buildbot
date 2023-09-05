@@ -32,7 +32,8 @@ export const FieldInt = observer(({field, fieldsState}: FieldIntProps) => {
     <FieldBase field={field} fieldsState={fieldsState}>
       <label htmlFor={field.fullName} className="control-label col-sm-10">{field.label}</label>
       <div className="col-sm-10">
-        <input type="text" className="form-control" value={state.value}
+        <input data-bb-test-id={`force-field-${field.fullName}`}
+               type="text" className="form-control" value={state.value}
                onChange={event => fieldsState.setValue(field.fullName, event.target.value)}/>
       </div>
     </FieldBase>

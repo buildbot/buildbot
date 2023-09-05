@@ -38,7 +38,8 @@ export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStri
           {field.choices.map(choice => (<option>{choice}</option>))}
         </Form.Control>
         { !field.strict && !field.multiple
-          ? <input className="select-editable form-control" type="text" value={state.value}
+          ? <input data-bb-test-id={`force-field-${field.fullName}`}
+                   className="select-editable form-control" type="text" value={state.value}
                    onChange={event => fieldsState.setValue(field.fullName, event.target.value)}/>
           : <></>
         }

@@ -56,7 +56,7 @@ export const BuildLinkWithSummaryTooltip =
     <Link to={`/builders/${build.builderid.toString()}/builds/${build.number}`}>
       <OverlayTrigger trigger={["hover", "focus"]} delay={{ show: 250, hide: 400 }}
                       overlay={renderBuildTooltip} placement="right">
-        <BadgeRound className={results2class(build, 'pulse')}>
+        <BadgeRound data-bb-test-id="build-link" className={results2class(build, 'pulse')}>
           {linkText}
         </BadgeRound>
       </OverlayTrigger>

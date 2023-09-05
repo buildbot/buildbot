@@ -1,0 +1,5 @@
+node_modules
+workdir
+/test-results/
+/playwright-report/
+/playwright/.cache/

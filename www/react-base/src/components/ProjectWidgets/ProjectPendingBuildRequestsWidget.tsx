@@ -24,6 +24,7 @@ import {
   useDataApiSingleElementQuery, Buildrequest, useDataApiDynamicQuery,
 } from "buildbot-data-js";
 import {buildbotGetSettings} from "buildbot-plugin-support";
+import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 import {PendingBuildRequestsTable} from "../PendingBuildRequestsTable/PendingBuildRequestsTable";
 
 export type ProjectPendingBuildRequestsWidgetProps = {
@@ -51,7 +52,7 @@ export const ProjectPendingBuildRequestsWidget = observer(({projectid}: ProjectP
 
   const renderContent = () => {
     if (!buildRequestsQuery.resolved) {
-      return <span>Loading ...</span>
+      return <LoadingSpan/>
     }
     if (buildRequestsQuery.array.length === 0) {
       return <span>None</span>

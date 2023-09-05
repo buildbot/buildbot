@@ -30,6 +30,7 @@ import {useParams} from "react-router-dom";
 import {useState} from "react";
 import {ChangeDetails} from "buildbot-ui";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
+import {LoadingDiv} from "../../components/LoadingDiv/LoadingDiv";
 
 
 export const ChangeBuildsView = observer(() => {
@@ -65,11 +66,11 @@ export const ChangeBuildsView = observer(() => {
       { change !== null
         ? <ChangeDetails change={change} compact={false}
                          showDetails={showDetails} setShowDetails={setShowDetails}/>
-        : <div>Loading... </div>
+        : <LoadingDiv/>
       }
       { buildsQuery.array.length > 0
         ? <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
-        : <div>Loading... </div>
+        : <LoadingDiv/>
       }
     </div>
   );
