@@ -92,11 +92,9 @@ export const Loginbar = () => {
     <Nav className="bb-loginbar-dropdown-nav">
       <NavDropdown title={dropdownToggle} id="bb-loginbar-dropdown">
         {userDropdownHeader}
-        <NavDropdown.Item>
-          <a href={"auth/logout?redirect=" + encodeURI(redirect)}>
-            <FaSignOutAlt/>
-            Logout
-          </a>
+        <NavDropdown.Item href={"auth/logout?redirect=" + encodeURI(redirect)}>
+          <FaSignOutAlt/>
+          Logout
         </NavDropdown.Item>
       </NavDropdown>
     </Nav>
