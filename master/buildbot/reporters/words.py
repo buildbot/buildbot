@@ -134,9 +134,10 @@ class Channel(service.AsyncService):
     def send(self, message, **kwargs):
         return self.bot.send_message(self.id, message, **kwargs)
 
+    @defer.inlineCallbacks
     def stopService(self):
         if self.subscribed:
-            self.unsubscribe_from_build_events()
+            yield self.unsubscribe_from_build_events()
 
     def validate_notification_event(self, event):
         if not re.compile("^(started|finished|success|warnings|failure|exception|"
@@ -185,11 +186,12 @@ class Channel(service.AsyncService):
         handle = yield startConsuming(workerEvent, ('workers', None, None))
         self.subscribed.append(handle)
 
+    @defer.inlineCallbacks
     def unsubscribe_from_build_events(self):
         # Cancel all the subscriptions we have
         old_list, self.subscribed = self.subscribed, []
         for handle in old_list:
-            handle.stopConsuming()
+            yield handle.stopConsuming()
 
     def add_notification_events(self, events):
         for event in events:
@@ -199,19 +201,21 @@ class Channel(service.AsyncService):
         if not self.subscribed:
             self.subscribe_to_build_events()
 
+    @defer.inlineCallbacks
     def remove_notification_events(self, events):
         for event in events:
             self.validate_notification_event(event)
             self.notify_events.remove(event)
 
             if not self.notify_events:
-                self.unsubscribe_from_build_events()
+                yield self.unsubscribe_from_build_events()
 
+    @defer.inlineCallbacks
     def remove_all_notification_events(self):
         self.notify_events = set()
 
         if self.subscribed:
-            self.unsubscribe_from_build_events()
+            yield self.unsubscribe_from_build_events()
 
     def shouldReportBuild(self, builder, buildnum):
         """Returns True if this build should be reported for this contact
@@ -627,9 +631,9 @@ class Contact:
 
         elif action in ("off", "off-quiet"):
             if events:
-                self.channel.remove_notification_events(events)
+                yield self.channel.remove_notification_events(events)
             else:
-                self.channel.remove_all_notification_events()
+                yield self.channel.remove_all_notification_events()
 
             if action == "off":
                 yield self.channel.list_notified_events()
