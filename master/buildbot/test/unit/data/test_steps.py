@@ -28,6 +28,7 @@ from buildbot.util import epoch2datetime
 TIME1 = 2001111
 TIME2 = 2002222
 TIME3 = 2003333
+TIME4 = 2004444
 
 
 class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -46,12 +47,12 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Build(id=30, builderid=77, number=7, masterid=88,
                          buildrequestid=82, workerid=47),
             fakedb.Step(id=70, number=0, name='one', buildid=30,
-                        started_at=TIME1, complete_at=TIME2, results=0),
+                        started_at=TIME1, locks_acquired_at=TIME2, complete_at=TIME3, results=0),
             fakedb.Step(id=71, number=1, name='two', buildid=30,
-                        started_at=TIME2, complete_at=TIME3, results=2,
+                        started_at=TIME2, locks_acquired_at=TIME3, complete_at=TIME4, results=2,
                         urls_json='[{"name":"url","url":"http://url"}]'),
             fakedb.Step(id=72, number=2, name='three', buildid=30,
-                        started_at=TIME3, hidden=True),
+                        started_at=TIME4, hidden=True),
         ])
 
     def tearDown(self):
@@ -68,7 +69,8 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'name': 'three',
             'number': 2,
             'results': None,
-            'started_at': epoch2datetime(TIME3),
+            'started_at': epoch2datetime(TIME4),
+            "locks_acquired_at": None,
             'state_string': '',
             'stepid': 72,
             'urls': [],
@@ -133,14 +135,14 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Build(id=31, builderid=77, number=8, masterid=88,
                          buildrequestid=82, workerid=47),
             fakedb.Step(id=70, number=0, name='one', buildid=30,
-                        started_at=TIME1, complete_at=TIME2, results=0),
+                        started_at=TIME1, locks_acquired_at=TIME2, complete_at=TIME3, results=0),
             fakedb.Step(id=71, number=1, name='two', buildid=30,
-                        started_at=TIME2, complete_at=TIME3, results=2,
+                        started_at=TIME2, locks_acquired_at=TIME3, complete_at=TIME4, results=2,
                         urls_json='[{"name":"url","url":"http://url"}]'),
             fakedb.Step(id=72, number=2, name='three', buildid=30,
-                        started_at=TIME3),
+                        started_at=TIME4),
             fakedb.Step(id=73, number=0, name='otherbuild', buildid=31,
-                        started_at=TIME2),
+                        started_at=TIME3),
         ])
 
     def tearDown(self):
@@ -201,6 +203,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': number,
             'results': None,
             'started_at': None,
+            "locks_acquired_at": None,
             'state_string': 'pending',
             'stepid': stepid,
             'urls': [],
@@ -219,6 +222,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': number,
             'results': None,
             'started_at': None,
+            "locks_acquired_at": None,
             'state_string': 'pending',
             'urls': [],
             'hidden': False,
@@ -253,6 +257,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME1),
             'state_string': 'pending',
             'stepid': 100,
             'urls': [],
@@ -271,6 +276,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME1),
             'state_string': 'pending',
             'urls': [],
             'hidden': False,
@@ -297,6 +303,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': None,
+            "locks_acquired_at": None,
             'state_string': 'hi',
             'stepid': 100,
             'urls': [],
@@ -315,6 +322,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': None,
+            "locks_acquired_at": None,
             'state_string': 'hi',
             'urls': [],
             'hidden': False,
@@ -345,6 +353,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': 9,
             'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME1),
             'state_string': 'pending',
             'stepid': 100,
             'urls': [],
@@ -363,6 +372,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': 9,
             'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME1),
             'state_string': 'pending',
             'urls': [],
             'hidden': False,
@@ -389,6 +399,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': None,
+            "locks_acquired_at": None,
             'state_string': 'pending',
             'stepid': 100,
             'urls': [{'name': 'foo', 'url': 'bar'}],
@@ -407,6 +418,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': None,
+            "locks_acquired_at": None,
             'state_string': 'pending',
             'urls': [{'name': 'foo', 'url': 'bar'}],
             'hidden': False,

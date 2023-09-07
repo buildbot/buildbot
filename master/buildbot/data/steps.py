@@ -29,6 +29,7 @@ class Db2DataMixin:
             'name': dbdict['name'],
             'buildid': dbdict['buildid'],
             'started_at': dbdict['started_at'],
+            "locks_acquired_at": dbdict["locks_acquired_at"],
             'complete': dbdict['complete_at'] is not None,
             'complete_at': dbdict['complete_at'],
             'state_string': dbdict['state_string'],
@@ -114,6 +115,7 @@ class Step(base.ResourceType):
         name = types.Identifier(50)
         buildid = types.Integer()
         started_at = types.NoneOk(types.DateTime())
+        locks_acquired_at = types.NoneOk(types.DateTime())
         complete = types.Boolean()
         complete_at = types.NoneOk(types.DateTime())
         results = types.NoneOk(types.Integer())

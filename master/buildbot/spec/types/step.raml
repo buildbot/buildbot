@@ -82,6 +82,9 @@ properties:
     started_at?:
         description: time at which this step started, or None if it hasn't started yet
         type: date
+    locks_acquired_at?:
+        description: time at which this step acquired locks (if any), or None if the locks haven't been acquired
+        type: date
     state_string:
         description: |
             a string giving detail on the state of the build.
