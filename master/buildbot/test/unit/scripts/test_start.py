@@ -59,6 +59,10 @@ app.setServiceParent(application)
 class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
+        # On slower machines with high CPU oversubscription this test may take longer to run than
+        # the default timeout.
+        self.timeout = 20
+
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write(fake_master_tac)
