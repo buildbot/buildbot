@@ -1,1 +1,0 @@
-Work around requirements parsing error for the Twisted dependency by pinning Twisted to 22.10 or older.
