@@ -62,6 +62,6 @@ class ShellMaster(RunMasterBase):
         self.assertEqual(build['buildid'], 1)
 
         # make sure the cancel reason is transferred all the way to the step log
-        cancel_log = build['steps'][1]['logs'][-1]
-        self.assertEqual(cancel_log['name'], 'cancelled')
-        self.assertIn('cancelled by test', cancel_log['contents']['content'])
+        cancel_logs = [log for log in build['steps'][1]["logs"] if log["name"] == "cancelled"]
+        self.assertEqual(len(cancel_logs), 1)
+        self.assertIn('cancelled by test', cancel_logs[0]['contents']['content'])
