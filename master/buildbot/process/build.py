@@ -333,6 +333,16 @@ class Build(properties.PropertiesMixin):
         self.preparation_step = buildstep.BuildStep(name="worker_preparation")
         self.preparation_step.setBuild(self)
         yield self.preparation_step.addStep()
+
+        # TODO: the time consuming actions during worker preparation are as follows:
+        #  - worker substantiation
+        #  - acquiring build locks
+        # Since locks_acquire_at calculates the time since beginning of the step until the end,
+        # it's impossible to represent this sequence using a single step. In the future it makes
+        # sense to add two steps: one for worker substantiation and another for acquiring build
+        # locks.
+        yield self.master.data.updates.set_step_locks_acquired_at(self.preparation_step.stepid)
+
         Build.setupBuildProperties(self.getProperties(), self.requests,
                                    self.sources, self.number)
 

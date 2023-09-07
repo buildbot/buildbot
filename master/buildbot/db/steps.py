@@ -124,7 +124,17 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=tbl.c.id == stepid)
-            conn.execute(q, started_at=started_at, locks_acquired_at=started_at)
+            conn.execute(q, started_at=started_at)
+        yield self.db.pool.do(thd)
+
+    @defer.inlineCallbacks
+    def set_step_locks_acquired_at(self, stepid):
+        locks_acquired_at = int(self.master.reactor.seconds())
+
+        def thd(conn):
+            tbl = self.db.model.steps
+            q = tbl.update(whereclause=tbl.c.id == stepid)
+            conn.execute(q, locks_acquired_at=locks_acquired_at)
         yield self.db.pool.do(thd)
 
     # returns a Deferred that returns None

@@ -455,6 +455,8 @@ class BuildStep(results.ResultComputingConfigMixin,
             if self.stopped:
                 raise BuildStepCancelled
 
+            yield self.master.data.updates.set_step_locks_acquired_at(self.stepid)
+
             # render renderables in parallel
             renderables = []
             accumulateClassList(self.__class__, 'renderables', renderables)

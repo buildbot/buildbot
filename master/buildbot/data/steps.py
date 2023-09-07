@@ -146,6 +146,12 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
+    def set_step_locks_acquired_at(self, stepid):
+        yield self.master.db.steps.set_step_locks_acquired_at(stepid=stepid)
+        yield self.generateEvent(stepid, 'updated')
+
+    @base.updateMethod
+    @defer.inlineCallbacks
     def setStepStateString(self, stepid, state_string):
         yield self.master.db.steps.setStepStateString(
             stepid=stepid, state_string=state_string)

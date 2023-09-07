@@ -199,7 +199,33 @@ class Tests(interfaces.InterfaceTests):
             'name': 'new',
             'number': 0,
             'started_at': epoch2datetime(TIME1),
-            "locks_acquired_at": epoch2datetime(TIME1),
+            "locks_acquired_at": None,
+            'complete_at': None,
+            'results': None,
+            'state_string': 'new',
+            'urls': [],
+            'hidden': False})
+
+    @defer.inlineCallbacks
+    def test_addStep_getStep_locks_acquiced(self):
+        self.reactor.advance(TIME1)
+        yield self.insert_test_data(self.backgroundData)
+        stepid, number, name = yield self.db.steps.addStep(buildid=30,
+                                                           name='new',
+                                                           state_string='new')
+        yield self.db.steps.startStep(stepid=stepid)
+        self.reactor.advance(TIME2 - TIME1)
+        yield self.db.steps.set_step_locks_acquired_at(stepid=stepid)
+        self.assertEqual((number, name), (0, 'new'))
+        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        validation.verifyDbDict(self, 'stepdict', stepdict)
+        self.assertEqual(stepdict, {
+            'id': stepid,
+            'buildid': 30,
+            'name': 'new',
+            'number': 0,
+            'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME2),
             'complete_at': None,
             'results': None,
             'state_string': 'new',

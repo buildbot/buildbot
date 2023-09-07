@@ -257,7 +257,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': epoch2datetime(TIME1),
-            "locks_acquired_at": epoch2datetime(TIME1),
+            "locks_acquired_at": None,
             'state_string': 'pending',
             'stepid': 100,
             'urls': [],
@@ -276,7 +276,50 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': epoch2datetime(TIME1),
-            "locks_acquired_at": epoch2datetime(TIME1),
+            "locks_acquired_at": None,
+            'state_string': 'pending',
+            'urls': [],
+            'hidden': False,
+        })
+
+    @defer.inlineCallbacks
+    def test_startStep_acquire_locks(self):
+        self.reactor.advance(TIME1)
+        yield self.master.db.steps.addStep(buildid=10, name='ten',
+                                           state_string='pending')
+        yield self.rtype.startStep(stepid=100)
+        self.reactor.advance(TIME2 - TIME1)
+        self.master.mq.clearProductions()
+        yield self.rtype.set_step_locks_acquired_at(stepid=100)
+
+        msgBody = {
+            'buildid': 10,
+            'complete': False,
+            'complete_at': None,
+            'name': 'ten',
+            'number': 0,
+            'results': None,
+            'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME2),
+            'state_string': 'pending',
+            'stepid': 100,
+            'urls': [],
+            'hidden': False,
+        }
+        self.master.mq.assertProductions([
+            (('builds', '10', 'steps', str(100), 'updated'), msgBody),
+            (('steps', str(100), 'updated'), msgBody),
+        ])
+        step = yield self.master.db.steps.getStep(100)
+        self.assertEqual(step, {
+            'buildid': 10,
+            'complete_at': None,
+            'id': 100,
+            'name': 'ten',
+            'number': 0,
+            'results': None,
+            'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME2),
             'state_string': 'pending',
             'urls': [],
             'hidden': False,
@@ -341,6 +384,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
                                            state_string='pending')
         self.reactor.advance(TIME1)
         yield self.rtype.startStep(stepid=100)
+        yield self.rtype.set_step_locks_acquired_at(stepid=100)
         self.reactor.advance(TIME2 - TIME1)
         self.master.mq.clearProductions()
         yield self.rtype.finishStep(stepid=100, results=9, hidden=False)
