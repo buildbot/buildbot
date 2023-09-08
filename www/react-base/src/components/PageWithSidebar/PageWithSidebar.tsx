@@ -114,7 +114,7 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
   return (
     <div className={pageWithSidebarClass}>
       <div onMouseEnter={() => sidebarStore.enter()} onMouseLeave={() => sidebarStore.leave()}
-           onClick={() => sidebarStore.show()} className="sidebar sidebar-blue">
+           onClick={() => sidebarStore.show()} className="sidebar">
         <ul>
           <li key="sidebar-main" className="sidebar-main"><Link to="/">{appTitle}{sidebarIcon}</Link></li>
           <li key="sidebar-title" className="sidebar-title"><span>NAVIGATION</span></li>
