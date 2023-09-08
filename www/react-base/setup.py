@@ -37,10 +37,7 @@ setup_www_plugin(
         '': [
             'VERSION',
             'static/*',
-            'static/js/*',
-            'static/css/*',
-            'static/img/*',
-            'static/fonts/*',
+            'static/assets/*',
         ]
     },
     entry_points="""
