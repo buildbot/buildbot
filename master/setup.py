@@ -486,7 +486,8 @@ setup_args['install_requires'] = [
     "txaio >= 2.2.2",
     "autobahn >= 0.16.0",
     'PyJWT',
-    'pyyaml'
+    'pyyaml',
+    'unidiff >= 0.7.5',
 ]
 
 # buildbot_windows_service needs pywin32
