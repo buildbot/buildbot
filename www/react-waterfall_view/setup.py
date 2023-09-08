@@ -34,7 +34,8 @@ setup_www_plugin(
     package_data={
         '': [
             'VERSION',
-            'static/*'
+            'static/*',
+            'static/assets/*'
         ]
     },
     entry_points="""
