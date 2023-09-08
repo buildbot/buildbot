@@ -23,6 +23,7 @@ export class Step extends BaseClass {
   @observable complete!: boolean;
   @observable complete_at!: number|null;
   @observable hidden!: boolean;
+  @observable locks_acquired_at!: number|null;
   @observable name!: string;
   @observable number!: number;
   @observable results!: number;
@@ -42,6 +43,7 @@ export class Step extends BaseClass {
     this.complete = object.complete;
     this.complete_at = object.complete_at;
     this.hidden = object.hidden;
+    this.locks_acquired_at = object.locks_acquired_at;
     this.name = object.name;
     this.number = object.number;
     this.results = object.results;
@@ -57,6 +59,7 @@ export class Step extends BaseClass {
       complete: this.complete,
       complete_at: this.complete_at,
       hidden: this.hidden,
+      locks_acquired_at: this.locks_acquired_at,
       name: this.name,
       number: this.number,
       results: this.results,

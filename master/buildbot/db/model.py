@@ -202,6 +202,7 @@ class Model(base.DBConnectorComponent):
                   sa.ForeignKey('builds.id', ondelete='CASCADE'),
                   nullable=False),
         sa.Column('started_at', sa.Integer),
+        sa.Column("locks_acquired_at", sa.Integer),
         sa.Column('complete_at', sa.Integer),
         sa.Column('state_string', sa.Text, nullable=False),
         sa.Column('results', sa.Integer),

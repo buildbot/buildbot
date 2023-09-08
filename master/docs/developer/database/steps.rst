@@ -21,6 +21,7 @@ Steps connector
     * ``name`` (the step name, an 50-character :ref:`identifier <type-identifier>` unique only within the build)
     * ``buildid`` (the ID of the build containing this step)
     * ``started_at`` (datetime at which this step began)
+    * ``locks_atquired_at`` (datetime at which this step acquired or None if the step has not yet acquired locks)
     * ``complete_at`` (datetime at which this step finished, or None if it is ongoing)
     * ``state_string`` (short string describing the step's state)
     * ``results`` (results of this step; see :ref:`Build-Result-Codes`)

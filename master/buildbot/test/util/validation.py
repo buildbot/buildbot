@@ -646,6 +646,7 @@ dbdict['stepdict'] = DictValidator(
     name=IdentifierValidator(50),
     buildid=IntValidator(),
     started_at=DateTimeValidator(),
+    locks_acquired_at=NoneOk(DateTimeValidator()),
     complete_at=NoneOk(DateTimeValidator()),
     state_string=StringValidator(),
     results=NoneOk(IntValidator()),

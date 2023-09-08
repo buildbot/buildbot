@@ -229,6 +229,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                     'complete': False,
                     'complete_at': None,
                     'hidden': False,
+                    "locks_acquired_at": None,
                     'logs': [{
                         'complete': False,
                         'content': {
@@ -256,6 +257,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                     'complete': False,
                     'complete_at': None,
                     'hidden': False,
+                    "locks_acquired_at": None,
                     'logs': [],
                     'name': 'step2',
                     'number': 29,
@@ -333,6 +335,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                     'complete': False,
                     'complete_at': None,
                     'hidden': False,
+                    "locks_acquired_at": None,
                     'logs': [{
                         'complete': False,
                         'content': {'content': 'line zero\nline 1\n',
@@ -358,6 +361,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                     'complete': False,
                     'complete_at': None,
                     'hidden': False,
+                    "locks_acquired_at": None,
                     'logs': [],
                     'name': 'step2',
                     'number': 29,

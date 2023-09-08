@@ -30,6 +30,7 @@ TIME1 = 1304262222
 TIME2 = 1304262223
 TIME3 = 1304262224
 TIME4 = 1304262235
+TIME5 = 1304262236
 
 
 class Tests(interfaces.InterfaceTests):
@@ -49,35 +50,38 @@ class Tests(interfaces.InterfaceTests):
     ]
     stepRows = [
         fakedb.Step(id=70, number=0, name='one', buildid=30,
-                    started_at=TIME1, complete_at=TIME2,
+                    started_at=TIME1, locks_acquired_at=TIME2, complete_at=TIME3,
                     state_string='test', results=0),
         fakedb.Step(id=71, number=1, name='two', buildid=30,
-                    started_at=TIME2, complete_at=TIME3,
+                    started_at=TIME2, locks_acquired_at=TIME3, complete_at=TIME4,
                     state_string='test', results=2,
                     urls_json='["http://url"]',
                     hidden=1),
         fakedb.Step(id=72, number=2, name='three', buildid=30,
-                    started_at=TIME3),
+                    started_at=TIME5),
         fakedb.Step(id=73, number=0, name='wrong-build', buildid=31),
     ]
     stepDicts = [
         {'id': 70, 'buildid': 30, 'number': 0, 'name': 'one',
          'results': 0,
          'started_at': epoch2datetime(TIME1),
-         'complete_at': epoch2datetime(TIME2),
+         "locks_acquired_at": epoch2datetime(TIME2),
+         'complete_at': epoch2datetime(TIME3),
          'state_string': 'test',
          'urls': [],
          'hidden': False},
         {'id': 71, 'buildid': 30, 'number': 1, 'name': 'two',
          'results': 2,
          'started_at': epoch2datetime(TIME2),
-         'complete_at': epoch2datetime(TIME3),
+         "locks_acquired_at": epoch2datetime(TIME3),
+         'complete_at': epoch2datetime(TIME4),
          'state_string': 'test',
          'urls': ['http://url'],
          'hidden': True},
         {'id': 72, 'buildid': 30, 'number': 2, 'name': 'three',
          'results': None,
-         'started_at': epoch2datetime(TIME3),
+         'started_at': epoch2datetime(TIME5),
+         "locks_acquired_at": None,
          'complete_at': None,
          'state_string': '',
          'urls': [],
@@ -195,6 +199,33 @@ class Tests(interfaces.InterfaceTests):
             'name': 'new',
             'number': 0,
             'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": None,
+            'complete_at': None,
+            'results': None,
+            'state_string': 'new',
+            'urls': [],
+            'hidden': False})
+
+    @defer.inlineCallbacks
+    def test_addStep_getStep_locks_acquiced(self):
+        self.reactor.advance(TIME1)
+        yield self.insert_test_data(self.backgroundData)
+        stepid, number, name = yield self.db.steps.addStep(buildid=30,
+                                                           name='new',
+                                                           state_string='new')
+        yield self.db.steps.startStep(stepid=stepid)
+        self.reactor.advance(TIME2 - TIME1)
+        yield self.db.steps.set_step_locks_acquired_at(stepid=stepid)
+        self.assertEqual((number, name), (0, 'new'))
+        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        validation.verifyDbDict(self, 'stepdict', stepdict)
+        self.assertEqual(stepdict, {
+            'id': stepid,
+            'buildid': 30,
+            'name': 'new',
+            'number': 0,
+            'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME2),
             'complete_at': None,
             'results': None,
             'state_string': 'new',

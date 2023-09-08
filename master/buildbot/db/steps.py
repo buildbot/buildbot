@@ -83,6 +83,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 "buildid": buildid,
                 "number": number,
                 "started_at": None,
+                "locks_acquired_at": None,
                 "complete_at": None,
                 "state_string": state_string,
                 "urls_json": '[]',
@@ -124,6 +125,16 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=tbl.c.id == stepid)
             conn.execute(q, started_at=started_at)
+        yield self.db.pool.do(thd)
+
+    @defer.inlineCallbacks
+    def set_step_locks_acquired_at(self, stepid):
+        locks_acquired_at = int(self.master.reactor.seconds())
+
+        def thd(conn):
+            tbl = self.db.model.steps
+            q = tbl.update(whereclause=tbl.c.id == stepid)
+            conn.execute(q, locks_acquired_at=locks_acquired_at)
         yield self.db.pool.do(thd)
 
     # returns a Deferred that returns None
@@ -185,6 +196,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             "name": row.name,
             "buildid": row.buildid,
             "started_at": epoch2datetime(row.started_at),
+            "locks_acquired_at": epoch2datetime(row.locks_acquired_at),
             "complete_at": epoch2datetime(row.complete_at),
             "state_string": row.state_string,
             "results": row.results,

@@ -31,9 +31,10 @@ class Step(Row):
     required_columns = ('buildid', )
 
     def __init__(self, id=None, number=29, name='step29', buildid=None,
-                 started_at=1304262222, complete_at=None,
+                 started_at=1304262222, locks_acquired_at=None, complete_at=None,
                  state_string='', results=None, urls_json='[]', hidden=0):
         super().__init__(id=id, number=number, name=name, buildid=buildid, started_at=started_at,
+                         locks_acquired_at=locks_acquired_at,
                          complete_at=complete_at, state_string=state_string, results=results,
                          urls_json=urls_json, hidden=hidden)
 
@@ -63,6 +64,7 @@ class FakeStepsComponent(FakeDBComponent):
             "number": row['number'],
             "name": row['name'],
             "started_at": epoch2datetime(row['started_at']),
+            "locks_acquired_at": epoch2datetime(row["locks_acquired_at"]),
             "complete_at": epoch2datetime(row['complete_at']),
             "state_string": row['state_string'],
             "results": row['results'],
@@ -126,6 +128,7 @@ class FakeStepsComponent(FakeDBComponent):
             'number': number,
             'name': name,
             'started_at': None,
+            "locks_acquired_at": None,
             'complete_at': None,
             'results': None,
             'state_string': state_string,
@@ -138,6 +141,12 @@ class FakeStepsComponent(FakeDBComponent):
         b = self.steps.get(stepid)
         if b:
             b['started_at'] = self.reactor.seconds()
+        return defer.succeed(None)
+
+    def set_step_locks_acquired_at(self, stepid):
+        b = self.steps.get(stepid)
+        if b:
+            b['locks_acquired_at'] = self.reactor.seconds()
         return defer.succeed(None)
 
     def setStepStateString(self, stepid, state_string):
