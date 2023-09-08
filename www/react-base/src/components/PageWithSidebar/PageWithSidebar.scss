@@ -13,18 +13,21 @@ $gl-sidebar-width: 600px;
   }
   height: 100%;
   /* theme */
-  .sidebar.sidebar-blue {
-    background: #30426a;
-    ul .sidebar-main, .sidebar-footer {
-      background: #273759;
+  .sidebar {
+    background: var(--bb-sidebar-background-color);
+    ul .sidebar-main {
+      background: var(--bb-sidebar-header-background-color);
+    }
+    .sidebar-footer {
+      background: var(--bb-sidebar-footer-background-color);
     }
     li.current a,
     li.current button {
-      background: #273759;
+      background: var(--bb-sidebar-button-current-background-color);
     }
     a:hover,
     button:hover {
-      background: #1b263d;
+      background: var(--bb-sidebar-button-hover-background-color);
     }
     ul .sidebar-title {
       color: #627cb7;
@@ -40,7 +43,7 @@ $gl-sidebar-width: 600px;
   }
   &:not(.active){
 
-    .sidebar.blue {
+    .sidebar {
       ul.sidebar .sidebar-title.separator {
         background: #273759;
       }
@@ -117,7 +120,7 @@ $gl-sidebar-width: 600px;
 
       li a,
       li button {
-        color: #fff;
+        color: var(--bb-sidebar-header-text-color);
         display: block;
         text-decoration: none;
         width: 250px;
@@ -153,7 +156,7 @@ $gl-sidebar-width: 600px;
           padding: 0;
           text-indent: 25px;
           font-size: 15px;
-          color: #b2bfdc;
+          color: var(--bb-sidebar-button-text-color);
           line-height: 40px;
           >svg {
             margin-left: -1em;
@@ -161,7 +164,8 @@ $gl-sidebar-width: 600px;
         }
         &.current {
           a, button {
-            border-left: 3px solid #8c5e10;
+            color: var(--bb-sidebar-button-current-text-color);
+            border-left: 3px solid var(--bb-sidebar-stripe-current-color);
             text-indent: 22px;
           }
           .menu-icon {
@@ -170,8 +174,8 @@ $gl-sidebar-width: 600px;
         }
         a:hover,
         button:hover {
-          color: #fff;
-          border-left: 3px solid #e99d1a;
+          color: var(--bb-sidebar-button-hover-text-color);
+          border-left: 3px solid var(--bb-sidebar-stripe-hover-color);
           text-indent: 22px;
         }
         .menu-icon {

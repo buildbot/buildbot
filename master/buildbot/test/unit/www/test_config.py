@@ -28,6 +28,23 @@ from buildbot.www import auth
 from buildbot.www import config
 
 
+class Utils(unittest.TestCase):
+    def test_serialize_www_frontend_theme_to_css(self):
+        self.maxDiff = None
+        self.assertEqual(config.serialize_www_frontend_theme_to_css({}, indent=4), '''\
+--bb-sidebar-background-color: #30426a;
+    --bb-sidebar-header-background-color: #273759;
+    --bb-sidebar-header-text-color: #fff;
+    --bb-sidebar-footer-background-color: #273759;
+    --bb-sidebar-button-text-color: #b2bfdc;
+    --bb-sidebar-button-hover-background-color: #1b263d;
+    --bb-sidebar-button-hover-text-color: #fff;
+    --bb-sidebar-button-current-background-color: #273759;
+    --bb-sidebar-button-current-text-color: #b2bfdc;
+    --bb-sidebar-stripe-hover-color: #e99d1a;
+    --bb-sidebar-stripe-current-color: #8c5e10;''')
+
+
 class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()

@@ -192,6 +192,33 @@ This server is configured with the ``www`` configuration key, which specifies a 
     This is useful to avoid websocket timeouts when using reverse proxies or CDNs.
     If the value is 0 (the default), pings are disabled.
 
+``theme``
+
+    Allows configuring certain properties of the web frontend, such as colors.
+    The configuration value is a dictionary.
+    The keys correspond to certain CSS variable names that are used throughout web frontend and made configurable.
+    The values correspond to CSS values of these variables.
+
+    The keys and values are not sanitized, so using data derived from user-supplied information is a security risk.
+
+    The default is the following:
+
+    .. code-block:: python
+
+        c["www"]["theme"] = {
+            "bb-sidebar-background-color": "#30426a",
+            "bb-sidebar-header-background-color": "#273759",
+            "bb-sidebar-header-text-color": "#fff",
+            "bb-sidebar-footer-background-color": "#273759",
+            "bb-sidebar-button-text-color": "#b2bfdc",
+            "bb-sidebar-button-hover-background-color": "#1b263d",
+            "bb-sidebar-button-hover-text-color": "#fff",
+            "bb-sidebar-button-current-background-color": "#273759",
+            "bb-sidebar-button-current-text-color": "#b2bfdc",
+            "bb-sidebar-stripe-hover-color": "#e99d1a",
+            "bb-sidebar-stripe-current-color": "#8c5e10",
+        }
+
 .. note::
 
     The :bb:cfg:`buildbotURL` configuration value gives the base URL that all masters will use to generate links.
