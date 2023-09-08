@@ -8,7 +8,12 @@
     <link id="bbicon" href="/icon.png" rel="icon">
     <link href="/icon.svg" title="Buildbot" rel="fluid-icon">
     <title>Buildbot</title>
+    <!-- BUILDBOT_THEME_CSS_PLACEHOLDER_BEGIN -->
     <style id="bb-style">
+      /* when updating the default colors update the following too:
+         - documentation at master/docs/manual/configuration/www.rst
+         - the actual color generation at master/buildbot/www/config.py _known_theme_variables
+      */
       :root {
         --bb-sidebar-background-color: #30426a;
         --bb-sidebar-header-background-color: #273759;
@@ -23,6 +28,7 @@
         --bb-sidebar-stripe-current-color: #8c5e10;
       }
     </style>
+    <!-- BUILDBOT_THEME_CSS_PLACEHOLDER_END -->
   </head>
   <body>
     <div id="outdated"></div>

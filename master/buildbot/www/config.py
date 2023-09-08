@@ -98,6 +98,39 @@ def serialize_www_frontend_config_dict_to_json(config):
     return json.dumps(config, default=to_json)
 
 
+_known_theme_variables = (
+    ("bb-sidebar-background-color", "#30426a"),
+    ("bb-sidebar-header-background-color", "#273759"),
+    ("bb-sidebar-header-text-color", "#fff"),
+    ("bb-sidebar-footer-background-color", "#273759"),
+    ("bb-sidebar-button-text-color", "#b2bfdc"),
+    ("bb-sidebar-button-hover-background-color", "#1b263d"),
+    ("bb-sidebar-button-hover-text-color", "#fff"),
+    ("bb-sidebar-button-current-background-color", "#273759"),
+    ("bb-sidebar-button-current-text-color", "#b2bfdc"),
+    ("bb-sidebar-stripe-hover-color", "#e99d1a"),
+    ("bb-sidebar-stripe-current-color", "#8c5e10"),
+)
+
+
+def serialize_www_frontend_theme_to_css(config, indent):
+    theme_config = config.get('theme', {})
+
+    return ('\n' + ' ' * indent).join([
+        f'--{name}: {theme_config.get(name, default)};'
+        for name, default in _known_theme_variables
+    ])
+
+
+def replace_placeholder_range(string, start, end, replacement):
+    # Simple string replacement is much faster than a multiline regex
+    i1 = string.find(start)
+    i2 = string.find(end)
+    if i1 < 0 or i2 < 0:
+        return string
+    return string[0:i1] + replacement + string[i2 + len(end):]
+
+
 class ConfigResource(resource.Resource):
     needsReconfig = True
 
@@ -236,11 +269,23 @@ class IndexResourceReact(resource.Resource):
         config.update({"user": self.master.www.getUserInfos(request)})
 
         serialized_config = serialize_www_frontend_config_dict_to_json(config)
+        serialized_css = serialize_www_frontend_theme_to_css(config, indent=8)
         rendered_index = self.index_template.replace(
             ' <!-- BUILDBOT_CONFIG_PLACEHOLDER -->',
             f'''<script id="bb-config">
     window.buildbotFrontendConfig = {serialized_config};
 </script>'''
+        )
+
+        rendered_index = replace_placeholder_range(
+            rendered_index,
+            '<!-- BUILDBOT_THEME_CSS_PLACEHOLDER_BEGIN -->',
+            '<!-- BUILDBOT_THEME_CSS_PLACEHOLDER_END -->',
+            f'''<style>
+      :root {{
+        {serialized_css}
+      }}
+    </style>''',
         )
 
         return unicode2bytes(rendered_index, encoding='ascii')
