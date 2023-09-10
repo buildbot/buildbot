@@ -392,6 +392,40 @@ All those methods take props object which is a L{IProperties} allowing to get so
                     }
                 }
 
+    .. py:method:: get_build_container_volume_mounts(self, props)
+
+        This method computes the `volumeMounts <https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#volumes-1>`_ part of the container spec.
+
+        Example:
+
+        .. code-block:: python
+
+            def get_build_container_volume_mounts(self, props):
+                return [
+                    {
+                        "name": "mount-name",
+                        "mountPath": "/cache",
+                    }
+                ]
+
+    .. py:method:: get_volumes(self, props)
+
+        This method computes the `volumes <https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#volumes>`_ part of the pod spec.
+
+        Example:
+
+        .. code-block:: python
+
+            def get_volumes(self, props):
+                return [
+                    {
+                        "name": "mount-name",
+                        "hostPath": {
+                            "path": "/var/log/pods",
+                        }
+                    }
+                ]
+
     .. py:method:: getServicesContainers(self, props)
 
         This method compute a list of containers spec to put alongside the worker container.

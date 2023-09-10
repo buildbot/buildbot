@@ -33,6 +33,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
     def getPodSpec(self, build):
         image = yield build.render(self.image)
         env = yield self.createEnvironment(build)
+
         return {
             "apiVersion": "v1",
             "kind": "Pod",
@@ -47,15 +48,23 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
                         "name": k,
                         "value": v
                     } for k, v in env.items()],
-                    "resources": (yield self.getBuildContainerResources(build))
+                    "resources": (yield self.getBuildContainerResources(build)),
+                    "volumeMounts": (yield self.get_build_container_volume_mounts(build)),
                 }] + (yield self.getServicesContainers(build)),
-                "restartPolicy": "Never"
+                "restartPolicy": "Never",
+                "volumes": (yield self.get_volumes(build)),
             }
         }
 
     def getBuildContainerResources(self, build):
         # customization point to generate Build container resources
         return {}
+
+    def get_build_container_volume_mounts(self, build):
+        return []
+
+    def get_volumes(self, build):
+        return []
 
     def getServicesContainers(self, build):
         # customization point to create services containers around the build container
