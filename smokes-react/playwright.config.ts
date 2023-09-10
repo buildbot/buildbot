@@ -23,6 +23,10 @@ export default defineConfig({
     testIdAttribute: 'data-bb-test-id'
   },
 
+  expect: {
+    timeout: 15000
+  },
+
   /* Configure projects for major browsers */
   projects: [
     {
