@@ -380,6 +380,18 @@ All those methods take props object which is a L{IProperties} allowing to get so
         This is important to reserve some CPU and memory for your builds, and to trigger node auto-scaling if needed.
         You can also limit the CPU and memory for your container.
 
+        Example:
+
+        .. code-block:: python
+
+            def getBuildContainerResources(self, props):
+                return {
+                    "requests": {
+                        "cpu": "2500m",
+                        "memory": "4G",
+                    }
+                }
+
     .. py:method:: getServicesContainers(self, props)
 
         This method compute a list of containers spec to put alongside the worker container.
