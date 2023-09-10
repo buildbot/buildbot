@@ -41,8 +41,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
             },
             "spec": {
                 "containers": [{
-                    "name":
-                    self.getContainerName(),
+                    "name": self.getContainerName(),
                     "image": image,
                     "env": [{
                         "name": k,
@@ -50,8 +49,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
                     } for k, v in env.items()],
                     "resources": (yield self.getBuildContainerResources(build))
                 }] + (yield self.getServicesContainers(build)),
-                "restartPolicy":
-                "Never"
+                "restartPolicy": "Never"
             }
         })
 
