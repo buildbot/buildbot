@@ -41,6 +41,41 @@ def skip_for_dialect(dialect):
     return dec
 
 
+def get_trial_parallel_from_cwd(cwd):
+    cwd = cwd.rstrip("/")
+    last = os.path.basename(cwd)
+    prev = os.path.basename(os.path.dirname(cwd))
+    if last == "_trial_temp":
+        return False
+    if prev == "_trial_temp":
+        try:
+            return int(last)
+        except ValueError:
+            return None
+    return None
+
+
+def resolve_test_index_in_db_url(db_url):
+    test_id = get_trial_parallel_from_cwd(os.getcwd())
+
+    if "{TEST_ID}" in db_url:
+        return db_url.replace("{TEST_ID}", str(test_id or 0))
+
+    if db_url == 'sqlite://':
+        return db_url
+
+    if test_id is not None and test_id is not False:
+        if db_url.startswith('sqlite:///'):
+            # Relative DB URLs in the test directory are fine.
+            path = db_url[len('sqlite:///'):]
+            if not os.path.relpath(path).startswith(".."):
+                return db_url
+
+        raise RuntimeError("Database tests cannnot run in parallel")
+
+    return db_url
+
+
 class RealDatabaseMixin:
 
     """
@@ -190,6 +225,8 @@ class RealDatabaseMixin:
         self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
         if not sqlite_memory and self.db_url == default_sqlite:
             self.db_url = "sqlite:///tmp.sqlite"
+
+        self.db_url = resolve_test_index_in_db_url(self.db_url)
 
         if not os.path.exists(basedir):
             os.makedirs(basedir)
