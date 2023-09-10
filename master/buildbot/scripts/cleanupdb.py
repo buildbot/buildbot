@@ -83,22 +83,28 @@ def _cleanupDatabase(config):
         return 1
 
     config['basedir'] = os.path.abspath(config['basedir'])
-    os.chdir(config['basedir'])
 
-    with base.captureErrors((SyntaxError, ImportError),
-                            f"Unable to load 'buildbot.tac' from '{config['basedir']}':"):
-        configFile = base.getConfigFileFromTac(config['basedir'])
+    orig_cwd = os.getcwd()
 
-    with base.captureErrors(config_module.ConfigErrors,
-                            f"Unable to load '{configFile}' from '{config['basedir']}':"):
-        master_cfg = base.loadConfig(config, configFile)
+    try:
+        os.chdir(config['basedir'])
 
-    if not master_cfg:
-        return 1
+        with base.captureErrors((SyntaxError, ImportError),
+                                f"Unable to load 'buildbot.tac' from '{config['basedir']}':"):
+            configFile = base.getConfigFileFromTac(config['basedir'])
 
-    yield doCleanupDatabase(config, master_cfg)
+        with base.captureErrors(config_module.ConfigErrors,
+                                f"Unable to load '{configFile}' from '{config['basedir']}':"):
+            master_cfg = base.loadConfig(config, configFile)
 
-    if not config['quiet']:
-        print("cleanup complete")
+        if not master_cfg:
+            return 1
+
+        yield doCleanupDatabase(config, master_cfg)
+
+        if not config['quiet']:
+            print("cleanup complete")
+    finally:
+        os.chdir(orig_cwd)
 
     return 0
