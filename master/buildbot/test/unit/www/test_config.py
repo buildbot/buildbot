@@ -35,6 +35,7 @@ class Utils(unittest.TestCase):
 --bb-sidebar-background-color: #30426a;
     --bb-sidebar-header-background-color: #273759;
     --bb-sidebar-header-text-color: #fff;
+    --bb-sidebar-title-text-color: #627cb7;
     --bb-sidebar-footer-background-color: #273759;
     --bb-sidebar-button-text-color: #b2bfdc;
     --bb-sidebar-button-hover-background-color: #1b263d;

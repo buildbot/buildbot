@@ -30,7 +30,7 @@ $gl-sidebar-width: 600px;
       background: var(--bb-sidebar-button-hover-background-color);
     }
     ul .sidebar-title {
-      color: #627cb7;
+      color: var(--bb-sidebar-title-text-color);
     }
   }
   &.active:not(.pinned) .sidebar{
