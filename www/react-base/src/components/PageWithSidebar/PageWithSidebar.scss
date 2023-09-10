@@ -21,9 +21,14 @@ $gl-sidebar-width: 600px;
     .sidebar-footer {
       background: var(--bb-sidebar-footer-background-color);
     }
-    li.current a,
-    li.current button {
-      background: var(--bb-sidebar-button-current-background-color);
+    li.current {
+      a, button {
+        background: var(--bb-sidebar-button-current-background-color);
+      }
+      a:hover,
+      button:hover {
+        background: var(--bb-sidebar-button-hover-background-color);
+      }
     }
     a:hover,
     button:hover {
