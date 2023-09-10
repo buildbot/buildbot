@@ -376,9 +376,55 @@ All those methods take props object which is a L{IProperties} allowing to get so
 
     .. py:method:: getBuildContainerResources(self, props)
 
-        This method compute the `pod resources` part of the container spec (`spec.containers[].resources`.
+        This method compute the `pod resources <https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#resources>`_ part of the container spec (`spec.containers[].resources`).
         This is important to reserve some CPU and memory for your builds, and to trigger node auto-scaling if needed.
         You can also limit the CPU and memory for your container.
+
+        Example:
+
+        .. code-block:: python
+
+            def getBuildContainerResources(self, props):
+                return {
+                    "requests": {
+                        "cpu": "2500m",
+                        "memory": "4G",
+                    }
+                }
+
+    .. py:method:: get_build_container_volume_mounts(self, props)
+
+        This method computes the `volumeMounts <https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#volumes-1>`_ part of the container spec.
+
+        Example:
+
+        .. code-block:: python
+
+            def get_build_container_volume_mounts(self, props):
+                return [
+                    {
+                        "name": "mount-name",
+                        "mountPath": "/cache",
+                    }
+                ]
+
+    .. py:method:: get_volumes(self, props)
+
+        This method computes the `volumes <https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#volumes>`_ part of the pod spec.
+
+        Example:
+
+        .. code-block:: python
+
+            def get_volumes(self, props):
+                return [
+                    {
+                        "name": "mount-name",
+                        "hostPath": {
+                            "path": "/var/log/pods",
+                        }
+                    }
+                ]
 
     .. py:method:: getServicesContainers(self, props)
 
@@ -388,7 +434,6 @@ All those methods take props object which is a L{IProperties} allowing to get so
 
 
 .. _official buildbot image: https://hub.docker.com/r/buildbot/buildbot-worker/
-.. _pod resources: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container
 
 Kubernetes config loaders
 -------------------------
