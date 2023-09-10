@@ -67,8 +67,8 @@ matrix:
 
     # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
     # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
-    #- env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest{TEST_ID}
-    #- env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest{TEST_ID}?user=buildbot&password=x'
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest{TEST_ID}
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL='postgresql+pg8000:///bbtest{TEST_ID}?user=buildbot&password=x'
 
 # Dependencies installation commands
 install:
