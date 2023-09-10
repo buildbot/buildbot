@@ -50,7 +50,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
       this.disposer = autorun(() => {
         const newParentIds = new Set<string>();
         for (let parent of this.parentArray!) {
-          if (!this.parentFilteredIds.indexOf(parent.id)) {
+          if (this.parentFilteredIds.length > 0 && this.parentFilteredIds.indexOf(parent.id) < 0) {
             continue;
           }
 
@@ -71,7 +71,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
         const newParentIds = new Set<string>();
         for (const parentList of this.parentArrayMap!.values()) {
           for (const parent of parentList.array) {
-            if (!this.parentFilteredIds.indexOf(parent.id)) {
+            if (this.parentFilteredIds.length > 0 && this.parentFilteredIds.indexOf(parent.id) < 0) {
               continue;
             }
 
