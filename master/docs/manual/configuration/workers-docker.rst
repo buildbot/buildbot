@@ -376,7 +376,7 @@ All those methods take props object which is a L{IProperties} allowing to get so
 
     .. py:method:: getBuildContainerResources(self, props)
 
-        This method compute the `pod resources` part of the container spec (`spec.containers[].resources`.
+        This method compute the `pod resources <https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#resources>`_ part of the container spec (`spec.containers[].resources`).
         This is important to reserve some CPU and memory for your builds, and to trigger node auto-scaling if needed.
         You can also limit the CPU and memory for your container.
 
@@ -400,7 +400,6 @@ All those methods take props object which is a L{IProperties} allowing to get so
 
 
 .. _official buildbot image: https://hub.docker.com/r/buildbot/buildbot-worker/
-.. _pod resources: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container
 
 Kubernetes config loaders
 -------------------------
