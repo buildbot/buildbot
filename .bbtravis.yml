@@ -60,15 +60,15 @@ matrix:
     # (by default in other tests in-memory SQLite database is used which is
     # recreated for each test).
     # Helps to detect issues with incorrect database setup/cleanup in tests.
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite DB_TYPE=sqlite
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db{TEST_ID}.sqlite DB_TYPE=sqlite
     # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest DB_TYPE=mysql
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID} DB_TYPE=mysql
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID}?storage_engine=InnoDB
 
     # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
     # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
-    #- env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest
-    #- env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest{TEST_ID}
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL='postgresql+pg8000:///bbtest{TEST_ID}?user=buildbot&password=x'
 
 # Dependencies installation commands
 install:
@@ -161,12 +161,8 @@ script:
       make frontend_tests_headless
 
   - title: master and worker tests
-    condition: TESTS in ("dev_virtualenv", "trial") and BUILDBOT_TEST_DB_URL == "sqlite://"
+    condition: TESTS in ("dev_virtualenv", "trial")
     cmd: /tmp/bbvenv/bin/trial -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
-
-  - title: master and worker tests
-    condition: TESTS in ("dev_virtualenv", "trial") and BUILDBOT_TEST_DB_URL != "sqlite://"
-    cmd: /tmp/bbvenv/bin/trial --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   - title: interop tests
     condition: TESTS == "interop"

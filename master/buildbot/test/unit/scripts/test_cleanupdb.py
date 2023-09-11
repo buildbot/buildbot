@@ -61,7 +61,6 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
     def setUp(self):
         self.setup_test_reactor()
-        self.origcwd = os.getcwd()
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write(textwrap.dedent("""
@@ -72,24 +71,23 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         self.ensureNoSqliteMemory()
 
     def tearDown(self):
-        os.chdir(self.origcwd)
         self.tearDownDirs()
 
     def ensureNoSqliteMemory(self):
         # test may use mysql or pg if configured in env
         envkey = "BUILDBOT_TEST_DB_URL"
         if envkey not in os.environ or os.environ[envkey] == 'sqlite://':
-
-            patch_environ(self, envkey, "sqlite:///" + os.path.join(
-                self.origcwd, "basedir", "state.sqlite"))
+            patch_environ(self, envkey,
+                          "sqlite:///" + os.path.abspath(os.path.join("basedir", "state.sqlite")))
 
     def createMasterCfg(self, extraconfig=""):
-        os.chdir(self.origcwd)
+        db_url = db.resolve_test_index_in_db_url(os.environ["BUILDBOT_TEST_DB_URL"])
+
         with open(os.path.join('basedir', 'master.cfg'), 'wt', encoding='utf-8') as f:
             f.write(textwrap.dedent(f"""
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
-                c['db_url'] = {repr(os.environ["BUILDBOT_TEST_DB_URL"])}
+                c['db_url'] = {repr(db_url)}
                 c['buildbotNetUsageData'] = None
                 c['multiMaster'] = True  # don't complain for no builders
                 {extraconfig}
