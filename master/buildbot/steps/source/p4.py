@@ -126,7 +126,6 @@ class P4(Source):
         if self.debug:
             log.msg('in run_vc')
 
-        self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
@@ -149,8 +148,11 @@ class P4(Source):
         # First we need to create the client
         yield self._createClientSpec()
 
+        self.revision = yield self.get_sync_revision(revision)
+
         yield self._getAttrGroupMember('mode', self.mode)()
-        yield self.parseGotRevision()
+        self.updateSourceProperty('got_revision', self.revision)
+
         return results.SUCCESS
 
     @defer.inlineCallbacks
@@ -337,8 +339,13 @@ class P4(Source):
         yield self._dovccmd(['login'], initialStdin=initialStdin)
 
     @defer.inlineCallbacks
-    def parseGotRevision(self):
-        command = self._buildVCCommand(['changes', '-m1', '#have'])
+    def get_sync_revision(self, revision=None):
+        revision = f"@{revision}" if revision else "#head"
+        if self.debug:
+            log.msg("P4: get_sync_revision() retrieve client actual revision at %s", revision)
+
+        changes_command_args = ['-ztag', 'changes', '-m1', f"//{self.p4client}/...{revision}"]
+        command = self._buildVCCommand(changes_command_args)
 
         cmd = remotecommand.RemoteShellCommand(self.workdir, command,
                                                env=self.env,
@@ -348,22 +355,36 @@ class P4(Source):
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
-        stdout = cmd.stdout.strip()
-        # Example output from p4 changes -m1 #have
-        # Change 212798 on 2012/04/13 by user@user-unix-bldng2 'change to
-        # pickup build'
-        revision = stdout.split()[1]
+        stdout = cmd.stdout.splitlines(keepends=False)
+        # Example output from p4 -ztag changes -m1
+        # ... change 212798
+        # ... time 1694770219
+        # ... user user@user-unix-bldng2
+        # ... client UserClient
+        # ... status submitted
+        # ... changeType public
+        # ... path //Depot/Path/...
+        # ... desc change to pickup build
+        change_identifier = "... change "
+        revision = next(
+            (
+                line[len(change_identifier):]
+                for line in stdout
+                if line.startswith(change_identifier)
+            ),
+            None
+        )
         try:
             int(revision)
-        except ValueError as e:
-            msg = ("p4.parseGotRevision unable to parse output "
-                   f"of 'p4 changes -m1 \"#have\"': '{stdout}'")
-            log.msg(msg)
-            raise buildstep.BuildStepFailed() from e
+        except ValueError as error:
+            log.msg(
+                "p4.get_sync_revision unable to parse output of %s: %s",
+                ['p4'] + changes_command_args,
+                stdout,
+            )
+            raise buildstep.BuildStepFailed() from error
 
-        if self.debug:
-            log.msg(f"Got p4 revision {revision}")
-        self.updateSourceProperty('got_revision', revision)
+        return revision
 
     @defer.inlineCallbacks
     def purge(self, ignore_ignores):
