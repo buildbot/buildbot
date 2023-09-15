@@ -56,16 +56,14 @@ export const Loginbar = () => {
     return (
       <Nav className="bb-loginbar-dropdown-nav">
         <NavDropdown title="Anonymous" id="bb-loginbar-dropdown">
-          <NavDropdown.Item>
-            <a href={"/auth/login?redirect=" + encodeURI(redirect)}>
-              {
-                config.auth.oauth2
-                  ? <span>
-                      {getAuthIcon(config.auth.fa_icon)}&nbsp;Login with {config.auth.name}
-                    </span>
-                  : <span><FaSignInAlt/>&nbsp;Login</span>
-              }
-            </a>
+          <NavDropdown.Item href={"/auth/login?redirect=" + encodeURI(redirect)}>
+            {
+              config.auth.oauth2
+                ? <span>
+                    {getAuthIcon(config.auth.fa_icon)}&nbsp;Login with {config.auth.name}
+                  </span>
+                : <span><FaSignInAlt/>&nbsp;Login</span>
+            }
           </NavDropdown.Item>
         </NavDropdown>
       </Nav>
