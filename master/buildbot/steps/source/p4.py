@@ -146,6 +146,9 @@ class P4(Source):
         if self.use_tickets and self.p4passwd:
             yield self._acquireTicket()
 
+        # First we need to create the client
+        yield self._createClientSpec()
+
         yield self._getAttrGroupMember('mode', self.mode)()
         yield self.parseGotRevision()
         return results.SUCCESS
@@ -154,9 +157,6 @@ class P4(Source):
     def mode_full(self):
         if self.debug:
             log.msg("P4:full()..")
-
-        # First we need to create the client
-        yield self._createClientSpec()
 
         # Then p4 sync #none
         yield self._dovccmd(['sync', '#none'])
@@ -184,9 +184,6 @@ class P4(Source):
     def mode_incremental(self):
         if self.debug:
             log.msg("P4:incremental()")
-
-        # First we need to create the client
-        yield self._createClientSpec()
 
         # and plan to do a checkout
         command = ['sync', ]
