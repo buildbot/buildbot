@@ -151,7 +151,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
-                                 '-c', 'p4_client1', 'sync', '//depot...@100'])
+                                 '-c', 'p4_client1', 'sync', '//p4_client1/...@100'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',

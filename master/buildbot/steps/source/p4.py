@@ -167,14 +167,14 @@ class P4(Source):
         # Then we need to sync the client
         if self.revision:
             if self.debug:
-                log.msg("P4: full() sync command based on :base:%s changeset:%d",
-                        self._getP4BaseForLog(), int(self.revision))
-            yield self._dovccmd(['sync', f'{self._getP4BaseForCommand()}...@{int(self.revision)}'],
+                log.msg("P4: full() sync command based on :client:%s changeset:%d",
+                        self.p4client, int(self.revision))
+            yield self._dovccmd(['sync', f'//{self.p4client}/...@{int(self.revision)}'],
                                 collectStdout=True)
         else:
             if self.debug:
-                log.msg("P4: full() sync command based on :base:%s no revision",
-                        self._getP4BaseForLog())
+                log.msg("P4: full() sync command based on :client:%s no revision",
+                        self.p4client)
             yield self._dovccmd(['sync'], collectStdout=True)
 
         if self.debug:
@@ -192,18 +192,12 @@ class P4(Source):
         command = ['sync', ]
 
         if self.revision:
-            command.extend([f'{self._getP4BaseForCommand()}...@{int(self.revision)}'])
+            command.extend([f'//{self.p4client}/...@{int(self.revision)}'])
 
         if self.debug:
             log.msg(
                 "P4:incremental() command:%s revision:%s", command, self.revision)
         yield self._dovccmd(command)
-
-    def _getP4BaseForLog(self):
-        return self.p4base or '<custom viewspec>'
-
-    def _getP4BaseForCommand(self):
-        return self.p4base or ''
 
     def _buildVCCommand(self, doCommand):
         assert doCommand, "No command specified"
