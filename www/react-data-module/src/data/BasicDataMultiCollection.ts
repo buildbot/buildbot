@@ -26,7 +26,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
   accessor: IDataAccessor;
   parentArray: IObservableArray<ParentDataType> | null;
   parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null;
-  parentFilteredIds: IObservableArray<string>;
+  parentFilteredIds: IObservableArray<string> | null;
 
   @observable byParentId = observable.map<string, Collection>();
   @observable sortedParentIds = observable.array<string>();
@@ -43,14 +43,14 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
     this.accessor = accessor;
     this.parentArray = parentArray;
     this.parentArrayMap = parentArrayMap;
-    this.parentFilteredIds = parentFilteredIds ?? observable([]);
+    this.parentFilteredIds = parentFilteredIds;
 
     this.callback = callback;
     if (parentArray !== null) {
       this.disposer = autorun(() => {
         const newParentIds = new Set<string>();
         for (let parent of this.parentArray!) {
-          if (this.parentFilteredIds.length > 0 && this.parentFilteredIds.indexOf(parent.id) < 0) {
+          if (this.parentFilteredIds !== null && this.parentFilteredIds.indexOf(parent.id) < 0) {
             continue;
           }
 
@@ -71,7 +71,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
         const newParentIds = new Set<string>();
         for (const parentList of this.parentArrayMap!.values()) {
           for (const parent of parentList.array) {
-            if (this.parentFilteredIds.length > 0 && this.parentFilteredIds.indexOf(parent.id) < 0) {
+            if (this.parentFilteredIds !== null && this.parentFilteredIds.indexOf(parent.id) < 0) {
               continue;
             }
 

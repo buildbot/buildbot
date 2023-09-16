@@ -117,7 +117,7 @@ describe("BasicDataMultiCollection", () => {
     return new Promise((resolve) => setImmediate(resolve));
   }
 
-  it("new objects to empty collection", async () => {
+  function mockParentAndChild() {
     mock.onGet(rootUrl + "parents").reply(200, {
       parents: [
         {
@@ -146,6 +146,10 @@ describe("BasicDataMultiCollection", () => {
         },
       ],
     });
+  }
+
+  it("new objects to empty collection", async () => {
+    mockParentAndChild();
 
     // request all parents and all tests
     const parents = TestParentClass.getAll(client.open());
@@ -183,5 +187,37 @@ describe("BasicDataMultiCollection", () => {
     expect(tests.byParentId.get('12')!.array.map(e => e.toObject())).toEqual([
       {testid: 51, testdata: 'c51'},
     ]);
+  });
+
+  it("should return nothing on getRelatedOfFiltered with empty filteredIds", async () => {
+    mockParentAndChild();
+
+    // request all parents then no tests
+    const parents = TestParentClass.getAll(client.open());
+    const tests = parents.getRelatedOfFiltered(observable([]), (p) => p.getTests());
+
+    await flushPromisesAndTimers();
+
+    expect(webSocket.parsedSendQueue).toEqual([{
+      _id: 1,
+      cmd: 'startConsuming',
+      path: 'parents/*/*'
+    }]);
+    webSocket.clearSendQueue();
+
+    webSocket.respond(JSON.stringify({_id: 1, msg: "OK", code: 200}));
+    await flushPromisesAndTimers();
+
+    expect(webSocket.parsedSendQueue).toEqual([]);
+    webSocket.clearSendQueue();
+
+    webSocket.respond(JSON.stringify({_id: 2, msg: "OK", code: 200}));
+    await flushPromisesAndTimers();
+
+    expect(parents.array.map(e => e.toObject())).toEqual([
+      {parentid: 12, parentdata: 'p12'},
+      {parentid: 13, parentdata: 'p13'},
+    ]);
+    expect(tests.byParentId.size).toEqual(0);
   });
 });
