@@ -114,7 +114,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         self.setup_step(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'),
-                       {"revision": '100'})
+                       {"revision": '101'})
 
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
@@ -151,14 +151,15 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
-                                 '-c', 'p4_client1', 'sync', '//p4_client1/...@100'])
+                                 '-c', 'p4_client1', '-ztag', 'changes',
+                                 '-m1', '//p4_client1/...@101'])
+            .stdout("... change 100")
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                  '-P', ('obfuscated', 'pass', 'XXXXXX'),
-                                 '-c', 'p4_client1', 'changes', '-m1', '#have'])
-            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
-            .exit(0)
+                                 '-c', 'p4_client1', 'sync', '//p4_client1/...@100'])
+            .exit(0),
         )
         self.expect_outcome(result=SUCCESS)
         self.expect_property('got_revision', '100', 'P4')
@@ -182,17 +183,18 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir=workdir,
                         timeout=timeout,
-                        command=(['p4', '-p', 'localhost:12000', '-u', 'user',
-                                  '-P', ('obfuscated', 'pass', 'XXXXXX'), '-c', 'p4_client1']
-                                 + extra_args + ['sync']))
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', '-ztag', 'changes',
+                                 '-m1', '//p4_client1/...#head'])
+            .stdout("... change 100")
             .exit(0),
             ExpectShell(workdir=workdir,
                         timeout=timeout,
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
-                                 '-c', 'p4_client1', 'changes', '-m1', '#have'])
-            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
-            .exit(0)
+                        command=(['p4', '-p', 'localhost:12000', '-u', 'user',
+                                  '-P', ('obfuscated', 'pass', 'XXXXXX'), '-c', 'p4_client1']
+                                 + extra_args + ['sync', '//p4_client1/...@100']))
+            .exit(0),
         )
         self.expect_outcome(result=SUCCESS)
         self.expect_property('got_revision', '100', 'P4')
@@ -511,6 +513,13 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .exit(0),
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
+                                 '-P', expected_pass,
+                                 '-c', p4client, '-ztag', 'changes',
+                                 '-m1', f'//{p4client}/...#head'])
+            .stdout("... change 100")
+            .exit(0),
+            ExpectShell(workdir=workdir,
+                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass, '-c', p4client]
                         + extra_args
                         + ['sync', '#none'])
@@ -522,14 +531,8 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                  '-P', expected_pass, '-c', p4client]
-                        + extra_args + ['sync'])
+                        + extra_args + ['sync', f'//{p4client}/...@100'])
             .exit(0),
-            ExpectShell(workdir=workdir,
-                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                 '-P', expected_pass, '-c', p4client,
-                                 'changes', '-m1', '#have'])
-            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
-            .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
         self.expect_property('got_revision', '100', 'P4')
@@ -1027,14 +1030,15 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         initial_stdin=client_spec)
             .exit(0),
             ExpectShell(workdir='wkdir',
-                        command=(['p4', '-p', 'localhost:12000', '-u', 'user',
-                                  '-c', 'p4_client1', 'sync']))
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                 '-c', 'p4_client1', '-ztag', 'changes',
+                                 '-m1', '//p4_client1/...#head'])
+            .stdout("... change 100")
             .exit(0),
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-c', 'p4_client1', 'changes', '-m1', '#have'])
-            .stdout("Change 100 on 2013/03/21 by user@machine \'duh\'")
-            .exit(0)
+                        command=(['p4', '-p', 'localhost:12000', '-u', 'user',
+                                  '-c', 'p4_client1', 'sync', '//p4_client1/...@100']))
+            .exit(0),
         )
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
