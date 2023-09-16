@@ -221,7 +221,17 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         # Not possible with older versions:
         # exceptions.AttributeError: 'TarFile' object has no attribute '__exit__'
         archive = tarfile.open(mode=mode, fileobj=self.fp)
-        archive.add(self.path, '')
+        try:
+            archive.add(self.path, '')
+        except OSError as e:
+            # if directory does not exist, bail out with an error
+            self.stderr = "Cannot read directory '{0}' for upload: {1}".format(self.path, e)
+            self.rc = 1
+            archive.close()
+            d = defer.succeed(False)
+            d.addCallback(self.finished)
+            return d
+
         archive.close()
 
         # Transfer it
