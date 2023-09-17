@@ -70,9 +70,13 @@ with:
 
 .. code-block:: python
 
-    c['www'] = dict(port=8010,
-                    plugins=dict(waterfall_view={},
-                    console_view={}))
+    c['www'] = {
+        "port": 8010,
+        "plugins": {
+            "waterfall_view": {},
+            "console_view": {}
+        }
+    }
 
 See :bb:cfg:`www` for more information.
 
