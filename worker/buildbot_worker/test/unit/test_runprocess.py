@@ -116,7 +116,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testStart(self):
-        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update)
 
         yield s.start()
 
