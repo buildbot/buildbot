@@ -281,7 +281,7 @@ class RunProcess(object):
     # Then changes to the system clock during a run wouldn't effect the "elapsed
     # time" results.
 
-    def __init__(self, command, workdir, unicode_encoding, send_update, environ=None,
+    def __init__(self, command_id, command, workdir, unicode_encoding, send_update, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, sigtermTime=None,
                  initialStdin=None, keepStdout=False, keepStderr=False,
@@ -300,6 +300,8 @@ class RunProcess(object):
         @param useProcGroup: (default True) use a process group for non-PTY
             process invocations
         """
+        self.command_id = command
+
         if logfiles is None:
             logfiles = {}
 
