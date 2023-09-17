@@ -67,7 +67,6 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
                                      builder_is_running, on_command_complete, None, command,
                                      command_id, args)
         self.protocol = protocol
-        self.command_id = command_id
 
     def protocol_args_setup(self, command, args):
         if "want_stdout" in args:

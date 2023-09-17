@@ -54,6 +54,7 @@ class ProtocolCommandBase:
         self.builder_is_running = builder_is_running
         self.on_command_complete = on_command_complete
         self.on_lost_remote_step = on_lost_remote_step
+        self.command_id = command_id
 
         self.protocol_args_setup(command, args)
 
