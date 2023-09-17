@@ -30,11 +30,11 @@ class IWorkerCommand(Interface):
     subclasses. It specifies how the worker can start, interrupt, and
     query the various Commands running on behalf of the buildmaster."""
 
-    def __init__(builder, stepId, args):
+    def __init__(builder, command_id, args):
         """Create the Command. 'builder' is a reference to the parent
         buildbot_worker.base.WorkerForBuilderBase instance, which will be
         used to send status updates (by calling builder.sendStatus).
-        'stepId' is a random string which helps correlate worker logs with
+        'command_id' is a random string which helps correlate worker logs with
         the master. 'args' is a dict of arguments that comes from the
         master-side BuildStep, with contents that are specific to the
         individual Command subclass.

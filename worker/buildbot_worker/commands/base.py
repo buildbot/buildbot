@@ -140,9 +140,9 @@ class Command(object):
 
     _reactor = reactor
 
-    def __init__(self, protocol_command, stepId, args):
+    def __init__(self, protocol_command, command_id, args):
         self.protocol_command = protocol_command
-        self.stepId = stepId  # just for logging
+        self.command_id = command_id  # just for logging
         self.args = args
         self.startTime = None
 
