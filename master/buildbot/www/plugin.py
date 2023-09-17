@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import importlib.resources
+import importlib_resources
 
 from twisted.web import static
 
@@ -25,9 +25,9 @@ class Application:
 
     def __init__(self, modulename, description, ui=True):
         self.description = description
-        self.version = importlib.resources.files(modulename).joinpath("VERSION")
+        self.version = importlib_resources.files(modulename).joinpath("VERSION")
         self.version = bytes2unicode(self.version.read_bytes())
-        self.static_dir = importlib.resources.files(modulename) / "static"
+        self.static_dir = importlib_resources.files(modulename) / "static"
         self.resource = static.File(self.static_dir)
         self.ui = ui
 
