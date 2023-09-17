@@ -342,7 +342,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
                                        "13", "invalid command", {})
 
         unknownCommand = yield self.assertFailure(do_start(), base.UnknownCommand)
-        self.assertEqual(str(unknownCommand), "unrecognized WorkerCommand 'invalid command'")
+        self.assertEqual(str(unknownCommand),
+                         "(command 13): unrecognized WorkerCommand 'invalid command'")
 
 
 class TestBotFactory(unittest.TestCase):

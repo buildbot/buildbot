@@ -99,24 +99,25 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.tearDownBasedir()
 
     def testCommandEncoding(self):
-        s = runprocess.RunProcess(u'abcd', self.basedir, 'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, u'abcd', self.basedir, 'utf-8', self.send_update)
         self.assertIsInstance(s.command, bytes)
         self.assertIsInstance(s.fake_command, bytes)
 
     def testCommandEncodingList(self):
-        s = runprocess.RunProcess([u'abcd', b'efg'], self.basedir, 'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, [u'abcd', b'efg'], self.basedir, 'utf-8', self.send_update)
         self.assertIsInstance(s.command[0], bytes)
         self.assertIsInstance(s.fake_command[0], bytes)
 
     def testCommandEncodingObfuscated(self):
-        s = runprocess.RunProcess([bsutil.Obfuscated(u'abcd', u'ABCD')], self.basedir, 'utf-8',
+        s = runprocess.RunProcess(0, [bsutil.Obfuscated(u'abcd', u'ABCD')], self.basedir, 'utf-8',
                                   self.send_update)
         self.assertIsInstance(s.command[0], bytes)
         self.assertIsInstance(s.fake_command[0], bytes)
 
     @defer.inlineCallbacks
     def testStart(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update)
 
         yield s.start()
 
@@ -125,8 +126,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testNoStdout(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
-                                  sendStdout=False)
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update, sendStdout=False)
 
         yield s.start()
 
@@ -135,8 +136,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testKeepStdout(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
-                                  keepStdout=True)
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update, keepStdout=True)
 
         yield s.start()
 
@@ -146,7 +147,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testStderr(self):
-        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, stderrCommand("hello"), self.basedir, 'utf-8',
+                                  self.send_update)
 
         yield s.start()
 
@@ -155,8 +157,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testNoStderr(self):
-        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update,
-                                  sendStderr=False)
+        s = runprocess.RunProcess(0, stderrCommand("hello"), self.basedir, 'utf-8',
+                                  self.send_update, sendStderr=False)
 
         yield s.start()
 
@@ -165,8 +167,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_incrementalDecoder(self):
-        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update,
-                                  sendStderr=True)
+        s = runprocess.RunProcess(0, stderrCommand("hello"), self.basedir, 'utf-8',
+                                  self.send_update, sendStderr=True)
         pp = runprocess.RunProcessPP(s)
         # u"\N{SNOWMAN} when encoded to utf-8 bytes is b"\xe2\x98\x83"
         pp.outReceived(b"\xe2")
@@ -181,8 +183,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testInvalidUTF8(self):
-        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update,
-                                  sendStderr=True)
+        s = runprocess.RunProcess(0, stderrCommand("hello"), self.basedir, 'utf-8',
+                                  self.send_update, sendStderr=True)
         pp = runprocess.RunProcessPP(s)
         INVALID_UTF8 = b"\xff"
         with self.assertRaises(UnicodeDecodeError):
@@ -196,8 +198,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testKeepStderr(self):
-        s = runprocess.RunProcess(stderrCommand("hello"), self.basedir, 'utf-8', self.send_update,
-                                  keepStderr=True)
+        s = runprocess.RunProcess(0, stderrCommand("hello"), self.basedir, 'utf-8',
+                                  self.send_update, keepStderr=True)
 
         yield s.start()
 
@@ -208,7 +210,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testStringCommand(self):
         # careful!  This command must execute the same on windows and UNIX
-        s = runprocess.RunProcess('echo hello', self.basedir, 'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, 'echo hello', self.basedir, 'utf-8', self.send_update)
 
         yield s.start()
 
@@ -216,7 +218,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
     def testObfuscatedCommand(self):
-        s = runprocess.RunProcess([('obfuscated', 'abcd', 'ABCD')], self.basedir, 'utf-8',
+        s = runprocess.RunProcess(0, [('obfuscated', 'abcd', 'ABCD')], self.basedir, 'utf-8',
                                   self.send_update)
         self.assertEqual(s.command, [b'abcd'])
         self.assertEqual(s.fake_command, [b'ABCD'])
@@ -224,7 +226,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testMultiWordStringCommand(self):
         # careful!  This command must execute the same on windows and UNIX
-        s = runprocess.RunProcess('echo Happy Days and Jubilation', self.basedir, 'utf-8',
+        s = runprocess.RunProcess(0, 'echo Happy Days and Jubilation', self.basedir, 'utf-8',
                                   self.send_update)
 
         # no quoting occurs
@@ -236,7 +238,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testInitialStdinUnicode(self):
-        s = runprocess.RunProcess(catCommand(), self.basedir, 'utf-8', self.send_update,
+        s = runprocess.RunProcess(0, catCommand(), self.basedir, 'utf-8', self.send_update,
                                   initialStdin=u'hello')
 
         yield s.start()
@@ -247,7 +249,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testMultiWordStringCommandQuotes(self):
         # careful!  This command must execute the same on windows and UNIX
-        s = runprocess.RunProcess('echo "Happy Days and Jubilation"', self.basedir, 'utf-8',
+        s = runprocess.RunProcess(0, 'echo "Happy Days and Jubilation"', self.basedir, 'utf-8',
                                   self.send_update)
 
         if runtime.platformType == "win32":
@@ -273,7 +275,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             # variable name.
         ]
 
-        s = runprocess.RunProcess(printArgsCommand() + args, self.basedir, 'utf-8',
+        s = runprocess.RunProcess(0, printArgsCommand() + args, self.basedir, 'utf-8',
                                   self.send_update)
         yield s.start()
 
@@ -286,7 +288,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         # this is highly contrived, but it proves the point.
         cmd = sys.executable + \
             ' -c "import sys; sys.stdout.write(\'b\\na\\n\')" | sort'
-        s = runprocess.RunProcess(cmd, self.basedir, 'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, cmd, self.basedir, 'utf-8', self.send_update)
 
         yield s.start()
 
@@ -295,7 +297,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testCommandTimeout(self):
-        s = runprocess.RunProcess(sleepCommand(10), self.basedir, 'utf-8', self.send_update,
+        s = runprocess.RunProcess(0, sleepCommand(10), self.basedir, 'utf-8', self.send_update,
                                   timeout=5)
         clock = task.Clock()
         s._reactor = clock
@@ -310,7 +312,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testCommandMaxTime(self):
-        s = runprocess.RunProcess(sleepCommand(10), self.basedir, 'utf-8', self.send_update,
+        s = runprocess.RunProcess(0, sleepCommand(10), self.basedir, 'utf-8', self.send_update,
                                   maxTime=5)
         clock = task.Clock()
         s._reactor = clock
@@ -326,7 +328,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     @compat.skipUnlessPlatformIs("posix")
     @defer.inlineCallbacks
     def test_stdin_closed(self):
-        s = runprocess.RunProcess(scriptCommand('assert_stdin_closed'),
+        s = runprocess.RunProcess(0, scriptCommand('assert_stdin_closed'),
                                   self.basedir, 'utf-8', self.send_update,
                                   # if usePTY=True, stdin is never closed
                                   usePTY=False,
@@ -337,7 +339,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_startCommand_exception(self):
-        s = runprocess.RunProcess(['whatever'], self.basedir, 'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, ['whatever'], self.basedir, 'utf-8', self.send_update)
 
         # set up to cause an exception in _startCommand
         def _startCommand(*args, **kwargs):
@@ -362,8 +364,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testLogEnviron(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
-                                  environ={"FOO": "BAR"})
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update, environ={"FOO": "BAR"})
 
         yield s.start()
 
@@ -372,8 +374,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testNoLogEnviron(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
-                                  environ={"FOO": "BAR"}, logEnviron=False)
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update, environ={"FOO": "BAR"}, logEnviron=False)
 
         yield s.start()
 
@@ -386,8 +388,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         environ = {"EXPND": "-${PATH}-",
                    "DOESNT_EXPAND": "-${---}-",
                    "DOESNT_FIND": "-${DOESNT_EXISTS}-"}
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
-                                  environ=environ)
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update, environ=environ)
 
         yield s.start()
 
@@ -399,8 +401,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testUnsetEnvironVar(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
-                                  environ={"PATH": None})
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update, environ={"PATH": None})
 
         yield s.start()
 
@@ -411,8 +413,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testEnvironPythonPath(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
-                                  environ={"PYTHONPATH": 'a'})
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update, environ={"PYTHONPATH": 'a'})
 
         yield s.start()
 
@@ -423,8 +425,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testEnvironArray(self):
-        s = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
-                                  environ={"FOO": ['a', 'b']})
+        s = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update, environ={"FOO": ['a', 'b']})
 
         yield s.start()
 
@@ -435,8 +437,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     def testEnvironInt(self):
         with self.assertRaises(RuntimeError):
-            runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update,
-                                  environ={"BUILD_NUMBER": 13})
+            runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                  self.send_update, environ={"BUILD_NUMBER": 13})
 
     def _test_spawnAsBatch(self, cmd, comspec):
 
@@ -450,7 +452,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         if 'COMSPEC' not in tempEnviron:
             tempEnviron['COMSPEC'] = comspec
         self.patch(os, "environ", tempEnviron)
-        s = runprocess.RunProcess(cmd, self.basedir, 'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, cmd, self.basedir, 'utf-8', self.send_update)
         s.pp = runprocess.RunProcessPP(s)
         s.deferred = defer.Deferred()
         d = s._spawnAsBatch(s.pp, s.command, "args",
@@ -577,8 +579,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfile = self.newPidfile()
         self.pid = None
 
-        s = runprocess.RunProcess(scriptCommand('write_pidfile_and_sleep', pidfile), self.basedir,
-                                  'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, scriptCommand('write_pidfile_and_sleep', pidfile),
+                                  self.basedir, 'utf-8', self.send_update)
         if interruptSignal is not None:
             s.interruptSignal = interruptSignal
         runproc_d = s.start()
@@ -604,8 +606,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         # is not None
         pidfile = self.newPidfile()
         self.pid = None
-        s = runprocess.RunProcess(scriptCommand('write_pidfile_and_sleep', pidfile), self.basedir,
-                                  'utf-8', self.send_update, sigtermTime=1)
+        s = runprocess.RunProcess(0, scriptCommand('write_pidfile_and_sleep', pidfile),
+                                  self.basedir, 'utf-8', self.send_update, sigtermTime=1)
         runproc_d = s.start()
         pidfile_d = self.waitForPidfile(pidfile)
         self.receivedSIGTERM = False
@@ -658,7 +660,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         child_pidfile = self.newPidfile()
         self.child_pid = None
 
-        s = runprocess.RunProcess(scriptCommand('spawn_child', parent_pidfile, child_pidfile),
+        s = runprocess.RunProcess(0, scriptCommand('spawn_child', parent_pidfile, child_pidfile),
                                   self.basedir, 'utf-8', self.send_update, usePTY=usePTY,
                                   useProcGroup=useProcGroup)
         runproc_d = s.start()
@@ -708,7 +710,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         child_pidfile = self.newPidfile()
         self.child_pid = None
 
-        s = runprocess.RunProcess(scriptCommand('double_fork', parent_pidfile, child_pidfile),
+        s = runprocess.RunProcess(0, scriptCommand('double_fork', parent_pidfile, child_pidfile),
                                   self.basedir, 'utf-8', self.send_update, usePTY=usePTY,
                                   useProcGroup=useProcGroup)
         runproc_d = s.start()
@@ -833,8 +835,8 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         # test a simple process that just sleeps waiting to die
         pidfile = self.new_pid_file()
 
-        s = runprocess.RunProcess(scriptCommand('write_pidfile_and_sleep', pidfile), self.basedir,
-                                  'utf-8', self.send_update)
+        s = runprocess.RunProcess(0, scriptCommand('write_pidfile_and_sleep', pidfile),
+                                  self.basedir, 'utf-8', self.send_update)
         if interrupt_signal is not None:
             s.interruptSignal = interrupt_signal
         runproc_d = s.start()
@@ -854,8 +856,8 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         # Tests that the process will receive SIGTERM if sigtermTimeout is not None
         pidfile = self.new_pid_file()
 
-        s = runprocess.RunProcess(scriptCommand('write_pidfile_and_sleep', pidfile), self.basedir,
-                                  'utf-8', self.send_update, sigtermTime=1)
+        s = runprocess.RunProcess(0, scriptCommand('write_pidfile_and_sleep', pidfile),
+                                  self.basedir, 'utf-8', self.send_update, sigtermTime=1)
 
         taskkill_calls = []
         orig_taskkill = s._taskkill
@@ -882,7 +884,7 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         parent_pidfile = self.new_pid_file()
         child_pidfile = self.new_pid_file()
 
-        s = runprocess.RunProcess(scriptCommand('spawn_child', parent_pidfile, child_pidfile),
+        s = runprocess.RunProcess(0, scriptCommand('spawn_child', parent_pidfile, child_pidfile),
                                   self.basedir, 'utf-8', self.send_update)
         runproc_d = s.start()
 
@@ -905,7 +907,7 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         parent_pidfile = self.new_pid_file()
         child_pidfile = self.new_pid_file()
 
-        s = runprocess.RunProcess(scriptCommand('double_fork', parent_pidfile, child_pidfile),
+        s = runprocess.RunProcess(0, scriptCommand('double_fork', parent_pidfile, child_pidfile),
                                   self.basedir, 'utf-8', self.send_update)
         runproc_d = s.start()
 
@@ -939,7 +941,8 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
         self.tearDownBasedir()
 
     def makeRP(self):
-        rp = runprocess.RunProcess(stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update)
+        rp = runprocess.RunProcess(0, stdoutCommand('hello'), self.basedir, 'utf-8',
+                                   self.send_update)
         return rp
 
     def test_statFile_missing(self):

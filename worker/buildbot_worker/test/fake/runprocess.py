@@ -105,7 +105,7 @@ class FakeRunProcess(object):
                                   ).format(len(cls._expectations)))
         del cls._expectations
 
-    def __init__(self, command, workdir, unicode_encoding, send_update, **kwargs):
+    def __init__(self, command_id, command, workdir, unicode_encoding, send_update, **kwargs):
         kwargs['command'] = command
         kwargs['workdir'] = workdir
 

@@ -56,13 +56,13 @@ class UnknownCommand(pb.Error):
 class ProtocolCommandPb(ProtocolCommandBase):
     def __init__(self, unicode_encoding, worker_basedir, basedir, buffer_size, buffer_timeout,
                  max_line_length, newline_re, builder_is_running, on_command_complete,
-                 on_lost_remote_step, command, stepId, args, command_ref):
+                 on_lost_remote_step, command, command_id, args, command_ref):
         self.basedir = basedir
         self.command_ref = command_ref
         ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, buffer_size,
                                      buffer_timeout, max_line_length, newline_re,
                                      builder_is_running, on_command_complete, on_lost_remote_step,
-                                     command, stepId, args)
+                                     command, command_id, args)
 
     def protocol_args_setup(self, command, args):
         if command == "mkdir":
@@ -262,7 +262,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         """This is invoked before the first step of any new build is run.  It
         doesn't do much, but masters call it so it's still here."""
 
-    def remote_startCommand(self, command_ref, stepId, command, args):
+    def remote_startCommand(self, command_ref, command_id, command, args):
         """
         This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
         part of various master-side BuildSteps, to start various commands
@@ -270,7 +270,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         .commandComplete() to notify the master-side RemoteCommand that I'm
         done.
         """
-        stepId = decode(stepId)
+        command_id = decode(command_id)
         command = decode(command)
         args = decode(args)
 
@@ -286,19 +286,19 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
                                                      self.buffer_timeout, self.max_line_length,
                                                      self.newline_re, self.running,
                                                      on_command_complete,
-                                                     self.lostRemoteStep, command, stepId, args,
+                                                     self.lostRemoteStep, command, command_id, args,
                                                      command_ref)
 
-        log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
+        log.msg(u"(command {0}): startCommand:{1}".format(command_id, command))
         self.protocol_command.protocol_notify_on_disconnect()
         d = self.protocol_command.command.doStart()
         d.addCallback(lambda res: None)
         d.addBoth(self.protocol_command.command_complete)
         return None
 
-    def remote_interruptCommand(self, stepId, why):
+    def remote_interruptCommand(self, command_id, why):
         """Halt the current step."""
-        log.msg("asked to interrupt current command: {0}".format(why))
+        log.msg("(command {0}): asked to interrupt: reason {1}".format(command_id, why))
         if not self.protocol_command:
             # TODO: just log it, a race could result in their interrupting a
             # command that wasn't actually running
