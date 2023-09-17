@@ -61,7 +61,8 @@ class ProtocolCommandBase:
         try:
             factory = registry.getFactory(command)
         except KeyError:
-            raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
+            raise UnknownCommand(u"(command {0}): unrecognized WorkerCommand '{1}'".format(
+                command_id, command))
 
         # .command points to a WorkerCommand instance, and is set while the step is running.
         self.command = factory(self, command_id, args)
@@ -70,6 +71,9 @@ class ProtocolCommandBase:
                                                    self.buffer_size, self.buffer_timeout)
 
         self.is_complete = False
+
+    def log_msg(self, msg):
+        log.msg(u"(command {0}): {1}".format(self.command_id, msg))
 
     def split_lines(self, stream, text, text_time):
         try:
@@ -118,13 +122,13 @@ class ProtocolCommandBase:
                     self.buffer.append(key, value)
 
     def _ack_failed(self, why, where):
-        log.msg("ProtocolCommandBase._ack_failed:", where)
+        self.log_msg("ProtocolCommandBase._ack_failed: {0}".format(where))
         log.err(why)  # we don't really care
 
     # this is fired by the Deferred attached to each Command
     def command_complete(self, failure):
         if failure:
-            log.msg("ProtocolCommandBase.command_complete (failure)", self.command)
+            self.log_msg("ProtocolCommandBase.command_complete (failure) {0}".format(self.command))
             log.err(failure)
             # failure, if present, is a failure.Failure. To send it across
             # the wire, we must turn it into a pb.CopyableFailure.
@@ -132,11 +136,11 @@ class ProtocolCommandBase:
             failure.unsafeTracebacks = True
         else:
             # failure is None
-            log.msg("ProtocolCommandBase.command_complete (success)", self.command)
+            self.log_msg("ProtocolCommandBase.command_complete (success) {0}".format(self.command))
 
         self.on_command_complete()
         if not self.builder_is_running:
-            log.msg(" but we weren't running, quitting silently")
+            self.log_msg(" but we weren't running, quitting silently")
             return
         if not self.is_complete:
             d = self.protocol_complete(failure)

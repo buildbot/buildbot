@@ -289,7 +289,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
                                                      self.lostRemoteStep, command, command_id, args,
                                                      command_ref)
 
-        log.msg(u" startCommand:{0} [id {1}]".format(command, command_id))
+        log.msg(u"(command {0}): startCommand:{1}".format(command_id, command))
         self.protocol_command.protocol_notify_on_disconnect()
         d = self.protocol_command.command.doStart()
         d.addCallback(lambda res: None)
@@ -298,7 +298,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
 
     def remote_interruptCommand(self, command_id, why):
         """Halt the current step."""
-        log.msg("asked to interrupt current command: {0}".format(why))
+        log.msg("(command {0}): asked to interrupt: reason {1}".format(command_id, why))
         if not self.protocol_command:
             # TODO: just log it, a race could result in their interrupting a
             # command that wasn't actually running
