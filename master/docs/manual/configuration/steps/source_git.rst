@@ -106,7 +106,7 @@ The Git step takes the following arguments:
    The argument should either be a ``bool`` or ``dict``, and will change how `git describe` is called:
 
    * ``getDescription=False``: disables this feature explicitly
-   * ``getDescription=True`` or empty ``dict()``: runs `git describe` with no args
+   * ``getDescription=True`` or empty ``{}``: runs `git describe` with no args
    * ``getDescription={...}``: a dict with keys named the same as the Git option.
      Each key's value can be ``False`` or ``None`` to explicitly skip that argument.
 

@@ -13,13 +13,15 @@ An example ``www`` configuration line which enables change_hook and two DIALECTS
 
 .. code-block:: python
 
-    c['www'] = dict(
-        change_hook_dialects={
-                              'base': True,
-                              'somehook': {'option1':True,
-                                           'option2':False},
+    c['www'] = {
+        "change_hook_dialects": {
+            'base': True,
+            'somehook': {
+                'option1': True,
+                'option2':False
+            },
         },
-    )
+    }
 
 Within the ``www`` config dictionary arguments, the ``change_hook`` key enables/disables the module, and ``change_hook_dialects`` whitelists DIALECTs where the keys are the module names and the values are optional arguments which will be passed to the hooks.
 
@@ -45,9 +47,10 @@ To protect URL against unauthorized access, you may use ``change_hook_auth`` opt
 .. code-block:: python
 
     from twisted.cred import strcred
-    c['www'] = dict(...,
-          change_hook_auth=[strcred.makeChecker("file:changehook.passwd")],
-    )
+    c['www'] = {
+        ...,
+        "change_hook_auth": [strcred.makeChecker("file:changehook.passwd")],
+    }
 
 Create a file ``changehook.passwd`` with content:
 
@@ -71,10 +74,10 @@ The Mercurial hook uses the base dialect:
 
 .. code-block:: python
 
-    c['www'] = dict(
+    c['www'] = {
         ...,
-        change_hook_dialects={'base': True},
-    )
+        "change_hook_dialects": {'base': True},
+    }
 
 Once this is configured on your buildmaster add the following hook on your server-side Mercurial repository's ``hgrc``:
 
@@ -148,9 +151,9 @@ The simplest way to use GitHub hook is as follows:
 
 .. code-block:: python
 
-    c['www'] = dict(
-        change_hook_dialects={'github': {}},
-    )
+    c['www'] = {
+        "change_hook_dialects": {'github': {}},
+    }
 
 Having added this line, you should add a webhook for your GitHub project (see `Creating Webhooks page at GitHub <https://developer.github.com/webhooks/creating/>`_).
 The parameters are:
@@ -169,14 +172,14 @@ The parameters are:
 
     .. code-block:: python
 
-            c['www'] = dict(
+            c['www'] = {
                 ...,
-                change_hook_dialects={
+                "change_hook_dialects": {
                     'github': {
                         'secret': 'MY-SECRET',
                     },
                 },
-            )
+            }
 
 :guilabel:`Which events would you like to trigger this webhook?`
     Click -- ``Let me select individual events``, then select ``Push`` and ``Pull request`` -- other kind of events are not currently supported.
@@ -221,9 +224,10 @@ The BitBucket hook is as simple as the GitHub one and takes no options.
 
 .. code-block:: python
 
-    c['www'] = dict(...,
-        change_hook_dialects={'bitbucket': True},
-    )
+    c['www'] = {
+        ...,
+        "change_hook_dialects": {'bitbucket': True},
+    }
 
 When this is set up, you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
 For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
@@ -247,10 +251,10 @@ Bitbucket Cloud hook
 
 .. code-block:: python
 
-    c['www'] = dict(
+    c['www'] = {
         ...,
-        change_hook_dialects={'bitbucketcloud': {}},
-    )
+        "change_hook_dialects": {'bitbucketcloud': {}},
+    }
 
 When this is set up, you should add a webhook pointing to ``/change_hook/bitbucketcloud`` relative to the root of the web status.
 
@@ -274,10 +278,10 @@ Bitbucket Server hook
 
 .. code-block:: python
 
-    c['www'] = dict(
+    c['www'] = {
         ...,
-        change_hook_dialects={'bitbucketserver': {}},
-    )
+        "change_hook_dialects": {'bitbucketserver': {}},
+    }
 
 When this is set up, you should add a webhook pointing to ``/change_hook/bitbucketserver`` relative to the root of the web status.
 
@@ -320,9 +324,10 @@ And you configure your WebStatus to enable this hook:
 
 .. code-block:: python
 
-    c['www'] = dict(...,
-        change_hook_dialects={'poller': True},
-    )
+    c['www'] = {
+        ...,
+        "change_hook_dialects": {'poller': True},
+    }
 
 Then you will be able to trigger a poll of the SVN repository by poking the ``/change_hook/poller`` URL from a commit hook like this:
 
@@ -353,13 +358,14 @@ GitLab hook
 
 .. code-block:: python
 
-    c['www'] = dict(...,
-        change_hook_dialects={
+    c['www'] = {
+        ...,
+        "change_hook_dialects": {
             'gitlab' : {
                 'secret': '...',
             },
         },
-    )
+    }
 
 
 The GitLab hook has the following parameters:
@@ -405,9 +411,10 @@ The Gitorious hook is as simple as GitHub one and it also takes no options.
 
 .. code-block:: python
 
-    c['www'] = dict(...,
-        change_hook_dialects={'gitorious': True},
-    )
+    c['www'] = {
+        ...,
+        "change_hook_dialects": {'gitorious': True},
+    }
 
 When this is set up, you should add a `POST` service pointing to ``/change_hook/gitorious`` relative to the root of the web status.
 For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point Gitorious to ``http://builds.example.com/change_hook/gitorious``.
@@ -440,17 +447,19 @@ For convenience, you can also use the generic option ``custom_class``, e.g.:
     class CustomBase(webhooks.base):
         def getChanges(self, request):
             args = request.args
-            chdict = dict(
-                          revision=args.get(b'revision'),
-                          repository=args.get(b'repository'),
-                          project=args.get(b'project'),
-                          codebase=args.get(b'codebase'))
+            chdict = {
+                "revision": args.get(b'revision'),
+                "repository": args.get(b'repository'),
+                "project": args.get(b'project'),
+                "codebase": args.get(b'codebase')
+            }
             return ([chdict], None)
 
-    c['www'] = dict(...,
-        change_hook_dialects={
+    c['www'] = {
+        ...,
+        "change_hook_dialects": {
             'base' : {
                 'custom_class': CustomBase,
             },
         },
-    )
+    }

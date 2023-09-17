@@ -764,11 +764,16 @@ Example:
                 avatarPattern='(&(objectClass=person)(mail=%(email)s))',
                 avatarData='thumbnailPhoto',
             )
-            c['www'] = dict(port=PORT, allowed_origins=["*"],
-                            url=c['buildbotURL'],
-                            auth=util.RemoteUserAuth(userInfoProvider=userInfoProvider),
-                            avatar_methods=[userInfoProvider,
-                                            util.AvatarGravatar()])
+            c['www'] = {
+                "port": PORT,
+                "allowed_origins": ["*"],
+                "url": c['buildbotURL'],
+                "auth": util.RemoteUserAuth(userInfoProvider=userInfoProvider),
+                "avatar_methods": [
+                    userInfoProvider,
+                    util.AvatarGravatar()
+                ]
+            }
 
 .. note::
 

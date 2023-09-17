@@ -475,7 +475,7 @@ If you have multiple projects in the same repository your split function can att
         project, path = path.split("/", 1)
         f = util.svn.split_file_branches(path)
         if f:
-            info = dict(project=project, path=f[1])
+            info = {"project": project, "path": f[1]}
             if f[0]:
                 info['branch'] = f[0]
             return info
@@ -562,13 +562,13 @@ The following definition for :meth:`my_file_splitter` will do the job:
         projectname = pieces.pop(0)
         if projectname != 'Nevow':
             return None # wrong project
-        return dict(branch=branch, path='/'.join(pieces))
+        return {"branch": branch, "path": "/".join(pieces)}
 
 If you later decide you want to get changes for Quotient as well you could replace the last 3 lines with simply:
 
 .. code-block:: python
 
-    return dict(project=projectname, branch=branch, path='/'.join(pieces))
+    return {"project": projectname, "branch": branch, "path": '/'.join(pieces)}
 
 
 .. _Writing-Change-Sources:

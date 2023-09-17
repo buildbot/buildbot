@@ -500,7 +500,10 @@ Metrics Options
 
 .. code-block:: python
 
-    c['metrics'] = dict(log_interval=10, periodic_interval=10)
+    c['metrics'] = {
+        "log_interval": 10,
+        "periodic_interval": 10
+    }
 
 :bb:cfg:`metrics` can be a dictionary that configures various aspects of the metrics subsystem.
 If :bb:cfg:`metrics` is ``None``, then metrics collection, logging and reporting will be disabled.
