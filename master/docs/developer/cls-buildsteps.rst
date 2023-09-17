@@ -205,7 +205,7 @@ BuildStep
         The dictionary can have a ``step`` key with a unicode value giving a summary for display with the step.
         This method is only called while the step is running.
 
-        New-style build steps should override this method to provide a more interesting summary than the default ``u"running"``.
+        New-style build steps should override this method to provide a more interesting summary than the default ``"running"``.
 
     .. py:method:: getResultSummary()
 

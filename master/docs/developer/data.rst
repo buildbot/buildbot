@@ -357,9 +357,9 @@ See that module's description for details.
         The get() method from endpoint should return following data structure::
 
             {
-                "raw": u"raw data to be sent to the http client",
-                "mime-type": u"<mime-type>",
-                "filename": u"filename_to_be_used_in_content_disposition_attachement_header"
+                "raw": "raw data to be sent to the http client",
+                "mime-type": "<mime-type>",
+                "filename": "filename_to_be_used_in_content_disposition_attachement_header"
             }
 
     .. py:method:: get(options, resultSpec, kwargs)

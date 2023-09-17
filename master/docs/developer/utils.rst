@@ -1140,7 +1140,7 @@ For example, a particular daily scheduler could be configured on multiple master
             def getResultSummary(self):
                 # access the service attribute
                 service = self.master.namedServices['myService']
-                return dict(step=u"arg value: %d" % (service.arg1,))
+                return dict(step="arg value: %d" % (service.arg1,))
 
         class MyService(BuildbotService):
             name = "myService"
