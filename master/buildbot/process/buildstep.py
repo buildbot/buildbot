@@ -277,6 +277,7 @@ class BuildStep(results.ResultComputingConfigMixin,
                          f"{repr(self.updateBuildSummaryPolicy)}")
         self._acquiringLocks = []
         self.stopped = False
+        self.timed_out = False
         self.master = None
         self.statistics = {}
         self.logs = {}
@@ -371,6 +372,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         if self.results != SUCCESS:
             stepsumm += f' ({statusToString(self.results)})'
+            if self.timed_out:
+                stepsumm += " (timed out)"
 
         return {'step': stepsumm}
 
@@ -766,6 +769,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         command.worker = self.worker
         try:
             res = yield command.run(self, self.remote, self.build.builder.name)
+            if command.remote_failure_reason in ("timeout", "timeout_without_output"):
+                self.timed_out = True
         finally:
             self.cmd = None
         return res
@@ -961,6 +966,8 @@ class ShellMixin:
         if summary:
             if self.results != SUCCESS:
                 summary += f' ({statusToString(self.results)})'
+                if self.timed_out:
+                    summary += " (timed out)"
             return {'step': summary}
         return super().getResultSummary()
 

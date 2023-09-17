@@ -188,6 +188,10 @@ BuildStep
         If false, then the step is running.
         If true, the step is not running, or has been interrupted.
 
+    .. py:attribute:: timed_out
+
+        If ``True``, then one or more remote commands of the step timed out.
+
     A step can indicate its up-to-the-moment status using a short summary string.
     These methods allow step subclasses to produce such summaries.
 
