@@ -206,6 +206,8 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
 
         if self.results != results.SUCCESS:
             description += f' ({results.statusToString(self.results)})'
+            if self.timed_out:
+                description += " (timed out)"
 
         return {'step': description}
 

@@ -168,5 +168,7 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
         if self.results != SUCCESS:
             summary += f' ({statusToString(self.results)})'
+            if self.timed_out:
+                summary += " (timed out)"
 
         return {'step': summary}

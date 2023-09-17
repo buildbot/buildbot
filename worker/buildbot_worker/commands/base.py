@@ -26,7 +26,7 @@ from buildbot_worker.exceptions import AbandonChain
 from buildbot_worker.interfaces import IWorkerCommand
 
 # The following identifier should be updated each time this file is changed
-command_version = "3.1"
+command_version = "3.2"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -70,6 +70,7 @@ command_version = "3.1"
 #    * "slavedest" command argument renamed to "workerdest" in downloadFile
 #      command.
 #  >= 3.1: rmfile command added to remove a file
+#  >= 3.2: shell command now reports failure reason in case the command timed out.
 
 
 @implementer(IWorkerCommand)

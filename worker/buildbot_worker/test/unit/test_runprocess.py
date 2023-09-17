@@ -306,6 +306,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         self.assertTrue(('stdout', nl('hello\n')) not in self.updates, self.show())
         self.assertTrue(('rc', FATAL_RC) in self.updates, self.show())
+        self.assertTrue(("failure_reason", "timeout_without_output") in self.updates, self.show())
 
     @defer.inlineCallbacks
     def testCommandMaxTime(self):
@@ -320,6 +321,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         self.assertTrue(('stdout', nl('hello\n')) not in self.updates, self.show())
         self.assertTrue(('rc', FATAL_RC) in self.updates, self.show())
+        self.assertTrue(("failure_reason", "timeout") in self.updates, self.show())
 
     @compat.skipUnlessPlatformIs("posix")
     @defer.inlineCallbacks

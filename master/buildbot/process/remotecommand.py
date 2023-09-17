@@ -59,6 +59,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.stdioLogName = stdioLogName
         self._startTime = None
         self._remoteElapsed = None
+        self.remote_failure_reason = None
         self.remote_command = remote_command
         self.args = args
         self.ignore_updates = ignore_updates
@@ -366,9 +367,11 @@ class RemoteCommand(base.RemoteCommandImpl):
             yield self.add_header_lines(f"program finished with exit code {rc}\n")
         if key == "elapsed":
             self._remoteElapsed = value
+        if key == "failure_reason":
+            self.remote_failure_reason = value
 
         # TODO: these should be handled at the RemoteCommand level
-        if key not in ('stdout', 'stderr', 'header', 'rc'):
+        if key not in ('stdout', 'stderr', 'header', 'rc', "failure_reason"):
             if key not in self.updates:
                 self.updates[key] = []
             self.updates[key].append(value)

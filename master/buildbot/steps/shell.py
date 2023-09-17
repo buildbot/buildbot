@@ -518,6 +518,8 @@ class Test(WarningCountingShellCommand):
                 summary = join_list(description)
                 if self.results != SUCCESS:
                     summary += f' ({statusToString(self.results)})'
+                    if self.timed_out:
+                        summary += " (timed out)"
                 return {'step': summary}
 
         return super().getResultSummary()
