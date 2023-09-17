@@ -84,11 +84,7 @@ def get_www_frontend_config_dict(master, www_config):
 def serialize_www_frontend_config_dict_to_json(config):
 
     def to_json(obj):
-        try:
-            obj = IConfigured(obj).getConfigDict()
-        except TypeError:
-            # this happens for old style classes (not deriving objects)
-            pass
+        obj = IConfigured(obj).getConfigDict()
         if isinstance(obj, dict):
             return obj
         # don't leak object memory address
