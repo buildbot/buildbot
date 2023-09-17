@@ -152,6 +152,9 @@ class Command(object):
                              self.__class__.__name__, ", ".join(missingArgs)))
         self.setup(args)
 
+    def log_msg(self, msg, *args):
+        log.msg(u"(command {0}): {1}".format(self.command_id, msg), *args)
+
     def setup(self, args):
         """Override this in a subclass to extract items from the args dict."""
 
@@ -178,9 +181,9 @@ class Command(object):
     def sendStatus(self, status):
         """Send a status update to the master."""
         if self.debug:
-            log.msg("sendStatus", status)
+            self.log_msg("sendStatus: {0}".format(status))
         if not self.running:
-            log.msg("would sendStatus but not .running")
+            self.log_msg("would sendStatus but not .running")
             return
         self.protocol_command.send_update(status)
 
@@ -197,8 +200,7 @@ class Command(object):
 
     def _abandonOnFailure(self, rc):
         if not isinstance(rc, int):
-            log.msg("weird, _abandonOnFailure was given rc={0} ({1})".format(
-                    rc, type(rc)))
+            self.log_msg("weird, _abandonOnFailure was given rc={0} ({1})".format(rc, type(rc)))
         assert isinstance(rc, int)
         if rc != 0:
             raise AbandonChain(rc)
@@ -208,8 +210,8 @@ class Command(object):
         self.sendStatus([('rc', 0)])
 
     def _checkAbandoned(self, why):
-        log.msg("_checkAbandoned", why)
+        self.log_msg("_checkAbandoned", why)
         why.trap(AbandonChain)
-        log.msg(" abandoning chain", why.value)
+        self.log_msg(" abandoning chain", why.value)
         self.sendStatus([('rc', why.value.args[0])])
         return None

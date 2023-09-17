@@ -30,7 +30,7 @@ class TransferCommand(Command):
 
     def finished(self, res):
         if self.debug:
-            log.msg('finished: stderr={0!r}, rc={1!r}'.format(self.stderr, self.rc))
+            self.log_msg('finished: stderr={0!r}, rc={1!r}'.format(self.stderr, self.rc))
 
         # don't use self.sendStatus here, since we may no longer be running
         # if we have been interrupted
@@ -42,7 +42,7 @@ class TransferCommand(Command):
 
     def interrupt(self):
         if self.debug:
-            log.msg('interrupted')
+            self.log_msg('interrupted')
         if self.interrupted:
             return
         self.rc = 1
@@ -79,7 +79,7 @@ class WorkerFileUploadCommand(TransferCommand):
 
     def start(self):
         if self.debug:
-            log.msg('WorkerFileUploadCommand started')
+            self.log_msg('WorkerFileUploadCommand started')
 
         access_time = None
         modified_time = None
@@ -90,13 +90,13 @@ class WorkerFileUploadCommand(TransferCommand):
 
             self.fp = open(self.path, 'rb')
             if self.debug:
-                log.msg("Opened '{0}' for upload".format(self.path))
+                self.log_msg("Opened '{0}' for upload".format(self.path))
         except Exception:
             self.fp = None
             self.stderr = "Cannot open file '{0}' for upload".format(self.path)
             self.rc = 1
             if self.debug:
-                log.msg("Cannot open file '{0}' for upload".format(self.path))
+                self.log_msg("Cannot open file '{0}' for upload".format(self.path))
 
         self.sendStatus([('header', "sending {0}\n".format(self.path))])
 
@@ -124,7 +124,7 @@ class WorkerFileUploadCommand(TransferCommand):
             d1 = self.protocol_command.protocol_update_upload_file_close(self.writer)
 
             def eb(f2):
-                log.msg("ignoring error from remote close():")
+                self.log_msg("ignoring error from remote close():")
                 log.err(f2)
             d1.addErrback(eb)
             d1.addBoth(lambda _: f)  # always return _loop failure
@@ -153,7 +153,7 @@ class WorkerFileUploadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('WorkerFileUploadCommand._writeBlock(): end')
+                self.log_msg('WorkerFileUploadCommand._writeBlock(): end')
             return True
 
         length = self.blocksize
@@ -170,10 +170,10 @@ class WorkerFileUploadCommand(TransferCommand):
             data = self.fp.read(length)
 
         if self.debug:
-            log.msg('WorkerFileUploadCommand._writeBlock(): ' +
-                    'allowed={0} readlen={1}'.format(length, len(data)))
+            self.log_msg('WorkerFileUploadCommand._writeBlock(): ' +
+                         'allowed={0} readlen={1}'.format(length, len(data)))
         if not data:
-            log.msg("EOF: callRemote(close)")
+            self.log_msg("EOF: callRemote(close)")
             return True
 
         if self.remaining is not None:
@@ -202,10 +202,10 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
 
     def start(self):
         if self.debug:
-            log.msg('WorkerDirectoryUploadCommand started')
+            self.log_msg('WorkerDirectoryUploadCommand started')
 
         if self.debug:
-            log.msg("path: {0!r}".format(self.path))
+            self.log_msg("path: {0!r}".format(self.path))
 
         # Create temporary archive
         fd, self.tarname = tempfile.mkstemp(prefix='buildbot-transfer-')
@@ -292,7 +292,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
     def start(self):
         if self.debug:
-            log.msg('WorkerFileDownloadCommand starting')
+            self.log_msg('WorkerFileDownloadCommand starting')
 
         dirname = os.path.dirname(self.path)
         if not os.path.exists(dirname):
@@ -301,7 +301,7 @@ class WorkerFileDownloadCommand(TransferCommand):
         try:
             self.fp = open(self.path, 'wb')
             if self.debug:
-                log.msg("Opened '{0}' for download".format(self.path))
+                self.log_msg("Opened '{0}' for download".format(self.path))
             if self.mode is not None:
                 # note: there is a brief window during which the new file
                 # will have the worker's default (umask) mode before we
@@ -319,7 +319,7 @@ class WorkerFileDownloadCommand(TransferCommand):
             self.stderr = "Cannot open file '{0}' for download".format(self.path)
             self.rc = 1
             if self.debug:
-                log.msg("Cannot open file '{0}' for download".format(self.path))
+                self.log_msg("Cannot open file '{0}' for download".format(self.path))
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -353,7 +353,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('WorkerFileDownloadCommand._readBlock(): end')
+                self.log_msg('WorkerFileDownloadCommand._readBlock(): end')
             return True
 
         length = self.blocksize
@@ -373,8 +373,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
     def _writeData(self, data):
         if self.debug:
-            log.msg('WorkerFileDownloadCommand._readBlock(): readlen=%d' %
-                    len(data))
+            self.log_msg('WorkerFileDownloadCommand._readBlock(): readlen={0}'.format(len(data)))
         if not data:
             return True
 
