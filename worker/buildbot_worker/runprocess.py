@@ -698,12 +698,14 @@ class RunProcess(object):
         msg = (
             "command timed out: {0} seconds without output running {1}".format(
             self.timeout, self.fake_command))
+        self.send_update([("failure_reason", "timeout_without_output")])
         self.kill(msg)
 
     def doMaxTimeout(self):
         self.maxTimeoutTimer = None
         msg = "command timed out: {0} seconds elapsed running {1}".format(
             self.maxTime, self.fake_command)
+        self.send_update([("failure_reason", "timeout")])
         self.kill(msg)
 
     def isDead(self):

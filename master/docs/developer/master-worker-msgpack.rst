@@ -824,6 +824,11 @@ Runs a ``shell`` command on the worker.
     If command succeeded, worker sends ``rc`` value 0 as an ``update`` message ``args`` key-value pair.
     It can also send many other ``update`` messages with keys such as ``header``, ``stdout`` or ``stderr`` to inform about command execution.
     If command failed, it sends ``rc`` value with the error number.
+    If command timed out, it sends ``failure_reason`` key.
+    The value of the ``failure_reason`` key can be one of the following:
+
+     - ``timeout`` if the command timed out due to time specified by the ``maxTime`` parameter being exceeded.
+     - ``timeout_without_output`` if the command timed out due to time specified by the ``timeout`` parameter being exceeded.
 
     The basic structure of worker ``update`` message is explained in section :ref:`MsgPack_Keys_And_Values_Message`.
 
@@ -1146,6 +1151,14 @@ Commands may have their own update names so only common ones are described here.
     It represents an exit code of a process.
     0 if the process exit was successful.
     Any other number represents a failure.
+
+``failure_reason``
+
+    Value is a string and describes additional scenarios when a process failed.
+    The value of the ``failure_reason`` key can be one of the following:
+
+     - ``timeout`` if the command timed out due to time specified by the ``maxTime`` parameter being exceeded.
+     - ``timeout_without_output`` if the command timed out due to time specified by the ``timeout`` parameter being exceeded.
 
 ``header``
     Value is a string of a header.
