@@ -105,12 +105,6 @@ warnings.filterwarnings('ignore', ".*time.clock has been deprecated in Python 3.
 warnings.filterwarnings('ignore', ".*The usage of `cmp` is deprecated and will be removed "
                                   "on or after.*", DeprecationWarning)
 
-# ignore a warning emitted by pkg_resources when importing certain namespace packages
-warnings.filterwarnings('ignore', ".*Not importing directory .*/zope: missing __init__",
-                        category=ImportWarning)
-warnings.filterwarnings('ignore', ".*Not importing directory .*/sphinxcontrib: missing __init__",
-                        category=ImportWarning)
-
 # ignore warnings from importing lib2to3 via buildbot_pkg ->
 # setuptools.command.build_py -> setuptools.lib2to3_ex -> lib2to3
 # https://github.com/pypa/setuptools/issues/2086
@@ -136,12 +130,6 @@ warnings.filterwarnings('ignore', "'pipes' is deprecated and slated for removal 
 
 # shown on Python 3.7 on Windows
 warnings.filterwarnings('ignore', "SelectableGroups dict interface is deprecated. Use select.",
-                        category=DeprecationWarning)
-
-# shown on Python 3.11
-warnings.filterwarnings('ignore', ".*pkg_resources is deprecated as an API.*",
-                        category=DeprecationWarning)
-warnings.filterwarnings('ignore', ".*Deprecated call to `pkg_resources.declare_namespace.*",
                         category=DeprecationWarning)
 
 # boto3 shows this warning when on old Python

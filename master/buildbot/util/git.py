@@ -14,7 +14,8 @@
 # Copyright Buildbot Team Members
 
 import re
-from pkg_resources import parse_version
+
+from packaging.version import parse as parse_version
 
 from twisted.internet import defer
 from twisted.python import log

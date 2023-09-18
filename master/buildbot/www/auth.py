@@ -14,10 +14,11 @@
 # Copyright Buildbot Team Members
 
 
-import pkg_resources
 import re
 from abc import ABCMeta
 from abc import abstractmethod
+
+from packaging.version import parse as parse_version
 
 import twisted
 from twisted.cred.checkers import FilePasswordDB
@@ -116,8 +117,8 @@ class RemoteUserAuth(AuthBase):
             self.headerRegex = re.compile(unicode2bytes(headerRegex))
 
     def getLoginResource(self):
-        current_version = pkg_resources.parse_version(twisted.__version__)
-        if current_version < pkg_resources.parse_version("22.10.0"):
+        current_version = parse_version(twisted.__version__)
+        if current_version < parse_version("22.10.0"):
             from twisted.web.resource import ForbiddenResource
             return ForbiddenResource(message="URL is not supported for authentication")
 
