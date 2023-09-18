@@ -333,6 +333,10 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        # On slower machines with high CPU oversubscription this test may take longer to run than
+        # the default timeout.
+        self.timeout = 10
+
         if httpclientservice.txrequests is None or httpclientservice.treq is None:
             raise unittest.SkipTest('this test requires txrequests and treq')
         site = server.Site(MyResource())

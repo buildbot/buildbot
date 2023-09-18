@@ -44,6 +44,10 @@ class HangCheckTests(TestCase):
     Tests for HangCheckProtocol.
     """
 
+    # On slower machines with high CPU oversubscription this test may take longer to run than
+    # the default timeout.
+    timeout = 20
+
     def test_disconnects(self):
         """
         When connecting to a server that doesn't send any data,
@@ -216,9 +220,9 @@ def connected_server_and_client(case, server_factory, client_factory):
 
 
 class EndToEndHangCheckTests(TestCase):
-    """
-    End to end test for HangCheckProtocol.
-    """
+    # On slower machines with high CPU oversubscription this test may take longer to run than
+    # the default timeout.
+    timeout = 20
 
     @defer.inlineCallbacks
     def test_http(self):
