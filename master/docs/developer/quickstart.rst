@@ -21,6 +21,7 @@ Buildbot uses Twisted `trial <http://twistedmatrix.com/trac/wiki/TwistedTrial>`_
 Windows users also need GNU make on their machines.
 The easiest way is to install it via the choco package manager, ``choco install make``.
 But WSL or MSYS2 is an even better option because of the integrated bash.
+Note that on Windows you need to create virtualenv manually.
 
 Following is a quick shell session to put you on the right track, including running the test suite.
 
@@ -32,7 +33,9 @@ Following is a quick shell session to put you on the right track, including runn
 
     # run a helper script which creates the virtualenv for development.
     # Virtualenv allows to install python packages without affecting
-    # other parts of the system
+    # other parts of the system.
+    # This script does not support Windows: you should create the virtualenv and install
+    # requirements-ci.txt manually.
     make virtualenv
 
     # activate the virtualenv (you should now see (.venv) in your shell prompt)
