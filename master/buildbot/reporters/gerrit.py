@@ -16,6 +16,7 @@
 Push events to Gerrit
 """
 
+import re
 import time
 import warnings
 
@@ -419,6 +420,16 @@ class GerritStatusPush(service.BuildbotService):
             if project is not None and revision is not None:
                 self.sendCodeReview(project, revision, result)
                 return
+
+        # Gerrit + GitPoller (when configured with project argument)
+        build_refspec_re = r'^refs/changes/(\d+)/(\d+)/(\d+)$'
+        build_branch = getProperty(build, 'branch')
+        build_project = getProperty(build, 'project')
+        match = re.search(build_refspec_re, build_branch)
+        if match and len(build_project) > 0:
+            revision = '%s,%s' % (match.group(2), match.group(3))
+            self.sendCodeReview(build_project, revision, result)
+            return
 
     def sendCodeReview(self, project, revision, result):
         gerrit_version = self.getCachedVersion()

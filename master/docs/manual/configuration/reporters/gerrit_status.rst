@@ -103,3 +103,30 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 .. seealso::
 
    :src:`master/docs/examples/git_gerrit.cfg` and :src:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution provide a full example setup of Git+Gerrit or Repo+Gerrit of :bb:reporter:`GerritStatusPush`.
+
+:class:`GerritStatusPush` is usually used with either :class:`GerritChangeSource` or :class:`GerritEventLogPoller`. But it can also work with a :class:`GitPoller` (when it is configured with the `project` argument). For example, with a :class:`GitPoller` configured as follows, reviews are sent back to the Gerrit server by :class:`GerritStatusPush` for refspecs matching the `refs/changes/n/n/n` syntax:
+
+.. code-block:: python
+
+    def accept_branch(refspec):
+        # Allow the following forms:
+        #   refs/heads/main
+        #   refs/heads/master
+        #   refs/heads/1.2
+        branch_re=r'^refs/heads/(main|master|\d+\.\d+)$'
+        if re.search(branch_re, refspec):
+            return True
+
+        # Allow the following forms:
+        #   refs/changes/81/281/2
+        branch_re=r'^refs/changes/\d+/\d+/\d+$'
+        if re.search(branch_re, refspec):
+            return True
+
+        return False
+
+    cs = changes.GitPoller(
+        'git+ssh://user@gerrit.example.org:29418/myproject',
+        project='myproject',
+        branches=accept_branch)
+    c['change_source'].append(cs)

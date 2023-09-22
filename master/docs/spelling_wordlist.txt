@@ -696,6 +696,7 @@ refactoring
 Refactoring
 refactorings
 refspec
+refspecs
 regex
 regexes
 regexp
