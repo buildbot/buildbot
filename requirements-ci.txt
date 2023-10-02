@@ -71,7 +71,7 @@ markdown2==2.4.10
 MarkupSafe==2.1.3
 mccabe==0.7.0
 more-itertools==10.1.0
-moto==4.2.3
+moto==4.2.5
 olefile==0.46
 packaging==23.1
 parameterized==0.9.0
