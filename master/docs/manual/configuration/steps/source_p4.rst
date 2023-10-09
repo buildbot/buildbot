@@ -104,6 +104,12 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
     This is added directly to the client spec's ``LineEnd`` property.
     The default is ``local``.
 
+``p4client_type``
+    (optional): The type of client to create.
+    A client type can be set to create a client better suited to CI use.
+    Learn more about client type in the `P4 documentation <https://www.perforce.com/manuals/p4sag/Content/P4SAG/performance.readonly.html>`_
+    The default is ``None``.
+
 ``p4extra_args``
     (optional): Extra arguments to be added to the P4 command-line for the ``sync`` command.
     So for instance if you want to sync only to populate a Perforce proxy (without actually syncing files to disk), you can do:
