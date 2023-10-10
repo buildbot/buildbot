@@ -48,6 +48,7 @@ class P4(Source):
     renderables = ['mode', 'p4base', 'p4client', 'p4viewspec', 'p4branch', 'p4passwd', 'p4port',
             'p4user']
     possible_modes = ('incremental', 'full')
+    possible_client_types = (None, 'readonly', 'partitioned')
 
     def __init__(self, mode='incremental',
                  method=None, p4base=None, p4branch=None,
@@ -57,6 +58,7 @@ class P4(Source):
                  p4client=Interpolate(
                      'buildbot_%(prop:workername)s_%(prop:buildername)s'),
                  p4client_spec_options='allwrite rmdir',
+                 p4client_type=None,
                  p4extra_args=None,
                  p4bin='p4',
                  use_tickets=False,
@@ -77,6 +79,7 @@ class P4(Source):
         self.p4line_end = p4line_end
         self.p4client = p4client
         self.p4client_spec_options = p4client_spec_options
+        self.p4client_type = p4client_type
         self.p4extra_args = p4extra_args
         self.use_tickets = use_tickets
         self.stream = stream
@@ -120,6 +123,12 @@ class P4(Source):
 
         if self.p4client_spec_options is None:
             self.p4client_spec_options = ''
+
+        if self.p4client_type not in self.possible_client_types and \
+                not interfaces.IRenderable.providedBy(self.p4client_type):
+            config.error(
+                f"p4client_type {self.p4client_type} is not an IRenderable, "
+                "or one of {self.possible_client_types}")
 
     @defer.inlineCallbacks
     def run_vc(self, branch, revision, patch):
@@ -277,6 +286,9 @@ class P4(Source):
             client_spec += f"LineEnd:\t{self.p4line_end}\n\n"
         else:
             client_spec += "LineEnd:\tlocal\n\n"
+
+        if self.p4client_type is not None:
+            client_spec += f"Type:\t{self.p4client_type}\n\n"
 
         # Perforce generates the view for stream-associated workspaces
         if self.stream:

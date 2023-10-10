@@ -1042,3 +1042,113 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         )
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
+
+    def test_client_type_readonly(self):
+        self.setup_step(P4(p4port='localhost:12000',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1',
+                          p4passwd='pass', p4client_type='readonly'))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent(f'''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t{root_dir}
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        Type:\treadonly
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''')
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['p4', '-V'])
+            .exit(0),
+
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000',
+                                 '-u', 'user', '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', 'client', '-i'],
+                        initial_stdin=client_spec)
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000',
+                                 '-u', 'user', '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', '-ztag', 'changes',
+                                 '-m1', '//p4_client1/...#head'])
+            .stdout("... change 100")
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=(['p4', '-p', 'localhost:12000',
+                                  '-u', 'user', '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                  '-c', 'p4_client1', 'sync', '//p4_client1/...@100']))
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_client_type_partitioned(self):
+        self.setup_step(P4(p4port='localhost:12000',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1',
+                          p4passwd='pass', p4client_type='partitioned'))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent(f'''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t{root_dir}
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        Type:\tpartitioned
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''')
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['p4', '-V'])
+            .exit(0),
+
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000',
+                                 '-u', 'user', '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', 'client', '-i'],
+                        initial_stdin=client_spec)
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000',
+                                 '-u', 'user', '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', '-ztag', 'changes',
+                                 '-m1', '//p4_client1/...#head'])
+            .stdout("... change 100")
+            .exit(0),
+            ExpectShell(workdir='wkdir',
+                        command=(['p4', '-p', 'localhost:12000',
+                                  '-u', 'user', '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                  '-c', 'p4_client1', 'sync', '//p4_client1/...@100']))
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
