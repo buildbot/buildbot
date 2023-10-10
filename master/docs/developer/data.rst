@@ -360,6 +360,16 @@ See that module's description for details.
                     "filename": "filename_to_be_used_in_content_disposition_attachement_header"
                 }
 
+        - ``EndpointKind.RAW_INLINE`` - returns a raw resource which is shown inline in HTTP client.
+
+            The difference between ``RAW`` resource is that content-disposition header is not set.
+            The get() method from endpoint should return following data structure::
+
+                {
+                    "raw": "raw data to be sent to the http client",
+                    "mime-type": "<mime-type>"
+                }
+
     .. py:attribute:: isCollection
 
         :type: boolean

@@ -29,6 +29,7 @@ class EndpointKind(enum.Enum):
     SINGLE = 1
     COLLECTION = 2
     RAW = 3
+    RAW_INLINE = 4
 
 
 class ResourceType:

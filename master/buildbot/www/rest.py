@@ -256,11 +256,12 @@ class V2RootResource(resource.Resource):
             endpoint.kind == EndpointKind.COLLECTION
         )
 
-    def encodeRaw(self, data, request):
+    def encodeRaw(self, data, request, is_inline):
         request.setHeader(b"content-type",
                           unicode2bytes(data['mime-type']) + b'; charset=utf-8')
-        request.setHeader(b"content-disposition",
-                          b'attachment; filename=' + unicode2bytes(data['filename']))
+        if not is_inline:
+            request.setHeader(b"content-disposition",
+                              b'attachment; filename=' + unicode2bytes(data['filename']))
         request.write(unicode2bytes(data['raw']))
         return
 
@@ -289,7 +290,11 @@ class V2RootResource(resource.Resource):
                 return
 
             if ep.kind == EndpointKind.RAW:
-                self.encodeRaw(data, request)
+                self.encodeRaw(data, request, False)
+                return
+
+            if ep.kind == EndpointKind.RAW_INLINE:
+                self.encodeRaw(data, request, True)
                 return
 
             # post-process any remaining parts of the resultspec
