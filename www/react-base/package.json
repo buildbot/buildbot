@@ -52,6 +52,7 @@
     "react-copy-to-clipboard": "^5.1.0",
     "react-dev-utils": "^11.0.3",
     "react-dom": "^18.2.0",
+    "react-hotkeys-hook": "^4.4.0",
     "react-icons": "^4.8.0",
     "react-refresh": "^0.8.3",
     "react-router-dom": "^6.3.0",

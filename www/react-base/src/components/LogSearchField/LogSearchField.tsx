@@ -16,7 +16,7 @@
 */
 
 import './LogSearchField.scss'
-import {useState} from "react";
+import {Ref, useState} from "react";
 import {FaChevronDown, FaChevronUp, FaSearch} from "react-icons/fa";
 
 export type LogSearchButtonProps = {
@@ -25,10 +25,12 @@ export type LogSearchButtonProps = {
   onTextChanged: (text: string) => void;
   onPrevClicked: () => void;
   onNextClicked: () => void;
+  inputRef: Ref<HTMLInputElement>;
 };
 
 export const LogSearchField = ({currentResult, totalResults,
-                                onTextChanged, onPrevClicked, onNextClicked}: LogSearchButtonProps) => {
+                                onTextChanged, onPrevClicked, onNextClicked,
+                                inputRef}: LogSearchButtonProps) => {
   const [searchText, setSearchText] = useState<string>('');
   const [hasFocus, setHasFocus] = useState<boolean>(false);
 
@@ -60,6 +62,7 @@ export const LogSearchField = ({currentResult, totalResults,
     <form role="search" className="bb-log-search-field">
       <FaSearch className="bb-log-search-field-icon"/>
       <input className="bb-log-search-field-text" type="text" value={searchText}
+             ref={inputRef}
              onFocus={() => setHasFocus(true)} onBlur={() => setHasFocus(false)}
              onChange={e => onSearchTextChanged(e.target.value)}
              onKeyDown={e => onKeyDown(e)}
