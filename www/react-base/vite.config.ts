@@ -109,7 +109,11 @@ export default defineConfig({
       '/ws': {
         target: proxyTargetWs,
         ws: true,
-        secure: false // the proxy attempts to verify certificate using localhost hostname
+        secure: false, // the proxy attempts to verify certificate using localhost hostname
+        headers: {
+          'Host': proxy.host,
+          'Origin': proxyTargetHttp,
+        },
       },
       '/avatar': proxyTargetHttp,
       '/img': proxyTargetHttp,
