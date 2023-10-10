@@ -169,6 +169,29 @@ class Tests(interfaces.InterfaceTests):
         dblist = yield self.db.projects.get_projects()
         self.assertEqual(dblist, [])
 
+    @defer.inlineCallbacks
+    def test_get_active_projects(self):
+        yield self.insert_test_data([
+            fakedb.Project(id=1, name='fake_project1'),
+            fakedb.Project(id=2, name='fake_project2'),
+            fakedb.Project(id=3, name='fake_project3'),
+            fakedb.Master(id=100),
+            fakedb.Builder(id=200, name="builder_200", projectid=2),
+            fakedb.Builder(id=201, name="builder_201", projectid=3),
+            fakedb.BuilderMaster(id=300, builderid=200, masterid=100),
+        ])
+        dblist = yield self.db.projects.get_active_projects()
+        for dbdict in dblist:
+            validation.verifyDbDict(self, 'projectdict', dbdict)
+        self.assertEqual(dblist, [{
+            "id": 2,
+            "name": "fake_project2",
+            "slug": "fake_project2",
+            "description": None,
+            "description_format": None,
+            "description_html": None,
+        }])
+
 
 class RealTests(Tests):
 
@@ -190,7 +213,12 @@ class TestRealDB(unittest.TestCase,
 
     @defer.inlineCallbacks
     def setUp(self):
-        yield self.setUpConnectorComponent(table_names=['projects'])
+        yield self.setUpConnectorComponent(table_names=[
+            "projects",
+            "builders",
+            "masters",
+            "builder_masters"
+        ])
 
         self.db.projects = projects.ProjectsConnectorComponent(self.db)
         self.master = self.db.master

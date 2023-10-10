@@ -95,6 +95,24 @@ class FakeProjectsComponent(FakeDBComponent):
             rv.append(self._row2dict(project))
         return rv
 
+    def get_active_projects(self):
+        rv = []
+
+        active_builderids = {
+            builderid for builderid, _ in self.db.builders.builder_masters.values()
+        }
+
+        active_projectids = {
+            builder["projectid"] for id, builder in self.db.builders.builders.items()
+            if id in active_builderids
+        }
+
+        for id, project in self.projects.items():
+            if id not in active_projectids:
+                continue
+            rv.append(self._row2dict(project))
+        return rv
+
     def update_project_info(
         self,
         projectid,

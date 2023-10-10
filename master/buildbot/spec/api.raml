@@ -361,6 +361,11 @@ types:
 /projects:
     description: This path selects all projects
     get:
+        queryParameters:
+            active:
+                type: boolean
+                description: Whether to return only active projects (with active builders) or all
+                required: false
         is:
         - bbget: {bbtype: project}
 
