@@ -125,8 +125,8 @@ class Endpoint:
         if hasattr(self, "isCollection"):
             warn_deprecated("3.10.0", "Endpoint.isCollection has been deprecated, "
                             "please set \"kind\" attribute instead. "
-                            "isRaw = True is equivalent to kind = EndpointKind.COLLECTION")
-            if self.isRaw:
+                            "isCollection = True is equivalent to kind = EndpointKind.COLLECTION")
+            if self.isCollection:
                 self.kind = EndpointKind.COLLECTION
 
     def get(self, resultSpec, kwargs):
