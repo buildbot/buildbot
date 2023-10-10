@@ -119,7 +119,7 @@ export const ChangeDetails = ({change, compact, showDetails, setShowDetails}: Ch
         <OverlayTrigger placement="top"
                         overlay={popoverWithText("comments-" + change.id, change.comments)}>
           {
-            change.revlink !== null
+            change.revlink
             ? <a href={change.revlink}>{change.comments.split("\n")[0]}</a>
             : <span>{change.comments.split("\n")[0]}</span>
           }
