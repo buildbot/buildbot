@@ -39,7 +39,7 @@ def _db2data(master):
 
 class MasterEndpoint(base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /masters/n:masterid
         /builders/n:builderid/masters/n:masterid
@@ -60,7 +60,7 @@ class MasterEndpoint(base.Endpoint):
 
 class MastersEndpoint(base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /masters
         /builders/n:builderid/masters

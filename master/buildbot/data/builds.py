@@ -73,7 +73,7 @@ class Db2DataMixin:
 
 class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builds/n:buildid
         /builders/n:builderid/builds/n:number
@@ -132,7 +132,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
 class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builds
         /builders/n:builderid/builds

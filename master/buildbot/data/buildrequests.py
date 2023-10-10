@@ -84,7 +84,7 @@ class Db2DataMixin:
 
 class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /buildrequests/n:buildrequestid
     """
@@ -152,7 +152,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /buildrequests
         /builders/n:builderid/buildrequests

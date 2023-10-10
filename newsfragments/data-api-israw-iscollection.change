@@ -1,0 +1,3 @@
+The ``isRaw`` and ``isCollection`` attributes of the ``Endpoint`` type have been deprecated.
+``Endpoint`` is used to extend the Buildbot API.
+Us a replacement use the new ``kind`` attribute.

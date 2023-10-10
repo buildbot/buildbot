@@ -37,7 +37,7 @@ def forceScheduler2Data(sched):
 
 class ForceSchedulerEndpoint(base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /forceschedulers/i:schedulername
     """
@@ -72,7 +72,7 @@ class ForceSchedulerEndpoint(base.Endpoint):
 
 class ForceSchedulersEndpoint(base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /forceschedulers
         /builders/:builderid/forceschedulers

@@ -42,7 +42,7 @@ class Db2DataMixin:
 
 class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /steps/n:stepid
         /builds/n:buildid/steps/i:step_name
@@ -70,7 +70,7 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builds/n:buildid/steps
         /builders/n:builderid/builds/n:build_number/steps

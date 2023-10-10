@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import copy
+import enum
 import functools
 import re
 from collections import UserList
@@ -21,6 +22,13 @@ from collections import UserList
 from twisted.internet import defer
 
 from buildbot.data import exceptions
+from buildbot.warnings import warn_deprecated
+
+
+class EndpointKind(enum.Enum):
+    SINGLE = 1
+    COLLECTION = 2
+    RAW = 3
 
 
 class ResourceType:
@@ -61,14 +69,14 @@ class ResourceType:
     @functools.lru_cache(1)
     def getDefaultEndpoint(self):
         for ep in self.getEndpoints():
-            if not ep.isCollection:
+            if ep.kind != EndpointKind.COLLECTION:
                 return ep
         return None
 
     @functools.lru_cache(1)
     def getCollectionEndpoint(self):
         for ep in self.getEndpoints():
-            if ep.isCollection or ep.isPseudoCollection:
+            if ep.kind == EndpointKind.COLLECTION or ep.isPseudoCollection:
                 return ep
         return None
 
@@ -91,7 +99,7 @@ class SubResource:
         self.rtype = rtype
         self.endpoints = {}
         for endpoint in rtype.endpoints:
-            if endpoint.isCollection:
+            if endpoint.kind == EndpointKind.COLLECTION:
                 self.endpoints[rtype.plural] = endpoint
             else:
                 self.endpoints[rtype.name] = endpoint
@@ -100,14 +108,25 @@ class SubResource:
 class Endpoint:
     pathPatterns = ""
     rootLinkName = None
-    isCollection = False
     isPseudoCollection = False
-    isRaw = False
+    kind = EndpointKind.SINGLE
     parentMapping = {}
 
     def __init__(self, rtype, master):
         self.rtype = rtype
         self.master = master
+        if hasattr(self, "isRaw"):
+            warn_deprecated("3.10.0", "Endpoint.isRaw has been deprecated, "
+                            "please set \"kind\" attribute instead. "
+                            "isRaw = True is equivalent to kind = EndpointKind.RAW")
+            if self.isRaw:
+                self.kind = EndpointKind.RAW
+        if hasattr(self, "isCollection"):
+            warn_deprecated("3.10.0", "Endpoint.isCollection has been deprecated, "
+                            "please set \"kind\" attribute instead. "
+                            "isRaw = True is equivalent to kind = EndpointKind.COLLECTION")
+            if self.isRaw:
+                self.kind = EndpointKind.COLLECTION
 
     def get(self, resultSpec, kwargs):
         raise NotImplementedError
@@ -136,7 +155,7 @@ class Endpoint:
         return ret
 
     def get_kwargs_from_graphql(self, parent, resolve_info, args):
-        if self.isCollection or self.isPseudoCollection:
+        if self.kind == EndpointKind.COLLECTION or self.isPseudoCollection:
             if parent is not None:
                 return self.get_kwargs_from_graphql_parent(
                     parent, resolve_info.parent_type.name

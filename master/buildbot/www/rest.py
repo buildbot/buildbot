@@ -26,6 +26,7 @@ from twisted.python import log
 from twisted.web.error import Error
 
 from buildbot.data import exceptions
+from buildbot.data.base import EndpointKind
 from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
@@ -249,7 +250,11 @@ class V2RootResource(resource.Resource):
     def decodeResultSpec(self, request, endpoint):
         args = request.args
         entityType = endpoint.rtype.entityType
-        return self.master.data.resultspec_from_jsonapi(args, entityType, endpoint.isCollection)
+        return self.master.data.resultspec_from_jsonapi(
+            args,
+            entityType,
+            endpoint.kind == EndpointKind.COLLECTION
+        )
 
     def encodeRaw(self, data, request):
         request.setHeader(b"content-type",
@@ -283,7 +288,7 @@ class V2RootResource(resource.Resource):
                 writeError(msg, errcode=404)
                 return
 
-            if ep.isRaw:
+            if ep.kind == EndpointKind.RAW:
                 self.encodeRaw(data, request)
                 return
 
@@ -292,7 +297,7 @@ class V2RootResource(resource.Resource):
 
             # annotate the result with some metadata
             meta = {}
-            if ep.isCollection:
+            if ep.kind == EndpointKind.COLLECTION:
                 offset, total = data.offset, data.total
                 if offset is None:
                     offset = 0

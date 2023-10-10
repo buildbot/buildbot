@@ -66,7 +66,7 @@ class FixerMixin:
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /changes/n:changeid
     """
@@ -79,7 +79,7 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
 
 class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /changes
         /builders/n:builderid/builds/n:build_number/changes

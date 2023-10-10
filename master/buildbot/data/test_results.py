@@ -38,7 +38,7 @@ class Db2DataMixin:
 
 class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /test_result_sets/n:test_result_setid/results
         """

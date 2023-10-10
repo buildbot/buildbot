@@ -33,7 +33,7 @@ def project_db_to_data(dbdict):
 
 class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /projects/n:projectid
         /projects/i:projectname
@@ -53,7 +53,7 @@ class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
 
 class ProjectsEndpoint(base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     rootLinkName = 'projects'
     pathPatterns = """
         /projects

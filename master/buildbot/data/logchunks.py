@@ -45,7 +45,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
 
     # Note that this is a singular endpoint, even though it overrides the
     # offset/limit query params in ResultSpec
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     isPseudoCollection = True
     pathPatterns = """
         /logchunks
@@ -98,8 +98,7 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
 
     # Note that this is a singular endpoint, even though it overrides the
     # offset/limit query params in ResultSpec
-    isCollection = False
-    isRaw = True
+    kind = base.EndpointKind.RAW
     pathPatterns = """
         /logs/n:logid/raw
         /steps/n:stepid/logs/i:log_slug/raw

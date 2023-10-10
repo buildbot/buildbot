@@ -38,7 +38,7 @@ class EndpointMixin:
 
 class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /logs/n:logid
         /steps/n:stepid/logs/i:log_slug
@@ -67,7 +67,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /steps/n:stepid/logs
         /builds/n:buildid/steps/i:step_name/logs
