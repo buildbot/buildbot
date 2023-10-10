@@ -24,7 +24,7 @@ import {Log, useDataAccessor} from "buildbot-data-js";
 import {FixedSizeList, ListOnItemsRenderedProps} from 'buildbot-ui';
 import AutoSizer, {Size} from "react-virtualized-auto-sizer";
 import {digitCount} from "../../util/Math";
-import {LogDownloadButton} from "../LogDownloadButton/LogDownloadButton";
+import {LogDownloadButtons} from "../LogDownloadButtons/LogDownloadButtons";
 import {LogSearchField} from "../LogSearchField/LogSearchField";
 import {LogTextManager} from "./LogTextManager";
 import {LogViewerTextLineRenderer} from "./LogViewerTextLineRenderer";
@@ -132,7 +132,7 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
                           onPrevClicked={() => manager.setPrevSearchResult()}
                           onNextClicked={() => manager.setNextSearchResult()}
                           inputRef={searchInputRef}/>
-          <LogDownloadButton log={log}/>
+          <LogDownloadButtons log={log}/>
         </div>
       </div>
       <FixedSizeList

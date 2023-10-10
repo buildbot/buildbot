@@ -15,24 +15,31 @@
   Copyright Buildbot Team Members
 */
 
-import './LogDownloadButton.scss';
+import './LogDownloadButtons.scss';
 import {useContext} from "react";
+import {Button, ButtonGroup} from "react-bootstrap";
 import {FaDownload} from "react-icons/fa";
 import {DataClientContext, Log} from "buildbot-data-js";
 
-export type LogDownloadButtonProps = {
+export type LogDownloadButtonsProps = {
   log: Log;
 }
 
-export const LogDownloadButton = ({log}: LogDownloadButtonProps) => {
+export const LogDownloadButtons = ({log}: LogDownloadButtonsProps) => {
   const dataClient = useContext(DataClientContext);
   const apiRootUrl = dataClient.restClient.rootUrl;
 
   return (
-    <a href={`${apiRootUrl}/logs/${log.id}/raw`} title="download log"
-       className="btn btn-default btn-xs bb-log-download-button">
-      <FaDownload/>&nbsp;
-      Download
-    </a>
+    <ButtonGroup>
+      <Button href={`${apiRootUrl}/logs/${log.id}/raw`} variant="default" title="download log"
+        className="bb-log-download-button btn-sm">
+        <FaDownload/>
+      </Button>
+      <Button href={`${apiRootUrl}/logs/${log.id}/raw_inline`} variant="default"
+              title="show log"
+              className="bb-log-download-button btn-sm">
+        Raw
+      </Button>
+    </ButtonGroup>
   );
 }
