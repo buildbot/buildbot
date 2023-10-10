@@ -17,6 +17,7 @@
 
 import './LogViewerText.scss'
 import {forwardRef, useCallback, useMemo, useRef, useState} from 'react';
+import {useHotkeys} from "react-hotkeys-hook";
 import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer} from "mobx-react";
 import {Log, useDataAccessor} from "buildbot-data-js";
@@ -114,6 +115,9 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
     });
   }
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useHotkeys('Ctrl+F', () => { searchInputRef.current?.focus(); }, {preventDefault: true});
+
   const outerElementType = useMemo(() => forwardRef<HTMLDivElement>((props, ref) => (
     <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props}/>
   )), []);
@@ -126,7 +130,8 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
                           totalResults={Math.max(manager.totalSearchResultCount, 0)}
                           onTextChanged={onSearchTextChanged}
                           onPrevClicked={() => manager.setPrevSearchResult()}
-                          onNextClicked={() => manager.setNextSearchResult()}/>
+                          onNextClicked={() => manager.setNextSearchResult()}
+                          inputRef={searchInputRef}/>
           <LogDownloadButton log={log}/>
         </div>
       </div>
