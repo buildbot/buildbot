@@ -37,7 +37,8 @@ export const ProjectsView = observer(() => {
     {caption: "Projects", route: "/projects"}
   ]);
 
-  const projects = useDataApiQuery(() => Project.getAll(accessor));
+  const projects = useDataApiQuery(
+    () => Project.getAll(accessor, {query: {active: true}}));
 
   const filteredProjects = projects.array.filter(project => {
     return project.name.indexOf(projectNameFilter) >= 0;
