@@ -59,6 +59,22 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
+    def get_active_projects(self):
+        def thd(conn):
+            projects_tbl = self.db.model.projects
+            builders_tbl = self.db.model.builders
+            bm_tbl = self.db.model.builder_masters
+
+            q = projects_tbl.select() \
+                .join(builders_tbl) \
+                .join(bm_tbl) \
+                .order_by(projects_tbl.c.name)
+            res = conn.execute(q)
+            return [self._project_dict_from_row(row) for row in res.fetchall()]
+
+        return self.db.pool.do(thd)
+
+    # returns a Deferred that returns a value
     def update_project_info(
         self,
         projectid,
