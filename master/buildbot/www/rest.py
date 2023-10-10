@@ -26,6 +26,7 @@ from twisted.python import log
 from twisted.web.error import Error
 
 from buildbot.data import exceptions
+from buildbot.data.base import EndpointKind
 from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
@@ -249,13 +250,18 @@ class V2RootResource(resource.Resource):
     def decodeResultSpec(self, request, endpoint):
         args = request.args
         entityType = endpoint.rtype.entityType
-        return self.master.data.resultspec_from_jsonapi(args, entityType, endpoint.isCollection)
+        return self.master.data.resultspec_from_jsonapi(
+            args,
+            entityType,
+            endpoint.kind == EndpointKind.COLLECTION
+        )
 
-    def encodeRaw(self, data, request):
+    def encodeRaw(self, data, request, is_inline):
         request.setHeader(b"content-type",
                           unicode2bytes(data['mime-type']) + b'; charset=utf-8')
-        request.setHeader(b"content-disposition",
-                          b'attachment; filename=' + unicode2bytes(data['filename']))
+        if not is_inline:
+            request.setHeader(b"content-disposition",
+                              b'attachment; filename=' + unicode2bytes(data['filename']))
         request.write(unicode2bytes(data['raw']))
         return
 
@@ -283,8 +289,12 @@ class V2RootResource(resource.Resource):
                 writeError(msg, errcode=404)
                 return
 
-            if ep.isRaw:
-                self.encodeRaw(data, request)
+            if ep.kind == EndpointKind.RAW:
+                self.encodeRaw(data, request, False)
+                return
+
+            if ep.kind == EndpointKind.RAW_INLINE:
+                self.encodeRaw(data, request, True)
                 return
 
             # post-process any remaining parts of the resultspec
@@ -292,7 +302,7 @@ class V2RootResource(resource.Resource):
 
             # annotate the result with some metadata
             meta = {}
-            if ep.isCollection:
+            if ep.kind == EndpointKind.COLLECTION:
                 offset, total = data.offset, data.total
                 if offset is None:
                     offset = 0

@@ -71,7 +71,7 @@ class Db2DataMixin:
 
 class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /buildsets/n:bsid
     """
@@ -85,7 +85,7 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /buildsets
     """

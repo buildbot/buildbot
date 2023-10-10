@@ -84,7 +84,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
         self.assertIdentical(endpoint, self.ep)
         rv = yield endpoint.get(resultSpec, kwargs)
 
-        if self.ep.isCollection:
+        if self.ep.kind == base.EndpointKind.COLLECTION:
             self.assertIsInstance(rv, (list, base.ListResult))
         else:
             self.assertIsInstance(rv, (dict, type(None)))

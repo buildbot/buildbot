@@ -25,7 +25,7 @@ import {observer, useLocalObservable} from "mobx-react";
 import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {ArrowExpander, useStateWithDefaultIfNotSet} from "buildbot-ui";
 import {CancellablePromise, Log, useDataAccessor} from "buildbot-data-js";
-import {LogDownloadButton} from "../LogDownloadButton/LogDownloadButton";
+import {LogDownloadButtons} from "../LogDownloadButtons/LogDownloadButtons";
 
 type RenderedLogLine = {
   content: JSX.Element[];
@@ -197,7 +197,7 @@ export const LogPreview = observer(({builderid, buildnumber, stepnumber, log,
               <Link to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}>
                 view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}&nbsp;
               </Link>
-              <LogDownloadButton log={log}/>
+              <LogDownloadButtons log={log}/>
             </div>
           </div>
         </div>

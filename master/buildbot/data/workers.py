@@ -43,7 +43,7 @@ class Db2DataMixin:
 
 class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /workers/n:workerid
         /workers/i:name
@@ -83,7 +83,7 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 
 class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     rootLinkName = 'workers'
     pathPatterns = """
         /workers

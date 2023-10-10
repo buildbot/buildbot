@@ -35,7 +35,7 @@ class Db2DataMixin:
 
 class BuildDatasNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data
         /builders/i:buildername/builds/n:build_number/data
@@ -56,7 +56,7 @@ class BuildDatasNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpo
 
 class BuildDataNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data/i:name
         /builders/i:buildername/builds/n:build_number/data/i:name
@@ -75,8 +75,7 @@ class BuildDataNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoi
 
 class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = False
-    isRaw = True
+    kind = base.EndpointKind.RAW
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data/i:name/value
         /builders/i:buildername/builds/n:build_number/data/i:name/value

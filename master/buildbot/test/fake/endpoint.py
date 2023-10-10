@@ -38,7 +38,7 @@ stepData = {
 
 
 class TestsEndpoint(base.Endpoint):
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
     /tests
     /test
@@ -51,8 +51,7 @@ class TestsEndpoint(base.Endpoint):
 
 
 class RawTestsEndpoint(base.Endpoint):
-    isCollection = False
-    isRaw = True
+    kind = base.EndpointKind.RAW
     pathPatterns = "/rawtest"
 
     def get(self, resultSpec, kwargs):
@@ -64,7 +63,7 @@ class RawTestsEndpoint(base.Endpoint):
 
 
 class FailEndpoint(base.Endpoint):
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = "/test/fail"
 
     def get(self, resultSpec, kwargs):
@@ -72,7 +71,7 @@ class FailEndpoint(base.Endpoint):
 
 
 class TestEndpoint(base.Endpoint):
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
     /tests/n:testid
     /test/n:testid
@@ -90,7 +89,7 @@ class TestEndpoint(base.Endpoint):
 
 
 class StepsEndpoint(base.Endpoint):
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = "/tests/n:testid/steps"
 
     def get(self, resultSpec, kwargs):
@@ -100,7 +99,7 @@ class StepsEndpoint(base.Endpoint):
 
 
 class StepEndpoint(base.Endpoint):
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = "/tests/n:testid/steps/n:stepid"
 
     def get(self, resultSpec, kwargs):

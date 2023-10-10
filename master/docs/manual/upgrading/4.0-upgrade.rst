@@ -89,3 +89,10 @@ Migration to ``croniter`` involves ensuring that the input times are passed as t
 
 The original ``buildbot.util.croniter`` code always assumed the input time is in the current timezone.
 The ``croniter`` package assumes the input time is in UTC timezone.
+
+
+Endpoint attributes
+-------------------
+
+``buildbot.data.base.Endpoint`` no longer provides ``isRaw`` and ``isCollection`` attributes.
+The equivalent in Buildbot 4.x is setting the ``kind`` attribute to ``EndpointKind.RAW`` and ``EndpointKind.COLLECTION`` respectively.

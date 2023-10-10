@@ -22,7 +22,7 @@ from buildbot.data import types
 
 class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builders/n:builderid
         /builders/i:buildername
@@ -55,7 +55,7 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
 
 class BuildersEndpoint(base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     rootLinkName = 'builders'
     pathPatterns = """
         /builders

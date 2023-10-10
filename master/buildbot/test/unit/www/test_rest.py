@@ -20,6 +20,7 @@ from unittest import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.data.base import EndpointKind
 from buildbot.data.exceptions import InvalidQueryParameter
 from buildbot.test.fake import endpoint
 from buildbot.test.reactor import TestReactorMixin
@@ -257,7 +258,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
 
         endpoint.TestEndpoint.rtype = mock.MagicMock()
         endpoint.TestsEndpoint.rtype = mock.MagicMock()
-        endpoint.Test.isCollection = True
+        endpoint.Test.kind = EndpointKind.COLLECTION
         endpoint.Test.rtype = endpoint.Test
 
     def assertRestCollection(self, typeName, items,
