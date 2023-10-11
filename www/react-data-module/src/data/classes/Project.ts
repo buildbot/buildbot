@@ -19,6 +19,7 @@ export class Project extends BaseClass {
   @observable description_html!: string|null;
   @observable slug!: string[];
   @observable name!: string;
+  @observable active!: boolean|null;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, String(object.projectid));
@@ -33,6 +34,7 @@ export class Project extends BaseClass {
     this.description = object.description;
     this.description_format = object.description_format;
     this.description_html = object.description_html;
+    this.active = object.active;
   }
 
   toObject() {
@@ -41,6 +43,7 @@ export class Project extends BaseClass {
       name: this.name,
       slug: this.slug,
       description: this.description,
+      active: this.active,
     };
   }
 

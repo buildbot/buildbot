@@ -116,7 +116,7 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
   }
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  useHotkeys('Ctrl+F', () => { searchInputRef.current?.focus(); }, {preventDefault: true});
+  useHotkeys('Mod+F', () => { searchInputRef.current?.focus(); }, {preventDefault: true});
 
   const outerElementType = useMemo(() => forwardRef<HTMLDivElement>((props, ref) => (
     <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props}/>

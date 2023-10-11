@@ -20,7 +20,7 @@ from buildbot.data import base
 from buildbot.data import types
 
 
-def project_db_to_data(dbdict):
+def project_db_to_data(dbdict, active=None):
     return {
         "projectid": dbdict["id"],
         "name": dbdict["name"],
@@ -28,6 +28,7 @@ def project_db_to_data(dbdict):
         "description": dbdict["description"],
         "description_format": dbdict["description_format"],
         "description_html": dbdict["description_html"],
+        "active": active,
     }
 
 
@@ -76,7 +77,7 @@ class ProjectsEndpoint(base.Endpoint):
                 if dbdict["id"] not in ids_active
             ]
 
-        return [project_db_to_data(dbdict) for dbdict in dbdicts]
+        return [project_db_to_data(dbdict, active=active) for dbdict in dbdicts]
 
     def get_kwargs_from_graphql(self, parent, resolve_info, args):
         return {}
@@ -97,6 +98,7 @@ class Project(base.ResourceType):
         projectid = types.Integer()
         name = types.Identifier(70)
         slug = types.Identifier(70)
+        active = types.NoneOk(types.Boolean())
         description = types.NoneOk(types.String())
         description_format = types.NoneOk(types.String())
         description_html = types.NoneOk(types.String())
