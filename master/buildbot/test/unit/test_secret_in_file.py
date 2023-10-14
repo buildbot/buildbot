@@ -57,7 +57,7 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         if os.name != "posix":
             self.skipTest("Permission checks only works on posix systems")
         filepath = self.createFileTemp(self.tmp_dir, "tempfile2.txt",
-                                       chmodRights=stat.S_IRGRP)
+                                       chmodRights=stat.S_IROTH)
         expctd_msg_error = " on file tempfile2.txt are too " \
                            "open. It is required that your secret files are" \
                            " NOT accessible by others!"

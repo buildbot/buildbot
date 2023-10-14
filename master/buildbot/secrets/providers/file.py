@@ -32,7 +32,7 @@ class SecretInAFile(SecretProviderBase):
     def checkFileIsReadOnly(self, dirname, secretfile):
         filepath = os.path.join(dirname, secretfile)
         obs_stat = stat.S_IMODE(os.stat(filepath).st_mode)
-        if (obs_stat & 0o77) != 0 and os.name == "posix":
+        if (obs_stat & 0o7) != 0 and os.name == "posix":
             config.error(f"Permissions {oct(obs_stat)} on file {secretfile} are too open."
                          " It is required that your secret files are NOT"
                          " accessible by others!")
