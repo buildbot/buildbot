@@ -232,11 +232,14 @@ def gen_create_branch_changes(newrev, refname, branch):
     f2 = subprocess.Popen(shlex.split("grep -v %s" % branchref),
                           stdin=f.stdout,
                           stdout=subprocess.PIPE)
-    f3 = subprocess.Popen(
-        shlex.split("git rev-list --reverse --pretty=oneline --stdin %s" % newrev),
-        stdin=f2.stdout,
-        stdout=subprocess.PIPE
-    )
+    options = "--reverse --pretty=oneline --stdin"
+    if first_parent:
+        # Don't add merged commits to avoid running builds twice for the same
+        # changes, as they should only be done for first parent commits
+        options += " --first-parent"
+    f3 = subprocess.Popen(shlex.split("git rev-list %s %s" % (options, newrev)),
+                          stdin=f2.stdout,
+                          stdout=subprocess.PIPE)
 
     gen_changes(f3, branch)
 
