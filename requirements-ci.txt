@@ -124,7 +124,7 @@ types-PyYAML==6.0.12.12
 typing_extensions==4.8.0
 unidiff==0.7.5
 # botocore depends on urllib3<1.27
-urllib3==1.26.17  # pyup: ignore
+urllib3==1.26.18  # pyup: ignore
 webcolors==1.13
 websocket-client==1.6.3
 Werkzeug==3.0.0
