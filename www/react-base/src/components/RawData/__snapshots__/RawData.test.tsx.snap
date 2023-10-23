@@ -32,7 +32,7 @@ exports[`RawData component object with array of objects 1`] = `
         />
       </svg>
       <span>
-        [{"str":"string"},{"int":123},{"float":123.4},{"boolean":true}]
+        [{"str":"string"},{"int":123},{"float":123.4},{"boolean":true},{"null":null}]
       </span>
     </dd>
   </div>
@@ -139,6 +139,23 @@ exports[`RawData component object with array of objects expanded 1`] = `
             </div>
           </dl>
         </li>
+        <li>
+          <dl
+            className="dl-horizontal"
+          >
+            <div
+              className="bb-raw-data-key-value"
+            >
+              <dt>
+                null
+              </dt>
+              <dd>
+                null
+                 
+              </dd>
+            </div>
+          </dl>
+        </li>
       </ul>
     </dd>
   </div>
@@ -204,6 +221,17 @@ exports[`RawData component observable object 1`] = `
        
     </dd>
   </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      null
+    </dt>
+    <dd>
+      null
+       
+    </dd>
+  </div>
 </dl>
 `;
 
@@ -239,7 +267,7 @@ exports[`RawData component observable object with array of objects 1`] = `
         />
       </svg>
       <span>
-        [{"str":"string"},{"int":123},{"float":123.4},{"boolean":true}]
+        [{"str":"string"},{"int":123},{"float":123.4},{"boolean":true},{"null":null}]
       </span>
     </dd>
   </div>
@@ -302,6 +330,17 @@ exports[`RawData component simple object 1`] = `
     </dt>
     <dd>
       321,string,true
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      null
+    </dt>
+    <dd>
+      null
        
     </dd>
   </div>

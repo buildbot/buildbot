@@ -49,6 +49,7 @@ describe('RawData component', function() {
       float: 123.4,
       boolean: true,
       array: [321, "string", true],
+      null: null,
     }
 
     assertRenderSnapshot(obj);
@@ -61,6 +62,7 @@ describe('RawData component', function() {
       float: 123.4,
       boolean: true,
       array: observable([321, "string", true]),
+      null: null,
     });
 
     assertRenderSnapshot(obj);
@@ -73,6 +75,7 @@ describe('RawData component', function() {
         {int: 123},
         {float: 123.4},
         {boolean: true},
+        {null: null},
       ],
     };
 
@@ -86,6 +89,7 @@ describe('RawData component', function() {
         {int: 123},
         {float: 123.4},
         {boolean: true},
+        {null: null},
       ],
     };
 
@@ -99,6 +103,7 @@ describe('RawData component', function() {
         observable({int: 123}),
         observable({float: 123.4}),
         observable({boolean: true}),
+        observable({null: null}),
       ],
     });
 
