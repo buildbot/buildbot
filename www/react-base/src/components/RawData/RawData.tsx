@@ -52,8 +52,8 @@ export const RawData = ({data}: RawDataProps) => {
   }
 
   const renderDataElement = (value: any) => {
-    if (!isObjectRaw(value) && !isArrayOfObjectsRaw(value)) {
-      return <dd>{value === null ? "null" : value.toString()}&nbsp;</dd>;
+    if (value === null) {
+      return <dd>{"null"}&nbsp;</dd>;
     }
     if (isArrayOfObjectsRaw(value)) {
       return (
@@ -71,6 +71,8 @@ export const RawData = ({data}: RawDataProps) => {
         </dd>
       )
     }
+
+    return <dd>{value.toString()}&nbsp;</dd>;
   }
 
   const renderElements = () => {
