@@ -117,7 +117,7 @@ tomli==2.0.1
 tomlkit==0.12.1
 towncrier==21.9.0
 treq==22.2.0
-Twisted==22.4.0
+Twisted==23.8.0
 txaio==23.1.1
 txrequests==0.9.6
 types-PyYAML==6.0.12.12
