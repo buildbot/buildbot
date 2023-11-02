@@ -379,3 +379,6 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             except docker.errors.APIError as e:
                 log.msg('Error while removing the image: %s', e)
         docker_client.close()
+        conn = self.conn
+        self.conn = None
+        self._disconnect(conn)
