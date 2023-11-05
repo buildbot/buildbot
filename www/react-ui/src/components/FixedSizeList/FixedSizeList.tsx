@@ -327,8 +327,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     const size = height;
     const numVisibleItems = Math.ceil((size + globalScrollOffset - offset) / itemSize);
 
-    return Math.max(0, Math.min(itemCount - 1, startIndex + numVisibleItems - 1 // -1 is because stop index is inclusive
-      ));
+    return Math.max(0, Math.min(itemCount, startIndex + numVisibleItems));
   }
 
   static getDerivedStateFromProps(
@@ -499,7 +498,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
 
     const items: ReactElement[] = [];
     if (itemCount > 0) {
-      for (let index = startIndex; index <= stopIndex; index++) {
+      for (let index = startIndex; index < stopIndex; index++) {
         const Children = children;
         items.push(
           <Children
@@ -722,7 +721,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
 
     return [
       Math.max(0, startIndex - overscanBackward),
-      Math.max(0, Math.min(itemCount - 1, stopIndex + overscanForward)),
+      Math.max(0, Math.min(itemCount, stopIndex + overscanForward)),
       startIndex,
       stopIndex,
     ];
