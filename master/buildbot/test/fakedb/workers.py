@@ -202,10 +202,14 @@ class FakeWorkersComponent(FakeDBComponent):
                 break
         return defer.succeed(None)
 
-    def setWorkerState(self, workerid, paused, graceful):
+    def set_worker_paused(self, workerid, paused):
         worker = self.workers.get(workerid)
         if worker is not None:
             worker['paused'] = int(paused)
+
+    def set_worker_graceful(self, workerid, graceful):
+        worker = self.workers.get(workerid)
+        if worker is not None:
             worker['graceful'] = int(graceful)
 
     def _configuredOn(self, workerid, builderid=None, masterid=None):

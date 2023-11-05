@@ -229,9 +229,17 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
-    def setWorkerState(self, workerid, paused, graceful):
+    def set_worker_paused(self, workerid, paused):
         def thd(conn):
             tbl = self.db.model.workers
             q = tbl.update(whereclause=tbl.c.id == workerid)
-            conn.execute(q, paused=int(paused), graceful=int(graceful))
+            conn.execute(q, paused=int(paused))
+        return self.db.pool.do(thd)
+
+    # returns a Deferred that returns None
+    def set_worker_graceful(self, workerid, graceful):
+        def thd(conn):
+            tbl = self.db.model.workers
+            q = tbl.update(whereclause=tbl.c.id == workerid)
+            conn.execute(q, graceful=int(graceful))
         return self.db.pool.do(thd)

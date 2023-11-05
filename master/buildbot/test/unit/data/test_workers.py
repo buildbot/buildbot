@@ -174,6 +174,21 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         worker = yield self.callGet(('workers', 2))
         self.validateData(worker)
         self.assertEqual(worker['paused'], True)
+        self.assertEqual(worker['graceful'], False)
+
+    @defer.inlineCallbacks
+    def test_set_worker_paused(self):
+        yield self.master.data.updates.set_worker_paused(2, True)
+        worker = yield self.callGet(('workers', 2))
+        self.validateData(worker)
+        self.assertEqual(worker['paused'], True)
+
+    @defer.inlineCallbacks
+    def test_set_worker_graceful(self):
+        yield self.master.data.updates.set_worker_graceful(2, True)
+        worker = yield self.callGet(('workers', 2))
+        self.validateData(worker)
+        self.assertEqual(worker['graceful'], True)
 
     @defer.inlineCallbacks
     def test_actions(self):
@@ -244,8 +259,8 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          sorted([w2(masterid=13, builderid=41)], key=configuredOnKey))
 
     @defer.inlineCallbacks
-    def test_setWorkerStateFindByPaused(self):
-        yield self.master.data.updates.setWorkerState(2, True, False)
+    def test_set_worker_paused_find_by_paused(self):
+        yield self.master.data.updates.set_worker_paused(2, True)
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('paused', 'eq', [True])])
 
@@ -280,6 +295,16 @@ class Worker(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             self.master.data.updates.workerConfigured,  # fake
             self.rtype.workerConfigured)  # real
         def workerConfigured(self, workerid, masterid, builderids):
+            pass
+
+    def test_signature_set_worker_paused(self):
+        @self.assertArgSpecMatches(self.master.data.updates.set_worker_paused)
+        def set_worker_paused(self, workerid, paused):
+            pass
+
+    def test_signature_set_worker_graceful(self):
+        @self.assertArgSpecMatches(self.master.data.updates.set_worker_graceful)
+        def set_worker_graceful(self, workerid, graceful):
             pass
 
     def test_findWorkerId(self):

@@ -100,3 +100,22 @@ Workers connector
         :returns: Deferred
 
         Change the state of a worker (see definition of states above in worker dict description).
+
+        This method is deprecated.
+
+    .. py:method:: set_worker_paused(workerid, paused)
+
+        :param integer workerid: the ID of the worker whose state is being changed
+        :param integer paused: the paused state
+        :returns: Deferred
+
+        Changes the ``paused`` state of the worker (see definition of states above in worker dict description).
+
+    .. py:method:: set_worker_graceful(workerid, graceful)
+
+        :param integer workerid: the ID of the worker whose state is being changed
+        :param integer graceful: the graceful state
+        :returns: Deferred
+
+        Changes the ``graceful`` state of the worker (see definition of states above in worker dict description).
+
