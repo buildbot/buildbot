@@ -82,6 +82,15 @@
   white-space: nowrap;
 }
 
+.bb-logviewer-text-download-log {
+  .bb-log-download-button {
+    color: #ccc;
+  }
+  .bb-log-download-button:hover {
+    color: white;
+  }
+}
+
 .bb-logviewer-result {
   background-color: orange;
   color: black;
