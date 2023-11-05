@@ -35,14 +35,14 @@ type RenderedLogLine = {
 
 class LogPreviewState {
   lines = observable.array<RenderedLogLine>();
-  @observable maxNumber: number = 0;
+  @observable maxNumber: number = -1;
 
   constructor() {
     makeObservable(this);
   }
 
   @action clearLines() {
-    this.maxNumber = 0;
+    this.maxNumber = -1;
     this.lines.clear();
   }
 

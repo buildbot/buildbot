@@ -34,7 +34,7 @@ export const LogViewerTextLineRenderer = ({manager, logLineDigitCount,
                              content: JSX.Element[]) => {
     return (
       <div key={index} className="bb-logviewer-text-row" style={style}>
-        <span data-linenumber-content={String(index).padStart(logLineDigitCount, ' ')}
+        <span data-linenumber-content={String(index + 1).padStart(logLineDigitCount, ' ')}
               className={`log_${lineType}`}>
           {content}
         </span>
