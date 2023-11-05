@@ -453,8 +453,8 @@ class FakeUpdates(service.AsyncService):
         yield self.master.db.workers.set_worker_paused(workerid=workerid, paused=paused)
         yield self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
 
-    def set_worker_paused(self, workerid, paused):
-        return self.master.db.workers.set_worker_paused(workerid, paused)
+    def set_worker_paused(self, workerid, paused, pause_reason=None):
+        return self.master.db.workers.set_worker_paused(workerid, paused, pause_reason=pause_reason)
 
     def set_worker_graceful(self, workerid, graceful):
         return self.master.db.workers.set_worker_graceful(workerid, graceful)

@@ -331,6 +331,7 @@ class Model(base.DBConnectorComponent):
         sa.Column("name", sa.String(50), nullable=False),
         sa.Column("info", JsonObject, nullable=False),
         sa.Column("paused", sa.SmallInteger, nullable=False, server_default="0"),
+        sa.Column("pause_reason", sa.Text, nullable=True),
         sa.Column("graceful", sa.SmallInteger, nullable=False, server_default="0"),
     )
 

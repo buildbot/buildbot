@@ -77,6 +77,7 @@ def w1(builderid=None, masterid=None):
         'workerinfo': {},
         'paused': False,
         'graceful': False,
+        "pause_reason": None,
         'connected_to': [
             {'masterid': 13},
         ],
@@ -93,6 +94,7 @@ def w2(builderid=None, masterid=None):
         'name': 'windows',
         'workerinfo': {'a': 'b'},
         'paused': False,
+        "pause_reason": None,
         'graceful': False,
         'connected_to': [
             {'masterid': 14},
@@ -178,10 +180,11 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_set_worker_paused(self):
-        yield self.master.data.updates.set_worker_paused(2, True)
+        yield self.master.data.updates.set_worker_paused(2, True, "reason")
         worker = yield self.callGet(('workers', 2))
         self.validateData(worker)
         self.assertEqual(worker['paused'], True)
+        self.assertEqual(worker["pause_reason"], "reason")
 
     @defer.inlineCallbacks
     def test_set_worker_graceful(self):
@@ -260,7 +263,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_set_worker_paused_find_by_paused(self):
-        yield self.master.data.updates.set_worker_paused(2, True)
+        yield self.master.data.updates.set_worker_paused(2, True, None)
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('paused', 'eq', [True])])
 
@@ -299,7 +302,7 @@ class Worker(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_set_worker_paused(self):
         @self.assertArgSpecMatches(self.master.data.updates.set_worker_paused)
-        def set_worker_paused(self, workerid, paused):
+        def set_worker_paused(self, workerid, paused, pause_reason=None):
             pass
 
     def test_signature_set_worker_graceful(self):

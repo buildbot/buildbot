@@ -29,10 +29,25 @@ class Worker(Row):
     id_column = 'id'
     required_columns = ('name', )
 
-    def __init__(self, id=None, name='some:worker', info=None, paused=0, graceful=0):
+    def __init__(
+        self,
+        id=None,
+        name='some:worker',
+        info=None,
+        paused=0,
+        pause_reason=None,
+        graceful=0
+    ):
         if info is None:
             info = {"a": "b"}
-        super().__init__(id=id, name=name, info=info, paused=paused, graceful=graceful)
+        super().__init__(
+            id=id,
+            name=name,
+            info=info,
+            paused=paused,
+            pause_reason=pause_reason,
+            graceful=graceful
+        )
 
 
 class ConnectedWorker(Row):
@@ -69,6 +84,7 @@ class FakeWorkersComponent(FakeDBComponent):
                     "id": row.id,
                     "name": row.name,
                     "paused": row.paused,
+                    "pause_reason": row.pause_reason,
                     "graceful": row.graceful,
                     "info": row.info
                 }
@@ -94,7 +110,10 @@ class FakeWorkersComponent(FakeDBComponent):
         self.workers[id] = {
             "id": id,
             "name": name,
-            "info": {}
+            "info": {},
+            "paused": 0,
+            "pause_reason": None,
+            "graceful": 0
         }
         return defer.succeed(id)
 
@@ -202,10 +221,11 @@ class FakeWorkersComponent(FakeDBComponent):
                 break
         return defer.succeed(None)
 
-    def set_worker_paused(self, workerid, paused):
+    def set_worker_paused(self, workerid, paused, pause_reason=None):
         worker = self.workers.get(workerid)
         if worker is not None:
             worker['paused'] = int(paused)
+            worker['pause_reason'] = pause_reason
 
     def set_worker_graceful(self, workerid, graceful):
         worker = self.workers.get(workerid)
@@ -241,6 +261,7 @@ class FakeWorkersComponent(FakeDBComponent):
             'workerinfo': w['info'],
             'name': w['name'],
             'paused': bool(w.get('paused')),
+            'pause_reason': w.get("pause_reason"),
             'graceful': bool(w.get('graceful')),
             'configured_on': self._configuredOn(w['id'], builderid, masterid),
             'connected_to': self._connectedTo(w['id'], masterid),

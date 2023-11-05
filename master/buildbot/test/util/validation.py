@@ -414,6 +414,7 @@ dbdict['workerdict'] = DictValidator(
         )
     ),
     paused=BooleanValidator(),
+    pause_reason=NoneOk(StringValidator()),
     graceful=BooleanValidator(),
     connected_to=ListValidator(IntValidator()),
     workerinfo=JsonValidator(),

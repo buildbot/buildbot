@@ -14,6 +14,7 @@ Workers connector
     * ``name`` - the name of the worker
     * ``workerinfo`` - worker information as dictionary
     * ``paused`` - boolean indicating worker is paused and shall not take new builds
+    * ``pause_reason`` - string indicating the reason for working being paused
     * ``graceful`` - boolean indicating worker will be shutdown as soon as build finished
     * ``connected_to`` - a list of masters, by ID, to which this worker is currently connected.
       This list will typically contain only one master, but in unusual circumstances the same worker may appear to be connected to multiple masters simultaneously
@@ -103,10 +104,11 @@ Workers connector
 
         This method is deprecated.
 
-    .. py:method:: set_worker_paused(workerid, paused)
+    .. py:method:: set_worker_paused(workerid, paused, pause_reason=None)
 
         :param integer workerid: the ID of the worker whose state is being changed
         :param integer paused: the paused state
+        :param string pause_reason: the reason for pausing the worker.
         :returns: Deferred
 
         Changes the ``paused`` state of the worker (see definition of states above in worker dict description).

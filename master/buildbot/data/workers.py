@@ -31,6 +31,7 @@ class Db2DataMixin:
             'name': dbdict['name'],
             'workerinfo': dbdict['workerinfo'],
             'paused': dbdict['paused'],
+            "pause_reason": dbdict["pause_reason"],
             'graceful': dbdict['graceful'],
             'connected_to': [
                 {'masterid': id}
@@ -132,6 +133,7 @@ class Worker(base.ResourceType):
         configured_on = types.List(of=MasterBuilderEntityType("master_builder", 'MasterBuilder'))
         workerinfo = types.JsonObject()
         paused = types.Boolean()
+        pause_reason = types.NoneOk(types.String())
         graceful = types.Boolean()
     entityType = EntityType(name, 'Worker')
 
@@ -188,8 +190,12 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def set_worker_paused(self, workerid, paused):
-        yield self.master.db.workers.set_worker_paused(workerid=workerid, paused=paused)
+    def set_worker_paused(self, workerid, paused, pause_reason=None):
+        yield self.master.db.workers.set_worker_paused(
+            workerid=workerid,
+            paused=paused,
+            pause_reason=pause_reason
+        )
         bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'state_updated')
 
