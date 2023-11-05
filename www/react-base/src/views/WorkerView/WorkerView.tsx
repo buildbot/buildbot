@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {useState} from "react";
 import {observer} from "mobx-react";
 import {
   Build,
@@ -28,6 +29,7 @@ import {useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
+import {WorkerActionsModal} from "../../components/WorkerActionsModal/WorkerActionsModal";
 
 export const WorkerView = observer(() => {
   const workerid = Number.parseInt(useParams<"workerid">().workerid ?? "");
@@ -45,11 +47,19 @@ export const WorkerView = observer(() => {
       }
     }));
 
+  const [workerForActions, setWorkerForActions] = useState<null|Worker>(null);
+
   return (
     <div className="container">
       <WorkersTable workers={workersQuery.array} buildersQuery={buildersQuery}
                     mastersQuery={mastersQuery}
-                    buildsForWorker={null} onWorkerIconClick={(w) => {}}/>
+                    buildsForWorker={null}
+                    onWorkerIconClick={(worker) => setWorkerForActions(worker)}/>
+      { workerForActions !== null
+        ? <WorkerActionsModal worker={workerForActions}
+                              onClose={() => setWorkerForActions(null)}/>
+        : <></>
+      }
       <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
     </div>
   );
