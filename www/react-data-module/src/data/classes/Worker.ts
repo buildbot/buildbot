@@ -26,6 +26,7 @@ export class Worker extends BaseClass {
   @observable connected_to!: ConnectedMaster[];
   @observable name!: string;
   @observable paused!: boolean;
+  @observable pause_reason!: string|null;
   @observable graceful!: boolean;
   @observable workerinfo!: {[key: string]: any};
 
@@ -41,6 +42,7 @@ export class Worker extends BaseClass {
     this.connected_to = object.connected_to;
     this.name = object.name;
     this.paused = object.paused;
+    this.pause_reason = object.pause_reason;
     this.graceful = object.graceful;
     this.workerinfo = object.workerinfo;
   }
@@ -52,6 +54,7 @@ export class Worker extends BaseClass {
       connected_to: this.connected_to,
       name: this.name,
       paused: this.paused,
+      pause_reason: this.pause_reason,
       graceful: this.graceful,
       workerinfo: this.workerinfo,
     };

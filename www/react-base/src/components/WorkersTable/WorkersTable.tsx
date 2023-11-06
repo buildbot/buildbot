@@ -42,6 +42,15 @@ export const getWorkerStatusIcon = (worker: Worker, onClick: () => void) => {
   return (<></>);
 }
 
+const anyWorkerPaused = (workers: Worker[]) => {
+  for (let w of workers) {
+    if (w.paused) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export const getWorkerInfoNamesToDisplay = (workers: Worker[]) => {
   const namesSet = new Set<string>();
   for (const worker of workers) {
@@ -122,10 +131,22 @@ export const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
     });
   }
 
-  const renderWorkerRow = (worker: Worker) => {
+  const renderPauseReason = (worker: Worker, displayPauseReason: boolean) => {
+    if (!displayPauseReason) {
+      return <></>;
+    }
+    return (
+      <td key="worker-paused">
+        {worker.paused ? worker.pause_reason : ""}
+      </td>
+    );
+  }
+
+  const renderWorkerRow = (worker: Worker, displayPauseReason: boolean) => {
     return (
       <tr key={worker.name}>
         <td key="state">{getWorkerStatusIcon(worker, () => onWorkerIconClick(worker))}</td>
+        {renderPauseReason(worker, displayPauseReason)}
         <td key="masters">{renderConnectedMasters(worker)}</td>
         <td key="name"><Link to={`/workers/${worker.workerid}`}>{worker.name}</Link></td>
         { buildsForWorker === null ? <></> : <td key="builds">{renderWorkerRecentBuilds(worker)}</td> }
@@ -134,11 +155,14 @@ export const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
     );
   }
 
+  const displayPauseReason = anyWorkerPaused(workers);
+
   return (
     <Table hover striped size="sm">
       <thead>
       <tr>
         <th key="state">State</th>
+        { displayPauseReason ? <th key="pause-reason">Pause reason</th> : <></> }
         <th key="masters">Masters</th>
         <th key="name">WorkerName</th>
         { buildsForWorker === null ? <></> : <th key="builds">Recent Builds</th> }
@@ -146,7 +170,7 @@ export const WorkersTable = observer(({workers, buildersQuery, mastersQuery,
       </tr>
       </thead>
       <tbody>
-        {workers.map(worker => renderWorkerRow(worker))}
+        {workers.map(worker => renderWorkerRow(worker, displayPauseReason))}
       </tbody>
     </Table>
   );

@@ -119,9 +119,14 @@ class Tests(interfaces.InterfaceTests):
         def deconfigureAllWorkersForMaster(self, masterid):
             pass
 
-    def test_signature_setWorkerState(self):
-        @self.assertArgSpecMatches(self.db.workers.setWorkerState)
-        def setWorkerState(self, workerid, paused, graceful):
+    def test_signature_set_worker_paused(self):
+        @self.assertArgSpecMatches(self.db.workers.set_worker_paused)
+        def set_worker_paused(self, workerid, paused, pause_reason=None):
+            pass
+
+    def test_signature_set_worker_graceful(self):
+        @self.assertArgSpecMatches(self.db.workers.set_worker_graceful)
+        def set_worker_graceful(self, workerid, graceful):
             pass
 
     @defer.inlineCallbacks
@@ -159,6 +164,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'zero',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "connected_to": [],
             "configured_on": []
@@ -179,6 +185,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'two',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "connected_to": [11],
             "configured_on": []
@@ -205,6 +212,7 @@ class Tests(interfaces.InterfaceTests):
                 "name": 'two',
                 "workerinfo": {'a': 'b'},
                 "paused": False,
+                "pause_reason": None,
                 "graceful": False,
                 "connected_to": [10, 11],
                 "configured_on": [
@@ -224,6 +232,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'zero',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "connected_to": [],
             "configured_on": []
@@ -242,6 +251,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'zero',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "configured_on": [
                 {'masterid': 10, 'builderid': 20}
@@ -263,6 +273,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'zero',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "configured_on": [
                 {'masterid': 10, 'builderid': 20}
@@ -282,6 +293,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'zero',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "configured_on": sorted([
                 {'masterid': 10, 'builderid': 20},
@@ -303,6 +315,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'zero',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "configured_on": sorted([
                 {'masterid': 10, 'builderid': 20},
@@ -321,6 +334,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'zero',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "configured_on": [
                 {'masterid': 11, 'builderid': 20},
@@ -339,6 +353,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'zero',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "configured_on": [
                 {'masterid': 11, 'builderid': 20},
@@ -357,6 +372,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'zero',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": False,
             "configured_on": [
                 {'masterid': 11, 'builderid': 20},
@@ -381,6 +397,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'zero',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": [],
                         "connected_to": []
@@ -389,6 +406,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'one',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": [],
                         "connected_to": []
@@ -414,6 +432,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'zero',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": sorted([
                             {'masterid': 10, 'builderid': 20},
@@ -426,6 +445,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'one',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": sorted([
                             {'masterid': 11, 'builderid': 20},
@@ -464,6 +484,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'zero',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": sorted([
                             {'masterid': 10, 'builderid': 20},
@@ -475,6 +496,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'one',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": sorted([
                              {'masterid': 11, 'builderid': 20},
@@ -502,6 +524,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'zero',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": sorted([
                             {'masterid': 10, 'builderid': 20},
@@ -530,6 +553,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'zero',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": sorted([
                              {'masterid': 11, 'builderid': 20},
@@ -541,6 +565,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'one',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": sorted([
                             {'masterid': 11, 'builderid': 20},
@@ -570,6 +595,7 @@ class Tests(interfaces.InterfaceTests):
                         "name": 'one',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
+                        "pause_reason": None,
                         "graceful": False,
                         "configured_on": sorted([{'masterid': 11, 'builderid': 22}, ],
                             key=configuredOnKey),
@@ -582,7 +608,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getWorkers_with_paused(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
-        yield self.db.workers.setWorkerState(31, paused=True, graceful=False)
+        yield self.db.workers.set_worker_paused(31, paused=True, pause_reason="reason")
+        yield self.db.workers.set_worker_graceful(31, graceful=False)
         workerdicts = yield self.db.workers.getWorkers(
             paused=True)
         for workerdict in workerdicts:
@@ -594,6 +621,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'one',
             "workerinfo": {'a': 'b'},
             "paused": True,
+            "pause_reason": "reason",
             "graceful": False,
             "configured_on": [],
             "connected_to": [11]
@@ -602,7 +630,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getWorkers_with_graceful(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
-        yield self.db.workers.setWorkerState(31, paused=False, graceful=True)
+        yield self.db.workers.set_worker_paused(31, paused=False)
+        yield self.db.workers.set_worker_graceful(31, graceful=True)
         workerdicts = yield self.db.workers.getWorkers(
             graceful=True)
         for workerdict in workerdicts:
@@ -613,6 +642,7 @@ class Tests(interfaces.InterfaceTests):
             "name": 'one',
             "workerinfo": {'a': 'b'},
             "paused": False,
+            "pause_reason": None,
             "graceful": True,
             "configured_on": [],
             "connected_to": [11]
@@ -633,6 +663,7 @@ class Tests(interfaces.InterfaceTests):
             'name': self.W1_NAME,
             'workerinfo': NEW_INFO,
             'paused': False,
+            "pause_reason": None,
             'graceful': False,
             'configured_on': [],
             'connected_to': [11]
@@ -674,11 +705,10 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(w['connected_to'], [])
 
     @defer.inlineCallbacks
-    def test_setWorkerState_existing(self):
+    def test_set_worker_paused_existing(self):
         yield self.insert_test_data(self.baseRows + self.worker1_rows)
 
-        yield self.db.workers.setWorkerState(
-            workerid=self.W1_ID, paused=False, graceful=True)
+        yield self.db.workers.set_worker_paused(self.W1_ID, False, None)
 
         w = yield self.db.workers.getWorker(self.W1_ID)
         self.assertEqual(w, {
@@ -686,13 +716,13 @@ class Tests(interfaces.InterfaceTests):
             'name': self.W1_NAME,
             'workerinfo': self.W1_INFO,
             'paused': False,
-            'graceful': True,
+            "pause_reason": None,
+            'graceful': False,
             'configured_on': [],
             'connected_to': []
         })
 
-        yield self.db.workers.setWorkerState(
-            workerid=self.W1_ID, paused=True, graceful=False)
+        yield self.db.workers.set_worker_paused(self.W1_ID, True, "reason")
 
         w = yield self.db.workers.getWorker(self.W1_ID)
         self.assertEqual(w, {
@@ -700,7 +730,40 @@ class Tests(interfaces.InterfaceTests):
             'name': self.W1_NAME,
             'workerinfo': self.W1_INFO,
             'paused': True,
+            "pause_reason": "reason",
             'graceful': False,
+            'configured_on': [],
+            'connected_to': []
+        })
+
+    @defer.inlineCallbacks
+    def test_set_worker_graceful_existing(self):
+        yield self.insert_test_data(self.baseRows + self.worker1_rows)
+
+        yield self.db.workers.set_worker_graceful(self.W1_ID, False)
+
+        w = yield self.db.workers.getWorker(self.W1_ID)
+        self.assertEqual(w, {
+            'id': self.W1_ID,
+            'name': self.W1_NAME,
+            'workerinfo': self.W1_INFO,
+            'paused': False,
+            "pause_reason": None,
+            'graceful': False,
+            'configured_on': [],
+            'connected_to': []
+        })
+
+        yield self.db.workers.set_worker_graceful(self.W1_ID, True)
+
+        w = yield self.db.workers.getWorker(self.W1_ID)
+        self.assertEqual(w, {
+            'id': self.W1_ID,
+            'name': self.W1_NAME,
+            'workerinfo': self.W1_INFO,
+            'paused': False,
+            "pause_reason": None,
+            'graceful': True,
             'configured_on': [],
             'connected_to': []
         })

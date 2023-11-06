@@ -93,6 +93,7 @@ class AbstractWorker(service.BuildbotService):
 
         self._graceful = False
         self._paused = False
+        self._pause_reason = None
 
         # these are set when the service is started
         self.manager = None
@@ -465,7 +466,8 @@ class AbstractWorker(service.BuildbotService):
         self.stopMissingTimer()
         yield self.updateWorker()
         yield self.botmaster.maybeStartBuildsForWorker(self.name)
-        self.updateState()
+        self._update_paused()
+        self._update_graceful()
 
     def messageReceivedFromWorker(self):
         now = time.time()
@@ -583,7 +585,7 @@ class AbstractWorker(service.BuildbotService):
         if key[-1] == "stop":
             return self.shutdownRequested()
         if key[-1] == "pause":
-            self.pause()
+            self.pause(params.get("reason", None))
         if key[-1] == "unpause":
             self.unpause()
         if key[-1] == "kill":
@@ -593,7 +595,7 @@ class AbstractWorker(service.BuildbotService):
     def shutdownRequested(self):
         self._graceful = True
         self.maybeShutdown()
-        self.updateState()
+        self._update_graceful()
 
     def addWorkerForBuilder(self, wfb):
         self.workerforbuilders[wfb.builder_name] = wfb
@@ -661,20 +663,25 @@ class AbstractWorker(service.BuildbotService):
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down worker')
 
-    def updateState(self):
-        self.master.data.updates.setWorkerState(self.workerid, self._paused, self._graceful)
+    def _update_paused(self):
+        self.master.data.updates.set_worker_paused(self.workerid, self._paused, self._pause_reason)
 
-    def pause(self):
+    def _update_graceful(self):
+        self.master.data.updates.set_worker_graceful(self.workerid, self._graceful)
+
+    def pause(self, reason):
         """Stop running new builds on the worker."""
         self._paused = True
-        self.updateState()
+        self._pause_reason = reason
+        self._update_paused()
 
     def unpause(self):
         """Restart running new builds on the worker."""
         self._paused = False
+        self._pause_reason = None
         self.stopQuarantineTimer()
         self.botmaster.maybeStartBuildsForWorker(self.name)
-        self.updateState()
+        self._update_paused()
 
     def isPaused(self):
         return self._paused

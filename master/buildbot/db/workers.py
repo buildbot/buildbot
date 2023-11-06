@@ -30,7 +30,13 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name == name),
-            insert_values={"name": name, "info": {}, "paused": 0, "graceful": 0}
+            insert_values={
+                "name": name,
+                "info": {},
+                "paused": 0,
+                "pause_reason": None,
+                "graceful": 0
+            }
         )
 
     def _deleteFromConfiguredWorkers_thd(self, conn, buildermasterids, workerid=None):
@@ -135,7 +141,9 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             j = j.outerjoin(bm_tbl)
             q = sa.select(
                 [workers_tbl.c.id, workers_tbl.c.name, workers_tbl.c.info,
-                 workers_tbl.c.paused, workers_tbl.c.graceful,
+                 workers_tbl.c.paused,
+                 workers_tbl.c.pause_reason,
+                 workers_tbl.c.graceful,
                  bm_tbl.c.builderid, bm_tbl.c.masterid],
                 from_obj=[j],
                 order_by=[workers_tbl.c.id])
@@ -168,6 +176,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                         'connected_to': [],
                         'workerinfo': row.info,
                         'paused': bool(row.paused),
+                        "pause_reason": row.pause_reason,
                         'graceful': bool(row.graceful)}
                     rv[lastId] = res
                 if row.builderid and row.masterid:
@@ -229,9 +238,17 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
-    def setWorkerState(self, workerid, paused, graceful):
+    def set_worker_paused(self, workerid, paused, pause_reason=None):
         def thd(conn):
             tbl = self.db.model.workers
             q = tbl.update(whereclause=tbl.c.id == workerid)
-            conn.execute(q, paused=int(paused), graceful=int(graceful))
+            conn.execute(q, paused=int(paused), pause_reason=pause_reason)
+        return self.db.pool.do(thd)
+
+    # returns a Deferred that returns None
+    def set_worker_graceful(self, workerid, graceful):
+        def thd(conn):
+            tbl = self.db.model.workers
+            q = tbl.update(whereclause=tbl.c.id == workerid)
+            conn.execute(q, graceful=int(graceful))
         return self.db.pool.do(thd)
