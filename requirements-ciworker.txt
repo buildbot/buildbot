@@ -6,7 +6,7 @@ autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: 
 Automat==20.2.0;  python_version < "3.6"  # pyup: ignore
 Automat==22.10.0;  python_version >= "3.6"
 cffi==1.16.0;  python_version >= "3.6"
-constantly==15.1.0
+constantly==23.10.4
 cryptography==41.0.4;  python_version >= "3.6"
 funcsigs==1.0.2
 future==0.18.3
