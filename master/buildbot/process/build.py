@@ -458,6 +458,8 @@ class Build(properties.PropertiesMixin):
             self.workerforbuilder.worker.putInQuarantine()
             if isinstance(why, failure.Failure):
                 yield self.preparation_step.addLogWithFailure(why)
+            elif isinstance(why, Exception):
+                yield self.preparation_step.addLogWithException(why)
             yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
                                                             "error while " + state_string)
             yield self.master.data.updates.finishStep(self.preparation_step.stepid,
