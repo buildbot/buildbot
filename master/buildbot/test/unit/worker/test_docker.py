@@ -99,7 +99,6 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
 
     @defer.inlineCallbacks
     def test_contruction_minimal_docker(self):
-        self.patch(dockerworker, 'docker_py_version', parse_version("4.0"))
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         client = docker.Client.latest
@@ -156,9 +155,8 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
             'network_mode': 'fake',
             'dns': ['1.1.1.1', '1.2.3.4'],
             'binds': ['/tmp:/tmp:ro'],
+            "init": True,
         }
-        if dockerworker.docker_py_version >= parse_version("2.2"):
-            expected['init'] = True
         self.assertEqual(client.call_args_create_host_config, [expected])
 
     @defer.inlineCallbacks
@@ -213,9 +211,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
         client = docker.Client.latest
         self.assertEqual(len(client.call_args_create_container), 1)
 
-        expected = {'prop': 'value-docker_worker', 'binds': []}
-        if dockerworker.docker_py_version >= parse_version("2.2"):
-            expected['init'] = True
+        expected = {'prop': 'value-docker_worker', 'binds': [], "init": True}
         self.assertEqual(client.call_args_create_host_config, [expected])
 
     @defer.inlineCallbacks

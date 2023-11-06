@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-__version__ = "1.10.6"
+__version__ = "4.0"
 
 
 class Client:
