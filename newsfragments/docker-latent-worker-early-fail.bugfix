@@ -1,0 +1,2 @@
+Improved handling of Docker containers that fail before worker attaches to master.
+In such case build will be restarted immediately instead of waiting for a timeout to expire.

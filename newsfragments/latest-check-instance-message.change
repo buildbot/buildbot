@@ -1,0 +1,2 @@
+``AbstractLatentWorker.check_instance()`` now accepts error message being supplied in case instance is not good.
+The previous API has been deprecated.

@@ -105,12 +105,16 @@ class Client:
             'image': image,
             'Id': ret['Id'],
             'name': name,  # docker does not return this
-            'Names': ["/" + name]  # this what docker returns
+            'Names': ["/" + name],  # this what docker returns
+            "State": "running",
         }
         return ret
 
     def remove_container(self, id, **kwargs):
         del self._containers[id]
+
+    def logs(self, id, tail=None):
+        return f"log for {id}\n1\n2\n3\nend\n".encode("utf-8")
 
     def close(self):
         # dummy close, no connection to cleanup

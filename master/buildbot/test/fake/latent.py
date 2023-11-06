@@ -229,4 +229,4 @@ class ControllableLatentWorker(AbstractLatentWorker):
         return (yield self._controller._stop_deferred)
 
     def check_instance(self):
-        return not self._controller.has_crashed
+        return (not self._controller.has_crashed, "")

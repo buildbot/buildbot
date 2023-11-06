@@ -675,8 +675,14 @@ Overriding these members ensures that builds aren't ran on incompatible workers 
     .. py:method:: check_instance(self)
 
         This method determines the health of an instance.
-        The method should return ``False`` if it determines that a serious error has occurred and worker will not connect to the master.
-        Otherwise, the method should return ``True``.
+        The method is expected to return a tuple with two members: ``is_good`` and ``message``.
+        The first member identifies whether the instance is still valid.
+        It should be ``False`` if the method determined that a serious error has occurred and worker will not connect to the master.
+        In such case, ``message`` should identify any additional error message that should be displayed to Buildbot user.
+
+        In case there is no additional messages, ``message`` should be an empty string.
+
+        Any exceptions raised from this method are interpreted as if the method returned ``False``.
 
 
 Custom Build Classes
