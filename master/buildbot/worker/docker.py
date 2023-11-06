@@ -34,13 +34,11 @@ from buildbot.worker import AbstractLatentWorker
 
 try:
     import docker
-    from docker import client
     from docker.errors import NotFound
-    _hush_pyflakes = [docker, client]
+    _hush_pyflakes = [docker]
     docker_py_version = parse_version(docker.__version__)
 except ImportError:
     docker = None
-    client = None
     docker_py_version = parse_version("0.0")
 
 
@@ -212,7 +210,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         return volume_list, volumes
 
     def _getDockerClient(self, client_args):
-        return client.APIClient(**client_args)
+        return docker.APIClient(**client_args)
 
     def renderWorkerProps(self, build):
         return build.render((self.docker_host, self.image, self.dockerfile,

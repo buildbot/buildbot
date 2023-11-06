@@ -51,7 +51,6 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
             image='busybox:latest', builder='docker_worker', distro='wheezy')
         self.build2 = Properties(
             image='busybox:latest', builder='docker_worker2', distro='wheezy')
-        self.patch(dockerworker, 'client', docker)
         docker.Client.containerCreated = False
         docker.Client.start_exception = None
 
