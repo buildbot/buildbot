@@ -27,6 +27,7 @@ from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
+from buildbot.util import deferwaiter
 from buildbot.util import service
 
 
@@ -55,6 +56,10 @@ class AbstractWorker(service.BuildbotService):
 
     # override to True if isCompatibleWithBuild may return False
     builds_may_be_incompatible = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._deferwaiter = deferwaiter.DeferWaiter()
 
     def checkConfig(self, name, password, max_builds=None,
                     notify_on_missing=None,
@@ -365,6 +370,7 @@ class AbstractWorker(service.BuildbotService):
         yield self.disconnect()
         yield self.waitForCompleteShutdown()
 
+        yield self._deferwaiter.wait()
         yield super().stopService()
 
     def isCompatibleWithBuild(self, build_props):
@@ -664,10 +670,18 @@ class AbstractWorker(service.BuildbotService):
         d.addErrback(log.err, 'error while shutting down worker')
 
     def _update_paused(self):
-        self.master.data.updates.set_worker_paused(self.workerid, self._paused, self._pause_reason)
+        self._deferwaiter.add(
+            self.master.data.updates.set_worker_paused(
+                self.workerid,
+                self._paused,
+                self._pause_reason
+            )
+        )
 
     def _update_graceful(self):
-        self.master.data.updates.set_worker_graceful(self.workerid, self._graceful)
+        self._deferwaiter.add(
+            self.master.data.updates.set_worker_graceful(self.workerid, self._graceful)
+        )
 
     def pause(self, reason):
         """Stop running new builds on the worker."""
