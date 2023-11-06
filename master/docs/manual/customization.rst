@@ -677,6 +677,7 @@ Overriding these members ensures that builds aren't ran on incompatible workers 
         This method determines the health of an instance.
         The method should return ``False`` if it determines that a serious error has occurred and worker will not connect to the master.
         Otherwise, the method should return ``True``.
+        Any exceptions raised from this method are interpreted as if the method returned ``False``.
 
 
 Custom Build Classes

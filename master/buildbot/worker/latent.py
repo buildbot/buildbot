@@ -460,12 +460,16 @@ class AbstractLatentWorker(AbstractWorker):
 
         try:
             yield self._start_stop_lock.acquire()
-            is_good = yield self.check_instance()
+            message = "latent worker crashed before connecting"
+            try:
+                is_good = yield self.check_instance()
+            except Exception as e:
+                message += ": " + str(e)
+                is_good = False
+
             if not is_good:
                 yield self._substantiation_failed(
-                    LatentWorkerFailedToSubstantiate(
-                        self.name, 'latent worker crashed before connecting'
-                    )
+                    LatentWorkerFailedToSubstantiate(self.name, message)
                 )
                 return
         finally:
