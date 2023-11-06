@@ -421,6 +421,20 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
             image="myworker_image", hostname="myworker_hostname")
         self.assertEqual(bs.hostname, 'myworker_hostname')
 
+    @defer.inlineCallbacks
+    def test_check_instance_running(self):
+        bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
+        yield bs.start_instance(self.build)
+        self.assertTrue((yield bs.check_instance()))
+
+    @defer.inlineCallbacks
+    def test_check_instance_exited(self):
+        bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
+        yield bs.start_instance(self.build)
+        for c in self._client._containers.values():
+            c["State"] = "exited"
+        self.assertFalse((yield bs.check_instance()))
+
 
 class testDockerPyStreamLogs(unittest.TestCase):
 

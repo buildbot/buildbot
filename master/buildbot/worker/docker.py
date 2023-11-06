@@ -348,6 +348,26 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         docker_client.close()
         return [instance['Id'], image]
 
+    def check_instance(self):
+        if self.instance is None:
+            return defer.succeed(True)
+        return threads.deferToThread(
+            self._thd_check_instance,
+            self._curr_client_args
+        )
+
+    def _thd_check_instance(self, curr_client_args):
+        docker_client = self._getDockerClient(curr_client_args)
+        container_name = self.getContainerName()
+        instances = docker_client.containers(all=1, filters={"name": container_name})
+        container_name = f"/{container_name}"
+        for instance in instances:
+            if container_name not in instance["Names"]:
+                continue
+            if instance["State"] == "exited":
+                return False
+        return True
+
     def stop_instance(self, fast=False):
         if self.instance is None:
             # be gentle. Something may just be trying to alert us that an
