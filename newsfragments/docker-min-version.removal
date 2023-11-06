@@ -1,0 +1,1 @@
+Buildbot now requires ``docker`` of version v4.0.0 or newer for Docker support.

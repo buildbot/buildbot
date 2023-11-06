@@ -27,10 +27,11 @@ from buildbot.process.properties import Property
 from buildbot.test.fake import docker
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.worker import docker as dockerworker
 
 
-class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
+class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
@@ -53,12 +54,6 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         self.patch(dockerworker, 'client', docker)
         docker.Client.containerCreated = False
         docker.Client.start_exception = None
-
-    @defer.inlineCallbacks
-    def test_constructor_nodocker(self):
-        self.patch(dockerworker, 'client', None)
-        with self.assertRaises(config.ConfigErrors):
-            yield self.setupWorker('bot', 'pass', 'unix://tmp.sock', 'debian:wheezy', [])
 
     @defer.inlineCallbacks
     def test_constructor_noimage_nodockerfile(self):
@@ -97,24 +92,18 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         self.assertEqual(bs.builds_may_be_incompatible, True)
 
     @defer.inlineCallbacks
-    def test_contruction_minimal_docker_py(self):
-        self.patch(dockerworker, 'docker_py_version', parse_version("1.10"))
-        bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
-        yield bs.start_instance(self.build)
-        client = docker.APIClient.latest
-        self.assertEqual(client.called_class_name, "Client")
-        client = docker.Client.latest
-        self.assertNotEqual(client.called_class_name, "APIClient")
+    def test_contruction_too_old_docker(self):
+        self.patch(dockerworker, 'docker_py_version', parse_version("3.2"))
+        with self.assertRaisesConfigError("The python module 'docker>=4.0'"):
+            yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
 
     @defer.inlineCallbacks
     def test_contruction_minimal_docker(self):
-        self.patch(dockerworker, 'docker_py_version', parse_version("2.0"))
+        self.patch(dockerworker, 'docker_py_version', parse_version("4.0"))
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         client = docker.Client.latest
         self.assertEqual(client.called_class_name, "APIClient")
-        client = docker.APIClient.latest
-        self.assertNotEqual(client.called_class_name, "Client")
 
     @defer.inlineCallbacks
     def test_constructor_nopassword(self):

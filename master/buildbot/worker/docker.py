@@ -140,8 +140,8 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
 
         super().checkConfig(name, password, image, masterFQDN, **kwargs)
 
-        if not client:
-            config.error("The python module 'docker>=2.0' is needed to use a"
+        if docker_py_version < parse_version("4.0.0"):
+            config.error("The python module 'docker>=4.0' is needed to use a"
                          " DockerLatentWorker")
         if not image and not dockerfile:
             config.error("DockerLatentWorker: You need to specify at least"
@@ -212,11 +212,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         return volume_list, volumes
 
     def _getDockerClient(self, client_args):
-        if parse_version("1.0") <= docker_py_version < parse_version("2.0"):
-            docker_client = client.Client(**client_args)
-        else:
-            docker_client = client.APIClient(**client_args)
-        return docker_client
+        return client.APIClient(**client_args)
 
     def renderWorkerProps(self, build):
         return build.render((self.docker_host, self.image, self.dockerfile,
@@ -306,7 +302,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
 
         volumes, binds = self._thd_parse_volumes(volumes)
         host_config['binds'] = binds
-        if docker_py_version >= parse_version("2.2") and 'init' not in host_config:
+        if 'init' not in host_config:
             host_config['init'] = True
         host_config = docker_client.create_host_config(**host_config)
 
