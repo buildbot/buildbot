@@ -23,7 +23,6 @@ class Client:
     start_exception = None
 
     def __init__(self, base_url):
-        Client.latest = self
         self.base_url = base_url
         self.call_args_create_container = []
         self.call_args_create_host_config = []

@@ -35,7 +35,6 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
-        self.patch(dockerworker, 'docker', docker)
         worker = dockerworker.DockerLatentWorker(*args, **kwargs)
         master = fakemaster.make_master(self, wantData=True)
         fakemaster.master = master
@@ -44,8 +43,20 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
         self.addCleanup(master.stopService)
         return worker
 
+    def _create_client(self, *args, **kwargs):
+        if self._client is None:
+            self._client = docker.Client(*args, **kwargs)
+        return self._client
+
     def setUp(self):
         self.setup_test_reactor()
+
+        self.patch(dockerworker, 'docker', docker)
+
+        # Patch factory function so that single test uses single client instance.
+        self.patch(docker, "APIClient", self._create_client)
+
+        self._client = None
 
         self.build = Properties(
             image='busybox:latest', builder='docker_worker', distro='wheezy')
@@ -100,9 +111,8 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
     def test_contruction_minimal_docker(self):
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
-        client = docker.Client.latest
         self.assertEqual(
-            [c["Names"] for c in client._containers.values()],
+            [c["Names"] for c in self._client._containers.values()],
             [["buildbot-bot-87de7e"]]
         )
 
@@ -149,14 +159,13 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
                                     custom_context=False, buildargs=None,
                                     encoding='gzip')
         yield bs.start_instance(self.build)
-        client = docker.APIClient.latest
         expected = {
             'network_mode': 'fake',
             'dns': ['1.1.1.1', '1.2.3.4'],
             'binds': ['/tmp:/tmp:ro'],
             "init": True,
         }
-        self.assertEqual(client.call_args_create_host_config, [expected])
+        self.assertEqual(self._client.call_args_create_host_config, [expected])
 
     @defer.inlineCallbacks
     def test_constructor_host_config_build_set_init(self):
@@ -171,8 +180,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
                                     custom_context=False, buildargs=None,
                                     encoding='gzip')
         yield bs.start_instance(self.build)
-        client = docker.APIClient.latest
-        self.assertEqual(client.call_args_create_host_config, [
+        self.assertEqual(self._client.call_args_create_host_config, [
             {'network_mode': 'fake',
              'dns': ['1.1.1.1', '1.2.3.4'],
              'init': False,
@@ -186,8 +194,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
                                     docker_host=Interpolate('tcp://value-%(prop:builder)s'),
                                     image='worker')
         yield bs.start_instance(self.build)
-        client = docker.Client.latest
-        self.assertEqual(client.base_url, 'tcp://value-docker_worker')
+        self.assertEqual(self._client.base_url, 'tcp://value-docker_worker')
 
     @defer.inlineCallbacks
     def test_start_instance_volume_renderable(self):
@@ -196,9 +203,8 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
             volumes=[Interpolate('/data:/worker/%(kw:builder)s/build',
                                  builder=Property('builder'))])
         yield bs.start_instance(self.build)
-        client = docker.Client.latest
-        self.assertEqual(len(client.call_args_create_container), 1)
-        self.assertEqual(client.call_args_create_container[0]['volumes'],
+        self.assertEqual(len(self._client.call_args_create_container), 1)
+        self.assertEqual(self._client.call_args_create_container[0]['volumes'],
                          ['/worker/docker_worker/build'])
 
     @defer.inlineCallbacks
@@ -207,11 +213,10 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
                                     hostconfig={'prop': Interpolate('value-%(kw:builder)s',
                                                                     builder=Property('builder'))})
         yield bs.start_instance(self.build)
-        client = docker.Client.latest
-        self.assertEqual(len(client.call_args_create_container), 1)
+        self.assertEqual(len(self._client.call_args_create_container), 1)
 
         expected = {'prop': 'value-docker_worker', 'binds': [], "init": True}
-        self.assertEqual(client.call_args_create_host_config, [expected])
+        self.assertEqual(self._client.call_args_create_host_config, [expected])
 
     @defer.inlineCallbacks
     def test_interpolate_renderables_for_new_build(self):
@@ -240,12 +245,11 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
                                     volumes=['/src/webapp:/opt/webapp'])
         yield bs.start_instance(self.build)
-        client = docker.Client.latest
-        self.assertEqual(len(client.call_args_create_container), 1)
-        self.assertEqual(len(client.call_args_create_host_config), 1)
-        self.assertEqual(client.call_args_create_container[0]['volumes'],
+        self.assertEqual(len(self._client.call_args_create_container), 1)
+        self.assertEqual(len(self._client.call_args_create_host_config), 1)
+        self.assertEqual(self._client.call_args_create_container[0]['volumes'],
                          ['/opt/webapp'])
-        self.assertEqual(client.call_args_create_host_config[0]['binds'],
+        self.assertEqual(self._client.call_args_create_host_config[0]['binds'],
                          ["/src/webapp:/opt/webapp"])
 
     @defer.inlineCallbacks
@@ -254,12 +258,11 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
                                     volumes=['/src/webapp:/opt/webapp:ro',
                                              '~:/backup:rw'])
         yield bs.start_instance(self.build)
-        client = docker.Client.latest
-        self.assertEqual(len(client.call_args_create_container), 1)
-        self.assertEqual(len(client.call_args_create_host_config), 1)
-        self.assertEqual(client.call_args_create_container[0]['volumes'],
+        self.assertEqual(len(self._client.call_args_create_container), 1)
+        self.assertEqual(len(self._client.call_args_create_host_config), 1)
+        self.assertEqual(self._client.call_args_create_container[0]['volumes'],
                          ['/opt/webapp', '/backup'])
-        self.assertEqual(client.call_args_create_host_config[0]['binds'],
+        self.assertEqual(self._client.call_args_create_host_config[0]['binds'],
                          ['/src/webapp:/opt/webapp:ro', '~:/backup:rw'])
 
     @defer.inlineCallbacks
@@ -340,8 +343,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
             'bot', 'pass', 'tcp://1234:2375', 'tester:latest', autopull=True)
         _, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'tester:latest')
-        client = docker.Client.latest
-        self.assertEqual(client._pullCount, 0)
+        self.assertEqual(self._client._pullCount, 0)
 
     @defer.inlineCallbacks
     def test_start_instance_image_alwayspull(self):
@@ -349,8 +351,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
             'bot', 'pass', 'tcp://1234:2375', 'tester:latest', autopull=True, alwaysPull=True)
         _, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'tester:latest')
-        client = docker.Client.latest
-        self.assertEqual(client._pullCount, 1)
+        self.assertEqual(self._client._pullCount, 1)
 
     @defer.inlineCallbacks
     def test_start_instance_image_noauto_alwayspull(self):
@@ -358,8 +359,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
             'bot', 'pass', 'tcp://1234:2375', 'tester:latest', autopull=False, alwaysPull=True)
         _, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'tester:latest')
-        client = docker.Client.latest
-        self.assertEqual(client._pullCount, 0)
+        self.assertEqual(self._client._pullCount, 0)
 
     @defer.inlineCallbacks
     def test_start_instance_noimage_renderabledockerfile(self):
@@ -405,7 +405,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
         self.assertEqual(name, 'busybox:latest')
 
     @defer.inlineCallbacks
-    def test_start_instance_docker_client_start_exception(self):
+    def test_start_instance_client_start_exception(self):
         msg = 'The container operating system does not match the host operating system'
         docker.Client.start_exception = docker.errors.APIError(msg)
 
