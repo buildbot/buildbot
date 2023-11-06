@@ -153,13 +153,13 @@ To do this, enter the following lines in a Python prompt where docker-py is inst
 
     >>> import docker
     >>> docker_socket = 'tcp://localhost:2375'
-    >>> client = docker.client.APIClient(base_url=docker_socket)
+    >>> client = docker.client.DockerClient(base_url=docker_socket)
     >>> worker_image = 'my_project_worker'
-    >>> container = client.create_container(worker_image)
-    >>> client.start(container['Id'])
+    >>> container = client.containers.create_container(worker_image)
+    >>> client.containers.start(container['Id'])
     >>> # Optionally examine the logs of the master
-    >>> client.stop(container['Id'])
-    >>> client.wait(container['Id'])
+    >>> client.containers.stop(container['Id'])
+    >>> client.containers.wait(container['Id'])
     0
 
 It is now time to add the new worker to the master configuration under :bb:cfg:`workers`.

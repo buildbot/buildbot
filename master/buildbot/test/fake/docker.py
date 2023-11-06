@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-__version__ = "1.10.6"
+__version__ = "4.0"
 
 
 class Client:
@@ -23,11 +23,9 @@ class Client:
     start_exception = None
 
     def __init__(self, base_url):
-        Client.latest = self
         self.base_url = base_url
         self.call_args_create_container = []
         self.call_args_create_host_config = []
-        self.called_class_name = None
         self._images = [
             {'RepoTags': ['busybox:latest', 'worker:latest', 'tester:latest']}]
         self._pullable = ['alpine:latest', 'tester:latest']
@@ -91,7 +89,6 @@ class Client:
 
     def create_container(self, image, *args, **kwargs):
         self.call_args_create_container.append(kwargs)
-        self.called_class_name = self.__class__.__name__
         name = kwargs.get('name', None)
         if 'buggy' in image:
             raise RuntimeError('we could not create this container')
@@ -108,7 +105,7 @@ class Client:
             'image': image,
             'Id': ret['Id'],
             'name': name,  # docker does not return this
-            'Names': [name]  # this what docker returns
+            'Names': ["/" + name]  # this what docker returns
         }
         return ret
 
