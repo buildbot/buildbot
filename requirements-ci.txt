@@ -21,7 +21,7 @@ alabaster==0.7.13
 alembic==1.11.3
 appdirs==1.4.4
 asn1crypto==1.5.1
-astroid==3.0.0
+astroid==3.0.1
 attrs==23.1.0
 Automat==22.10.0
 Babel==2.12.1
