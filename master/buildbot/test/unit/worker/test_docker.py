@@ -433,7 +433,16 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
         yield bs.start_instance(self.build)
         for c in self._client._containers.values():
             c["State"] = "exited"
-        self.assertEqual((yield bs.check_instance()), (False, ""))
+
+        expected_logs = (
+            "logs: \n"
+            "log for 8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7\n"
+            "1\n"
+            "2\n"
+            "3\n"
+            "end\n"
+        )
+        self.assertEqual((yield bs.check_instance()), (False, expected_logs))
 
 
 class testDockerPyStreamLogs(unittest.TestCase):

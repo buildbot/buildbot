@@ -113,6 +113,9 @@ class Client:
     def remove_container(self, id, **kwargs):
         del self._containers[id]
 
+    def logs(self, id, tail=None):
+        return f"log for {id}\n1\n2\n3\nend\n".encode("utf-8")
+
     def close(self):
         # dummy close, no connection to cleanup
         pass

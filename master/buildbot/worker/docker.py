@@ -365,7 +365,8 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             if container_name not in instance["Names"]:
                 continue
             if instance["State"] == "exited":
-                return (False, "")
+                logs = docker_client.logs(instance['Id'], tail=100).decode("utf-8")
+                return (False, "logs: \n" + logs)
         return (True, "")
 
     def stop_instance(self, fast=False):
