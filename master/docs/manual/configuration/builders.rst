@@ -192,7 +192,7 @@ Possible values for both ``collapseRequests`` configurations are:
 ``False``
     Requests will never be collapsed.
 
-``callable(builder, req1, req2)``
+``callable(master, builder, req1, req2)``
     Requests will be collapsed if the callable returns true.
     See :ref:`Collapse-Request-Functions` for detailed example.
 
