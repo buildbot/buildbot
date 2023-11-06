@@ -130,4 +130,4 @@ websocket-client==1.6.4
 Werkzeug==3.0.1
 wrapt==1.15.0
 xmltodict==0.13.0
-zope.interface==6.0
+zope.interface==6.1
