@@ -27,7 +27,6 @@ class Client:
         self.base_url = base_url
         self.call_args_create_container = []
         self.call_args_create_host_config = []
-        self.called_class_name = None
         self._images = [
             {'RepoTags': ['busybox:latest', 'worker:latest', 'tester:latest']}]
         self._pullable = ['alpine:latest', 'tester:latest']
@@ -91,7 +90,6 @@ class Client:
 
     def create_container(self, image, *args, **kwargs):
         self.call_args_create_container.append(kwargs)
-        self.called_class_name = self.__class__.__name__
         name = kwargs.get('name', None)
         if 'buggy' in image:
             raise RuntimeError('we could not create this container')

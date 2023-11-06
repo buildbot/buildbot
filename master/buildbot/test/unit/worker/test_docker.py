@@ -103,7 +103,10 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         client = docker.Client.latest
-        self.assertEqual(client.called_class_name, "APIClient")
+        self.assertEqual(
+            [c["Names"] for c in client._containers.values()],
+            [["buildbot-bot-87de7e"]]
+        )
 
     @defer.inlineCallbacks
     def test_constructor_nopassword(self):
