@@ -28,7 +28,6 @@ from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.util import Notifier
-from buildbot.util import deferwaiter
 from buildbot.worker.base import AbstractWorker
 
 
@@ -162,7 +161,6 @@ class AbstractLatentWorker(AbstractWorker):
         super().__init__(*args, **kwargs)
         self._substantiation_notifier = Notifier()
         self._start_stop_lock = defer.DeferredLock()
-        self._deferwaiter = deferwaiter.DeferWaiter()
         self._check_instance_timer = None
 
     def checkConfig(self, name, password,
