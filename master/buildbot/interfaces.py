@@ -49,15 +49,18 @@ deprecatedModuleAttribute(
 
 
 class LatentWorkerFailedToSubstantiate(Exception):
-    pass
+    def __str__(self):
+        return " ".join(str(arg) for arg in self.args)
 
 
 class LatentWorkerCannotSubstantiate(Exception):
-    pass
+    def __str__(self):
+        return " ".join(str(arg) for arg in self.args)
 
 
 class LatentWorkerSubstantiatiationCancelled(Exception):
-    pass
+    def __str__(self):
+        return " ".join(str(arg) for arg in self.args)
 
 
 class IPlugin(Interface):
