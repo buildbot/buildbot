@@ -113,7 +113,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
         yield bs.start_instance(self.build)
         self.assertEqual(
             [c["Names"] for c in self._client._containers.values()],
-            [["buildbot-bot-87de7e"]]
+            [["/buildbot-bot-87de7e"]]
         )
 
     @defer.inlineCallbacks

@@ -105,7 +105,7 @@ class Client:
             'image': image,
             'Id': ret['Id'],
             'name': name,  # docker does not return this
-            'Names': [name]  # this what docker returns
+            'Names': ["/" + name]  # this what docker returns
         }
         return ret
 
