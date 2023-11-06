@@ -350,7 +350,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
 
     def check_instance(self):
         if self.instance is None:
-            return defer.succeed(True)
+            return defer.succeed((True, ""))
         return threads.deferToThread(
             self._thd_check_instance,
             self._curr_client_args
@@ -365,8 +365,8 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             if container_name not in instance["Names"]:
                 continue
             if instance["State"] == "exited":
-                return False
-        return True
+                return (False, "")
+        return (True, "")
 
     def stop_instance(self, fast=False):
         if self.instance is None:
