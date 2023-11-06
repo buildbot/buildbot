@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from packaging.version import parse as parse_version
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -96,7 +98,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_contruction_minimal_docker_py(self):
-        self.patch(dockerworker, 'docker_py_version', 1.10)
+        self.patch(dockerworker, 'docker_py_version', parse_version("1.10"))
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         client = docker.APIClient.latest
@@ -106,7 +108,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_contruction_minimal_docker(self):
-        self.patch(dockerworker, 'docker_py_version', 2.0)
+        self.patch(dockerworker, 'docker_py_version', parse_version("2.0"))
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         client = docker.Client.latest
@@ -163,7 +165,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
             'dns': ['1.1.1.1', '1.2.3.4'],
             'binds': ['/tmp:/tmp:ro'],
         }
-        if dockerworker.docker_py_version >= 2.2:
+        if dockerworker.docker_py_version >= parse_version("2.2"):
             expected['init'] = True
         self.assertEqual(client.call_args_create_host_config, [expected])
 
@@ -220,7 +222,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         self.assertEqual(len(client.call_args_create_container), 1)
 
         expected = {'prop': 'value-docker_worker', 'binds': []}
-        if dockerworker.docker_py_version >= 2.2:
+        if dockerworker.docker_py_version >= parse_version("2.2"):
             expected['init'] = True
         self.assertEqual(client.call_args_create_host_config, [expected])
 

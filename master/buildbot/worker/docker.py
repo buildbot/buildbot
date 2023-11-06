@@ -19,6 +19,8 @@ import json
 import socket
 from io import BytesIO
 
+from packaging.version import parse as parse_version
+
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
@@ -35,11 +37,11 @@ try:
     from docker import client
     from docker.errors import NotFound
     _hush_pyflakes = [docker, client]
-    docker_py_version = float(docker.__version__.rsplit(".", 1)[0])
+    docker_py_version = parse_version(docker.__version__)
 except ImportError:
     docker = None
     client = None
-    docker_py_version = 0.0
+    docker_py_version = parse_version("0.0")
 
 
 def _handle_stream_line(line):
@@ -210,7 +212,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         return volume_list, volumes
 
     def _getDockerClient(self, client_args):
-        if 1.0 <= docker_py_version < 2.0:
+        if parse_version("1.0") <= docker_py_version < parse_version("2.0"):
             docker_client = client.Client(**client_args)
         else:
             docker_client = client.APIClient(**client_args)
@@ -304,7 +306,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
 
         volumes, binds = self._thd_parse_volumes(volumes)
         host_config['binds'] = binds
-        if docker_py_version >= 2.2 and 'init' not in host_config:
+        if docker_py_version >= parse_version("2.2") and 'init' not in host_config:
             host_config['init'] = True
         host_config = docker_client.create_host_config(**host_config)
 
