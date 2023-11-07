@@ -106,6 +106,7 @@ Buildmaster
 buildmasters
 buildnumber
 buildrequest
+buildrequestid
 buildrequests
 buildset
 Buildset

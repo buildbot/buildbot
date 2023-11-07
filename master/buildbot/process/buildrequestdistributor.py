@@ -87,8 +87,8 @@ class BuildChooserBase:
                                                  [resultspec.Filter('claimed',
                                                                     'eq',
                                                                     [False])])
-            # sort by submitted_at, so the first is the oldest
-            brdicts.sort(key=lambda brd: brd['submitted_at'])
+            # sort by buildrequestid, so the first is the oldest
+            brdicts.sort(key=lambda brd: brd['buildrequestid'])
             self.unclaimedBrdicts = brdicts
         return self.unclaimedBrdicts
 

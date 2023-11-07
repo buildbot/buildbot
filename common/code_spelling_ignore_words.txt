@@ -200,6 +200,7 @@ buildreq
 buildrequest
 buildrequestcompletions
 buildrequestdistributor
+buildrequestid
 buildrequestresults
 buildrequests
 buildrequestsconnectorcomponent
