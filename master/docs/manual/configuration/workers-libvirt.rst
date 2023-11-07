@@ -69,6 +69,11 @@ Should set up a KVM compatible libvirt network for your buildbot VM's to run on.
 Configuring your Master
 -----------------------
 
+.. warning::
+   There is currently a buildbot bug that fails to use the ``base_image`` if provided.
+   This means that the worker always uses the ``hd_image`` and changes will persist between builds.
+   See the `GitHub issue <https://github.com/buildbot/buildbot/issues/7122>`_ for details.
+
 If you want to add a simple on demand VM to your setup, you only need the following.
 We set the username to ``minion1``, the password to ``sekrit``.
 The base image is called ``base_image`` and a copy of it will be made for the duration of the VM's life.
