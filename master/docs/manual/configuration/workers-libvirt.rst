@@ -33,7 +33,7 @@ Setting up libvirt
 We won't show you how to set up libvirt as it is quite different on each platform, but there are a few things you should keep in mind.
 
 * If you are using the system libvirt (libvirt and buildbot master are on same server), your buildbot master user will need to be in the libvirtd group.
-* If libvirt and buildbot master are on different servers, the user connecting to libvirt over ssh will need to be in the libvirtd group. Also need to setup authorization via ssh-keys (without password prompt).   
+* If libvirt and buildbot master are on different servers, the user connecting to libvirt over ssh will need to be in the libvirtd group. Also need to setup authorization via ssh-keys (without password prompt).
 * If you are using KVM, your buildbot master user will need to be in the KVM group.
 * You need to think carefully about your virtual network *first*.
   Will NAT be enough?
@@ -122,7 +122,7 @@ If you don't, buildbot won't be able to find a VM to start.
 ``xml``
     If a VM isn't predefined in virt-manager, then you can instead provide XML like that used with ``virsh define``.
     The VM will be created automatically when needed, and destroyed when not needed any longer.
-    
+
 .. note:: The ``hd_image`` and ``base_image`` must be on same machine with buildbot master.
 
 Connection to master
@@ -143,7 +143,7 @@ If you want to use libvirt on remote server configure remote libvirt server and 
 
 Configure remote libvirt server:
 
-1. Create virtual machine for buildbot and configure it. 
+1. Create virtual machine for buildbot and configure it.
 2. Change virtual machine image file to new name, which will be used as temporary image and deleted after virtual machine stops. Execute command ``sudo virsh edit <VM name>``. In xml file locate ``devices/disk/source`` and change file path to new name. The file must not be exists, it will create via hook script.
 3. Add hook script to ``/etc/libvirt/hooks/qemu`` to recreate VM image each start:
 
@@ -162,7 +162,7 @@ Configure remote libvirt server:
    import sys
 
    images_path = '/var/lib/libvirt/images/'
-   
+
    # build-vm - VM name in virsh list --all
    # vm_base_image.qcow2 - base image file name, must exist in path /var/lib/libvirt/images/
    # vm_temp_image.qcow2 - temporary image. Must not exist in path /var/lib/libvirt/images/, but
@@ -180,7 +180,7 @@ Configure remote libvirt server:
        if vir_domain in domains:
            domain = domains[vir_domain]
            cmd = ['/usr/bin/qemu-img', 'create', '-b', images_path + domain[0],
-                  '-f', 'qcow2', images_path + domain[1]]
+                  '-f', 'qcow2', '-F', 'qcow2', images_path + domain[1]]
            subprocess.call(cmd)
 
    if __name__ == "__main__":
