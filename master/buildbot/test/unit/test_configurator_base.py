@@ -25,6 +25,15 @@ class ConfiguratorBaseTests(configurators.ConfiguratorMixin, unittest.Synchronou
     def test_basic(self):
         self.setupConfigurator()
         self.assertEqual(
-            self.config_dict, {'schedulers': [], 'protocols': {}, 'workers': [], 'builders': []}
+            self.config_dict,
+            {
+                'schedulers': [],
+                'protocols': {},
+                'builders': [],
+                'workers': [],
+                'projects': [],
+                'secretsProviders': [],
+                'www': {},
+            },
         )
         self.assertEqual(self.configurator.workers, [])
