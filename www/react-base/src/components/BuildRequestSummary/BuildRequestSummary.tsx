@@ -18,7 +18,7 @@
 import './BuildRequestSummary.scss';
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
-import {Builder, Buildrequest, Buildset, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
+import {Builder, Buildrequest, Buildset, useDataAccessor, useDataApiQuery, SKIPPED, results2text} from "buildbot-data-js";
 import {BadgeStatus} from "buildbot-ui";
 import {BuildSummary} from "../BuildSummary/BuildSummary";
 import {Link} from "react-router-dom";
@@ -48,6 +48,9 @@ export const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSumma
                   parentRelationship={null}/>
   ));
 
+  const isRequestSkipped = buildRequest?.results === SKIPPED;
+  const requestResultClass = isRequestSkipped ? "results_SKIPPED" : "results_PENDING";
+
   const renderBuildRequestDetails = () => {
     if (buildRequest === null) {
       return <>loading buildrequests details...</>
@@ -65,17 +68,19 @@ export const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSumma
           | {reason}
         </div>
         <div className="flex-grow-1 text-right">
-          <span>waiting for available worker and locks</span>
-          <BadgeStatus className="results_PENDING">...</BadgeStatus>
+          {!isRequestSkipped ? <span>waiting for available worker and locks</span> : <></>}
+          <BadgeStatus className={requestResultClass}>
+            {results2text(buildRequest)}
+          </BadgeStatus>
         </div>
       </>
     );
   }
 
-  const renderPendingBuilds = () => {
+  const renderRequest = () => {
     return (
       <div>
-        <Card className="bb-build-request-summary-pending-panel results_PENDING">
+        <Card className={"bb-build-request-summary-pending-panel " + requestResultClass}>
           <Card.Header className="no-select">
             <div className="flex-row">
               {renderBuildRequestDetails()}
@@ -89,8 +94,7 @@ export const BuildRequestSummary = observer(({buildrequestid}: BuildRequestSumma
   return (
     <div className="bb-build-request-summary">
       <>
-        {buildElements}
-        {builds.array.length === 0 ? renderPendingBuilds() : <></>}
+        {builds.array.length > 0 ? buildElements : renderRequest()}
       </>
     </div>
   );
