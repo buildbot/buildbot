@@ -24,6 +24,7 @@ from future.utils import iteritems
 from future.utils import string_types
 from future.utils import text_type
 
+import shlex
 import os
 import pprint
 import re
@@ -331,7 +332,7 @@ class RunProcess(object):
             return cmd
 
         self.command = to_bytes(util.Obfuscated.get_real(command))
-        self.fake_command = to_bytes(util.Obfuscated.get_fake(command))
+        self.fake_command = util.Obfuscated.get_fake(command)
 
         self.sendStdout = sendStdout
         self.sendStderr = sendStderr
@@ -531,7 +532,7 @@ class RunProcess(object):
         self.send_update([('header', msg + u"\n")])
 
         # then the obfuscated command array for resolving unambiguity
-        msg = u" argv: {0}".format(self.fake_command)
+        msg = u" argv: {0}".format(shlex.join(self.fake_command))
         self.log_msg(u" " + msg)
         self.send_update([('header', msg + u"\n")])
 

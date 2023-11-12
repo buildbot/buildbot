@@ -16,6 +16,7 @@
 import os
 import pprint
 import re
+import shlex
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -91,7 +92,8 @@ class MasterShellCommand(BuildStep):
             yield self.stdio_log.addHeader(" ".join(command) + "\n\n")
         yield self.stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
         yield self.stdio_log.addHeader(f" in dir {os.getcwd()}\n")
-        yield self.stdio_log.addHeader(f" argv: {argv}\n")
+        quoted_argv = shlex.join(map(lambda s: s.decode("utf-8") if isinstance(s, bytes) else s, argv))
+        yield self.stdio_log.addHeader(f" argv: {quoted_argv}\n")
 
         os_env = os.environ
         if self.env is None:
