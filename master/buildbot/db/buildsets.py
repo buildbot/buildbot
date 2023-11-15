@@ -17,6 +17,9 @@ Support for buildsets in the database
 """
 
 import json
+from functools import reduce
+from operator import and_
+from operator import or_
 
 import sqlalchemy as sa
 
@@ -175,15 +178,35 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def getBuildsets(self, complete=None, resultSpec=None):
         def thd(conn):
+            if resultSpec is not None:
+                sourceStampFilter = resultSpec.popFilter('sourcestamps', 'contains')
+            else:
+                sourceStampFilter = None
+
             bs_tbl = self.db.model.buildsets
-            q = bs_tbl.select()
+            ss_tbl = self.db.model.sourcestamps
+
+            j = bs_tbl
+            if sourceStampFilter is not None:
+                j = bs_tbl
+                j = j.join(self.db.model.buildset_sourcestamps)
+                j = j.join(ss_tbl)
+            q = sa.select(columns=[bs_tbl], from_obj=[j], distinct=True)
+
             if complete is not None:
                 if complete:
                     q = q.where(bs_tbl.c.complete != 0)
                 else:
                     q = q.where((bs_tbl.c.complete == 0) |
                                 (bs_tbl.c.complete == NULL))
+
             if resultSpec is not None:
+                if sourceStampFilter:
+                    def ssid_as_id(key):
+                        return "id" if key == "ssid" else key
+                    q = q.where(reduce(or_, [reduce(and_, [ss_tbl.c[ssid_as_id(key)] == value
+                                for key, value in filter.items()])
+                                for filter in sourceStampFilter]))
                 return resultSpec.thd_execute(conn, q, lambda x: self._thd_row2dict(conn, x))
             res = conn.execute(q)
             return [self._thd_row2dict(conn, row) for row in res.fetchall()]

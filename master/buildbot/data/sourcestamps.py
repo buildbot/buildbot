@@ -14,11 +14,14 @@
 # Copyright Buildbot Team Members
 
 
+import json
+
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import patches
 from buildbot.data import types
+from buildbot.util import bytes2unicode
 
 
 def _db2data(ss):
@@ -89,4 +92,12 @@ class SourceStamp(base.ResourceType):
         codebase = types.String()
         patch = types.NoneOk(patches.Patch.entityType)
         created_at = types.DateTime()
+
+        def valueFromString(self, arg):
+            d = json.loads(bytes2unicode(arg))
+            d = {k: self.fields[k].valueFromString(v) for k, v in d.items()}
+            if len(d.keys()) == 0:
+                raise TypeError  # don't allow {}
+            return d
+
     entityType = EntityType(name, 'Sourcestamp')
