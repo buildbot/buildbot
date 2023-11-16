@@ -309,6 +309,7 @@ class RunProcess(object):
         @param useProcGroup: (default True) use a process group for non-PTY
             process invocations
         """
+        self.secret_string = "########"
         if logfiles is None:
             logfiles = {}
 
@@ -319,6 +320,8 @@ class RunProcess(object):
                     return util.Obfuscated(w[1], w[2])
                 return w
             command = [obfus(w) for w in command]
+            # Hacky fix: Fixing the problem of revealing the token if using https:// method.
+            command_tmp = [ obfus(re.sub("(?<=https\:\/\/)(.*?)(?=\@)", self.secret_string, w)) for w in command      ]
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the worker.  This is mostly platform
         # specific, but can be overridden in the worker's buildbot.tac file.
@@ -340,7 +343,8 @@ class RunProcess(object):
             return cmd
 
         self.command = to_bytes(util.Obfuscated.get_real(command))
-        self.fake_command = to_bytes(util.Obfuscated.get_fake(command))
+        # Hacky fix: Fixing the problem of revealing the token if using http:// method.
+        self.fake_command = to_bytes(util.Obfuscated.get_fake(command_tmp))
 
         self.sendStdout = sendStdout
         self.sendStderr = sendStderr
