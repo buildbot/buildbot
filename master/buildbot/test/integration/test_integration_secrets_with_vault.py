@@ -64,13 +64,42 @@ class SecretsConfig(RunMasterBase):
         except (FileNotFoundError, subprocess.CalledProcessError) as e:
             raise SkipTest("Vault integration needs docker environment to be setup") from e
 
+    @defer.inlineCallbacks
+    def setup_config(self, secret_specifier):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(
+                name="force",
+                builderNames=["testy"])]
+
+        # note that as of December 2018, the vault docker image default to kv
+        # version 2 to be enabled by default
+        c['secretsProviders'] = [HashiCorpVaultSecretProvider(
+            vaultToken='my_vaulttoken',
+            vaultServer="http://localhost:8200",
+            apiVersion=2
+        )]
+
+        f = BuildFactory()
+        f.addStep(ShellCommand(command=Interpolate(f'echo {secret_specifier} | base64')))
+
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          workernames=["local1"],
+                          factory=f)]
+        yield self.setup_master(c)
+
     def remove_container(self):
         subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'])
 
     @defer.inlineCallbacks
     def do_secret_test(self, secret_specifier, expected_obfuscation, expected_value):
         with assertProducesWarning(DeprecatedApiWarning):
-            yield self.setupConfig(masterConfig(secret_specifier=secret_specifier))
+            yield self.setup_config(secret_specifier=secret_specifier)
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
 
@@ -97,32 +126,3 @@ class SecretsConfig(RunMasterBase):
     @defer.inlineCallbacks
     def test_nested_key(self):
         yield self.do_secret_test('%(secret:key1/key2/id)s', '<key1/key2/id>', 'val')
-
-
-def masterConfig(secret_specifier):
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import schedulers
-
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
-
-    # note that as of December 2018, the vault docker image default to kv
-    # version 2 to be enabled by default
-    c['secretsProviders'] = [HashiCorpVaultSecretProvider(
-        vaultToken='my_vaulttoken',
-        vaultServer="http://localhost:8200",
-        apiVersion=2
-    )]
-
-    f = BuildFactory()
-    f.addStep(ShellCommand(command=Interpolate(f'echo {secret_specifier} | base64')))
-
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
-    return c

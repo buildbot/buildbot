@@ -26,7 +26,7 @@ from buildbot_worker.exceptions import AbandonChain
 from buildbot_worker.interfaces import IWorkerCommand
 
 # The following identifier should be updated each time this file is changed
-command_version = "3.1"
+command_version = "3.2"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -70,6 +70,7 @@ command_version = "3.1"
 #    * "slavedest" command argument renamed to "workerdest" in downloadFile
 #      command.
 #  >= 3.1: rmfile command added to remove a file
+#  >= 3.2: shell command now reports failure reason in case the command timed out.
 
 
 @implementer(IWorkerCommand)
@@ -139,9 +140,9 @@ class Command(object):
 
     _reactor = reactor
 
-    def __init__(self, protocol_command, stepId, args):
+    def __init__(self, protocol_command, command_id, args):
         self.protocol_command = protocol_command
-        self.stepId = stepId  # just for logging
+        self.command_id = command_id  # just for logging
         self.args = args
         self.startTime = None
 
@@ -150,6 +151,9 @@ class Command(object):
             raise ValueError("{0} is missing args: {1}".format(
                              self.__class__.__name__, ", ".join(missingArgs)))
         self.setup(args)
+
+    def log_msg(self, msg, *args):
+        log.msg(u"(command {0}): {1}".format(self.command_id, msg), *args)
 
     def setup(self, args):
         """Override this in a subclass to extract items from the args dict."""
@@ -177,9 +181,9 @@ class Command(object):
     def sendStatus(self, status):
         """Send a status update to the master."""
         if self.debug:
-            log.msg("sendStatus", status)
+            self.log_msg("sendStatus: {0}".format(status))
         if not self.running:
-            log.msg("would sendStatus but not .running")
+            self.log_msg("would sendStatus but not .running")
             return
         self.protocol_command.send_update(status)
 
@@ -196,8 +200,7 @@ class Command(object):
 
     def _abandonOnFailure(self, rc):
         if not isinstance(rc, int):
-            log.msg("weird, _abandonOnFailure was given rc={0} ({1})".format(
-                    rc, type(rc)))
+            self.log_msg("weird, _abandonOnFailure was given rc={0} ({1})".format(rc, type(rc)))
         assert isinstance(rc, int)
         if rc != 0:
             raise AbandonChain(rc)
@@ -207,8 +210,8 @@ class Command(object):
         self.sendStatus([('rc', 0)])
 
     def _checkAbandoned(self, why):
-        log.msg("_checkAbandoned", why)
+        self.log_msg("_checkAbandoned", why)
         why.trap(AbandonChain)
-        log.msg(" abandoning chain", why.value)
+        self.log_msg(" abandoning chain", why.value)
         self.sendStatus([('rc', why.value.args[0])])
         return None

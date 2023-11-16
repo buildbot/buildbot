@@ -1,0 +1,1 @@
+Fix incorrect propagation of option ``--proxy-connection-string`` into buildbot.tac when creating new Worker.

@@ -1,0 +1,11 @@
+
+.bb-project-view-container {
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-left: 0;
+  margin-right: 0;
+
+  & > .card {
+    margin-bottom: 0.5rem;
+  }
+}

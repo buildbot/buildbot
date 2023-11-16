@@ -16,6 +16,7 @@
 
 from twisted.internet import defer
 
+from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
@@ -83,18 +84,28 @@ class SchedulerMixin(interfaces.InterfaceTests):
             rows.extend([fakedb.Builder(name=bname)
                          for bname in scheduler.builderNames])
 
-        db.insertTestData(rows)
+        db.insert_test_data(rows)
 
         if overrideBuildsetMethods:
-            for method in (
-                    'addBuildsetForSourceStampsWithDefaults',
-                    'addBuildsetForChanges',
-                    'addBuildsetForSourceStamps'):
-                actual = getattr(scheduler, method)
-                fake = getattr(self, f'fake_{method}')
+            self.assertArgSpecMatches(
+                scheduler.addBuildsetForSourceStampsWithDefaults,
+                self.fake_addBuildsetForSourceStampsWithDefaults
+            )
+            scheduler.addBuildsetForSourceStampsWithDefaults = \
+                self.fake_addBuildsetForSourceStampsWithDefaults
 
-                self.assertArgSpecMatches(actual, fake)
-                setattr(scheduler, method, fake)
+            self.assertArgSpecMatches(
+                scheduler.addBuildsetForChanges,
+                self.fake_addBuildsetForChanges
+            )
+            scheduler.addBuildsetForChanges = self.fake_addBuildsetForChanges
+
+            self.assertArgSpecMatches(
+                scheduler.addBuildsetForSourceStamps,
+                self.fake_addBuildsetForSourceStamps
+            )
+            scheduler.addBuildsetForSourceStamps = self.fake_addBuildsetForSourceStamps
+
             self.addBuildsetCalls = []
             self._bsidGenerator = iter(range(500, 999))
             self._bridGenerator = iter(range(100, 999))
@@ -174,6 +185,9 @@ class SchedulerMixin(interfaces.InterfaceTests):
         attributes"""
         ch = self.FakeChange()
         ch.__dict__.update(kwargs)
+        properties = ch.properties
+        ch.properties = Properties()
+        ch.properties.update(properties, "Change")
         return ch
 
     @defer.inlineCallbacks
@@ -195,7 +209,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
                                                     waited_for=False, properties=None,
-                                                    builderNames=None, **kw):
+                                                    builderNames=None, priority=None, **kw):
         properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
 
@@ -204,35 +218,52 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
         sourcestamps = sorted(sourcestamps, key=sourceStampKey)
         self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
-                                      dict(reason=reason, sourcestamps=sourcestamps,
-                                           waited_for=waited_for, properties=properties,
-                                           builderNames=builderNames)))
+                                      {"reason": reason, "sourcestamps": sourcestamps,
+                                       "waited_for": waited_for, "properties": properties,
+                                       "builderNames": builderNames, "priority": priority}))
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForChanges(self, waited_for=False, reason='', external_idstring=None,
-                                   changeids=None, builderNames=None, properties=None, **kw):
+                                   changeids=None, builderNames=None, properties=None,
+                                   priority=None, **kw):
         if changeids is None:
             changeids = []
         properties = properties.asDict() if properties is not None else None
-        self.addBuildsetCalls.append(('addBuildsetForChanges',
-                                      dict(waited_for=waited_for, reason=reason,
-                                           external_idstring=external_idstring,
-                                           changeids=changeids,
-                                           properties=properties, builderNames=builderNames,
-                                           )))
+        self.addBuildsetCalls.append(
+            (
+                'addBuildsetForChanges',
+                {
+                    "waited_for": waited_for,
+                    "reason": reason,
+                    "external_idstring": external_idstring,
+                    "changeids": changeids,
+                    "properties": properties,
+                    "builderNames": builderNames,
+                    "priority": priority,
+                }
+            )
+        )
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
                                         reason='', external_idstring=None, properties=None,
-                                        builderNames=None, **kw):
+                                        builderNames=None, priority=None, **kw):
         if sourcestamps is None:
             sourcestamps = []
         properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
-        self.addBuildsetCalls.append(('addBuildsetForSourceStamps',
-                                      dict(reason=reason, external_idstring=external_idstring,
-                                           properties=properties, builderNames=builderNames,
-                                           sourcestamps=sourcestamps)))
+        self.addBuildsetCalls.append(
+            (
+                'addBuildsetForSourceStamps',
+                {
+                    "reason": reason,
+                    "external_idstring": external_idstring,
+                    "properties": properties,
+                    "builderNames": builderNames,
+                    "sourcestamps": sourcestamps
+                }
+            )
+        )
 
         return self._addBuildsetReturnValue(builderNames)

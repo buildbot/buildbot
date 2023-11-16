@@ -34,8 +34,7 @@ def gengraphql(config):
     graphql = GraphQLConnector()
     yield graphql.setServiceParent(master)
     graphql.data = data
-    master.config.www = dict(
-        graphql={"debug": True})
+    master.config.www = {"graphql": {'debug': True}}
     graphql.reconfigServiceWithBuildbotConfig(master.config)
     yield master.startService()
     if config['out'] != '--':

@@ -16,10 +16,9 @@
 import base64
 import os
 import sys
+import time
 
 from parameterized import parameterized
-
-import mock
 
 from twisted.application import service
 from twisted.internet import defer
@@ -32,12 +31,18 @@ from buildbot_worker import util
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util import command
 
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 if sys.version_info >= (3, 6):
     import msgpack
+
     # pylint: disable=ungrouped-imports
+    from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
     from buildbot_worker.msgpack import decode_http_authorization_header
     from buildbot_worker.msgpack import encode_http_authorization_header
-    from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
     from buildbot_worker.pb import BotMsgpack  # pylint: disable=ungrouped-imports
 
 
@@ -326,6 +331,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_call_start_command_failed(self):
+        self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
         path = os.path.join('basedir', 'test_dir')
@@ -344,24 +350,18 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'args': [['rc', 1]],
+                'args': [
+                    ['rc', 1],
+                    ['elapsed', 0],
+                    ['header', ['mkdir: test_error: {}\n'.format(path), [35], [123.0]]]
+                ],
                 'command_id': '123',
                 'seq_number': 0
-            }, {
-                'op': 'update',
-                'args': [['elapsed', 0]],
-                'command_id': '123',
-                'seq_number': 1
-            }, {
-                'op': 'update',
-                'args': [['header', 'mkdir: test_error: {}\n'.format(path)]],
-                'command_id': '123',
-                'seq_number': 2
             }, {
                 'op': 'complete',
                 'args': None,
                 'command_id': '123',
-                'seq_number': 3
+                'seq_number': 1
             },
             # response result is always None, even if the command failed
             {'op': 'response', 'result': None, 'seq_number': 1}
@@ -376,13 +376,13 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
         yield self.send_message(create_msg(0))
         yield self.send_message(create_msg(1))
-        yield self.send_message(create_msg(2))
 
         # worker should not send any new messages in response to masters 'response'
         self.assertEqual(self.list_send_message_args, [])
 
     @defer.inlineCallbacks
     def test_call_start_command_shell_success(self):
+        self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
         # patch runprocess to handle the 'echo', below
@@ -406,29 +406,67 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'args': [['stdout', 'hello\n']],
+                'args': [
+                    ['stdout', ['hello\n', [5], [123.0]]],
+                    ['rc', 0],
+                    ['elapsed', 0],
+                    ['header', ['headers\n', [7], [123.0]]]
+                ],
                 'command_id': '123',
                 'seq_number': 0
-            }, {
-                'op': 'update',
-                'args': [['rc', 0]],
-                'command_id': '123',
-                'seq_number': 1
-            }, {
-                'op': 'update',
-                'args': [['elapsed', 0]],
-                'command_id': '123',
-                'seq_number': 2
-            }, {
-                'op': 'update',
-                'args': [['header', 'headers\n']],
-                'command_id': '123',
-                'seq_number': 3
             }, {
                 'op': 'complete',
                 'args': None,
                 'command_id': '123',
-                'seq_number': 4
+                'seq_number': 1
+            }, {
+                'op': 'response', 'seq_number': 1, 'result': None
+            }
+        ])
+
+    @defer.inlineCallbacks
+    def test_call_start_command_shell_success_logs(self):
+        self.patch(time, 'time', lambda: 123.0)
+        self.setup_with_worker_for_builder()
+
+        workdir = os.path.join('basedir', 'test_basedir')
+        self.patch_runprocess(
+            Expect(['echo'], workdir)
+            .update('header', 'headers\n')
+            .update('log', ('test_log', ('hello')))
+            .update('log', ('test_log', ('hello1\n')))
+            .update('log', ('test_log2', ('hello2\n')))
+            .update('log', ('test_log3', ('hello3')))
+            .update('rc', 0)
+            .exit(0)
+            )
+
+        yield self.send_message({
+            'op': 'start_command',
+            'seq_number': 1,
+            'command_id': '123',
+            'command_name': 'shell',
+            'args': {'command': ['echo'], 'workdir': workdir}
+        })
+
+        self.assert_sent_messages([
+            {
+                'op': 'update',
+                'args': [
+                    ['header', ['headers\n', [7], [123.0]]],
+                    ['log', ['test_log', ['hellohello1\n', [11], [123.0]]]],
+                    ['log', ['test_log2', ['hello2\n', [6], [123.0]]]],
+                    ['rc', 0],
+                    ['elapsed', 0],
+                    ['log', ['test_log3', ['hello3\n', [6], [123.0]]]],
+                ],
+                'command_id': '123',
+                'seq_number': 0
+            }, {
+                'op': 'complete',
+                'args': None,
+                'command_id': '123',
+                'seq_number': 1
             }, {
                 'op': 'response', 'seq_number': 1, 'result': None
             }
@@ -436,6 +474,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_start_command_shell_success_updates_single(self):
+        self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
         # patch runprocess to handle the 'echo', below
@@ -457,24 +496,19 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([
             {
                 'op': 'update',
-                'args': [['stdout', 'hello\n'], ['rc', 0]],
+                'args': [
+                    ['stdout', ['hello\n', [5], [123.0]]],
+                    ['rc', 0],
+                    ['elapsed', 0],
+                    ['header', ['headers\n', [7], [123.0]]]
+                ],
                 'command_id': '123',
                 'seq_number': 0
-            }, {
-                'op': 'update',
-                'args': [['elapsed', 0]],
-                'command_id': '123',
-                'seq_number': 1
-            }, {
-                'op': 'update',
-                'args': [['header', 'headers\n']],
-                'command_id': '123',
-                'seq_number': 2
             }, {
                 'op': 'complete',
                 'args': None,
                 'command_id': '123',
-                'seq_number': 3
+                'seq_number': 1
             }, {
                 'op': 'response', 'seq_number': 1, 'result': None
             }
@@ -509,6 +543,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_call_interrupt_command_success(self):
+        self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
         self.protocol.factory.command.doInterrupt = mock.Mock()
 
@@ -554,19 +589,14 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'seq_number': 0,
                 'command_id': '123',
-                'args': [['header', 'headers\n']]
+                'args': [['header', ['headers\n', [7], [123.0]]]]
             }, {
                 'op': 'update',
                 'seq_number': 1,
                 'command_id': '123',
-                'args': [['rc', -1]]
+                'args': [['rc', -1], ['header', ['killing\n', [7], [123.0]]]],
             }, {
-                'op': 'update',
-                'seq_number': 2,
-                'command_id': '123',
-                'args': [['header', 'killing\n']],
-            }, {
-                'op': 'complete', 'seq_number': 3, 'command_id': '123', 'args': None
+                'op': 'complete', 'seq_number': 2, 'command_id': '123', 'args': None
             }, {
                 'op': 'response', 'seq_number': 1, 'result': None
             }

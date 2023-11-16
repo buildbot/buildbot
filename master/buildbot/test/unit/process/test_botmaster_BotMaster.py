@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -62,6 +62,7 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
         self.reason = reason
         self.results = results
         self.finishFakeBuild()
+        return defer.succeed(None)
 
     def finishFakeBuild(self):
         self.fake_builder.building = []
@@ -163,6 +164,8 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigServiceWithBuildbotConfig(self):
         # check that reconfigServiceBuilders is called.
+        self.patch(self.botmaster, 'reconfigProjects',
+                   mock.Mock(side_effect=lambda c: defer.succeed(None)))
         self.patch(self.botmaster, 'reconfigServiceBuilders',
                    mock.Mock(side_effect=lambda c: defer.succeed(None)))
         self.patch(self.botmaster, 'maybeStartBuildsForAllBuilders',
@@ -171,8 +174,8 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
         new_config = mock.Mock()
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
 
-        self.botmaster.reconfigServiceBuilders.assert_called_with(
-            new_config)
+        self.botmaster.reconfigServiceBuilders.assert_called_with(new_config)
+        self.botmaster.reconfigProjects.assert_called_with(new_config)
         self.assertTrue(
             self.botmaster.maybeStartBuildsForAllBuilders.called)
 

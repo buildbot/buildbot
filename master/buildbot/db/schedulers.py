@@ -27,13 +27,12 @@ class SchedulerAlreadyClaimedError(Exception):
 
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     # returns a Deferred that returns None
     def enable(self, schedulerid, v):
         def thd(conn):
             tbl = self.db.model.schedulers
-            q = tbl.update(whereclause=(tbl.c.id == schedulerid))
+            q = tbl.update(whereclause=tbl.c.id == schedulerid)
             conn.execute(q, enabled=int(v))
         return self.db.pool.do(thd)
 
@@ -71,7 +70,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def flushChangeClassifications(self, schedulerid, less_than=None):
         def thd(conn):
             sch_ch_tbl = self.db.model.scheduler_changes
-            wc = (sch_ch_tbl.c.schedulerid == schedulerid)
+            wc = sch_ch_tbl.c.schedulerid == schedulerid
             if less_than is not None:
                 wc = wc & (sch_ch_tbl.c.changeid < less_than)
             q = sch_ch_tbl.delete(whereclause=wc)
@@ -88,7 +87,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             sch_ch_tbl = self.db.model.scheduler_changes
             ch_tbl = self.db.model.changes
 
-            wc = (sch_ch_tbl.c.schedulerid == schedulerid)
+            wc = sch_ch_tbl.c.schedulerid == schedulerid
 
             # may need to filter further based on branch, etc
             extra_wheres = []
@@ -111,8 +110,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             q = sa.select(
                 [sch_ch_tbl.c.changeid, sch_ch_tbl.c.important],
                 whereclause=wc)
-            return {r.changeid: [False, True][r.important]
-                    for r in conn.execute(q)}
+            return {r.changeid: bool(r.important) for r in conn.execute(q)}
         return self.db.pool.do(thd)
 
     def findSchedulerId(self, name):
@@ -121,10 +119,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
-            insert_values=dict(
-                name=name,
-                name_hash=name_hash,
-            ))
+            insert_values={"name": name, "name_hash": name_hash}
+        )
 
     # returns a Deferred that returns None
     def setSchedulerMaster(self, schedulerid, masterid):
@@ -134,15 +130,14 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             # handle the masterid=None case to get it out of the way
             if masterid is None:
                 q = sch_mst_tbl.delete(
-                    whereclause=(sch_mst_tbl.c.schedulerid == schedulerid))
+                    whereclause=sch_mst_tbl.c.schedulerid == schedulerid)
                 conn.execute(q).close()
                 return None
 
             # try a blind insert..
             try:
                 q = sch_mst_tbl.insert()
-                conn.execute(q,
-                             dict(schedulerid=schedulerid, masterid=masterid)).close()
+                conn.execute(q, {"schedulerid": schedulerid, "masterid": masterid}).close()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this scheduler, but who?
                 join = self.db.model.masters.outerjoin(
@@ -184,21 +179,27 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             # if we're given a _schedulerid, select only that row
             wc = None
             if _schedulerid:
-                wc = (sch_tbl.c.id == _schedulerid)
+                wc = sch_tbl.c.id == _schedulerid
             else:
                 # otherwise, filter with active, if necessary
                 if masterid is not None:
-                    wc = (sch_mst_tbl.c.masterid == masterid)
+                    wc = sch_mst_tbl.c.masterid == masterid
                 elif active:
-                    wc = (sch_mst_tbl.c.masterid != NULL)
+                    wc = sch_mst_tbl.c.masterid != NULL
                 elif active is not None:
-                    wc = (sch_mst_tbl.c.masterid == NULL)
+                    wc = sch_mst_tbl.c.masterid == NULL
 
             q = sa.select([sch_tbl.c.id, sch_tbl.c.name, sch_tbl.c.enabled,
                            sch_mst_tbl.c.masterid],
                           from_obj=join, whereclause=wc)
 
-            return [dict(id=row.id, name=row.name, enabled=bool(row.enabled),
-                         masterid=row.masterid)
-                    for row in conn.execute(q).fetchall()]
+            return [
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "enabled": bool(row.enabled),
+                    "masterid": row.masterid
+                }
+                for row in conn.execute(q).fetchall()
+            ]
         return self.db.pool.do(thd)

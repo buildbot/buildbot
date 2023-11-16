@@ -1,0 +1,34 @@
+.bb-build-summary {
+  .card-header {
+    color: #333333;
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    padding: 10px 15px;
+    border-bottom: 1px solid transparent;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+  }
+
+  .bb-build-summary-details,
+  .bb-build-summary-time {
+    float: right;
+  }
+
+  .btn-xs {
+    padding: 1px 5px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+  }
+
+  .btn-default {
+    color: #333;
+    background-color: #fff;
+    border-color: #ccc;
+  }
+
+  .group-results > li .bb-build-request-summary > div {
+    margin-bottom: 0px;
+    margin-top: 0px;
+  }
+}

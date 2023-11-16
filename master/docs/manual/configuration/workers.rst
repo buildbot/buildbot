@@ -249,6 +249,12 @@ The following options are available for all latent workers.
     If this is set to 0, then the worker will be shut down immediately.
     If it is less than 0, it will be shut down only when shutting down master.
 
+``check_instance_interval``
+    This option controls the interval that the health checks run during worker startup.
+    The health checks speed up the detection of irrecoverably crashed worker (e.g. due to an issue with Docker image in the case of Docker workers).
+    Without such checks build would continue waiting for the worker to connect until ``missing_timeout`` time elapses.
+    The value of the option defaults to 10 seconds.
+
 .. _Supported-Latent-Workers:
 
 Supported Latent Workers

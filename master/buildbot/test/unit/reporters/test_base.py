@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -186,3 +186,129 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
         self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
         self.assertLogged('Got exception when handling reporter events')
+
+    @defer.inlineCallbacks
+    def test_reports_sent_in_order_despite_slow_generator(self):
+        gen = self.setup_mock_generator([('builds', None, None)])
+
+        notifier = yield self.setupNotifier(generators=[gen])
+
+        # Handle an event when generate is slow
+        gen.generate = slow_generate = mock.Mock(return_value=defer.Deferred())
+        notifier._got_event(('builds', None, None), {'buildrequestid': 1})
+        notifier.sendMessage.assert_not_called()
+
+        # Then handle an event when generate is fast
+        gen.generate = mock.Mock(return_value=defer.Deferred())
+        gen.generate.return_value.callback(2)
+        notifier._got_event(('builds', None, None), {'buildrequestid': 1})
+
+        # sendMessage still not called
+        notifier.sendMessage.assert_not_called()
+
+        # Have the slow generate finish
+        slow_generate.return_value.callback(1)
+
+        # Now sendMessage should have been called two times
+        self.assertEqual(notifier.sendMessage.call_args_list, [mock.call([1]), mock.call([2])])
+
+    @defer.inlineCallbacks
+    def test_reports_sent_in_order_despite_multiple_slow_generators(self):
+        gen = self.setup_mock_generator([('buildrequests', None, None)])
+        gen2 = self.setup_mock_generator([('builds', None, None)])
+
+        notifier = yield self.setupNotifier(generators=[gen, gen2])
+
+        # This makes it possible to mock generate calls in arbitrary order
+        mock_generate_calls = {
+            'buildrequests': {
+                1: {
+                    'new': defer.Deferred()
+                }
+            },
+            'builds': {
+                1: {
+                    'new': defer.Deferred(),
+                    'finished': defer.Deferred()
+                }
+            }
+        }
+
+        def mock_generate(_1, _2, key, msg):
+            return mock_generate_calls[key[0]][msg['buildrequestid']][key[2]]
+        gen.generate = mock.Mock(side_effect=mock_generate)
+        gen2.generate = mock.Mock(side_effect=mock_generate)
+
+        # Handle an event when generate is very slow
+        notifier._got_event(('buildrequests', None, 'new'), {'buildrequestid': 1})
+
+        # Handle an event when generate is also slow
+        notifier._got_event(('builds', None, 'new'), {'buildrequestid': 1})
+
+        # Handle an event when generate is fast
+        mock_generate_calls['builds'][1]['finished'].callback(3)
+        notifier._got_event(('builds', None, 'finished'), {'buildrequestid': 1})
+
+        # Finish generate call for second event
+        mock_generate_calls['builds'][1]['new'].callback(2)
+
+        # sendMessage still not called
+        notifier.sendMessage.assert_not_called()
+
+        # Finish generate call for first event
+        mock_generate_calls['buildrequests'][1]['new'].callback(1)
+
+        # Now sendMessage should have been called three times in given order
+        self.assertEqual(
+            notifier.sendMessage.call_args_list,
+            [mock.call([1]), mock.call([2]), mock.call([3])]
+        )
+
+    @defer.inlineCallbacks
+    def test_reports_sent_in_order_and_asap_for_multiple_builds(self):
+        gen = self.setup_mock_generator([('builds', None, None)])
+
+        notifier = yield self.setupNotifier(generators=[gen])
+
+        # This makes it possible to mock generate calls in arbitrary order
+        mock_generate_calls = {
+            'builds': {
+                1: {
+                    'new': defer.Deferred(),
+                    'finished': defer.Deferred()
+                },
+                2: {
+                    'new': defer.Deferred(),
+                    'finished': defer.Deferred()
+                }
+            }
+        }
+
+        def mock_generate(_1, _2, key, msg):
+            return mock_generate_calls[key[0]][msg['buildrequestid']][key[2]]
+        gen.generate = mock.Mock(side_effect=mock_generate)
+
+        # Handle an event (for first build) when generate is slow
+        notifier._got_event(('builds', None, 'new'), {'buildrequestid': 1})
+        notifier.sendMessage.assert_not_called()
+
+        # Handle an event (for second build) when generate is fast
+        mock_generate_calls['builds'][2]['new'].callback(21)
+        notifier._got_event(('builds', None, 'new'), {'buildrequestid': 2})
+
+        # Handle an event (for first build) when generate is fast
+        mock_generate_calls['builds'][1]['finished'].callback(12)
+        notifier._got_event(('builds', None, 'finished'), {'buildrequestid': 1})
+
+        # Handle an event (for second build) when generate is fast
+        mock_generate_calls['builds'][2]['finished'].callback(22)
+        notifier._got_event(('builds', None, 'finished'), {'buildrequestid': 2})
+
+        # Finish generate call for first event
+        mock_generate_calls['builds'][1]['new'].callback(11)
+
+        # Now sendMessage should have been called four times in given order
+        self.assertEqual(
+            notifier.sendMessage.call_args_list,
+            [mock.call([21]), mock.call([22]), mock.call([11]), mock.call([12])]
+        )

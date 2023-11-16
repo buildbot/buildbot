@@ -15,10 +15,9 @@
 
 
 import os
+from unittest import mock
 
 from parameterized import parameterized
-
-import mock
 
 from twisted.internet import defer
 from twisted.python import runtime

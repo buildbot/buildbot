@@ -355,7 +355,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         substantiating again.
         '''
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         yield self.create_build_request([builder_id])
 
@@ -392,7 +392,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         erroneous cancellation of the substantiation request.
         '''
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         # Trigger a single buildrequest
         yield self.create_build_request([builder_id])
@@ -434,7 +434,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         stop_instance() is in progress.
         '''
         controller, builder_ids = yield self.create_single_worker_two_builder_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         # Trigger a single buildrequest
         yield self.create_build_request([builder_ids[0]])
@@ -470,7 +470,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         to substantiate.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         # insubstantiate during start_instance(). Note that failed substantiation is notified only
         # after the latent workers completes start-stop cycle.
@@ -489,7 +489,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         process to complete.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         # Substantiate worker via a build
         yield self.create_build_request([builder_id])
@@ -520,7 +520,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         process to complete.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
         controller.auto_connect_worker = worker_connects
 
         # Substantiate worker via a build
@@ -611,7 +611,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         on current insubstantiation to finish
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         yield self.create_build_request([builder_id])
 
@@ -663,6 +663,43 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
+    def test_stalled_substantiation_then_check_instance_fails_get_requeued(self):
+        """
+        If a latent worker substantiate, but not connect and check_instance() indicates a crash,
+        the build request should become unclaimed as soon as check_instance_interval passes
+        """
+        controller, builder_id = yield self.create_single_worker_config(
+            controller_kwargs={'check_instance_interval': 10}
+        )
+        controller.auto_connect_worker = False
+
+        # Trigger a buildrequest
+        _, brids = yield self.create_build_request([builder_id])
+
+        unclaimed_build_requests = []
+        yield self.master.mq.startConsuming(
+            lambda key, request: unclaimed_build_requests.append(request),
+            ('buildrequests', None, 'unclaimed'))
+
+        # The worker startup succeeds, but it doe not connect and check_instance() later
+        # indicates a crash.
+        yield controller.start_instance(True)
+
+        self.reactor.advance(10)
+        controller.has_crashed = True
+        self.reactor.advance(10)
+
+        # Flush the errors logged by the failure.
+        self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
+
+        # When the substantiation fails, the buildrequest becomes unclaimed.
+        self.assertEqual(
+            set(brids),
+            {req['buildrequestid'] for req in unclaimed_build_requests}
+        )
+        yield controller.auto_stop(True)
+
+    @defer.inlineCallbacks
     def test_sever_connection_before_ping_then_timeout_get_requeued(self):
         """
         If a latent worker connects, but its connection is severed without
@@ -670,7 +707,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         out and requeue the build.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         yield self.create_build_request([builder_id])
 
@@ -805,8 +842,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         build can start correctly
         """
         controller, stepcontroller, builder_id = yield self.create_single_worker_config_with_step(
-            controller_kwargs=dict(build_wait_timeout=0)
-            )
+            controller_kwargs={"build_wait_timeout": 0})
 
         # Request a build and disconnect midway
         controller.auto_disconnect_worker = False
@@ -836,7 +872,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         worker side due to, e.g. network problems.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=-1))
+            controller_kwargs={"build_wait_timeout": -1})
 
         controller.auto_disconnect_worker = False
         controller.auto_connect_worker = False
@@ -872,7 +908,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         middle of the build, the build is re-queued and successfully restarted.
         """
         controller, stepcontroller, builder_id = yield self.create_single_worker_config_with_step(
-            controller_kwargs=dict(build_wait_timeout=0))
+            controller_kwargs={"build_wait_timeout": 0})
 
         # Request a build and disconnect midway
         yield self.create_build_request([builder_id])
@@ -904,7 +940,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         can substantiate after that.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         yield self.create_build_request([builder_id])
 
@@ -942,7 +978,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         created during insubstantiation
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         yield self.create_build_request([builder_id])
 
@@ -978,7 +1014,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         e.g. network problems.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=-1))
+            controller_kwargs={"build_wait_timeout": -1})
 
         controller.auto_disconnect_worker = False
         controller.auto_connect_worker = False
@@ -1022,7 +1058,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         it without problems if the worker does not disconnect either.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=-1))
+            controller_kwargs={"build_wait_timeout": -1})
 
         controller.auto_disconnect_worker = False
         controller.auto_connect_worker = False
@@ -1057,7 +1093,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         When build_wait_timeout is negative, we should still insubstantiate when master shuts down.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=-1))
+            controller_kwargs={"build_wait_timeout": -1})
 
         # Substantiate worker via a build
         yield self.create_build_request([builder_id])
@@ -1077,7 +1113,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         Throwing a synchronous exception from stop_instance should allow subsequent build to start.
         """
         controller, builder_id = yield self.create_single_worker_config(
-            controller_kwargs=dict(build_wait_timeout=1))
+            controller_kwargs={"build_wait_timeout": 1})
 
         controller.auto_stop(True)
 
@@ -1172,10 +1208,10 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         """
         controller, stepcontroller, builder_id = \
             yield self.create_single_worker_config_with_step(
-                controller_kwargs=dict(
-                    kind=Interpolate('%(prop:worker_kind)s'),
-                    build_wait_timeout=0
-                )
+                controller_kwargs={
+                    "kind": Interpolate('%(prop:worker_kind)s'),
+                    "build_wait_timeout": 0
+                }
             )
 
         # create build request
@@ -1221,10 +1257,10 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
 
         controller, stepcontroller, builder_id = \
             yield self.create_single_worker_config_with_step(
-                controller_kwargs=dict(
-                    kind=Interpolate('%(prop:worker_kind)s'),
-                    build_wait_timeout=5
-                )
+                controller_kwargs={
+                    "kind": Interpolate('%(prop:worker_kind)s'),
+                    "build_wait_timeout": 5
+                }
             )
 
         # create build request
@@ -1293,7 +1329,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         """
         controller, stepcontroller, builder_id = \
             yield self.create_single_worker_config_with_step(
-                controller_kwargs=dict(build_wait_timeout=1))
+                controller_kwargs={"build_wait_timeout": 1})
 
         controller.worker.substantiate(None, None)
         yield controller.start_instance(True)
@@ -1563,7 +1599,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
     def test_2workers_build_substantiates_insubstantiates_both_workers(self):
         machine_controller, worker_controllers, step_controllers, builder_ids = \
             yield self.create_two_worker_config(
-                controller_kwargs=dict(starts_without_substantiate=True))
+                controller_kwargs={"starts_without_substantiate": True})
 
         for wc in worker_controllers:
             wc.auto_start(True)

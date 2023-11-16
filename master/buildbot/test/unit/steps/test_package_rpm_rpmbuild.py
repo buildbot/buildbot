@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 from collections import OrderedDict
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

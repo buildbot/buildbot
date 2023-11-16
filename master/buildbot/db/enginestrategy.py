@@ -32,8 +32,6 @@ from sqlalchemy.pool import NullPool
 
 from twisted.python import log
 
-from buildbot.util import sautils
-
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 
 
@@ -115,16 +113,7 @@ class MySQLStrategy(Strategy):
                 log.msg(f'exception happened {ex}')
                 raise
 
-        # older versions of sqlalchemy require the listener to be specified
-        # in the kwargs, in a class instance
-        if sautils.sa_version() < (0, 7, 0):
-            class ReconnectingListener:
-                pass
-            rcl = ReconnectingListener()
-            rcl.checkout = checkout_listener
-            engine.pool.add_listener(rcl)
-        else:
-            sa.event.listen(engine.pool, 'checkout', checkout_listener)
+        sa.event.listen(engine.pool, 'checkout', checkout_listener)
 
     def should_retry(self, ex):
         return any([self.is_disconnect(ex.orig.args),
@@ -156,7 +145,7 @@ def special_case_sqlite(u, kwargs):
         kwargs.setdefault('poolclass', NullPool)
 
         database = u.database
-        database = database % dict(basedir=kwargs['basedir'])
+        database = database % {"basedir": kwargs['basedir']}
         if not os.path.isabs(database[0]):
             database = os.path.join(kwargs['basedir'], database)
 
@@ -238,7 +227,7 @@ def create_engine(name_or_url, **kwargs):
         u, kwargs, max_conns = special_case_mysql(u, kwargs)
 
     # remove the basedir as it may confuse sqlalchemy
-    basedir = kwargs.pop('basedir')
+    kwargs.pop('basedir')
 
     # calculate the maximum number of connections from the pool parameters,
     # if it hasn't already been specified
@@ -253,6 +242,4 @@ def create_engine(name_or_url, **kwargs):
     # by DBConnector to configure the surrounding thread pool
     engine.optimal_thread_pool_size = max_conns
 
-    # keep the basedir
-    engine.buildbot_basedir = basedir
     return engine

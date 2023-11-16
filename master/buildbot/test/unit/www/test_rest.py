@@ -15,18 +15,21 @@
 
 import json
 import re
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.data.base import Endpoint
+from buildbot.data.base import EndpointKind
 from buildbot.data.exceptions import InvalidQueryParameter
 from buildbot.test.fake import endpoint
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+from buildbot.warnings import DeprecatedApiWarning
 from buildbot.www import authz
 from buildbot.www import graphql
 from buildbot.www import rest
@@ -258,7 +261,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
 
         endpoint.TestEndpoint.rtype = mock.MagicMock()
         endpoint.TestsEndpoint.rtype = mock.MagicMock()
-        endpoint.Test.isCollection = True
+        endpoint.Test.kind = EndpointKind.COLLECTION
         endpoint.Test.rtype = endpoint.Test
 
     def assertRestCollection(self, typeName, items,
@@ -317,7 +320,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_not_found(self):
         yield self.render_resource(self.rsrc, b'/not/found')
         self.assertRequest(
-            contentJson=dict(error='Invalid path: not/found'),
+            contentJson={"error": 'Invalid path: not/found'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=404)
 
@@ -325,7 +328,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_invalid_query(self):
         yield self.render_resource(self.rsrc, b'/test?huh=1')
         self.assertRequest(
-            contentJson=dict(error="unrecognized query parameter 'huh'"),
+            contentJson={"error": "unrecognized query parameter 'huh'"},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -412,7 +415,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_limit(self):
         yield self.render_resource(self.rsrc, b'/test?limit=foo!')
         self.assertRequest(
-            contentJson=dict(error="invalid limit"),
+            contentJson={"error": 'invalid limit'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -420,7 +423,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_offset(self):
         yield self.render_resource(self.rsrc, b'/test?offset=foo!')
         self.assertRequest(
-            contentJson=dict(error="invalid offset"),
+            contentJson={"error": 'invalid offset'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -428,7 +431,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_simple_filter_value(self):
         yield self.render_resource(self.rsrc, b'/test?success=sorta')
         self.assertRequest(
-            contentJson=dict(error="invalid filter value for success"),
+            contentJson={"error": 'invalid filter value for success'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -436,7 +439,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_filter_value(self):
         yield self.render_resource(self.rsrc, b'/test?testid__lt=fifteen')
         self.assertRequest(
-            contentJson=dict(error="invalid filter value for testid__lt"),
+            contentJson={"error": 'invalid filter value for testid__lt'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -452,7 +455,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_collection_invalid_field(self):
         yield self.render_resource(self.rsrc, b'/test?field=success&field=WTF')
         self.assertRequest(
-            contentJson=dict(error="no such field 'WTF'"),
+            contentJson={"error": "no such field 'WTF'"},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -560,7 +563,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def test_api_details_filter_fails(self):
         yield self.render_resource(self.rsrc, b'/test/13?success=false')
         self.assertRequest(
-            contentJson=dict(error="this is not a collection"),
+            contentJson={"error": 'this is not a collection'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -975,3 +978,24 @@ class ContentTypeParser(unittest.TestCase):
     def test_text(self):
         self.assertEqual(
             rest.ContentTypeParser(b"text/plain; Charset=UTF-8").gettype(), "text/plain")
+
+
+class EndpointKindMigrationTest(unittest.TestCase):
+
+    def test_is_raw(self):
+        class TestEndpoint(Endpoint):
+            isRaw = True
+
+        with assertProducesWarning(DeprecatedApiWarning,
+                                   message_pattern=r"Endpoint.isRaw has been deprecated"):
+            ep = TestEndpoint(mock.Mock(), mock.Mock())
+        self.assertEqual(ep.kind, EndpointKind.RAW)
+
+    def test_is_collection(self):
+        class TestEndpoint(Endpoint):
+            isCollection = True
+
+        with assertProducesWarning(DeprecatedApiWarning,
+                                   message_pattern=r"Endpoint.isCollection has been deprecated"):
+            ep = TestEndpoint(mock.Mock(), mock.Mock())
+        self.assertEqual(ep.kind, EndpointKind.COLLECTION)

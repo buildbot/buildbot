@@ -33,11 +33,13 @@ from buildbot.config.errors import ConfigErrors
 from buildbot.config.errors import capture_config_errors
 from buildbot.config.errors import error
 from buildbot.interfaces import IRenderable
+from buildbot.process.project import Project
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import ComparableMixin
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import service as util_service
 from buildbot.warnings import ConfigWarning
+from buildbot.warnings import warn_deprecated
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -126,8 +128,8 @@ class MasterConfig(util.ComparableMixin):
     def __init__(self):
         # local import to avoid circular imports
         from buildbot.process import properties
-        # default values for all attributes
 
+        # default values for all attributes
         # global
         self.title = 'Buildbot'
         self.titleURL = 'http://buildbot.net'
@@ -147,40 +149,34 @@ class MasterConfig(util.ComparableMixin):
         self.protocols = {}
         self.buildbotNetUsageData = "basic"
 
-        self.validation = dict(
-            branch=re.compile(r'^[\w.+/~-]*$'),
-            revision=re.compile(r'^[ \w\.\-/]*$'),
-            property_name=re.compile(r'^[\w\.\-/~:]*$'),
-            property_value=re.compile(r'^[\w\.\-/~:]*$'),
-        )
-        self.db = dict(
-            db_url=DEFAULT_DB_URL,
-        )
-        self.mq = dict(
-            type='simple',
-        )
+        self.validation = {
+            "branch": re.compile(r'^[\w.+/~-]*$'),
+            "revision": re.compile(r'^[ \w\.\-/]*$'),
+            "property_name": re.compile(r'^[\w\.\-/~:]*$'),
+            "property_value": re.compile(r'^[\w\.\-/~:]*$'),
+        }
+        self.db = {"db_url": DEFAULT_DB_URL}
+        self.mq = {"type": 'simple'}
         self.metrics = None
-        self.caches = dict(
-            Builds=15,
-            Changes=10,
-        )
+        self.caches = {"Builds": 15, "Changes": 10}
         self.schedulers = {}
         self.secretsProviders = []
         self.builders = []
         self.workers = []
         self.change_sources = []
         self.machines = []
+        self.projects = []
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
-        self.www = dict(
-            port=None,
-            plugins={},
-            auth=auth.NoAuth(),
-            authz=authz.Authz(),
-            avatar_methods=avatar.AvatarGravatar(),
-            logfileName='http.log',
-        )
+        self.www = {
+            "port": None,
+            "plugins": {},
+            "auth": auth.NoAuth(),
+            "authz": authz.Authz(),
+            "avatar_methods": avatar.AvatarGravatar(),
+            "logfileName": 'http.log',
+        }
         self.services = {}
 
     _known_config_keys = set([
@@ -208,6 +204,7 @@ class MasterConfig(util.ComparableMixin):
         "mq",
         "multiMaster",
         "prioritizeBuilders",
+        "projects",
         "projectName",
         "projectURL",
         "properties",
@@ -268,6 +265,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_secrets(filename, config_dict)
             config.load_caches(filename, config_dict)
             config.load_schedulers(filename, config_dict)
+            config.load_projects(filename, config_dict)
             config.load_builders(filename, config_dict)
             config.load_workers(filename, config_dict)
             config.load_change_sources(filename, config_dict)
@@ -280,6 +278,7 @@ class MasterConfig(util.ComparableMixin):
             config.check_single_master()
             config.check_schedulers()
             config.check_locks()
+            config.check_projects()
             config.check_builders()
             config.check_ports()
             config.check_machines()
@@ -296,6 +295,10 @@ class MasterConfig(util.ComparableMixin):
             if name in config_dict:
                 v = config_dict[name]
             elif alt_key and alt_key in config_dict:
+                warn_deprecated(
+                    "3.9.0",
+                    f"Configuration dictionary key {alt_key} is deprecated. Use {name} instead."
+                )
                 v = config_dict[alt_key]
             else:
                 return
@@ -459,7 +462,7 @@ class MasterConfig(util.ComparableMixin):
         return DEFAULT_DB_URL
 
     def load_db(self, filename, config_dict):
-        self.db = dict(db_url=self.getDbUrlFromConfig(config_dict))
+        self.db = {"db_url": self.getDbUrlFromConfig(config_dict)}
 
     def load_mq(self, filename, config_dict):
         from buildbot.mq import connector  # avoid circular imports
@@ -545,6 +548,22 @@ class MasterConfig(util.ComparableMixin):
             seen_names.add(s.name)
 
         self.schedulers = dict((s.name, s) for s in schedulers)
+
+    def load_projects(self, filename, config_dict):
+        if 'projects' not in config_dict:
+            return
+        projects = config_dict['projects']
+
+        if not isinstance(projects, (list, tuple)):
+            error("c['projects'] must be a list")
+            return
+
+        def mapper(p):
+            if isinstance(p, Project):
+                return p
+            error(f"{repr(p)} is not a project config (in c['projects']")
+            return None
+        self.projects = [mapper(p) for p in projects]
 
     def load_builders(self, filename, config_dict):
         if 'builders' not in config_dict:
@@ -688,7 +707,9 @@ class MasterConfig(util.ComparableMixin):
             'ui_default_config',
             'versions',
             'ws_ping_interval',
+            'project_widgets',
             'graphql',
+            'theme',
         }
         unknown = set(list(www_cfg)) - allowed
 
@@ -799,10 +820,19 @@ class MasterConfig(util.ComparableMixin):
                 for lock in b.locks:
                     check_lock(lock)
 
+    def check_projects(self):
+        seen_names = set()
+        for p in self.projects:
+            if p.name in seen_names:
+                error(f"duplicate project name '{p.name}'")
+            seen_names.add(p.name)
+
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
         # to unknown workers
         workernames = {w.workername for w in self.workers}
+        project_names = {p.name for p in self.projects}
+
         seen_names = set()
         seen_builddirs = set()
 
@@ -818,6 +848,10 @@ class MasterConfig(util.ComparableMixin):
             if b.builddir in seen_builddirs:
                 error(f"duplicate builder builddir '{b.builddir}'")
             seen_builddirs.add(b.builddir)
+
+            if b.project is not None:
+                if b.project not in project_names:
+                    error(f"builder '{b.name}' uses unknown project name '{b.project}'")
 
     def check_ports(self):
         ports = set()

@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from parameterized import parameterized
+from unittest import mock
 
-import mock
+from parameterized import parameterized
 
 from twisted.internet import defer
 from twisted.trial import unittest

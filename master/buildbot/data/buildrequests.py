@@ -84,7 +84,7 @@ class Db2DataMixin:
 
 class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /buildrequests/n:buildrequestid
     """
@@ -99,11 +99,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             return (yield self.db2data(buildrequest))
         return None
 
-    @defer.inlineCallbacks
-    def control(self, action, args, kwargs):
-        if action != "cancel":
-            raise ValueError(f"action: {action} is not supported")
-        brid = kwargs['buildrequestid']
+    def cancel_request(self, brid, args, kwargs):
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
         try:
@@ -137,10 +133,26 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         self.master.mq.produce(('buildrequests', str(brid), 'cancel'), brdict)
         return None
 
+    def set_request_priority(self, brid, args, kwargs):
+        priority = args['priority']
+        yield self.master.db.buildrequests.set_build_requests_priority(
+                 brids=[brid], priority=priority)
+        return None
+
+    @defer.inlineCallbacks
+    def control(self, action, args, kwargs):
+        brid = kwargs['buildrequestid']
+        if action == "cancel":
+            return self.cancel_request(brid, args, kwargs)
+        elif action == "set_priority":
+            return self.set_request_priority(brid, args, kwargs)
+        else:
+            raise ValueError(f"action: {action} is not supported")
+
 
 class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /buildrequests
         /builders/n:builderid/buildrequests

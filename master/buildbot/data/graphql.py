@@ -23,6 +23,7 @@ from buildbot.asyncio import AsyncIOLoopWithTwisted
 from buildbot.asyncio import as_deferred
 from buildbot.asyncio import as_future
 from buildbot.data import resultspec
+from buildbot.data.base import EndpointKind
 from buildbot.data.types import Entity
 from buildbot.util import service
 
@@ -256,7 +257,7 @@ class GraphQLConnector(service.AsyncService):
             rspec = None
             kwargs = ep.get_kwargs_from_graphql(parent, resolve_info, args)
 
-            if ep.isCollection or ep.isPseudoCollection:
+            if ep.kind == EndpointKind.COLLECTION or ep.isPseudoCollection:
                 args = {k: _enforce_list(v) for k, v in args.items()}
                 rspec = self.data.resultspec_from_jsonapi(args, ep.rtype.entityType, True)
 

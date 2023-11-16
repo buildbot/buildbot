@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from pkg_resources import parse_version
+from packaging.version import parse as parse_version
 
 from twisted import __version__ as twistedVersion
 from twisted.internet import defer
@@ -27,10 +27,33 @@ from buildbot.test.util.integration import RunMasterBase
 # with one builder and a shellcommand step, which use usePTY
 class ShellMaster(RunMasterBase):
 
+    @defer.inlineCallbacks
+    def setup_config(self, usePTY):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.plugins import steps
+        from buildbot.process.factory import BuildFactory
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(
+                name="force",
+                builderNames=["testy"])]
+
+        f = BuildFactory()
+        f.addStep(steps.ShellCommand(
+            command='if [ -t 1 ] ; then echo in a terminal; else echo "not a terminal"; fi',
+            usePTY=usePTY))
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          workernames=["local1"],
+                          factory=f)]
+        yield self.setup_master(c)
+
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
     def test_usePTY(self):
-        yield self.setupConfig(masterConfig(usePTY=True))
+        yield self.setup_config(usePTY=True)
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -50,32 +73,9 @@ class ShellMaster(RunMasterBase):
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
     def test_NOusePTY(self):
-        yield self.setupConfig(masterConfig(usePTY=False))
+        yield self.setup_config(usePTY=False)
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         res = yield self.checkBuildStepLogExist(build, "not a terminal", onlyStdout=True)
         self.assertTrue(res)
-
-
-# master configuration
-def masterConfig(usePTY):
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import steps, schedulers
-
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
-
-    f = BuildFactory()
-    f.addStep(steps.ShellCommand(
-        command='if [ -t 1 ] ; then echo in a terminal; else echo "not a terminal"; fi',
-        usePTY=usePTY))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
-    return c

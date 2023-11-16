@@ -59,6 +59,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.stdioLogName = stdioLogName
         self._startTime = None
         self._remoteElapsed = None
+        self.remote_failure_reason = None
         self.remote_command = remote_command
         self.args = args
         self.ignore_updates = ignore_updates
@@ -204,15 +205,10 @@ class RemoteCommand(base.RemoteCommandImpl):
             for key, value in updates:
                 if self.active and not self.ignore_updates:
                     if key in ['stdout', 'stderr', 'header']:
-                        whole_line = self.split_line(key, value)
-                        if whole_line is not None:
-                            self.remoteUpdate(key, whole_line, False)
+                        self.remoteUpdate(key, value[0], False)
                     elif key == "log":
                         logname, data = value
-                        whole_line = self.split_line(logname, data)
-                        value = (logname, whole_line)
-                        if whole_line is not None:
-                            self.remoteUpdate(key, value, False)
+                        self.remoteUpdate(key, (logname, data[0]), False)
                     else:
                         self.remoteUpdate(key, value, False)
         except Exception:
@@ -371,14 +367,15 @@ class RemoteCommand(base.RemoteCommandImpl):
             yield self.add_header_lines(f"program finished with exit code {rc}\n")
         if key == "elapsed":
             self._remoteElapsed = value
+        if key == "failure_reason":
+            self.remote_failure_reason = value
 
         # TODO: these should be handled at the RemoteCommand level
-        if key not in ('stdout', 'stderr', 'header', 'rc'):
+        if key not in ('stdout', 'stderr', 'header', 'rc', "failure_reason"):
             if key not in self.updates:
                 self.updates[key] = []
             self.updates[key].append(value)
 
-    @util.deferredLocked('loglock')
     @defer.inlineCallbacks
     def remoteComplete(self, maybeFailure):
         if self._startTime and self._remoteElapsed:
@@ -389,21 +386,26 @@ class RemoteCommand(base.RemoteCommandImpl):
             if key in ['stdout', 'stderr', 'header']:
                 whole_line = lbf.flush()
                 if whole_line is not None:
-                    self.remoteUpdate(key, whole_line, True)
+                    yield self.remoteUpdate(key, whole_line, True)
             else:
                 logname = key
                 whole_line = lbf.flush()
                 value = (logname, whole_line)
                 if whole_line is not None:
-                    self.remoteUpdate("log", value, True)
+                    yield self.remoteUpdate("log", value, True)
 
-        for name, loog in self.logs.items():
-            if self._closeWhenFinished[name]:
-                if maybeFailure:
-                    yield loog.addHeader(f"\nremoteFailed: {maybeFailure}")
-                else:
-                    log.msg(f"closing log {loog}")
-                yield loog.finish()
+        try:
+            yield self.loglock.acquire()
+            for name, loog in self.logs.items():
+                if self._closeWhenFinished[name]:
+                    if maybeFailure:
+                        yield loog.addHeader(f"\nremoteFailed: {maybeFailure}")
+                    else:
+                        log.msg(f"closing log {loog}")
+                    yield loog.finish()
+        finally:
+            yield self.loglock.release()
+
         if maybeFailure:
             # Message Pack protocol can not send an exception object back to the master, so
             # exception information is sent as a string

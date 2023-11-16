@@ -9,7 +9,7 @@ The purpose of this service is to cancel builds once one build on a buildset fai
 
 This is useful for reducing use of resources in cases when there is no need to gather information from all builds of a buildset once one of them fails.
 
-The service may be configured to be track a subset of builds.
+The service may be configured to track a subset of builds.
 This is controlled by the ``filters`` parameter.
 The decision on whether to cancel a build is done once a build fails.
 

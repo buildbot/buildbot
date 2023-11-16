@@ -41,7 +41,7 @@ class Db2DataMixin:
 
 class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /schedulers/n:schedulerid
         /masters/n:masterid/schedulers/n:schedulerid
@@ -67,7 +67,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
 class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /schedulers
         /masters/n:masterid/schedulers

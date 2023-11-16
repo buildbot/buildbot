@@ -29,10 +29,25 @@ class Worker(Row):
     id_column = 'id'
     required_columns = ('name', )
 
-    def __init__(self, id=None, name='some:worker', info=None, paused=0, graceful=0):
+    def __init__(
+        self,
+        id=None,
+        name='some:worker',
+        info=None,
+        paused=0,
+        pause_reason=None,
+        graceful=0
+    ):
         if info is None:
             info = {"a": "b"}
-        super().__init__(id=id, name=name, info=info, paused=paused, graceful=graceful)
+        super().__init__(
+            id=id,
+            name=name,
+            info=info,
+            paused=paused,
+            pause_reason=pause_reason,
+            graceful=graceful
+        )
 
 
 class ConnectedWorker(Row):
@@ -62,24 +77,28 @@ class FakeWorkersComponent(FakeDBComponent):
         self.configured = {}
         self.connected = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Worker):
-                self.workers[row.id] = dict(
-                    id=row.id,
-                    name=row.name,
-                    paused=row.paused,
-                    graceful=row.graceful,
-                    info=row.info)
+                self.workers[row.id] = {
+                    "id": row.id,
+                    "name": row.name,
+                    "paused": row.paused,
+                    "pause_reason": row.pause_reason,
+                    "graceful": row.graceful,
+                    "info": row.info
+                }
             elif isinstance(row, ConfiguredWorker):
                 row.id = row.buildermasterid * 10000 + row.workerid
-                self.configured[row.id] = dict(
-                    buildermasterid=row.buildermasterid,
-                    workerid=row.workerid)
+                self.configured[row.id] = {
+                    "buildermasterid": row.buildermasterid,
+                    "workerid": row.workerid
+                }
             elif isinstance(row, ConnectedWorker):
-                self.connected[row.id] = dict(
-                    masterid=row.masterid,
-                    workerid=row.workerid)
+                self.connected[row.id] = {
+                    "masterid": row.masterid,
+                    "workerid": row.workerid
+                }
 
     def findWorkerId(self, name):
         validation.verifyType(self.t, 'name', name,
@@ -88,10 +107,14 @@ class FakeWorkersComponent(FakeDBComponent):
             if m['name'] == name:
                 return defer.succeed(m['id'])
         id = len(self.workers) + 1
-        self.workers[id] = dict(
-            id=id,
-            name=name,
-            info={})
+        self.workers[id] = {
+            "id": id,
+            "name": name,
+            "info": {},
+            "paused": 0,
+            "pause_reason": None,
+            "graceful": 0
+        }
         return defer.succeed(id)
 
     def _getWorkerByName(self, name):
@@ -156,7 +179,7 @@ class FakeWorkersComponent(FakeDBComponent):
         json.dumps(workerinfo)
         if worker is not None:
             worker['info'] = workerinfo
-        new_conn = dict(masterid=masterid, workerid=workerid)
+        new_conn = {"masterid": masterid, "workerid": workerid}
         if new_conn not in self.connected.values():
             conn_id = max([0] + list(self.connected)) + 1
             self.connected[conn_id] = new_conn
@@ -185,23 +208,28 @@ class FakeWorkersComponent(FakeDBComponent):
         for k, v in list(self.configured.items()):
             if v['buildermasterid'] in allbuildermasterids and v['workerid'] == workerid:
                 del self.configured[k]
-        self.insertTestData([ConfiguredWorker(workerid=workerid,
+        self.insert_test_data([ConfiguredWorker(workerid=workerid,
                                               buildermasterid=buildermasterid)
                              for buildermasterid in buildermasterids])
         return defer.succeed(None)
 
     def workerDisconnected(self, workerid, masterid):
-        del_conn = dict(masterid=masterid, workerid=workerid)
+        del_conn = {"masterid": masterid, "workerid": workerid}
         for id, conn in self.connected.items():
             if conn == del_conn:
                 del self.connected[id]  # noqa pylint: disable=unnecessary-dict-index-lookup
                 break
         return defer.succeed(None)
 
-    def setWorkerState(self, workerid, paused, graceful):
+    def set_worker_paused(self, workerid, paused, pause_reason=None):
         worker = self.workers.get(workerid)
         if worker is not None:
             worker['paused'] = int(paused)
+            worker['pause_reason'] = pause_reason
+
+    def set_worker_graceful(self, workerid, graceful):
+        worker = self.workers.get(workerid)
+        if worker is not None:
             worker['graceful'] = int(graceful)
 
     def _configuredOn(self, workerid, builderid=None, masterid=None):
@@ -233,6 +261,7 @@ class FakeWorkersComponent(FakeDBComponent):
             'workerinfo': w['info'],
             'name': w['name'],
             'paused': bool(w.get('paused')),
+            'pause_reason': w.get("pause_reason"),
             'graceful': bool(w.get('graceful')),
             'configured_on': self._configuredOn(w['id'], builderid, masterid),
             'connected_to': self._connectedTo(w['id'], masterid),

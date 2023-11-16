@@ -23,20 +23,21 @@ from buildbot.www.rest import BadJsonRpc2
 
 
 def forceScheduler2Data(sched):
-    ret = dict(all_fields=[],
-               name=str(sched.name),
-               button_name=str(sched.buttonName),
-               label=str(sched.label),
-               builder_names=[str(name)
-                              for name in sched.builderNames],
-               enabled=sched.enabled)
+    ret = {
+        "all_fields": [],
+        "name": str(sched.name),
+        "button_name": str(sched.buttonName),
+        "label": str(sched.label),
+        "builder_names": [str(name) for name in sched.builderNames],
+        "enabled": sched.enabled
+    }
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
     return ret
 
 
 class ForceSchedulerEndpoint(base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /forceschedulers/i:schedulername
     """
@@ -71,7 +72,7 @@ class ForceSchedulerEndpoint(base.Endpoint):
 
 class ForceSchedulersEndpoint(base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /forceschedulers
         /builders/:builderid/forceschedulers

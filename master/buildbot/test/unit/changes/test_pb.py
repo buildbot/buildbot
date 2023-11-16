@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -31,10 +31,12 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
                          TestReactorMixin,
                          unittest.TestCase):
 
-    DEFAULT_CONFIG = dict(port='9999',
-                          user='alice',
-                          passwd='sekrit',
-                          name=changesource.ChangeSourceMixin.DEFAULT_NAME)
+    DEFAULT_CONFIG = {
+        "port": '9999',
+        "user": 'alice',
+        "passwd": 'sekrit',
+        "name": changesource.ChangeSourceMixin.DEFAULT_NAME
+    }
 
     EXP_DEFAULT_REGISTRATION = ('9999', 'alice', 'sekrit')
 
@@ -222,7 +224,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_addChange_noprefix(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(dict(who="bar", files=['a']))
+        yield cp.perspective_addChange({"who": 'bar', "files": ['a']})
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'bar',
@@ -244,7 +246,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_addChange_codebase(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(dict(who="bar", files=[], codebase='cb'))
+        yield cp.perspective_addChange({"who": 'bar', "files": [], "codebase": 'cb'})
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'bar',
@@ -267,7 +269,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     def test_addChange_prefix(self):
         cp = pb.ChangePerspective(self.master, 'xx/')
         yield cp.perspective_addChange(
-            dict(who="bar", files=['xx/a', 'yy/b']))
+            {"who": 'bar', "files": ['xx/a', 'yy/b']})
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'bar',
@@ -290,7 +292,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     def test_addChange_sanitize_None(self):
         cp = pb.ChangePerspective(self.master, None)
         yield cp.perspective_addChange(
-            dict(project=None, revlink=None, repository=None)
+            {"project": None, "revlink": None, "repository": None}
         )
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
@@ -314,7 +316,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     def test_addChange_when_None(self):
         cp = pb.ChangePerspective(self.master, None)
         yield cp.perspective_addChange(
-            dict(when=None)
+            {"when": None}
         )
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
@@ -338,7 +340,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     def test_addChange_files_tuple(self):
         cp = pb.ChangePerspective(self.master, None)
         yield cp.perspective_addChange(
-            dict(files=('a', 'b'))
+            {"files": ('a', 'b')}
         )
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
@@ -361,9 +363,11 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_addChange_unicode(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(dict(author="\N{SNOWMAN}",
-                                          comments="\N{SNOWMAN}",
-                                          files=['\N{VERY MUCH GREATER-THAN}']))
+        yield cp.perspective_addChange({
+            "author": "\N{SNOWMAN}",
+            "comments": "\N{SNOWMAN}",
+            "files": ['\N{VERY MUCH GREATER-THAN}']
+        })
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': '\u2603',
@@ -385,10 +389,11 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_addChange_unicode_as_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(dict(author="\N{SNOWMAN}".encode('utf8'),
-                                          comments="\N{SNOWMAN}".encode(
-                                              'utf8'),
-                                          files=['\N{VERY MUCH GREATER-THAN}'.encode('utf8')]))
+        yield cp.perspective_addChange({
+            "author": "\N{SNOWMAN}".encode('utf8'),
+            "comments": "\N{SNOWMAN}".encode('utf8'),
+            "files": ['\N{VERY MUCH GREATER-THAN}'.encode('utf8')]
+        })
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': '\u2603',
@@ -412,7 +417,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
         cp = pb.ChangePerspective(self.master, None)
         bogus_utf8 = b'\xff\xff\xff\xff'
         replacement = bogus_utf8.decode('utf8', 'replace')
-        yield cp.perspective_addChange(dict(author=bogus_utf8, files=['a']))
+        yield cp.perspective_addChange({"author": bogus_utf8, "files": ['a']})
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': replacement,
@@ -434,8 +439,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_addChange_old_param_names(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(dict(who='me', when=1234,
-                                          files=[]))
+        yield cp.perspective_addChange({"who": 'me', "when": 1234, "files": []})
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'me',
@@ -457,7 +461,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_createUserObject_git_src(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(dict(who="c <h@c>", src='git'))
+        yield cp.perspective_addChange({"who": 'c <h@c>', "src": 'git'})
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'c <h@c>',

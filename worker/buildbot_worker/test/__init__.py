@@ -21,7 +21,7 @@ from twisted.trial import unittest
 from buildbot_worker import monkeypatches
 
 # apply the same patches the worker does when it starts
-monkeypatches.patch_all(for_tests=True)
+monkeypatches.patch_all()
 
 
 def add_debugging_monkeypatches():
@@ -59,8 +59,11 @@ __all__ = []
 
 # import mock so we bail out early if it's not installed
 try:
-    import mock
+    from unittest import mock
     [mock]
 except ImportError:
-    raise ImportError("Buildbot tests require the 'mock' module; "
-                      "try 'pip install mock'")
+    try:
+        import mock
+    except ImportError:
+        raise ImportError("Buildbot tests require the 'mock' module; "
+                          "try 'pip install mock'")

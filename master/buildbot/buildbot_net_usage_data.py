@@ -34,7 +34,7 @@ from twisted.python import log
 
 from buildbot.process.buildstep import _BuildStepFactory
 from buildbot.util import unicode2bytes
-from buildbot.www.config import IndexResource
+from buildbot.www.config import get_environment_versions
 
 # This can't change! or we will need to make sure we are compatible with all
 # released version of buildbot >=0.9.0
@@ -43,7 +43,7 @@ PHONE_HOME_URL = "https://events.buildbot.net/events/phone_home"
 
 def linux_distribution():
     os_release = "/etc/os-release"
-    meta_data = {'ID': "unknown_linux", 'VERSION_ID': "unknown_version"}
+    meta_data = {}
     if os.path.exists(os_release):
         with open("/etc/os-release", encoding='utf-8') as f:
             for line in f:
@@ -52,7 +52,15 @@ def linux_distribution():
                     meta_data[k] = v.strip('""')
                 except Exception:
                     pass
-    return meta_data['ID'], meta_data['VERSION_ID']
+
+    linux_id = meta_data.get("ID", "unknown_linux")
+
+    linux_version = "unknown_version"
+    # Pre-release versions of Debian contain VERSION_CODENAME but not VERSION_ID
+    for version_key in ["VERSION_ID", "VERSION_CODENAME"]:
+        linux_version = meta_data.get(version_key, linux_version)
+
+    return linux_id, linux_version
 
 
 def get_distro():
@@ -128,7 +136,7 @@ def basicData(master):
     installid = hashlib.sha1(hashInput).hexdigest()
     return {
         'installid': installid,
-        'versions': dict(IndexResource.getEnvironmentVersions()),
+        'versions': dict(get_environment_versions()),
         'platform': {
             'platform': platform.platform(),
             'system': platform.system(),
@@ -198,7 +206,7 @@ def _sendWithRequests(url, data):
         import requests  # pylint: disable=import-outside-toplevel
     except ImportError:
         return None
-    r = requests.post(url, json=data)
+    r = requests.post(url, json=data, timeout=30)
     return r.text
 
 

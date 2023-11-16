@@ -131,7 +131,7 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
         cfg = BuilderConfig(name='b', workername='s1', workernames='s2', builddir='bd',
                             workerbuilddir='wbd', factory=self.factory, tags=['c'],
                             nextWorker=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
-                            env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
+                            env={"x": 10}, properties={"y": 20}, collapseRequests='cr',
                             description='buzz')
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
@@ -156,13 +156,18 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
             BuilderConfig(name="a", workernames=['a'], factory=self.factory,
                           defaultProperties={'a' * 257: 'value'})
 
+    def test_description_wrong_format(self):
+        with self.assertRaisesConfigError("builder description format must be None"):
+            BuilderConfig(name="a", workernames=['a'], factory=self.factory,
+                          description_format="unknown")
+
     def test_getConfigDict(self):
         ns = lambda: 'ns'
         nb = lambda: 'nb'
         cfg = BuilderConfig(name='b', workername='s1', workernames='s2', builddir='bd',
                             workerbuilddir='wbd', factory=self.factory, tags=['c'],
                             nextWorker=ns, nextBuild=nb, locks=['l'],
-                            env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
+                            env={"x": 10}, properties={"y": 20}, collapseRequests='cr',
                             description='buzz')
         self.assertEqual(cfg.getConfigDict(), {'builddir': 'bd',
                                                'tags': ['c'],

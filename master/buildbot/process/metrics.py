@@ -237,7 +237,7 @@ class MetricCountHandler(MetricHandler):
         retval = {}
         for counter in sorted(self.keys()):
             retval[counter] = self.get(counter)
-        return dict(counters=retval)
+        return {"counters": retval}
 
 
 class MetricTimeHandler(MetricHandler):
@@ -265,7 +265,7 @@ class MetricTimeHandler(MetricHandler):
         retval = {}
         for timer in sorted(self.keys()):
             retval[timer] = self.get(timer)
-        return dict(timers=retval)
+        return {"timers": retval}
 
 
 class MetricAlarmHandler(MetricHandler):
@@ -290,7 +290,7 @@ class MetricAlarmHandler(MetricHandler):
         retval = {}
         for alarm, (level, msg) in sorted(self._alarms.items()):
             retval[alarm] = (ALARM_TEXT[level], msg)
-        return dict(alarms=retval)
+        return {"alarms": retval}
 
 
 class AttachedWorkersWatcher:

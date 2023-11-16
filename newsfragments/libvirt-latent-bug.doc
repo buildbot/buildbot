@@ -1,0 +1,1 @@
+Describe an existing bug with Libvirt latent workers that does not use a copy of the image (:issue `7122`).

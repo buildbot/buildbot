@@ -124,12 +124,6 @@ class TestSourceStampFilter(unittest.TestCase):
                                    branch_not_re=re.compile('^b0$'))
         self.assertEqual(filter.is_matched(ss), expected)
 
-    def test_filter_is_matched_codebase(self):
-        filter = SourceStampFilter(project_eq='p', codebase_eq='c', repository_eq='r',
-                                   branch_eq='b')
-        self.assertEqual(filter.is_matched_codebase('c'), True)
-        self.assertEqual(filter.is_matched_codebase('0'), False)
-
     def test_filter_repr(self):
         filter = SourceStampFilter(project_eq='p', codebase_eq='c',
                                    repository_eq='r', branch_eq='b',

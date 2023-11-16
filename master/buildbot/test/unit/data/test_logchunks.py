@@ -35,7 +35,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Builder(id=77),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Master(id=88),

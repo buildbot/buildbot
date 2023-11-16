@@ -42,7 +42,7 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
 
     @defer.inlineCallbacks
     def test_bogus_row_no_source(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel',
                                   property_value='"no source"'),
@@ -52,11 +52,14 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
         c = yield self.db.changes.getChange(13)
 
         self.assertEqual(c['properties'],
-                         dict(devel=('no source', 'Change')))
+            {
+            "devel": ('no source', 'Change')
+            }
+        )
 
     @defer.inlineCallbacks
     def test_bogus_row_jsoned_list(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel',
                                   property_value='[1, 2]'),
@@ -66,4 +69,7 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
         c = yield self.db.changes.getChange(13)
 
         self.assertEqual(c['properties'],
-                         dict(devel=([1, 2], 'Change')))
+            {
+            "devel": ([1, 2], 'Change')
+            }
+        )

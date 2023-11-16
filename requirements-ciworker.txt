@@ -1,29 +1,34 @@
-attrs==21.4.0
-autobahn==22.3.2;  python_version >= "3.7"
+attrs==21.4.0;  python_version < "3.6"  # pyup: ignore
+attrs==23.1.0;  python_version >= "3.6"
+autobahn==23.6.2;  python_version >= "3.9"
+autobahn==22.7.1;  python_version < "3.9" and python_version >= "3.7"  # pyup: ignore
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
-Automat==20.2.0
-cffi==1.15.0;  python_version >= "3.6"
+Automat==20.2.0;  python_version < "3.6"  # pyup: ignore
+Automat==22.10.0;  python_version >= "3.6"
+cffi==1.16.0;  python_version >= "3.6"
 constantly==15.1.0
-cryptography==37.0.2;  python_version >= "3.6"
+cryptography==41.0.4;  python_version >= "3.6"
 funcsigs==1.0.2
-future==0.18.2
+future==0.18.3
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
-incremental==21.3.0;  python_version >= "3.6"
+incremental==22.10.0;  python_version >= "3.6"
 incremental==17.5.0;  python_version < "3.0"  # pyup: ignore
-# pin mock, because 4.x no longer supports Python 3.5
-mock==3.0.5  # pyup: ignore
-parameterized==0.8.1
-pbr==5.8.1
+mock==3.0.5;  python_version < "3.6"  # pyup: ignore
+mock==5.1.0;  python_version >= "3.6"
+parameterized==0.8.1;  python_version < "3.6"  # pyup: ignore
+parameterized==0.9.0;  python_version >= "3.6"
+pbr==5.11.1
 # pin PyHamcrest, because 2.x no longer supports Python 2.7
 PyHamcrest==1.9.0  # pyup: ignore
-psutil==5.9.0
+psutil==5.9.5
 pycparser==2.21;  python_version >= "3.6"
 six==1.16.0
 Twisted==22.4.0;  python_version >= "3.6"
 Twisted==20.3.0;  python_version < "3.6"  # pyup: ignore
-txaio;  python_version >= "3.6"
-typing-extensions==4.2.0;  python_version >= "3.7"
-typing-extensions==3.10.0.2;  python_version < "3.7" and python_version >= "3.5"
-zope.interface==5.4.0
+txaio==23.1.1;  python_version >= "3.6"
+typing-extensions==4.8.0;  python_version >= "3.7"
+typing-extensions==4.8.0;  python_version < "3.7" and python_version >= "3.5"
+zope.interface==5.4.0;  python_version < "3.6"  # pyup: ignore
+zope.interface==6.0;  python_version >= "3.6"
 -e worker

@@ -25,7 +25,6 @@ class TestResultDict(dict):
 
 
 class TestResultsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     @defer.inlineCallbacks
     def _add_code_paths(self, builderid, paths):

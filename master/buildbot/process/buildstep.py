@@ -50,7 +50,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.process.results import Results
+from buildbot.process.results import statusToString
 from buildbot.util import bytes2unicode
 from buildbot.util import debounce
 from buildbot.util import flatten
@@ -277,6 +277,7 @@ class BuildStep(results.ResultComputingConfigMixin,
                          f"{repr(self.updateBuildSummaryPolicy)}")
         self._acquiringLocks = []
         self.stopped = False
+        self.timed_out = False
         self.master = None
         self.statistics = {}
         self.logs = {}
@@ -370,7 +371,9 @@ class BuildStep(results.ResultComputingConfigMixin,
             stepsumm = 'finished'
 
         if self.results != SUCCESS:
-            stepsumm += f' ({Results[self.results]})'
+            stepsumm += f' ({statusToString(self.results)})'
+            if self.timed_out:
+                stepsumm += " (timed out)"
 
         return {'step': stepsumm}
 
@@ -454,6 +457,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
             if self.stopped:
                 raise BuildStepCancelled
+
+            yield self.master.data.updates.set_step_locks_acquired_at(self.stepid)
 
             # render renderables in parallel
             renderables = []
@@ -764,6 +769,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         command.worker = self.worker
         try:
             res = yield command.run(self, self.remote, self.build.builder.name)
+            if command.remote_failure_reason in ("timeout", "timeout_without_output"):
+                self.timed_out = True
         finally:
             self.cmd = None
         return res
@@ -915,8 +922,10 @@ class ShellMixin:
 
         # merge the builder's environment with that supplied here
         builderEnv = self.build.builder.config.env
-        kwargs['env'] = yield self.build.render(builderEnv)
-        kwargs['env'].update(self.env)
+        kwargs['env'] = {
+            **(yield self.build.render(builderEnv)),
+            **kwargs['env'],
+        }
         kwargs['stdioLogName'] = stdioLogName
 
         # default the workdir appropriately
@@ -956,7 +965,9 @@ class ShellMixin:
         summary = util.command_to_string(self.command)
         if summary:
             if self.results != SUCCESS:
-                summary += f' ({Results[self.results]})'
+                summary += f' ({statusToString(self.results)})'
+                if self.timed_out:
+                    summary += " (timed out)"
             return {'step': summary}
         return super().getResultSummary()
 

@@ -17,8 +17,7 @@ import json
 import os
 import shutil
 import tempfile
-
-from mock import Mock
+from unittest.mock import Mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -1023,7 +1022,7 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def testBasic(self):
-        msg = dict(message="Hello World")
+        msg = {"message": 'Hello World'}
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
         self.step.worker = Mock()
@@ -1047,7 +1046,7 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_basic_with_renderable(self):
-        msg = dict(message=Interpolate("Hello World"))
+        msg = {"message": Interpolate('Hello World')}
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
         self.step.worker = Mock()
@@ -1070,7 +1069,7 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin,
         self.assertEqual(b''.join(read), b'{"message": "Hello World"}')
 
     def testFailure(self):
-        msg = dict(message="Hello World")
+        msg = {"message": 'Hello World'}
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
         self.expect_commands(

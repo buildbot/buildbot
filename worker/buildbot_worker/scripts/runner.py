@@ -132,6 +132,8 @@ class CreateWorkerOptions(MakerBase):
          "Allows the worker to initiate a graceful shutdown. One of "
          "'signal' or 'file'"],
         ["protocol", None, "pb", "Protocol to be used when creating master-worker connection"],
+        ["connection-string", None, None,
+         "Twisted endpoint connection string (this will override master host[:port])"],
         ["proxy-connection-string", None, None,
          "Address of HTTP proxy to tunnel through"]
     ]
@@ -217,7 +219,7 @@ class CreateWorkerOptions(MakerBase):
                                        argument))
 
         for argument in ["log-count", "maxretries", "umask", "numcpus"]:
-            if not re.match(r'^(0o)?\d+$', self[argument]) and \
+            if not re.match(r'^((0o)\d+|0|[1-9]\d*)$', self[argument]) and \
                     self[argument] != 'None':
                 raise usage.UsageError("{} parameter needs to be a number"
                                     " or None".format(argument))

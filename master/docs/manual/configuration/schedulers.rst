@@ -188,7 +188,7 @@ There are several common arguments for schedulers, although not all are availabl
 
 ``change_filter`` (optional)
 
-    The change filter that will determine which changes are recognized by this scheduler (see :ref:`Change-Filters`).
+    The change filter that will determine which changes are recognized by this scheduler (see :ref:`ChangeFilter`).
     Note that this is different from ``fileIsImportant``; if the change filter filters out a change, the change is completely ignored by the scheduler.
     If a change is allowed by the change filter but is deemed unimportant, it will not cause builds to start but will be remembered and shown in status displays.
     The default value of ``None`` does not filter any changes at all.
@@ -208,6 +208,14 @@ There are several common arguments for schedulers, although not all are availabl
     A string that will be used as the reason for the triggered build.
     By default it lists the type and name of the scheduler triggering the build.
 
+.. _Scheduler-Attr-Priority:
+
+``priority`` (optional)
+
+    Specifies the default priority for :class:`BuildRequests` created by this scheduler.
+    It can either be an integer or a function (see :ref:`Scheduler-Priority-Functions`).
+    By default it creates :class:`BuildRequests` with priority 0.
+
 The remaining subsections represent a catalog of the available scheduler types.
 All these schedulers are defined in modules under :mod:`buildbot.schedulers`, and their docstrings are the best source of documentation on the arguments each one takes.
 
@@ -224,109 +232,6 @@ The Data API and web UI display the master on which each scheduler is running.
 There is currently no mechanism to control which master's scheduler instance becomes active.
 The behavior is nondeterministic, based on the timing of polling by inactive schedulers.
 The failover is non-revertive.
-
-.. _Change-Filters:
-
-Change Filters
-~~~~~~~~~~~~~~
-
-Several schedulers perform filtering on an incoming set of changes.
-The filter can most generically be specified as a :class:`ChangeFilter`.
-
-Set up a :class:`ChangeFilter` like this:
-
-.. code-block:: python
-
-    from buildbot.plugins import util
-    my_filter = util.ChangeFilter(project_re="^baseproduct/.*", branch="devel")
-
-and then assign it to a scheduler with the ``change_filter`` parameter:
-
-.. code-block:: python
-
-    sch = SomeSchedulerClass(...,
-        change_filter=my_filter)
-
-There are five attributes of changes on which you can filter:
-
-``project``
-
-    The project string, as defined by the ChangeSource.
-
-``repository``
-
-    The repository in which the change occurred.
-
-``branch``
-
-    The branch on which the change occurred.
-    Note that 'trunk' or 'master' is often denoted by ``None``.
-
-``category``
-
-    The category, again as defined by the ChangeSource.
-
-``codebase``
-
-    The change's codebase.
-
-For each attribute, the filter can look for one specific value:
-
-.. code-block:: python
-
-    my_filter = util.ChangeFilter(project='myproject')
-
-or accept a set of values:
-
-.. code-block:: python
-
-    my_filter = util.ChangeFilter(project=['myproject', 'jimsproject'])
-
-or apply a regular expression, using the attribute name with a "``_re``" suffix:
-
-.. code-block:: python
-
-    my_filter = util.ChangeFilter(category_re='.*deve.*')
-    # or, to use regular expression flags:
-    import re
-    my_filter = util.ChangeFilter(category_re=re.compile('.*deve.*', re.I))
-
-:class:`buildbot.www.hooks.github.GitHubEventHandler` has a special ``github_distinct`` property that can be used to specify whether or not non-distinct changes should be considered.
-For example, if a commit is pushed to a branch that is not being watched and then later pushed to a watched branch, by default, this will be recorded as two separate changes.
-In order to record a change only the first time the commit appears, you can use a custom :class:`ChangeFilter` like this:
-
-.. code-block:: python
-
-    ChangeFilter(filter_fn=lambda c: c.properties.getProperty('github_distinct'))
-
-For anything more complicated, define a Python function to recognize the strings you want:
-
-.. code-block:: python
-
-    def my_branch_fn(branch):
-        return branch in branches_to_build and branch not in branches_to_ignore
-    my_filter = util.ChangeFilter(branch_fn=my_branch_fn)
-
-The special argument ``filter_fn`` can be used to specify a function that is given the entire Change object, and returns a boolean.
-
-The entire set of allowed arguments, then, is
-
-+------------+---------------+---------------+
-| project    | project_re    | project_fn    |
-+------------+---------------+---------------+
-| repository | repository_re | repository_fn |
-+------------+---------------+---------------+
-| branch     | branch_re     | branch_fn     |
-+------------+---------------+---------------+
-| category   | category_re   | category_fn   |
-+------------+---------------+---------------+
-| codebase   | codebase_re   | codebase_fn   |
-+------------+---------------+---------------+
-| filter_fn                                  |
-+--------------------------------------------+
-
-A Change passes the filter only if *all* arguments are satisfied.
-If no filter object is given to a scheduler, then all changes will be built (subject to any other restrictions the scheduler enforces).
 
 Usage example
 ~~~~~~~~~~~~~
@@ -745,16 +650,63 @@ The full list of parameters is:
 
     The day of the month to start a build.
     This defaults to ``*``, meaning every day.
+    Use ``L`` to specify last day of the month.
+    Last day option respects leap years.
 
 ``month`` (optional)
 
     The month in which to start the build, with January = 1.
-    This defaults to ``*``, meaning every month.
+    This defaults to ``*``, meaning every month. Month or month
+    range / list as standard C abbreviated name ``jan-feb``, ``jan,dec``.
 
 ``dayOfWeek`` (optional)
 
     The day of the week to start a build, with Monday = 0.
-    This defaults to ``*``, meaning every day of the week.
+    This defaults to ``*``, meaning every day of the week or nth weekday of month.
+    Like first Monday of month ``1#1``, last Monday of month ``L1``,
+    Monday + Friday ``mon,fri`` or ranges Monday to Friday ``mon-fri``.
+
+Forcing builds when there are no changes
+........................................
+
+Nightly scheduler supports scheduling builds even in there were no important changes and ``onlyIfChanged`` was set to ``True``.
+This is controlled by ``force_at_*`` parameters.
+The feature is enabled if least one of them is set.
+
+The time interval identified by ``force_at_minute``, ``force_at_hour``, ``force_at_day_of_month``, ``force_at_month`` and ``force_at_day_of_week`` must be subset of time interval identified by ``minute``, ``hour``, ``dayOfMonth``, ``month``, ``dayOfWeek``.
+
+``force_at_minute`` (optional)
+
+    The minute of the hour on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``0`` meaning builds will run every hour.
+
+``force_at_hour`` (optional)
+
+    The hour of the day on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``*`` meaning builds will run each hour.
+
+``force_at_day_of_month`` (optional)
+
+    The day of the month on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``*`` meaning builds will run each day.
+
+``force_at_month`` (optional)
+
+    The month of the year on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``*`` meaning builds will run each month.
+
+``force_at_day_of_week`` (optional)
+
+    The day of the week on which to start the build even if there were no important changes and ``onlyIfChanged`` was set to ``True``.
+    The default is ``None`` meaning this feature is disabled.
+    If the feature is enabled by setting another ``force_at_*`` parameter, then the default value is ``*`` meaning builds will run each day of the week.
+
+Example
+.......
 
 For example, the following :file:`master.cfg` clause will cause a build to be started every night at 3:00am:
 

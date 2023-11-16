@@ -371,7 +371,7 @@ class SVN(Source):
     def computeSourceRevision(self, changes):
         if not changes or None in [c.revision for c in changes]:
             return None
-        lastChange = max([int(c.revision) for c in changes])
+        lastChange = max(int(c.revision) for c in changes)
         return lastChange
 
     @staticmethod
@@ -428,7 +428,7 @@ class SVN(Source):
         if self.revision:
             checkout_cmd.extend(["--revision", str(self.revision)])
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
         res = yield self._dovccmd(checkout_cmd, abandonOnFailure=abandonOnFailure)

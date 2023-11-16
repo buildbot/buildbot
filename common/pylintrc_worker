@@ -7,9 +7,6 @@
 # pygtk.require().
 #init-hook=
 
-# Profiled execution.
-profile=no
-
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
 ignore=
@@ -33,7 +30,6 @@ load-plugins=
 # blacklisted-name
 # missing-docstring
 # too-many-lines
-# no-self-use
 # duplicate-code
 # too-many-ancestors
 # too-many-instance-attributes
@@ -44,8 +40,6 @@ load-plugins=
 # too-many-arguments
 # too-many-locals
 # too-many-statements
-# abstract-class-not-used
-# abstract-class-little-used
 # exec-used
 # star-args
 # deprecated-module
@@ -55,21 +49,11 @@ load-plugins=
 # unpacking-non-sequence
 # maybe-no-member
 
-# "bad-continuation" disabled due to conflict with flake8 (and PEP8)
-# See <https://github.com/PyCQA/pylint/issues/747>
-# flake8 wants:
-#     func("..."
-#          )
-# pylint wants:
-#     func("..."
-#         )
-
 disable=
   blacklisted-name,
   invalid-name,
   missing-docstring,
   too-many-lines,
-  no-self-use,
   duplicate-code,
   too-many-ancestors,
   too-many-instance-attributes,
@@ -80,8 +64,6 @@ disable=
   too-many-arguments,
   too-many-locals,
   too-many-statements,
-  abstract-class-not-used,
-  abstract-class-little-used,
   deprecated-module,
   fixme,
   global-variable-undefined,
@@ -99,14 +81,12 @@ disable=
   import-error,
   import-outside-toplevel,
   pointless-statement,
-  bad-builtin,
   attribute-defined-outside-init,
   protected-access,
   arguments-differ,
   signature-differs,
   abstract-method,
   super-init-not-called,
-  no-init,
   non-parent-init-called,
   global-statement,
   redefined-outer-name,
@@ -118,8 +98,6 @@ disable=
   superfluous-parens,
   no-self-argument,
   no-value-for-parameter,
-  interface-not-implemented,
-  bad-continuation,
   keyword-arg-before-vararg,
   useless-object-inheritance,
   deprecated-method,
@@ -128,8 +106,6 @@ disable=
   assignment-from-none,
   comparison-with-callable,
   stop-iteration-return,
-  redefined-variable-type,
-  deprecated-lambda,
   bad-string-format-type, # https://github.com/PyCQA/pylint/issues/2631
   duplicate-string-formatting-argument,
   cyclic-import,  # only happens when pylint is ran in non-parallel mode
@@ -144,6 +120,7 @@ disable=
   arguments-renamed,
   not-context-manager,
   use-a-generator,
+  unnecessary-lambda-assignment,
 
 [REPORTS]
 
@@ -155,30 +132,12 @@ output-format=text
 # Change the default error message template.
 msg-template={path}:{line} {msg} [{symbol}]
 
-# Include message's id in output
-include-ids=yes
-
-# Include symbolic ids of messages in output
-symbols=no
-
-# Put messages in a separate file for each module / package specified on the
-# command line instead of printing them on stdout. Reports (if any) will be
-# written in a file name "pylint_global.[txt|html]".
-files-output=no
-
-# Tells whether to display a full report or only the messages
-reports=no
-
 # Python expression which should return a note less than 10 (10 is the highest
 # note). You have access to the variables errors warning, statement which
 # respectively contain the number of errors / warnings messages and the total
 # number of statements analyzed. This is used by the global evaluation report
 # (RP0004).
 evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
-
-# Add a comment according to your evaluation note. This is used by the global
-# evaluation report (RP0004).
-comment=no
 
 
 [SPELLING]
@@ -245,10 +204,6 @@ ignore-mixin-members=yes
 # (useful for classes with attributes dynamically set).
 ignored-classes=SQLObject
 
-# When zope mode is activated, add a predefined set of Zope acquired attributes
-# to generated-members.
-zope=no
-
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E0201 when accessed. Python regular
 # expressions are accepted.
@@ -260,9 +215,6 @@ generated-members=REQUEST,acl_users,aq_parent
 # Will be removed in PyLint 2.0
 # Required attributes for module, separated by a comma
 #required-attributes=
-
-# List of builtins function names that should not be used, separated by a comma
-bad-functions=map,filter,apply,input
 
 # Regular expression which should only match correct module names
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
@@ -367,9 +319,6 @@ max-locals=15
 # Maximum number of return / yield for function / method body
 max-returns=6
 
-# Maximum number of branch for function / method body
-max-branchs=12
-
 # Maximum number of statements in function / method body
 max-statements=50
 
@@ -390,4 +339,4 @@ max-public-methods=20
 
 # Exceptions that will emit a warning when being caught. Defaults to
 # "Exception"
-overgeneral-exceptions=Exception
+overgeneral-exceptions=builtins.Exception

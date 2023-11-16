@@ -15,9 +15,8 @@
 
 import operator
 import posixpath
-
-from mock import Mock
-from mock import call
+from unittest.mock import Mock
+from unittest.mock import call
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -123,6 +122,9 @@ class FakeBuilder:
 
     def getBuilderIdForName(self, name):
         return defer.succeed(self._builders.get(name, None) or self.builderid)
+
+    def find_project_id(self, name):
+        return defer.succeed(None)
 
 
 @implementer(interfaces.IBuildStepFactory)
@@ -868,7 +870,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testGetUrl(self):
         self.build.number = 3
         url = yield self.build.getUrl()
-        self.assertEqual(url, 'http://localhost:8080/#builders/83/builds/3')
+        self.assertEqual(url, 'http://localhost:8080/#/builders/83/builds/3')
 
     @defer.inlineCallbacks
     def testGetUrlForVirtualBuilder(self):
@@ -878,7 +880,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.build.setProperty('virtual_builder_tags', ['_virtual_'])
         self.build.number = 33
         url = yield self.build.getUrl()
-        self.assertEqual(url, 'http://localhost:8080/#builders/108/builds/33')
+        self.assertEqual(url, 'http://localhost:8080/#/builders/108/builds/33')
 
     def test_active_builds_metric(self):
         """

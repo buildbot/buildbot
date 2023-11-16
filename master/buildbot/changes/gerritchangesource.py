@@ -25,6 +25,7 @@ from buildbot import config
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
+from buildbot.config.checks import check_param_int_none
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import runprocess
@@ -65,19 +66,49 @@ class GerritChangeFilter(ChangeFilter):
 
     """This gerrit specific change filter helps creating pre-commit and post-commit builders"""
 
-    def __init__(self,
-                 eventtype=None, eventtype_re=None, eventtype_fn=None, **kw):
-        super().__init__(**kw)
+    compare_attrs = ('eventtype_fn', 'gerrit_branch_fn')
 
-        self.checks.update(
-            self.createChecks(
-                (eventtype, eventtype_re, eventtype_fn, "prop:event.type"),
-            ))
+    def __init__(self,
+                 branch=util.NotABranch, branch_re=None, branch_fn=None,
+                 eventtype=None, eventtype_re=None, eventtype_fn=None, **kw):
+        if eventtype is not None:
+            kw.setdefault('property_eq', {})['event.type'] = eventtype
+        if eventtype_re is not None:
+            kw.setdefault('property_re', {})['event.type'] = eventtype_re
+
         # for branch change filter, we take the real gerrit branch
         # instead of the change's branch, which is also used as a grouping key
-        if "branch" in self.checks:
-            self.checks["prop:event.change.branch"] = self.checks["branch"]
-            del self.checks["branch"]
+        if branch is not util.NotABranch:
+            kw.setdefault('property_eq', {})['event.change.branch'] = branch
+        if branch_re is not None:
+            kw.setdefault('property_re', {})['event.change.branch'] = branch_re
+
+        super().__init__(**kw)
+        self.eventtype_fn = eventtype_fn
+        self.gerrit_branch_fn = branch_fn
+
+    def filter_change(self, change):
+        if self.eventtype_fn is not None:
+            value = change.properties.getProperty('event.type', '')
+            if not self.eventtype_fn(value):
+                return False
+
+        if self.gerrit_branch_fn is not None:
+            # for branch change filter, we take the real gerrit branch
+            # instead of the change's branch, which is also used as a grouping key
+            value = change.properties.getProperty('event.change.branch', '')
+            if not self.gerrit_branch_fn(value):
+                return False
+
+        return super().filter_change(change)
+
+    def _get_repr_filters(self):
+        filters = super()._get_repr_filters()
+        if self.eventtype_fn is not None:
+            filters.append(f'{self.eventtype_fn.__name__}(eventtype)')
+        if self.gerrit_branch_fn is not None:
+            filters.append(f'{self.gerrit_branch_fn.__name__}(branch)')
+        return filters
 
 
 def _gerrit_user_to_author(props, username="unknown"):
@@ -131,7 +162,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             log.msg(f"bad json line: {line}")
             return defer.succeed(None)
 
-        if not(isinstance(event, dict) and "type" in event):
+        if not (isinstance(event, dict) and "type" in event):
             if self.debug:
                 log.msg(f"no type in event {line}")
             return defer.succeed(None)
@@ -171,8 +202,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             "codebase": '',
         }
 
-        _, found_existing = yield(
-             self.master.db.sourcestamps.findOrCreateId(**stampdict))
+        _, found_existing = yield self.master.db.sourcestamps.findOrCreateId(**stampdict)
 
         if found_existing and event_type in ("patchset-created", "ref-updated"):
             if self.debug:
@@ -254,16 +284,17 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         if 'patchset-created' in self.handled_events and ref['refName'].startswith('refs/changes/'):
             return None
 
-        return self.addChange(event['type'], dict(
-            author=author,
-            project=ref["project"],
-            repository=f'{self.gitBaseURL}/{ref["project"]}',
-            branch=self.strip_refs_heads_from_branch(ref["refName"]),
-            revision=ref["newRev"],
-            comments="Gerrit: commit(s) pushed.",
-            files=["unknown"],
-            category=event["type"],
-            properties=properties))
+        return self.addChange(event['type'], {
+            "author": author,
+            "project": ref["project"],
+            "repository": f'{self.gitBaseURL}/{ref["project"]}',
+            "branch": self.strip_refs_heads_from_branch(ref["refName"]),
+            "revision": ref["newRev"],
+            "comments": "Gerrit: commit(s) pushed.",
+            "files": ["unknown"],
+            "category": event["type"],
+            "properties": properties
+        })
 
 
 class GerritChangeSource(GerritChangeSourceBase):
@@ -285,6 +316,9 @@ class GerritChangeSource(GerritChangeSourceBase):
     STREAM_BACKOFF_MAX = 60
     "(seconds) maximum time to wait before retrying a failed connection"
 
+    # The number of gerrit output lines to print in case of a failure
+    MAX_STORED_OUTPUT_DEBUG_LINES = 20
+
     name = None
 
     def checkConfig(self,
@@ -292,11 +326,17 @@ class GerritChangeSource(GerritChangeSourceBase):
                     username,
                     gerritport=29418,
                     identity_file=None,
+                    ssh_server_alive_interval_s=15,
+                    ssh_server_alive_count_max=3,
                     **kwargs):
         if self.name is None:
             self.name = f"GerritChangeSource:{username}@{gerritserver}:{gerritport}"
         if 'gitBaseURL' not in kwargs:
             kwargs['gitBaseURL'] = "automatic at reconfigure"
+        check_param_int_none(ssh_server_alive_interval_s, self.__class__,
+                             "ssh_server_alive_interval_s")
+        check_param_int_none(ssh_server_alive_count_max, self.__class__,
+                             "ssh_server_alive_count_max")
         super().checkConfig(**kwargs)
 
     def reconfigService(self,
@@ -305,6 +345,8 @@ class GerritChangeSource(GerritChangeSourceBase):
                         gerritport=29418,
                         identity_file=None,
                         name=None,
+                        ssh_server_alive_interval_s=15,
+                        ssh_server_alive_count_max=3,
                         **kwargs):
         if 'gitBaseURL' not in kwargs:
             kwargs['gitBaseURL'] = f"ssh://{username}@{gerritserver}:{gerritport}"
@@ -315,9 +357,19 @@ class GerritChangeSource(GerritChangeSourceBase):
         self.process = None
         self.wantProcess = False
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
+        self.ssh_server_alive_interval_s = ssh_server_alive_interval_s
+        self.ssh_server_alive_count_max = ssh_server_alive_count_max
+        self._last_lines_for_debug = []
         return super().reconfigService(**kwargs)
 
+    def _append_line_for_debug(self, line):
+        self._last_lines_for_debug.append(line)
+        while len(self._last_lines_for_debug) > self.MAX_STORED_OUTPUT_DEBUG_LINES:
+            self._last_lines_for_debug.pop(0)
+
     class LocalPP(LineProcessProtocol):
+
+        MAX_STORED_OUTPUT_DEBUG_LINES = 20
 
         def __init__(self, change_source):
             super().__init__()
@@ -328,12 +380,15 @@ class GerritChangeSource(GerritChangeSourceBase):
             if self.change_source.debug:
                 log.msg(f"{self.change_source.name} "
                         f"stdout: {line.decode('utf-8', errors='replace')}")
+
+            self.change_source._append_line_for_debug(line)
             yield self.change_source.lineReceived(line)
 
         def errLineReceived(self, line):
             if self.change_source.debug:
                 log.msg(f"{self.change_source.name} "
                         f"stderr: {line.decode('utf-8', errors='replace')}")
+            self.change_source._append_line_for_debug(line)
 
         def processEnded(self, status):
             super().processEnded(status)
@@ -351,8 +406,13 @@ class GerritChangeSource(GerritChangeSourceBase):
            self.STREAM_GOOD_CONNECTION_TIME:
             # bad startup; start the stream process again after a timeout,
             # and then increase the timeout
+            log_lines = "\n".join([l.decode("utf-8", errors="ignore")
+                                   for l in self._last_lines_for_debug])
+
             log.msg(f"{self.name}: stream-events failed; restarting after "
-                    f"{round(self.streamProcessTimeout)}s")
+                    f"{round(self.streamProcessTimeout)}s.\n"
+                    f"{len(self._last_lines_for_debug)} log lines follow:\n{log_lines}")
+
             self.master.reactor.callLater(
                 self.streamProcessTimeout, self.startStreamProcess)
             self.streamProcessTimeout *= self.STREAM_BACKOFF_EXPONENT
@@ -372,9 +432,15 @@ class GerritChangeSource(GerritChangeSourceBase):
         '''Get an ssh command list which invokes gerrit with the given args on the
         remote host'''
 
-        cmd = [
-            "ssh",
+        options = [
             "-o", "BatchMode=yes",
+        ]
+        if self.ssh_server_alive_interval_s is not None:
+            options += ["-o", f"ServerAliveInterval={self.ssh_server_alive_interval_s}"]
+        if self.ssh_server_alive_count_max is not None:
+            options += ["-o", f"ServerAliveCountMax={self.ssh_server_alive_count_max}"]
+
+        cmd = ["ssh"] + options + [
             f"{self.username}@{self.gerritserver}",
             "-p", str(self.gerritport)
         ]
@@ -393,6 +459,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         cmd = self._buildGerritCommand("stream-events")
         self.lastStreamProcessStart = util.now()
         self.process = reactor.spawnProcess(self.LocalPP(self), "ssh", cmd, env=None)
+        self._last_lines_for_debug = []
 
     @defer.inlineCallbacks
     def getFiles(self, change, patchset):
@@ -493,7 +560,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             log.msg(f"{self.name}: Polling gerrit: {last_event_formatted}".encode("utf-8"))
 
         res = yield self._http.get("/plugins/events-log/events/",
-                                   params=dict(t1=last_event_formatted))
+                                   params={"t1": last_event_formatted})
         lines = yield res.content()
         for line in lines.splitlines():
             yield self.lineReceived(line)

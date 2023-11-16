@@ -53,6 +53,8 @@ To accomplish this, all URLs are generated relative to the base URL.
 Overall, the space under the base URL looks like this:
 
 * ``/`` -- The HTML document that loads the UI
+* ``/config`` -- Returns implementation-defined master configuration used by the frontend UI.
+  The same data may be embedded directly into the HTML document returned by the ``/`` URL.
 * ``/api/v{version}`` -- The root of the REST APIs, each versioned numerically.
   Users should, in general, use the latest version.
 * ``/ws`` -- The WebSocket endpoint to subscribe to messages from the mq system.

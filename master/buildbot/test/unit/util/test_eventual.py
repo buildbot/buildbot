@@ -55,7 +55,7 @@ class Eventually(unittest.TestCase):
 
     def test_eventually_args(self):
         eventual.eventually(self.cb, 1, 2, a='a')
-        return self.assertResults([(1, 2, dict(a='a'))])
+        return self.assertResults([(1, 2, {"a": 'a'})])
 
     def test_eventually_err(self):
         # monkey-patch log.err; this is restored by tearDown

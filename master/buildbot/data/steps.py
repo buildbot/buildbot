@@ -29,6 +29,7 @@ class Db2DataMixin:
             'name': dbdict['name'],
             'buildid': dbdict['buildid'],
             'started_at': dbdict['started_at'],
+            "locks_acquired_at": dbdict["locks_acquired_at"],
             'complete': dbdict['complete_at'] is not None,
             'complete_at': dbdict['complete_at'],
             'state_string': dbdict['state_string'],
@@ -41,7 +42,7 @@ class Db2DataMixin:
 
 class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /steps/n:stepid
         /builds/n:buildid/steps/i:step_name
@@ -69,7 +70,7 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builds/n:buildid/steps
         /builders/n:builderid/builds/n:build_number/steps
@@ -114,6 +115,7 @@ class Step(base.ResourceType):
         name = types.Identifier(50)
         buildid = types.Integer()
         started_at = types.NoneOk(types.DateTime())
+        locks_acquired_at = types.NoneOk(types.DateTime())
         complete = types.Boolean()
         complete_at = types.NoneOk(types.DateTime())
         results = types.NoneOk(types.Integer())
@@ -141,6 +143,12 @@ class Step(base.ResourceType):
     def startStep(self, stepid):
         yield self.master.db.steps.startStep(stepid=stepid)
         yield self.generateEvent(stepid, 'started')
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def set_step_locks_acquired_at(self, stepid):
+        yield self.master.db.steps.set_step_locks_acquired_at(stepid=stepid)
+        yield self.generateEvent(stepid, 'updated')
 
     @base.updateMethod
     @defer.inlineCallbacks

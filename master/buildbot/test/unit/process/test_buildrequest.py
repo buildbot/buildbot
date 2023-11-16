@@ -15,8 +15,7 @@
 
 import datetime
 import json
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -43,7 +42,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     def createBuilder(self, name, builderid=None):
         if builderid is None:
             b = fakedb.Builder(name=name)
-            yield self.master.db.insertTestData([b])
+            yield self.master.db.insert_test_data([b])
             builderid = b.id
 
         bldr = mock.Mock(name=name)
@@ -60,7 +59,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_request_collapse(self, rows, brids, exp):
-        yield self.master.db.insertTestData(rows)
+        yield self.master.db.insert_test_data(rows)
         brCollapser = buildrequest.BuildRequestCollapser(self.master, brids)
         self.assertEqual(exp, (yield brCollapser.collapse()))
 
@@ -422,7 +421,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_fromBrdict(self):
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insertTestData([
+        master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9284', repository='svn://...',
@@ -460,7 +459,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_fromBrdict_submittedAt_NULL(self):
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insertTestData([
+        master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9284', repository='svn://...',
@@ -480,7 +479,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
     def test_fromBrdict_no_sourcestamps(self):
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insertTestData([
+        master.db.insert_test_data([
             fakedb.Builder(id=78, name='not important'),
             fakedb.Buildset(id=539, reason='triggered'),
             # buildset has no sourcestamps
@@ -497,7 +496,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_fromBrdict_multiple_sourcestamps(self):
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insertTestData([
+        master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9283', repository='svn://a..',
@@ -553,7 +552,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         """
         brs = []  # list of buildrequests
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insertTestData([
+        master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9283', repository='svn://a..', codebase='A',
@@ -630,7 +629,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         """
         brDicts = []  # list of buildrequests dictionary
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insertTestData([
+        master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=238, branch='trunk',
                                revision='1800', repository='svn://c..',

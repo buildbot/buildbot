@@ -73,7 +73,7 @@ VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 
 @implementer(interfaces.IEmailLookup)
 class Domain(util.ComparableMixin):
-    compare_attrs = ("domain")
+    compare_attrs = ("domain",)
 
     def __init__(self, domain):
         assert "@" not in domain
@@ -332,11 +332,12 @@ class MailNotifier(ReporterBase):
 
         s = unicode2bytes(s)
         recipients = [parseaddr(r)[1] for r in recipients]
+        hostname = self.relayhost if self.useTls or useAuth else None
         sender_factory = ESMTPSenderFactory(
             unicode2bytes(self.smtpUser), unicode2bytes(self.smtpPassword),
             parseaddr(self.fromaddr)[1], recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
-            requireAuthentication=useAuth)
+            requireAuthentication=useAuth, hostname=hostname)
 
         if self.useSmtps:
             reactor.connectSSL(self.relayhost, self.smtpPort,

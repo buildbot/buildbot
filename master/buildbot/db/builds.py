@@ -26,7 +26,6 @@ from buildbot.util import epoch2datetime
 
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     # returns a Deferred that returns a value
     def _getBuild(self, whereclause):
@@ -160,7 +159,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
             # get the highest current number
             r = conn.execute(sa.select([sa.func.max(tbl.c.number)],
-                                       whereclause=(tbl.c.builderid == builderid)))
+                                       whereclause=tbl.c.builderid == builderid))
             number = r.scalar()
             new_number = 1 if number is None else number + 1
             # insert until we are successful..
@@ -169,12 +168,16 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     _race_hook(conn)
 
                 try:
-                    r = conn.execute(self.db.model.builds.insert(),
-                                     dict(number=new_number, builderid=builderid,
-                                          buildrequestid=buildrequestid,
-                                          workerid=workerid, masterid=masterid,
-                                          started_at=started_at, complete_at=None,
-                                          state_string=state_string))
+                    r = conn.execute(self.db.model.builds.insert(), {
+                        "number": new_number,
+                        "builderid": builderid,
+                        "buildrequestid": buildrequestid,
+                        "workerid": workerid,
+                        "masterid": masterid,
+                        "started_at": started_at,
+                        "complete_at": None,
+                        "state_string": state_string
+                    })
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                     # pg 9.5 gives this error which makes it pass some build
                     # numbers
@@ -189,7 +192,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.builds
 
-            q = tbl.update(whereclause=(tbl.c.id == buildid))
+            q = tbl.update(whereclause=tbl.c.id == buildid)
             conn.execute(q, state_string=state_string)
         return self.db.pool.do(thd)
 
@@ -197,7 +200,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
     def finishBuild(self, buildid, results):
         def thd(conn):
             tbl = self.db.model.builds
-            q = tbl.update(whereclause=(tbl.c.id == buildid))
+            q = tbl.update(whereclause=tbl.c.id == buildid)
             conn.execute(q,
                          complete_at=int(self.master.reactor.seconds()),
                          results=results)
@@ -209,7 +212,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             bp_tbl = self.db.model.build_properties
             q = sa.select(
                 [bp_tbl.c.name, bp_tbl.c.value, bp_tbl.c.source],
-                whereclause=(bp_tbl.c.buildid == bid))
+                whereclause=bp_tbl.c.buildid == bid)
             props = []
             if resultSpec is not None:
                 data = resultSpec.thd_execute(conn, q, lambda x: x)
@@ -237,23 +240,27 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             prop = conn.execute(q).fetchone()
             value_js = json.dumps(value)
             if prop is None:
-                conn.execute(bp_tbl.insert(),
-                             dict(buildid=bid, name=name, value=value_js,
-                                  source=source))
+                conn.execute(bp_tbl.insert(), {
+                    "buildid": bid,
+                    "name": name,
+                    "value": value_js,
+                    "source": source
+                })
             elif (prop.value != value_js) or (prop.source != source):
                 conn.execute(bp_tbl.update(whereclause=whereclause),
-                             dict(value=value_js, source=source))
+                             {"value": value_js, "source": source})
         yield self.db.pool.do(thd)
 
     def _builddictFromRow(self, row):
-        return dict(
-            id=row.id,
-            number=row.number,
-            builderid=row.builderid,
-            buildrequestid=row.buildrequestid,
-            workerid=row.workerid,
-            masterid=row.masterid,
-            started_at=epoch2datetime(row.started_at),
-            complete_at=epoch2datetime(row.complete_at),
-            state_string=row.state_string,
-            results=row.results)
+        return {
+            "id": row.id,
+            "number": row.number,
+            "builderid": row.builderid,
+            "buildrequestid": row.buildrequestid,
+            "workerid": row.workerid,
+            "masterid": row.masterid,
+            "started_at": epoch2datetime(row.started_at),
+            "complete_at": epoch2datetime(row.complete_at),
+            "state_string": row.state_string,
+            "results": row.results
+        }

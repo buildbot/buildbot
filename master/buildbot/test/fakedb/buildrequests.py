@@ -58,7 +58,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         self.reqs = {}
         self.claims = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, BuildRequest):
                 self.reqs[row.id] = row

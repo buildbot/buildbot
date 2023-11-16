@@ -1,0 +1,264 @@
+/* Based on http://ehesp.github.io/Responsive-Dashboard/ by Elliot Hesp */
+$gl-sidebar-transition-time: 0.2s;
+$gl-sidebar-small-threshold: 600px;
+$gl-sidebar-width: 600px;
+.bb-rotate-45{
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+.gl-page-with-sidebar {
+  padding-left: 70px;
+  @media (max-width: $gl-sidebar-small-threshold) {
+    padding-left: 30px;
+  }
+  height: 100%;
+  /* theme */
+  .sidebar {
+    background: var(--bb-sidebar-background-color);
+    ul .sidebar-main {
+      background: var(--bb-sidebar-header-background-color);
+    }
+    .sidebar-footer {
+      background: var(--bb-sidebar-footer-background-color);
+    }
+    li.current {
+      a, button {
+        background: var(--bb-sidebar-button-current-background-color);
+      }
+      a:hover,
+      button:hover {
+        background: var(--bb-sidebar-button-hover-background-color);
+      }
+    }
+    a:hover,
+    button:hover {
+      background: var(--bb-sidebar-button-hover-background-color);
+    }
+    ul .sidebar-title {
+      color: var(--bb-sidebar-title-text-color);
+    }
+  }
+  &.active:not(.pinned) .sidebar{
+    transform: translate(180px, 0px);
+    -webkit-transform: translate(180px, 0px);
+  }
+  /* add scrollbar if the menu is open */
+  &.active .sidebar ul {
+    overflow-y: auto;
+  }
+  &:not(.active){
+
+    .sidebar {
+      ul.sidebar .sidebar-title.separator {
+        background: #273759;
+      }
+    }
+    ul {
+      .sidebar-title {
+        alpha: 0;
+      }
+      &.separator {
+        display: block;
+        margin: 13px 0;
+      }
+      .sidebar-list a:hover span,
+      .sidebar-list button:hover span{
+        border-left: 3px solid #e99d1a;
+        text-indent: 22px;
+      }
+    }
+    .sidebar-footer {
+      display: none;
+    }
+  }
+  &.pinned{
+    > .content {
+      margin-left: 180px;
+    }
+    .sidebar {
+      margin-left: 0px;
+      left: 0px;
+    }
+  }
+  // use ngAnimate for the sidebar
+  &.active-add, &.active-remove {
+    // ngAnimate wants an animation on the object it watches
+    //  even if it is not actually animated
+    transition: all $gl-sidebar-transition-time ease-out 0s;
+    .sidebar {
+      transition: all $gl-sidebar-transition-time ease-out 0s;
+
+    }
+  }
+  /* sidebar */
+  .sidebar {
+    z-index:3000;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    margin-left: -150px;
+
+    @media (max-width: $gl-sidebar-small-threshold) {
+      width: 210px;
+    }
+    left: -30px;
+    width: 250px;
+    position: fixed;
+    height: 100%;
+    ul {
+      position: absolute;
+      top: 0;
+      bottom: 45px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      text-indent: 20px;
+      overflow-x: hidden;
+      overflow-y: hidden;
+
+      li button {
+        background-color: transparent;
+        border: 0;
+        text-align: left;
+      }
+
+      li a,
+      li button {
+        color: var(--bb-sidebar-header-text-color);
+        display: block;
+        text-decoration: none;
+        width: 250px;
+        @media (max-width: $gl-sidebar-small-threshold) {
+          width: 210px;
+        }
+      }
+      li.sidebar-main {
+        height: 51px;
+        a, button {
+          font-size: 18px;
+          line-height: 50px;
+        }
+        .menu-icon {
+          float: right;
+          font-size: 18px;
+          padding-right: 28px;
+          line-height: 50px;
+          @media (max-width: $gl-sidebar-small-threshold) {
+            padding-right: 8px;
+          }
+        }
+      }
+      li.sidebar-title {
+        font-size: 12px;
+        height: 35px;
+        line-height: 40px;
+        text-transform: uppercase;
+      }
+      li.sidebar-list {
+        height: 40px;
+        a, button {
+          padding: 0;
+          text-indent: 25px;
+          font-size: 15px;
+          color: var(--bb-sidebar-button-text-color);
+          line-height: 40px;
+          >svg {
+            margin-left: -1em;
+          }
+        }
+        &.current {
+          a, button {
+            color: var(--bb-sidebar-button-current-text-color);
+            border-left: 3px solid var(--bb-sidebar-stripe-current-color);
+            text-indent: 22px;
+          }
+          .menu-icon {
+            text-indent: 25px;
+          }
+        }
+        a:hover,
+        button:hover {
+          color: var(--bb-sidebar-button-hover-text-color);
+          border-left: 3px solid var(--bb-sidebar-stripe-hover-color);
+          text-indent: 22px;
+        }
+        .menu-icon {
+          float: right;
+          padding-right: 29px;
+          line-height: 40px;
+          width: 70px;
+          @media (max-width: $gl-sidebar-small-threshold) {
+            width: 50px;
+          }
+        }
+        a:hover .menu-icon,
+        button:hover .menu-icon {
+          text-indent: 25px;
+        }
+        &.subitem {
+          transition: height $gl-sidebar-transition-time ease-out 0s;
+          a, button {
+            padding-left:20px;
+            transition: line-height $gl-sidebar-transition-time ease-out 0s, color $gl-sidebar-transition-time ease-out 0s,  background $gl-sidebar-transition-time ease-out 0s;;
+          }
+          &:not(.active) {
+            height: 0px;
+            a, button {
+              line-height: 0px;
+              color: rgba(255, 0, 0, 0.0);
+            }
+          }
+
+        }
+      }
+    }
+  }
+  /* footer */
+  .sidebar-footer {
+    position: absolute;
+    height: 40px;
+    bottom: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+
+    div button {
+      background-color: transparent;
+      border: 0;
+    }
+
+    div a,
+    div button {
+      color: #b2bfdc;
+      font-size: 12px;
+      line-height: 43px;
+    }
+    div a:hover,
+    div button:hover {
+      color: #ffffff;
+      text-decoration: none;
+    }
+  }
+  /* content */
+  > .content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: margin-left $gl-sidebar-transition-time ease-out 0s;
+    padding-left: 0px;
+    margin-left: 0px;
+    overflow-y: visible;
+    .container {
+      flex-grow: 1;
+      width: 100%;
+      max-width: 100%;
+    }
+    .container-fluid {
+      flex-grow: 1;
+      width: 100%;
+    }
+  }
+  overflow-y: visible;
+}

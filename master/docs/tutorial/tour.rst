@@ -234,8 +234,13 @@ Setting Authorized Web Users
 
 The default configuration allows everyone to perform any task, like creating or stopping builds via the web interface. To restrict this to a user, look for::
 
-  c['www'] = dict(port=8010,
-                   plugins=dict(waterfall_view={}, console_view={}))
+  c['www'] = {
+      "port": 8010,
+      "plugins": {
+          "waterfall_view": {},
+          "console_view": {}
+      }
+  }
 
 and append::
 

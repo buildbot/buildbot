@@ -23,56 +23,96 @@ log = Logger()
 
 class LineBoundaryFinder:
 
-    __slots__ = ['partial_line', 'warned']
-    # split at reasonable line length.
-    # too big lines will fill master's memory, and slow down the UI too much.
-    MAX_LINELENGTH = 4096
-    # the lookahead here (`(?=.)`) ensures that `\r` doesn't match at the end
-    # of the buffer
-    # we also convert cursor control sequence to newlines
-    # and ugly \b+ (use of backspace to implement progress bar)
-    newline_re = re.compile(r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)')
+    __slots__ = ['max_line_length', 'newline_re', 'partial_line', 'warned', 'time']
 
-    def __init__(self):
-        self.partial_line = None
+    def __init__(self, max_line_length, newline_re):
+        # split at reasonable line length.
+        # too big lines will fill master's memory, and slow down the UI too much.
+        self.max_line_length = max_line_length
+        self.newline_re = re.compile(newline_re)
+        self.partial_line = ""
         self.warned = False
+        self.time = None
 
-    def append(self, text):
+    def append(self, text, time):
+        # returns a tuple containing three elements:
+        # - text: string containing one or more lines
+        # - lf_positions: newline position in returned string
+        # - line times: times when first line symbol was received
+        had_partial_line = False
         if self.partial_line:
-            if len(self.partial_line) > self.MAX_LINELENGTH:
-                if not self.warned:
-                    # Unfortunately we cannot give more hint as per which log that is
-                    log.warn("Splitting long line: {line_start} {length} "
-                             "(not warning anymore for this log)",
-                             line_start=self.partial_line[:30],
-                             length=len(self.partial_line))
-                    self.warned = True
-                # switch the variables, and return previous _partial_line_,
-                # split every MAX_LINELENGTH plus a trailing \n
-                self.partial_line, text = text, self.partial_line
-                ret = []
-                while len(text) > self.MAX_LINELENGTH:
-                    ret.append(text[:self.MAX_LINELENGTH])
-                    text = text[self.MAX_LINELENGTH:]
-                ret.append(text)
-                result = ("\n".join(ret) + "\n")
-                return result
+            had_partial_line = True
             text = self.partial_line + text
-            self.partial_line = None
+            time_partial_line = self.time
+
         text = self.newline_re.sub('\n', text)
-        if text:
-            if text[-1] != '\n':
-                i = text.rfind('\n')
-                if i >= 0:
-                    i = i + 1
-                    text, self.partial_line = text[:i], text[i:]
-                else:
-                    self.partial_line = text
-                    return None
-            return text
-        return None
+
+        lf_positions = self.get_lf_positions(text)
+
+        ret_lines = []  # lines with appropriate number of symbols and their separators \n
+        ret_indexes = []  # ret_indexes is a list of '\n' symbols
+        ret_text_length = -1
+        ret_line_count = 0
+
+        first_position = 0
+        for position in lf_positions:
+            # finds too long lines and splits them, each element in ret_lines will be a line of
+            # appropriate length
+            while position - first_position >= self.max_line_length:
+                line = text[first_position: self.max_line_length - 1] + '\n'
+                ret_lines.append(line)
+                ret_line_count += 1
+                ret_text_length = ret_text_length + len(line)
+                ret_indexes.append(ret_text_length)
+                first_position = first_position + self.max_line_length
+
+            line = text[first_position: (position + 1)]
+            ret_lines.append(line)
+            ret_line_count += 1
+            ret_text_length = ret_text_length + len(line)
+            ret_indexes.append(ret_text_length)
+            first_position = position + 1
+
+        position = len(text)
+        while position - first_position >= self.max_line_length:
+            line = text[first_position: self.max_line_length - 1] + '\n'
+            ret_lines.append(line)
+            ret_text_length = ret_text_length + len(line)
+            ret_indexes.append(ret_text_length)
+            first_position = first_position + self.max_line_length - 1
+
+        if had_partial_line:
+            times = []
+            if ret_line_count > 1:
+                times = [time] * (ret_line_count - 1)
+            line_times = [time_partial_line] + times
+        else:
+            line_times = ret_line_count * [time]
+
+        ret_text = "".join(ret_lines)
+
+        if ret_text != '' or not had_partial_line:
+            self.time = time
+
+        self.partial_line = text[first_position: position]
+
+        if ret_text == '':
+            return None
+
+        return (ret_text, ret_indexes, line_times)
+
+    def get_lf_positions(self, text):
+        lf_position = 0
+        lf_positions = []
+        while lf_position != -1:
+            lf_position = text.find('\n', lf_position)
+            if lf_position < 0:
+                break
+            lf_positions.append(lf_position)
+            lf_position = lf_position + 1
+        return lf_positions
 
     def flush(self):
-        if self.partial_line is not None:
-            return self.append('\n')
+        if self.partial_line != "":
+            return self.append('\n', self.time)
         return None

@@ -118,6 +118,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         # local cache for this master's object ID
         self._object_id = None
 
+        self._got_sigterm = False
+
         # Check environment is sensible
         check_functional_environment(self.config)
 
@@ -128,7 +130,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             self.hostname = socket.getfqdn()
 
         # public attributes
-        self.name = (f"{self.hostname}:{os.path.abspath(self.basedir or '.')}")
+        self.name = f"{self.hostname}:{os.path.abspath(self.basedir or '.')}"
         if isinstance(self.name, bytes):
             self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
@@ -325,6 +327,16 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             self.reactor.stop()
 
         finally:
+            @defer.inlineCallbacks
+            def call_after_signal(sig_num, stack):
+                if not self._got_sigterm:
+                    self._got_sigterm = True
+                    yield self.disownServiceParent()
+                    self.reactor.stop()
+                else:
+                    log.msg('Ignoring SIGTERM, master is already shutting down.')
+
+            signal.signal(signal.SIGTERM, call_after_signal)
             if startup_succeed:
                 log.msg("BuildMaster is running")
             else:

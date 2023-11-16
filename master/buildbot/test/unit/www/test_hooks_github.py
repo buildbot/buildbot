@@ -451,7 +451,8 @@ gitJsonPayloadCommit = {
 
 gitJsonPayloadFiles = [
     {
-        "filename": "README.md"
+        "filename": "README.md",
+        "previous_filename": "old_README.md"
     }
 ]
 
@@ -1182,7 +1183,7 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
                          "This is a pretty simple change that we need to pull into master.")
         self.assertEqual(change["branch"], "refs/pull/50/merge")
         if valid_token:
-            self.assertEqual(change['files'], ['README.md'])
+            self.assertEqual(change['files'], ['README.md', 'old_README.md'])
         else:
             self.assertEqual(change['files'], [])
         self.assertEqual(change["revlink"],

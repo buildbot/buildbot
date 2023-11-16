@@ -57,7 +57,7 @@ class FakeHvacKvV1:
 class FakeHvacKvV2:
     token = None
 
-    def read_secret_version(self, path, mount_point):
+    def read_secret_version(self, path, mount_point, raise_on_deleted_version=True):
         if self.token is None:
             raise hvac.exceptions.Unauthorized(message="Fake Unauthorized exception")
         if path == "wrong/path":
@@ -90,6 +90,9 @@ class FakeHvacClient:
         self._token = new_token
         self.secrets.kv.v1.token = new_token
         self.secrets.kv.v2.token = new_token
+
+    def is_authenticated(self):
+        return self._token
 
 
 def mock_vault(*args, **kwargs):
@@ -134,8 +137,8 @@ class TestSecretInHashiCorpVaultKvSecretProvider(ConfigErrorsMixin, unittest.Tes
         if hvac is None:
             raise unittest.SkipTest(
                 "Need to install hvac to test HashiCorpVaultKvSecretProvider")
-        param = dict(vault_server="", authenticator=VaultAuthenticatorToken("mockToken"),
-                     path_delimiter='|', path_escape='\\', api_version=2)
+        param = {"vault_server": "", "authenticator": VaultAuthenticatorToken("mockToken"),
+                "path_delimiter": '|', "path_escape": '\\', "api_version": 2}
         self.provider = HashiCorpVaultKvSecretProvider(**param)
         self.provider.reconfigService(**param)
         self.provider.client = FakeHvacClient()

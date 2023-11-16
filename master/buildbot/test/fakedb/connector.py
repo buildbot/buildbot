@@ -24,6 +24,7 @@ from buildbot.test.fakedb.changes import FakeChangesComponent
 from buildbot.test.fakedb.changesources import FakeChangeSourcesComponent
 from buildbot.test.fakedb.logs import FakeLogsComponent
 from buildbot.test.fakedb.masters import FakeMastersComponent
+from buildbot.test.fakedb.projects import FakeProjectsComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.test.fakedb.schedulers import FakeSchedulersComponent
 from buildbot.test.fakedb.sourcestamps import FakeSourceStampsComponent
@@ -42,7 +43,7 @@ class FakeDBConnector(service.AsyncMultiService):
     """
     A stand-in for C{master.db} that operates without an actual database
     backend.  This also implements a test-data interface similar to the
-    L{buildbot.test.util.db.RealDatabaseMixin.insertTestData} method.
+    L{buildbot.test.util.db.RealDatabaseMixin.insert_test_data} method.
 
     The child classes implement various useful assertions and faking methods;
     see their documentation for more.
@@ -83,6 +84,8 @@ class FakeDBConnector(service.AsyncMultiService):
         self._components.append(comp)
         self.masters = comp = FakeMastersComponent(self, testcase)
         self._components.append(comp)
+        self.projects = comp = FakeProjectsComponent(self, testcase)
+        self._components.append(comp)
         self.builders = comp = FakeBuildersComponent(self, testcase)
         self._components.append(comp)
         self.tags = comp = FakeTagsComponent(self, testcase)
@@ -96,12 +99,12 @@ class FakeDBConnector(service.AsyncMultiService):
         self.is_setup = True
         return defer.succeed(None)
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         """Insert a list of Row instances into the database; this method can be
         called synchronously or asynchronously (it completes immediately) """
         for row in rows:
             if self.checkForeignKeys:
                 row.checkForeignKeys(self, self.t)
             for comp in self._components:
-                comp.insertTestData([row])
+                comp.insert_test_data([row])
         return defer.succeed(None)

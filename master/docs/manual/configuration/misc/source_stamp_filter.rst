@@ -17,6 +17,8 @@ The following parameters are supported by the :py:class:`SourceStampFilter`:
     (optional, a string or a list of strings)
     The corresponding property of the source stamp must match exactly to at least one string from the value supplied by the argument.
 
+    ``branch`` uses ``util.NotABranch`` as its default value which indicates that no checking should be done, because the branch may actually have ``None`` value to be checked.
+
 ``project_not_eq``, ``codebase_not_eq``, ``repository_not_eq``, ``branch_not_eq``
     (optional, a string or a list of strings)
     The corresponding property of the source stamp must not match exactly to any string from the value supplied by the argument.
@@ -36,3 +38,4 @@ The following parameters are supported by the :py:class:`SourceStampFilter`:
     The given function will be passed the source stamp.
     It is expected to return ``True`` if the source stamp is matched, ``False`` otherwise.
     In case of a match, all other conditions will still be evaluated.
+

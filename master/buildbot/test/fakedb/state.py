@@ -46,7 +46,7 @@ class FakeStateComponent(FakeDBComponent):
         self.objects = {}
         self.states = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Object):
                 self.objects[(row.name, row.class_name)] = row.id
@@ -94,15 +94,17 @@ class FakeStateComponent(FakeDBComponent):
 
     # fake methods
 
-    def set_fake_state(self, object, **kwargs):
+    def set_fake_state(self, object, name, value):
         state_key = (object.name, object.__class__.__name__)
         if state_key in self.objects:
             id = self.objects[state_key]
         else:
             id = self.objects[state_key] = self._newId()
 
-        self.states[id] = dict((k, json.dumps(v))
-                               for k, v in kwargs.items())
+        if id in self.states:
+            self.states[id][name] = json.dumps(value)
+        else:
+            self.states[id] = {name: json.dumps(value)}
         return id
 
     # assertions

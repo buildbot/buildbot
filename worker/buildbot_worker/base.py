@@ -20,16 +20,21 @@ import multiprocessing
 import os.path
 import socket
 import sys
+import time
 
 from twisted.application import service
+from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import failure
 from twisted.python import log
 from twisted.spread import pb
 
 import buildbot_worker
-from buildbot_worker import monkeypatches
 from buildbot_worker.commands import base
 from buildbot_worker.commands import registry
+from buildbot_worker.compat import bytes2unicode
+from buildbot_worker.util import buffer_manager
+from buildbot_worker.util import lineboundaries
 
 
 class UnknownCommand(pb.Error):
@@ -37,54 +42,93 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandBase:
-    def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
-                 on_command_complete, on_lost_remote_step, command, command_id, args):
+    def __init__(self, unicode_encoding, worker_basedir, buffer_size, buffer_timeout,
+                 max_line_length, newline_re, builder_is_running, on_command_complete,
+                 on_lost_remote_step, command, command_id, args):
         self.unicode_encoding = unicode_encoding
         self.worker_basedir = worker_basedir
+        self.buffer_size = buffer_size
+        self.buffer_timeout = buffer_timeout
+        self.max_line_length = max_line_length
+        self.newline_re = newline_re
         self.builder_is_running = builder_is_running
         self.on_command_complete = on_command_complete
         self.on_lost_remote_step = on_lost_remote_step
+        self.command_id = command_id
 
         self.protocol_args_setup(command, args)
 
         try:
             factory = registry.getFactory(command)
         except KeyError:
-            raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
+            raise UnknownCommand(u"(command {0}): unrecognized WorkerCommand '{1}'".format(
+                command_id, command))
 
         # .command points to a WorkerCommand instance, and is set while the step is running.
         self.command = factory(self, command_id, args)
+        self._lbfs = {}
+        self.buffer = buffer_manager.BufferManager(reactor, self.protocol_send_update_message,
+                                                   self.buffer_size, self.buffer_timeout)
 
         self.is_complete = False
 
+    def log_msg(self, msg):
+        log.msg(u"(command {0}): {1}".format(self.command_id, msg))
+
+    def split_lines(self, stream, text, text_time):
+        try:
+            return self._lbfs[stream].append(text, text_time)
+        except KeyError:
+            lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder(self.max_line_length,
+                                                                         self.newline_re)
+            return lbf.append(text, text_time)
+
+    def flush_command_output(self):
+        for key in sorted(list(self._lbfs)):
+            lbf = self._lbfs[key]
+            if key in ['stdout', 'stderr', 'header']:
+                whole_line = lbf.flush()
+                if whole_line is not None:
+                    self.buffer.append(key, whole_line)
+            else:  # custom logfile
+                logname = key
+                whole_line = lbf.flush()
+                if whole_line is not None:
+                    self.buffer.append('log', (logname, whole_line))
+
+        self.buffer.flush()
+        return defer.succeed(None)
+
     # sendUpdate is invoked by the Commands we spawn
     def send_update(self, data):
-        """This sends the status update to the master-side
-        L{buildbot.process.step.RemoteCommand} object, giving it a sequence
-        number in the process. It adds the update to a queue, and asks the
-        master to acknowledge the update so it can be removed from that
-        queue."""
-
         if not self.builder_is_running:
-            # .running comes from service.Service, and says whether the
-            # service is running or not. If we aren't running, don't send any
-            # status messages.
+            # if builder is not running, do not send any status messages
             return
-        # the update[1]=0 comes from the leftover 'updateNum', which the
-        # master still expects to receive. Provide it to avoid significant
-        # interoperability issues between new workers and old masters.
+
         if not self.is_complete:
-            d = self.protocol_update(data)
-            d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
+            # first element of the tuple is dictionary key, second element is value
+            data_time = time.time()
+            for key, value in data:
+                if key in ['stdout', 'stderr', 'header']:
+                    whole_line = self.split_lines(key, value, data_time)
+                    if whole_line is not None:
+                        self.buffer.append(key, whole_line)
+                elif key == 'log':
+                    logname, data = value
+                    whole_line = self.split_lines(logname, data, data_time)
+                    if whole_line is not None:
+                        self.buffer.append('log', (logname, whole_line))
+                else:
+                    self.buffer.append(key, value)
 
     def _ack_failed(self, why, where):
-        log.msg("ProtocolCommandBase._ack_failed:", where)
+        self.log_msg("ProtocolCommandBase._ack_failed: {0}".format(where))
         log.err(why)  # we don't really care
 
     # this is fired by the Deferred attached to each Command
     def command_complete(self, failure):
         if failure:
-            log.msg("ProtocolCommandBase.command_complete (failure)", self.command)
+            self.log_msg("ProtocolCommandBase.command_complete (failure) {0}".format(self.command))
             log.err(failure)
             # failure, if present, is a failure.Failure. To send it across
             # the wire, we must turn it into a pb.CopyableFailure.
@@ -92,11 +136,11 @@ class ProtocolCommandBase:
             failure.unsafeTracebacks = True
         else:
             # failure is None
-            log.msg("ProtocolCommandBase.command_complete (success)", self.command)
+            self.log_msg("ProtocolCommandBase.command_complete (success) {0}".format(self.command))
 
         self.on_command_complete()
         if not self.builder_is_running:
-            log.msg(" but we weren't running, quitting silently")
+            self.log_msg(" but we weren't running, quitting silently")
             return
         if not self.is_complete:
             d = self.protocol_complete(failure)
@@ -124,6 +168,12 @@ class BotBase(service.MultiService):
         ) or 'ascii'
         self.delete_leftover_dirs = delete_leftover_dirs
         self.builders = {}
+        # Don't send any data until at least buffer_size bytes have been collected
+        # or buffer_timeout elapsed
+        self.buffer_size = 64 * 1024
+        self.buffer_timeout = 5
+        self.max_line_length = 4096
+        self.newline_re = r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)'
 
     # for testing purposes
     def setOsReleaseFile(self, os_release_file):
@@ -175,7 +225,11 @@ class BotBase(service.MultiService):
                 filename = os.path.join(basedir, f)
                 if os.path.isfile(filename):
                     with open(filename, "r") as fin:
-                        files[f] = fin.read()
+                        try:
+                            files[f] = bytes2unicode(fin.read())
+                        except UnicodeDecodeError:
+                            log.err(failure.Failure(),
+                                    'error while reading file: %s' % (filename))
 
         self._read_os_release(self.os_release_file, files)
 
@@ -226,9 +280,6 @@ class WorkerBase(service.MultiService):
         self.basedir = basedir
 
     def startService(self):
-        # first, apply all monkeypatches
-        monkeypatches.patch_all()
-
         log.msg("Starting Worker -- version: {0}".format(buildbot_worker.version))
 
         if self.umask is not None:

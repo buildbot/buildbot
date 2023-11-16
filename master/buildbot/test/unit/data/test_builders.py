@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -34,7 +34,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        return self.db.insertTestData([
+        return self.db.insert_test_data([
             fakedb.Builder(id=1, name='buildera'),
             fakedb.Builder(id=2, name='builderb'),
             fakedb.Master(id=13),
@@ -90,12 +90,14 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        return self.db.insertTestData([
+        return self.db.insert_test_data([
+            fakedb.Project(id=201, name='project201'),
+            fakedb.Project(id=202, name='project202'),
             fakedb.Builder(id=1, name='buildera'),
             fakedb.Builder(id=2, name='builderb'),
-            fakedb.Builder(id=3, name='builderTagA'),
-            fakedb.Builder(id=4, name='builderTagB'),
-            fakedb.Builder(id=5, name='builderTagAB'),
+            fakedb.Builder(id=3, name='builderTagA', projectid=201),
+            fakedb.Builder(id=4, name='builderTagB', projectid=201),
+            fakedb.Builder(id=5, name='builderTagAB', projectid=202),
             fakedb.Tag(id=3, name="tagA"),
             fakedb.Tag(id=4, name="tagB"),
             fakedb.BuildersTags(builderid=3, tagid=3),
@@ -128,6 +130,16 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         self.assertEqual(sorted([b['builderid'] for b in builders]),
                          [2])
+
+    @defer.inlineCallbacks
+    def test_get_projectid(self):
+        builders = yield self.callGet(('projects', 201, 'builders'))
+
+        for b in builders:
+            self.validateData(b)
+
+        self.assertEqual(sorted([b['builderid'] for b in builders]),
+                         [3, 4])
 
     @defer.inlineCallbacks
     def test_get_masterid_missing(self):
@@ -185,7 +197,7 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = builders.Builder(self.master)
-        return self.master.db.insertTestData([
+        return self.master.db.insert_test_data([
             fakedb.Master(id=13),
             fakedb.Master(id=14),
         ])
@@ -205,7 +217,8 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
 
     def test_signature_updateBuilderInfo(self):
         @self.assertArgSpecMatches(self.master.data.updates.updateBuilderInfo)
-        def updateBuilderInfo(self, builderid, description, tags):
+        def updateBuilderInfo(self, builderid, description, description_format, description_html,
+                              projectid, tags):
             pass
 
     def test_signature_updateBuilderList(self):
@@ -219,11 +232,21 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     def test_updateBuilderList(self):
         # add one builder master
         yield self.rtype.updateBuilderList(13, ['somebuilder'])
-        self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
-                         sorted([
-                             dict(id=1, masterids=[13],
-                                  name='somebuilder', description=None, tags=[]),
-                         ]))
+        self.assertEqual(
+            sorted((yield self.master.db.builders.getBuilders())),
+            sorted([
+                {
+                    "id": 1,
+                    "masterids": [13],
+                    "name": "somebuilder",
+                    "description": None,
+                    "description_html": None,
+                    "description_format": None,
+                    "projectid": None,
+                    "tags": []
+                },
+            ]
+        ))
         self.master.mq.assertProductions([(('builders', '1', 'started'),
                                            {'builderid': 1, 'masterid': 13,
                                             'name': 'somebuilder'})])
@@ -234,37 +257,92 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         def builderKey(builder):
             return builder['id']
 
-        self.assertEqual(sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
-                         sorted([
-                             dict(id=1, masterids=[13],
-                                  name='somebuilder', description=None, tags=[]),
-                             dict(id=2, masterids=[13],
-                                  name='another', description=None, tags=[]),
-                         ], key=builderKey))
+        self.assertEqual(
+            sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
+            sorted([
+                {
+                    "id": 1,
+                    "masterids": [13],
+                    "name": "somebuilder",
+                    "description": None,
+                    "description_html": None,
+                    "description_format": None,
+                    "projectid": None,
+                    "tags": []
+                },
+                {
+                    "id": 2,
+                    "masterids": [13],
+                    "name": "another",
+                    "description": None,
+                    "description_html": None,
+                    "description_format": None,
+                    "projectid": None,
+                    "tags": []
+                },
+            ], key=builderKey
+        ))
         self.master.mq.assertProductions([(('builders', '2', 'started'),
                                            {'builderid': 2, 'masterid': 13, 'name': 'another'})])
 
         # add one for another master
         yield self.rtype.updateBuilderList(14, ['another'])
-        self.assertEqual(sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
-                         sorted([
-                             dict(id=1, masterids=[13],
-                                  name='somebuilder', description=None, tags=[]),
-                             dict(id=2, masterids=[13, 14],
-                                  name='another', description=None, tags=[]),
-                         ], key=builderKey))
+        self.assertEqual(
+            sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
+            sorted([
+                {
+                    "id": 1,
+                    "masterids": [13],
+                    "name": "somebuilder",
+                    "description": None,
+                    "description_html": None,
+                    "description_format": None,
+                    "projectid": None,
+                    "tags": []
+                },
+                {
+                    "id": 2,
+                    "masterids": [13, 14],
+                    "name": "another",
+                    "description": None,
+                    "description_html": None,
+                    "description_format": None,
+                    "projectid": None,
+                    "tags": []
+                },
+            ], key=builderKey
+        ))
         self.master.mq.assertProductions([(('builders', '2', 'started'),
                                            {'builderid': 2, 'masterid': 14, 'name': 'another'})])
 
         # remove both for the first master
         yield self.rtype.updateBuilderList(13, [])
-        self.assertEqual(sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
-                         sorted([
-                             dict(
-                                 id=1, masterids=[], name='somebuilder', description=None, tags=[]),
-                             dict(
-                                 id=2, masterids=[14], name='another', description=None, tags=[]),
-                         ], key=builderKey))
+        self.assertEqual(
+            sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
+            sorted([
+                {
+                    "id": 1,
+                    "masterids": [],
+                    "name": "somebuilder",
+                    "description": None,
+                    "description_html": None,
+                    "description_format": None,
+                    "projectid": None,
+                    "tags": []
+                },
+                {
+                    "id": 2,
+                    "masterids": [14],
+                    "name": "another",
+                    "description": None,
+                    "description_html": None,
+                    "description_format": None,
+                    "projectid": None,
+                    "tags": []
+                },
+            ], key=builderKey
+        ))
+
         self.master.mq.assertProductions([
             (('builders', '1', 'stopped'),
              {'builderid': 1, 'masterid': 13, 'name': 'somebuilder'}),

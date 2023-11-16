@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+import datetime
+
+import croniter
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -25,8 +29,47 @@ from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.schedulers import base
-from buildbot.util import croniter
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
+
+# States of objects which have to be observed are registered in the data base table `object_state`.
+# `objectid` in the `object_state` refers to the object from the `object` table.
+# Schedulers use the following state keys:
+# - `last_only_if_changed` - bool, setting of `onlyIfChanged` when the scheduler checked whether to
+# run build the last time. Does not exist if there was no build before.
+# - `last_build` - timestamp, time when the last build was scheduled to run. If `onlyIfChanged` is
+# set to True, only when there are designated changes build will be started. If the build was not
+# started,
+# `last_build` means on what time build was scheduled to run ignoring the fact if it actually ran or
+# not.
+# Value of these state keys affects the decision whether to run a build.
+#
+# When deciding whether to run the build or to skip it, several factors and their interactions are
+# evaluated:
+# - the value of `onlyIfChanged` (default is False);
+# - has the state of `onlyIfChanged` changed;
+# - whether this would be first build (True if `last_build` value was not detected). If there
+# already were builds in the past, it indicates that the scheduler is existing;
+# - were there any important changes after the last build.
+#
+# If `onlyIfChanged` is not set or its setting changes to False, builds will always run on the time
+# set, ignoring the status of `last_only_if_changed` and `last_build` regardless of what the state
+# is or anything else.
+#
+# If `onlyIfChanged` is True, then builds will be run when there are relevant changes.
+#
+# If `onlyIfChanged` is True and even when there were no relevant changes, builds will run for the
+# the first time on specified time as well when the following condition holds:
+# - `last_only_if_changed` was set to False on previous build. This ensures that any changes that
+# happened while `onlyIfChanged` was still False are not missed. This may result in a single build
+# done unnecessarily, but it is accepted as a good compromise because it only happens when
+# `onlyIfChanged` is adjusted;
+# - `last_build` does not have a value yet meaning that it is a new scheduler and we should have
+# initial build to set a baseline.
+#
+# There is an edge case, when upgrading to v3.5.0 and new object status variable
+# `last_only_if_changed` is introduced. If scheduler exists and had builds before
+# (`last_build` has a value), build should only be started if there are relevant changes.
+# Thus upgrading the version does not start unnecessary builds.
 
 
 class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
@@ -73,6 +116,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
         self._reactor = reactor  # patched by tests
+        self.is_first_build = None
 
     @defer.inlineCallbacks
     def activate(self):
@@ -87,6 +131,10 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
         # get the scheduler's last_build time (note: only done at startup)
         self.lastActuated = yield self.getState('last_build', None)
+        if self.lastActuated is None:
+            self.is_first_build = True
+        else:
+            self.is_first_build = False
 
         # schedule the next build
         yield self.scheduleNextBuild()
@@ -152,10 +200,23 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         # occurred since the last invocation. Note that when the scheduler has just been started
         # there may not be any important changes yet and we should start the build for the
         # current state of the code whatever it is.
-        last_only_if_changed = yield self.getState('last_only_if_changed', False)
-        if last_only_if_changed and self.onlyIfChanged and not any(classifications.values()):
+        #
+        # Note that last_only_if_changed will always be set to the value of onlyIfChanged
+        # at the point when startBuild finishes (it is not obvious, that all code paths lead
+        # to this outcome)
+
+        last_only_if_changed = yield self.getState('last_only_if_changed', True)
+
+        if (
+            last_only_if_changed
+            and self.onlyIfChanged
+            and not any(classifications.values())
+            and not self.is_first_build
+            and not self.maybe_force_build_on_unimportant_changes(self.lastActuated)
+        ):
             log.msg(("{} scheduler <{}>: skipping build " +
                      "- No important changes").format(self.__class__.__name__, self.name))
+            self.is_first_build = False
             return
 
         if last_only_if_changed != self.onlyIfChanged:
@@ -166,16 +227,19 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         if changeids:
             max_changeid = changeids[-1]  # (changeids are sorted)
             yield self.addBuildsetForChanges(reason=self.reason,
-                                             changeids=changeids)
+                                             changeids=changeids,
+                                             priority=self.priority)
             yield scheds.flushChangeClassifications(self.serviceid,
                                                     less_than=max_changeid + 1)
         else:
             # There are no changes, but onlyIfChanged is False, so start
             # a build of the latest revision, whatever that is
-            sourcestamps = [dict(codebase=cb) for cb in self.codebases]
+            sourcestamps = [{"codebase": cb} for cb in self.codebases]
             yield self.addBuildsetForSourceStampsWithDefaults(
                 reason=self.reason,
-                sourcestamps=sourcestamps)
+                sourcestamps=sourcestamps,
+                priority=self.priority)
+        self.is_first_build = False
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
@@ -207,11 +271,23 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         """
         return self.actuationLock.run(self._scheduleNextBuild_locked)
 
+    def maybe_force_build_on_unimportant_changes(self, current_actuation_time):
+        """
+        Allows forcing a build in cases when there are no important changes and onlyIfChanged is
+        enabled.
+        """
+        return False
+
     # utilities
 
     def now(self):
         "Similar to util.now, but patchable by tests"
         return util.now(self._reactor)
+
+    def current_utc_offset(self, tm):
+        return (
+            datetime.datetime.fromtimestamp(tm) - datetime.datetime.utcfromtimestamp(tm)
+        ).total_seconds()
 
     @defer.inlineCallbacks
     def _scheduleNextBuild_locked(self):
@@ -281,10 +357,26 @@ class Periodic(Timed):
 
 
 class NightlyBase(Timed):
-    compare_attrs = ('minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek')
+    compare_attrs = (
+        "minute",
+        "hour",
+        "dayOfMonth",
+        "month",
+        "dayOfWeek",
+        "force_at_minute",
+        "force_at_hour",
+        "force_at_day_of_month",
+        "force_at_month",
+        "force_at_day_of_week",
+    )
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
+                 force_at_minute=None,
+                 force_at_hour=None,
+                 force_at_day_of_month=None,
+                 force_at_month=None,
+                 force_at_day_of_week=None,
                  **kwargs):
         super().__init__(name, builderNames, **kwargs)
 
@@ -293,6 +385,25 @@ class NightlyBase(Timed):
         self.dayOfMonth = dayOfMonth
         self.month = month
         self.dayOfWeek = dayOfWeek
+
+        self.force_at_enabled = (
+            force_at_minute is not None
+            or force_at_hour is not None
+            or force_at_day_of_month is not None
+            or force_at_month is not None
+            or force_at_day_of_week is not None
+        )
+
+        def default_if_none(value, default):
+            if value is None:
+                return default
+            return value
+
+        self.force_at_minute = default_if_none(force_at_minute, 0)
+        self.force_at_hour = default_if_none(force_at_hour, "*")
+        self.force_at_day_of_month = default_if_none(force_at_day_of_month, "*")
+        self.force_at_month = default_if_none(force_at_month, "*")
+        self.force_at_day_of_week = default_if_none(force_at_day_of_week, "*")
 
     def _timeToCron(self, time, isDayOfWeek=False):
         if isinstance(time, int):
@@ -325,14 +436,50 @@ class NightlyBase(Timed):
 
         return ','.join([str(s) for s in time])  # Convert the list to a string
 
+    def _times_to_cron_line(self, minute, hour, day_of_month, month, day_of_week):
+        return " ".join([
+            str(self._timeToCron(minute)),
+            str(self._timeToCron(hour)),
+            str(self._timeToCron(day_of_month)),
+            str(self._timeToCron(month)),
+            str(self._timeToCron(day_of_week, True)),
+        ])
+
+    def _time_to_croniter_tz_time(self, ts):
+        # By default croniter interprets input timestamp in UTC timezone. However, the scheduler
+        # works in local timezone, so appropriate timezone information needs to be passed
+        tz = datetime.timezone(datetime.timedelta(seconds=self.current_utc_offset(ts)))
+        return datetime.datetime.fromtimestamp(ts, tz)
+
     def getNextBuildTime(self, lastActuated):
-        dateTime = lastActuated or self.now()
-        sched = (f'{self._timeToCron(self.minute)} {self._timeToCron(self.hour)} '
-                 f'{self._timeToCron(self.dayOfMonth)} {self._timeToCron(self.month)} '
-                 f'{self._timeToCron(self.dayOfWeek, True)}')
-        cron = croniter.croniter(sched, dateTime)
+        ts = lastActuated or self.now()
+        sched = self._times_to_cron_line(
+            self.minute,
+            self.hour,
+            self.dayOfMonth,
+            self.month,
+            self.dayOfWeek,
+        )
+
+        cron = croniter.croniter(sched, self._time_to_croniter_tz_time(ts))
         nextdate = cron.get_next(float)
         return defer.succeed(nextdate)
+
+    def maybe_force_build_on_unimportant_changes(self, current_actuation_time):
+        if not self.force_at_enabled:
+            return False
+        cron_string = self._times_to_cron_line(
+            self.force_at_minute,
+            self.force_at_hour,
+            self.force_at_day_of_month,
+            self.force_at_month,
+            self.force_at_day_of_week,
+        )
+
+        return croniter.croniter.match(
+            cron_string,
+            self._time_to_croniter_tz_time(current_actuation_time)
+        )
 
 
 class Nightly(NightlyBase):
@@ -340,10 +487,20 @@ class Nightly(NightlyBase):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
+                 force_at_minute=None,
+                 force_at_hour=None,
+                 force_at_day_of_month=None,
+                 force_at_month=None,
+                 force_at_day_of_week=None,
                  **kwargs):
         super().__init__(name=name, builderNames=builderNames,
                          minute=minute, hour=hour, dayOfMonth=dayOfMonth,
                          month=month, dayOfWeek=dayOfWeek, reason=reason,
+                         force_at_minute=force_at_minute,
+                         force_at_hour=force_at_hour,
+                         force_at_day_of_month=force_at_day_of_month,
+                         force_at_month=force_at_month,
+                         force_at_day_of_week=force_at_day_of_week,
                          **kwargs)
 
 
@@ -353,10 +510,20 @@ class NightlyTriggerable(NightlyBase):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
+                 force_at_minute=None,
+                 force_at_hour=None,
+                 force_at_day_of_month=None,
+                 force_at_month=None,
+                 force_at_day_of_week=None,
                  **kwargs):
         super().__init__(name=name, builderNames=builderNames,
                          minute=minute, hour=hour, dayOfMonth=dayOfMonth,
                          month=month, dayOfWeek=dayOfWeek, reason=reason,
+                         force_at_minute=force_at_minute,
+                         force_at_hour=force_at_hour,
+                         force_at_day_of_month=force_at_day_of_month,
+                         force_at_month=force_at_month,
+                         force_at_day_of_week=force_at_day_of_week,
                          **kwargs)
 
         self._lastTrigger = None
@@ -451,4 +618,5 @@ class NightlyTriggerable(NightlyBase):
             sourcestamps=sourcestamps,
             properties=props,
             parent_buildid=parent_buildid,
-            parent_relationship=parent_relationship)
+            parent_relationship=parent_relationship,
+            priority=self.priority)

@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 import json
+import re
 from unittest.case import SkipTest
-
-from mock import Mock
+from unittest.mock import Mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -44,6 +44,19 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         jsonArg = obj.call_args[0][0]
         jsonArg = bytes2unicode(jsonArg)
         actual_json = json.loads(jsonArg)
+
+        keys_to_pop = []
+        for key in expected_json:
+            if hasattr(expected_json[key], 'match'):
+                keys_to_pop.append(key)
+                regex = expected_json[key]
+                value = actual_json[key]
+                self.assertRegex(value, regex)
+
+        for key in keys_to_pop:
+            expected_json.pop(key)
+            actual_json.pop(key)
+
         self.assertEqual(actual_json, expected_json)
 
     def do_onConnect(self, protocols):
@@ -66,55 +79,53 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.proto.is_graphql, True)
 
     def test_ping(self):
-        self.proto.onMessage(json.dumps(dict(cmd="ping", _id=1)), False)
+        self.proto.onMessage(json.dumps({"cmd": 'ping', "_id": 1}), False)
         self.assert_called_with_json(
             self.proto.sendMessage, {"msg": "pong", "code": 200, "_id": 1}
         )
 
     def test_bad_cmd(self):
-        self.proto.onMessage(json.dumps(dict(cmd="poing", _id=1)), False)
+        self.proto.onMessage(json.dumps({"cmd": 'poing', "_id": 1}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {"_id": 1, "code": 404, "error": "no such command type 'poing'"},
         )
 
     def test_no_cmd(self):
-        self.proto.onMessage(json.dumps(dict(_id=1)), False)
+        self.proto.onMessage(json.dumps({"_id": 1}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {"_id": None, "code": 400, "error": "no 'cmd' in websocket frame"},
         )
 
     def test_too_many_arguments(self):
-        self.proto.onMessage(json.dumps(dict(_id=1, cmd="ping", foo="bar")), False)
+        self.proto.onMessage(json.dumps({"_id": 1, "cmd": 'ping', "foo": 'bar'}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {
                 "_id": 1,
                 "code": 400,
-                "error": "Invalid method argument 'cmd_ping() got an unexpected keyword "
-                "argument 'foo''",
+                "error": re.compile(".*Invalid method argument.*"),
             },
         )
 
     def test_too_many_arguments_graphql(self):
         self.proto.is_graphql = True
         self.proto.onMessage(
-            json.dumps(dict(id=1, type="connection_init", foo="bar")), False
+            json.dumps({"id": 1, "type": 'connection_init', "foo": 'bar'}), False
         )
         self.assert_called_with_json(
             self.proto.sendMessage,
             {
                 "id": None,
-                "message": "Invalid method argument 'graphql_cmd_connection_init() got an "
-                "unexpected keyword argument 'foo''",
+                "message": re.compile('.*Invalid method argument.*'),
                 "type": "error",
             },
         )
 
     def test_no_type_while_graphql(self):
         self.proto.is_graphql = True
-        self.proto.onMessage(json.dumps(dict(_id=1, cmd="ping")), False)
+        self.proto.onMessage(json.dumps({"_id": 1, "cmd": 'ping'}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {
@@ -127,7 +138,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def test_type_while_not_graphql(self):
         self.proto.is_graphql = False
-        self.proto.onMessage(json.dumps(dict(_id=1, type="ping")), False)
+        self.proto.onMessage(json.dumps({"_id": 1, "type": 'ping'}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {
@@ -139,7 +150,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     def test_no_id(self):
-        self.proto.onMessage(json.dumps(dict(cmd="ping")), False)
+        self.proto.onMessage(json.dumps({"cmd": 'ping'}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {
@@ -151,7 +162,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.proto.onMessage(
-            json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False
+            json.dumps({"cmd": 'startConsuming', "path": 'builds/*/*', "_id": 1}), False
         )
         self.assert_called_with_json(
             self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 1}
@@ -164,7 +175,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def test_startConsumingBadPath(self):
         self.proto.onMessage(
-            json.dumps(dict(cmd="startConsuming", path={}, _id=1)), False
+            json.dumps({"cmd": 'startConsuming', "path": {}, "_id": 1}), False
         )
         self.assert_called_with_json(
             self.proto.sendMessage,
@@ -173,7 +184,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def test_stopConsumingNotRegistered(self):
         self.proto.onMessage(
-            json.dumps(dict(cmd="stopConsuming", path="builds/*/*", _id=1)), False
+            json.dumps({"cmd": 'stopConsuming', "path": 'builds/*/*', "_id": 1}), False
         )
         self.assert_called_with_json(
             self.proto.sendMessage,
@@ -182,13 +193,13 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def test_stopConsuming(self):
         self.proto.onMessage(
-            json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False
+            json.dumps({"cmd": 'startConsuming', "path": 'builds/*/*', "_id": 1}), False
         )
         self.assert_called_with_json(
             self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 1}
         )
         self.proto.onMessage(
-            json.dumps(dict(cmd="stopConsuming", path="builds/*/*", _id=2)), False
+            json.dumps({"cmd": 'stopConsuming', "path": 'builds/*/*', "_id": 2}), False
         )
         self.assert_called_with_json(
             self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 2}
@@ -196,7 +207,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     # graphql
     def test_connection_init(self):
-        self.proto.onMessage(json.dumps(dict(type="connection_init")), False)
+        self.proto.onMessage(json.dumps({"type": 'connection_init'}), False)
         self.assert_called_with_json(self.proto.sendMessage, {"type": "connection_ack"})
 
     @defer.inlineCallbacks
@@ -205,7 +216,13 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             raise SkipTest("graphql-core not installed")
         yield self.proto.onMessage(
             json.dumps(
-                dict(type="start", payload=dict(query="{builders{name}}"), id=1)
+                {
+                    "type": "start",
+                    "payload": {
+                        "query": "{builders{name}}"
+                    },
+                    "id": 1
+                }
             ),
             False,
         )
@@ -246,7 +263,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.proto.onMessage(json.dumps(dict(type="stop", id=1)), False)
+        yield self.proto.onMessage(json.dumps({"type": 'stop', "id": 1}), False)
 
         self.assertEqual(len(self.proto.graphql_subs), 0)
 
@@ -256,14 +273,21 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             raise SkipTest("graphql-core not installed")
         yield self.proto.onMessage(
             json.dumps(
-                dict(type="start", payload=dict(query="{builders{not_existing}}"), id=1)
+                {
+                    "type": "start",
+                    "payload": {
+                        "query": "{builders{not_existing}}"
+                    },
+                    "id": 1
+                }
             ),
             False,
         )
         self.assert_called_with_json(
             self.proto.sendMessage,
             {
-                "payload": {
+                "payload":
+                {
                     "data": None,
                     "errors": [
                         {

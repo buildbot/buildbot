@@ -51,10 +51,12 @@ Builders connector
 
         Get the indicated builder.
 
-    .. py:method:: getBuilders(masterid=None)
+    .. py:method:: getBuilders(masterid=None, projectid=None)
 
         :param integer masterid: ID of the master to which the results should be limited
+        :param integer masterid: ID of the project to which the results should be limited
         :returns: list of Builder dicts via Deferred
 
         Get all builders (in unspecified order).
-        If ``masterid`` is given, then only builders configured on that master are returned.
+        If ``masterid`` is specified, then only builders configured on that master are returned.
+        If ``projectid`` is specified, then only builders for a particular project are returned.

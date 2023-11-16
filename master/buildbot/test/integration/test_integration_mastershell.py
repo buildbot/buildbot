@@ -31,7 +31,8 @@ from buildbot.util import asyncSleep
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
 
-    def config_for_master_command(self, **kwargs):
+    @defer.inlineCallbacks
+    def setup_config_for_master_command(self, **kwargs):
         c = {}
 
         c['schedulers'] = [
@@ -43,7 +44,7 @@ class ShellMaster(RunMasterBase):
         c['builders'] = [
             BuilderConfig(name="testy", workernames=["local1"], factory=f)
         ]
-        return c
+        yield self.setup_master(c)
 
     def get_change(self):
         return {
@@ -58,7 +59,7 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_shell(self):
-        yield self.setupConfig(self.config_for_master_command(command='echo hello'))
+        yield self.setup_config_for_master_command(command='echo hello')
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.get_change(), wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -66,9 +67,9 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_logs(self):
-        yield self.setupConfig(self.config_for_master_command(command=[
+        yield self.setup_config_for_master_command(command=[
             sys.executable, '-c', 'print("hello")'
-        ]))
+        ])
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.get_change(), wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -78,9 +79,9 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_fails(self):
-        yield self.setupConfig(self.config_for_master_command(command=[
+        yield self.setup_config_for_master_command(command=[
             sys.executable, '-c', 'exit(1)'
-        ]))
+        ])
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.get_change(), wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -88,9 +89,9 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_interrupt(self):
-        yield self.setupConfig(self.config_for_master_command(name='sleep', command=[
+        yield self.setup_config_for_master_command(name='sleep', command=[
             sys.executable, '-c', "while True: pass"
-        ]))
+        ])
 
         d = self.doForceBuild(wantSteps=True, useChange=self.get_change(), wantLogs=True)
 

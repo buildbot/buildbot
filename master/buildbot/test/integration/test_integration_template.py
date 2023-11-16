@@ -25,43 +25,44 @@ from buildbot.test.util.integration import RunMasterBase
 class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
+    def setup_config(self):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.plugins import steps
+        from buildbot.process.factory import BuildFactory
+
+        c['schedulers'] = [
+            schedulers.AnyBranchScheduler(
+                name="sched",
+                builderNames=["testy"]),
+            schedulers.ForceScheduler(
+                name="force",
+                builderNames=["testy"])]
+
+        f = BuildFactory()
+        f.addStep(steps.ShellCommand(command='echo hello'))
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          workernames=["local1"],
+                          factory=f)]
+        c['www'] = {'graphql': True}
+        yield self.setup_master(c)
+
+    @defer.inlineCallbacks
     def test_shell(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_config()
         # if you don't need change, you can just remove this change, and useChange parameter
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none"
-                      )
+        change = {
+            "branch": "master",
+            "files": ["foo.c"],
+            "author": "me@foo.com",
+            "committer": "me@foo.com",
+            "comments": "good stuff",
+            "revision": "HEAD",
+            "project": "none"
+        }
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True,
                                         wantProperties=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['properties']['owners'], (['me@foo.com'], 'Build'))
-
-
-# master configuration
-def masterConfig():
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import steps, schedulers
-
-    c['schedulers'] = [
-        schedulers.AnyBranchScheduler(
-            name="sched",
-            builderNames=["testy"]),
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
-
-    f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
-    c['www'] = {'graphql': True}
-    return c

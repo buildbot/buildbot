@@ -42,7 +42,7 @@ class Debouncer:
         # true if this instance is stopped
         self.stopped = False
         # deferreds to fire when the call is complete
-        self.completeDeferreds = None
+        self.completeDeferreds = []
         # for tests
         self.get_reactor = get_reactor
 
@@ -63,7 +63,6 @@ class Debouncer:
 
     def invoke(self):
         self.phase = PH_RUNNING
-        self.completeDeferreds = []
         d = defer.maybeDeferred(self.function)
         d.addErrback(log.err, 'from debounced function:')
 
@@ -71,10 +70,16 @@ class Debouncer:
         def retry(_):
             queued = self.phase == PH_RUNNING_QUEUED
             self.phase = PH_IDLE
+            if queued and self.stopped:
+                # If stop() is called when debouncer is running with additional run queued,
+                # the queued run must still be invoked because the current run may be stale.
+                self.invoke()
+                return
+
             while self.completeDeferreds:
                 self.completeDeferreds.pop(0).callback(None)
             if queued:
-                self.__call__()
+                self()
 
     def start(self):
         self.stopped = False

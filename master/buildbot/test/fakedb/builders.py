@@ -26,8 +26,25 @@ class Builder(Row):
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
 
-    def __init__(self, id=None, name='some:builder', name_hash=None, description=None):
-        super().__init__(id=id, name=name, name_hash=name_hash, description=description)
+    def __init__(
+        self,
+        id=None,
+        name='some:builder',
+        name_hash=None,
+        projectid=None,
+        description=None,
+        description_format=None,
+        description_html=None
+    ):
+        super().__init__(
+            id=id,
+            name=name,
+            name_hash=name_hash,
+            projectid=projectid,
+            description=description,
+            description_format=description_format,
+            description_html=description_html,
+        )
 
 
 class BuilderMaster(Row):
@@ -58,13 +75,17 @@ class FakeBuildersComponent(FakeDBComponent):
         self.builder_masters = {}
         self.builders_tags = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Builder):
-                self.builders[row.id] = dict(
-                    id=row.id,
-                    name=row.name,
-                    description=row.description)
+                self.builders[row.id] = {
+                    "id": row.id,
+                    "name": row.name,
+                    "projectid": row.projectid,
+                    "description": row.description,
+                    "description_format": row.description_format,
+                    "description_html": row.description_html,
+                }
             if isinstance(row, BuilderMaster):
                 self.builder_masters[row.id] = \
                     (row.builderid, row.masterid)
@@ -80,16 +101,20 @@ class FakeBuildersComponent(FakeDBComponent):
         if not autoCreate:
             return defer.succeed(None)
         id = len(self.builders) + 1
-        self.builders[id] = dict(
-            id=id,
-            name=name,
-            description=None,
-            tags=[])
+        self.builders[id] = {
+            "id": id,
+            "name": name,
+            "description": None,
+            "description_format": None,
+            "description_html": None,
+            "projectid": None,
+            "tags": []
+        }
         return defer.succeed(id)
 
     def addBuilderMaster(self, builderid=None, masterid=None):
         if (builderid, masterid) not in list(self.builder_masters.values()):
-            self.insertTestData([
+            self.insert_test_data([
                 BuilderMaster(builderid=builderid, masterid=masterid),
             ])
         return defer.succeed(None)
@@ -110,7 +135,7 @@ class FakeBuildersComponent(FakeDBComponent):
             return defer.succeed(self._row2dict(bldr))
         return defer.succeed(None)
 
-    def getBuilders(self, masterid=None):
+    def getBuilders(self, masterid=None, projectid=None):
         rv = []
         for builderid, bldr in self.builders.items():
             masterids = [bm[1] for bm in self.builder_masters.values()
@@ -121,20 +146,26 @@ class FakeBuildersComponent(FakeDBComponent):
         if masterid is not None:
             rv = [bd for bd in rv
                   if masterid in bd['masterids']]
+        if projectid is not None:
+            rv = [bd for bd in rv if bd['projectid'] == projectid]
         return defer.succeed(rv)
 
     def addTestBuilder(self, builderid, name=None):
         if name is None:
             name = f"SomeBuilder-{builderid}"
-        self.db.insertTestData([
+        self.db.insert_test_data([
             Builder(id=builderid, name=name),
         ])
 
     @defer.inlineCallbacks
-    def updateBuilderInfo(self, builderid, description, tags):
+    def updateBuilderInfo(self, builderid, description, description_format, description_html,
+                          projectid, tags):
         if builderid in self.builders:
             tags = tags if tags else []
             self.builders[builderid]['description'] = description
+            self.builders[builderid]['description_format'] = description_format
+            self.builders[builderid]['description_html'] = description_html
+            self.builders[builderid]['projectid'] = projectid
 
             # add tags
             tagids = []

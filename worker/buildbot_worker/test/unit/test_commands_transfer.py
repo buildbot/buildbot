@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import io
 import os
+import re
 import shutil
 import sys
 import tarfile
@@ -362,6 +363,40 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         ])
 
 
+class TestWorkerDirectoryUploadNoDir(CommandTestMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpCommand()
+        self.fakemaster = FakeMasterMethods(self.add_update)
+
+    def tearDown(self):
+        self.tearDownCommand()
+
+    @defer.inlineCallbacks
+    def test_directory_not_available(self):
+        path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
+
+        self.make_command(transfer.WorkerDirectoryUploadCommand, {
+            'path': path,
+            'workersrc': 'data',
+            'writer': FakeRemote(self.fakemaster),
+            'maxsize': None,
+            'blocksize': 512,
+            'compress': None
+        })
+
+        yield self.run_command()
+
+        updates = self.get_updates()
+        self.assertEqual(updates[0], ('rc', 1))
+        self.assertEqual(updates[1][0], "stderr")
+
+        error_msg = updates[1][1]
+        pattern = re.compile("Cannot read directory (.*?) for upload: (.*?)")
+        match = pattern.match(error_msg)
+        self.assertNotEqual(error_msg, match)
+
+
 class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
@@ -384,7 +419,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
     def test_simple(self):
         self.fakemaster.count_reads = True    # get actual byte counts
         self.fakemaster.data = test_data = b'1234' * 13
-        assert(len(self.fakemaster.data) == 52)
+        assert len(self.fakemaster.data) == 52
 
         path = os.path.join(self.basedir, os.path.expanduser('data'))
         self.make_command(transfer.WorkerFileDownloadCommand, {

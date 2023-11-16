@@ -64,7 +64,7 @@ def getDetailsForBuildset(master, bsid, want_properties=False, want_steps=False,
                                   want_logs=want_logs,
                                   want_logs_content=want_logs_content)
 
-    return dict(buildset=buildset, builds=builds)
+    return {"buildset": buildset, "builds": builds}
 
 
 @defer.inlineCallbacks
@@ -223,17 +223,17 @@ def getResponsibleUsersForBuild(master, buildid):
 
 def getURLForBuild(master, builderid, build_number):
     prefix = master.config.buildbotURL
-    return prefix + f"#builders/{builderid}/builds/{build_number}"
+    return prefix + f"#/builders/{builderid}/builds/{build_number}"
 
 
 def getURLForBuildrequest(master, buildrequestid):
     prefix = master.config.buildbotURL
-    return f"{prefix}#buildrequests/{buildrequestid}"
+    return f"{prefix}#/buildrequests/{buildrequestid}"
 
 
 def get_url_for_log(master, builderid, build_number, step_number, log_slug):
     prefix = master.config.buildbotURL
-    return f"{prefix}#builders/{builderid}/builds/{build_number}/" + \
+    return f"{prefix}#/builders/{builderid}/builds/{build_number}/" + \
         f"steps/{step_number}/logs/{log_slug}"
 
 

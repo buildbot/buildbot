@@ -259,15 +259,26 @@ class RunProcess:
         log.msg(f'{self}: killing process using {interrupt_signal}')
 
         if runtime.platformType == "win32":
-            if interrupt_signal is not None and self.process.pid is not None:
-                if interrupt_signal == "TERM":
-                    # TODO: blocks
-                    subprocess.check_call(f"TASKKILL /PID {self.process.pid} /T")
-                    success = True
-                elif interrupt_signal == "KILL":
-                    # TODO: blocks
-                    subprocess.check_call(f"TASKKILL /F /PID {self.process.pid} /T")
-                    success = True
+            pid = self.process.pid
+            if interrupt_signal is not None and pid is not None:
+                try:
+                    if interrupt_signal == "TERM":
+                        # TODO: blocks
+                        subprocess.check_call(f"TASKKILL /PID {pid} /T")
+                        success = True
+                    elif interrupt_signal == "KILL":
+                        # TODO: blocks
+                        subprocess.check_call(f"TASKKILL /F /PID {pid} /T")
+                        success = True
+                except subprocess.CalledProcessError as e:
+                    # taskkill may return 128 or 255 as exit code when the child has already exited.
+                    # We can't handle this race condition in any other way than just interpreting
+                    # the kill action as successful
+                    if e.returncode in (128, 255):
+                        log.msg(f"{self} taskkill didn't find pid {pid} to kill")
+                        success = True
+                    else:
+                        raise
 
         # try signalling the process itself (works on Windows too, sorta)
         if not success:

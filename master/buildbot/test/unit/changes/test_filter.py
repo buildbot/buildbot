@@ -15,130 +15,222 @@
 
 import re
 
+from parameterized import parameterized
+
 from twisted.trial import unittest
 
-from buildbot.changes import filter
+from buildbot.changes.filter import ChangeFilter
 from buildbot.test.fake.change import Change
 
 
-class ChangeFilter(unittest.TestCase):
-
-    def setUp(self):
-        self.results = []  # (got, expected, msg)
-        self.filt = None
-
-    def tearDown(self):
-        if self.results:
-            raise RuntimeError("test forgot to call check()")
-
-    def setfilter(self, **kwargs):
-        self.filt = filter.ChangeFilter(**kwargs)
-
-    def yes(self, change, msg):
-        self.results.append((self.filt.filter_change(change), True, msg))
-
-    def no(self, change, msg):
-        self.results.append((self.filt.filter_change(change), False, msg))
-
-    def check(self):
-        errs = []
-        for r in self.results:
-            if (r[0] or r[1]) and not (r[0] and r[1]):
-                errs.append(r[2])
-        self.results = []
-        if errs:
-            self.fail("; ".join(errs))
-
+class TestChangeFilter(unittest.TestCase):
     def test_filter_change_filter_fn(self):
-        self.setfilter(filter_fn=lambda ch: ch.x > 3)
-        self.no(Change(x=2), "filter_fn returns False")
-        self.yes(Change(x=4), "filter_fn returns True")
-        self.check()
+        f = ChangeFilter(filter_fn=lambda ch: ch.x > 3)
+        self.assertFalse(f.filter_change(Change(x=2)))
+        self.assertTrue(f.filter_change(Change(x=4)))
 
-    def test_filter_change_filt_str(self):
-        self.setfilter(project="myproj")
-        self.no(Change(project="yourproj"),
-                "non-matching PROJECT returns False")
-        self.yes(Change(project="myproj"), "matching PROJECT returns True")
-        self.check()
+        self.assertEqual(repr(f), "<ChangeFilter on <lambda>()>")
 
-    def test_filter_change_filt_list(self):
-        self.setfilter(repository=["vc://a", "vc://b"])
-        self.yes(Change(repository="vc://a"),
-                 "matching REPOSITORY vc://a returns True")
-        self.yes(Change(repository="vc://b"),
-                 "matching REPOSITORY vc://b returns True")
-        self.no(Change(repository="vc://c"),
-                "non-matching REPOSITORY returns False")
-        self.no(Change(repository=None), "None for REPOSITORY returns False")
-        self.check()
+    test_cases = [
+        (
+            "match",
+            Change(project="p", codebase="c", repository="r", category="ct", branch="b"),
+            True,
+        ),
+        (
+            "not_project",
+            Change(project="p0", codebase="c", repository="r", category="ct", branch="b"),
+            False,
+        ),
+        (
+            "not_codebase",
+            Change(project="p", codebase="c0", repository="r", category="ct", branch="b"),
+            False,
+        ),
+        (
+            "not_repository",
+            Change(project="p", codebase="c", repository="r0", category="ct", branch="b"),
+            False,
+        ),
+        (
+            "not_category",
+            Change(project="p", codebase="c", repository="r", category="ct0", branch="b"),
+            False,
+        ),
+        (
+            "not_branch",
+            Change(project="p", codebase="c", repository="r", category="ct", branch="b0"),
+            False,
+        ),
+    ]
 
-    def test_filter_change_filt_list_None(self):
-        self.setfilter(branch=["mybr", None])
-        self.yes(Change(branch="mybr"), "matching BRANCH mybr returns True")
-        self.yes(Change(branch=None), "matching BRANCH None returns True")
-        self.no(Change(branch="misc"), "non-matching BRANCH returns False")
-        self.check()
+    @parameterized.expand(test_cases)
+    def test_eq(self, name, change, expected):
+        f = ChangeFilter(project="p", codebase="c", repository="r", category="ct", branch="b")
+        self.assertEqual(f.filter_change(change), expected)
 
-    def test_filter_change_filt_re(self):
-        self.setfilter(category_re="^a.*")
-        self.yes(Change(category="albert"), "matching CATEGORY returns True")
-        self.no(
-            Change(category="boris"), "non-matching CATEGORY returns False")
-        self.check()
+    @parameterized.expand(test_cases)
+    def test_eq_list(self, name, change, expected):
+        f = ChangeFilter(
+            project=["p", "p9"],
+            codebase=["c", "c9"],
+            repository=["r", "r9"],
+            category=["ct", "ct9"],
+            branch=["b", "b9"],
+        )
+        self.assertEqual(f.filter_change(change), expected)
+
+    @parameterized.expand(test_cases)
+    def test_not_eq(self, name, change, expected):
+        f = ChangeFilter(
+            project_not_eq="p0",
+            codebase_not_eq="c0",
+            repository_not_eq="r0",
+            category_not_eq="ct0",
+            branch_not_eq="b0",
+        )
+        self.assertEqual(f.filter_change(change), expected)
+
+    @parameterized.expand(test_cases)
+    def test_not_eq_list(self, name, change, expected):
+        f = ChangeFilter(
+            project_not_eq=["p0", "p1"],
+            codebase_not_eq=["c0", "c1"],
+            repository_not_eq=["r0", "r1"],
+            category_not_eq=["ct0", "ct1"],
+            branch_not_eq=["b0", "b1"],
+        )
+        self.assertEqual(f.filter_change(change), expected)
+
+    @parameterized.expand(test_cases)
+    def test_re(self, name, change, expected):
+        f = ChangeFilter(
+            project_re="^p$",
+            codebase_re="^c$",
+            repository_re="^r$",
+            category_re="^ct$",
+            branch_re="^b$",
+        )
+        self.assertEqual(f.filter_change(change), expected)
+
+    @parameterized.expand(test_cases)
+    def test_re_list(self, name, change, expected):
+        f = ChangeFilter(
+            project_re=["^p$", "^p1$"],
+            codebase_re=["^c$", "^c1$"],
+            repository_re=["^r$", "^r1$"],
+            category_re=["^ct$", "^ct1$"],
+            branch_re=["^b$", "^b1$"],
+        )
+        self.assertEqual(f.filter_change(change), expected)
+
+    @parameterized.expand(test_cases)
+    def test_not_re(self, name, change, expected):
+        f = ChangeFilter(
+            project_not_re="^p0$",
+            codebase_not_re="^c0$",
+            repository_not_re="^r0$",
+            category_not_re="^ct0$",
+            branch_not_re="^b0$",
+        )
+        self.assertEqual(f.filter_change(change), expected)
+
+    @parameterized.expand(test_cases)
+    def test_not_re_list(self, name, change, expected):
+        f = ChangeFilter(
+            project_not_re=["^p0$", "^p1$"],
+            codebase_not_re=["^c0$", "^c1$"],
+            repository_not_re=["^r0$", "^r1$"],
+            category_not_re=["^ct0$", "^ct1$"],
+            branch_not_re=["^b0$", "^b1$"],
+        )
+        self.assertEqual(f.filter_change(change), expected)
+
+    @parameterized.expand(test_cases)
+    def test_re_pattern(self, name, change, expected):
+        f = ChangeFilter(
+            project_re=re.compile("^p$"),
+            codebase_re=re.compile("^c$"),
+            repository_re=re.compile("^r$"),
+            category_re=re.compile("^ct$"),
+            branch_re=re.compile("^b$"),
+        )
+        self.assertEqual(f.filter_change(change), expected)
+
+    @parameterized.expand(test_cases)
+    def test_fn(self, name, change, expected):
+        f = ChangeFilter(
+            project_fn=lambda p: p == "p",
+            codebase_fn=lambda p: p == "c",
+            repository_fn=lambda p: p == "r",
+            category_fn=lambda p: p == "ct",
+            branch_fn=lambda p: p == "b",
+        )
+        self.assertEqual(f.filter_change(change), expected)
+
+        self.assertEqual(
+            repr(f),
+            "<ChangeFilter on <lambda>(project) and <lambda>(codebase) and "
+            "<lambda>(repository) and <lambda>(category) and <lambda>(branch)>",
+        )
+
+    def test_filter_change_filt_branch_list_None(self):
+        f = ChangeFilter(branch=["mybr", None])
+        self.assertTrue(f.filter_change(Change(branch="mybr")))
+        self.assertTrue(f.filter_change(Change(branch=None)))
+        self.assertFalse(f.filter_change(Change(branch="misc")))
 
     def test_filter_change_branch_re(self):  # regression - see #927
-        self.setfilter(branch_re="^t.*")
-        self.yes(Change(branch="trunk"), "matching BRANCH returns True")
-        self.no(Change(branch="development"),
-                "non-matching BRANCH returns False")
-        self.no(Change(branch=None), "branch=None returns False")
-        self.check()
-
-    def test_filter_change_filt_re_compiled(self):
-        self.setfilter(category_re=re.compile("^b.*", re.I))
-        self.no(Change(category="albert"),
-                "non-matching CATEGORY returns False")
-        self.yes(Change(category="boris"), "matching CATEGORY returns True")
-        self.yes(
-            Change(category="Bruce"), "matching CATEGORY returns True, using re.I")
-        self.check()
+        f = ChangeFilter(branch_re="^t.*")
+        self.assertTrue(f.filter_change(Change(branch="trunk")))
+        self.assertFalse(f.filter_change(Change(branch="development")))
+        self.assertFalse(f.filter_change(Change(branch=None)))
 
     def test_filter_change_combination(self):
-        self.setfilter(project='p', repository='r', branch='b', category='c',
-                       codebase='cb')
-        self.no(Change(project='x', repository='x', branch='x', category='x'),
-                "none match -> False")
-        self.no(Change(project='p', repository='r', branch='b', category='x'),
-                "three match -> False")
-        self.no(Change(project='p', repository='r', branch='b', category='c',
-                       codebase='x'), "four match -> False")
-        self.yes(Change(project='p', repository='r', branch='b', category='c',
-                        codebase='cb'), "all match -> True")
-        self.check()
+        f = ChangeFilter(project="p", repository="r", branch="b", category="c", codebase="cb")
+        self.assertFalse(
+            f.filter_change(Change(project="x", repository="x", branch="x", category="x"))
+        )
+        self.assertFalse(
+            f.filter_change(Change(project="p", repository="r", branch="b", category="x"))
+        )
+        self.assertFalse(
+            f.filter_change(Change(project="p", repository="r", branch="b", category="c"))
+        )
+        self.assertTrue(
+            f.filter_change(
+                Change(project="p", repository="r", branch="b", category="c", codebase="cb")
+            )
+        )
 
     def test_filter_change_combination_filter_fn(self):
-        self.setfilter(project='p', repository='r', branch='b', category='c',
-                       filter_fn=lambda c: c.ff)
-        self.no(Change(project='x', repository='x', branch='x', category='x', ff=False),
-                "none match and fn returns False -> False")
-        self.no(Change(project='p', repository='r', branch='b', category='c', ff=False),
-                "all match and fn returns False -> False")
-        self.no(Change(project='x', repository='x', branch='x', category='x', ff=True),
-                "none match and fn returns True -> False")
-        self.yes(Change(project='p', repository='r', branch='b', category='c', ff=True),
-                 "all match and fn returns True -> False")
-        self.check()
+        f = ChangeFilter(
+            project="p",
+            repository="r",
+            branch="b",
+            category="c",
+            filter_fn=lambda c: c.ff,
+        )
+        self.assertFalse(
+            f.filter_change(Change(project="x", repository="x", branch="x", category="x", ff=False))
+        )
+        self.assertFalse(
+            f.filter_change(Change(project="p", repository="r", branch="b", category="c", ff=False))
+        )
+        self.assertFalse(
+            f.filter_change(Change(project="x", repository="x", branch="x", category="x", ff=True))
+        )
+        self.assertTrue(
+            f.filter_change(Change(project="p", repository="r", branch="b", category="c", ff=True))
+        )
 
     def test_filter_props(self):
-        self.setfilter()
-        self.filt.checks.update(
-            self.filt.createChecks(
-                ("ref-updated", None, None, "prop:event.type"),
-            ))
-        self.yes(
-            Change(properties={'event.type': 'ref-updated'}), "matching property")
-        self.no(
-            Change(properties={'event.type': 'patch-uploaded'}), "non matching property")
-        self.no(Change(properties={}), "no property")
-        self.check()
+        f = ChangeFilter(property_eq={"event.type": "ref-updated"})
+        self.assertTrue(f.filter_change(Change(properties={"event.type": "ref-updated"})))
+        self.assertFalse(f.filter_change(Change(properties={"event.type": "patch-uploaded"})))
+        self.assertFalse(f.filter_change(Change(properties={})))
+
+        f = ChangeFilter(property_re={"event.type": "^ref-updated$"})
+        self.assertTrue(f.filter_change(Change(properties={"event.type": "ref-updated"})))
+        self.assertFalse(f.filter_change(Change(properties={"event.type": "patch-uploaded"})))
+        self.assertFalse(f.filter_change(Change(properties={})))

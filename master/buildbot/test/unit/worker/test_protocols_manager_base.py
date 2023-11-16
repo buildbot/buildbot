@@ -16,7 +16,7 @@
 Test clean shutdown functionality of the master
 """
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 
 import warnings
-from pkg_resources import parse_version
+from unittest.mock import Mock
+from unittest.mock import call
 
-from mock import Mock
-from mock import call
+from packaging.version import parse as parse_version
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -163,7 +163,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, finalResult):
-        self.insertTestData(buildResults, finalResult)
+        self.insert_test_data(buildResults, finalResult)
         res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
         builds = res['builds']
         buildset = res['buildset']
@@ -182,7 +182,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         for i, buildResult in enumerate(buildResults):
             info.append({'name': f"Builder{i}", 'result': buildResult,
                          'resultText': resultText[i], 'text': 'buildText',
-                         'url': f"http://localhost:8080/#builders/{79 + i}/builds/{i}",
+                         'url': f"http://localhost:8080/#/builders/{79 + i}/builds/{i}",
                          'build': builds[i]})
         return info
 

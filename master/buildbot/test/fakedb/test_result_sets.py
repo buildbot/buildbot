@@ -40,7 +40,7 @@ class FakeTestResultSetsComponent(FakeDBComponent):
     def setUp(self):
         self.result_sets = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, TestResultSet):
                 self.result_sets[row.id] = row.values.copy()

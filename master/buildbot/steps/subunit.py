@@ -23,7 +23,7 @@ from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.process.results import Results
+from buildbot.process.results import statusToString
 
 
 class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
@@ -37,8 +37,11 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
     def __init__(self):
         super().__init__()
         try:
-            from subunit import TestProtocolServer, PROGRESS_CUR, PROGRESS_SET
-            from subunit import PROGRESS_PUSH, PROGRESS_POP
+            from subunit import PROGRESS_CUR
+            from subunit import PROGRESS_POP
+            from subunit import PROGRESS_PUSH
+            from subunit import PROGRESS_SET
+            from subunit import TestProtocolServer
         except ImportError as e:
             raise ImportError("subunit is not importable, but is required for "
                               "SubunitLogObserver support.") from e
@@ -164,6 +167,8 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         # TODO: expectedFailures/unexpectedSuccesses
 
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
+            summary += f' ({statusToString(self.results)})'
+            if self.timed_out:
+                summary += " (timed out)"
 
         return {'step': summary}

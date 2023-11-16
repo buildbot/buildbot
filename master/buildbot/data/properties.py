@@ -23,7 +23,7 @@ from buildbot.data import types
 
 class BuildsetPropertiesEndpoint(base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /buildsets/n:bsid/properties
     """
@@ -34,7 +34,7 @@ class BuildsetPropertiesEndpoint(base.Endpoint):
 
 class BuildPropertiesEndpoint(base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/properties
         /builds/n:buildid/properties
@@ -50,7 +50,7 @@ class BuildPropertiesEndpoint(base.Endpoint):
 
 class PropertiesListEndpoint(base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builds/n:buildid/property_list
         /buildsets/n:bsid/properties_list
@@ -144,5 +144,5 @@ class Properties(base.ResourceType):
     def setBuildProperty(self, buildid, name, value, source):
         res = yield self.master.db.builds.setBuildProperty(
             buildid, name, value, source)
-        yield self.generateUpdateEvent(buildid, dict(name=(value, source)))
+        yield self.generateUpdateEvent(buildid, {"name": (value, source)})
         return res

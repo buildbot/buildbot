@@ -52,8 +52,13 @@ class ZulipStatusPush(ReporterBase):
     def sendMessage(self, reports):
         build = reports[0]['builds'][0]
         event = ("new", "finished")[0 if build["complete"] is False else 1]
-        jsondata = dict(event=event, buildid=build["buildid"], buildername=build["builder"]["name"],
-                        url=build["url"], project=build["properties"]["project"][0])
+        jsondata = {
+            "event": event,
+            "buildid": build["buildid"],
+            "buildername": build["builder"]["name"],
+            "url": build["url"],
+            "project": build["properties"]["project"][0]
+        }
         if event == "new":
             jsondata["timestamp"] = int(build["started_at"].timestamp())
         elif event == "finished":

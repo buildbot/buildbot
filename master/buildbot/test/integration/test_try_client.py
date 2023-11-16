@@ -15,8 +15,7 @@
 
 
 import os
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -93,13 +92,43 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         return self.jobdir
 
     @defer.inlineCallbacks
+    def setup_config(self, extra_config):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.process import results
+        from buildbot.process.buildstep import BuildStep
+        from buildbot.process.factory import BuildFactory
+
+        class MyBuildStep(BuildStep):
+
+            def run(self):
+                return results.SUCCESS
+
+        c['change_source'] = []
+        c['schedulers'] = []  # filled in above
+        f1 = BuildFactory()
+        f1.addStep(MyBuildStep(name='one'))
+        f1.addStep(MyBuildStep(name='two'))
+        c['builders'] = [
+            BuilderConfig(name="a", workernames=["local1"], factory=f1),
+        ]
+        c['title'] = "test"
+        c['titleURL'] = "test"
+        c['buildbotURL'] = "http://localhost:8010/"
+        c['mq'] = {'debug': True}
+        # test wants to influence the config, but we still return a new config
+        # each time
+        c.update(extra_config)
+        yield self.setup_master(c)
+
+    @defer.inlineCallbacks
     def startMaster(self, sch):
         extra_config = {
             'schedulers': [sch],
         }
         self.sch = sch
 
-        yield self.setupConfig(masterConfig(extra_config))
+        yield self.setup_config(extra_config)
 
         # wait until the scheduler is active
         yield waitFor(lambda: self.sch.active)
@@ -271,33 +300,3 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         ])
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
-
-
-def masterConfig(extra_config):
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.buildstep import BuildStep
-    from buildbot.process.factory import BuildFactory
-    from buildbot.process import results
-
-    class MyBuildStep(BuildStep):
-
-        def run(self):
-            return results.SUCCESS
-
-    c['change_source'] = []
-    c['schedulers'] = []  # filled in above
-    f1 = BuildFactory()
-    f1.addStep(MyBuildStep(name='one'))
-    f1.addStep(MyBuildStep(name='two'))
-    c['builders'] = [
-        BuilderConfig(name="a", workernames=["local1"], factory=f1),
-    ]
-    c['title'] = "test"
-    c['titleURL'] = "test"
-    c['buildbotURL'] = "http://localhost:8010/"
-    c['mq'] = {'debug': True}
-    # test wants to influence the config, but we still return a new config
-    # each time
-    c.update(extra_config)
-    return c

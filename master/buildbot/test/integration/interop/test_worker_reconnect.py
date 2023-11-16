@@ -37,9 +37,29 @@ class WorkerReconnectPb(RunMasterBase):
     proto = "pb"
 
     @defer.inlineCallbacks
+    def setup_config(self):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
+
+        c['schedulers'] = [
+            schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"]),
+            schedulers.ForceScheduler(name="force", builderNames=["testy"])
+        ]
+
+        f = BuildFactory()
+        f.addStep(DisconnectingStep())
+        c['builders'] = [
+            BuilderConfig(name="testy", workernames=["local1"], factory=f)
+        ]
+        yield self.setup_master(c)
+
+    @defer.inlineCallbacks
     def test_eventually_reconnect(self):
         DisconnectingStep.disconnection_list = []
-        yield self.setupConfig(masterConfig())
+        yield self.setup_config()
+
         build = yield self.doForceBuild()
         self.assertEqual(build['buildid'], 2)
         self.assertEqual(len(DisconnectingStep.disconnection_list), 2)
@@ -47,27 +67,3 @@ class WorkerReconnectPb(RunMasterBase):
 
 class WorkerReconnectMsgPack(WorkerReconnectPb):
     proto = "msgpack"
-
-
-# master configuration
-def masterConfig():
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import schedulers
-
-    c['schedulers'] = [
-        schedulers.AnyBranchScheduler(
-            name="sched",
-            builderNames=["testy"]),
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
-
-    f = BuildFactory()
-    f.addStep(DisconnectingStep())
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
-    return c

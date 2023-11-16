@@ -18,6 +18,9 @@ import re
 from abc import ABCMeta
 from abc import abstractmethod
 
+from packaging.version import parse as parse_version
+
+import twisted
 from twisted.cred.checkers import FilePasswordDB
 from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
@@ -112,6 +115,15 @@ class RemoteUserAuth(AuthBase):
             self.header = unicode2bytes(header)
         if headerRegex is not None:
             self.headerRegex = re.compile(unicode2bytes(headerRegex))
+
+    def getLoginResource(self):
+        current_version = parse_version(twisted.__version__)
+        if current_version < parse_version("22.10.0"):
+            from twisted.web.resource import ForbiddenResource
+            return ForbiddenResource(message="URL is not supported for authentication")
+
+        from twisted.web.pages import forbidden
+        return forbidden(message="URL is not supported for authentication")
 
     @defer.inlineCallbacks
     def maybeAutoLogin(self, request):
@@ -220,7 +232,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     @defer.inlineCallbacks
     def renderLogin(self, request):
         session = request.getSession()
-        session.user_info = dict(username=bytes2unicode(self.username))
+        session.user_info = {"username": bytes2unicode(self.username)}
         yield self.master.www.auth.updateUserInfo(request)
         raise _redirect(self.master, request)
 

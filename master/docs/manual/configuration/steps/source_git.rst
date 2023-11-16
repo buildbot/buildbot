@@ -11,7 +11,7 @@ The :bb:step:`Git` build step clones or updates a `Git <http://git.or.cz/>`_ rep
 
 .. note::
 
-   Buildbot supports Git version 1.2.0 or later. Earlier versions (such as the one shipped in Ubuntu 'Dapper') do not support the :command:`git init` command that Buildbot uses.
+   Buildbot supports Git version 1.2.0 or later.
 
 .. code-block:: python
 
@@ -37,7 +37,7 @@ The Git step takes the following arguments:
 ``shallow`` (optional)
    Instructs Git to attempt shallow clones (``--depth 1``).
    The depth defaults to 1 and can be changed by passing an integer instead of ``True``.
-   This option can be used only in full builds with clobber method.
+   This option can be used only in incremental builds, or full builds with clobber method.
 
 ``reference`` (optional)
    Use the specified string as a path to a reference repository on the local machine.
@@ -106,7 +106,7 @@ The Git step takes the following arguments:
    The argument should either be a ``bool`` or ``dict``, and will change how `git describe` is called:
 
    * ``getDescription=False``: disables this feature explicitly
-   * ``getDescription=True`` or empty ``dict()``: runs `git describe` with no args
+   * ``getDescription=True`` or empty ``{}``: runs `git describe` with no args
    * ``getDescription={...}``: a dict with keys named the same as the Git option.
      Each key's value can be ``False`` or ``None`` to explicitly skip that argument.
 

@@ -26,7 +26,6 @@ class UsDict(dict):
 
 
 class UsersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     # returns a Deferred that returns a value
     def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
@@ -58,13 +57,12 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             transaction = conn.begin()
             inserted_user = False
             try:
-                r = conn.execute(tbl.insert(), dict(identifier=identifier))
+                r = conn.execute(tbl.insert(), {"identifier": identifier})
                 uid = r.inserted_primary_key[0]
                 inserted_user = True
 
                 conn.execute(tbl_info.insert(),
-                             dict(uid=uid, attr_type=attr_type,
-                                  attr_data=attr_data))
+                             {"uid": uid, "attr_type": attr_type, "attr_data": attr_data})
 
                 transaction.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
@@ -96,14 +94,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
-            q = tbl.select(whereclause=(tbl.c.uid == uid))
+            q = tbl.select(whereclause=tbl.c.uid == uid)
             users_row = conn.execute(q).fetchone()
 
             if not users_row:
                 return None
 
             # gather all attr_type and attr_data entries from users_info table
-            q = tbl_info.select(whereclause=(tbl_info.c.uid == uid))
+            q = tbl_info.select(whereclause=tbl_info.c.uid == uid)
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
@@ -130,14 +128,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
-            q = tbl.select(whereclause=(tbl.c.bb_username == username))
+            q = tbl.select(whereclause=tbl.c.bb_username == username)
             users_row = conn.execute(q).fetchone()
 
             if not users_row:
                 return None
 
             # gather all attr_type and attr_data entries from users_info table
-            q = tbl_info.select(whereclause=(tbl_info.c.uid == users_row.uid))
+            q = tbl_info.select(whereclause=tbl_info.c.uid == users_row.uid)
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
@@ -152,7 +150,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             dicts = []
             if rows:
                 for row in rows:
-                    ud = dict(uid=row.uid, identifier=row.identifier)
+                    ud = {"uid": row.uid, "identifier": row.identifier}
                     dicts.append(ud)
             return dicts
         return self.db.pool.do(thd)
@@ -182,7 +180,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
             # update the users table if it needs to be updated
             if update_dict:
-                q = tbl.update(whereclause=(tbl.c.uid == uid))
+                q = tbl.update(whereclause=tbl.c.uid == uid)
                 res = conn.execute(q, update_dict)
 
             # then, update the attributes, carefully handling the potential
@@ -227,7 +225,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     self.db.model.users_info,
                     self.db.model.users,
             ]:
-                conn.execute(tbl.delete(whereclause=(tbl.c.uid == uid)))
+                conn.execute(tbl.delete(whereclause=tbl.c.uid == uid))
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
@@ -235,7 +233,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.users
 
-            q = tbl.select(whereclause=(tbl.c.identifier == identifier))
+            q = tbl.select(whereclause=tbl.c.identifier == identifier)
             row = conn.execute(q).fetchone()
             if not row:
                 return None

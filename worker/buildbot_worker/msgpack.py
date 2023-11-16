@@ -28,7 +28,6 @@ from twisted.python import log
 
 from buildbot_worker.base import ProtocolCommandBase
 from buildbot_worker.util import deferwaiter
-from buildbot_worker.util import lineboundaries
 
 
 class RemoteWorkerError(Exception):
@@ -60,20 +59,14 @@ def remote_print(self, message):
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):
-    def __init__(self, unicode_encoding, worker_basedir, builder_is_running,
+    def __init__(self, unicode_encoding, worker_basedir, buffer_size, buffer_timeout,
+                 max_line_length, newline_re, builder_is_running,
                  on_command_complete, protocol, command_id, command, args):
-        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
-                                     on_command_complete, None, command, command_id, args)
+        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, buffer_size,
+                                     buffer_timeout, max_line_length, newline_re,
+                                     builder_is_running, on_command_complete, None, command,
+                                     command_id, args)
         self.protocol = protocol
-        self.command_id = command_id
-        self._lbfs = {}
-
-    def split_lines(self, stream, text):
-        try:
-            return self._lbfs[stream].append(text)
-        except KeyError:
-            lbf = self._lbfs[stream] = lineboundaries.LineBoundaryFinder()
-            return lbf.append(text)
 
     def protocol_args_setup(self, command, args):
         if "want_stdout" in args:
@@ -94,48 +87,13 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
         if command == "download_file" and 'reader' not in args:
             args['reader'] = None
 
-    # Returns a Deferred
-    def protocol_update(self, data):
-        lines = []
-        for key, value in data:
-            if key in ['stdout', 'stderr', 'header']:
-                whole_line = self.split_lines(key, value)
-                if whole_line is not None:
-                    lines.append((key, whole_line))
-            elif key == 'log':
-                logname, data = value
-                whole_line = self.split_lines(logname, data)
-                value = (logname, whole_line)
-                if whole_line is not None:
-                    lines.append((key, value))
-            else:
-                lines.append((key, value))
-        if lines:
-            return self.protocol.get_message_result({'op': 'update', 'args': lines,
-                                                     'command_id': self.command_id})
-        return defer.succeed(None)
+    def protocol_send_update_message(self, message):
+        d = self.protocol.get_message_result({'op': 'update', 'args': message,
+                                              'command_id': self.command_id})
+        d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
 
     def protocol_notify_on_disconnect(self):
         pass
-
-    def flush_command_output(self):
-        lines = []
-        for key, lbf in self._lbfs.items():
-            if key in ['stdout', 'stderr', 'header']:
-                whole_line = lbf.flush()
-                if whole_line is not None:
-                    lines.append((key, whole_line))
-            else:  # custom logfile
-                logname = key
-                whole_line = lbf.flush()
-                value = (logname, whole_line)
-                if whole_line is not None:
-                    lines.append((key, value))
-        d_update = defer.succeed(None)
-        if lines:
-            d_update = self.protocol.get_message_result({'op': 'update', 'args': lines,
-                                                         'command_id': self.command_id})
-        return d_update
 
     @defer.inlineCallbacks
     def protocol_complete(self, failure):
@@ -268,6 +226,25 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
+    def call_set_worker_settings(self, msg):
+        is_exception = False
+        try:
+            self.contains_msg_key(msg, ('args',))
+            for setting in ["buffer_size", "buffer_timeout", "newline_re", "max_line_length"]:
+                if setting not in msg["args"]:
+                    raise KeyError('message did not contain obligatory settings for worker')
+
+            self.factory.buildbot_bot.buffer_size = msg["args"]["buffer_size"]
+            self.factory.buildbot_bot.buffer_timeout = msg["args"]["buffer_timeout"]
+            self.factory.buildbot_bot.newline_re = msg["args"]["newline_re"]
+            self.factory.buildbot_bot.max_line_length = msg["args"]["max_line_length"]
+            result = None
+        except Exception as e:
+            is_exception = True
+            result = str(e)
+
+        self.send_response_msg(msg, result, is_exception)
+
     @defer.inlineCallbacks
     def call_start_command(self, msg):
         is_exception = False
@@ -336,6 +313,8 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             self._deferwaiter.add(self.call_print(msg))
         elif msg['op'] == "keepalive":
             self._deferwaiter.add(self.call_keepalive(msg))
+        elif msg['op'] == "set_worker_settings":
+            self._deferwaiter.add(self.call_set_worker_settings(msg))
         elif msg['op'] == "get_worker_info":
             self._deferwaiter.add(self.call_get_worker_info(msg))
         elif msg['op'] == "start_command":

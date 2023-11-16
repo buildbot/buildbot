@@ -261,10 +261,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         result = None
         is_exception = False
         try:
-            self.contains_msg_key(msg, ('command_id',))
-
-            if "args" not in msg:
-                raise KeyError('message did not contain obligatory "args" key')
+            self.contains_msg_key(msg, ('command_id', 'args'))
 
             if msg['command_id'] not in self.command_id_to_writer_map:
                 raise KeyError('unknown "command_id"')
@@ -383,7 +380,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             else:
                 authentication = False
         except Exception as e:
-            raise Exception("Internal error") from e
+            raise RuntimeError("Internal error") from e
         finally:
             eventually(dispatcher.master.initLock.release)
 
@@ -431,7 +428,7 @@ class Dispatcher(BaseDispatcher):
             # Check that websocket port is actually stored into the port attribute, as we're
             # relying on undocumented behavior.
             if self.serverFactory.port != self.DUMMY_PORT:
-                raise Exception("Expected websocket port to be set to dummy port")
+                raise RuntimeError("Expected websocket port to be set to dummy port")
             self.serverFactory.port = port.getHost().port
         return port
 

@@ -27,7 +27,6 @@ class ChangeSourceAlreadyClaimedError(Exception):
 
 
 class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     def findChangeSourceId(self, name):
         tbl = self.db.model.changesources
@@ -35,10 +34,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
-            insert_values=dict(
-                name=name,
-                name_hash=name_hash,
-            ))
+            insert_values={"name": name, "name_hash": name_hash})
 
     # returns a Deferred that returns None
     def setChangeSourceMaster(self, changesourceid, masterid):
@@ -48,7 +44,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             # handle the masterid=None case to get it out of the way
             if masterid is None:
                 q = cs_mst_tbl.delete(
-                    whereclause=(cs_mst_tbl.c.changesourceid == changesourceid))
+                    whereclause=cs_mst_tbl.c.changesourceid == changesourceid)
                 conn.execute(q)
                 return
 
@@ -56,7 +52,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             try:
                 q = cs_mst_tbl.insert()
                 conn.execute(q,
-                             dict(changesourceid=changesourceid, masterid=masterid))
+                             {"changesourceid": changesourceid, "masterid": masterid})
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this changesource.
                 raise ChangeSourceAlreadyClaimedError from e
@@ -86,21 +82,20 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             # if we're given a _changesourceid, select only that row
             wc = None
             if _changesourceid:
-                wc = (cs_tbl.c.id == _changesourceid)
+                wc = cs_tbl.c.id == _changesourceid
             else:
                 # otherwise, filter with active, if necessary
                 if masterid is not None:
-                    wc = (cs_mst_tbl.c.masterid == masterid)
+                    wc = cs_mst_tbl.c.masterid == masterid
                 elif active:
-                    wc = (cs_mst_tbl.c.masterid != NULL)
+                    wc = cs_mst_tbl.c.masterid != NULL
                 elif active is not None:
-                    wc = (cs_mst_tbl.c.masterid == NULL)
+                    wc = cs_mst_tbl.c.masterid == NULL
 
             q = sa.select([cs_tbl.c.id, cs_tbl.c.name,
                            cs_mst_tbl.c.masterid],
                           from_obj=join, whereclause=wc)
 
-            return [dict(id=row.id, name=row.name,
-                         masterid=row.masterid)
+            return [{"id": row.id, "name": row.name, "masterid": row.masterid}
                     for row in conn.execute(q).fetchall()]
         return self.db.pool.do(thd)

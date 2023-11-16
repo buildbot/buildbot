@@ -56,7 +56,8 @@ class Row:
 
     def __init__(self, **kwargs):
         if self.__init__.__func__ is Row.__init__:
-            raise Exception('Row.__init__ must be overridden to supply default values for columns')
+            raise RuntimeError('Row.__init__ must be overridden to supply default values for '
+                               'columns')
 
         self.values = kwargs.copy()
         if self.id_column:
@@ -140,19 +141,20 @@ class Row:
 
     @defer.inlineCallbacks
     def checkForeignKeys(self, db, t):
-        accessors = dict(
-            buildsetid=db.buildsets.getBuildset,
-            workerid=db.workers.getWorker,
-            builderid=db.builders.getBuilder,
-            buildid=db.builds.getBuild,
-            changesourceid=db.changesources.getChangeSource,
-            changeid=db.changes.getChange,
-            buildrequestid=db.buildrequests.getBuildRequest,
-            sourcestampid=db.sourcestamps.getSourceStamp,
-            schedulerid=db.schedulers.getScheduler,
-            brid=db.buildrequests.getBuildRequest,
-            stepid=db.steps.getStep,
-            masterid=db.masters.getMaster)
+        accessors = {
+            "buildsetid": db.buildsets.getBuildset,
+            "workerid": db.workers.getWorker,
+            "builderid": db.builders.getBuilder,
+            "buildid": db.builds.getBuild,
+            "changesourceid": db.changesources.getChangeSource,
+            "changeid": db.changes.getChange,
+            "buildrequestid": db.buildrequests.getBuildRequest,
+            "sourcestampid": db.sourcestamps.getSourceStamp,
+            "schedulerid": db.schedulers.getScheduler,
+            "brid": db.buildrequests.getBuildRequest,
+            "stepid": db.steps.getStep,
+            "masterid": db.masters.getMaster
+        }
         for foreign_key in self.foreignKeys:
             if foreign_key in accessors:
                 key = getattr(self, foreign_key)

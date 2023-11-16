@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.python import failure
@@ -37,7 +37,7 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
 
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
             fakedb.ChangeSource(id=13, name='some:changesource'),
@@ -104,7 +104,7 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
             fakedb.ChangeSource(id=13, name='some:changesource'),
@@ -213,7 +213,7 @@ class ChangeSource(TestReactorMixin, interfaces.InterfaceTests,
 
     @defer.inlineCallbacks
     def test__masterDeactivated(self):
-        yield self.master.db.insertTestData([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.ChangeSource(id=13, name='some:changesource'),
             fakedb.ChangeSourceMaster(changesourceid=13, masterid=22),

@@ -1,0 +1,111 @@
+@import '../../styles/colors.scss';
+
+.bb-logviewer-text-wrapper {
+  height: 100%;
+}
+
+.bb-logviewer-text-area {
+  padding-left: 0.5em;
+  background-color: #000;
+  color: $bb-color-log-white;
+  .padding {
+    // zebra pattern
+    background: repeating-linear-gradient(-45deg,rgb(10, 10, 10),rgb(40, 40, 40) 7%, rgb(10,10,10) 10%)
+  }
+  .log_o, .ansi_white, .ansi30 {
+    color: $bb-color-log-white;
+  }
+  .log_e, .ansi_red, .ansi31 {
+    color: #c91b00;
+  }
+  .ansi_green, .ansi32 {
+    color: #00c200;
+  }
+  .ansi_yellow, .ansi33 {
+    color: #c7c400;
+  }
+  .ansi_blue, .ansi34 {
+    color: #0225c7;
+  }
+  .ansi_magenta, .ansi35 {
+    color: #ca30c7;
+  }
+  .log_h, .ansi_cyan, .ansi36 {
+    color: #00c5c7;
+  }
+  // bright colors
+  .ansi1 {
+    &.ansi30 {
+      color: #ffffff;
+    }
+    &.ansi31 {
+      color: #ff6e67;
+    }
+    &.ansi32 {
+      color: #5ffa68;
+    }
+    &.ansi33 {
+      color: #fffc67;
+    }
+    &.ansi34 {
+      color: #6871ff;
+    }
+    &.ansi35 {
+      color: #f075f0;
+    }
+    &.ansi37 {
+      color: #60fdff;
+    }
+  }
+}
+
+.bb-logviewer-text-row {
+  font-family: "Monaco", monospace;
+}
+
+.bb-logviewer-text-download-log {
+  position: absolute;
+  top: 1em;
+  right: 2em;
+
+  & > div {
+    position: relative;
+    z-index: 1;
+
+    & > .btn {
+      background-color: white;
+    }
+  }
+}
+
+.bb-logviewer-text-row > span {
+  white-space: nowrap;
+}
+
+.bb-logviewer-text-download-log {
+  .bb-log-download-button {
+    color: #ccc;
+  }
+  .bb-log-download-button:hover {
+    color: white;
+  }
+}
+
+.bb-logviewer-result {
+  background-color: orange;
+  color: black;
+}
+
+.bb-logviewer-result.bb-logviewer-result-current {
+  background-color: yellow;
+}
+
+.bb-logviewer-result-begin {
+  border-top-left-radius: 0.3rem;
+  border-bottom-left-radius: 0.3rem;
+}
+
+.bb-logviewer-result-end {
+  border-top-right-radius: 0.3rem;
+  border-bottom-right-radius: 0.3rem;
+}

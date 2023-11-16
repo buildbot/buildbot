@@ -47,10 +47,36 @@ class MySource(Source):
 
 class ShellMaster(RunMasterBase):
 
+    @defer.inlineCallbacks
+    def setup_config(self):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.plugins import steps
+        from buildbot.plugins import util
+        from buildbot.process.factory import BuildFactory
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(
+                name="force",
+                codebases=[util.CodebaseParameter(
+                    "foo", patch=util.PatchParameter())],
+                builderNames=["testy"])]
+
+        f = BuildFactory()
+        f.addStep(MySource(codebase='foo'))
+        # if the patch was applied correctly, then make will work!
+        f.addStep(steps.ShellCommand(command=["make"]))
+        c['builders'] = [
+            BuilderConfig(name="testy", workernames=["local1"], factory=f)
+        ]
+
+        yield self.setup_master(c)
+
     @skipUnlessPlatformIs("posix")  # make is not installed on windows
     @defer.inlineCallbacks
     def test_shell(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_config()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True,
                                         forceParams={'foo_patch_body': PATCH})
         self.assertEqual(build['buildid'], 1)
@@ -59,35 +85,10 @@ class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_shell_no_patch(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setup_config()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         # if no patch, the source step is happy, but the make step cannot find makefile
         self.assertEqual(build['steps'][1]['results'], SUCCESS)
         self.assertEqual(build['steps'][2]['results'], FAILURE)
         self.assertEqual(build['results'], FAILURE)
-
-
-# master configuration
-def masterConfig():
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import steps, schedulers, util
-
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            codebases=[util.CodebaseParameter(
-                "foo", patch=util.PatchParameter())],
-            builderNames=["testy"])]
-
-    f = BuildFactory()
-    f.addStep(MySource(codebase='foo'))
-    # if the patch was applied correctly, then make will work!
-    f.addStep(steps.ShellCommand(command=["make"]))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
-    return c

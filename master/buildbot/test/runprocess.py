@@ -66,7 +66,7 @@ class MasterRunProcessMixin:
     def expect_commands(self, *exp):
         for e in exp:
             if not isinstance(e, ExpectMasterShell):
-                raise Exception('All expectation must be an instance of ExpectMasterShell')
+                raise RuntimeError('All expectation must be an instance of ExpectMasterShell')
 
         self._patch_runprocess()
         self._expected_master_commands.extend(exp)

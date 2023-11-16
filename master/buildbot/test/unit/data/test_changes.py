@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -37,7 +37,7 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
                           repository='svn://...', codebase='cbsvn',
@@ -68,7 +68,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=133),
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
                           repository='svn://...', codebase='cbsvn',
@@ -214,13 +214,20 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def test_addChange(self):
         # src and codebase are default here
-        kwargs = dict(author='warner', committer='david', branch='warnerdb',
-                      category='devel', comments='fix whitespace',
-                      files=['master/buildbot/__init__.py'],
-                      project='Buildbot', repository='git://warner',
-                      revision='0e92a098b', revlink='http://warner/0e92a098b',
-                      when_timestamp=256738404,
-                      properties={'foo': 20})
+        kwargs = {
+            "author": 'warner',
+            "committer": 'david',
+            "branch": 'warnerdb',
+            "category": 'devel',
+            "comments": 'fix whitespace',
+            "files": ['master/buildbot/__init__.py'],
+            "project": 'Buildbot',
+            "repository": 'git://warner',
+            "revision": '0e92a098b',
+            "revlink": 'http://warner/0e92a098b',
+            "when_timestamp": 256738404,
+            "properties": {'foo': 20}
+        }
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = self.changeEvent
         expectedRow = fakedb.Change(
@@ -246,13 +253,22 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         createUserObject = mock.Mock(spec=users.createUserObject)
         createUserObject.return_value = defer.succeed(123)
         self.patch(users, 'createUserObject', createUserObject)
-        kwargs = dict(author='warner', committer='david', branch='warnerdb',
-                      category='devel', comments='fix whitespace',
-                      files=['master/buildbot/__init__.py'],
-                      project='Buildbot', repository='git://warner',
-                      revision='0e92a098b', revlink='http://warner/0e92a098b',
-                      when_timestamp=256738404,
-                      properties={'foo': 20}, src='git', codebase='cb')
+        kwargs = {
+            "author": 'warner',
+            "committer": 'david',
+            "branch": 'warnerdb',
+            "category": 'devel',
+            "comments": 'fix whitespace',
+            "files": ['master/buildbot/__init__.py'],
+            "project": 'Buildbot',
+            "repository": 'git://warner',
+            "revision": '0e92a098b',
+            "revlink": 'http://warner/0e92a098b',
+            "when_timestamp": 256738404,
+            "properties": {'foo': 20},
+            "src": 'git',
+            "codebase": 'cb'
+        }
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
             'author': 'warner',
@@ -310,13 +326,20 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.config.preChangeGenerator = preChangeGenerator
         self.master.config.codebaseGenerator = \
             lambda change: f"cb-{(change['category'])}"
-        kwargs = dict(author='warner', committer='david', branch='warnerdb',
-                      category='devel', comments='fix whitespace',
-                      files=['master/buildbot/__init__.py'],
-                      project='Buildbot', repository='git://warner',
-                      revision='0e92a098b', revlink='http://warner/0e92a098b',
-                      when_timestamp=256738404,
-                      properties={'foo': 20})
+        kwargs = {
+            "author": 'warner',
+            "committer": 'david',
+            "branch": 'warnerdb',
+            "category": 'devel',
+            "comments": 'fix whitespace',
+            "files": ['master/buildbot/__init__.py'],
+            "project": 'Buildbot',
+            "repository": 'git://warner',
+            "revision": '0e92a098b',
+            "revlink": 'http://warner/0e92a098b',
+            "when_timestamp": 256738404,
+            "properties": {'foo': 20}
+        }
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
             'author': 'warner',
@@ -368,12 +391,20 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.config = mock.Mock(name='master.config')
         self.master.config.revlink = lambda rev, repo: f'foo{repo}bar{rev}baz'
         # revlink is default here
-        kwargs = dict(author='warner', committer='david', branch='warnerdb',
-                      category='devel', comments='fix whitespace',
-                      files=['master/buildbot/__init__.py'],
-                      project='Buildbot', repository='git://warner',
-                      codebase='', revision='0e92a098b', when_timestamp=256738404,
-                      properties={'foo': 20})
+        kwargs = {
+            "author": 'warner',
+            "committer": 'david',
+            "branch": 'warnerdb',
+            "category": 'devel',
+            "comments": 'fix whitespace',
+            "files": ['master/buildbot/__init__.py'],
+            "project": 'Buildbot',
+            "repository": 'git://warner',
+            "codebase": '',
+            "revision": '0e92a098b',
+            "when_timestamp": 256738404,
+            "properties": {'foo': 20}
+        }
         expectedRoutingKey = ('changes', '500', 'new')
         # When no revlink is passed to addChange, but a repository and revision is
         # passed, the revlink should be constructed by calling the revlink callable

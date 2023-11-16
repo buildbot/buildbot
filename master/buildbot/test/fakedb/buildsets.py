@@ -68,7 +68,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.completed_bsids = set()
         self.buildset_sourcestamps = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Buildset):
                 bs = self.buildsets[row.id] = row.values.copy()
@@ -98,7 +98,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
     @defer.inlineCallbacks
     def addBuildset(self, sourcestamps, reason, properties, builderids, waited_for,
                     external_idstring=None, submitted_at=None,
-                    parent_buildid=None, parent_relationship=None):
+                    parent_buildid=None, parent_relationship=None, priority=0):
         # We've gotten this wrong a couple times.
         assert isinstance(
             waited_for, bool), f'waited_for should be boolean: {repr(waited_for)}'
@@ -116,7 +116,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 BuildRequest(buildsetid=bsid, builderid=builderid, waited_for=waited_for,
                              submitted_at=submitted_at))
 
-        self.db.buildrequests.insertTestData(br_rows)
+        self.db.buildrequests.insert_test_data(br_rows)
 
         # make up a row and keep its dictionary, with the properties tacked on
         bsrow = Buildset(id=bsid, reason=reason,

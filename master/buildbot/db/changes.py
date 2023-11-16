@@ -34,7 +34,6 @@ class ChDict(dict):
 
 
 class ChangesConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     # returns a Deferred that returns a value
     def getParentChangeIds(self, branch, repository, project, codebase):
@@ -104,35 +103,41 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             transaction = conn.begin()
 
-            r = conn.execute(ch_tbl.insert(), dict(
-                author=author,
-                committer=committer,
-                comments=comments,
-                branch=branch,
-                revision=revision,
-                revlink=revlink,
-                when_timestamp=datetime2epoch(when_timestamp),
-                category=category,
-                repository=repository,
-                codebase=codebase,
-                project=project,
-                sourcestampid=ssid,
-                parent_changeids=parent_changeid))
+            r = conn.execute(ch_tbl.insert(), {
+                "author": author,
+                "committer": committer,
+                "comments": comments,
+                "branch": branch,
+                "revision": revision,
+                "revlink": revlink,
+                "when_timestamp": datetime2epoch(when_timestamp),
+                "category": category,
+                "repository": repository,
+                "codebase": codebase,
+                "project": project,
+                "sourcestampid": ssid,
+                "parent_changeids": parent_changeid
+            })
             changeid = r.inserted_primary_key[0]
             if files:
                 tbl = self.db.model.change_files
                 for f in files:
                     self.checkLength(tbl.c.filename, f)
                 conn.execute(tbl.insert(), [
-                    dict(changeid=changeid, filename=f)
+                    {
+                        "changeid": changeid,
+                        "filename": f
+                    }
                     for f in files
                 ])
             if properties:
                 tbl = self.db.model.change_properties
                 inserts = [
-                    dict(changeid=changeid,
-                         property_name=k,
-                         property_value=json.dumps(v))
+                    {
+                        "changeid": changeid,
+                        "property_name": k,
+                        "property_value": json.dumps(v)
+                    }
                     for k, v in properties.items()
                 ]
                 for i in inserts:
@@ -142,7 +147,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 conn.execute(tbl.insert(), inserts)
             if uid:
                 ins = self.db.model.change_users.insert()
-                conn.execute(ins, dict(changeid=changeid, uid=uid))
+                conn.execute(ins, {"changeid": changeid, "uid": uid})
 
             transaction.commit()
 
@@ -158,7 +163,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
             q = changes_tbl.select(
-                whereclause=(changes_tbl.c.changeid == changeid))
+                whereclause=changes_tbl.c.changeid == changeid)
             rp = conn.execute(q)
             row = rp.fetchone()
             if not row:
@@ -217,7 +222,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
             q = changes_tbl.select(
-                whereclause=(changes_tbl.c.sourcestampid == sourcestampid))
+                whereclause=changes_tbl.c.sourcestampid == sourcestampid)
             # if there are multiple changes for this ssid, get the most recent one
             q = q.order_by(changes_tbl.c.changeid.desc())
             q = q.limit(1)
@@ -235,7 +240,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         def thd(conn):
             cu_tbl = self.db.model.change_users
-            q = cu_tbl.select(whereclause=(cu_tbl.c.changeid == changeid))
+            q = cu_tbl.select(whereclause=cu_tbl.c.changeid == changeid)
             res = conn.execute(q)
             rows = res.fetchall()
             row_uids = [row.uid for row in rows]
@@ -249,11 +254,12 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
-            q = sa.select([changes_tbl.c.changeid])
 
             if resultSpec is not None:
+                q = changes_tbl.select()
                 return reversed(resultSpec.thd_execute(conn, q, self._getDataFromRow))
 
+            q = sa.select([changes_tbl.c.changeid])
             rp = conn.execute(q)
             changeids = [self._getDataFromRow(row) for row in rp]
             rp.close()
@@ -300,7 +306,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         """
 
         if not changeHorizon:
-            return None
+            return
 
         def thd(conn):
             changes_tbl = self.db.model.changes
@@ -357,7 +363,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             sourcestampid=int(ch_row.sourcestampid))
 
         query = change_files_tbl.select(
-            whereclause=(change_files_tbl.c.changeid == ch_row.changeid))
+            whereclause=change_files_tbl.c.changeid == ch_row.changeid)
         rows = conn.execute(query)
         for r in rows:
             chdict['files'].append(r.filename)
@@ -375,7 +381,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             return v, s
 
         query = change_properties_tbl.select(
-            whereclause=(change_properties_tbl.c.changeid == ch_row.changeid))
+            whereclause=change_properties_tbl.c.changeid == ch_row.changeid)
         rows = conn.execute(query)
         for r in rows:
             try:

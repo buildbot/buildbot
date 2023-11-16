@@ -15,14 +15,13 @@
 
 import json
 import os
-import pkg_resources
+from importlib.metadata import entry_points
 from io import BytesIO
 from io import StringIO
+from unittest import mock
 from urllib.parse import parse_qs
 from urllib.parse import unquote as urlunquote
 from uuid import uuid1
-
-import mock
 
 from twisted.internet import defer
 from twisted.web import server
@@ -86,7 +85,7 @@ class FakeRequest:
     def finish(self):
         self.finished = True
         if self.redirected_to is not None:
-            self.deferred.callback(dict(redirected=self.redirected_to))
+            self.deferred.callback({"redirected": self.redirected_to})
         else:
             self.deferred.callback(self.written)
 
@@ -124,7 +123,7 @@ class FakeRequest:
 class RequiresWwwMixin:
     # mix this into a TestCase to skip if buildbot-www is not installed
 
-    if not list(pkg_resources.iter_entry_points('buildbot.www', 'base')):
+    if not [ep for ep in entry_points().get('buildbot.www', []) if ep.name == 'base']:
         if 'BUILDBOT_TEST_REQUIRE_WWW' in os.environ:
             raise RuntimeError('$BUILDBOT_TEST_REQUIRE_WWW is set but '
                                'buildbot-www is not installed')
@@ -140,7 +139,7 @@ class WwwTestMixin(RequiresWwwMixin):
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
         master.www.getUserInfos = lambda _: getattr(
             self.master.session, "user_info", {"anonymous": True})
-        cfg = dict(port=None, auth=auth.NoAuth(), authz=authz.Authz())
+        cfg = {"port": None, "auth": auth.NoAuth(), "authz": authz.Authz()}
         cfg.update(kwargs)
         master.config.www = cfg
         if url is not None:

@@ -58,10 +58,16 @@ class TestUsersClient(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_usersclient_send_ids(self):
-        yield user.user(dict(master='a:9990', username="x",
-                           passwd="y", op='get', bb_username=None,
-                           bb_password=None, ids=['me', 'you'],
-                           info=None))
+        yield user.user({
+            "master": 'a:9990',
+            "username": "x",
+            "passwd": "y",
+            "op": 'get',
+            "bb_username": None,
+            "bb_password": None,
+            "ids": ['me', 'you'],
+            "info": None
+        })
 
         c = self.usersclient
         self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
@@ -75,10 +81,16 @@ class TestUsersClient(unittest.TestCase):
             return 'ENCRY'
         self.patch(users, 'encrypt', _fake_encrypt)
 
-        yield user.user(dict(master='a:9990', username="x",
-                           passwd="y", op='update', bb_username='bud',
-                           bb_password='day', ids=None,
-                           info=[{'identifier': 'x', 'svn': 'x'}]))
+        yield user.user({
+            "master": 'a:9990',
+            "username": "x",
+            "passwd": "y",
+            "op": 'update',
+            "bb_username": 'bud',
+            "bb_password": 'day',
+            "ids": None,
+            "info": [{'identifier': 'x', 'svn': 'x'}]
+        })
 
         c = self.usersclient
         self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
@@ -88,10 +100,16 @@ class TestUsersClient(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_usersclient_send_add_info(self):
-        yield user.user(dict(master='a:9990', username="x",
-                           passwd="y", op='add', bb_username=None,
-                           bb_password=None, ids=None,
-                           info=[{'git': 'x <h@c>', 'irc': 'aaa'}]))
+        yield user.user({
+            "master": 'a:9990',
+            "username": "x",
+            "passwd": "y",
+            "op": 'add',
+            "bb_username": None,
+            "bb_password": None,
+            "ids": None,
+            "info": [{'git': 'x <h@c>', 'irc': 'aaa'}]
+        })
 
         c = self.usersclient
         self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,

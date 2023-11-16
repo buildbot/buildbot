@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -36,7 +36,7 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
@@ -133,7 +133,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Builder(id=78, name='builder78'),
             fakedb.Builder(id=79, name='builder79'),
@@ -339,9 +339,13 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     def test_addBuild(self):
         return self.do_test_callthrough('addBuild', self.rtype.addBuild,
                                         builderid=10, buildrequestid=13, workerid=20,
-                                        exp_kwargs=dict(builderid=10, buildrequestid=13,
-                                                        workerid=20, masterid=self.master.masterid,
-                                                        state_string='created'))
+                                        exp_kwargs={
+                                            "builderid": 10,
+                                            "buildrequestid": 13,
+                                            "workerid": 20,
+                                            "masterid": self.master.masterid,
+                                            "state_string": 'created'
+                                        })
 
     def test_addBuildEvent(self):
 

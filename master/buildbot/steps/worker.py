@@ -52,7 +52,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
         # a case-sensitive dictionary in worker_environ.  Fortunately, that
         # dictionary is also folded to uppercase, so we can simply fold the
         # variable names to uppercase to duplicate the case-insensitivity.
-        fold_to_uppercase = (self.worker.worker_system == 'win32')
+        fold_to_uppercase = self.worker.worker_system == 'win32'
 
         properties = self.build.getProperties()
         environ = self.worker.worker_environ

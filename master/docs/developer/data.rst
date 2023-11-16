@@ -340,11 +340,43 @@ See that module's description for details.
         If set, then the first path pattern for this endpoint will be included as a link in the root of the API.
         This should be set for any endpoints that begin an explorable tree.
 
+    .. py:attribute:: kind
+
+        :type: number
+
+        Defines type of the endpoint.
+        The following endpoint types are supported:
+
+        - ``EndpointKind.SINGLE`` - returns single resource
+        - ``EndpointKind.COLLECTION`` - returns a collection of resources
+        - ``EndpointKind.RAW`` - returns a raw resource.
+
+            Raw resources are used to get the data not encoded in JSON via the REST API.
+            The get() method from endpoint should return following data structure::
+
+                {
+                    "raw": "raw data to be sent to the http client",
+                    "mime-type": "<mime-type>",
+                    "filename": "filename_to_be_used_in_content_disposition_attachement_header"
+                }
+
+        - ``EndpointKind.RAW_INLINE`` - returns a raw resource which is shown inline in HTTP client.
+
+            The difference between ``RAW`` resource is that content-disposition header is not set.
+            The get() method from endpoint should return following data structure::
+
+                {
+                    "raw": "raw data to be sent to the http client",
+                    "mime-type": "<mime-type>"
+                }
+
     .. py:attribute:: isCollection
 
         :type: boolean
 
         If true, then this endpoint returns collections of resources.
+
+        This attribute is deprecated, use ``kind`` attribute instead.
 
     .. py:attribute:: isRaw
 
@@ -352,15 +384,7 @@ See that module's description for details.
 
         If true, then this endpoint returns a raw resource.
 
-        Raw resources are used to get the data not encoded in JSON via the REST API.
-        In the REST principles, this should be done via another endpoint, and not via a query parameter.
-        The get() method from endpoint should return following data structure::
-
-            {
-                "raw": u"raw data to be sent to the http client",
-                "mime-type": u"<mime-type>",
-                "filename": u"filename_to_be_used_in_content_disposition_attachement_header"
-            }
+        This attribute is deprecated, use ``kind`` attribute instead.
 
     .. py:method:: get(options, resultSpec, kwargs)
 

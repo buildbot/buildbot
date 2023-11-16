@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -77,14 +77,14 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'pending',
-                  'target_url': 'http://localhost:8080/#buildrequests/11',
+                  'target_url': 'http://localhost:8080/#/buildrequests/11',
                   'ref': 'master',
                   'description': 'Build pending.', 'name': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'canceled',
-                  'target_url': 'http://localhost:8080/#buildrequests/11',
+                  'target_url': 'http://localhost:8080/#/buildrequests/11',
                   'ref': 'master',
                   'description': 'Build pending.', 'name': 'buildbot/Builder0'})
 
@@ -104,28 +104,28 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'running',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build done.', 'name': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'failed',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build done.', 'name': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'canceled',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build done.', 'name': 'buildbot/Builder0'})
 
@@ -152,7 +152,7 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'running',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'})
         build['complete'] = False
@@ -167,7 +167,7 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
             'post',
             '/api/v4/projects/20922342342/statuses/d34db33fd43db33f',
             json={'state': 'running',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'})
         build['complete'] = False
@@ -214,7 +214,7 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'running',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'},
             content_json={'message': 'sha1 not found for branch master'},

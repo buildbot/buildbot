@@ -202,6 +202,7 @@ class Model(base.DBConnectorComponent):
                   sa.ForeignKey('builds.id', ondelete='CASCADE'),
                   nullable=False),
         sa.Column('started_at', sa.Integer),
+        sa.Column("locks_acquired_at", sa.Integer),
         sa.Column('complete_at', sa.Integer),
         sa.Column('state_string', sa.Text, nullable=False),
         sa.Column('results', sa.Integer),
@@ -330,6 +331,7 @@ class Model(base.DBConnectorComponent):
         sa.Column("name", sa.String(50), nullable=False),
         sa.Column("info", JsonObject, nullable=False),
         sa.Column("paused", sa.SmallInteger, nullable=False, server_default="0"),
+        sa.Column("pause_reason", sa.Text, nullable=True),
         sa.Column("graceful", sa.SmallInteger, nullable=False, server_default="0"),
     )
 
@@ -583,6 +585,26 @@ class Model(base.DBConnectorComponent):
         sa.Column('important', sa.Integer),
     )
 
+    # Tables related to projects
+    # --------------------------
+
+    projects = sautils.Table(
+        'projects', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        # project name
+        sa.Column('name', sa.Text, nullable=False),
+        # sha1 of name; used for a unique index
+        sa.Column('name_hash', sa.String(hash_length), nullable=False),
+        # project slug, potentially shown in the URLs
+        sa.Column('slug', sa.String(50), nullable=False),
+        # project description
+        sa.Column('description', sa.Text, nullable=True),
+        # the format of project description
+        sa.Column('description_format', sa.Text, nullable=True),
+        # project description rendered as html if description_format is not NULL
+        sa.Column('description_html', sa.Text, nullable=True),
+    )
+
     # Tables related to builders
     # --------------------------
 
@@ -593,6 +615,15 @@ class Model(base.DBConnectorComponent):
         sa.Column('name', sa.Text, nullable=False),
         # builder's description
         sa.Column('description', sa.Text, nullable=True),
+        # the format of builder description
+        sa.Column('description_format', sa.Text, nullable=True),
+        # builder description rendered as html if description_format is not NULL
+        sa.Column('description_html', sa.Text, nullable=True),
+        # builder's project
+        sa.Column('projectid', sa.Integer,
+                  sa.ForeignKey('projects.id', name="fk_builders_projectid",
+                                ondelete='SET NULL'),
+                  nullable=True),
         # sha1 of name; used for a unique index
         sa.Column('name_hash', sa.String(hash_length), nullable=False),
     )
@@ -864,7 +895,9 @@ class Model(base.DBConnectorComponent):
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
     sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
              scheduler_changes.c.changeid, unique=True)
+    sa.Index('projects_name_hash', projects.c.name_hash, unique=True)
     sa.Index('builder_name_hash', builders.c.name_hash, unique=True)
+    sa.Index('builders_projectid', builders.c.projectid)
     sa.Index('builder_masters_builderid', builder_masters.c.builderid)
     sa.Index('builder_masters_masterid', builder_masters.c.masterid)
     sa.Index('builder_masters_identity',
@@ -938,25 +971,24 @@ class Model(base.DBConnectorComponent):
 
     implied_indexes = [
         ('change_users',
-            dict(unique=False, column_names=['uid'], name='uid')),
+            {"unique": False, "column_names": ['uid'], "name": 'uid'}),
         ('sourcestamps',
-            dict(unique=False, column_names=['patchid'], name='patchid')),
+            {"unique": False, "column_names": ['patchid'], "name": 'patchid'}),
         ('scheduler_masters',
-            dict(unique=False, column_names=['masterid'], name='masterid')),
+            {"unique": False, "column_names": ['masterid'], "name": 'masterid'}),
         ('changesource_masters',
-            dict(unique=False, column_names=['masterid'], name='masterid')),
+            {"unique": False, "column_names": ['masterid'], "name": 'masterid'}),
         ('buildset_sourcestamps',
-            dict(unique=False, column_names=['sourcestampid'],
-                 name='sourcestampid')),
+            {"unique": False, "column_names": ['sourcestampid'], "name": 'sourcestampid'}),
         ('buildsets',
-            dict(unique=False, column_names=['parent_buildid'],
-                 name='parent_buildid')),
+            {"unique": False, "column_names": ['parent_buildid'], "name": 'parent_buildid'}),
         ('builders_tags',
-            dict(unique=False, column_names=['tagid'],
-                 name='tagid')),
-        ('changes',
-            dict(unique=False, column_names=['parent_changeids'],
-                 name='parent_changeids')),
+            {"unique": False, "column_names": ['tagid'], "name": 'tagid'}),
+        ('changes', {
+            "unique": False,
+            "column_names": ['parent_changeids'],
+            "name": 'parent_changeids'
+        }),
         ('test_result_sets', {
             'name': 'builderid',
             'column_names': ['builderid'],
@@ -1085,7 +1117,12 @@ class Model(base.DBConnectorComponent):
                 self.alembic_stamp(conn, alembic_scripts, current_script_rev_head)
                 return
 
-            context = alembic.runtime.migration.MigrationContext.configure(conn)
+            def upgrade(rev, context):
+                log.msg(f'Upgrading from {rev} to {current_script_rev_head}')
+                return alembic_scripts._upgrade_revs(current_script_rev_head, rev)
+
+            context = alembic.runtime.migration.MigrationContext.configure(conn,
+                                                                           opts={'fn': upgrade})
             current_rev = context.get_current_revision()
 
             if current_rev == current_script_rev_head:
@@ -1094,8 +1131,9 @@ class Model(base.DBConnectorComponent):
 
             log.msg('Upgrading database')
             with sautils.withoutSqliteForeignKeys(conn):
-                with context.begin_transaction():
-                    context.run_migrations()
+                with alembic.operations.Operations.context(context):
+                    with context.begin_transaction():
+                        context.run_migrations()
 
             log.msg('Upgrading database: done')
 

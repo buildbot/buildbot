@@ -16,10 +16,9 @@
 
 import datetime
 from datetime import timedelta
+from unittest import mock
 
 from parameterized import parameterized
-
-import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest

@@ -21,7 +21,7 @@ from buildbot.data import types
 
 
 class RootEndpoint(base.Endpoint):
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = "/"
 
     def get(self, resultSpec, kwargs):
@@ -39,7 +39,7 @@ class Root(base.ResourceType):
 
 
 class SpecEndpoint(base.Endpoint):
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = "/application.spec"
 
     def get(self, resultSpec, kwargs):

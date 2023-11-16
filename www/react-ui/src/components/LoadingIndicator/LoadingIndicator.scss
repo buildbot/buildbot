@@ -1,0 +1,14 @@
+
+.bb-load-indicator {
+  width: 100%;
+  height: 100%;
+}
+
+.bb-load-indicator > * {
+  text-align: center;
+}
+
+.bb-load-indicator svg {
+  width: 2em;
+  height: 2em;
+}

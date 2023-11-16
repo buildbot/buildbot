@@ -157,16 +157,6 @@ BuildStep
 
     Execution of the step itself is governed by the following methods and attributes.
 
-    .. py:method:: startStep(remote)
-
-        :param remote: a remote reference to the worker-side
-            :class:`~buildbot_worker.pb.WorkerForBuilderPb` instance
-        :returns: Deferred
-
-        Begin the step.
-        This is the build's interface to step execution.
-        Subclasses should override :meth:`run` to implement custom behaviors.
-
     .. py:method:: run()
 
         :returns: result via Deferred
@@ -177,42 +167,9 @@ BuildStep
         If the method raises an exception or its Deferred fires with failure, then the step will be completed with an EXCEPTION result.
         Any other output from the step (logfiles, status strings, URLs, etc.) is the responsibility of the ``run`` method.
 
+        The function is not called if the step is skipped or otherwise not run.
+
         Subclasses should override this method.
-        Do *not* call :py:meth:`finished` or :py:meth:`failed` from this method.
-
-    .. py:method:: start()
-
-        :returns: ``None`` or :data:`~buildbot.process.results.SKIPPED`,
-            optionally via a Deferred.
-
-        Begin the step.
-        BuildSteps written before Buildbot-0.9.0 often override this method instead of :py:meth:`run`, but this approach is deprecated.
-
-        When the step is done, it should call :py:meth:`finished`, with a result -- a constant from :mod:`buildbot.process.results`.
-        The result will be handed off to the :py:class:`~buildbot.process.build.Build`.
-
-        If the step encounters an exception, it should call :meth:`failed` with a Failure object.
-
-        If the step decides it does not need to be run, :meth:`start` can return the constant :data:`~buildbot.process.results.SKIPPED`.
-        In this case, it is not necessary to call :meth:`finished` directly.
-
-    .. py:method:: finished(results)
-
-        :param results: a constant from :mod:`~buildbot.process.results`
-
-        A call to this method indicates that the step is finished and the build should analyze the results and perhaps proceed to the next step.
-        The step should not perform any additional processing after calling this method.
-        This method must only be called from the (deprecated) :py:meth:`start` method.
-
-    .. py:method:: failed(failure)
-
-        :param failure: a :class:`~twisted.python.failure.Failure` instance
-
-        Similar to :meth:`finished`, this method indicates that the step is finished, but handles exceptions with appropriate logging and diagnostics.
-
-        This method handles :exc:`BuildStepFailed` specially, by calling ``finished(FAILURE)``.
-        This provides subclasses with a shortcut to stop execution of a step by raising this failure in a context where :meth:`failed` will catch it.
-        This method must only be called from the (deprecated) :py:meth:`start` method.
 
     .. py:method:: interrupt(reason)
 
@@ -221,7 +178,6 @@ BuildStep
 
         This method is used from various control interfaces to stop a running step.
         The step should be brought to a halt as quickly as possible, by cancelling a remote command, killing a local process, etc.
-        The step must still finish with either :meth:`finished` or :meth:`failed`.
 
         The ``reason`` parameter can be a string or, when a worker is lost during step processing, a :exc:`~twisted.internet.error.ConnectionLost` failure.
 
@@ -232,13 +188,17 @@ BuildStep
         If false, then the step is running.
         If true, the step is not running, or has been interrupted.
 
+    .. py:attribute:: timed_out
+
+        If ``True``, then one or more remote commands of the step timed out.
+
     A step can indicate its up-to-the-moment status using a short summary string.
     These methods allow step subclasses to produce such summaries.
 
     .. py:method:: updateSummary()
 
         Update the summary, calling :py:meth:`getCurrentSummary` or :py:meth:`getResultSummary` as appropriate.
-        New-style build steps should call this method any time the summary may have changed.
+        Build steps should call this method any time the summary may have changed.
         This method is debounced, so even calling it for every log line is acceptable.
 
     .. py:method:: getCurrentSummary()
@@ -249,7 +209,7 @@ BuildStep
         The dictionary can have a ``step`` key with a unicode value giving a summary for display with the step.
         This method is only called while the step is running.
 
-        New-style build steps should override this method to provide a more interesting summary than the default ``u"running"``.
+        Build steps may override this method to provide a more interesting summary than the default ``"running"``.
 
     .. py:method:: getResultSummary()
 
@@ -264,7 +224,7 @@ BuildStep
         This method is only called when the step is finished.
         The step's result is available in ``self.results`` at that time.
 
-        New-style build steps should override this method to provide a more interesting summary than the default, or to provide any build summary information.
+        Build steps may override this method to provide a more interesting summary than the default, or to provide any build summary information.
 
 
     .. py:method:: getBuildResultSummary()

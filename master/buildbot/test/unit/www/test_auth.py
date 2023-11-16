@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+from unittest import mock
 
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.cred.credentials import UsernamePassword
@@ -141,6 +141,9 @@ class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.assertEqual(int(e.status), 403)
         else:
             self.fail("403 expected")
+
+    def test_get_login_resource_does_not_throw(self):
+        self.auth.getLoginResource()
 
 
 class AuthRealm(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):

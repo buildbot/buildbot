@@ -762,6 +762,8 @@ In the near future, all uses of this module will be replaced with message-queuei
 :py:mod:`buildbot.util.croniter`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+(deprecated)
+
 This module is a copy of https://github.com/taichino/croniter, and provides support for converting cron-like time specifications to actual times.
 
 :py:mod:`buildbot.util.state`
@@ -1138,7 +1140,7 @@ For example, a particular daily scheduler could be configured on multiple master
             def getResultSummary(self):
                 # access the service attribute
                 service = self.master.namedServices['myService']
-                return dict(step=u"arg value: %d" % (service.arg1,))
+                return dict(step="arg value: %d" % (service.arg1,))
 
         class MyService(BuildbotService):
             name = "myService"
@@ -1353,7 +1355,7 @@ For example, a particular daily scheduler could be configured on multiple master
                     res = yield self._http.get("/")
                     # note that at this point, only the http response headers are received
                     if res.code != 200:
-                        raise Exception("%d: server did not succeed" % (res.code))
+                        raise RuntimeError("%d: server did not succeed" % (res.code))
                     res_json = yield res.json()
                     # res.json() returns a deferred to account for the time needed to fetch the
                     # entire body

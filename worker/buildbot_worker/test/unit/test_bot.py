@@ -21,8 +21,6 @@ import multiprocessing
 import os
 import shutil
 
-import mock
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -37,6 +35,11 @@ from buildbot_worker.commands.base import Command
 from buildbot_worker.test.fake.remote import FakeRemote
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util import command
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 
 class TestBot(unittest.TestCase):
@@ -102,13 +105,17 @@ VERSION_ID="1"
         # remove any os_ fields as they are dependent on the test environment
         info = {k: v for k, v in info.items() if not k.startswith("os_")}
 
-        self.assertEqual(info, dict(
-            admin='testy!', foo='bar',
-            environ=os.environ, system=os.name, basedir=self.basedir,
-            worker_commands=self.real_bot.remote_getCommands(),
-            version=self.real_bot.remote_getVersion(),
-            numcpus=multiprocessing.cpu_count(),
-            delete_leftover_dirs=False))
+        self.assertEqual(info, {
+            "admin": 'testy!',
+            "foo": 'bar',
+            "environ": os.environ,
+            "system": os.name,
+            "basedir": self.basedir,
+            "worker_commands": self.real_bot.remote_getCommands(),
+            "version": self.real_bot.remote_getVersion(),
+            "numcpus": multiprocessing.cpu_count(),
+            "delete_leftover_dirs": False
+            })
 
     @defer.inlineCallbacks
     def test_getWorkerInfo_nodir(self):
@@ -119,6 +126,41 @@ VERSION_ID="1"
         self.assertEqual(set(info.keys()), set(
             ['environ', 'system', 'numcpus', 'basedir', 'worker_commands', 'version',
              'delete_leftover_dirs']))
+
+    @defer.inlineCallbacks
+    def test_getWorkerInfo_decode_error(self):
+        infodir = os.path.join(self.basedir, "info")
+        os.makedirs(infodir)
+        with open(os.path.join(infodir, "admin"), "w") as f:
+            f.write("testy!")
+        with open(os.path.join(infodir, "foo"), "w") as f:
+            f.write("bar")
+        with open(os.path.join(infodir, "environ"), "w") as f:
+            f.write("something else")
+        # This will not be part of worker info
+        with open(os.path.join(infodir, "binary"), "wb") as f:
+            f.write(b"\x90")
+
+        # patch the log.err, otherwise trial will think something *actually*
+        # failed
+        self.patch(log, "err", lambda f, x: None)
+
+        info = yield self.bot.callRemote("getWorkerInfo")
+
+        # remove any os_ fields as they are dependent on the test environment
+        info = {k: v for k, v in info.items() if not k.startswith("os_")}
+
+        self.assertEqual(info, {
+            "admin": 'testy!',
+            "foo": 'bar',
+            "environ": os.environ,
+            "system": os.name,
+            "basedir": self.basedir,
+            "worker_commands": self.real_bot.remote_getCommands(),
+            "version": self.real_bot.remote_getVersion(),
+            "numcpus": multiprocessing.cpu_count(),
+            "delete_leftover_dirs": False
+            })
 
     def test_shutdown(self):
         d1 = defer.Deferred()
@@ -214,15 +256,14 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         )
 
         yield self.wfb.callRemote("startCommand", FakeRemote(st),
-                                  "13", "shell", dict(command=['echo', 'hello'],
-                                                      workdir='workdir'))
+                                  "13", "shell",
+                                  {"command": ['echo', 'hello'], "workdir": 'workdir'})
         yield st.wait_for_finish()
-
         self.assertEqual(st.actions, [
-            ['update', [[{'header': 'headers'}, 0]]],
             ['update', [[{'stdout': 'hello\n'}, 0]]],
             ['update', [[{'rc': 0}, 0]]],
             ['update', [[{'elapsed': 1}, 0]]],
+            ['update', [[{'header': 'headers\n'}, 0]]],
             ['complete', None],
         ])
 
@@ -240,8 +281,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         )
 
         yield self.wfb.callRemote("startCommand", FakeRemote(st),
-                                  "13", "shell", dict(command=['sleep', '10'],
-                                                      workdir='workdir'))
+                                  "13", "shell", {"command": ['sleep', '10'], "workdir": 'workdir'})
 
         # wait a jiffy..
         d = defer.Deferred()
@@ -254,9 +294,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         yield st.wait_for_finish()
 
         self.assertEqual(st.actions, [
-            ['update', [[{'header': 'headers'}, 0]]],
-            ['update', [[{'header': 'killing'}, 0]]],
             ['update', [[{'rc': -1}, 0]]],
+            ['update', [[{'header': 'headerskilling\n'}, 0]]],
             ['complete', None],
         ])
 
@@ -275,8 +314,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         self.patch(log, "err", lambda f: None)
 
         yield self.wfb.callRemote("startCommand", FakeRemote(st),
-                                  "13", "shell", dict(command=['sleep', '10'],
-                                                      workdir='workdir'))
+                                  "13", "shell", {"command": ['sleep', '10'], "workdir": 'workdir'})
 
         yield st.wait_for_finish()
 
@@ -304,7 +342,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
                                        "13", "invalid command", {})
 
         unknownCommand = yield self.assertFailure(do_start(), base.UnknownCommand)
-        self.assertEqual(str(unknownCommand), "unrecognized WorkerCommand 'invalid command'")
+        self.assertEqual(str(unknownCommand),
+                         "(command 13): unrecognized WorkerCommand 'invalid command'")
 
 
 class TestBotFactory(unittest.TestCase):

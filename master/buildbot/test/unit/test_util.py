@@ -16,8 +16,8 @@
 import datetime
 import locale
 import os
-
-import mock
+import sys
+from unittest import mock
 
 from twisted.internet import reactor
 from twisted.internet import task
@@ -381,7 +381,10 @@ class FunctionalEnvironment(unittest.TestCase):
     def test_broken_locale(self):
         def err():
             raise KeyError
-        self.patch(locale, 'getdefaultlocale', err)
+        if sys.version_info >= (3, 11, 0):
+            self.patch(locale, 'getencoding', err)
+        else:
+            self.patch(locale, 'getdefaultlocale', err)
         config = mock.Mock()
         util.check_functional_environment(config)
         config.error.assert_called_with(mock.ANY)

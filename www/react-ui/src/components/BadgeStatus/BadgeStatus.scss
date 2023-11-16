@@ -1,0 +1,73 @@
+@import '../../styles/colors.scss';
+
+.bb-badge-status {
+  display: inline;
+  padding: 0.2em 0.6em 0.3em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25em;
+
+  &.results_SUCCESS, &.worker_CONNECTED {
+    color: $bb-color-results-success;
+    background-color: $bb-color-background-results-success;
+    border-color: $bb-color-border-results-success;
+  }
+
+  &.results_WARNINGS {
+    color: $bb-color-results-warnings;
+    background-color: $bb-color-background-results-warnings;
+    border-color: $bb-color-border-results-warnings;
+  }
+
+  &.results_FAILURE, &.worker_DISCONNECTED {
+    color: $bb-color-results-failure;
+    background-color: $bb-color-background-results-failure;
+    border-color: $bb-color-border-results-failure;
+  }
+
+  &.results_SKIPPED {
+    color: $bb-color-results-skipped;
+    background: $bb-color-background-results-skipped;
+    border-color: $bb-color-border-results-skipped;
+  }
+
+  &.results_EXCEPTION {
+    color: $bb-color-results-exception;
+    background-color: $bb-color-background-results-exception;
+    border-color: $bb-color-border-results-exception;
+  }
+
+  &.results_RETRY {
+    color: $bb-color-results-retry;
+    background-color: $bb-color-background-results-retry;
+    border-color: $bb-color-border-results-retry;
+  }
+
+  &.results_CANCELLED {
+    color: $bb-color-results-cancelled;
+    background-color: $bb-color-background-results-cancelled;
+    border-color: $bb-color-border-results-cancelled;
+  }
+
+  &.results_PENDING {
+    color: $bb-color-results-pending;
+    background-color: $bb-color-background-results-pending;
+    border-color: $bb-color-border-results-pending;
+  }
+
+  &.results_UNKNOWN {
+    color: $bb-color-results-unknown;
+    background-color: $bb-color-background-results-unknown;
+    border-color: $bb-color-border-results-unknown;
+  }
+}
+
+a .bb-badge-status:hover,
+a .bb-badge-status:focus {
+  color: #fff;
+  cursor: pointer;
+}

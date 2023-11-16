@@ -20,7 +20,6 @@ import sys
 from twisted.internet import defer
 
 from buildbot import config as config_module
-from buildbot import monkeypatches
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
@@ -71,37 +70,41 @@ def doCleanupDatabase(config, master_cfg):
 
 
 @in_reactor
-def cleanupDatabase(config, _noMonkey=False):  # pragma: no cover
+def cleanupDatabase(config):  # pragma: no cover
     # we separate the actual implementation to protect unit tests
     # from @in_reactor which stops the reactor
-    if not _noMonkey:
-        monkeypatches.patch_all()
-    return _cleanupDatabase(config, _noMonkey=False)
+    return _cleanupDatabase(config)
 
 
 @defer.inlineCallbacks
-def _cleanupDatabase(config, _noMonkey=False):
+def _cleanupDatabase(config):
 
     if not base.checkBasedir(config):
         return 1
 
     config['basedir'] = os.path.abspath(config['basedir'])
-    os.chdir(config['basedir'])
 
-    with base.captureErrors((SyntaxError, ImportError),
-                            f"Unable to load 'buildbot.tac' from '{config['basedir']}':"):
-        configFile = base.getConfigFileFromTac(config['basedir'])
+    orig_cwd = os.getcwd()
 
-    with base.captureErrors(config_module.ConfigErrors,
-                            f"Unable to load '{configFile}' from '{config['basedir']}':"):
-        master_cfg = base.loadConfig(config, configFile)
+    try:
+        os.chdir(config['basedir'])
 
-    if not master_cfg:
-        return 1
+        with base.captureErrors((SyntaxError, ImportError),
+                                f"Unable to load 'buildbot.tac' from '{config['basedir']}':"):
+            configFile = base.getConfigFileFromTac(config['basedir'])
 
-    yield doCleanupDatabase(config, master_cfg)
+        with base.captureErrors(config_module.ConfigErrors,
+                                f"Unable to load '{configFile}' from '{config['basedir']}':"):
+            master_cfg = base.loadConfig(config, configFile)
 
-    if not config['quiet']:
-        print("cleanup complete")
+        if not master_cfg:
+            return 1
+
+        yield doCleanupDatabase(config, master_cfg)
+
+        if not config['quiet']:
+            print("cleanup complete")
+    finally:
+        os.chdir(orig_cwd)
 
     return 0

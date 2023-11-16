@@ -113,6 +113,6 @@ class PushoverNotifier(ReporterBase):
 
     def sendNotification(self, params):
         twlog.msg("sending pushover notification")
-        params.update(dict(user=self.user_key, token=self.api_token))
+        params.update({"user": self.user_key, "token": self.api_token})
         params.update(self.otherParams)
         return self._http.post('/1/messages.json', params=params)

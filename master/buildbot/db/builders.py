@@ -31,13 +31,11 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
-            insert_values=dict(
-                name=name,
-                name_hash=name_hash,
-            ), autoCreate=autoCreate)
+            insert_values={"name": name, "name_hash": name_hash}, autoCreate=autoCreate)
 
     @defer.inlineCallbacks
-    def updateBuilderInfo(self, builderid, description, tags):
+    def updateBuilderInfo(self, builderid, description, description_format, description_html,
+                          projectid, tags):
         # convert to tag IDs first, as necessary
         def toTagid(tag):
             if isinstance(tag, type(1)):
@@ -56,17 +54,22 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             transaction = conn.begin()
 
             q = builders_tbl.update(
-                whereclause=(builders_tbl.c.id == builderid))
-            conn.execute(q, description=description).close()
+                whereclause=builders_tbl.c.id == builderid)
+            conn.execute(q, description=description, description_format=description_format,
+                         description_html=description_html, projectid=projectid).close()
             # remove previous builders_tags
             conn.execute(builders_tags_tbl.delete(
                 whereclause=((builders_tags_tbl.c.builderid == builderid)))).close()
 
             # add tag ids
             if tagsids:
-                conn.execute(builders_tags_tbl.insert(),
-                             [dict(builderid=builderid, tagid=tagid)
-                              for tagid in tagsids]).close()
+                conn.execute(builders_tags_tbl.insert(), [
+                    {
+                        "builderid": builderid,
+                        "tagid": tagid
+                    }
+                    for tagid in tagsids
+                ]).close()
 
             transaction.commit()
 
@@ -102,7 +105,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                              (tbl.c.masterid == masterid))))
         return self.db.pool.do(thd)
 
-    def getBuilders(self, masterid=None, _builderid=None):
+    def getBuilders(self, masterid=None, projectid=None, _builderid=None):
         def thd(conn):
             bldr_tbl = self.db.model.builders
             bm_tbl = self.db.model.builder_masters
@@ -116,15 +119,24 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             if masterid is not None:
                 limiting_bm_tbl = bm_tbl.alias('limiting_bm')
                 j = j.join(limiting_bm_tbl,
-                           onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
+                           onclause=bldr_tbl.c.id == limiting_bm_tbl.c.builderid)
             q = sa.select(
-                [bldr_tbl.c.id, bldr_tbl.c.name,
-                    bldr_tbl.c.description, bm_tbl.c.masterid],
+                [
+                    bldr_tbl.c.id,
+                    bldr_tbl.c.name,
+                    bldr_tbl.c.description,
+                    bldr_tbl.c.description_format,
+                    bldr_tbl.c.description_html,
+                    bldr_tbl.c.projectid,
+                    bm_tbl.c.masterid
+                ],
                 from_obj=[j],
                 order_by=[bldr_tbl.c.id, bm_tbl.c.masterid])
             if masterid is not None:
                 # filter the masterid from the limiting table
                 q = q.where(limiting_bm_tbl.c.masterid == masterid)
+            if projectid is not None:
+                q = q.where(bldr_tbl.c.projectid == projectid)
             if _builderid is not None:
                 q = q.where(bldr_tbl.c.id == _builderid)
 
@@ -142,8 +154,16 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             for row in conn.execute(q).fetchall():
                 # pylint: disable=unsubscriptable-object
                 if not last or row['id'] != last['id']:
-                    last = dict(id=row.id, name=row.name, masterids=[], description=row.description,
-                                tags=bldr_id_to_tags[row.id])
+                    last = {
+                        "id": row.id,
+                        "name": row.name,
+                        "masterids": [],
+                        "description": row.description,
+                        "description_format": row.description_format,
+                        "description_html": row.description_html,
+                        "projectid": row.projectid,
+                        "tags": bldr_id_to_tags[row.id]
+                    }
                     rv.append(last)
                 if row['masterid']:
                     last['masterids'].append(row['masterid'])

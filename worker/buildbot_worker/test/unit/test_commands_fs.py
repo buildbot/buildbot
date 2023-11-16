@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import errno
 import os
 import shutil
 import stat
@@ -30,12 +31,6 @@ from buildbot_worker.commands import utils
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util.command import CommandTestMixin
 from buildbot_worker.test.util.compat import skipUnlessPlatformIs
-
-# python-2.4 doesn't have os.errno
-if hasattr(os, 'errno'):
-    errno = os.errno
-else:
-    import errno
 
 
 class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):

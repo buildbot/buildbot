@@ -315,7 +315,7 @@ class Mercurial(Source):
 
     def _clone(self):
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
         d = self._dovccmd(['clone', '--noupdate', self.repourl, '.'],

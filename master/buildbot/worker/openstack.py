@@ -288,10 +288,11 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
 
         # then try to start new one
         boot_args = [self.workername, image_uuid, flavor_uuid]
-        boot_kwargs = dict(
-            meta=meta,
-            block_device_mapping_v2=block_devices,
-            **nova_args)
+        boot_kwargs = {
+            "meta": meta,
+            "block_device_mapping_v2": block_devices,
+            **nova_args
+        }
         instance = self.novaclient.servers.create(*boot_args, **boot_kwargs)
         # There is an issue when using sessions that the status is not
         # available on the first try. Trying again will work fine. Fetch the
@@ -330,6 +331,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
                     f'{minutes // 60:02d}:{minutes % 60:02d}:{seconds:02d}']
         else:
             self.failed_to_start(instance.id, instance.status)
+            return None  # This is just to silence warning, above line throws an exception
 
     def stop_instance(self, fast=False):
         instance = self.instance

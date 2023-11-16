@@ -18,7 +18,8 @@ Push events to Gerrit
 
 import time
 import warnings
-from pkg_resources import parse_version
+
+from packaging.version import parse as parse_version
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -46,7 +47,7 @@ def makeReviewResult(message, *labels):
     """
     helper to produce a review result
     """
-    return dict(message=message, labels=dict(labels))
+    return {"message": message, "labels": dict(labels)}
 
 
 def _handleLegacyResult(result):
@@ -293,7 +294,7 @@ class GerritStatusPush(service.BuildbotService):
         if key[0] == 'buildsets' and key[2] == 'complete':  # pragma: no cover
             yield self.buildsetComplete(key, msg)
             return
-        raise Exception(f'Invalid key for _got_event: {key}')  # pragma: no cover
+        raise RuntimeError(f'Invalid key for _got_event: {key}')  # pragma: no cover
 
     @defer.inlineCallbacks
     def buildStarted(self, key, build):

@@ -18,12 +18,12 @@ from __future__ import print_function
 
 import glob
 import os
+import platform
 import shutil
 import sys
 
 from twisted.internet import defer
 from twisted.internet import threads
-from twisted.python import log
 from twisted.python import runtime
 
 from buildbot_worker import runprocess
@@ -46,7 +46,7 @@ class MakeDirectory(base.Command):
                 if not os.path.isdir(dirname):
                     os.makedirs(dirname)
             except OSError as e:
-                log.msg("MakeDirectory {0} failed: {1}".format(dirname, e))
+                self.log_msg("MakeDirectory {0} failed: {1}".format(dirname, e))
                 self.sendStatus([
                     ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)),
                     ('rc', e.errno)
@@ -107,7 +107,7 @@ class RemoveDirectory(base.Command):
     def _clobber(self, dummy, path, chmodDone=False):
         command = ["rm", "-rf", path]
 
-        c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
+        c = runprocess.RunProcess(self.command_id, command, self.protocol_command.worker_basedir,
                                   self.protocol_command.unicode_encoding,
                                   self.protocol_command.send_update,
                                   sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
@@ -140,7 +140,7 @@ class RemoveDirectory(base.Command):
             # permission) by running 'find' instead
             command = ["find", path, '-exec', 'chmod', 'u+rwx', '{}', ';']
 
-        c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
+        c = runprocess.RunProcess(self.command_id, command, self.protocol_command.worker_basedir,
                                   self.protocol_command.unicode_encoding,
                                   self.protocol_command.send_update,
                                   sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
@@ -191,11 +191,16 @@ class CopyDirectory(base.Command):
                 os.makedirs(os.path.dirname(to_path))
             if os.path.exists(to_path):
                 # I don't think this happens, but just in case..
-                log.msg(("cp target '{0}' already exists -- cp will not do what you think!"
-                         ).format(to_path))
+                self.log_msg(("cp target '{0}' already exists -- cp will not do what you think!"
+                              ).format(to_path))
 
-            command = ['cp', '-R', '-P', '-p', '-v', from_path, to_path]
-            c = runprocess.RunProcess(command, self.protocol_command.worker_basedir,
+            if platform.system().lower().find('solaris') >= 0:
+                command = ['cp', '-R', '-P', '-p', from_path, to_path]
+            else:
+                command = ['cp', '-R', '-P', '-p', '-v', from_path, to_path]
+
+            c = runprocess.RunProcess(self.command_id, command,
+                                      self.protocol_command.worker_basedir,
                                       self.protocol_command.unicode_encoding,
                                       self.protocol_command.send_update,
                                       sendRC=False, timeout=self.timeout,
@@ -223,7 +228,7 @@ class StatFile(base.Command):
             stat = os.stat(filename)
             self.sendStatus([('stat', tuple(stat)), ('rc', 0)])
         except OSError as e:
-            log.msg("StatFile {0} failed: {1}".format(filename, e))
+            self.log_msg("StatFile {0} failed: {1}".format(filename, e))
             self.sendStatus([
                 ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, filename)),
                 ('rc', e.errno)
@@ -248,7 +253,7 @@ class GlobPath(base.Command):
                 files = glob.glob(pathname)
             self.sendStatus([('files', files), ('rc', 0)])
         except OSError as e:
-            log.msg("GlobPath {0} failed: {1}".format(pathname, e))
+            self.log_msg("GlobPath {0} failed: {1}".format(pathname, e))
             self.sendStatus([
                 ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)),
                 ('rc', e.errno)
@@ -269,7 +274,7 @@ class ListDir(base.Command):
             files = os.listdir(dirname)
             self.sendStatus([('files', files), ('rc', 0)])
         except OSError as e:
-            log.msg("ListDir {0} failed: {1}".format(dirname, e))
+            self.log_msg("ListDir {0} failed: {1}".format(dirname, e))
             self.sendStatus([
                 ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)),
                 ('rc', e.errno)
@@ -290,7 +295,7 @@ class RemoveFile(base.Command):
             os.remove(pathname)
             self.sendStatus([('rc', 0)])
         except OSError as e:
-            log.msg("remove file {0} failed: {1}".format(pathname, e))
+            self.log_msg("remove file {0} failed: {1}".format(pathname, e))
             self.sendStatus([
                 ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)),
                 ('rc', e.errno)

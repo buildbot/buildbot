@@ -1,0 +1,18 @@
+#%RAML 1.0 DataType
+description: |
+    This resource type describes a project.
+
+properties:
+    projectid:
+        description: the ID of this project
+        type: integer
+    name:
+        description: project name
+        type: identifier
+    slug:
+        description: project slug
+        type: identifier
+    description?:
+        description: description of the project
+        type: string
+type: object

@@ -842,7 +842,7 @@ class FlattenList(RenderableOperatorsMixin, util.ComparableMixin):
     An instance of this class flattens all nested lists in a list
     """
 
-    compare_attrs = ('nestedlist')
+    compare_attrs = ('nestedlist',)
 
     def __init__(self, nestedlist, types=(list, tuple)):
         """

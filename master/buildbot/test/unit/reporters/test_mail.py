@@ -16,8 +16,7 @@
 import base64
 import copy
 from email import charset
-
-from mock import Mock
+from unittest.mock import Mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -127,7 +126,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         build['properties']['hhh'] = ('vvv', 'fake')
         msgdict = create_msgdict()
         mn = yield self.setupMailNotifier('from@example.org',
-                                          extraHeaders=dict(hhh=properties.Property('hhh')))
+            extraHeaders={"hhh": properties.Property('hhh')})
         # add some Unicode to detect encoding problems
         m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, [build])
 
@@ -143,7 +142,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         builds = [build, copy.deepcopy(build)]
         builds[1]['builder']['name'] = 'builder2'
         msgdict = create_msgdict()
-        mn = yield self.setupMailNotifier('from@example.org', extraHeaders=dict(hhh='vvv'))
+        mn = yield self.setupMailNotifier('from@example.org', extraHeaders={"hhh": 'vvv'})
         m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, builds)
 
         txt = m.as_string()
@@ -167,7 +166,9 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
         try:
             s = m.as_string()
-            # python 2.6 default transfer in base64 for utf-8
+            # The default transfer encoding is base64 for utf-8 even when it could be represented
+            # accurately by quoted 7bit encoding. TODO: it is possible to override it,
+            # see https://bugs.python.org/issue12552
             if "base64" not in s:
                 self.assertIn("Unicode log", s)
             else:  # b64encode and remove '=' padding (hence [:-1])
@@ -393,6 +394,82 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         self.assertEqual(1, len(fakereactor.method_calls))
         self.assertIn(('connectSSL', ('localhost', 25, None, fakereactor.connectSSL.call_args[
                       0][3]), {}), fakereactor.method_calls)
+
+    @ssl.skipUnless
+    @defer.inlineCallbacks
+    def test_hostname_for_client_context_for_tcp_over_tls(self):
+        fakeSenderFactory = Mock()
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
+            5].callback(True)
+        self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+        msg = Mock()
+        msg.as_string = Mock(return_value='<email>')
+
+        mn = yield self.setupMailNotifier('John Doe <john.doe@domain.tld>',
+                                          useTls=True)
+        yield mn.sendMail(msg, ['Jane Doe <jane.doe@domain.tld>'])
+
+        self.assertEqual(mn.useTls, True)
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
+                      fakereactor.method_calls)
+
+        self.assertEqual("localhost",
+                         fakeSenderFactory.call_args.kwargs.get("hostname"))
+
+    @ssl.skipUnless
+    @defer.inlineCallbacks
+    def test_hostname_for_client_context_for_tcp_over_tls_auth(self):
+        fakeSenderFactory = Mock()
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
+            5].callback(True)
+        self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+        msg = Mock()
+        msg.as_string = Mock(return_value='<email>')
+
+        mn = yield self.setupMailNotifier('John Doe <john.doe@domain.tld>',
+                                          smtpUser="u$er",
+                                          smtpPassword="pa$$word",
+                                          useTls=False)
+        yield mn.sendMail(msg, ['Jane Doe <jane.doe@domain.tld>'])
+
+        self.assertEqual(mn.smtpUser, "u$er")
+        self.assertEqual(mn.smtpPassword, "pa$$word")
+        self.assertEqual(mn.useTls, False)
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
+                      fakereactor.method_calls)
+
+        self.assertEqual("localhost",
+                         fakeSenderFactory.call_args.kwargs.get("hostname"))
+
+    @ssl.skipUnless
+    @defer.inlineCallbacks
+    def test_hostname_for_client_context_for_plan_tcp(self):
+        fakeSenderFactory = Mock()
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
+            5].callback(True)
+        self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+        msg = Mock()
+        msg.as_string = Mock(return_value='<email>')
+
+        mn = yield self.setupMailNotifier('John Doe <john.doe@domain.tld>',
+                                          useTls=False)
+        yield mn.sendMail(msg, ['Jane Doe <jane.doe@domain.tld>'])
+
+        self.assertEqual(mn.useTls, False)
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
+                      fakereactor.method_calls)
+
+        self.assertEqual(None,
+                         fakeSenderFactory.call_args.kwargs.get("hostname"))
 
 
 def create_msgdict(funny_chars='\u00E5\u00E4\u00F6'):

@@ -30,7 +30,7 @@ class TestMetricBase(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.observer = metrics.MetricLogObserver()
         self.observer.parent = self.master = fakemaster.make_master(self)
-        self.master.config.metrics = dict(log_interval=0, periodic_interval=0)
+        self.master.config.metrics = {"log_interval": 0, "periodic_interval": 0}
         self.observer._reactor = self.reactor
         self.observer.startService()
         self.observer.reconfigServiceWithBuildbotConfig(self.master.config)
@@ -183,13 +183,13 @@ class TestReconfig(TestMetricBase):
         self.assertEqual(observer.periodic_task, None)
 
         # enable log_interval
-        new_config.metrics = dict(log_interval=10, periodic_interval=0)
+        new_config.metrics = {"log_interval": 10, "periodic_interval": 0}
         observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assertTrue(observer.log_task)
         self.assertEqual(observer.periodic_task, None)
 
         # disable that and enable periodic_interval
-        new_config.metrics = dict(periodic_interval=10, log_interval=0)
+        new_config.metrics = {"periodic_interval": 10, "log_interval": 0}
         observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assertTrue(observer.periodic_task)
         self.assertEqual(observer.log_task, None)
@@ -205,13 +205,13 @@ class TestReconfig(TestMetricBase):
         self.assertEqual(observer.periodic_task, None)
 
         # disable both
-        new_config.metrics = dict(periodic_interval=0, log_interval=0)
+        new_config.metrics = {"periodic_interval": 0, "log_interval": 0}
         observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assertEqual(observer.log_task, None)
         self.assertEqual(observer.periodic_task, None)
 
         # enable both
-        new_config.metrics = dict(periodic_interval=10, log_interval=10)
+        new_config.metrics = {"periodic_interval": 10, "log_interval": 10}
         observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assertTrue(observer.log_task)
         self.assertTrue(observer.periodic_task)

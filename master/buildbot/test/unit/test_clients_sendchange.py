@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -78,10 +78,21 @@ class Sender(unittest.TestCase):
         yield s.send('branch', 'rev', 'comm', ['a'])
 
         self.assertProcess('localhost', 1234, b'change', b'changepw', [
-            dict(project='', repository='', who=None, files=['a'],
-                 comments='comm', branch='branch', revision='rev',
-                 category=None, when=None, properties={}, revlink='',
-                 src=None)])
+            {
+                "project": '',
+                "repository": '',
+                "who": None,
+                "files": ['a'],
+                "comments": 'comm',
+                "branch": 'branch',
+                "revision": 'rev',
+                "category": None,
+                "when": None,
+                "properties": {},
+                "revlink": '',
+                "src": None
+            }
+        ])
 
     @defer.inlineCallbacks
     def test_send_auth(self):
@@ -89,10 +100,21 @@ class Sender(unittest.TestCase):
         yield s.send('branch', 'rev', 'comm', ['a'])
 
         self.assertProcess('localhost', 1234, b'me', b'sekrit', [
-            dict(project='', repository='', who=None, files=['a'],
-                 comments='comm', branch='branch', revision='rev',
-                 category=None, when=None, properties={}, revlink='',
-                 src=None)])
+            {
+                "project": '',
+                "repository": '',
+                "who": None,
+                "files": ['a'],
+                "comments": 'comm',
+                "branch": 'branch',
+                "revision": 'rev',
+                "category": None,
+                "when": None,
+                "properties": {},
+                "revlink": '',
+                "src": None
+            }
+        ])
 
     @defer.inlineCallbacks
     def test_send_full(self):
@@ -102,10 +124,21 @@ class Sender(unittest.TestCase):
                    project='p', revlink='rl')
 
         self.assertProcess('localhost', 1234, b'change', b'changepw', [
-            dict(project='p', repository='r', who='me', files=['a'],
-                 comments='comm', branch='branch', revision='rev',
-                 category='cats', when=1234, properties={'a': 'b'},
-                 revlink='rl', src='git')])
+            {
+                "project": 'p',
+                "repository": 'r',
+                "who": 'me',
+                "files": ['a'],
+                "comments": 'comm',
+                "branch": 'branch',
+                "revision": 'rev',
+                "category": 'cats',
+                "when": 1234,
+                "properties": {'a': 'b'},
+                "revlink": 'rl',
+                "src": 'git'
+            }
+        ])
 
     @defer.inlineCallbacks
     def test_send_files_tuple(self):
@@ -114,10 +147,21 @@ class Sender(unittest.TestCase):
         yield s.send('branch', 'rev', 'comm', ('a', 'b'))
 
         self.assertProcess('localhost', 1234, b'change', b'changepw', [
-            dict(project='', repository='', who=None, files=['a', 'b'],
-                 comments='comm', branch='branch', revision='rev',
-                 category=None, when=None, properties={}, revlink='',
-                 src=None)])
+            {
+                "project": '',
+                "repository": '',
+                "who": None,
+                "files": ['a', 'b'],
+                "comments": 'comm',
+                "branch": 'branch',
+                "revision": 'rev',
+                "category": None,
+                "when": None,
+                "properties": {},
+                "revlink": '',
+                "src": None
+            }
+        ])
 
     @defer.inlineCallbacks
     def test_send_codebase(self):
@@ -125,10 +169,22 @@ class Sender(unittest.TestCase):
         yield s.send('branch', 'rev', 'comm', ['a'], codebase='mycb')
 
         self.assertProcess('localhost', 1234, b'change', b'changepw', [
-            dict(project='', repository='', who=None, files=['a'],
-                 comments='comm', branch='branch', revision='rev',
-                 category=None, when=None, properties={}, revlink='',
-                 src=None, codebase='mycb')])
+            {
+                "project": '',
+                "repository": '',
+                "who": None,
+                "files": ['a'],
+                "comments": 'comm',
+                "branch": 'branch',
+                "revision": 'rev',
+                "category": None,
+                "when": None,
+                "properties": {},
+                "revlink": '',
+                "src": None,
+                "codebase": 'mycb'
+            }
+        ])
 
     @defer.inlineCallbacks
     def test_send_unicode(self):
@@ -146,18 +202,21 @@ class Sender(unittest.TestCase):
                    revlink='\U0001F517')
 
         self.assertProcess('localhost', 1234, b'change', b'changepw', [
-            dict(project='\N{SKULL AND CROSSBONES}',
-                 repository='\N{SNOWMAN}',
-                 who='\N{THAI CHARACTER KHOMUT}',
-                 files=['\U0001F4C1'],  # FILE FOLDER
-                 comments='\N{POSTAL MARK FACE}',
-                 branch='\N{DEGREE SIGN}',
-                 revision='\U0001f49e',  # REVOLVING HEARTS
-                 category='\U0001F640',  # WEARY CAT FACE
-                 when=1234,
-                 properties={'\N{LATIN SMALL LETTER A WITH MACRON}': 'b'},
-                 revlink='\U0001F517',  # LINK SYMBOL
-                 src=None)])
+            {
+                "project": '\N{SKULL AND CROSSBONES}',
+                "repository": '\N{SNOWMAN}',
+                "who": '\N{THAI CHARACTER KHOMUT}',
+                "files": ['\U0001F4C1'],  # FILE FOLDER
+                "comments": '\N{POSTAL MARK FACE}',
+                "branch": '\N{DEGREE SIGN}',
+                "revision": '\U0001f49e',  # REVOLVING HEARTS
+                "category": '\U0001F640',  # WEARY CAT FACE
+                "when": 1234,
+                "properties": {'\N{LATIN SMALL LETTER A WITH MACRON}': 'b'},
+                "revlink": '\U0001F517',  # LINK SYMBOL
+                "src": None
+            }
+        ])
 
     @defer.inlineCallbacks
     def test_send_unicode_utf8(self):
@@ -177,19 +236,22 @@ class Sender(unittest.TestCase):
                    revlink='\U0001F517'.encode('utf8'))
 
         self.assertProcess('localhost', 1234, b'change', b'changepw', [
-            dict(project='\N{SKULL AND CROSSBONES}',
-                 repository='\N{SNOWMAN}',
-                 who='\N{THAI CHARACTER KHOMUT}',
-                 files=['\U0001F4C1'],  # FILE FOLDER
-                 comments='\N{POSTAL MARK FACE}',
-                 branch='\N{DEGREE SIGN}',
-                 revision='\U0001f49e',  # REVOLVING HEARTS
-                 category='\U0001F640',  # WEARY CAT FACE
-                 when=1234,
-                 # NOTE: not decoded!
-                 properties={b'\xc4\x81': 'b'},
-                 revlink='\U0001F517',  # LINK SYMBOL
-                 src=None)])
+            {
+                "project": '\N{SKULL AND CROSSBONES}',
+                "repository": '\N{SNOWMAN}',
+                "who": '\N{THAI CHARACTER KHOMUT}',
+                "files": ['\U0001F4C1'],  # FILE FOLDER
+                "comments": '\N{POSTAL MARK FACE}',
+                "branch": '\N{DEGREE SIGN}',
+                "revision": '\U0001f49e',  # REVOLVING HEARTS
+                "category": '\U0001F640',  # WEARY CAT FACE
+                "when": 1234,
+                # NOTE: not decoded!
+                "properties": {b'\xc4\x81': 'b'},
+                "revlink": '\U0001F517',  # LINK SYMBOL
+                "src": None
+            }
+        ])
 
     @defer.inlineCallbacks
     def test_send_unicode_latin1(self):
@@ -211,16 +273,19 @@ class Sender(unittest.TestCase):
                    revlink='\N{INVERTED QUESTION MARK}'.encode('latin1'))
 
         self.assertProcess('localhost', 1234, b'change', b'changepw', [
-            dict(project='\N{DEGREE SIGN}',
-                 repository='\N{SECTION SIGN}',
-                 who='\N{MACRON}',
-                 files=['\N{NOT SIGN}'],
-                 comments='\N{BROKEN BAR}',
-                 branch='\N{YEN SIGN}',
-                 revision='\N{POUND SIGN}',
-                 category='\N{PILCROW SIGN}',
-                 when=1234,
-                 # NOTE: not decoded!
-                 properties={b'\xb9': 'b'},
-                 revlink='\N{INVERTED QUESTION MARK}',
-                 src=None)])
+            {
+                "project": '\N{DEGREE SIGN}',
+                "repository": '\N{SECTION SIGN}',
+                "who": '\N{MACRON}',
+                "files": ['\N{NOT SIGN}'],
+                "comments": '\N{BROKEN BAR}',
+                "branch": '\N{YEN SIGN}',
+                "revision": '\N{POUND SIGN}',
+                "category": '\N{PILCROW SIGN}',
+                "when": 1234,
+                # NOTE: not decoded!
+                "properties": {b'\xb9': 'b'},
+                "revlink": '\N{INVERTED QUESTION MARK}',
+                "src": None
+            }
+        ])

@@ -31,11 +31,14 @@ import sys
 from io import BytesIO
 from io import StringIO
 
-import mock
-
 from twisted.python import log
 
 from buildbot_worker.scripts import base
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 try:
     # Python 2

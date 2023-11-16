@@ -97,12 +97,12 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.assertRegex(pod_name, r'default/buildbot-worker-[0-9a-f]+')
         pod = worker._kube.pods[pod_name]
         self.assertEqual(
-            sorted(pod['spec'].keys()), ['containers', 'restartPolicy'])
-        self.assertEqual(
-            sorted(pod['spec']['containers'][0].keys()),
-            ['env', 'image', 'name', 'resources'])
+            sorted(pod['spec'].keys()), ['containers', 'restartPolicy', "volumes"])
+        self.assertEqual(sorted(pod['spec']['containers'][0].keys()),
+                         ['env', 'image', 'name', 'resources', "volumeMounts"])
         self.assertEqual(pod['spec']['containers'][0]['image'],
                          'rendered:buildbot/buildbot-worker')
+        self.assertEqual(pod["spec"]["volumes"], [])
         self.assertEqual(pod['spec']['restartPolicy'], 'Never')
 
     @defer.inlineCallbacks

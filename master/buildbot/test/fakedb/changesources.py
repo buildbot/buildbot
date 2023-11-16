@@ -48,7 +48,7 @@ class FakeChangeSourcesComponent(FakeDBComponent):
         self.changesource_masters = {}
         self.states = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, ChangeSource):
                 self.changesources[row.id] = row.name
@@ -67,10 +67,11 @@ class FakeChangeSourcesComponent(FakeDBComponent):
 
     def getChangeSource(self, changesourceid):
         if changesourceid in self.changesources:
-            rv = dict(
-                id=changesourceid,
-                name=self.changesources[changesourceid],
-                masterid=None)
+            rv = {
+                "id": changesourceid,
+                "name": self.changesources[changesourceid],
+                "masterid": None
+            }
             # only set masterid if the relevant changesource master exists and
             # is active
             rv['masterid'] = self.changesource_masters.get(changesourceid)

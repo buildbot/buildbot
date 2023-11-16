@@ -1,0 +1,51 @@
+@import '../../styles/colors.scss';
+
+.tooltip.buildsummarytooltipstyle .tooltip-inner {
+  border: 1.5px;
+  padding: 1px;
+  min-width: 600px;
+  color: #262626;
+  background-color: white;
+  border-style: solid;
+  font-size: 12px;
+}
+
+.tooltip.buildsummarytooltipstyle {
+  &.results_SUCCESS .tooltip-inner,
+  &.worker_CONNECTED .tooltip-inner {
+    border-color: $bb-color-border-results-success;
+  }
+
+  &.results_WARNINGS .tooltip-inner {
+    border-color: $bb-color-border-results-warnings;
+  }
+
+  &.results_FAILURE .tooltip-inner,
+  &.worker_DISCONNECTED .tooltip-inner {
+    border-color: $bb-color-border-results-failure;
+  }
+
+  &.results_SKIPPED .tooltip-inner {
+    border-color: $bb-color-border-results-skipped;
+  }
+
+  &.results_EXCEPTION .tooltip-inner {
+    border-color: $bb-color-border-results-exception;
+  }
+
+  &.results_RETRY .tooltip-inner {
+    border-color: $bb-color-border-results-retry;
+  }
+
+  &.results_CANCELLED .tooltip-inner {
+    border-color: $bb-color-border-results-cancelled;
+  }
+
+  &.results_PENDING .tooltip-inner {
+    border-color: $bb-color-border-results-pending;
+  }
+
+  &.results_UNKNOWN .tooltip-inner {
+    border-color: $bb-color-border-results-unknown;
+  }
+}

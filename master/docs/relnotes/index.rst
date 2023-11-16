@@ -8,6 +8,221 @@ Release Notes
 
 .. towncrier release notes start
 
+
+Buildbot ``3.9.2`` ( ``2023-09-02`` )
+=====================================
+
+Bug fixes
+---------
+
+- Work around requirements parsing error for the Twisted dependency by pinning Twisted to 22.10 or older.
+  This fixes buildbot crash on startup when newest Twisted is installed.
+
+
+Buildbot ``3.9.1`` ( ``2023-09-02`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed handling of primary key columns on Postgres in the ``copy-db`` script.
+- Fixed a race condition in the ``copy-db`` script which sometimes lead to no data being copied.
+- Options for `create-worker` that are converted to numbers are now also checked to be valid Python literals.
+  This will prevent creating invalid worker configurations, e.g.: when using option ``--umask=022`` instead of ``--umask=0o022`` or ``--umask=18``. (:issue:`7047`)
+- Fixed worker not connecting error when there are files in WORKER/info folder that can not be decoded. (:issue:`3585`) (:issue:`4758`) (:issue:`6932`)
+- Fixed incorrect git command line parameters when using ``Git`` source step with ``mode="incremental"``, ``shallow=True``, ``submodules=True`` (regression since Buildbot 3.9.0) (:issue:`7054`).
+
+Improved Documentation
+----------------------
+
+- Clarified that ``shallow`` option for the ``Git`` source step is also supported in ``incremental`` mode.
+
+
+Buildbot ``3.9.0`` ( ``2023-08-16`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed missed invocations of methods decorated with ``util.debounce`` when debouncer was being stopped under certain conditions.
+  This caused step and build state string updates to be sometimes missed.
+- Improved stale connection handling in ``GerritChangeSource``.
+  ``GerritChangeSource`` will instruct the ssh client to send periodic keepalive messages and will reconnect if the server does not reply for 45 seconds (default).
+  ``GerritChangeSource`` now has ``ssh_server_alive_interval_s`` and ``ssh_server_alive_count_max`` options to control this behavior.
+- Fixed unnecessary build started under the following conditions: there is an existing Nightly scheduler, ``onlyIfChanged`` is set to true and there is version upgrade from v3.4.0 (:issue:`6793`).
+- Fixed performance of changes data API queries with custom filters.
+- Prevent possible event loss during reconfig of reporters (:issue:`6982`).
+- Fixed exception thrown when worker copies directories in Solaris operating system (:issue:`6870`).
+- Fixed excessive log messages due to JWT token decoding error (:issue:`6872`).
+- Fixed excessive log messages when otherwise unsupported ``/auth/login`` endpoint is accessed when using ``RemoteUserAuth`` authentication plugin.
+
+Features
+--------
+
+- Introduce a way to group builders by project.
+  A new ``projects`` list is added to the configuration dictionary.
+  Builders can be associated to the entries in that list by the new ``project`` argument.
+
+  Grouping builders by project allows to significantly clean up the UI in larger Buildbot installations that contain hundreds or thousands of builders for a smaller number of unrelated codebases.
+  This is currently implemented only in experimental React UI.
+- Added support specifying the project in ``GitHubPullrequestPoller``.
+  Previously it was forced to be equal to GitHub's repository full name.
+- Reporter ``BitbucketServerCoreAPIStatusPush`` now supports ``BuildRequestGenerator`` and generates build status for build requests (by default).
+- Buildbot now has ``copy-db`` script migrate all data stored in the database from one database to another.
+  This may be used to change database engine types.
+  For example a sqlite database may be migrated to Postgres or MySQL when the load and data size grows.
+- Added cron features like last day of month to ``Nightly`` Scheduler.
+- Buildrequests can now have their priority changed, using the ``/buildrequests`` API.
+- The force scheduler can now set a build request priority.
+- Added support for specifying builder descriptions in markdown which is later rendered to HTML for presentation in the web frontend.
+- Build requests are now sorted according to their buildrequest.
+  Request time is now used as a secondary sort key.
+- Significantly improved performance of reporters or reporters with slower generators which is important on larger Buildbot installations.
+- Schedulers can now set a default priority for the buildrequests that it creates.
+  It can either be an integer or a function.
+- Implement support for shallow submodule update using git.
+- ``GerritChangeSource`` will now log a small number of previous log lines coming from ``ssh`` process in case of connection failure.
+
+Deprecations and Removals
+-------------------------
+
+- Deprecated ``projectName`` and ``projectURL`` configuration dictionary keys.
+
+
+Buildbot ``3.8.0`` ( ``2023-04-16`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed compatibility issues with Python 3.11.
+- Fixed compatibility with Autobahn v22.4.1 and newer.
+- Fixed issue with overriding `env` when calling `ShellMixin.makeRemoteShellCommand`
+- Buildbot will now include the previous location of moved files when evaluating a Github commit.
+  This fixes an issue where a commit that moves a file out of a folder, would not be shown in the
+  web UI for a builder that is tracking that same folder.
+- Improved reliability of Buildbot log watching to follow log files even after rotation.
+  This improves reliability of Buildbot start and restart scripts.
+- Fixed handling of occasional errors that happen when attempting to kill a master-side process that has already exited.
+- Fixed a race condition in PyLint step that may lead to step throwing exceptions.
+- Fixed compatibility with qemu 6.1 and newer when using LibVirtWorker with ``cheap_copy=True`` (default).
+- Fixed an issue with secrets provider stripping newline from ssh keys sent in git steps.
+- Fixed occasional errors that happen when killing processes on Windows. TASKKILL command may return
+  code 255 when process has already exited.
+- Fixed deleting secrets from worker that contain '~' in their destination path.
+
+Changes
+-------
+
+- Buildbot now requires NodeJS 14.18 or newer to build the frontend.
+- The URLs emitted by the Buildbot APIs have been changed to include slash after the hash (``#``)
+  symbol to be compatible with what React web UI supports.
+
+Improved Documentation
+----------------------
+
+- Replace statement "https is unsupported" with a more detailed disclaimer.
+
+Features
+--------
+
+- Add a way to disable default ``WarningCountingShellCommand`` parser.
+- Added health check API that latent workers can use to specify that a particular worker will not connect and build should not wait for it and mark itself as failure immediately.
+- Implemented a way to customize TLS setting for ``LdapUserInfo``.
+
+
+Buildbot ``3.7.0`` ( ``2022-12-04`` )
+=====================================
+
+Bug fixes
+---------
+
+- Improved statistics capture to avoid negative build duration.
+- Improved reliability of "buildbot stop" (:issue:`3535`).
+- Cancelled builds now have stop reason included into the state string.
+- Fixed ``custom_class`` change hook checks to allow hook without a plugin.
+- Added treq response wrapper to fix issue with missing url attribute.
+- Fixed Buildbot Worker being unable to start on Python 2.7 due to issue in a new version of Automat dependency.
+
+Features
+--------
+
+- Expanded ``ChangeFilter`` filtering capabilities:
+   - New ``<attribute>_not_eq`` parameters to require no match
+   - ``<attribute>_re`` now support multiple regexes
+   - New ``<attribute>_not_re`` parameters to require no match by regex
+   - New ``property_<match_type>`` parameters to perform filtering on change properties.
+- Exposed frontend configuration as implementation-defined JSON document that can be queried separately.
+- Added support for custom branch keys to ``OldBuildCanceller``.
+  This is useful in Version Control Systems such as Gerrit that have multiple branch names for the same logical branch that should be tracked by the canceller.
+- ``p4port`` argument of the ``P4`` step has been marked renderable.
+- Added automatic generation of commands for Telegram bot without need to send them manually to BotFather.
+
+Deprecations and Removals
+-------------------------
+
+- This release includes an experimental web UI written using React framework.
+  The existing web UI is written using AngularJS framework which is no longer maintained.
+  The new web UI can be tested by installing ``buildbot-www-react`` package and ``'base_react': {}`` key-value to www plugins.
+  Currently no web UI plugins are supported.
+  The existing web UI will be deprecated on subsequent Buildbot released and eventually replaced with the React-based web UI on Buildbot 4.0.
+
+
+Buildbot ``3.6.1`` ( ``2022-09-22`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed handling of last line in logs when Buildbot worker 3.5 and older connects to Buildbot master 3.6 (:issue:`6632`).
+- Fixed worker ``cpdir`` command handling when using PB protocol (:issue:`6539`)
+
+
+Buildbot ``3.6.0`` ( ``2022-08-25`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed compatibility with Autobahn 22.4.x.
+- Fixed a circular import that causes errors in certain cases.
+- Fixed issue with :bb:worker:`DockerLatentWorker` accumulating connections with the docker server (:issue:`6538`).
+- Fixed documentation build for ReadTheDocs: Sphinx and Python have been updated to latest version.
+- Fixed build pending and canceled status reports to GitLab.
+- Fixed compatibility of hvac implementation with Vault 1.10.x (:issue:`6475`).
+- Fixed a race condition in ``PyLint`` step that may lead to step throwing exceptions.
+- Reporters now always wait for previous report to completing upload before sending another one.
+  This works around a race condition in GitLab build reports ingestion pipeline (:issue:`6563`).
+- Fixed "retry fetch" and "clobber on failure" git checkout options.
+- Improved Visual Studio installation path retrieval when using MSBuild and only 'BuildTools' are installed.
+- Fixed search for Visual Studio executables by inspecting both ``C:\Program Files`` and ``C:\Program Files (x86)`` directories.
+- Fixed Visual Studio based steps causing an exception in ``getResultSummary`` when being skipped.
+- Fixed issue where workers would immediately retry login on authentication failure.
+- Fixed sending emails when using Twisted 21.2 or newer (:issue:`5943`)
+
+Features
+--------
+
+- Implemented support for App password authentication in ``BitbucketStatusPush`` reporter.
+- Cancelled build requests now generate build reports.
+- Implemented support for ``--no-verify`` git option to the ``GitCommit`` step.
+- ``HTTPClientService`` now accepts full URL in its methods.
+  Previously only a relative URL was supported.
+- Callback argument of class ``LineBoundaryFinder`` is now optional and deprecated.
+- Added ``VS2019``, ``VS2022``, ``MsBuild15``, ``MsBuild16``, ``MsBuild17`` steps.
+- Names of transfer related temporary files are now prefixed with ``buildbot-transfer-``.
+- ``buildbot try`` now accepts empty diffs and prints a warning instead of rejecting the diff.
+- Implemented note event handling in GitLab www hook.
+
+Deprecations and Removals
+-------------------------
+
+- Removed support for Python 3.6 from master.
+  Minimal python version for the master is now 3.7.
+  The Python version requirements for the worker don't change: 2.7 or 3.4 and newer.
+- ``buildbot`` package now requires Twisted versions >= 18.7.0
+
+
 Buildbot ``3.5.0`` ( ``2022-03-06`` )
 =====================================
 

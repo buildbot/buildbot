@@ -96,7 +96,7 @@ class Tests(unittest.TestCase):
         c = self.getBaseConfig()
 
         def myCompute(data):
-            return dict(db=data['db'])
+            return {"db": data['db']}
         c['buildbotNetUsageData'] = myCompute
         master = self.getMaster(c)
         data = computeUsageData(master)

@@ -15,8 +15,7 @@
 
 
 import datetime
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -46,7 +45,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Master(id=fakedb.FakeBuildRequestsComponent.MASTER_ID),
             fakedb.Worker(id=13, name='wrk'),
@@ -124,7 +123,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Builder(id=78, name='ccc'),
             fakedb.Builder(id=79, name='ddd'),
@@ -173,7 +172,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testGetProperties(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.BuildsetProperty(buildsetid=8822, property_name='prop1',
                                     property_value='["one", "fake1"]'),
             fakedb.BuildsetProperty(buildsetid=8822, property_name='prop2',
@@ -298,7 +297,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
 
     @defer.inlineCallbacks
     def testFakeDataClaimBuildRequests(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.BuildRequest(id=44, buildsetid=8822),
             fakedb.BuildRequest(id=55, buildsetid=8822),
         ])
@@ -314,7 +313,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
 
     @defer.inlineCallbacks
     def testClaimBuildRequests(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Builder(id=123),
             fakedb.BuildRequest(id=44, buildsetid=8822, builderid=123),
             fakedb.BuildRequest(id=55, buildsetid=8822, builderid=123),
@@ -323,7 +322,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         yield self.doTestCallthrough('claimBuildRequests', claimBuildRequestsMock,
                                      self.rtype.claimBuildRequests,
                                      methodargs=[[44]],
-                                     methodkwargs=dict(claimed_at=self.CLAIMED_AT),
+                                     methodkwargs={"claimed_at": self.CLAIMED_AT},
                                      expectedRes=True,
                                      expectedException=None)
         msg = {
@@ -367,7 +366,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         yield self.doTestCallthrough('claimBuildRequests', claimBuildRequestsMock,
                                      self.rtype.claimBuildRequests,
                                      methodargs=[[44]],
-                                     methodkwargs=dict(claimed_at=self.CLAIMED_AT),
+                                     methodkwargs={"claimed_at": self.CLAIMED_AT},
                                      expectedRes=False,
                                      expectedException=None)
         self.assertEqual(self.master.mq.productions, [])
@@ -379,7 +378,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         yield self.doTestCallthrough('claimBuildRequests', claimBuildRequestsMock,
                                      self.rtype.claimBuildRequests,
                                      methodargs=[[44]],
-                                     methodkwargs=dict(claimed_at=self.CLAIMED_AT),
+                                     methodkwargs={"claimed_at": self.CLAIMED_AT},
                                      expectedRes=None,
                                      expectedException=self.dBLayerException)
         self.assertEqual(self.master.mq.productions, [])
@@ -403,7 +402,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
 
     @defer.inlineCallbacks
     def testUnclaimBuildRequests(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Builder(id=123),
             fakedb.BuildRequest(id=44, buildsetid=8822, builderid=123),
         ])
@@ -476,7 +475,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
                                      completeBuildRequestsMock,
                                      self.rtype.completeBuildRequests,
                                      methodargs=[[46], 12],
-                                     methodkwargs=dict(complete_at=self.COMPLETE_AT),
+                                     methodkwargs={"complete_at": self.COMPLETE_AT},
                                      expectedRes=True,
                                      expectedException=None)
 
@@ -500,7 +499,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
                                      completeBuildRequestsMock,
                                      self.rtype.completeBuildRequests,
                                      methodargs=[[46], 12],
-                                     methodkwargs=dict(complete_at=self.COMPLETE_AT),
+                                     methodkwargs={"complete_at": self.COMPLETE_AT},
                                      expectedRes=False,
                                      expectedException=None)
 
@@ -512,13 +511,13 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
                                      completeBuildRequestsMock,
                                      self.rtype.completeBuildRequests,
                                      methodargs=[[46], 12],
-                                     methodkwargs=dict(complete_at=self.COMPLETE_AT),
+                                     methodkwargs={"complete_at": self.COMPLETE_AT},
                                      expectedRes=None,
                                      expectedException=self.dBLayerException)
 
     @defer.inlineCallbacks
     def testRebuildBuildrequest(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='builder'),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),

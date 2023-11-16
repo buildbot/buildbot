@@ -34,10 +34,10 @@ class Scheduler(Row):
 class SchedulerMaster(Row):
     table = "scheduler_masters"
 
-    defaults = dict(
-        schedulerid=None,
-        masterid=None,
-    )
+    defaults = {
+        "schedulerid": None,
+        "masterid": None,
+    }
 
     foreignKeys = ('schedulerid', 'masterid')
     required_columns = ('schedulerid', 'masterid')
@@ -49,11 +49,11 @@ class SchedulerMaster(Row):
 class SchedulerChange(Row):
     table = "scheduler_changes"
 
-    defaults = dict(
-        schedulerid=None,
-        changeid=None,
-        important=1,
-    )
+    defaults = {
+        "schedulerid": None,
+        "changeid": None,
+        "important": 1,
+    }
 
     foreignKeys = ('schedulerid', 'changeid')
     required_columns = ('schedulerid', 'changeid')
@@ -71,7 +71,7 @@ class FakeSchedulersComponent(FakeDBComponent):
         self.classifications = {}
         self.enabled = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, SchedulerChange):
                 cls = self.classifications.setdefault(row.schedulerid, {})
@@ -103,8 +103,12 @@ class FakeSchedulersComponent(FakeDBComponent):
                                  project=-1, codebase=-1):
         classifications = self.classifications.setdefault(schedulerid, {})
 
-        sentinel = dict(branch=object(), repository=object(),
-                        project=object(), codebase=object())
+        sentinel = {
+            "branch": object(),
+            "repository": object(),
+            "project": object(),
+            "codebase": object()
+        }
 
         if branch != -1:
             # filter out the classifications for the requested branch
@@ -142,11 +146,12 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     def getScheduler(self, schedulerid):
         if schedulerid in self.schedulers:
-            rv = dict(
-                id=schedulerid,
-                name=self.schedulers[schedulerid],
-                enabled=self.enabled.get(schedulerid, True),
-                masterid=None)
+            rv = {
+                "id": schedulerid,
+                "name": self.schedulers[schedulerid],
+                "enabled": self.enabled.get(schedulerid, True),
+                "masterid": None
+            }
             # only set masterid if the relevant scheduler master exists and
             # is active
             rv['masterid'] = self.scheduler_masters.get(schedulerid)

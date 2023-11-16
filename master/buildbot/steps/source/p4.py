@@ -45,8 +45,10 @@ class P4(Source):
 
     name = 'p4'
 
-    renderables = ['mode', 'p4base', 'p4client', 'p4viewspec', 'p4branch', 'p4passwd']
+    renderables = ['mode', 'p4base', 'p4client', 'p4viewspec', 'p4branch', 'p4passwd', 'p4port',
+            'p4user']
     possible_modes = ('incremental', 'full')
+    possible_client_types = (None, 'readonly', 'partitioned')
 
     def __init__(self, mode='incremental',
                  method=None, p4base=None, p4branch=None,
@@ -56,6 +58,7 @@ class P4(Source):
                  p4client=Interpolate(
                      'buildbot_%(prop:workername)s_%(prop:buildername)s'),
                  p4client_spec_options='allwrite rmdir',
+                 p4client_type=None,
                  p4extra_args=None,
                  p4bin='p4',
                  use_tickets=False,
@@ -76,6 +79,7 @@ class P4(Source):
         self.p4line_end = p4line_end
         self.p4client = p4client
         self.p4client_spec_options = p4client_spec_options
+        self.p4client_type = p4client_type
         self.p4extra_args = p4extra_args
         self.use_tickets = use_tickets
         self.stream = stream
@@ -120,12 +124,17 @@ class P4(Source):
         if self.p4client_spec_options is None:
             self.p4client_spec_options = ''
 
+        if self.p4client_type not in self.possible_client_types and \
+                not interfaces.IRenderable.providedBy(self.p4client_type):
+            config.error(
+                f"p4client_type {self.p4client_type} is not an IRenderable, "
+                "or one of {self.possible_client_types}")
+
     @defer.inlineCallbacks
     def run_vc(self, branch, revision, patch):
         if self.debug:
             log.msg('in run_vc')
 
-        self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
@@ -145,17 +154,20 @@ class P4(Source):
         if self.use_tickets and self.p4passwd:
             yield self._acquireTicket()
 
+        # First we need to create the client
+        yield self._createClientSpec()
+
+        self.revision = yield self.get_sync_revision(revision)
+
         yield self._getAttrGroupMember('mode', self.mode)()
-        yield self.parseGotRevision()
+        self.updateSourceProperty('got_revision', self.revision)
+
         return results.SUCCESS
 
     @defer.inlineCallbacks
     def mode_full(self):
         if self.debug:
             log.msg("P4:full()..")
-
-        # First we need to create the client
-        yield self._createClientSpec()
 
         # Then p4 sync #none
         yield self._dovccmd(['sync', '#none'])
@@ -166,14 +178,14 @@ class P4(Source):
         # Then we need to sync the client
         if self.revision:
             if self.debug:
-                log.msg("P4: full() sync command based on :base:%s changeset:%d",
-                        self._getP4BaseForLog(), int(self.revision))
-            yield self._dovccmd(['sync', f'{self._getP4BaseForCommand()}...@{int(self.revision)}'],
+                log.msg("P4: full() sync command based on :client:%s changeset:%d",
+                        self.p4client, int(self.revision))
+            yield self._dovccmd(['sync', f'//{self.p4client}/...@{int(self.revision)}'],
                                 collectStdout=True)
         else:
             if self.debug:
-                log.msg("P4: full() sync command based on :base:%s no revision",
-                        self._getP4BaseForLog())
+                log.msg("P4: full() sync command based on :client:%s no revision",
+                        self.p4client)
             yield self._dovccmd(['sync'], collectStdout=True)
 
         if self.debug:
@@ -184,25 +196,16 @@ class P4(Source):
         if self.debug:
             log.msg("P4:incremental()")
 
-        # First we need to create the client
-        yield self._createClientSpec()
-
         # and plan to do a checkout
         command = ['sync', ]
 
         if self.revision:
-            command.extend([f'{self._getP4BaseForCommand()}...@{int(self.revision)}'])
+            command.extend([f'//{self.p4client}/...@{int(self.revision)}'])
 
         if self.debug:
             log.msg(
                 "P4:incremental() command:%s revision:%s", command, self.revision)
         yield self._dovccmd(command)
-
-    def _getP4BaseForLog(self):
-        return self.p4base or '<custom viewspec>'
-
-    def _getP4BaseForCommand(self):
-        return self.p4base or ''
 
     def _buildVCCommand(self, doCommand):
         assert doCommand, "No command specified"
@@ -284,6 +287,9 @@ class P4(Source):
         else:
             client_spec += "LineEnd:\tlocal\n\n"
 
+        if self.p4client_type is not None:
+            client_spec += f"Type:\t{self.p4client_type}\n\n"
+
         # Perforce generates the view for stream-associated workspaces
         if self.stream:
             client_spec += f"Stream:\t{self.p4base}/{self.p4branch}\n"
@@ -345,8 +351,13 @@ class P4(Source):
         yield self._dovccmd(['login'], initialStdin=initialStdin)
 
     @defer.inlineCallbacks
-    def parseGotRevision(self):
-        command = self._buildVCCommand(['changes', '-m1', '#have'])
+    def get_sync_revision(self, revision=None):
+        revision = f"@{revision}" if revision else "#head"
+        if self.debug:
+            log.msg("P4: get_sync_revision() retrieve client actual revision at %s", revision)
+
+        changes_command_args = ['-ztag', 'changes', '-m1', f"//{self.p4client}/...{revision}"]
+        command = self._buildVCCommand(changes_command_args)
 
         cmd = remotecommand.RemoteShellCommand(self.workdir, command,
                                                env=self.env,
@@ -356,22 +367,36 @@ class P4(Source):
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
-        stdout = cmd.stdout.strip()
-        # Example output from p4 changes -m1 #have
-        # Change 212798 on 2012/04/13 by user@user-unix-bldng2 'change to
-        # pickup build'
-        revision = stdout.split()[1]
+        stdout = cmd.stdout.splitlines(keepends=False)
+        # Example output from p4 -ztag changes -m1
+        # ... change 212798
+        # ... time 1694770219
+        # ... user user@user-unix-bldng2
+        # ... client UserClient
+        # ... status submitted
+        # ... changeType public
+        # ... path //Depot/Path/...
+        # ... desc change to pickup build
+        change_identifier = "... change "
+        revision = next(
+            (
+                line[len(change_identifier):]
+                for line in stdout
+                if line.startswith(change_identifier)
+            ),
+            None
+        )
         try:
             int(revision)
-        except ValueError as e:
-            msg = ("p4.parseGotRevision unable to parse output "
-                   f"of 'p4 changes -m1 \"#have\"': '{stdout}'")
-            log.msg(msg)
-            raise buildstep.BuildStepFailed() from e
+        except ValueError as error:
+            log.msg(
+                "p4.get_sync_revision unable to parse output of %s: %s",
+                ['p4'] + changes_command_args,
+                stdout,
+            )
+            raise buildstep.BuildStepFailed() from error
 
-        if self.debug:
-            log.msg(f"Got p4 revision {revision}")
-        self.updateSourceProperty('got_revision', revision)
+        return revision
 
     @defer.inlineCallbacks
     def purge(self, ignore_ignores):
@@ -396,5 +421,5 @@ class P4(Source):
     def computeSourceRevision(self, changes):
         if not changes or None in [c.revision for c in changes]:
             return None
-        lastChange = max([int(c.revision) for c in changes])
+        lastChange = max(int(c.revision) for c in changes)
         return lastChange

@@ -88,8 +88,8 @@ class VerifyDict(unittest.TestCase):
         except UnicodeEncodeError as e:
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.
-            raise(unittest.SkipTest("Cannot encode weird unicode "
-                f"on this platform with {os_encoding}")) from e
+            raise unittest.SkipTest("Cannot encode weird unicode "
+                f"on this platform with {os_encoding}") from e
 
         self.doValidationTest(validation.IdentifierValidator(50),
                               good=[

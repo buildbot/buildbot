@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-version = "1.10.6"
+__version__ = "4.0"
 
 
 class Client:
@@ -23,11 +23,9 @@ class Client:
     start_exception = None
 
     def __init__(self, base_url):
-        Client.latest = self
         self.base_url = base_url
         self.call_args_create_container = []
         self.call_args_create_host_config = []
-        self.called_class_name = None
         self._images = [
             {'RepoTags': ['busybox:latest', 'worker:latest', 'tester:latest']}]
         self._pullable = ['alpine:latest', 'tester:latest']
@@ -91,13 +89,12 @@ class Client:
 
     def create_container(self, image, *args, **kwargs):
         self.call_args_create_container.append(kwargs)
-        self.called_class_name = self.__class__.__name__
         name = kwargs.get('name', None)
         if 'buggy' in image:
-            raise Exception('we could not create this container')
+            raise RuntimeError('we could not create this container')
         for c in self._containers.values():
             if c['name'] == name:
-                raise Exception('cannot create with same name')
+                raise RuntimeError('cannot create with same name')
         ret = {
             'Id':
             '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
@@ -108,12 +105,16 @@ class Client:
             'image': image,
             'Id': ret['Id'],
             'name': name,  # docker does not return this
-            'Names': [name]  # this what docker returns
+            'Names': ["/" + name],  # this what docker returns
+            "State": "running",
         }
         return ret
 
     def remove_container(self, id, **kwargs):
         del self._containers[id]
+
+    def logs(self, id, tail=None):
+        return f"log for {id}\n1\n2\n3\nend\n".encode("utf-8")
 
     def close(self):
         # dummy close, no connection to cleanup

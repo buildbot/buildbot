@@ -32,8 +32,8 @@ class SourceCommandTestMixin(command.CommandTestMixin):
 
         * writeSourcedata - writes to self.sourcedata (self is the TestCase)
         * readSourcedata - reads from self.sourcedata
-        * doClobber - invokes RunProcess(['clobber', DIRECTORY])
-        * doCopy - invokes RunProcess(['copy', cmd.srcdir, cmd.workdir])
+        * doClobber - invokes RunProcess(0, ['clobber', DIRECTORY])
+        * doCopy - invokes RunProcess(0, ['copy', cmd.srcdir, cmd.workdir])
         """
 
         cmd = command.CommandTestMixin.make_command(self, cmdclass, args, makedirs)

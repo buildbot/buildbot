@@ -16,6 +16,11 @@
 HVAC based providers
 """
 
+
+import importlib.metadata
+
+from packaging.version import parse as parse_version
+
 from twisted.internet import defer
 from twisted.internet import threads
 
@@ -105,6 +110,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         if vault_server.endswith('/'):  # pragma: no cover
             vault_server = vault_server[:-1]
         self.client = hvac.Client(vault_server)
+        self.version = parse_version(importlib.metadata.version('hvac'))
         self.client.secrets.kv.default_kv_version = api_version
         return self
 
@@ -140,23 +146,22 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         if self.api_version == 1:
             return self.client.secrets.kv.v1.read_secret(path=path, mount_point=self.secrets_mount)
         else:
+            if self.version >= parse_version("1.1.1"):
+                return self.client.secrets.kv.v2.read_secret_version(path=path,
+                                                                     mount_point=self.secrets_mount,
+                                                                     raise_on_deleted_version=True)
             return self.client.secrets.kv.v2.read_secret_version(path=path,
                                                                  mount_point=self.secrets_mount)
 
     def thd_hvac_get(self, path):
         """
-        query secret from Vault and try to re-authenticate in case Unauthorized
-        exception when active token reaches its TTL
+        query secret from Vault and re-authenticate if not authenticated
         """
 
-        # no need to "try" import, it was already handled by reconfigService()
-        import hvac
-
-        try:
-            response = self.thd_hvac_wrap_read(path=path)
-        except (hvac.exceptions.Unauthorized, hvac.exceptions.InvalidRequest):
+        if not self.client.is_authenticated():
             self.authenticator.authenticate(self.client)
-            response = self.thd_hvac_wrap_read(path=path)
+
+        response = self.thd_hvac_wrap_read(path=path)
 
         return response
 

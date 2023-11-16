@@ -62,6 +62,7 @@ class Build(properties.PropertiesMixin):
 
     VIRTUAL_BUILDERNAME_PROP = "virtual_builder_name"
     VIRTUAL_BUILDERDESCRIPTION_PROP = "virtual_builder_description"
+    VIRTUAL_BUILDER_PROJECT_PROP = "virtual_builder_project"
     VIRTUAL_BUILDERTAGS_PROP = "virtual_builder_tags"
     workdir = "build"
     reason = "changes"
@@ -98,6 +99,7 @@ class Build(properties.PropertiesMixin):
         # overall results, may downgrade after each step
         self.results = SUCCESS
         self.properties = properties.Properties()
+        self.stopped_reason = None
 
         # tracks execution during the build finish phase
         self._locks_released = False
@@ -274,15 +276,19 @@ class Build(properties.PropertiesMixin):
                 description = self.getProperty(
                     self.VIRTUAL_BUILDERDESCRIPTION_PROP,
                     self.builder.config.description)
+                project = self.getProperty(
+                    self.VIRTUAL_BUILDER_PROJECT_PROP,
+                    self.builder.config.project)
                 tags = self.getProperty(
                     self.VIRTUAL_BUILDERTAGS_PROP,
                     self.builder.config.tags)
                 if type(tags) == type([]) and '_virtual_' not in tags:
                     tags.append('_virtual_')
 
-                self.master.data.updates.updateBuilderInfo(self._builderid,
-                                                           description,
-                                                           tags)
+                projectid = yield self.builder.find_project_id(project)
+                # Note: not waiting for updateBuilderInfo to complete
+                self.master.data.updates.updateBuilderInfo(self._builderid, description, None,
+                                                           None, projectid, tags)
 
             else:
                 self._builderid = yield self.builder.getBuilderId()
@@ -327,6 +333,16 @@ class Build(properties.PropertiesMixin):
         self.preparation_step = buildstep.BuildStep(name="worker_preparation")
         self.preparation_step.setBuild(self)
         yield self.preparation_step.addStep()
+
+        # TODO: the time consuming actions during worker preparation are as follows:
+        #  - worker substantiation
+        #  - acquiring build locks
+        # Since locks_acquire_at calculates the time since beginning of the step until the end,
+        # it's impossible to represent this sequence using a single step. In the future it makes
+        # sense to add two steps: one for worker substantiation and another for acquiring build
+        # locks.
+        yield self.master.data.updates.set_step_locks_acquired_at(self.preparation_step.stepid)
+
         Build.setupBuildProperties(self.getProperties(), self.requests,
                                    self.sources, self.number)
 
@@ -442,6 +458,8 @@ class Build(properties.PropertiesMixin):
             self.workerforbuilder.worker.putInQuarantine()
             if isinstance(why, failure.Failure):
                 yield self.preparation_step.addLogWithFailure(why)
+            elif isinstance(why, Exception):
+                yield self.preparation_step.addLogWithException(why)
             yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
                                                             "error while " + state_string)
             yield self.master.data.updates.finishStep(self.preparation_step.stepid,
@@ -628,6 +646,7 @@ class Build(properties.PropertiesMixin):
     def controlStopBuild(self, key, params):
         return self.stopBuild(**params)
 
+    @defer.inlineCallbacks
     def stopBuild(self, reason="<no reason given>", results=CANCELLED):
         # the idea here is to let the user cancel a build because, e.g.,
         # they realized they committed a bug and they don't want to waste
@@ -639,10 +658,10 @@ class Build(properties.PropertiesMixin):
         log.msg(f" {self}: stopping build: {reason} {results}")
         if self.finished:
             return
-        # TODO: include 'reason' in this point event
+        self.stopped_reason = reason
         self.stopped = True
         if self.currentStep and self.currentStep.results is None:
-            self.currentStep.interrupt(reason)
+            yield self.currentStep.interrupt(reason)
 
         self.results = results
 
@@ -667,6 +686,8 @@ class Build(properties.PropertiesMixin):
             text = ["cancelled"]
         else:
             text = ["build", "successful"]
+        if self.stopped_reason is not None:
+            text.extend([f'({self.stopped_reason})'])
         text.extend(self.text)
         return self.buildFinished(text, self.results)
 

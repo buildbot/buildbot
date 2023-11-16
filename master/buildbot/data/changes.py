@@ -48,13 +48,25 @@ class FixerMixin:
                 del change['sourcestampid']
         return change
     fieldMapping = {
+        'author': 'changes.author',
+        'branch': 'changes.branch',
+        'category': 'changes.category',
         'changeid': 'changes.changeid',
+        'codebase': 'changes.codebase',
+        'comments': 'changes.comments',
+        'committer': 'changes.committer',
+        'project': 'changes.project',
+        'repository': 'changes.repository',
+        'revision': 'changes.revision',
+        'revlink': 'changes.revlink',
+        'sourcestampid': 'changes.sourcestampid',
+        'when_timestamp': 'changes.when_timestamp',
     }
 
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /changes/n:changeid
     """
@@ -67,7 +79,7 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
 
 class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /changes
         /builders/n:builderid/builds/n:build_number/changes

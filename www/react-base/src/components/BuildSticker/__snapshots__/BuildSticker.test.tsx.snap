@@ -1,0 +1,155 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`buildsticker component failed 1`] = `
+<div
+  className="bb-buildsticker results_FAILURE card"
+>
+  <div
+    className="card-body"
+  >
+    <div
+      className="bb-buildsticker-left"
+    >
+      <div
+        className="bb-badge-status results_FAILURE"
+      >
+        FAILURE
+      </div>
+      <a
+        href="/builders/2/builds/1"
+        onClick={[Function]}
+      >
+        /
+        1
+      </a>
+    </div>
+    <div
+      className="bb-buildsticker-left"
+    >
+      <span
+        className="bb-buildsticker-time"
+      >
+        10 s
+      </span>
+      <span>
+        failed
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`buildsticker component pending 1`] = `
+<div
+  className="bb-buildsticker results_PENDING card"
+>
+  <div
+    className="card-body"
+  >
+    <div
+      className="bb-buildsticker-left"
+    >
+      <div
+        className="bb-badge-status results_PENDING"
+      >
+        ...
+      </div>
+      <a
+        href="/builders/2/builds/1"
+        onClick={[Function]}
+      >
+        /
+        1
+      </a>
+    </div>
+    <div
+      className="bb-buildsticker-left"
+    >
+      <span
+        className="bb-buildsticker-time"
+      >
+        18992 days 23:59:40
+      </span>
+      <span>
+        pending
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`buildsticker component simple 1`] = `
+<div
+  className="bb-buildsticker results_UNKNOWN card"
+>
+  <div
+    className="card-body"
+  >
+    <div
+      className="bb-buildsticker-left"
+    >
+      <div
+        className="bb-badge-status results_UNKNOWN"
+      >
+        ...
+      </div>
+      <a
+        href="/builders/2/builds/1"
+        onClick={[Function]}
+      >
+        /
+        1
+      </a>
+    </div>
+    <div
+      className="bb-buildsticker-left"
+    >
+      <span
+        className="bb-buildsticker-time"
+      >
+        18993 days 0:00:00
+      </span>
+      <span />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`buildsticker component success 1`] = `
+<div
+  className="bb-buildsticker results_SUCCESS card"
+>
+  <div
+    className="card-body"
+  >
+    <div
+      className="bb-buildsticker-left"
+    >
+      <div
+        className="bb-badge-status results_SUCCESS"
+      >
+        SUCCESS
+      </div>
+      <a
+        href="/builders/2/builds/1"
+        onClick={[Function]}
+      >
+        /
+        1
+      </a>
+    </div>
+    <div
+      className="bb-buildsticker-left"
+    >
+      <span
+        className="bb-buildsticker-time"
+      >
+        10 s
+      </span>
+      <span>
+        finished
+      </span>
+    </div>
+  </div>
+</div>
+`;

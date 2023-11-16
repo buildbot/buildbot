@@ -106,7 +106,7 @@ class TestGNUAutoconf(TestBuildFactory):
                     checkPresent = True
                 if step.buildStep().command == ['make', 'distcheck']:
                     distcheckPresent = True
-            except(AttributeError, KeyError):
+            except (AttributeError, KeyError):
                 pass
 
         self.assertTrue(configurePresent)
@@ -125,7 +125,7 @@ class TestGNUAutoconf(TestBuildFactory):
                 self.assertNotIn(cmd, [['make', 'all'], ['make', 'check'],
                                  ['make', 'distcheck']],
                                  f"Build step {cmd} should not be present.")
-            except(AttributeError, KeyError):
+            except (AttributeError, KeyError):
                 pass
 
     def test_init_reconf(self):
@@ -139,7 +139,7 @@ class TestGNUAutoconf(TestBuildFactory):
             try:
                 if step.buildStep().command[0] == 'autoreconf':
                     reconfPresent = True
-            except(AttributeError, KeyError):
+            except (AttributeError, KeyError):
                 pass
         self.assertTrue(reconfPresent)
 
@@ -151,6 +151,6 @@ class TestGNUAutoconf(TestBuildFactory):
             try:
                 if step.buildStep().command == ['notsoautoreconf']:
                     selfreconfPresent = True
-            except(AttributeError, KeyError):
+            except (AttributeError, KeyError):
                 pass
         self.assertTrue(selfreconfPresent)

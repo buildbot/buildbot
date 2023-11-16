@@ -159,6 +159,22 @@ This command is frontend for various database maintenance jobs:
 - optimiselogs: This optimization groups logs into bigger chunks
   to apply higher level of compression.
 
+copy-db
++++++++
+
+.. code-block:: none
+
+    buildbot copy-db {DESTINATION_URL} {BASEDIR} [-q]
+
+This command copies all buildbot data from source database configured in the buildbot configuration file to the destination database.
+The URL of the destination database is specified on the command line.
+The destination database may have different type from the source database.
+
+The destination database must be empty.
+The script will initialize it in the same way as if a new Buildbot installation was created.
+
+Source database must be already upgraded to the current Buildbot version by the ``buildbot upgrade-master`` command.
+
 Developer Tools
 ~~~~~~~~~~~~~~~
 

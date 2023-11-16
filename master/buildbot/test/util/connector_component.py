@@ -74,6 +74,6 @@ class FakeConnectorComponentMixin(TestReactorMixin):
         self.master = fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
         self.db.checkForeignKeys = True
-        self.insertTestData = self.db.insertTestData
+        self.insert_test_data = self.db.insert_test_data
 
         return defer.succeed(None)

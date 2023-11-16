@@ -21,6 +21,7 @@ Buildbot uses Twisted `trial <http://twistedmatrix.com/trac/wiki/TwistedTrial>`_
 Windows users also need GNU make on their machines.
 The easiest way is to install it via the choco package manager, ``choco install make``.
 But WSL or MSYS2 is an even better option because of the integrated bash.
+Note that on Windows you need to create virtualenv manually.
 
 Following is a quick shell session to put you on the right track, including running the test suite.
 
@@ -32,7 +33,9 @@ Following is a quick shell session to put you on the right track, including runn
 
     # run a helper script which creates the virtualenv for development.
     # Virtualenv allows to install python packages without affecting
-    # other parts of the system
+    # other parts of the system.
+    # This script does not support Windows: you should create the virtualenv and install
+    # requirements-ci.txt manually.
     make virtualenv
 
     # activate the virtualenv (you should now see (.venv) in your shell prompt)
@@ -73,7 +76,7 @@ Prerequisites
 
 .. note::
 
-  Buildbot UI requires at least node 4 or newer and yarn.
+  Buildbot UI requires at least node 14.18 or newer and yarn.
 
 * Install LTS release of node.js.
 
@@ -81,13 +84,13 @@ Prerequisites
 
   For modern Linux distributions, you can often just install the distribution-provided node version if it's recent enough.
   You can use yarn from the same source.
-  The below method has been tested on Ubuntu 18.04 and should work on recent enough Debian.
+  The below method has been tested on Debian Bookworm.
 
   .. code-block:: none
 
     sudo apt install nodejs yarn
 
-  In other cases, use https://deb.nodesource.com.
+  In other cases, use https://deb.nodesource.com and https://classic.yarnpkg.com/lang/en/docs/install.
 
 .. _JSDevQuickStart:
 

@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 import random
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.python import failure
@@ -101,7 +100,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
     def createBuilder(self, name, builderid=None, builder_config=None):
         if builderid is None:
             b = fakedb.Builder(name=name)
-            yield self.master.db.insertTestData([b])
+            yield self.master.db.insert_test_data([b])
             builderid = b.id
 
         bldr = mock.Mock(name=name)
@@ -261,7 +260,7 @@ class Test(TestBRDBase):
 
     @defer.inlineCallbacks
     def do_test_sortBuilders(self, prioritizeBuilders, oldestRequestTimes,
-                             expected, returnDeferred=False):
+                             highestPriorities, expected, returnDeferred=False):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(list(oldestRequestTimes))
         self.master.config.prioritizeBuilders = prioritizeBuilders
@@ -276,6 +275,9 @@ class Test(TestBRDBase):
                 t = epoch2datetime(t)
             self.builders[n].getOldestRequestTime = mklambda(t)
 
+        for n, t in highestPriorities.items():
+            self.builders[n].get_highest_priority = mklambda(t)
+
         result = yield self.brd._sortBuilders(list(oldestRequestTimes))
 
         self.assertEqual(result, expected)
@@ -283,19 +285,27 @@ class Test(TestBRDBase):
 
     def test_sortBuilders_default_sync(self):
         return self.do_test_sortBuilders(None,  # use the default sort
-                                         dict(bldr1=777, bldr2=999, bldr3=888),
-                                         ['bldr1', 'bldr3', 'bldr2'])
+                                         {"bldr1": 777, "bldr2": 999, "bldr3": 888},
+                                         {"bldr1": 10, "bldr2": 15, "bldr3": 5},
+                                         ['bldr2', 'bldr1', 'bldr3'])
 
     def test_sortBuilders_default_asyn(self):
         return self.do_test_sortBuilders(None,  # use the default sort
-                                         dict(bldr1=777, bldr2=999, bldr3=888),
-                                         ['bldr1', 'bldr3', 'bldr2'],
+                                         {"bldr1": 777, "bldr2": 999, "bldr3": 888},
+                                         {"bldr1": 10, "bldr2": 15, "bldr3": 5},
+                                         ['bldr2', 'bldr1', 'bldr3'],
                                          returnDeferred=True)
 
     def test_sortBuilders_default_None(self):
         return self.do_test_sortBuilders(None,  # use the default sort
-                                         dict(
-                                             bldr1=777, bldr2=None, bldr3=888),
+                                         {"bldr1": 777, "bldr2": None, "bldr3": 888},
+                                         {"bldr1": 10, "bldr2": None, "bldr3": 5},
+                                         ['bldr1', 'bldr3', 'bldr2'])
+
+    def test_sortBuilders_default_priority_match(self):
+        return self.do_test_sortBuilders(None,  # use the default sort
+                                         {"bldr1": 777, "bldr2": 999, "bldr3": 888},
+                                         {"bldr1": 10, "bldr2": 10, "bldr3": 10},
                                          ['bldr1', 'bldr3', 'bldr2'])
 
     def test_sortBuilders_custom(self):
@@ -304,7 +314,8 @@ class Test(TestBRDBase):
             return sorted(builders, key=lambda b: b.name)
 
         return self.do_test_sortBuilders(prioritizeBuilders,
-                                         dict(bldr1=1, bldr2=1, bldr3=1),
+                                         {"bldr1": 1, "bldr2": 1, "bldr3": 1},
+                                         {"bldr1": 10, "bldr2": 15, "bldr3": 5},
                                          ['bldr1', 'bldr2', 'bldr3'])
 
     def test_sortBuilders_custom_async(self):
@@ -313,7 +324,8 @@ class Test(TestBRDBase):
             return defer.succeed(sorted(builders, key=lambda b: b.name))
 
         return self.do_test_sortBuilders(prioritizeBuilders,
-                                         dict(bldr1=1, bldr2=1, bldr3=1),
+                                         {"bldr1": 1, "bldr2": 1, "bldr3": 1},
+                                         {"bldr1": 10, "bldr2": 15, "bldr3": 5},
                                          ['bldr1', 'bldr2', 'bldr3'])
 
     @defer.inlineCallbacks
@@ -390,7 +402,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         rows = rows or []
         exp_claims = exp_claims or []
         exp_builds = exp_builds or []
-        yield self.master.db.insertTestData(rows)
+        yield self.master.db.insert_test_data(rows)
 
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
 
@@ -617,7 +629,7 @@ class TestMaybeStartBuilds(TestBRDBase):
                                 submitted_at=135000),
         ]
 
-        yield self.master.db.insertTestData(rows)
+        yield self.master.db.insert_test_data(rows)
 
         # first time around, only #11 stays claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)

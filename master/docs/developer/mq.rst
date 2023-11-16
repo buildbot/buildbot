@@ -155,6 +155,7 @@ Wamp
             'number': 1,
             'results': None,
             'started_at': 1,
+            'locks_acquired_at': 2,
             'state_string': u'created'
         }
 

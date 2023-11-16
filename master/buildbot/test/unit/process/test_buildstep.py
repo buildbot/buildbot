@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+from unittest import mock
+
+from parameterized import parameterized
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -773,6 +775,16 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
         self.checkSummary((yield st.getBuildResultSummary()), 'fooing (skipped)')
         self.checkSummary(st.getResultSummary(), 'fooing (skipped)')
 
+    @defer.inlineCallbacks
+    def test_getResultSummary_description_failure_timed_out(self):
+        st = buildstep.BuildStep()
+        st.results = FAILURE
+        st.description = "fooing"
+        st.timed_out = True
+        self.checkSummary((yield st.getBuildResultSummary()), "fooing (failure) (timed out)",
+                          "fooing (failure) (timed out)")
+        self.checkSummary(st.getResultSummary(), "fooing (failure) (timed out)")
+
     # Test calling checkWorkerHasCommand() when worker have support for
     # requested remote command.
     def testcheckWorkerHasCommandGood(self):
@@ -1244,6 +1256,30 @@ class TestShellMixin(TestBuildStepMixin,
         yield self.run_step()
 
     @defer.inlineCallbacks
+    def test_step_env_default(self):
+        env = {'ENV': 'TRUE'}
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], env=env))
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'], env=env)
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        yield self.run_step()
+
+    @defer.inlineCallbacks
+    def test_step_env_overridden(self):
+        env = {'ENV': 'TRUE'}
+        env_override = {'OVERRIDE': 'TRUE'}
+        self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], env=env,
+                                           make_cmd_kwargs={'env': env_override}))
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'], env=env_override)
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        yield self.run_step()
+
+    @defer.inlineCallbacks
     def test_extra_logfile(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'],
                                           logfiles={'logname': 'logpath.log'}))
@@ -1364,6 +1400,18 @@ class TestShellMixin(TestBuildStepMixin,
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="'foo BAR'")
+        yield self.run_step()
+
+    @parameterized.expand(["timeout", "timeout_without_output"])
+    @defer.inlineCallbacks
+    def test_description_timed_out(self, failure_reason):
+        self.setup_step(SimpleShellCommand(command=["foo"]))
+        self.expect_commands(
+            ExpectShell(workdir="wkdir", command=["foo"])
+            .update("failure_reason", failure_reason)
+            .exit(1)
+        )
+        self.expect_outcome(result=FAILURE, state_string="'foo' (failure) (timed out)")
         yield self.run_step()
 
     def test_getResultSummary(self):

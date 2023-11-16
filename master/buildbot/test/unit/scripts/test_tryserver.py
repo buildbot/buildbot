@@ -31,7 +31,7 @@ class TestStatusLog(dirs.DirsMixin, unittest.TestCase):
         self.setUpDirs("jobdir", self.newdir, self.tmpdir)
 
     def test_trycmd(self):
-        config = dict(jobdir='jobdir')
+        config = {"jobdir": 'jobdir'}
         inputfile = StringIO('this is my try job')
         self.patch(sys, 'stdin', inputfile)
 

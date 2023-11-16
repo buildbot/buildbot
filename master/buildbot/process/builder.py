@@ -31,6 +31,7 @@ from buildbot.process.results import RETRY
 from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
+from buildbot.util.render_description import render_description
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -86,6 +87,15 @@ class Builder(util_service.ReconfigurableServiceMixin,
         raise AssertionError(f"no config found for builder '{self.name}'")
 
     @defer.inlineCallbacks
+    def find_project_id(self, project):
+        if project is None:
+            return project
+        projectid = yield self.master.data.updates.find_project_id(project)
+        if projectid is None:
+            log.msg(f"{self} could not find project ID for project name {project}")
+        return projectid
+
+    @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         builder_config = self._find_builder_config_by_name(new_config)
         old_config = self.config
@@ -98,9 +108,19 @@ class Builder(util_service.ReconfigurableServiceMixin,
         builderid = yield self.getBuilderId()
 
         if self._has_updated_config_info(old_config, builder_config):
-            yield self.master.data.updates.updateBuilderInfo(builderid,
-                                                             builder_config.description,
-                                                             builder_config.tags)
+            projectid = yield self.find_project_id(builder_config.project)
+
+            yield self.master.data.updates.updateBuilderInfo(
+                builderid,
+                builder_config.description,
+                builder_config.description_format,
+                render_description(
+                    builder_config.description,
+                    builder_config.description_format
+                ),
+                projectid,
+                builder_config.tags
+            )
 
         # if we have any workers attached which are no longer configured,
         # drop them.
@@ -112,6 +132,10 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if old_config is None:
             return True
         if old_config.description != new_config.description:
+            return True
+        if old_config.description_format != new_config.description_format:
+            return True
+        if old_config.project != new_config.project:
             return True
         if old_config.tags != new_config.tags:
             return True
@@ -172,6 +196,22 @@ class Builder(util_service.ReconfigurableServiceMixin,
             return completed[0]['complete_at']
         else:
             return None
+
+    @defer.inlineCallbacks
+    def get_highest_priority(self):
+        """Returns the priority of the highest priority unclaimed build request
+        for this builder, or None if there are no build requests.
+
+        @returns: priority or None, via Deferred
+        """
+        bldrid = yield self.getBuilderId()
+        unclaimed = yield self.master.data.get(
+            ('builders', bldrid, 'buildrequests'),
+            [resultspec.Filter('claimed', 'eq', [False])],
+            order=['-priority'], limit=1)
+        if unclaimed:
+            return unclaimed[0]['priority']
+        return None
 
     def getBuild(self, number):
         for b in self.building:

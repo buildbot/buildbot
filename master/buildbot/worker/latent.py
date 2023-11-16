@@ -28,7 +28,7 @@ from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.util import Notifier
-from buildbot.util import deferwaiter
+from buildbot.warnings import warn_deprecated
 from buildbot.worker.base import AbstractWorker
 
 
@@ -162,17 +162,20 @@ class AbstractLatentWorker(AbstractWorker):
         super().__init__(*args, **kwargs)
         self._substantiation_notifier = Notifier()
         self._start_stop_lock = defer.DeferredLock()
-        self._deferwaiter = deferwaiter.DeferWaiter()
+        self._check_instance_timer = None
 
     def checkConfig(self, name, password,
                     build_wait_timeout=60 * 10,
+                    check_instance_interval=10,
                     **kwargs):
         super().checkConfig(name, password, **kwargs)
 
     def reconfigService(self, name, password,
                         build_wait_timeout=60 * 10,
+                        check_instance_interval=10,
                         **kwargs):
         self.build_wait_timeout = build_wait_timeout
+        self.check_instance_interval = check_instance_interval
         return super().reconfigService(name, password, **kwargs)
 
     def _generate_random_password(self):
@@ -223,6 +226,9 @@ class AbstractLatentWorker(AbstractWorker):
     def stop_instance(self, fast=False):
         # responsible for shutting down instance.
         raise NotImplementedError
+
+    def check_instance(self):
+        return (True, "")
 
     @property
     def substantiated(self):
@@ -302,6 +308,8 @@ class AbstractLatentWorker(AbstractWorker):
                 log.msg(f"Worker {self.name} substantiated (already attached)")
                 self.state = States.SUBSTANTIATED
                 self._fireSubstantiationNotifier(True)
+            else:
+                self._start_check_instance_timer()
 
         except Exception as e:
             self.stopMissingTimer()
@@ -320,6 +328,8 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def attached(self, conn):
+        self._stop_check_instance_timer()
+
         if self.state != States.SUBSTANTIATING_STARTING and \
                 self.build_wait_timeout >= 0:
             msg = (f'Worker {self.name} received connection while not trying to substantiate.'
@@ -420,6 +430,63 @@ class AbstractLatentWorker(AbstractWorker):
         self.build_wait_timer = self.master.reactor.callLater(
             self.build_wait_timeout, self._soft_disconnect)
 
+    def _stop_check_instance_timer(self):
+        if self._check_instance_timer is not None:
+            if self._check_instance_timer.active():
+                self._check_instance_timer.cancel()
+            self._check_instance_timer = None
+
+    def _start_check_instance_timer(self):
+        self._stop_check_instance_timer()
+        self._check_instance_timer = self.master.reactor.callLater(
+            self.check_instance_interval, self._check_instance_timer_fired
+        )
+
+    def _check_instance_timer_fired(self):
+        self._deferwaiter.add(self._check_instance_timer_fired_impl())
+
+    @defer.inlineCallbacks
+    def _check_instance_timer_fired_impl(self):
+        self._check_instance_timer = None
+        if self.state != States.SUBSTANTIATING_STARTING:
+            # The only case when we want to recheck whether the instance has not failed is
+            # between call to start_instance() and successful attachment of the worker.
+            return
+
+        if self._start_stop_lock.locked:  # pragma: no cover
+            # This can't actually happen, because we start the timer for instance checking after
+            # start_instance() completed and in insubstantiation the state is changed from
+            # SUBSTANTIATING_STARTING as soon as the lock is acquired.
+            return
+
+        try:
+            yield self._start_stop_lock.acquire()
+            message = "latent worker crashed before connecting"
+            try:
+                value = yield self.check_instance()
+                if isinstance(value, bool):
+                    is_good = value
+                    warn_deprecated("3.10.0", "check_instance() must return a two element tuple "
+                                    "with second element containing error message, if any")
+
+                else:
+                    is_good, message_append = value
+                    message += ": " + message_append
+            except Exception as e:
+                message += ": " + str(e)
+                is_good = False
+
+            if not is_good:
+                yield self._substantiation_failed(
+                    LatentWorkerFailedToSubstantiate(self.name, message)
+                )
+                return
+        finally:
+            self._start_stop_lock.release()
+
+        # if check passes, schedule another one until worker connects
+        self._start_check_instance_timer()
+
     @defer.inlineCallbacks
     def insubstantiate(self, fast=False, force_substantiation_build=None):
         # If force_substantiation_build is not None, we'll try to substantiate the given build
@@ -459,6 +526,7 @@ class AbstractLatentWorker(AbstractWorker):
                     failure.Failure(LatentWorkerSubstantiatiationCancelled()))
 
             self._clearBuildWaitTimer()
+            self._stop_check_instance_timer()
 
             if prev_state in [States.SUBSTANTIATING_STARTING, States.SUBSTANTIATED]:
                 try:
@@ -533,6 +601,7 @@ class AbstractLatentWorker(AbstractWorker):
             self.state = States.SHUT_DOWN
 
         self._clearBuildWaitTimer()
+        self._stop_check_instance_timer()
         res = yield super().stopService()
         return res
 
@@ -557,8 +626,8 @@ class LocalLatentWorker(AbstractLatentWorker):
     starts_without_substantiate = True
 
     def checkConfig(self, name, password, **kwargs):
-        super.checkConfig(self, name, password, build_wait_timeout=-1,
-                          **kwargs)
+        super().checkConfig(self, name, password, build_wait_timeout=-1,
+                            **kwargs)
 
     def reconfigService(self, name, password, **kwargs):
         return super().reconfigService(name, password, build_wait_timeout=-1,

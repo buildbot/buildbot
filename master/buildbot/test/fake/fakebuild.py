@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 import posixpath
-
-import mock
+from unittest import mock
 
 from buildbot import config
 from buildbot.process import factory

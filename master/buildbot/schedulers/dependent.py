@@ -107,7 +107,8 @@ class Dependent(base.BaseScheduler):
             if sub_results in (SUCCESS, WARNINGS):
                 yield self.addBuildsetForSourceStamps(
                     sourcestamps=sub_ssids.copy(),
-                    reason='downstream')
+                    reason='downstream',
+                    priority=self.priority)
 
             sub_bsids.append(sub_bsid)
 

@@ -77,7 +77,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
             })
@@ -89,7 +89,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
@@ -101,7 +101,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': -1,
                 'duration': '2h 1m 4s'
             })
@@ -133,7 +133,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
             })
@@ -145,7 +145,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
@@ -170,7 +170,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'builder Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
             })
@@ -182,7 +182,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'builder Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
@@ -207,7 +207,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': True,
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
             })
@@ -219,7 +219,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': True,
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
@@ -245,7 +245,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'category': 'Builder0',
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
             })
@@ -258,7 +258,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'category': 'Builder0',
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
@@ -283,7 +283,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'Builder0',
                 'reporter': 'Builder0',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
             })
@@ -295,7 +295,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'Builder0',
                 'reporter': 'Builder0',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
@@ -318,7 +318,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
             })
@@ -338,7 +338,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
                 'abstain': False,
                 'name': 'Builder0',
                 'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'url': 'http://localhost:8080/#/builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
             })

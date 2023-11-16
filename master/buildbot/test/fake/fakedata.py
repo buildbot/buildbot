@@ -41,7 +41,7 @@ class FakeUpdates(service.AsyncService):
         self.maybeBuildsetCompleteCalls = 0
         self.masterStateChanges = []  # dictionaries
         self.schedulerIds = {}  # { name : id }; users can add schedulers here
-        self.builderIds = {}  # { name : id }; users can add schedulers here
+        self.builderIds = {}  # { name : id }; users can add builders here
         self.schedulerMasters = {}  # { schedulerid : masterid }
         self.changesourceMasters = {}  # { changesourceid : masterid }
         self.workerIds = {}  # { name : id }; users can add workers here
@@ -138,7 +138,7 @@ class FakeUpdates(service.AsyncService):
     @defer.inlineCallbacks
     def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
                     properties=None, builderids=None, external_idstring=None,
-                    parent_buildid=None, parent_relationship=None):
+                    parent_buildid=None, parent_relationship=None, priority=0):
         if sourcestamps is None:
             sourcestamps = []
         if properties is None:
@@ -210,6 +210,28 @@ class FakeUpdates(service.AsyncService):
     def rebuildBuildrequest(self, buildrequest):
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
+    def update_project_info(
+        self,
+        projectid,
+        slug,
+        description,
+        description_format,
+        description_html,
+    ):
+        yield self.master.db.projects.update_project_info(
+            projectid,
+            slug,
+            description,
+            description_format,
+            description_html
+        )
+
+    def find_project_id(self, name):
+        validation.verifyType(self.testcase, 'project name', name,
+                              validation.StringValidator())
+        return self.master.db.projects.find_project_id(name)
+
     def updateBuilderList(self, masterid, builderNames):
         self.testcase.assertEqual(masterid, self.master.masterid)
         for n in builderNames:
@@ -218,8 +240,10 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def updateBuilderInfo(self, builderid, description, tags):
-        yield self.master.db.builders.updateBuilderInfo(builderid, description, tags)
+    def updateBuilderInfo(self, builderid, description, description_format, description_html,
+                          projectid, tags):
+        yield self.master.db.builders.updateBuilderInfo(builderid, description, description_format,
+                                                        description_html, projectid, tags)
 
     def masterDeactivated(self, masterid):
         return defer.succeed(None)
@@ -337,6 +361,11 @@ class FakeUpdates(service.AsyncService):
                               validation.IntValidator())
         return defer.succeed(None)
 
+    def set_step_locks_acquired_at(self, stepid):
+        validation.verifyType(self.testcase, 'stepid', stepid,
+                              validation.IntValidator())
+        return defer.succeed(None)
+
     def setStepStateString(self, stepid, state_string):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
@@ -362,8 +391,7 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'type', type,
                               validation.IdentifierValidator(1))
         logid = max([0] + list(self.logs)) + 1
-        self.logs[logid] = dict(
-            name=name, type=type, content=[], finished=False)
+        self.logs[logid] = {"name": name, "type": type, "content": [], "finished": False}
         return defer.succeed(logid)
 
     def finishLog(self, logid):
@@ -420,11 +448,16 @@ class FakeUpdates(service.AsyncService):
     def schedulerEnable(self, schedulerid, v):
         return self.master.db.schedulers.enable(schedulerid, v)
 
+    @defer.inlineCallbacks
     def setWorkerState(self, workerid, paused, graceful):
-        return self.master.db.workers.setWorkerState(
-            workerid=workerid,
-            paused=paused,
-            graceful=graceful)
+        yield self.master.db.workers.set_worker_paused(workerid=workerid, paused=paused)
+        yield self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
+
+    def set_worker_paused(self, workerid, paused, pause_reason=None):
+        return self.master.db.workers.set_worker_paused(workerid, paused, pause_reason=pause_reason)
+
+    def set_worker_graceful(self, workerid, graceful):
+        return self.master.db.workers.set_worker_graceful(workerid, graceful)
 
     # methods form BuildData resource
     @defer.inlineCallbacks

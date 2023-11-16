@@ -31,9 +31,9 @@ try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
     import setuptools
+    from distutils.command.install_data import install_data
     from setuptools import setup
     from setuptools.command.sdist import sdist
-    from distutils.command.install_data import install_data
 except ImportError:
     setuptools = None
     from distutils.command.sdist import sdist
@@ -103,12 +103,14 @@ setup_args = {
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
 
     'packages': [
         "buildbot_worker",
         "buildbot_worker.util",
-        "buildbot_worker.backports",
         "buildbot_worker.commands",
         "buildbot_worker.scripts",
         "buildbot_worker.monkeypatches",
@@ -144,7 +146,7 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
-twisted_ver = ">= 17.9.0"
+twisted_ver = ">= 18.7.0"
 
 if setuptools is not None:
     setup_args['install_requires'] = [
@@ -158,6 +160,13 @@ if setuptools is not None:
             'autobahn >= 0.16.0',
             'msgpack >= 0.6.0',
         ]
+    else:
+        # Automat 20.2.0 is the last version that supports Python 2.7. Unfortunately the package
+        # did not update its metadata and thus newer versions advertise Python 2.7 support even
+        # though they are broken.
+        setup_args['install_requires'] += [
+            'Automat <= 20.2.0',
+        ]
 
     # buildbot_worker_windows_service needs pywin32
     if sys.platform == "win32":
@@ -165,9 +174,13 @@ if setuptools is not None:
 
     # Unit test hard dependencies.
     test_deps = [
-        'mock',
         'psutil',
     ]
+    if sys.version_info < (3, 3):
+        # unittest.mock added in Python 3.3
+        test_deps += [
+            'mock',
+        ]
 
     setup_args['tests_require'] = test_deps
 

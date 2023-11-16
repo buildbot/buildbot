@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-def patch_all(for_tests=False):
-    if for_tests:
-        from buildbot_worker.monkeypatches import testcase_assert
-        testcase_assert.patch()
+def patch_all():
+    from buildbot_worker.monkeypatches import testcase_assert
+    testcase_assert.patch()

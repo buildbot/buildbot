@@ -35,7 +35,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
     def __init__(self, config):
         # Cannot use super() here.
         # We must explicitly call both parent constructors.
-        ApplicationSession.__init__(self)
+        ApplicationSession.__init__(self, config)
         service.AsyncMultiService.__init__(self)
         self.leaving = False
         self.setServiceParent(config.extra['parent'])
@@ -157,7 +157,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
         self.app = self.serviceClass(
             url=self.router_url,
-            extra=dict(master=self.master, parent=self),
+            extra={"master": self.master, "parent": self},
             realm=realm,
             make=make
         )

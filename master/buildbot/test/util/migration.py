@@ -17,6 +17,7 @@
 import os
 
 import sqlalchemy as sa
+from alembic.operations import Operations
 from alembic.runtime.migration import MigrationContext
 
 from twisted.internet import defer
@@ -71,7 +72,7 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
             setup_thd_cb(conn)
         yield self.db.pool.do(setup_thd)
 
-        alembic_scripts = self.alembic_get_scripts()
+        alembic_scripts = self.db.model.alembic_get_scripts()
 
         def upgrade_thd(engine):
             with querylog.log_queries():
@@ -84,8 +85,9 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
                         context = MigrationContext.configure(conn, opts={'fn': upgrade})
 
-                        with context.begin_transaction():
-                            context.run_migrations()
+                        with Operations.context(context):
+                            with context.begin_transaction():
+                                context.run_migrations()
 
         yield self.db.pool.do_with_engine(upgrade_thd)
 

@@ -14,10 +14,9 @@
 # Copyright Buildbot Team Members
 
 import socket
+from unittest import mock
 
 from parameterized import parameterized
-
-import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -74,7 +73,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
 
     def libvirt_open(self, uri):
         if uri not in self.connections:
-            raise Exception('Could not find test connection')
+            raise RuntimeError('Could not find test connection')
         return self.connections[uri]
 
     def add_fake_conn(self, uri):
@@ -130,7 +129,8 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
     @defer.inlineCallbacks
     def test_prepare_base_image_cheap(self):
         self.expect_commands(
-            ExpectMasterShell(["qemu-img", "create", "-b", "o", "-f", "qcow2", "p"])
+            ExpectMasterShell(["qemu-img", "create", "-o", "backing_fmt=qcow2",
+                               "-b", "o", "-f", "qcow2", "p"])
         )
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')

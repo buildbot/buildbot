@@ -187,7 +187,7 @@ class UpcloudLatentWorker(AbstractLatentWorker):
             reason = (f'{self.__class__.__name__} {self.workername} failed to stop instance '
                       f'{self.instance["Id"]} ({self._state()}): {reason.decode()}')
             self.instance = None
-            raise Exception(reason)
+            raise RuntimeError(reason)
         while (yield self._state()) not in ["stopped", "absent"]:
             yield util.asyncSleep(1, reactor=self.master.reactor)
 
@@ -198,4 +198,4 @@ class UpcloudLatentWorker(AbstractLatentWorker):
             reason = (f'{self.__class__.__name__} {self.workername} failed to delete instance '
                       f'{self.instance["Id"]} ({self._state()}): {reason.decode()}')
             self.instance = None
-            raise Exception(reason)
+            raise RuntimeError(reason)

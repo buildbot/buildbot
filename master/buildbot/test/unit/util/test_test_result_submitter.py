@@ -30,7 +30,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True)
         yield self.master.startService()
 
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Buildset(id=20),
             fakedb.Builder(id=88, name='b1'),

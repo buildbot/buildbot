@@ -12,8 +12,8 @@
 # serve to show the default.
 
 
+import importlib.metadata
 import os
-import pkg_resources
 import sys
 import textwrap
 
@@ -23,19 +23,19 @@ import textwrap
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from buildbot.util.raml import RamlSpec
     from buildbot.reporters.telegram import TelegramContact
+    from buildbot.util.raml import RamlSpec
 except ImportError:
     sys.path.insert(2, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     os.pardir))
-    from buildbot.util.raml import RamlSpec
     from buildbot.reporters.telegram import TelegramContact
+    from buildbot.util.raml import RamlSpec
 
 # -- General configuration -----------------------------------------------
 try:
-    pkg_resources.require('docutils>=0.8')
-except pkg_resources.ResolutionError as e:
-    raise RuntimeError("docutils is not installed or has incompatible version. "
+    importlib.metadata.distribution('docutils')
+except importlib.metadata.PackageNotFoundError as e:
+    raise RuntimeError("docutils is not installed. "
                        "Please install documentation dependencies with `pip "
                        "install buildbot[docs]`") from e
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -87,10 +87,7 @@ else:
 # The full version, including alpha/beta/rc tags.
 release = version
 
-# add a loud note about python 2
-rst_prolog = textwrap.dedent("""\
-.. caution:: Buildbot no longer supports Python 2.7 on the Buildbot master.
-""")
+rst_prolog = ""
 
 # add a loud note for anyone looking at the latest docs
 if release == 'latest':
@@ -141,10 +138,10 @@ intersphinx_mapping = {
 }
 
 extlinks = {
-    'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request '),
-    'issue': ('https://github.com/buildbot/buildbot/issues/%s', 'issue # '),
+    'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request %s'),
+    'issue': ('https://github.com/buildbot/buildbot/issues/%s', 'issue #%s'),
     # deprecated. Use issue instead, and point to Github
-    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),
+    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #%s'),
     # Renders as link with whole url, e.g.
     #   :src-link:`master`
     # renders as
@@ -154,8 +151,8 @@ extlinks = {
     'src-link': ('https://github.com/buildbot/buildbot/tree/master/%s', None),
     # "pretty" reference that looks like relative path in Buildbot source tree
     # by default.
-    'src': ('https://github.com/buildbot/buildbot/tree/master/%s', ''),
-    'contrib-src': ('https://github.com/buildbot/buildbot-contrib/tree/master/%s', ''),
+    'src': ('https://github.com/buildbot/buildbot/tree/master/%s', '%s'),
+    'contrib-src': ('https://github.com/buildbot/buildbot-contrib/tree/master/%s', '%s'),
 }
 
 # Sphinx' link checker.
@@ -328,7 +325,7 @@ for raml_typename, raml_type in sorted(raml_spec.types.items()):
 
     doc_path = f'developer/raml/{raml_typename}.rst'
     if not os.path.exists(doc_path):
-        raise Exception(f'File {doc_path} for RAML type {raml_typename} does not exist')
+        raise RuntimeError(f'File {doc_path} for RAML type {raml_typename} does not exist')
 
 # Spell checker.
 try:

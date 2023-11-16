@@ -60,6 +60,7 @@ class Triggerable(base.BaseScheduler):
         idsDeferred = self.addBuildsetForSourceStampsWithDefaults(
             reason,
             sourcestamps, waited_for,
+            priority=self.priority,
             properties=props,
             parent_buildid=parent_buildid,
             parent_relationship=parent_relationship)

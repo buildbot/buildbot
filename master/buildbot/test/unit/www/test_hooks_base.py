@@ -107,11 +107,12 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase,
         class CustomBase(BaseHookHandler):
             def getChanges(self, request):
                 args = request.args
-                chdict = dict(
-                              revision=args.get(b'revision'),
-                              repository=args.get(b'_repository') or '',
-                              project=args.get(b'project') or '',
-                              codebase=args.get(b'codebase'))
+                chdict = {
+                    "revision": args.get(b'revision'),
+                    "repository": args.get(b'_repository') or '',
+                    "project": args.get(b'project') or '',
+                    "codebase": args.get(b'codebase')
+                }
                 return ([chdict], None)
         self.changeHook = _prepare_base_change_hook(self, custom_class=CustomBase)
 

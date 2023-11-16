@@ -56,6 +56,7 @@ class LatentController(SeverWorkerConnectionMixin):
                  starts_without_substantiate=None, **kwargs):
         self.case = case
         self.build_wait_timeout = build_wait_timeout
+        self.has_crashed = False
         self.worker = ControllableLatentWorker(name, self, **kwargs)
         self.remote_worker = None
 
@@ -226,3 +227,6 @@ class ControllableLatentWorker(AbstractLatentWorker):
             return True
         self._controller._stop_deferred = defer.Deferred()
         return (yield self._controller._stop_deferred)
+
+    def check_instance(self):
+        return (not self._controller.has_crashed, "")

@@ -59,7 +59,7 @@ class TestOldBuildTracker(unittest.TestCase):
                                       branch_eq=['br1', 'br2'])
         filter.add_filter(['bldr1', 'bldr2'], ss_filter)
         self.cancellations = []
-        self.tracker = _OldBuildTracker(filter, self.on_cancel)
+        self.tracker = _OldBuildTracker(filter, lambda ss: ss['branch'], self.on_cancel)
 
     def on_cancel(self, id_tuple):
         is_build, id = id_tuple
@@ -334,11 +334,12 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         }
 
     def insert_test_data(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='builder1'),
             fakedb.Builder(id=80, name='builder2'),
+            fakedb.Builder(id=81, name='builder3'),
 
             fakedb.Buildset(id=98, results=None, reason="reason98"),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
@@ -355,6 +356,15 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
             fakedb.BuildRequest(id=11, buildsetid=99, builderid=80),
             fakedb.Build(id=20, number=1, builderid=80, buildrequestid=11, workerid=13,
                          masterid=92, results=None, state_string="state2"),
+
+            fakedb.Buildset(id=100, results=None, reason="reason100"),
+            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=236),
+            fakedb.SourceStamp(id=236, revision='revision2', project='project2',
+                               codebase='codebase2', repository='repository2',
+                               branch='refs/changes/10/12310/2'),
+            fakedb.BuildRequest(id=12, buildsetid=100, builderid=81),
+            fakedb.Build(id=21, number=1, builderid=81, buildrequestid=12, workerid=13,
+                         masterid=92, results=None, state_string="state3"),
         ])
 
     @defer.inlineCallbacks
@@ -362,6 +372,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.canceller = OldBuildCanceller('canceller', [
             (['builder1'], SourceStampFilter(branch_eq=['branch1'])),
             (['builder2'], SourceStampFilter(branch_eq=['branch2'])),
+            (['builder3'], SourceStampFilter()),
         ])
         yield self.canceller.setServiceParent(self.master)
 
@@ -385,7 +396,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
                 brdict = yield self.master.db.buildrequests.getBuildRequest(id)
                 expected_productions.append((('buildrequests', str(id), 'cancel'), brdict))
             else:
-                raise Exception(f"Unknown cancellation type {kind}")
+                raise RuntimeError(f"Unknown cancellation type {kind}")
 
         self.master.mq.assertProductions(expected_productions)
 
@@ -397,6 +408,19 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
         self.assert_cancelled([('build', 19)])
+
+        self.master.mq.callConsumer(('changes', '124', 'new'), ss_dict)
+        self.assert_cancelled([])
+
+    @defer.inlineCallbacks
+    def test_cancel_build_after_new_commit_gerrit_branch_filter(self):
+        yield self.setup_canceller_with_filters()
+
+        ss_dict = self.create_ss_dict('project2', 'codebase2', 'repository2',
+                                      'refs/changes/10/12310/3')
+
+        self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
+        self.assert_cancelled([('build', 21)])
 
         self.master.mq.callConsumer(('changes', '124', 'new'), ss_dict)
         self.assert_cancelled([])
@@ -482,8 +506,8 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         on_build_new_d.callback(None)
         on_buildrequest_new_d.callback(None)
         yield d
-        self.assertEqual(on_build_new_build_ids, [19, 20])
-        self.assertEqual(on_buildrequest_new_breq_ids, [10, 11])
+        self.assertEqual(on_build_new_build_ids, [19, 20, 21])
+        self.assertEqual(on_buildrequest_new_breq_ids, [10, 11, 12])
 
         self.assertFalse(self.canceller._build_tracker.is_build_tracked(19))
         self.assertFalse(self.canceller._build_tracker.is_build_tracked(20))

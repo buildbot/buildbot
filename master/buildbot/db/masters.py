@@ -33,18 +33,19 @@ class MastersConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
-            insert_values=dict(
-                name=name,
-                name_hash=name_hash,
-                active=0,  # initially inactive
-                last_active=int(self.master.reactor.seconds())
-            ))
+            insert_values={
+                "name": name,
+                "name_hash": name_hash,
+                "active": 0,  # initially inactive
+                "last_active": int(self.master.reactor.seconds())
+            }
+        )
 
     # returns a Deferred that returns a value
     def setMasterState(self, masterid, active):
         def thd(conn):
             tbl = self.db.model.masters
-            whereclause = (tbl.c.id == masterid)
+            whereclause = tbl.c.id == masterid
 
             # get the old state
             r = conn.execute(sa.select([tbl.c.active],
@@ -60,7 +61,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 # master
                 sch_mst_tbl = self.db.model.scheduler_masters
                 q = sch_mst_tbl.delete(
-                    whereclause=(sch_mst_tbl.c.masterid == masterid))
+                    whereclause=sch_mst_tbl.c.masterid == masterid)
                 conn.execute(q)
 
             # set the state (unconditionally, just to be safe)
@@ -79,7 +80,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.masters
             res = conn.execute(tbl.select(
-                whereclause=(tbl.c.id == masterid)))
+                whereclause=tbl.c.id == masterid))
             row = res.fetchone()
 
             rv = None

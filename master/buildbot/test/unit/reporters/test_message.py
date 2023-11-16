@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 import textwrap
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -142,7 +141,7 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
             extra_build_properties = {}
 
         self.db = self.master.db
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrkr'),
             fakedb.Buildset(id=98, results=results1, reason="testReason1"),
@@ -156,18 +155,18 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
                          masterid=92, results=results2),
         ])
         for build_id in (20, 21):
-            self.db.insertTestData([
+            self.db.insert_test_data([
                 fakedb.BuildProperty(buildid=build_id, name="workername", value="wrkr"),
                 fakedb.BuildProperty(buildid=build_id, name="reason", value="because"),
             ])
 
             for name, value in extra_build_properties.items():
-                self.db.insertTestData([
+                self.db.insert_test_data([
                     fakedb.BuildProperty(buildid=build_id, name=name, value=value),
                 ])
 
         if with_steps:
-            self.db.insertTestData([
+            self.db.insert_test_data([
                 fakedb.Step(id=151, buildid=21, number=1, results=SUCCESS, name='first step'),
                 fakedb.Step(id=152, buildid=21, number=2, results=results2, name='second step'),
                 fakedb.Step(id=153, buildid=21, number=3, results=SUCCESS, name='third step'),
@@ -231,7 +230,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 A passing build has been detected on builder Builder1 while building Buildbot.
 
                 Full details are available at:
-                    http://localhost:8080/#builders/80/builds/1
+                    http://localhost:8080/#/builders/80/builds/1
 
                 Build state: test
                 Revision: (unknown)
@@ -257,7 +256,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 A passing build has been detected on builder Builder1 while building Buildbot.
 
                 Full details are available at:
-                    http://localhost:8080/#builders/80/builds/1
+                    http://localhost:8080/#/builders/80/builds/1
 
                 Build state: test
                 Revision: abcd1234
@@ -271,12 +270,12 @@ class TestMessageFormatter(MessageFormatterTestBase):
 
                 - 2: second step ( success )
                     Logs:
-                        - stdio: http://localhost:8080/#builders/80/builds/1/steps/2/logs/stdio
-                        - stderr: http://localhost:8080/#builders/80/builds/1/steps/2/logs/stderr
+                        - stdio: http://localhost:8080/#/builders/80/builds/1/steps/2/logs/stdio
+                        - stderr: http://localhost:8080/#/builders/80/builds/1/steps/2/logs/stderr
 
                 - 3: third step ( success )
                     Logs:
-                        - stdio: http://localhost:8080/#builders/80/builds/1/steps/3/logs/stdio
+                        - stdio: http://localhost:8080/#/builders/80/builds/1/steps/3/logs/stdio
 
                 ''')
         })
@@ -290,7 +289,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
             'subject': '☺ Buildbot (Buildbot): Builder1 - test ((unknown revision))',
             'body': textwrap.dedent('''\
                 <p>A passing build has been detected on builder
-                <a href="http://localhost:8080/#builders/80/builds/1">Builder1</a>
+                <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
                 while building Buildbot.</p>
                 <p>Information:</p>
                 <ul>
@@ -318,7 +317,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
             'subject': '☺ Buildbot (Buildbot): Builder1 - test (abcd1234)',
             'body': textwrap.dedent('''\
                 <p>A passing build has been detected on builder
-                <a href="http://localhost:8080/#builders/80/builds/1">Builder1</a>
+                <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
                 while building Buildbot.</p>
                 <p>Information:</p>
                 <ul>
@@ -338,15 +337,15 @@ class TestMessageFormatter(MessageFormatterTestBase):
                     <li style="">
                     2: second step ( success )
                     (
-                        <a href="http://localhost:8080/#builders/80/builds/1/steps/2/logs/stdio">&lt;stdio&gt;</a>
-                        <a href="http://localhost:8080/#builders/80/builds/1/steps/2/logs/stderr">&lt;stderr&gt;</a>
+                        <a href="http://localhost:8080/#/builders/80/builds/1/steps/2/logs/stdio">&lt;stdio&gt;</a>
+                        <a href="http://localhost:8080/#/builders/80/builds/1/steps/2/logs/stderr">&lt;stderr&gt;</a>
                     )
                     </li>
 
                     <li style="">
                     3: third step ( success )
                     (
-                        <a href="http://localhost:8080/#builders/80/builds/1/steps/3/logs/stdio">&lt;stdio&gt;</a>
+                        <a href="http://localhost:8080/#/builders/80/builds/1/steps/3/logs/stdio">&lt;stdio&gt;</a>
                     )
                     </li>
 
@@ -359,7 +358,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(res['type'], "plain")
         self.assertEqual(res['body'],
-                         "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
+                         "URL: http://localhost:8080/#/builders/80/builds/1 -- Build succeeded!")
 
     @defer.inlineCallbacks
     def test_inline_subject(self):

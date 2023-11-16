@@ -545,8 +545,12 @@ class CodebaseParameter(NestedParameter):
         if label is None and codebase:
             label = "Codebase: " + codebase
 
-        fields_dict = dict(branch=branch, revision=revision,
-                           repository=repository, project=project)
+        fields_dict = {
+            "branch": branch,
+            "revision": revision,
+            "repository": repository,
+            "project": project
+        }
         for k, v in fields_dict.items():
             if v is DefaultField:
                 v = StringParameter(name=k, label=k.capitalize() + ":")
@@ -635,7 +639,8 @@ class ForceScheduler(base.BaseScheduler):
                  buttonName=None,
                  codebases=None,
                  label=None,
-                 properties=None):
+                 properties=None,
+                 priority=IntParameter(name="priority", default=0)):
         """
         Initialize a ForceScheduler.
 
@@ -725,19 +730,25 @@ class ForceScheduler(base.BaseScheduler):
                              f"or CodebaseParameter objects: {repr(codebases)}")
 
             self.forcedProperties.append(codebase)
-            codebase_dict[codebase.codebase] = dict(
-                branch='', repository='', revision='')
+            codebase_dict[codebase.codebase] = {"branch": '', "repository": '', "revision": ''}
 
         super().__init__(name=name,
                          builderNames=builderNames,
                          properties={},
                          codebases=codebase_dict)
 
+        if self.checkIfType(priority, IntParameter):
+            self.priority = priority
+        else:
+            config.error(f"ForceScheduler '{name}': priority must be a IntParameter: "
+                         f"{repr(priority)}")
+
         if properties:
             self.forcedProperties.extend(properties)
 
         # this is used to simplify the template
-        self.all_fields = [NestedParameter(name='', fields=[username, reason])]
+        self.all_fields = [NestedParameter(name='',
+                                           fields=[username, reason, priority])]
         self.all_fields.extend(self.forcedProperties)
 
         self.reasonString = reasonString
@@ -818,6 +829,9 @@ class ForceScheduler(base.BaseScheduler):
             owner = yield collector.collectValidationErrors(self.username.fullName,
                                                             self.username.getFromKwargs, kwargs)
 
+        priority = yield collector.collectValidationErrors(self.priority.fullName,
+                                                           self.priority.getFromKwargs, kwargs)
+
         properties, _, sourcestamps = yield self.gatherPropertiesAndChanges(
             collector, **kwargs)
 
@@ -840,6 +854,7 @@ class ForceScheduler(base.BaseScheduler):
             sourcestamps=sourcestamps,
             properties=properties,
             builderNames=builderNames,
+            priority=priority,
         )
 
         return res

@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -30,10 +29,18 @@ from buildbot.test.util import www
 
 
 def mkconfig(**kwargs):
-    config = dict(force=False, relocatable=False, config='master.cfg',
-                  db='sqlite:///state.sqlite', basedir=os.path.abspath('basedir'),
-                  quiet=False, **{'no-logrotate': False, 'log-size': 10000000,
-                                  'log-count': 10})
+    config = {
+        "force": False,
+        "relocatable": False,
+        "config": 'master.cfg',
+        "db": 'sqlite:///state.sqlite',
+        "basedir": os.path.abspath('basedir'),
+        "quiet": False, **{
+            'no-logrotate': False,
+            'log-size': 10000000,
+            'log-count': 10
+        }
+    }
     config.update(kwargs)
     return config
 
@@ -118,15 +125,18 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         basedir = basedir or self.basedir
         # pylint: disable=unsubscriptable-object
         self.assertEqual(
-            dict(basedir=self.DBConnector.call_args[0][1],
-                 db_url=self.DBConnector.call_args[0][0].mkconfig.db['db_url'],
-                 verbose=self.db.setup.call_args[1]['verbose'],
-                 check_version=self.db.setup.call_args[1]['check_version'],
-                 ),
-            dict(basedir=self.basedir,
-                 db_url=db_url,
-                 verbose=True,
-                 check_version=False))
+            {
+                "basedir": self.DBConnector.call_args[0][1],
+                "db_url": self.DBConnector.call_args[0][0].mkconfig.db['db_url'],
+                "verbose": self.db.setup.call_args[1]['verbose'],
+                "check_version": self.db.setup.call_args[1]['check_version'],
+            }, {
+                "basedir": self.basedir,
+                "db_url": db_url,
+                "verbose": True,
+                "check_version": False
+            }
+        )
 
     # tests
 
@@ -230,9 +240,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.patch(connector.DBConnector, 'setup', setup)
         upgrade = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(model.Model, 'upgrade', upgrade)
-        yield create_master.createDB(
-            mkconfig(basedir='test', quiet=True),
-            _noMonkey=True)
+        yield create_master.createDB(mkconfig(basedir='test', quiet=True))
         setup.asset_called_with(check_version=False, verbose=False)
         upgrade.assert_called_with()
         self.assertWasQuiet()

@@ -69,19 +69,19 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixi
             'post',
             '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
             json={'state': 'pending',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build started.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
             json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
             json={'state': 'failure',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
         build['complete'] = False
@@ -107,7 +107,7 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixi
     def test_source_stamp_no_props_nightly_scheduler(self):
         # no status updates are expected
 
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
@@ -151,42 +151,42 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixi
             'post',
             '/repos/test_user/test_project/statuses/rev1',
             json={'state': 'pending',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build started.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/test_user/test_project/statuses/rev3',
             json={'state': 'pending',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build started.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/test_user/test_project/statuses/rev1',
             json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/test_user/test_project/statuses/rev3',
             json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/test_user/test_project/statuses/rev1',
             json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/test_user/test_project/statuses/rev3',
             json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
         # note that the first sourcestamp only has revision, second only branch and only the third
         # has both
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
@@ -260,19 +260,19 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
             'post',
             '/repos/buildbot2/buildbot2/statuses/d34db33fd43db33f',
             json={'state': 'pending',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build started.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/buildbot2/buildbot2/statuses/d34db33fd43db33f',
             json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/buildbot2/buildbot2/statuses/d34db33fd43db33f',
             json={'state': 'failure',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
         yield self.sp._got_event(('builds', 20, 'new'), build)
@@ -290,19 +290,19 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
             'post',
             '/repos/buildbot1/buildbot1/statuses/d34db33fd43db33f',
             json={'state': 'pending',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build started.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/buildbot1/buildbot1/statuses/d34db33fd43db33f',
             json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/repos/buildbot1/buildbot1/statuses/d34db33fd43db33f',
             json={'state': 'failure',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
         yield self.sp._got_event(('builds', 20, 'new'), build)
@@ -400,7 +400,7 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
 
         # note that the first sourcestamp only has revision, second only branch and only the third
         # has both
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),

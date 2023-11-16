@@ -1,0 +1,15 @@
+{
+  "name": "smokes-react",
+  "version": "1.0.0",
+  "description": "smoke tests for buildbot with cypress",
+  "main": "index.js",
+  "dependencies": {
+    "@playwright/test": "^1.37.0",
+    "qs": "^6.11",
+    "request": "^2.88.2",
+    "typescript": "^4.4.2"
+  },
+  "scripts": {},
+  "author": "",
+  "license": "GPL2.0"
+}

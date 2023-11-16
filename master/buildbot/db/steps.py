@@ -25,21 +25,20 @@ from buildbot.util import epoch2datetime
 
 
 class StepsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
     url_lock = None
 
     @defer.inlineCallbacks
     def getStep(self, stepid=None, buildid=None, number=None, name=None):
         tbl = self.db.model.steps
         if stepid is not None:
-            wc = (tbl.c.id == stepid)
+            wc = tbl.c.id == stepid
         else:
             if buildid is None:
                 raise RuntimeError('must supply either stepid or buildid')
             if number is not None:
-                wc = (tbl.c.number == number)
+                wc = tbl.c.number == number
             elif name is not None:
-                wc = (tbl.c.name == name)
+                wc = tbl.c.name == name
             else:
                 raise RuntimeError('must supply either number or name')
             wc = wc & (tbl.c.buildid == buildid)
@@ -73,17 +72,23 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.steps
             # get the highest current number
             r = conn.execute(sa.select([sa.func.max(tbl.c.number)],
-                                       whereclause=(tbl.c.buildid == buildid)))
+                                       whereclause=tbl.c.buildid == buildid))
             number = r.scalar()
             number = 0 if number is None else number + 1
 
             # note that there is no chance for a race condition here,
             # since only one master is inserting steps.  If there is a
             # conflict, then the name is likely already taken.
-            insert_row = dict(buildid=buildid, number=number,
-                              started_at=None, complete_at=None,
-                              state_string=state_string,
-                              urls_json='[]', name=name)
+            insert_row = {
+                "buildid": buildid,
+                "number": number,
+                "started_at": None,
+                "locks_acquired_at": None,
+                "complete_at": None,
+                "state_string": state_string,
+                "urls_json": '[]',
+                "name": name
+            }
             try:
                 r = conn.execute(self.db.model.steps.insert(), insert_row)
                 got_id = r.inserted_primary_key[0]
@@ -118,15 +123,25 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=(tbl.c.id == stepid))
+            q = tbl.update(whereclause=tbl.c.id == stepid)
             conn.execute(q, started_at=started_at)
+        yield self.db.pool.do(thd)
+
+    @defer.inlineCallbacks
+    def set_step_locks_acquired_at(self, stepid):
+        locks_acquired_at = int(self.master.reactor.seconds())
+
+        def thd(conn):
+            tbl = self.db.model.steps
+            q = tbl.update(whereclause=tbl.c.id == stepid)
+            conn.execute(q, locks_acquired_at=locks_acquired_at)
         yield self.db.pool.do(thd)
 
     # returns a Deferred that returns None
     def setStepStateString(self, stepid, state_string):
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=(tbl.c.id == stepid))
+            q = tbl.update(whereclause=tbl.c.id == stepid)
             conn.execute(q, state_string=state_string)
         return self.db.pool.do(thd)
 
@@ -145,7 +160,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
 
             tbl = self.db.model.steps
-            wc = (tbl.c.id == stepid)
+            wc = tbl.c.id == stepid
             q = sa.select([tbl.c.urls_json],
                           whereclause=wc)
             res = conn.execute(q)
@@ -154,7 +169,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 _racehook()
             urls = json.loads(row.urls_json)
 
-            url_item = dict(name=name, url=url)
+            url_item = {"name": name, "url": url}
 
             if url_item not in urls:
                 urls.append(url_item)
@@ -167,7 +182,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def finishStep(self, stepid, results, hidden):
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=(tbl.c.id == stepid))
+            q = tbl.update(whereclause=tbl.c.id == stepid)
             conn.execute(q,
                          complete_at=int(self.master.reactor.seconds()),
                          results=results,
@@ -175,14 +190,16 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def _stepdictFromRow(self, row):
-        return dict(
-            id=row.id,
-            number=row.number,
-            name=row.name,
-            buildid=row.buildid,
-            started_at=epoch2datetime(row.started_at),
-            complete_at=epoch2datetime(row.complete_at),
-            state_string=row.state_string,
-            results=row.results,
-            urls=json.loads(row.urls_json),
-            hidden=bool(row.hidden))
+        return {
+            "id": row.id,
+            "number": row.number,
+            "name": row.name,
+            "buildid": row.buildid,
+            "started_at": epoch2datetime(row.started_at),
+            "locks_acquired_at": epoch2datetime(row.locks_acquired_at),
+            "complete_at": epoch2datetime(row.complete_at),
+            "state_string": row.state_string,
+            "results": row.results,
+            "urls": json.loads(row.urls_json),
+            "hidden": bool(row.hidden)
+        }

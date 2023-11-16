@@ -16,8 +16,7 @@
 import json
 import os
 import textwrap
-
-import mock
+from unittest import mock
 
 from autobahn.wamp.exception import TransportLost
 from autobahn.wamp.types import SubscribeOptions
@@ -68,8 +67,8 @@ class FakeWampConnector:
         owntopic = self.topic.split(".")
         if len(topic) != len(owntopic):
             return False
-        for i, _ in enumerate(topic):
-            if owntopic[i] != "" and topic[i] != owntopic[i]:
+        for i, itopic in enumerate(topic):
+            if owntopic[i] != "" and itopic != owntopic[i]:
                 return False
         return True
 
@@ -230,7 +229,7 @@ class WampMQ(TestReactorMixin, unittest.TestCase):
 
 
 class FakeConfig:
-    mq = dict(type='wamp', router_url="wss://foo", realm="realm1")
+    mq = {"type": 'wamp', "router_url": 'wss://foo', "realm": 'realm1'}
 
 
 class WampMQReal(TestReactorMixin, unittest.TestCase):

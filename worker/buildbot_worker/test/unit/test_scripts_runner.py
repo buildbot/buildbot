@@ -19,14 +19,17 @@ from __future__ import print_function
 import os
 import sys
 
-import mock
-
 from twisted.python import log
 from twisted.python import usage
 from twisted.trial import unittest
 
 from buildbot_worker.scripts import runner
 from buildbot_worker.test.util import misc
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 
 class OptionsMixin(object):
@@ -117,9 +120,11 @@ class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     def test_all_args(self):
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
-        self.assertOptions(opts,
-                           dict(quiet=True, nodaemon=True,
-                                basedir=self.ABSPATH_PREFIX + self.MY_BASEDIR))
+        self.assertOptions(opts, {
+            "quiet": True,
+            "nodaemon": True,
+            "basedir": self.ABSPATH_PREFIX + self.MY_BASEDIR
+        })
 
 
 class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
@@ -135,9 +140,11 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     def test_all_args(self):
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
-        self.assertOptions(opts,
-                           dict(quiet=True, nodaemon=True,
-                                basedir=self.ABSPATH_PREFIX + self.MY_BASEDIR))
+        self.assertOptions(opts, {
+            "quiet": True,
+            "nodaemon": True,
+            "basedir": self.ABSPATH_PREFIX + self.MY_BASEDIR
+        })
 
 
 class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
@@ -168,9 +175,13 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         # argument will not be converted to absolute path
         self.patch(runner.MakerBase, "postOptions", mock.Mock())
 
-        self.assertOptions(self.parse(*self.req_args),
-                           dict(basedir="bdir", host="mstr", port=5678,
-                                name="name", passwd="pswd"))
+        self.assertOptions(self.parse(*self.req_args), {
+            "basedir": "bdir",
+            "host": "mstr",
+            "port": 5678,
+            "name": "name",
+            "passwd": "pswd"
+        })
 
     def test_all_args(self):
 
@@ -232,6 +243,11 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         with self.assertRaisesRegex(usage.UsageError,
                                "umask parameter needs to be a number or None"):
             self.parse("--umask=X", *self.req_args)
+
+    def test_inv_umask2(self):
+        with self.assertRaisesRegex(usage.UsageError,
+                               "umask parameter needs to be a number or None"):
+            self.parse("--umask=022", *self.req_args)
 
     def test_inv_allow_shutdown(self):
         with self.assertRaisesRegex(usage.UsageError,

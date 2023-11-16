@@ -25,19 +25,44 @@ from buildbot.test.util.integration import RunMasterBase
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
 
+    def create_config(self):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.plugins import steps
+        from buildbot.process.factory import BuildFactory
+
+        c['schedulers'] = [
+            schedulers.AnyBranchScheduler(
+                name="sched1",
+                builderNames=["testy1"]),
+            schedulers.ForceScheduler(
+                name="sched2",
+                builderNames=["testy2"])
+        ]
+        f = BuildFactory()
+        f.addStep(steps.ShellCommand(command='echo hello'))
+        c['builders'] = [
+            BuilderConfig(name=name,
+                          workernames=["local1"],
+                          factory=f)
+            for name in ['testy1', 'testy2']
+        ]
+        return c
+
     @defer.inlineCallbacks
     def test_shell(self):
-        cfg = masterConfig()
-        yield self.setupConfig(cfg)
+        cfg = self.create_config()
+        yield self.setup_master(cfg)
 
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none"
-                      )
+        change = {
+            "branch": "master",
+            "files": ["foo.c"],
+            "author": "me@foo.com",
+            "committer": "me@foo.com",
+            "comments": "good stuff",
+            "revision": "HEAD",
+            "project": "none"
+        }
         # switch the configuration of the scheduler, and make sure the correct builder is run
         cfg['schedulers'] = [
             schedulers.AnyBranchScheduler(
@@ -52,29 +77,3 @@ class ShellMaster(RunMasterBase):
         self.assertEqual(build['buildid'], 1)
         builder = yield self.master.data.get(('builders', build['builderid']))
         self.assertEqual(builder['name'], 'testy2')
-
-
-# master configuration
-def masterConfig():
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import steps
-
-    c['schedulers'] = [
-        schedulers.AnyBranchScheduler(
-            name="sched1",
-            builderNames=["testy1"]),
-        schedulers.ForceScheduler(
-            name="sched2",
-            builderNames=["testy2"])
-    ]
-    f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
-    c['builders'] = [
-        BuilderConfig(name=name,
-                      workernames=["local1"],
-                      factory=f)
-        for name in ['testy1', 'testy2']
-    ]
-    return c

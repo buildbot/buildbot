@@ -141,6 +141,9 @@ class GitHubEventHandler(PullRequestMixin):
     def handle_ping(self, _, __):
         return [], 'git'
 
+    def handle_workflow_run(self, _, __):
+        return [], 'git'
+
     def handle_push(self, payload, event):
         # This field is unused:
         user = None
@@ -273,7 +276,15 @@ class GitHubEventHandler(PullRequestMixin):
         res = yield http.get(url)
         if 200 <= res.code < 300:
             data = yield res.json()
-            return [f["filename"] for f in data]
+            filenames = []
+            for f in data:
+                filenames.append(f["filename"])
+                # If a file was moved this tell us where it was moved from.
+                previous_filename = f.get("previous_filename")
+                if previous_filename is not None:
+                    filenames.append(previous_filename)
+
+            return filenames
 
         log.msg(f'Failed fetching PR files: response code {res.code}')
         return []

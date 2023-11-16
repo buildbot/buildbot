@@ -132,7 +132,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSourceStamp_simple(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.SourceStamp(id=234, branch='br', revision='rv',
                                repository='rep', codebase='cb', project='prj',
                                created_at=CREATED_AT),
@@ -159,7 +159,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getSourceStamp_simple_None(self):
         "check that NULL branch and revision are handled correctly"
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.SourceStamp(id=234, branch=None, revision=None,
                                repository='rep', codebase='cb', project='prj'),
         ])
@@ -171,7 +171,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSourceStamp_patch(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
@@ -180,13 +180,16 @@ class Tests(interfaces.InterfaceTests):
         ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
         validation.verifyDbDict(self, 'ssdict', ssdict)
-        self.assertEqual(dict((k, v) for k, v in ssdict.items()
-                              if k.startswith('patch_')),
-                         dict(patch_body=b'hello, world',
-                              patch_level=3,
-                              patch_author='bar',
-                              patch_comment='foo',
-                              patch_subdir='/foo'))
+        self.assertEqual(
+            {k: v for k, v in ssdict.items() if k.startswith('patch_')},
+            {
+                "patch_body": b'hello, world',
+                "patch_level": 3,
+                "patch_author": 'bar',
+                "patch_comment": 'foo',
+                "patch_subdir": '/foo'
+            }
+        )
 
     @defer.inlineCallbacks
     def test_getSourceStamp_nosuch(self):
@@ -196,7 +199,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSourceStamps(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
@@ -253,7 +256,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def do_test_getSourceStampsForBuild(self, rows, buildid, expected):
-        yield self.insertTestData(rows)
+        yield self.insert_test_data(rows)
 
         sourcestamps = yield self.db.sourcestamps.getSourceStampsForBuild(buildid)
 
@@ -378,6 +381,7 @@ class TestRealDB(unittest.TestCase,
         yield self.setUpConnectorComponent(
             table_names=['sourcestamps',
                          'patches',
+                         "projects",
                          'masters',
                          'workers',
                          'buildsets',

@@ -87,8 +87,8 @@ class BuildChooserBase:
                                                  [resultspec.Filter('claimed',
                                                                     'eq',
                                                                     [False])])
-            # sort by submitted_at, so the first is the oldest
-            brdicts.sort(key=lambda brd: brd['submitted_at'])
+            # sort by buildrequestid, so the first is the oldest
+            brdicts.sort(key=lambda brd: brd['buildrequestid'])
             self.unclaimedBrdicts = brdicts
         return self.unclaimedBrdicts
 
@@ -230,8 +230,9 @@ class BasicBuildChooser(BuildChooserBase):
                         f"from _getNextUnclaimedBuildRequest for builder '{self.bldr}'")
                 nextBreq = None
         else:
-            # otherwise just return the first build
-            brdict = self.unclaimedBrdicts[0]
+            # otherwise just return the build with highest priority
+            brdict = sorted(self.unclaimedBrdicts.data,
+                            key=lambda b: b['priority'], reverse=True)[0]
             nextBreq = yield self._getBuildRequestForBrdict(brdict)
 
         return nextBreq
@@ -371,7 +372,12 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         @defer.inlineCallbacks
         def key(bldr):
-            # Sort by time of oldest build request
+            # Sort primarily highest priority of build requests
+            priority = yield bldr.get_highest_priority()
+            if priority is None:
+                # for builders that do not have pending buildrequest, we just use large number
+                priority = -math.inf
+            # Break ties using the time of oldest build request
             time = yield bldr.getOldestRequestTime()
             if time is None:
                 # for builders that do not have pending buildrequest, we just use large number
@@ -379,7 +385,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
             else:
                 if isinstance(time, datetime):
                     time = time.timestamp()
-            return (time, bldr.name)
+            return (-priority, time, bldr.name)
 
         yield async_sort(builders, key)
 

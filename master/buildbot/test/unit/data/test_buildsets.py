@@ -40,7 +40,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Buildset(id=13, reason='because I said so'),
             fakedb.SourceStamp(id=92),
             fakedb.SourceStamp(id=93),
@@ -81,7 +81,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=92),
             fakedb.Buildset(id=13, complete=True),
             fakedb.Buildset(id=14, complete=False),
@@ -130,7 +130,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = buildsets.Buildset(self.master)
-        return self.master.db.insertTestData([
+        return self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234, branch='br', codebase='cb',
                                project='pr', repository='rep', revision='rev',
                                created_at=89834834),
@@ -148,7 +148,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             self.rtype.addBuildset)  # real
         def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
                         properties=None, builderids=None, external_idstring=None,
-                        parent_buildid=None, parent_relationship=None):
+                        parent_buildid=None, parent_relationship=None, priority=0):
             pass
 
     @defer.inlineCallbacks
@@ -216,11 +216,18 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         ssmap = {234: self.SS234_DATA}
         return (
             ('buildsets', str(bsid), 'new'),
-            dict(bsid=bsid, complete=False, complete_at=None,
-                 external_idstring=external_idstring, reason=reason,
-                 results=None, scheduler=scheduler,
-                 sourcestamps=[ssmap[ssid] for ssid in sourcestampids],
-                 submitted_at=submitted_at))
+            {
+                "bsid": bsid,
+                "complete": False,
+                "complete_at": None,
+                "external_idstring": external_idstring,
+                "reason": reason,
+                "results": None,
+                "scheduler": scheduler,
+                "sourcestamps": [ssmap[ssid] for ssid in sourcestampids],
+                "submitted_at": submitted_at
+            }
+        )
 
     def _buildsetCompleteMessage(self, bsid, complete_at=A_TIMESTAMP_EPOCH,
                                  submitted_at=A_TIMESTAMP_EPOCH, external_idstring='extid',
@@ -228,17 +235,28 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         if sourcestampids is None:
             sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
-        return (
-            ('buildsets', str(bsid), 'complete'),
-            dict(bsid=bsid, complete=True, complete_at=complete_at,
-                 external_idstring=external_idstring, reason=reason,
-                 results=results, submitted_at=submitted_at,
-                 sourcestamps=[ssmap[ssid] for ssid in sourcestampids]))
+        return (('buildsets', str(bsid), 'complete'), {
+            "bsid": bsid,
+            "complete": True,
+            "complete_at": complete_at,
+            "external_idstring": external_idstring,
+            "reason": reason,
+            "results": results,
+            "submitted_at": submitted_at,
+            "sourcestamps": [ssmap[ssid] for ssid in sourcestampids],
+            "parent_buildid": None,
+            "parent_relationship": None,
+        })
 
     def test_addBuildset_two_builderNames(self):
-        kwargs = dict(scheduler='fakesched', reason='because',
-                      sourcestamps=[234], external_idstring='extid',
-                      builderids=[42, 43], waited_for=True)
+        kwargs = {
+            "scheduler": 'fakesched',
+            "reason": 'because',
+            "sourcestamps": [234],
+            "external_idstring": 'extid',
+            "builderids": [42, 43],
+            "waited_for": True
+        }
         expectedReturn = (200, {42: 1000, 43: 1001})
         expectedMessages = [
             self._buildRequestMessage1(1000, 200, 42),
@@ -249,24 +267,33 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             self._buildRequestMessage3(1001, 200, 43),
             self._buildsetMessage(200),
         ]
-        expectedBuildset = dict(reason='because',
-                                properties={},
-                                external_idstring='extid')
+        expectedBuildset = {
+            "reason": 'because',
+            "properties": {},
+            "external_idstring": 'extid'
+        }
         return self.do_test_addBuildset(kwargs,
                                         expectedReturn, expectedMessages, expectedBuildset)
 
     def test_addBuildset_no_builderNames(self):
-        kwargs = dict(scheduler='fakesched', reason='because',
-                      sourcestamps=[234], external_idstring='extid', waited_for=False)
+        kwargs = {
+            "scheduler": 'fakesched',
+            "reason": 'because',
+            "sourcestamps": [234],
+            "external_idstring": 'extid',
+            "waited_for": False
+        }
         expectedReturn = (200, {})
         expectedMessages = [
             self._buildsetMessage(200),
             # with no builderNames, this is done already
             self._buildsetCompleteMessage(200),
         ]
-        expectedBuildset = dict(reason='because',
-                                properties={},
-                                external_idstring='extid')
+        expectedBuildset = {
+            "reason": 'because',
+            "properties": {},
+            "external_idstring": 'extid'
+        }
         return self.do_test_addBuildset(kwargs,
                                         expectedReturn, expectedMessages, expectedBuildset)
 
@@ -318,7 +345,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
                                        complete=buildRequestCompletions.get(
                                            brid),
                                        results=buildRequestResults.get(brid, SUCCESS))
-        yield self.master.db.insertTestData([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=42, name='bldr1'),
             fakedb.Buildset(id=72,
                             submitted_at=EARLIER,

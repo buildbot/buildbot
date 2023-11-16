@@ -254,6 +254,40 @@ The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`:
 
     ... BuilderConfig(..., nextBuild=nextBuild, ...) ...
 
+.. index:: Schedulers; priority
+
+.. _Scheduler-Priority-Functions:
+
+Scheduler Priority Functions
+----------------------------
+When a :class:`Scheduler` is creating a a new :class:`BuildRequest` from a (list of) :class:`Change` (s),it is possible to set the :class:`BuildRequest` priority.
+This can either be an integer or a function, which receives a list of builder names and a dictionary of :class:`Change`, grouped by their codebase.
+
+A simple implementation might look like this:
+
+.. code-block:: python
+
+   def scheduler_priority(builderNames, changesByCodebase):
+        priority = 0
+
+        for codebase, changes in changesByCodebase.items():
+            for chg in changes:
+                if chg["branch"].startswith("dev/"):
+                        priority = max(priority, 0)
+                elif chg["branch"].startswith("bugfix/"):
+                        priority = max(priority, 5)
+                elif chg["branch"] == "main":
+                        priority = max(priority, 10)
+
+        return priority
+
+The priority function/integer can be passed as a parameter to :class:`Scheduler`:
+
+.. code-block:: python
+
+   ... schedulers.SingleBranchScheduler(..., priority=scheduler_priority, ...) ...
+
+
 .. _canStartBuild-Functions:
 
 ``canStartBuild`` Functions
@@ -441,7 +475,7 @@ If you have multiple projects in the same repository your split function can att
         project, path = path.split("/", 1)
         f = util.svn.split_file_branches(path)
         if f:
-            info = dict(project=project, path=f[1])
+            info = {"project": project, "path": f[1]}
             if f[0]:
                 info['branch'] = f[0]
             return info
@@ -528,13 +562,13 @@ The following definition for :meth:`my_file_splitter` will do the job:
         projectname = pieces.pop(0)
         if projectname != 'Nevow':
             return None # wrong project
-        return dict(branch=branch, path='/'.join(pieces))
+        return {"branch": branch, "path": "/".join(pieces)}
 
 If you later decide you want to get changes for Quotient as well you could replace the last 3 lines with simply:
 
 .. code-block:: python
 
-    return dict(project=projectname, branch=branch, path='/'.join(pieces))
+    return {"project": projectname, "branch": branch, "path": '/'.join(pieces)}
 
 
 .. _Writing-Change-Sources:
@@ -637,6 +671,19 @@ Overriding these members ensures that builds aren't ran on incompatible workers 
         A deferred should be returned, whose callback should return ``True`` if build is compatible and ``False`` otherwise.
         The method may be called when the instance is not yet started and should indicate compatible build in that case.
         In the default implementation the callback returns ``True``.
+
+    .. py:method:: check_instance(self)
+
+        This method determines the health of an instance.
+        The method is expected to return a tuple with two members: ``is_good`` and ``message``.
+        The first member identifies whether the instance is still valid.
+        It should be ``False`` if the method determined that a serious error has occurred and worker will not connect to the master.
+        In such case, ``message`` should identify any additional error message that should be displayed to Buildbot user.
+
+        In case there is no additional messages, ``message`` should be an empty string.
+
+        Any exceptions raised from this method are interpreted as if the method returned ``False``.
+
 
 Custom Build Classes
 --------------------

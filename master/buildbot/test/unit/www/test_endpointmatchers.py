@@ -44,7 +44,7 @@ class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertTrue(match is None)
 
     def insertData(self):
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=13, branch='secret'),
             fakedb.Build(
                 id=15, buildrequestid=16, masterid=1, workerid=2, builderid=21),

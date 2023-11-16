@@ -191,7 +191,7 @@ class CVS(Source):
             command += ['-D', self.revision]
         command += [self.cvsmodule]
         if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
+            abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
         res = yield self._dovccmd(command, '', abandonOnFailure=abandonOnFailure)
@@ -339,7 +339,7 @@ class CVS(Source):
     def computeSourceRevision(self, changes):
         if not changes:
             return None
-        lastChange = max([c.when for c in changes])
-        lastSubmit = max([br.submittedAt for br in self.build.requests])
+        lastChange = max(c.when for c in changes)
+        lastSubmit = max(br.submittedAt for br in self.build.requests)
         when = (lastChange + lastSubmit) / 2
         return formatdate(when)

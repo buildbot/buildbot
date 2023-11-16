@@ -18,9 +18,9 @@
 import datetime
 import os
 import re
+import shutil
 import subprocess
 import sys
-from pkg_resources import parse_version
 from subprocess import PIPE
 from subprocess import STDOUT
 from subprocess import Popen
@@ -198,8 +198,12 @@ class BuildJsCommand(distutils.cmd.Command):
         """Run command."""
         if self.already_run:
             return
+
+        if os.path.isdir('build'):
+            shutil.rmtree('build')
+
         package = self.distribution.packages[0]
-        if os.path.exists("webpack.config.js"):
+        if os.path.exists("package.json"):
 
             shell = bool(os.name == 'nt')
 

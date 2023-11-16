@@ -146,9 +146,14 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
         def thdAddLog(conn):
             try:
-                r = conn.execute(self.db.model.logs.insert(),
-                                 dict(name=name, slug=slug, stepid=stepid,
-                                      complete=0, num_lines=0, type=type))
+                r = conn.execute(self.db.model.logs.insert(), {
+                    "name": name,
+                    "slug": slug,
+                    "stepid": stepid,
+                    "complete": 0,
+                    "num_lines": 0,
+                    "type": type
+                })
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 raise KeyError(f"log with slug '{slug!r}' already exists in this step") from e
@@ -180,12 +185,15 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             last_line = chunk_first_line + chunk.count(b'\n')
 
             chunk, compressed_id = self.thdCompressChunk(chunk)
-            conn.execute(self.db.model.logchunks.insert(),
-                         dict(logid=logid, first_line=chunk_first_line,
-                              last_line=last_line, content=chunk,
-                              compressed=compressed_id)).close()
+            conn.execute(self.db.model.logchunks.insert(), {
+                "logid": logid,
+                "first_line": chunk_first_line,
+                "last_line": last_line,
+                "content": chunk,
+                "compressed": compressed_id
+            }).close()
             chunk_first_line = last_line + 1
-        conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
+        conn.execute(self.db.model.logs.update(whereclause=self.db.model.logs.c.id == logid),
                      num_lines=last_line + 1).close()
         return first_line, last_line
 
@@ -250,7 +258,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def finishLog(self, logid):
         def thdfinishLog(conn):
             tbl = self.db.model.logs
-            q = tbl.update(whereclause=(tbl.c.id == logid))
+            q = tbl.update(whereclause=tbl.c.id == logid)
             conn.execute(q, complete=1)
         return self.db.pool.do(thdfinishLog)
 
@@ -329,10 +337,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
                 # and we recompress them in one big chunk
                 chunk, compressed_id = self.thdCompressChunk(chunk)
-                conn.execute(tbl.insert(),
-                             dict(logid=logid, first_line=todo_first_line,
-                                  last_line=todo_last_line, content=chunk,
-                                  compressed=compressed_id)).close()
+                conn.execute(tbl.insert(), {
+                    "logid": logid,
+                    "first_line": todo_first_line,
+                    "last_line": todo_last_line,
+                    "content": chunk,
+                    "compressed": compressed_id
+                }).close()
                 transaction.commit()
 
             # calculate how many bytes we saved

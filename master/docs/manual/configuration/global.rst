@@ -24,6 +24,8 @@ In the default configuration Buildbot uses a file-based SQLite database, stored 
    However, it does not scale well with large numbers of builders, workers and users.
    If you expect your Buildbot to grow over time, it is strongly advised to use a real database server (e.g., MySQL or Postgres).
 
+   A SQLite3 database may be migrated to a real database server using ``buildbot copy-db`` script.
+
    See the :ref:`Database-Server` section for more details.
 
 Override this configuration with the :bb:cfg:`db_url` parameter.
@@ -498,7 +500,10 @@ Metrics Options
 
 .. code-block:: python
 
-    c['metrics'] = dict(log_interval=10, periodic_interval=10)
+    c['metrics'] = {
+        "log_interval": 10,
+        "periodic_interval": 10
+    }
 
 :bb:cfg:`metrics` can be a dictionary that configures various aspects of the metrics subsystem.
 If :bb:cfg:`metrics` is ``None``, then metrics collection, logging and reporting will be disabled.

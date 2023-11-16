@@ -175,7 +175,7 @@ class Change:
 
     def asDict(self):
         '''returns a dictionary with suitable info for html/mail rendering'''
-        files = [dict(name=f) for f in self.files]
+        files = [{"name": f} for f in self.files]
         files.sort(key=lambda a: a['name'])
 
         result = {

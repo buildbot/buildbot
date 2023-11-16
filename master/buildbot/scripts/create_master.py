@@ -20,7 +20,6 @@ import jinja2
 from twisted.internet import defer
 from twisted.python import util
 
-from buildbot import monkeypatches
 from buildbot.config import master as config_master
 from buildbot.master import BuildMaster
 from buildbot.util import in_reactor
@@ -77,11 +76,7 @@ def makeSampleConfig(config):
 
 
 @defer.inlineCallbacks
-def createDB(config, _noMonkey=False):
-    # apply the db monkeypatches (and others - no harm)
-    if not _noMonkey:  # pragma: no cover
-        monkeypatches.patch_all()
-
+def createDB(config):
     # create a master with the default configuration, but with db_url
     # overridden
     master_cfg = config_master.MasterConfig()

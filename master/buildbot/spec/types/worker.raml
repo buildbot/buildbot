@@ -26,6 +26,9 @@ properties:
     paused:
         description: the worker is paused if it is connected but doesn't accept new builds
         type: bool
+    pause_reason?:
+        description: the reason for pausing the worker, if the worker is paused
+        type: string
     graceful:
         description: the worker is graceful if it doesn't accept new builds, and will shutdown when builds are finished
         type: bool

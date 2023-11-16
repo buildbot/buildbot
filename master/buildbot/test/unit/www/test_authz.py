@@ -83,17 +83,23 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 RolesFromDomain(admins=["mi7.uk"])
             ]
         )
-        self.users = dict(homer=dict(email="homer@springfieldplant.com"),
-                          bond=dict(email="007@mi6.uk"),
-                          moneypenny=dict(email="moneypenny@mi7.uk"),
-                          nineuser=dict(email="user@nine.com", groups=["buildbot-nine-mergers",
-                                                                       "buildbot-nine-developers"]),
-                          eightuser=dict(
-                              email="user@eight.com", groups=["buildbot-eight-deverlopers"])
-                          )
+        self.users = {
+            "homer": {"email": "homer@springfieldplant.com"},
+            "bond": {"email": "007@mi6.uk"},
+            "moneypenny": {"email": "moneypenny@mi7.uk"},
+            "nineuser": {
+                "email": "user@nine.com",
+                "groups": ["buildbot-nine-mergers",
+                "buildbot-nine-developers"]
+            },
+            "eightuser": {
+                "email": "user@eight.com",
+                "groups": ["buildbot-eight-deverlopers"]
+            }
+        }
         self.master = self.make_master(url='h:/a/b/', authz=authzcfg)
         self.authz = self.master.authz
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Builder(id=77, name="mybuilder"),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),

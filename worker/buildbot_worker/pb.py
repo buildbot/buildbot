@@ -54,13 +54,15 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandPb(ProtocolCommandBase):
-    def __init__(self, unicode_encoding, worker_basedir, basedir, builder_is_running,
-                 on_command_complete, on_lost_remote_step, command, stepId, args, command_ref):
+    def __init__(self, unicode_encoding, worker_basedir, basedir, buffer_size, buffer_timeout,
+                 max_line_length, newline_re, builder_is_running, on_command_complete,
+                 on_lost_remote_step, command, command_id, args, command_ref):
         self.basedir = basedir
         self.command_ref = command_ref
-        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, builder_is_running,
-                                     on_command_complete, on_lost_remote_step,
-                                     command, stepId, args)
+        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, buffer_size,
+                                     buffer_timeout, max_line_length, newline_re,
+                                     builder_is_running, on_command_complete, on_lost_remote_step,
+                                     command, command_id, args)
 
     def protocol_args_setup(self, command, args):
         if command == "mkdir":
@@ -78,7 +80,7 @@ class ProtocolCommandPb(ProtocolCommandBase):
 
         if command == "cpdir":
             args['from_path'] = os.path.join(self.basedir, args['fromdir'])
-            args['from_path'] = os.path.join(self.basedir, args['todir'])
+            args['to_path'] = os.path.join(self.basedir, args['todir'])
             del args['fromdir']
             del args['todir']
 
@@ -94,7 +96,7 @@ class ProtocolCommandPb(ProtocolCommandBase):
             del args['dir']
 
         if command == "rmfile":
-            args['path'] = os.path.join(self.basedir, args['path'])
+            args['path'] = os.path.join(self.basedir, os.path.expanduser(args['path']))
 
         if command == "shell":
             args['workdir'] = os.path.join(self.basedir, args['workdir'])
@@ -117,25 +119,37 @@ class ProtocolCommandPb(ProtocolCommandBase):
             del args['workdir']
             del args['workerdest']
 
-    # Returns a Deferred
-    def protocol_update(self, data):
-        # data is a list of tuples
-        # first element of the tuple is dictionary key, second element is value
-        dl = []
-        for key, value in data:
-            update = [{key: value}, 0]
+    def protocol_send_update_message(self, message):
+        # after self.buffer.append log message is of type:
+        # (key, (text, newline_indexes, line_times))
+        # only key and text is sent to master in PB protocol
+        # if message is not log, simply sends the value (e.g.[("rc", 0)])
+        for key, value in message:
+            if key in ['stdout', 'stderr', 'header']:
+                # the update[1]=0 comes from the leftover 'updateNum', which the
+                # master still expects to receive. Provide it to avoid significant
+                # interoperability issues between new workers and old masters.
+                update = [{key: value[0]}, 0]
+            elif key == "log":
+                logname, data = value
+                update = [{key: (logname, data[0])}, 0]
+            else:
+                update = [{key: value}, 0]
             updates = [update]
             d = self.command_ref.callRemote("update", updates)
-            dl.append(d)
-        return defer.DeferredList(dl, fireOnOneErrback=True, consumeErrors=True)
+            d.addErrback(self._ack_failed, "ProtocolCommandBase.send_update")
 
     def protocol_notify_on_disconnect(self):
         self.command_ref.notifyOnDisconnect(self.on_lost_remote_step)
 
-    # Returns a Deferred
+    @defer.inlineCallbacks
     def protocol_complete(self, failure):
+        d_update = self.flush_command_output()
         self.command_ref.dontNotifyOnDisconnect(self.on_lost_remote_step)
-        return self.command_ref.callRemote("complete", failure)
+        d_complete = self.command_ref.callRemote("complete", failure)
+
+        yield d_update
+        yield d_complete
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
@@ -181,10 +195,15 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
     # is severed.
     remote = None
 
-    def __init__(self, name, unicode_encoding):
+    def __init__(self, name, unicode_encoding, buffer_size, buffer_timeout, max_line_length,
+                 newline_re):
         # service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
         self.unicode_encoding = unicode_encoding
+        self.buffer_size = buffer_size
+        self.buffer_timeout = buffer_timeout
+        self.max_line_length = max_line_length
+        self.newline_re = newline_re
         self.protocol_command = None
 
     def __repr__(self):
@@ -243,7 +262,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         """This is invoked before the first step of any new build is run.  It
         doesn't do much, but masters call it so it's still here."""
 
-    def remote_startCommand(self, command_ref, stepId, command, args):
+    def remote_startCommand(self, command_ref, command_id, command, args):
         """
         This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
         part of various master-side BuildSteps, to start various commands
@@ -251,7 +270,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         .commandComplete() to notify the master-side RemoteCommand that I'm
         done.
         """
-        stepId = decode(stepId)
+        command_id = decode(command_id)
         command = decode(command)
         args = decode(args)
 
@@ -263,21 +282,23 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
             self.protocol_command = None
 
         self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.bot.basedir,
-                                                     self.basedir, self.running,
+                                                     self.basedir, self.buffer_size,
+                                                     self.buffer_timeout, self.max_line_length,
+                                                     self.newline_re, self.running,
                                                      on_command_complete,
-                                                     self.lostRemoteStep, command, stepId, args,
+                                                     self.lostRemoteStep, command, command_id, args,
                                                      command_ref)
 
-        log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
+        log.msg(u"(command {0}): startCommand:{1}".format(command_id, command))
         self.protocol_command.protocol_notify_on_disconnect()
         d = self.protocol_command.command.doStart()
         d.addCallback(lambda res: None)
         d.addBoth(self.protocol_command.command_complete)
         return None
 
-    def remote_interruptCommand(self, stepId, why):
+    def remote_interruptCommand(self, command_id, why):
         """Halt the current step."""
-        log.msg("asked to interrupt current command: {0}".format(why))
+        log.msg("(command {0}): asked to interrupt: reason {1}".format(command_id, why))
         if not self.protocol_command:
             # TODO: just log it, a race could result in their interrupting a
             # command that wasn't actually running
@@ -318,7 +339,9 @@ class BotPbLike(BotBase):
                             name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
-                b = self.WorkerForBuilder(name, self.unicode_encoding)
+                b = self.WorkerForBuilder(name, self.unicode_encoding, self.buffer_size,
+                                          self.buffer_timeout, self.max_line_length,
+                                          self.newline_re)
                 b.setServiceParent(self)
                 b.setBuilddir(builddir)
                 self.builders[name] = b
@@ -406,6 +429,8 @@ if sys.version_info >= (3, 6):
                 del self.protocol_commands[command_id]
 
             protocol_command = ProtocolCommandMsgpack(self.unicode_encoding, self.basedir,
+                                                      self.buffer_size, self.buffer_timeout,
+                                                      self.max_line_length, self.newline_re,
                                                       self.running, on_command_complete,
                                                       protocol, command_id, command, args)
 
@@ -456,8 +481,8 @@ class BotFactory(AutoLoginPBFactory):
 
     _reactor = reactor
 
-    def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay):
-        AutoLoginPBFactory.__init__(self)
+    def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay, retryPolicy=None):
+        AutoLoginPBFactory.__init__(self, retryPolicy=retryPolicy)
         self.keepaliveInterval = keepaliveInterval
         self.keepalive_lock = defer.DeferredLock()
         self._shutting_down = False
@@ -566,7 +591,7 @@ class Worker(WorkerBase):
 
         if protocol == 'pb':
             bot_class = BotPb
-        elif protocol == 'msgpack_experimental_v5':
+        elif protocol == 'msgpack_experimental_v7':
             if sys.version_info < (3, 6):
                 raise NotImplementedError(
                     'Msgpack protocol is only supported on Python 3.6 and newer'
@@ -596,10 +621,17 @@ class Worker(WorkerBase):
 
         self.allow_shutdown = allow_shutdown
 
+        def policy(attempt):
+            if maxRetries and attempt >= maxRetries:
+                reactor.stop()
+            return backoffPolicy()(attempt)
+
         if protocol == 'pb':
-            bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
+            bf = self.bf = BotFactory(
+                buildmaster_host, port, keepalive, maxdelay, retryPolicy=policy
+            )
             bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
-        elif protocol == 'msgpack_experimental_v5':
+        elif protocol == 'msgpack_experimental_v7':
             if connection_string is None:
                 ws_conn_string = "ws://{}:{}".format(buildmaster_host, port)
             else:
@@ -645,10 +677,6 @@ class Worker(WorkerBase):
                 connection_string = get_connection_string(buildmaster_host, port)
             endpoint = clientFromString(reactor, connection_string)
 
-        def policy(attempt):
-            if maxRetries and attempt >= maxRetries:
-                reactor.stop()
-            return backoffPolicy()(attempt)
         pb_service = ClientService(endpoint, bf, retryPolicy=policy)
         self.addService(pb_service)
 

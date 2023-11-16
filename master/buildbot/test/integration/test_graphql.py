@@ -100,7 +100,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
         yield self.master.stopService()
 
     def insert_initial_data(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=1),
             fakedb.Worker(id=1, name='example-worker'),
 
@@ -185,23 +185,32 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
                                  source="Worker"),
 
             fakedb.Step(id=1, number=1, name='step1', buildid=1,
-                        started_at=100010, complete_at=100019, state_string='step1 done'),
+                        started_at=100010, locks_acquired_at=100012, complete_at=100019,
+                        state_string='step1 done'),
             fakedb.Step(id=2, number=2, name='step2', buildid=1,
-                        started_at=100020, complete_at=100029, state_string='step2 done'),
+                        started_at=100020, locks_acquired_at=100022, complete_at=100029,
+                        state_string='step2 done'),
             fakedb.Step(id=3, number=3, name='step3', buildid=1,
-                        started_at=100030, complete_at=100039, state_string='step3 done'),
+                        started_at=100030, locks_acquired_at=100032, complete_at=100039,
+                        state_string='step3 done'),
             fakedb.Step(id=11, number=1, name='step1', buildid=2,
-                        started_at=100210, complete_at=100219, state_string='step1 done'),
+                        started_at=100210, locks_acquired_at=100212, complete_at=100219,
+                        state_string='step1 done'),
             fakedb.Step(id=12, number=2, name='step2', buildid=2,
-                        started_at=100220, complete_at=100229, state_string='step2 done'),
+                        started_at=100220, locks_acquired_at=100222, complete_at=100229,
+                        state_string='step2 done'),
             fakedb.Step(id=13, number=3, name='step3', buildid=2,
-                        started_at=100230, complete_at=100239, state_string='step3 done'),
+                        started_at=100230, locks_acquired_at=100232, complete_at=100239,
+                        state_string='step3 done'),
             fakedb.Step(id=21, number=1, name='step1', buildid=3,
-                        started_at=100410, complete_at=100419, state_string='step1 done'),
+                        started_at=100410, locks_acquired_at=100412, complete_at=100419,
+                        state_string='step1 done'),
             fakedb.Step(id=22, number=2, name='step2', buildid=3,
-                        started_at=100420, complete_at=100429, state_string='step2 done'),
+                        started_at=100420, locks_acquired_at=100422, complete_at=100429,
+                        state_string='step2 done'),
             fakedb.Step(id=23, number=3, name='step3', buildid=3,
-                        started_at=100430, complete_at=100439, state_string='step3 done'),
+                        started_at=100430, locks_acquired_at=100432, complete_at=100439,
+                        state_string='step3 done'),
 
             fakedb.Log(id=1, name='stdio', slug='stdio', stepid=1, complete=1, num_lines=10),
             fakedb.Log(id=2, name='stdio', slug='stdio', stepid=2, complete=1, num_lines=20),

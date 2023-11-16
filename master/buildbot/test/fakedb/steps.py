@@ -31,9 +31,10 @@ class Step(Row):
     required_columns = ('buildid', )
 
     def __init__(self, id=None, number=29, name='step29', buildid=None,
-                 started_at=1304262222, complete_at=None,
+                 started_at=1304262222, locks_acquired_at=None, complete_at=None,
                  state_string='', results=None, urls_json='[]', hidden=0):
         super().__init__(id=id, number=number, name=name, buildid=buildid, started_at=started_at,
+                         locks_acquired_at=locks_acquired_at,
                          complete_at=complete_at, state_string=state_string, results=results,
                          urls_json=urls_json, hidden=hidden)
 
@@ -43,7 +44,7 @@ class FakeStepsComponent(FakeDBComponent):
     def setUp(self):
         self.steps = {}
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Step):
                 self.steps[row.id] = row.values.copy()
@@ -57,17 +58,19 @@ class FakeStepsComponent(FakeDBComponent):
         return id
 
     def _row2dict(self, row):
-        return dict(
-            id=row['id'],
-            buildid=row['buildid'],
-            number=row['number'],
-            name=row['name'],
-            started_at=epoch2datetime(row['started_at']),
-            complete_at=epoch2datetime(row['complete_at']),
-            state_string=row['state_string'],
-            results=row['results'],
-            urls=json.loads(row['urls_json']),
-            hidden=bool(row['hidden']))
+        return {
+            "id": row['id'],
+            "buildid": row['buildid'],
+            "number": row['number'],
+            "name": row['name'],
+            "started_at": epoch2datetime(row['started_at']),
+            "locks_acquired_at": epoch2datetime(row["locks_acquired_at"]),
+            "complete_at": epoch2datetime(row['complete_at']),
+            "state_string": row['state_string'],
+            "results": row['results'],
+            "urls": json.loads(row['urls_json']),
+            "hidden": bool(row['hidden'])
+        }
 
     def getStep(self, stepid=None, buildid=None, number=None, name=None):
         if stepid is not None:
@@ -108,7 +111,7 @@ class FakeStepsComponent(FakeDBComponent):
         build_steps = [r for r in self.steps.values()
                        if r['buildid'] == buildid]
         if build_steps:
-            number = max([r['number'] for r in build_steps]) + 1
+            number = max(r['number'] for r in build_steps) + 1
             names = {r['name'] for r in build_steps}
             if name in names:
                 i = 1
@@ -125,6 +128,7 @@ class FakeStepsComponent(FakeDBComponent):
             'number': number,
             'name': name,
             'started_at': None,
+            "locks_acquired_at": None,
             'complete_at': None,
             'results': None,
             'state_string': state_string,
@@ -137,6 +141,12 @@ class FakeStepsComponent(FakeDBComponent):
         b = self.steps.get(stepid)
         if b:
             b['started_at'] = self.reactor.seconds()
+        return defer.succeed(None)
+
+    def set_step_locks_acquired_at(self, stepid):
+        b = self.steps.get(stepid)
+        if b:
+            b['locks_acquired_at'] = self.reactor.seconds()
         return defer.succeed(None)
 
     def setStepStateString(self, stepid, state_string):
@@ -157,7 +167,7 @@ class FakeStepsComponent(FakeDBComponent):
         b = self.steps.get(stepid)
         if b:
             urls = json.loads(b['urls_json'])
-            url_item = dict(name=name, url=url)
+            url_item = {"name": name, "url": url}
             if url_item not in urls:
                 urls.append(url_item)
             b['urls_json'] = json.dumps(urls)

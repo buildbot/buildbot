@@ -15,8 +15,7 @@
 
 
 import json as jsonmodule
-
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -107,9 +106,11 @@ class HTTPClientService(service.SharedService):
         if content_json is not None:
             content = jsonmodule.dumps(content_json, default=toJson)
 
-        self._expected.append(dict(
-            method=method, ep=ep, params=params, headers=headers, data=data, json=json, code=code,
-            content=content, files=files))
+        self._expected.append({
+            "method": method, "ep": ep,
+            "params": params, "headers": headers,
+            "data": data, "json": json,
+            "code": code, "content": content, "files": files})
         return None
 
     def assertNoOutstanding(self):

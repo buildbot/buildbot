@@ -1,0 +1,98 @@
+@import "bootstrap/scss/bootstrap";
+
+$gl-sidebar-small-threshold: 600px;
+
+.fa.fa-ringing {
+  -webkit-animation-name: 'ring_animation';
+  -webkit-animation-duration: 2000ms;
+  -webkit-transform-origin:70% 70%;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: linear;
+  animation-name: 'ring_animation';
+  animation-duration: 2000ms;
+  transform-origin:50% 50%;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  color:red;
+}
+/* ring animation for notifications */
+@-webkit-keyframes ring_animation {
+  0% { -webkit-transform: rotate(10deg); }
+  5% { -webkit-transform: rotate(-10deg); }
+  10% { -webkit-transform: rotate(10deg); }
+  15% { -webkit-transform: rotate(-10deg); }
+  20% { -webkit-transform: rotate(10deg); }
+  25% { -webkit-transform: rotate(-10deg); }
+  30% { -webkit-transform: rotate(10deg); }
+  35% { -webkit-transform: rotate(-10deg); }
+  40% { -webkit-transform: rotate(10deg); }
+  45% { -webkit-transform: rotate(-10deg); }
+  50% { -webkit-transform: rotate(0deg); }
+  100% { }
+}
+@keyframes ring_animation {
+  0% { transform: rotate(10deg); }
+  5% { transform: rotate(-10deg); }
+  10% { transform: rotate(10deg); }
+  15% { transform: rotate(-10deg); }
+  20% { transform: rotate(10deg); }
+  25% { transform: rotate(-10deg); }
+  30% { transform: rotate(10deg); }
+  35% { transform: rotate(-10deg); }
+  40% { transform: rotate(10deg); }
+  45% { transform: rotate(-10deg); }
+  50% { transform: rotate(0deg); }
+  100% { }
+}
+
+// Reset link color for hierarchy links because otherwise it's not clear which of these are clickable
+.navbar-light .bb-topbar-navbar-elements .nav-link {
+  color: $link-color;
+
+  @include hover() {
+    color: $link-hover-color;
+    text-decoration: $link-hover-decoration;
+  }
+}
+
+// Positioning of the separators between hierarchy links.
+.bb-topbar-navbar-elements {
+  .nav-item:not(:first-child)::before {
+    padding: 0.5rem;
+    display: inline-block;
+    content: "/";
+    color: #cccccc;
+  }
+
+  .nav-link {
+    display: inline-block;
+  }
+}
+
+// Align navbar with sidebar
+.navbar {
+  padding-bottom: 0;
+  padding-top: 0;
+  margin-bottom: 20px;
+}
+.navbar .navbar-brand {
+  font-size: 21px;
+}
+
+@media (max-width: $gl-sidebar-small-threshold) {
+  .navbar .navbar-brand {
+    display: none;
+  }
+  .navbar .breadcrumb {
+    font-size: 14px;
+    padding-left: 0px;
+  }
+}
+
+img.avatar {
+  background-color: #ccc;
+  border-radius: 50%;
+  height: 40px;
+  margin: -10px;
+  width: 40px;
+}

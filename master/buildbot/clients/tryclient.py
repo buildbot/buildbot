@@ -601,7 +601,7 @@ class Try(pb.Referenceable):
         self.sourcestamp = ss
         patchlevel, diff = ss.patch
         if diff is None:
-            raise RuntimeError("There is no patch to try, diff is empty.")
+            output("WARNING: There is no patch to try, diff is empty.")
 
         if self.connect == "ssh":
             revspec = ss.revision

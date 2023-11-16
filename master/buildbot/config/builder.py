@@ -14,7 +14,9 @@
 # Copyright Buildbot Team Members
 
 
+from buildbot.config.checks import check_markdown_support
 from buildbot.config.checks import check_param_length
+from buildbot.config.checks import check_param_str_none
 from buildbot.config.errors import error
 from buildbot.db.model import Model
 from buildbot.util import bytes2unicode
@@ -31,7 +33,8 @@ class BuilderConfig(util_config.ConfiguredMixin):
                  tags=None,
                  nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
-                 canStartBuild=None, defaultProperties=None
+                 description_format=None,
+                 canStartBuild=None, defaultProperties=None, project=None
                  ):
         # name is required, and can't start with '_'
         if not name or type(name) not in (bytes, str):
@@ -43,6 +46,11 @@ class BuilderConfig(util_config.ConfiguredMixin):
             self.name = bytes2unicode(name, encoding="ascii")
         except UnicodeDecodeError:
             error("builder names must be unicode or ASCII")
+
+        if not isinstance(project, (type(None), str)):
+            error("builder project must be None or str")
+            project = None
+        self.project = project
 
         # factory is required
         if factory is None:
@@ -125,7 +133,21 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         self.collapseRequests = collapseRequests
 
-        self.description = description
+        self.description = check_param_str_none(description, self.__class__, "description")
+        self.description_format = check_param_str_none(
+            description_format,
+            self.__class__,
+            "description_format"
+        )
+
+        if self.description_format is None:
+            pass
+        elif self.description_format == "markdown":
+            if not check_markdown_support(self.__class__):  # pragma: no cover
+                self.description_format = None
+        else:
+            error("builder description format must be None or \"markdown\"")
+            self.description_format = None
 
     def getConfigDict(self):
         # note: this method will disappear eventually - put your smarts in the
@@ -137,6 +159,8 @@ class BuilderConfig(util_config.ConfiguredMixin):
             'builddir': self.builddir,
             'workerbuilddir': self.workerbuilddir,
         }
+        if self.project:
+            rv['project'] = self.project
         if self.tags:
             rv['tags'] = self.tags
         if self.nextWorker:
@@ -155,4 +179,6 @@ class BuilderConfig(util_config.ConfiguredMixin):
             rv['collapseRequests'] = self.collapseRequests
         if self.description:
             rv['description'] = self.description
+            if self.description_format:
+                rv['description_format'] = self.description_format
         return rv

@@ -94,18 +94,18 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                             complete=False):
         """Call callConsumer with a buildset message.  Most of the values here
         are hard-coded to correspond to those in do_test."""
-        msg = dict(
-            bsid=44,
-            sourcestamps=[],  # blah blah blah
-            submitted_at=SUBMITTED_AT_TIME,
-            complete=complete,
-            complete_at=COMPLETE_AT_TIME if complete else None,
-            external_idstring=None,
-            reason='Because',
-            results=results if complete else -1,
-            parent_buildid=None,
-            parent_relationship=None,
-        )
+        msg = {
+            "bsid": 44,
+            "sourcestamps": [],  # blah blah blah
+            "submitted_at": SUBMITTED_AT_TIME,
+            "complete": complete,
+            "complete_at": COMPLETE_AT_TIME if complete else None,
+            "external_idstring": None,
+            "reason": 'Because',
+            "results": results if complete else -1,
+            "parent_buildid": None,
+            "parent_relationship": None,
+        }
         if not complete:
             msg['scheduler'] = scheduler_name
         self.master.mq.callConsumer(
@@ -129,7 +129,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched.activate()
 
         # announce a buildset with a matching name..
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=93, revision='555',
                                branch='master', project='proj', repository='repo',
                                codebase='cb'),
@@ -158,13 +158,18 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         # and check whether a buildset was added in response
         if expect_buildset:
-            self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamps', dict(
-                    builderNames=None,  # defaults
-                    external_idstring=None,
-                    properties=None,
-                    reason='downstream',
-                    sourcestamps=[93])),
+            self.assertEqual(self.addBuildsetCalls,
+            [
+                (
+                    'addBuildsetForSourceStamps',
+                    {
+                        "builderNames": None,  # defaults
+                        "external_idstring": None,
+                        "properties": None,
+                        "reason": 'downstream',
+                        "sourcestamps": [93]
+                    }
+                ),
             ])
         else:
             self.assertEqual(self.addBuildsetCalls, [])
@@ -186,7 +191,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched = self.makeScheduler()
 
         # insert some state, with more bsids than exist
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.SourceStamp(id=1234),
             fakedb.Buildset(id=11),
             fakedb.Buildset(id=13),

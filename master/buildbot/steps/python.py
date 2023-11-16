@@ -23,7 +23,7 @@ from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.process.results import Results
+from buildbot.process.results import statusToString
 
 
 class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
@@ -60,7 +60,7 @@ class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
         if self.errors:
             summary += f" err={self.errors}"
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
+            summary += f' ({statusToString(self.results)})'
         return {'step': summary}
 
     @defer.inlineCallbacks
@@ -156,7 +156,7 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
                 summary += f" {m}={self.counts[m]}"
 
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
+            summary += f' ({statusToString(self.results)})'
 
         return {'step': summary}
 
@@ -298,7 +298,7 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
                 summary += f" {fullmsg}={self.counts[msg]}"
 
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
+            summary += f' ({statusToString(self.results)})'
 
         return {'step': summary}
 
@@ -421,7 +421,7 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
         summary = f'{self.name} {len(self.warnings)} warnings'
 
         if self.results != SUCCESS:
-            summary += f' ({Results[self.results]})'
+            summary += f' ({statusToString(self.results)})'
 
         return {'step': summary}
 

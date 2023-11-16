@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.python import failure
@@ -35,7 +35,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
             fakedb.Scheduler(id=13, name='some:scheduler'),
@@ -101,7 +101,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
             fakedb.Scheduler(id=13, name='some:scheduler'),
@@ -163,7 +163,7 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
     @defer.inlineCallbacks
     def test_schedulerEnable(self):
         SOMETIME = 1348971992
-        yield self.master.db.insertTestData([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=22, active=0, last_active=SOMETIME),
             fakedb.Scheduler(id=13, name='some:scheduler'),
             fakedb.SchedulerMaster(schedulerid=13, masterid=22),
@@ -247,7 +247,7 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
 
     @defer.inlineCallbacks
     def test__masterDeactivated(self):
-        yield self.master.db.insertTestData([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Scheduler(id=13, name='some:scheduler'),
             fakedb.SchedulerMaster(schedulerid=13, masterid=22),

@@ -29,6 +29,7 @@ class WorkerShellCommand(base.Command):
         workdir = args['workdir']
 
         c = runprocess.RunProcess(
+            self.command_id,
             args['command'],
             workdir,
             self.protocol_command.unicode_encoding,

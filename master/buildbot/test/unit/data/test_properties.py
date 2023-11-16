@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -35,7 +35,7 @@ class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Buildset(id=13, reason='because I said so'),
             fakedb.SourceStamp(id=92),
             fakedb.SourceStamp(id=93),
@@ -64,7 +64,7 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insertTestData([
+        self.db.insert_test_data([
             fakedb.Buildset(id=28),
             fakedb.BuildRequest(id=5, buildsetid=28),
             fakedb.Master(id=3),
@@ -129,7 +129,7 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_setBuildProperties(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Buildset(id=28),
             fakedb.BuildRequest(id=5, buildsetid=28),
             fakedb.Master(id=3),
@@ -140,7 +140,7 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin,
         self.master.db.builds.setBuildProperty = mock.Mock(
             wraps=self.master.db.builds.setBuildProperty)
         props = processProperties.fromDict(
-            dict(a=(1, 't'), b=(['abc', 9], 't')))
+            {"a": (1, 't'), "b": (['abc', 9], 't')})
         yield self.rtype.setBuildProperties(1234, props)
         setBuildPropertiesCalls = sorted(self.master.db.builds.setBuildProperty.mock_calls)
         self.assertEqual(setBuildPropertiesCalls, [

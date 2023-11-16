@@ -153,7 +153,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addChange_withParent(self):
-        yield self.insertTestData(self.change14_rows)
+        yield self.insert_test_data(self.change14_rows)
 
         self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
@@ -210,7 +210,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChange_chdict(self):
-        yield self.insertTestData(self.change14_rows)
+        yield self.insert_test_data(self.change14_rows)
 
         chdict = yield self.db.changes.getChange(14)
 
@@ -236,7 +236,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeUids_found(self):
-        yield self.insertTestData(self.change14_rows + [
+        yield self.insert_test_data(self.change14_rows + [
             fakedb.SourceStamp(id=92),
             fakedb.User(uid=1),
             fakedb.ChangeUser(changeid=14, uid=1),
@@ -247,7 +247,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeUids_multi(self):
-        yield self.insertTestData(self.change14_rows + self.change13_rows + [
+        yield self.insert_test_data(self.change14_rows + self.change13_rows + [
             fakedb.User(uid=1, identifier="one"),
             fakedb.User(uid=2, identifier="two"),
             fakedb.User(uid=99, identifier="nooo"),
@@ -265,7 +265,7 @@ class Tests(interfaces.InterfaceTests):
             pass
 
     def insert7Changes(self):
-        return self.insertTestData([
+        return self.insert_test_data([
             fakedb.SourceStamp(id=922),
             fakedb.Change(changeid=8, sourcestampid=922),
             fakedb.Change(changeid=9, sourcestampid=922),
@@ -292,7 +292,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangesHugeCount(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.SourceStamp(id=92),
         ] + [
             fakedb.Change(changeid=i) for i in range(2, 102)])
@@ -314,7 +314,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChanges_missing(self):
-        yield self.insertTestData(self.change13_rows + self.change14_rows)
+        yield self.insert_test_data(self.change13_rows + self.change14_rows)
 
         def check(changes):
             # requested all, but only got 2
@@ -342,7 +342,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLatestChangeid(self):
-        yield self.insertTestData(self.change13_rows)
+        yield self.insert_test_data(self.change13_rows)
 
         changeid = yield self.db.changes.getLatestChangeid()
 
@@ -361,7 +361,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getParentChangeIds(self):
-        yield self.insertTestData(self.change14_rows + self.change13_rows)
+        yield self.insert_test_data(self.change14_rows + self.change13_rows)
 
         changeid = yield self.db.changes.getParentChangeIds(branch='warnerdb',
                                                       repository='git://warner',
@@ -507,7 +507,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_addChange_with_uid(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.User(uid=1, identifier="one"),
         ])
         changeid = yield self.db.changes.addChange(
@@ -560,7 +560,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_pruneChanges(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.Scheduler(id=29),
             fakedb.SourceStamp(id=234, branch='aa'),
             fakedb.SourceStamp(id=235, branch='bb'),
@@ -596,7 +596,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_pruneChanges_lots(self):
-        yield self.insertTestData([
+        yield self.insert_test_data([
             fakedb.SourceStamp(id=29),
         ] + [
             fakedb.Change(changeid=n, sourcestampid=29)
@@ -623,7 +623,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_pruneChanges_None(self):
-        yield self.insertTestData(self.change13_rows)
+        yield self.insert_test_data(self.change13_rows)
 
         yield self.db.changes.pruneChanges(None)
 
@@ -731,7 +731,7 @@ class RealTests(Tests):
         # Build 7 has only one change for codebase C
         rows.extend(addChange('C', 3, 'bob', 'bob', '11th commit'))
         rows.extend(addBuild(codebase_ss, 2))
-        yield self.insertTestData(rows)
+        yield self.insert_test_data(rows)
 
         @defer.inlineCallbacks
         def expect(buildid, commits):
@@ -767,7 +767,7 @@ class TestRealDB(unittest.TestCase,
                          'sourcestampsets', 'sourcestamps', 'patches', 'change_users',
                          'users', 'buildsets', 'workers', 'builders', 'masters',
                          'buildrequests', 'builds', 'buildset_sourcestamps',
-                         'workers'])
+                         'workers', "projects"])
 
         self.db.changes = changes.ChangesConnectorComponent(self.db)
         self.db.builds = builds.BuildsConnectorComponent(self.db)

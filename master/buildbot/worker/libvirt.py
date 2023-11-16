@@ -184,7 +184,10 @@ class LibVirtWorker(AbstractLatentWorker):
             return
 
         if self.cheap_copy:
-            clone_cmd = ['qemu-img', 'create', '-b', self.base_image, '-f', 'qcow2', self.image]
+            clone_cmd = ['qemu-img', 'create',
+                         '-o', 'backing_fmt=qcow2',
+                         '-b', self.base_image,
+                         '-f', 'qcow2', self.image]
         else:
             clone_cmd = ['cp', self.base_image, self.image]
 

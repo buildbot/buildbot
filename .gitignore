@@ -48,3 +48,4 @@ sandbox.*
 # www
 */node_modules/
 node_modules
+yarn-error.log

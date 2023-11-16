@@ -20,6 +20,7 @@ from buildbot.data import base
 from buildbot.data import exceptions
 from buildbot.data import types
 from buildbot.util import identifiers
+from buildbot.warnings import warn_deprecated
 
 
 class Db2DataMixin:
@@ -30,6 +31,7 @@ class Db2DataMixin:
             'name': dbdict['name'],
             'workerinfo': dbdict['workerinfo'],
             'paused': dbdict['paused'],
+            "pause_reason": dbdict["pause_reason"],
             'graceful': dbdict['graceful'],
             'connected_to': [
                 {'masterid': id}
@@ -43,7 +45,7 @@ class Db2DataMixin:
 
 class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = False
+    kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /workers/n:workerid
         /workers/i:name
@@ -73,16 +75,17 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 
         worker = yield self.get(None, kwargs)
         if worker is not None:
-            self.master.mq.produce(("control", "worker",
-                                    str(worker['workerid']), action),
-                                dict(reason=kwargs.get('reason', args.get('reason', 'no reason'))))
+            self.master.mq.produce(
+            ("control", "worker", str(worker["workerid"]), action),
+            {"reason": kwargs.get("reason", args.get("reason", "no reason"))},
+        )
         else:
             raise exceptions.exceptions.InvalidPathError("worker not found")
 
 
 class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 
-    isCollection = True
+    kind = base.EndpointKind.COLLECTION
     rootLinkName = 'workers'
     pathPatterns = """
         /workers
@@ -130,6 +133,7 @@ class Worker(base.ResourceType):
         configured_on = types.List(of=MasterBuilderEntityType("master_builder", 'MasterBuilder'))
         workerinfo = types.JsonObject()
         paused = types.Boolean()
+        pause_reason = types.NoneOk(types.String())
         graceful = types.Boolean()
     entityType = EntityType(name, 'Worker')
 
@@ -177,10 +181,28 @@ class Worker(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def setWorkerState(self, workerid, paused, graceful):
-        yield self.master.db.workers.setWorkerState(
+        warn_deprecated("3.10.0", "setWorkerState() has been deprecated, "
+                        "please use set_worker_paused() and/or set_worker_graceful()")
+        yield self.master.db.workers.set_worker_paused(workerid=workerid, paused=paused)
+        yield self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
+        bs = yield self.master.data.get(('workers', workerid))
+        self.produceEvent(bs, 'state_updated')
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def set_worker_paused(self, workerid, paused, pause_reason=None):
+        yield self.master.db.workers.set_worker_paused(
             workerid=workerid,
             paused=paused,
-            graceful=graceful)
+            pause_reason=pause_reason
+        )
+        bs = yield self.master.data.get(('workers', workerid))
+        self.produceEvent(bs, 'state_updated')
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def set_worker_graceful(self, workerid, graceful):
+        yield self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
         bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'state_updated')
 

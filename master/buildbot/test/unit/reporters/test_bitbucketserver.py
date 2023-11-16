@@ -14,15 +14,15 @@
 # Copyright Buildbot Team Members
 
 import datetime
+from unittest.mock import Mock
 
 from dateutil.tz import tzutc
-
-from mock import Mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.plugins import util
+from buildbot.process.builder import Builder
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -80,21 +80,21 @@ class TestBitbucketServerStatusPush(TestReactorMixin, ConfigErrorsMixin, unittes
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+            json={'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'state': 'INPROGRESS', 'key': 'Builder0',
                   'description': 'Build started.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+            json={'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'state': 'SUCCESSFUL', 'key': 'Builder0',
                   'description': 'Build done.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+            json={'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'state': 'FAILED', 'key': 'Builder0',
                   'description': 'Build done.'})
         build['complete'] = False
@@ -123,21 +123,21 @@ class TestBitbucketServerStatusPush(TestReactorMixin, ConfigErrorsMixin, unittes
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+            json={'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'state': 'INPROGRESS', 'key': 'Builder0',
                   'name': 'Build', 'description': 'Build started.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+            json={'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'state': 'SUCCESSFUL', 'key': 'Builder0',
                   'name': 'Build', 'description': 'Build finished.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+            json={'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'state': 'FAILED', 'key': 'Builder0',
                   'name': 'Build', 'description': 'Build finished.'},
             code=HTTP_PROCESSED)
@@ -156,7 +156,7 @@ class TestBitbucketServerStatusPush(TestReactorMixin, ConfigErrorsMixin, unittes
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+            json={'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'state': 'INPROGRESS', 'key': 'Builder0',
                   'description': 'Build started.'},
             code=HTTP_NOT_FOUND,
@@ -196,6 +196,13 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
+        builder = Mock(spec=Builder)
+        builder.master = self.master
+        builder.name = "Builder0"
+        builder.setupProperties = lambda props: props.setProperty(
+            "buildername", "Builder0", "Builder")
+        self.master.botmaster.getBuilderById = Mock(return_value=builder)
+
         http_headers = {} if token is None else {'Authorization': 'Bearer tokentoken'}
         http_auth = ('username', 'passwd') if token is None else None
 
@@ -228,7 +235,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
             json={'name': _name, 'description': 'Build started.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'INPROGRESS',
                   'parent': _parent, 'duration': None, 'testResults': None},
             code=HTTP_PROCESSED)
@@ -236,7 +243,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
             json={'name': _name, 'description': 'Build done.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'SUCCESSFUL',
                   'parent': _parent, 'duration': 10000, 'testResults': None},
             code=HTTP_PROCESSED)
@@ -244,7 +251,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
             json={'name': _name, 'description': 'Build done.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'FAILED',
                   'parent': _parent, 'duration': 10000, 'testResults': None},
             code=HTTP_PROCESSED)
@@ -256,6 +263,33 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
         yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
         yield self.sp._got_event(('builds', 20, 'finished'), build)
+
+    @defer.inlineCallbacks
+    def test_buildrequest(self):
+        yield self.setupReporter()
+        buildrequest = yield self.insert_buildrequest_new()
+
+        _name = "Builder0 #(build request)"
+        _parent = "Builder0"
+        self._http.expect(
+            'post',
+            '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
+            json={'name': _name, 'description': 'Build pending.', 'key': 'Builder0',
+                  'url': 'http://localhost:8080/#/buildrequests/11',
+                  'ref': 'refs/heads/master', 'buildNumber': '', 'state': 'INPROGRESS',
+                  'parent': _parent, 'duration': None, 'testResults': None},
+            code=HTTP_PROCESSED)
+        self._http.expect(
+            'post',
+            '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
+            json={'name': _name, 'description': 'Build pending.', 'key': 'Builder0',
+                  'url': 'http://localhost:8080/#/buildrequests/11',
+                  'ref': 'refs/heads/master', 'buildNumber': '', 'state': 'FAILED',
+                  'parent': _parent, 'duration': None, 'testResults': None},
+            code=HTTP_PROCESSED)
+
+        yield self.sp._got_event(('buildrequests', 11, 'new'), buildrequest)
+        yield self.sp._got_event(('buildrequests', 11, 'cancel'), buildrequest)
 
     def test_config_no_base_url(self):
         with self.assertRaisesConfigError("Parameter base_url has to be given"):
@@ -308,7 +342,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
             json={'name': 'Builder0 #0', 'description': 'Build started.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'INPROGRESS',
                   'parent': 'Builder0', 'duration': None, 'testResults': None},
             code=HTTP_NOT_FOUND)
@@ -336,7 +370,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
             json={'name': 'Builder0 #0', 'description': 'Build started.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': None, 'buildNumber': '0', 'state': 'INPROGRESS',
                   'parent': 'Builder0', 'duration': None, 'testResults': None},
             code=HTTP_PROCESSED)
@@ -402,7 +436,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
             json={'name': 'Unittests [win10]', 'description': 'Build done.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': "refs/pull/34/merge", 'buildNumber': '100', 'state': 'SUCCESSFUL',
                   'parent': 'Unittests-master', 'duration': 50000, 'testResults': {'failed': 0,
                   'skipped': 2, 'successful': 3}},
@@ -422,7 +456,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
             json={'name': 'Builder0 #0', 'description': 'Build done.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'SUCCESSFUL',
                   'parent': 'Builder0', 'duration': 10000, 'testResults': {'failed': 0,
                   'skipped': 2, 'successful': 3}},
@@ -441,7 +475,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
             json={'name': 'Builder0 #0', 'description': 'Build started.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'url': 'http://localhost:8080/#/builders/79/builds/0',
                   'ref': "refs/heads/master", 'buildNumber': '0', 'state': 'INPROGRESS',
                   'parent': 'Builder0', 'duration': None, 'testResults': None},
             code=HTTP_PROCESSED)
@@ -497,7 +531,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, set_pr=True):
-        yield super().insertTestData([buildResults], buildResults)
+        yield super().insert_test_data([buildResults], buildResults)
         build = yield self.master.data.get(('builds', 20))
         if set_pr:
             yield self.master.db.builds.setBuildProperty(

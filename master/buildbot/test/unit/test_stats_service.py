@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import mock
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -117,18 +117,19 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         try:
             # Try to import
             import influxdb  # pylint: disable=import-outside-toplevel
+
             # consume it somehow to please pylint
             [influxdb]
         except ImportError:
             with self.assertRaises(config.ConfigErrors):
-                InfluxStorageService("fake_url", "fake_port", "fake_user",
+                InfluxStorageService("fake_url", 12345, "fake_user",
                                      "fake_password", "fake_db", captures)
 
         # if instead influxdb is installed, then initialize it - no errors
         # should be realized
         else:
             new_storage_backends = [
-                InfluxStorageService("fake_url", "fake_port", "fake_user", "fake_password",
+                InfluxStorageService("fake_url", 12345, "fake_user", "fake_password",
                                      "fake_db", captures)
             ]
             yield self.stats_service.reconfigService(new_storage_backends)
@@ -193,7 +194,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
         self.master.mq.verifyMessages = False
 
     def setupBuild(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Build(id=1, masterid=1, workerid=1,
                          builderid=self.BUILDER_IDS[0],
                          buildrequestid=1, number=1),
@@ -206,19 +207,19 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
         yield self.stats_service.reconfigService([self.fake_storage_service])
 
     def get_dict(self, build):
-        return dict(
-            buildid=1,
-            number=build['number'],
-            builderid=build['builderid'],
-            buildrequestid=build['buildrequestid'],
-            workerid=build['workerid'],
-            masterid=build['masterid'],
-            started_at=build['started_at'],
-            complete=True,
-            complete_at=build['complete_at'],
-            state_string='',
-            results=0,
-        )
+        return {
+            "buildid": 1,
+            "number": build['number'],
+            "builderid": build['builderid'],
+            "buildrequestid": build['buildrequestid'],
+            "workerid": build['workerid'],
+            "masterid": build['masterid'],
+            "started_at": build['started_at'],
+            "complete": True,
+            "complete_at": build['complete_at'],
+            "state_string": '',
+            "results": 0,
+        }
 
     @defer.inlineCallbacks
     def end_build_call_consumers(self):

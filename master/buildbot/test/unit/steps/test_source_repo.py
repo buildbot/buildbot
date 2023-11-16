@@ -83,8 +83,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
 
     def mySetupStep(self, **kwargs):
         if "repoDownloads" not in kwargs:
-            kwargs.update(dict(repoDownloads=repo.RepoDownloadsFromProperties(["repo_download",
-                                                                              "repo_download2"])))
+            kwargs.update({"repoDownloads": repo.RepoDownloadsFromProperties(["repo_download",
+                                                                              "repo_download2"])})
         self.setup_step(
             repo.Repo(manifestURL='git://myrepo.com/manifest.git',
                       manifestBranch="mb",

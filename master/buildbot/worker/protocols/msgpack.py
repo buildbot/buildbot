@@ -121,7 +121,7 @@ class Connection(base.Connection):
 
     def loseConnection(self):
         self.stopKeepaliveTimer()
-        self.protocol.sendClose()
+        self.protocol.transport.abortConnection()
 
     # keepalive handling
 
@@ -158,6 +158,19 @@ class Connection(base.Connection):
             self.path_expanduser = path_expand_user.posix_expanduser
         return self.info
 
+    def _set_worker_settings(self):
+        # the lookahead here (`(?=.)`) ensures that `\r` doesn't match at the end
+        # of the buffer
+        # we also convert cursor control sequence to newlines
+        # and ugly \b+ (use of backspace to implement progress bar)
+        newline_re = r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)'
+        return self.protocol.get_message_result({
+            'op': 'set_worker_settings',
+            'args': {'newline_re': newline_re,
+                     'max_line_length': 4096,
+                     'buffer_timeout': 5,
+                     'buffer_size': 64 * 1024}})
+
     def create_remote_command(self, worker_name, expected_keys, error_msg):
         command_id = remotecommand.RemoteCommand.generate_new_command_id()
         command = BasicRemoteCommand(worker_name, expected_keys, error_msg)
@@ -166,6 +179,8 @@ class Connection(base.Connection):
 
     @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):
+        yield self._set_worker_settings()
+
         basedir = self.info['basedir']
         builder_names = [name for name, _ in builders]
         self.builder_basedirs = {name: self.path_module.join(basedir, builddir)
@@ -282,7 +297,9 @@ class Connection(base.Connection):
             del args['dir']
 
         if commandName == "rmfile":
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['path'])
+            args['path'] = self.path_module.join(self.builder_basedirs[builderName],
+                                                 self.path_expanduser(args['path'],
+                                                                      self.info['environ']))
 
         if commandName == "shell":
             args['workdir'] = self.path_module.join(self.builder_basedirs[builderName],

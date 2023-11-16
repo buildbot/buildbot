@@ -22,7 +22,7 @@ describe('change hook', function() {
         await post(`${testPageUrl}/change_hook/base`).form({
             comments:'sd',
             project:'pyflakes',
-            repository:'git://github.com/buildbot/hello-world.git',
+            repository:'https://github.com/buildbot/hello-world.git',
             author:'foo <foo@bar.com>',
             committer:'foo <foo@bar.com>',
             revision: 'HEAD',

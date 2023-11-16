@@ -360,7 +360,8 @@ def makeList(input):
 def in_reactor(f):
     """decorate a function by running it with maybeDeferred in a reactor"""
     def wrap(*args, **kwargs):
-        from twisted.internet import reactor, defer
+        from twisted.internet import defer
+        from twisted.internet import reactor
         result = []
 
         def _async():
@@ -409,7 +410,10 @@ def asyncSleep(delay, reactor=None):
 
 def check_functional_environment(config):
     try:
-        locale.getdefaultlocale()
+        if sys.version_info >= (3, 11, 0):
+            locale.getencoding()
+        else:
+            locale.getdefaultlocale()
     except (KeyError, ValueError) as e:
         config.error("\n".join([
             "Your environment has incorrect locale settings. This means python cannot handle "

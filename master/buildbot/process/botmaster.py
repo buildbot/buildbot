@@ -25,6 +25,7 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import RETRY
 from buildbot.process.workerforbuilder import States
 from buildbot.util import service
+from buildbot.util.render_description import render_description
 
 
 class LockRetrieverMixin:
@@ -130,7 +131,23 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                         else:
                             results = RETRY
                         is_building = build.workerforbuilder.state == States.BUILDING
-                        build.stopBuild("Master Shutdown", results)
+
+                        # Master should not wait build.stopBuild for ages to complete if worker
+                        # does not send any message about shutting the builds down quick enough.
+                        # Just kill the connection with the worker
+                        def lose_connection(b):
+                            if b.workerforbuilder.worker.conn is not None:
+                                b.workerforbuilder.worker.conn.loseConnection()
+
+                        sheduled_call = self.master.reactor.callLater(5, lose_connection, build)
+
+                        def cancel_lose_connection(_, call):
+                            if call.active():
+                                call.cancel()
+
+                        d = build.stopBuild("Master Shutdown", results)
+                        d.addBoth(cancel_lose_connection, sheduled_call)
+
                         if not is_building:
                             # if it is not building, then it must be a latent worker
                             # which is substantiating. Cancel it.
@@ -227,7 +244,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         timer = metrics.Timer("BotMaster.reconfigServiceWithBuildbotConfig")
         timer.start()
 
-        # reconfigure builders
+        yield self.reconfigProjects(new_config)
         yield self.reconfigServiceBuilders(new_config)
 
         # call up
@@ -238,6 +255,21 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.maybeStartBuildsForAllBuilders()
 
         timer.stop()
+
+    @defer.inlineCallbacks
+    def reconfigProjects(self, new_config):
+        for project_config in new_config.projects:
+            projectid = yield self.master.data.updates.find_project_id(project_config.name)
+            yield self.master.data.updates.update_project_info(
+                projectid,
+                project_config.slug,
+                project_config.description,
+                project_config.description_format,
+                render_description(
+                    project_config.description,
+                    project_config.description_format
+                ),
+            )
 
     @defer.inlineCallbacks
     def reconfigServiceBuilders(self, new_config):

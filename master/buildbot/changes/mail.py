@@ -246,11 +246,20 @@ class CVSMaildirSource(MaildirSource):
         comments = comments.rstrip() + "\n"
         if comments == '\n':
             comments = None
-        return ('cvs', dict(author=author, committer=None, files=files, comments=comments,
-                            isdir=isdir, when=when, branch=branch,
-                            revision=rev, category=category,
-                            repository=cvsroot, project=project,
-                            properties=self.properties))
+        return ('cvs', {
+            "author": author,
+            "committer": None,
+            "files": files,
+            "comments": comments,
+            "isdir": isdir,
+            "when": when,
+            "branch": branch,
+            "revision": rev,
+            "category": category,
+            "repository": cvsroot,
+            "project": project,
+            "properties": self.properties
+        })
 
 # svn "commit-email.pl" handler.  The format is very similar to freshcvs mail;
 # here's a sample:
@@ -375,8 +384,14 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             log.msg("no matching files found, ignoring commit")
             return None
 
-        return ('svn', dict(author=author, committer=None, files=files, comments=comments,
-                            when=when, revision=rev))
+        return ('svn', {
+            "author": author,
+            "committer": None,
+            "files": files,
+            "comments": comments,
+            "when": when,
+            "revision": rev
+        })
 
 # bzr Launchpad branch subscription mails. Sample mail:
 #
@@ -513,10 +528,16 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
                     branch = None
 
         if rev and author:
-            return ('bzr', dict(author=author, committer=None, files=d['files'],
-                                comments=d['comments'],
-                                when=when, revision=rev,
-                                branch=branch, repository=repository or ''))
+            return ('bzr', {
+                "author": author,
+                "committer": None,
+                "files": d['files'],
+                "comments": d['comments'],
+                "when": when,
+                "revision": rev,
+                "branch": branch,
+                "repository": repository or ''
+            })
         return None
 
 

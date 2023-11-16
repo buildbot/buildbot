@@ -47,22 +47,31 @@ class FakeUsersComponent(FakeDBComponent):
         self.users_info = {}
         self.id_num = 0
 
-    def insertTestData(self, rows):
+    def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, User):
-                self.users[row.uid] = dict(identifier=row.identifier,
-                                           bb_username=row.bb_username,
-                                           bb_password=row.bb_password)
+                self.users[row.uid] = {
+                    "identifier": row.identifier,
+                    "bb_username": row.bb_username,
+                    "bb_password": row.bb_password
+                }
 
             if isinstance(row, UserInfo):
                 assert row.uid in self.users
                 if row.uid not in self.users_info:
-                    self.users_info[row.uid] = [dict(attr_type=row.attr_type,
-                                                     attr_data=row.attr_data)]
+                    self.users_info[row.uid] = [
+                        {
+                            "attr_type": row.attr_type,
+                            "attr_data": row.attr_data
+                        }
+                    ]
                 else:
                     self.users_info[row.uid].append(
-                        dict(attr_type=row.attr_type,
-                             attr_data=row.attr_data))
+                        {
+                            "attr_type": row.attr_type,
+                            "attr_data": row.attr_data
+                        }
+                    )
 
     def _user2dict(self, uid):
         usdict = None
@@ -89,8 +98,8 @@ class FakeUsersComponent(FakeDBComponent):
                     return defer.succeed(uid)
 
         uid = self.nextId()
-        self.db.insertTestData([User(uid=uid, identifier=identifier)])
-        self.db.insertTestData([UserInfo(uid=uid,
+        self.db.insert_test_data([User(uid=uid, identifier=identifier)])
+        self.db.insert_test_data([UserInfo(uid=uid,
                                          attr_type=attr_type,
                                          attr_data=attr_data)])
         return defer.succeed(uid)
@@ -133,8 +142,7 @@ class FakeUsersComponent(FakeDBComponent):
                         attr['attr_data'] = attr_data
                         break
                 else:
-                    infos.append(dict(attr_type=attr_type,
-                                      attr_data=attr_data))
+                    infos.append({"attr_type": attr_type, "attr_data": attr_data})
             except KeyError:
                 pass
 

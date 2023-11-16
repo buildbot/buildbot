@@ -48,7 +48,7 @@ def main():
     try:
         browser, version = get_chrome_version(args.browsers)
         if browser is None:
-            raise Exception('Could no get browser version')
+            raise RuntimeError('Could no get browser version')
 
         print('Using {0} release {1}'.format(browser, version))
 
@@ -67,7 +67,7 @@ def main():
                 69: '2.44',
             }
             if chrome_major not in chrome_major_to_chromedriver:
-                raise Exception('Unknown Chrome version {}.{}.{}'.format(
+                raise RuntimeError('Unknown Chrome version {}.{}.{}'.format(
                     chrome_major, chrome_minor, chrome_patch))
             chromedriver_version = chrome_major_to_chromedriver[chrome_major]
 

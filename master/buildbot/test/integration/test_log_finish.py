@@ -25,11 +25,12 @@ from buildbot.test.util.integration import RunMasterBase
 class TestLog(RunMasterBase):
     # master configuration
 
-    def masterConfig(self, step):
+    @defer.inlineCallbacks
+    def setup_config(self, step):
         c = {}
         from buildbot.config import BuilderConfig
-        from buildbot.process.factory import BuildFactory
         from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
 
         c['schedulers'] = [
             schedulers.AnyBranchScheduler(
@@ -42,7 +43,7 @@ class TestLog(RunMasterBase):
             BuilderConfig(name="testy",
                           workernames=["local1"],
                           factory=f)]
-        return c
+        yield self.setup_master(c)
 
     @defer.inlineCallbacks
     def test_shellcommand(self):
@@ -57,15 +58,17 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setupConfig(self.masterConfig(step))
+        yield self.setup_config(step)
 
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none")
+        change = {
+            "branch": "master",
+            "files": ["foo.c"],
+            "author": "me@foo.com",
+            "committer": "me@foo.com",
+            "comments": "good stuff",
+            "revision": "HEAD",
+            "project": "none"
+        }
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], SUCCESS)
@@ -84,15 +87,17 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setupConfig(self.masterConfig(step))
+        yield self.setup_config(step)
 
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none")
+        change = {
+            "branch": "master",
+            "files": ["foo.c"],
+            "author": "me@foo.com",
+            "committer": "me@foo.com",
+            "comments": "good stuff",
+            "revision": "HEAD",
+            "project": "none"
+        }
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], SUCCESS)
@@ -112,15 +117,17 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setupConfig(self.masterConfig(step))
+        yield self.setup_config(step)
 
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none")
+        change = {
+            "branch": "master",
+            "files": ["foo.c"],
+            "author": "me@foo.com",
+            "committer": "me@foo.com",
+            "comments": "good stuff",
+            "revision": "HEAD",
+            "project": "none"
+        }
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertFalse(self.curr_log.finished)

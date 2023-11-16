@@ -31,7 +31,6 @@ class ObjDict(dict):
 
 
 class StateConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
 
     def getObjectId(self, name, class_name):
         # defer to a cached method that only takes one parameter (a tuple)

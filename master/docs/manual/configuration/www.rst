@@ -12,9 +12,9 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
 ``port``
     The TCP port on which to serve requests.
-    It might be an integer or any string accepted by `serverFromString <https://twistedmatrix.com/documents/current/api/twisted.internet.endpoints.html#serverFromString>`_ (ex: "tcp:8010:interface=127.0.0.1" to listen on another interface).
-    Note that SSL is not supported.
-    To host Buildbot with SSL, use an HTTP proxy such as lighttpd, nginx, or Apache.
+    It might be an integer or any string accepted by `serverFromString <https://docs.twistedmatrix.com/en/stable/api/twisted.internet.endpoints.html#serverFromString>`_ (ex: `"tcp:8010:interface=127.0.0.1"` to listen on another interface).
+    Note that using twisted's SSL endpoint is discouraged.
+    Use a reverse proxy that offers proper SSL hardening instead (see :ref:`Reverse_Proxy_Config`).
     If this is ``None`` (the default), then the master will not implement a web server.
 
 ``json_cache_seconds``
@@ -191,6 +191,34 @@ This server is configured with the ``www`` configuration key, which specifies a 
     Send websocket pings every ``ws_ping_interval`` seconds.
     This is useful to avoid websocket timeouts when using reverse proxies or CDNs.
     If the value is 0 (the default), pings are disabled.
+
+``theme``
+
+    Allows configuring certain properties of the web frontend, such as colors.
+    The configuration value is a dictionary.
+    The keys correspond to certain CSS variable names that are used throughout web frontend and made configurable.
+    The values correspond to CSS values of these variables.
+
+    The keys and values are not sanitized, so using data derived from user-supplied information is a security risk.
+
+    The default is the following:
+
+    .. code-block:: python
+
+        c["www"]["theme"] = {
+            "bb-sidebar-background-color": "#30426a",
+            "bb-sidebar-header-background-color": "#273759",
+            "bb-sidebar-header-text-color": "#fff",
+            "bb-sidebar-title-text-color": "#627cb7",
+            "bb-sidebar-footer-background-color": "#273759",
+            "bb-sidebar-button-text-color": "#b2bfdc",
+            "bb-sidebar-button-hover-background-color": "#1b263d",
+            "bb-sidebar-button-hover-text-color": "#fff",
+            "bb-sidebar-button-current-background-color": "#273759",
+            "bb-sidebar-button-current-text-color": "#b2bfdc",
+            "bb-sidebar-stripe-hover-color": "#e99d1a",
+            "bb-sidebar-stripe-current-color": "#8c5e10",
+        }
 
 .. note::
 
@@ -691,7 +719,7 @@ In this case the username provided by oauth2 will be used, and all other informa
 
 Currently only one provider is available:
 
-.. py:class:: buildbot.ldapuserinfo.LdapUserInfo(uri, bindUser, bindPw, accountBase, accountPattern, groupBase=None, groupMemberPattern=None, groupName=None, accountFullName, accountEmail, avatarPattern=None, avatarData=None, accountExtraFields=None)
+.. py:class:: buildbot.ldapuserinfo.LdapUserInfo(uri, bindUser, bindPw, accountBase, accountPattern, groupBase=None, groupMemberPattern=None, groupName=None, accountFullName, accountEmail, avatarPattern=None, avatarData=None, accountExtraFields=None, tls=None)
 
         :param uri: uri of the ldap server
         :param bindUser: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
@@ -710,6 +738,7 @@ Currently only one provider is available:
         :param avatarData: the name of the field in groups ldap database where the avatar picture is to be found.
                            This field is supposed to contain the raw picture, format is automatically detected from jpeg, png or git.
         :param accountExtraFields: extra fields to extracts for use with the authorization policies
+        :param tls: an instance of ``ldap.Tls`` that specifies TLS settings.
 
         If one of the three optional groups parameters is supplied, then all of them become mandatory. If none is supplied, the retrieved user info has an empty list of groups.
 
@@ -735,11 +764,16 @@ Example:
                 avatarPattern='(&(objectClass=person)(mail=%(email)s))',
                 avatarData='thumbnailPhoto',
             )
-            c['www'] = dict(port=PORT, allowed_origins=["*"],
-                            url=c['buildbotURL'],
-                            auth=util.RemoteUserAuth(userInfoProvider=userInfoProvider),
-                            avatar_methods=[userInfoProvider,
-                                            util.AvatarGravatar()])
+            c['www'] = {
+                "port": PORT,
+                "allowed_origins": ["*"],
+                "url": c['buildbotURL'],
+                "auth": util.RemoteUserAuth(userInfoProvider=userInfoProvider),
+                "avatar_methods": [
+                    userInfoProvider,
+                    util.AvatarGravatar()
+                ]
+            }
 
 .. note::
 

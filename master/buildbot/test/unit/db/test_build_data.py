@@ -63,7 +63,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_add_data_get_data(self):
-        yield self.insertTestData(self.common_data)
+        yield self.insert_test_data(self.common_data)
         yield self.db.build_data.setBuildData(buildid=30, name='mykey', value=b'myvalue',
                                               source='mysource')
         data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
@@ -78,13 +78,13 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_data_non_existing(self):
-        yield self.insertTestData(self.common_data)
+        yield self.insert_test_data(self.common_data)
         data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
         self.assertIsNone(data_dict)
 
     @defer.inlineCallbacks
     def test_add_data_replace_value(self):
-        yield self.insertTestData(self.common_data)
+        yield self.insert_test_data(self.common_data)
         yield self.db.build_data.setBuildData(buildid=30, name='mykey', value=b'myvalue',
                                               source='mysource')
         yield self.db.build_data.setBuildData(buildid=30, name='mykey', value=b'myvalue2',
@@ -102,7 +102,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_add_data_insert_race(self):
-        yield self.insertTestData(self.common_data)
+        yield self.insert_test_data(self.common_data)
 
         def hook(conn):
             value = b'myvalue_old'
@@ -132,7 +132,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_add_data_get_data_no_value(self):
-        yield self.insertTestData(self.common_data)
+        yield self.insert_test_data(self.common_data)
         yield self.db.build_data.setBuildData(buildid=30, name='mykey', value=b'myvalue',
                                               source='mysource')
         data_dict = yield self.db.build_data.getBuildDataNoValue(buildid=30, name='mykey')
@@ -147,13 +147,13 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_data_no_values_non_existing(self):
-        yield self.insertTestData(self.common_data)
+        yield self.insert_test_data(self.common_data)
         data_dict = yield self.db.build_data.getBuildDataNoValue(buildid=30, name='mykey')
         self.assertIsNone(data_dict)
 
     @defer.inlineCallbacks
     def test_get_all_build_data_no_values(self):
-        yield self.insertTestData(self.common_data + [
+        yield self.insert_test_data(self.common_data + [
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
             fakedb.BuildData(id=92, buildid=30, name='name2', value=b'value2', source='source2'),
             fakedb.BuildData(id=93, buildid=31, name='name3', value=b'value3', source='source3'),
@@ -189,7 +189,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_remove_old_build_data(self, older_than_timestamp, exp_num_deleted,
                                    exp_remaining_names):
-        yield self.insertTestData(self.common_data + [
+        yield self.insert_test_data(self.common_data + [
             fakedb.Build(id=50, buildrequestid=41, number=17, masterid=88,
                          builderid=88, workerid=47, complete_at=None),
             fakedb.Build(id=51, buildrequestid=42, number=18, masterid=88,
@@ -232,7 +232,7 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         yield self.setUpConnectorComponent(
             table_names=['builds', 'builders', 'masters', 'buildrequests', 'buildsets',
-                         'workers', 'build_data'])
+                         'workers', 'build_data', "projects"])
 
         self.db.build_data = build_data.BuildDataConnectorComponent(self.db)
 

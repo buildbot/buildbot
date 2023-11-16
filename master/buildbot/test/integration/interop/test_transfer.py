@@ -20,8 +20,15 @@ import shutil
 
 from twisted.internet import defer
 
+from buildbot.process.buildstep import BuildStep
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
+from buildbot.steps.transfer import DirectoryUpload
+from buildbot.steps.transfer import FileDownload
+from buildbot.steps.transfer import FileUpload
+from buildbot.steps.transfer import MultipleFileUpload
+from buildbot.steps.transfer import StringDownload
+from buildbot.steps.worker import CompositeStepMixin
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
@@ -35,6 +42,93 @@ from buildbot.test.util.integration import RunMasterBase
 class TransferStepsMasterPb(RunMasterBase):
     proto = "pb"
 
+    @defer.inlineCallbacks
+    def setup_config(self, bigfilename):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(
+                name="force",
+                builderNames=["testy"])]
+
+        f = BuildFactory()
+        # do a bunch of transfer to exercise the protocol
+        f.addStep(StringDownload("filecontent", workerdest="dir/file1.txt"))
+        f.addStep(StringDownload("filecontent2", workerdest="dir/file2.txt"))
+        # create 8 MB file
+        with open(bigfilename, 'w', encoding='utf-8') as o:
+            buf = "xxxxxxxx" * 1024
+            for _ in range(1000):
+                o.write(buf)
+        f.addStep(FileDownload(mastersrc=bigfilename, workerdest="bigfile.txt"))
+        f.addStep(FileUpload(workersrc="dir/file2.txt", masterdest="master.txt"))
+        f.addStep(FileDownload(mastersrc="master.txt", workerdest="dir/file3.txt"))
+        f.addStep(DirectoryUpload(workersrc="dir", masterdest="dir"))
+        c['builders'] = [
+            BuilderConfig(name="testy", workernames=["local1"], factory=f)
+        ]
+        yield self.setup_master(c)
+
+    @defer.inlineCallbacks
+    def setup_config_glob(self):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
+
+        class CustomStep(BuildStep, CompositeStepMixin):
+            @defer.inlineCallbacks
+            def run(self):
+                content = yield self.getFileContentFromWorker(
+                    "dir/file1.txt", abandonOnFailure=True)
+                assert content == "filecontent"
+                return SUCCESS
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(
+                name="force", builderNames=["testy"])
+        ]
+
+        f = BuildFactory()
+        f.addStep(StringDownload("filecontent", workerdest="dir/file1.txt"))
+        f.addStep(StringDownload("filecontent2", workerdest="dir/notafile1.txt"))
+        f.addStep(StringDownload("filecontent2", workerdest="dir/only1.txt"))
+        f.addStep(
+            MultipleFileUpload(
+                workersrcs=["dir/file*.txt", "dir/not*.txt", "dir/only?.txt"],
+                masterdest="dest/",
+                glob=True))
+        f.addStep(CustomStep())
+        c['builders'] = [
+            BuilderConfig(name="testy", workernames=["local1"], factory=f)
+        ]
+        yield self.setup_master(c)
+
+    @defer.inlineCallbacks
+    def setup_config_single_step(self, step):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.plugins import schedulers
+        from buildbot.process.factory import BuildFactory
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(
+                name="force",
+                builderNames=["testy"])]
+
+        f = BuildFactory()
+
+        f.addStep(FileUpload(workersrc="dir/noexist_path", masterdest="master_dest"))
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          workernames=["local1"],
+                          factory=f)
+        ]
+        yield self.setup_master(c)
+
     def readMasterDirContents(self, top):
         contents = {}
         for root, _, files in os.walk(top):
@@ -44,46 +138,10 @@ class TransferStepsMasterPb(RunMasterBase):
                     contents[fn] = f.read()
         return contents
 
-    def get_config_single_step(self, step):
-        c = {}
-        from buildbot.config import BuilderConfig
-        from buildbot.process.factory import BuildFactory
-        from buildbot.plugins import steps, schedulers
-
-        c['schedulers'] = [
-            schedulers.ForceScheduler(
-                name="force",
-                builderNames=["testy"])]
-
-        f = BuildFactory()
-
-        f.addStep(steps.FileUpload(workersrc="dir/noexist_path", masterdest="master_dest"))
-        c['builders'] = [
-            BuilderConfig(name="testy",
-                          workernames=["local1"],
-                          factory=f)
-        ]
-        return c
-
-    def get_non_existing_file_upload_config(self):
-        from buildbot.plugins import steps
-        step = steps.FileUpload(workersrc="dir/noexist_path", masterdest="master_dest")
-        return self.get_config_single_step(step)
-
-    def get_non_existing_directory_upload_config(self):
-        from buildbot.plugins import steps
-        step = steps.DirectoryUpload(workersrc="dir/noexist_path", masterdest="master_dest")
-        return self.get_config_single_step(step)
-
-    def get_non_existing_multiple_file_upload_config(self):
-        from buildbot.plugins import steps
-        step = steps.MultipleFileUpload(workersrcs=["dir/noexist_path"], masterdest="master_dest")
-        return self.get_config_single_step(step)
-
     @flaky(bugNumber=4407, onPlatform='win32')
     @defer.inlineCallbacks
     def test_transfer(self):
-        yield self.setupConfig(masterConfig(bigfilename=self.mktemp()))
+        yield self.setup_config(bigfilename=self.mktemp())
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
@@ -100,7 +158,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_globTransfer(self):
-        yield self.setupConfig(masterGlobConfig())
+        yield self.setup_config_glob()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
         dirContents = self.readMasterDirContents("dest")
@@ -115,7 +173,9 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_no_exist_file_upload(self):
-        yield self.setupConfig(self.get_non_existing_file_upload_config())
+        step = FileUpload(workersrc="dir/noexist_path", masterdest="master_dest")
+        yield self.setup_config_single_step(step)
+
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
         res = yield self.checkBuildStepLogExist(build, "Cannot open file")
@@ -123,7 +183,9 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_no_exist_directory_upload(self):
-        yield self.setupConfig(self.get_non_existing_directory_upload_config())
+        step = DirectoryUpload(workersrc="dir/noexist_path", masterdest="master_dest")
+        yield self.setup_config_single_step(step)
+
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
         res = yield self.checkBuildStepLogExist(build, "Cannot open file")
@@ -131,7 +193,9 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_no_exist_multiple_file_upload(self):
-        yield self.setupConfig(self.get_non_existing_multiple_file_upload_config())
+        step = MultipleFileUpload(workersrcs=["dir/noexist_path"], masterdest="master_dest")
+        yield self.setup_config_single_step(step)
+
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
         res = yield self.checkBuildStepLogExist(build, "Cannot open file")
@@ -140,79 +204,3 @@ class TransferStepsMasterPb(RunMasterBase):
 
 class TransferStepsMasterNull(TransferStepsMasterPb):
     proto = "null"
-
-
-# master configuration
-def masterConfig(bigfilename):
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import steps, schedulers
-
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
-
-    f = BuildFactory()
-    # do a bunch of transfer to exercise the protocol
-    f.addStep(steps.StringDownload("filecontent", workerdest="dir/file1.txt"))
-    f.addStep(steps.StringDownload("filecontent2", workerdest="dir/file2.txt"))
-    # create 8 MB file
-    with open(bigfilename, 'w', encoding='utf-8') as o:
-        buf = "xxxxxxxx" * 1024
-        for _ in range(1000):
-            o.write(buf)
-    f.addStep(
-        steps.FileDownload(
-            mastersrc=bigfilename, workerdest="bigfile.txt"))
-    f.addStep(
-        steps.FileUpload(workersrc="dir/file2.txt", masterdest="master.txt"))
-    f.addStep(
-        steps.FileDownload(mastersrc="master.txt", workerdest="dir/file3.txt"))
-    f.addStep(steps.DirectoryUpload(workersrc="dir", masterdest="dir"))
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)
-    ]
-    return c
-
-
-def masterGlobConfig():
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import steps, schedulers
-    from buildbot.steps.worker import CompositeStepMixin
-
-    class CustomStep(steps.BuildStep, CompositeStepMixin):
-        @defer.inlineCallbacks
-        def run(self):
-            content = yield self.getFileContentFromWorker(
-                "dir/file1.txt", abandonOnFailure=True)
-            assert content == "filecontent"
-            return SUCCESS
-
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force", builderNames=["testy"])
-    ]
-
-    f = BuildFactory()
-    f.addStep(steps.StringDownload("filecontent", workerdest="dir/file1.txt"))
-    f.addStep(
-        steps.StringDownload(
-            "filecontent2", workerdest="dir/notafile1.txt"))
-    f.addStep(steps.StringDownload("filecontent2", workerdest="dir/only1.txt"))
-    f.addStep(
-        steps.MultipleFileUpload(
-            workersrcs=["dir/file*.txt", "dir/not*.txt", "dir/only?.txt"],
-            masterdest="dest/",
-            glob=True))
-    f.addStep(CustomStep())
-    c['builders'] = [
-        BuilderConfig(
-            name="testy", workernames=["local1"], factory=f)
-    ]
-    return c

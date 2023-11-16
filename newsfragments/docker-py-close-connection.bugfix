@@ -1,1 +1,0 @@
-Fix issue with :bb:worker:`DockerLatentWorker` accumulating connections with the docker server (:issue:`6538`).

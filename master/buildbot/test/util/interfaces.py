@@ -15,10 +15,9 @@
 
 
 import inspect
-import pkg_resources
+from collections import OrderedDict
 
 import zope.interface.interface
-from twisted.trial import unittest
 from zope.interface.interface import Attribute
 
 
@@ -37,24 +36,25 @@ class InterfaceTests:
 
             self.assertArgSpecMatches(obj.methodUnderTest, self.fakeMethod)
         """
-        def filter(spec):
-            # the tricky thing here is to align args and defaults, since the
-            # defaults correspond to the *last* n elements of args.  To make
-            # things easier, we go in reverse, and keep a separate counter for
-            # the defaults
-            args = spec[0]
-            defaults = list(spec[3] if spec[3] is not None else [])
-            di = -1
-            for ai in range(len(args) - 1, -1, -1):
-                arg = args[ai]
-                if arg.startswith('_') or (arg == 'self' and ai == 0):
-                    del args[ai]
-                    if -di <= len(defaults):
-                        del defaults[di]
-                        di += 1
-                di -= 1
+        def filter(signature):
+            if len(signature.parameters) == 0:
+                return signature
 
-            return (args, spec[1], spec[2], defaults or None)
+            parameters = OrderedDict(signature.parameters)
+            for name in parameters:
+                if name == 'self':
+                    parameters.pop('self')
+                break
+
+            delete_names = []
+            for name in parameters:
+                if name.startswith('_'):
+                    delete_names.append(name)
+            for name in delete_names:
+                parameters.pop(name)
+
+            signature = signature.replace(parameters=parameters.values())
+            return signature
 
         def remove_decorators(func):
             try:
@@ -64,12 +64,11 @@ class InterfaceTests:
 
         def filter_argspec(func):
             return filter(
-                inspect.getfullargspec(remove_decorators(func)))
+                inspect.signature(remove_decorators(func)))
 
         def assert_same_argspec(expected, actual):
             if expected != actual:
-                msg = (f"Expected: {inspect.formatargspec(*expected)}; got: "
-                       f"{inspect.formatargspec(*actual)}")
+                msg = f"Expected: {expected}; got: {actual}"
                 self.fail(msg)
 
         actual_argspec = filter_argspec(actualMethod)
@@ -87,13 +86,6 @@ class InterfaceTests:
 
     def assertInterfacesImplemented(self, cls):
         "Given a class, assert that the zope.interface.Interfaces are implemented to specification."
-
-        # see if this version of zope.interface is too old to run these tests
-        zi_vers = pkg_resources.working_set.find(
-            pkg_resources.Requirement.parse('zope.interface')).version
-        if pkg_resources.parse_version(zi_vers) < pkg_resources.parse_version('4.1.1'):
-            raise unittest.SkipTest(
-                "zope.interfaces is too old to run this test")
 
         for interface in zope.interface.implementedBy(cls):
             for attr, template_argspec in interface.namesAndDescriptions():

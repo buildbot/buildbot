@@ -75,7 +75,7 @@ def getVersionFromArchiveId(git_archive_id='$Format:%ct %d$'):
         See man gitattributes(5) and git-log(1) (PRETTY FORMATS) for more details.
     """
     # mangle the magic string to make sure it is not replaced by git archive
-    if not git_archive_id.startswith('$For''mat:'):
+    if not git_archive_id.startswith('$For' + 'mat:'):
         # source was modified by git archive, try to parse the version from
         # the value of git_archive_id
 

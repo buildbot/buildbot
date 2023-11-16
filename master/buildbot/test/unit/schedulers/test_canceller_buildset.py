@@ -42,7 +42,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         return self.master.stopService()
 
     def insert_test_data(self):
-        self.master.db.insertTestData([
+        self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=100, name='builder1'),

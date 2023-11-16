@@ -192,6 +192,10 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
         return self.results
 
     def getResultSummary(self):
+        if self.logobserver is None:
+            # step was skipped or log observer was not created due to another reason
+            return {"step": results.statusToString(self.results)}
+
         description = (f'compile {self.logobserver.nbProjects} projects {self.logobserver.nbFiles} '
                        'files')
 
@@ -201,7 +205,9 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
             description += f' {self.logobserver.nbErrors} errors'
 
         if self.results != results.SUCCESS:
-            description += f' ({results.Results[self.results]})'
+            description += f' ({results.statusToString(self.results)})'
+            if self.timed_out:
+                description += " (timed out)"
 
         return {'step': description}
 
@@ -438,6 +444,14 @@ class VC141(VC14):
 VS2017 = VC141
 
 
+class VS2019(VS2017):
+    default_installdir = r"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community"
+
+
+class VS2022(VS2017):
+    default_installdir = r"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\Community"
+
+
 def _msbuild_format_defines_parameter(defines):
     if defines is None or len(defines) == 0:
         return ""
@@ -528,6 +542,7 @@ class MsBuild141(VisualStudio):
     defines = None
     vcenv_bat = r"\VC\Auxiliary\Build\vcvarsall.bat"
     renderables = ['platform']
+    version_range = "[15.0,16.0)"
 
     def __init__(self, platform, defines=None, **kwargs):
         self.platform = platform
@@ -539,6 +554,8 @@ class MsBuild141(VisualStudio):
         self.env['VCENV_BAT'] = self.vcenv_bat
         self.add_env_path("PATH",
                    'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\')
+        self.add_env_path("PATH",
+                   'C:\\Program Files\\Microsoft Visual Studio\\Installer\\')
         self.add_env_path("PATH", r'${PATH}')
 
     def describe_project(self, done=False):
@@ -557,7 +574,9 @@ class MsBuild141(VisualStudio):
         self.descriptionDone = 'built ' + self.describe_project()
         yield self.updateSummary()
 
-        command = ('FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\') '
+        command = ('FOR /F "tokens=*" %%I in '
+                   f'(\'vswhere.exe -version "{self.version_range}" -products * '
+                   '-property installationPath\') '
                    f' do "%%I\\%VCENV_BAT%" x86 && msbuild "{self.projectfile}" '
                    f'/p:Configuration="{self.config}" /p:Platform="{self.platform}" /maxcpucount')
 
@@ -568,3 +587,14 @@ class MsBuild141(VisualStudio):
 
         res = yield super().run()
         return res
+
+
+MsBuild15 = MsBuild141
+
+
+class MsBuild16(MsBuild141):
+    version_range = "[16.0,17.0)"
+
+
+class MsBuild17(MsBuild141):
+    version_range = "[17.0,18.0)"

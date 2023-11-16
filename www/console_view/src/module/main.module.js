@@ -371,7 +371,7 @@ class Console {
                 }
 
                 if ((change == null)) {
-                    revision = rev === {} ? "" : rev[rev.keys()[0]];
+                    revision = rev === {} ? "" : rev[Object.keys(rev)[0]];
                     change = this.makeFakeChange(codebase, revision, build.started_at);
                 }
             }

@@ -26,6 +26,7 @@ from twisted.python import log
 from twisted.web.error import Error
 
 from buildbot.data import exceptions
+from buildbot.data.base import EndpointKind
 from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
@@ -84,15 +85,17 @@ class RestRootResource(resource.Resource):
         api_versions = dict((f'v{v}', f'{self.base_url}api/v{v}')
                             for v in self.version_classes
                             if v > min_vers)
-        data = json.dumps(dict(api_versions=api_versions))
+        data = json.dumps({"api_versions": api_versions})
         return unicode2bytes(data)
 
 
-JSONRPC_CODES = dict(parse_error=-32700,
-                     invalid_request=-32600,
-                     method_not_found=-32601,
-                     invalid_params=-32602,
-                     internal_error=-32603)
+JSONRPC_CODES = {
+    "parse_error": -32700,
+    "invalid_request": -32600,
+    "method_not_found": -32601,
+    "invalid_params": -32602,
+    "internal_error": -32603
+}
 
 
 class V2RootResource(resource.Resource):
@@ -211,7 +214,7 @@ class V2RootResource(resource.Resource):
             request.setResponseCode(errcode)
             request.setHeader(b'content-type', JSON_ENCODED)
             if "error" not in jsonRpcReply:  # already filled in by caller
-                jsonRpcReply['error'] = dict(code=jsonrpccode, message=msg)
+                jsonRpcReply['error'] = {"code": jsonrpccode, "message": msg}
             data = json.dumps(jsonRpcReply)
             data = unicode2bytes(data)
             request.write(data)
@@ -247,13 +250,18 @@ class V2RootResource(resource.Resource):
     def decodeResultSpec(self, request, endpoint):
         args = request.args
         entityType = endpoint.rtype.entityType
-        return self.master.data.resultspec_from_jsonapi(args, entityType, endpoint.isCollection)
+        return self.master.data.resultspec_from_jsonapi(
+            args,
+            entityType,
+            endpoint.kind == EndpointKind.COLLECTION
+        )
 
-    def encodeRaw(self, data, request):
+    def encodeRaw(self, data, request, is_inline):
         request.setHeader(b"content-type",
                           unicode2bytes(data['mime-type']) + b'; charset=utf-8')
-        request.setHeader(b"content-disposition",
-                          b'attachment; filename=' + unicode2bytes(data['filename']))
+        if not is_inline:
+            request.setHeader(b"content-disposition",
+                              b'attachment; filename=' + unicode2bytes(data['filename']))
         request.write(unicode2bytes(data['raw']))
         return
 
@@ -265,7 +273,7 @@ class V2RootResource(resource.Resource):
             request.setResponseCode(errcode)
             request.setHeader(b'content-type', b'text/plain; charset=utf-8')
             msg = bytes2unicode(msg)
-            data = json.dumps(dict(error=msg))
+            data = json.dumps({"error": msg})
             data = unicode2bytes(data)
             request.write(data)
 
@@ -281,8 +289,12 @@ class V2RootResource(resource.Resource):
                 writeError(msg, errcode=404)
                 return
 
-            if ep.isRaw:
-                self.encodeRaw(data, request)
+            if ep.kind == EndpointKind.RAW:
+                self.encodeRaw(data, request, False)
+                return
+
+            if ep.kind == EndpointKind.RAW_INLINE:
+                self.encodeRaw(data, request, True)
                 return
 
             # post-process any remaining parts of the resultspec
@@ -290,7 +302,7 @@ class V2RootResource(resource.Resource):
 
             # annotate the result with some metadata
             meta = {}
-            if ep.isCollection:
+            if ep.kind == EndpointKind.COLLECTION:
                 offset, total = data.offset, data.total
                 if offset is None:
                     offset = 0
@@ -370,11 +382,11 @@ class V2RootResource(resource.Resource):
             request.setHeader(b'content-type', b'text/plain; charset=utf-8')
             if request.method == b'POST':
                 # jsonRPC callers want the error message in error.message
-                data = json.dumps(dict(error=dict(message=msg)))
+                data = json.dumps({"error": {"message": msg}})
                 data = unicode2bytes(data)
                 request.write(data)
             else:
-                data = json.dumps(dict(error=msg))
+                data = json.dumps({"error": msg})
                 data = unicode2bytes(data)
                 request.write(data)
             request.finish()
