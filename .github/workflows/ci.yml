@@ -123,3 +123,4 @@ jobs:
 
       - name: "Run tests for ${{ matrix.python-version }}"
         run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+        timeout-minutes: 30
