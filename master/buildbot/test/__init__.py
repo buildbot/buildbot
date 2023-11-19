@@ -131,10 +131,6 @@ warnings.filterwarnings('ignore', ".*'urllib3.contrib.pyopenssl' module is depre
 warnings.filterwarnings('ignore', "'pipes' is deprecated and slated for removal in Python 3.13",
                         category=DeprecationWarning)
 
-# shown on Python 3.7 on Windows
-warnings.filterwarnings('ignore', "SelectableGroups dict interface is deprecated. Use select.",
-                        category=DeprecationWarning)
-
 # boto3 shows this warning when on old Python
 warnings.filterwarnings('ignore', ".*Boto3 will no longer support Python .*",
                         category=Warning)

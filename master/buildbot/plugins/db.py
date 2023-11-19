@@ -25,6 +25,7 @@ from zope.interface.verify import verifyClass
 
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
+from buildbot.util.importlib_compat import entry_points_get
 
 # Base namespace for Buildbot specific plugins
 _NAMESPACE_BASE = 'buildbot'
@@ -34,8 +35,8 @@ def find_distribution_info(entry_point_name, entry_point_group):
     for distribution in distributions():
         # each distribution can have many entry points
         try:
-            for ep in distribution.entry_points:
-                if ep.name == entry_point_name and ep.group == entry_point_group:
+            for ep in entry_points_get(distribution.entry_points, entry_point_group):
+                if ep.name == entry_point_name:
                     return (distribution.metadata['Name'], distribution.metadata['Version'])
         except KeyError as exc:
             raise PluginDBError("Plugin info was found, but it is invalid.") from exc
@@ -242,7 +243,7 @@ class _Plugins:
     def _tree(self):
         if self._real_tree is None:
             self._real_tree = _NSNode()
-            entries = entry_points().get(self._group, [])
+            entries = entry_points_get(entry_points(), self._group)
             for entry in entries:
                 self._real_tree.add(entry.name,
                                     _PluginEntry(self._group, entry,
