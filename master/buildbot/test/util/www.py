@@ -29,6 +29,7 @@ from twisted.web import server
 from buildbot.test.fake import fakemaster
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+from buildbot.util.importlib_compat import entry_points_get
 from buildbot.www import auth
 from buildbot.www import authz
 
@@ -123,7 +124,7 @@ class FakeRequest:
 class RequiresWwwMixin:
     # mix this into a TestCase to skip if buildbot-www is not installed
 
-    if not [ep for ep in entry_points().get('buildbot.www', []) if ep.name == 'base']:
+    if not [ep for ep in entry_points_get(entry_points(), 'buildbot.www') if ep.name == 'base']:
         if 'BUILDBOT_TEST_REQUIRE_WWW' in os.environ:
             raise RuntimeError('$BUILDBOT_TEST_REQUIRE_WWW is set but '
                                'buildbot-www is not installed')
