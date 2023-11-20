@@ -18,4 +18,4 @@ sphinxcontrib-spelling==8.0.0
 sphinxcontrib-websupport==1.2.4;  python_version < "3.9" # pyup: ignore
 sphinxcontrib-websupport==1.2.6;  python_version >= "3.9"
 Pygments==2.16.1
-towncrier==21.9.0
+towncrier==23.11.0
