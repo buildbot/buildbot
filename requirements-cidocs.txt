@@ -17,5 +17,5 @@ sphinxcontrib-serializinghtml==1.1.9;  python_version >= "3.9"
 sphinxcontrib-spelling==8.0.0
 sphinxcontrib-websupport==1.2.4;  python_version < "3.9" # pyup: ignore
 sphinxcontrib-websupport==1.2.6;  python_version >= "3.9"
-Pygments==2.16.1
+Pygments==2.17.1
 towncrier==23.11.0
