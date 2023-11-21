@@ -311,7 +311,7 @@ class RunProcess(object):
                 return w
             command = [obfus(w) for w in command]
             # Hacky fix: Fixing the problem of revealing the token if using https:// method.
-            command_tmp = [ obfus(re.sub("(?<=https\:\/\/)(.*?)(?=\@)", self.secret_string, w)) for w in command      ]
+            command_tmp = [ obfus(re.sub(r"(?<=https\:\/\/)(.*?)(?=\@)", self.secret_string, w)) for w in command      ]
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the worker.  This is mostly platform
         # specific, but can be overridden in the worker's buildbot.tac file.
