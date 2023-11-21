@@ -300,6 +300,7 @@ class RunProcess(object):
         """
         self.command_id = command
         self.secret_string = "########"
+        command_tmp = command
         if logfiles is None:
             logfiles = {}
 
