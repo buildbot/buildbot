@@ -299,8 +299,18 @@ class RunProcess(object):
             process invocations
         """
         self.command_id = command
-        self.secret_string = "########"
         command_tmp = command
+        def mosaic_sensitive_info(cmd, arrPattern=["(?<=https\:\/\/)(.*?)(?=\@)"],
+                               strMosaic="######"):
+            strTmp = ""
+            for pattern in arrPattern:
+                try:
+                    strTmp = re.sub(pattern, strMosaic, cmd)
+                except:
+                    strTmp = re.sub(pattern, strMosaic, str(cmd))
+            print("Go things cover")
+            return strTmp
+
         if logfiles is None:
             logfiles = {}
 
@@ -312,7 +322,7 @@ class RunProcess(object):
                 return w
             command = [obfus(w) for w in command]
             # Hacky fix: Fixing the problem of revealing the token if using https:// method.
-            command_tmp = [ obfus(re.sub(r"(?<=https\:\/\/)(.*?)(?=\@)", self.secret_string, w)) for w in command      ]
+            command_tmp = [ obfus(mosaic_sensitive_info(w)) for w in command      ]
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the worker.  This is mostly platform
         # specific, but can be overridden in the worker's buildbot.tac file.
