@@ -300,13 +300,13 @@ class RunProcess(object):
         """
         self.command_id = command
         command_tmp = command
-        def mosaic_sensitive_info(cmd, arrPattern=[r"(?<=https\:\/\/)(.*?)(?=\@)"],
+        def mosaic_sensitive_info(cmd, arrPattern = [r"(?<=https\:\/\/)(.*?)(?=\@)"],
                                strMosaic="######"):
             strTmp = ""
             for pattern in arrPattern:
                 try:
                     strTmp = re.sub(pattern, strMosaic, cmd)
-                except:
+                except TypeError:
                     strTmp = re.sub(pattern, strMosaic, str(cmd))
             print("Go things cover")
             return strTmp
@@ -321,8 +321,8 @@ class RunProcess(object):
                     return util.Obfuscated(w[1], w[2])
                 return w
             command = [obfus(w) for w in command]
-            # Hacky fix: Fixing the problem of revealing the token if using https:// method.
-            command_tmp = [ obfus(mosaic_sensitive_info(w)) for w in command      ]
+            # Hack fix: Fixing the problem of revealing the token if using https:// method.
+            command_tmp = [obfus(mosaic_sensitive_info(w)) for w in command]
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the worker.  This is mostly platform
         # specific, but can be overridden in the worker's buildbot.tac file.
