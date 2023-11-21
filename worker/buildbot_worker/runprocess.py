@@ -305,7 +305,7 @@ class RunProcess(object):
             """
             The arrPattern is only for small request now. The list of pattern
             is open for future.
-            This subroutine will find the sensitive information from the commandlines
+            Finding the sensitive information from the commandlines
             and prevent it revealing in the stdout.
             """
             arrPattern = [r"(?<=https\:\/\/)(.*?)(?=\@)"]
