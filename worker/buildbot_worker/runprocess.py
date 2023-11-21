@@ -301,10 +301,12 @@ class RunProcess(object):
         self.command_id = command
         command_tmp = command
 
-        def mosaic_sensitive_info(cmd, arrPattern = [], strMosaic="######"):
-            """ 
+        def mosaic_sensitive_info(cmd, arrPattern=None, strMosaic="######"):
+            """
             The arrPattern is only for small request now. The list of pattern
-            is open for future 
+            is open for future.
+            This function will find the sensitive information from the commandlines
+            and prevent it revealing in the stdout.
             """
             arrPattern = [r"(?<=https\:\/\/)(.*?)(?=\@)"]
             strTmp = ""
