@@ -300,7 +300,13 @@ class RunProcess(object):
         """
         self.command_id = command
         command_tmp = command
-        def mosaic_sensitive_info(cmd, arrPattern = [r"(?<=https\:\/\/)(.*?)(?=\@)"], strMosaic="######"):
+
+        def mosaic_sensitive_info(cmd, arrPattern = [], strMosaic="######"):
+            """ 
+            The arrPattern is only for small request now. The list of pattern
+            is open for future 
+            """
+            arrPattern = [r"(?<=https\:\/\/)(.*?)(?=\@)"]
             strTmp = ""
             for pattern in arrPattern:
                 try:
