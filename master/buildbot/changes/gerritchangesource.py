@@ -543,7 +543,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
     @staticmethod
     def now():
         """patchable now (datetime is not patchable as builtin)"""
-        return datetime.datetime.utcnow()
+        return datetime.datetime.now(datetime.timezone.utc)
 
     @defer.inlineCallbacks
     def poll(self):
@@ -553,7 +553,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             # the last event time to some historical look-back
             last_event = self.now() - datetime.timedelta(days=self._first_fetch_lookback)
         else:
-            last_event = datetime.datetime.utcfromtimestamp(last_event_ts)
+            last_event = datetime.datetime.fromtimestamp(last_event_ts, datetime.timezone.utc)
         last_event_formatted = last_event.strftime("%Y-%m-%d %H:%M:%S")
 
         if self.debug:

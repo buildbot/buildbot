@@ -688,10 +688,10 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
             fakedb.Object(id=self.OBJECTID, name='GerritEventLogPoller:gerrit',
                           class_name='GerritEventLogPoller')])
         yield self.newChangeSource(get_files=True)
-        self.changesource.now = lambda: datetime.datetime.utcfromtimestamp(
-            self.NOW_TIMESTAMP)
+        self.changesource.now = lambda: datetime.datetime.fromtimestamp(
+            self.NOW_TIMESTAMP, datetime.timezone.utc)
         thirty_days_ago = (
-            datetime.datetime.utcfromtimestamp(self.NOW_TIMESTAMP)
+            datetime.datetime.fromtimestamp(self.NOW_TIMESTAMP, datetime.timezone.utc)
             - datetime.timedelta(days=30))
         self._http.expect(method='get', ep='/plugins/events-log/events/',
             params={'t1': thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")},

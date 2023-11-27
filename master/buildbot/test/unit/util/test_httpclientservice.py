@@ -395,7 +395,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     @defer.inlineCallbacks
     def test_put_content_with_json_datetime(self):
         exp_content_json = {"json_received": {"a": 'b', "ts": 12}}
-        dt = datetime.datetime.utcfromtimestamp(12)
+        dt = datetime.datetime.fromtimestamp(12, datetime.timezone.utc)
         self.expect('post', '/', json={"a": 'b', "ts": dt},
                     content_json=exp_content_json)
         res = yield self._http.post('/', json={"a": 'b', "ts": dt})

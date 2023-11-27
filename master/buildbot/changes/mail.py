@@ -116,7 +116,7 @@ class CVSMaildirSource(MaildirSource):
         else:
             when = mktime_tz(dateTuple)
 
-        theTime = datetime.datetime.utcfromtimestamp(float(when))
+        theTime = datetime.datetime.fromtimestamp(float(when), datetime.timezone.utc)
         rev = theTime.strftime('%Y-%m-%d %H:%M:%S')
 
         catRE = re.compile(r'^Category:\s*(\S.*)')
