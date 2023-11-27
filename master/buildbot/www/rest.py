@@ -337,7 +337,7 @@ class V2RootResource(resource.Resource):
 
             # set up caching
             if self.cache_seconds:
-                now = datetime.datetime.utcnow()
+                now = datetime.datetime.now(datetime.timezone.utc)
                 expires = now + datetime.timedelta(seconds=self.cache_seconds)
                 expiresBytes = unicode2bytes(
                     expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))

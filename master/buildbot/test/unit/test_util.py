@@ -204,7 +204,7 @@ class TimeFunctions(unittest.TestCase):
                          datetime.timedelta(0))
         self.assertEqual(util.UTC.dst(datetime.datetime.now()),
                          datetime.timedelta(0))
-        self.assertEqual(util.UTC.tzname(datetime.datetime.utcnow()), "UTC")
+        self.assertEqual(util.UTC.tzname(datetime.datetime.now(datetime.timezone.utc)), "UTC")
 
     def test_epoch2datetime(self):
         self.assertEqual(util.epoch2datetime(0),

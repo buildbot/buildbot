@@ -21,6 +21,7 @@
 import datetime
 import os
 import re
+import sys
 from subprocess import PIPE
 from subprocess import STDOUT
 from subprocess import Popen
@@ -56,7 +57,11 @@ def mTimeVersion(init_file):
     for root, _, files in os.walk(cwd):
         for f in files:
             m = max(os.path.getmtime(os.path.join(root, f)), m)
-    d = datetime.datetime.utcfromtimestamp(m)
+
+    if sys.version_info >= (3, 3):
+        d = datetime.datetime.fromtimestamp(m, datetime.timezone.utc)
+    else:
+        d = datetime.datetime.utcfromtimestamp(m)
     return d.strftime("%Y.%m.%d")
 
 
@@ -83,7 +88,10 @@ def getVersionFromArchiveId(git_archive_id='$Format:%ct %d$'):
 
         # archived revision is not tagged, use the commit date
         tstamp = git_archive_id.strip().split()[0]
-        d = datetime.datetime.utcfromtimestamp(int(tstamp))
+        if sys.version_info >= (3, 3):
+            d = datetime.datetime.fromtimestamp(int(tstamp), datetime.timezone.utc)
+        else:
+            d = datetime.datetime.utcfromtimestamp(int(tstamp))
         return d.strftime('%Y.%m.%d')
     return None
 

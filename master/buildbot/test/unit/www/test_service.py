@@ -246,7 +246,7 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
 
     def test_getSession_from_expired_jwt(self):
         # expired one week ago
-        exp = datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
+        exp = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(weeks=1)
         exp = calendar.timegm(datetime.datetime.timetuple(exp))
         payload = {'user_info': {'some': 'payload'}, 'exp': exp}
         uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
