@@ -434,17 +434,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         yield self.addStep()
 
-        yield self._setup_locks()
-
         try:
-            # set up locks
-            yield self.acquireLocks()
-
-            if self.stopped:
-                raise BuildStepCancelled
-
-            yield self.master.data.updates.set_step_locks_acquired_at(self.stepid)
-
             yield self._render_renderables()
             # we describe ourselves only when renderables are interpolated
             self.updateSummary()
@@ -455,8 +445,17 @@ class BuildStep(results.ResultComputingConfigMixin,
             else:
                 doStep = yield self.doStepIf(self)
 
-            # run -- or skip -- the step
             if doStep:
+                yield self._setup_locks()
+
+                # set up locks
+                yield self.acquireLocks()
+
+                if self.stopped:
+                    raise BuildStepCancelled
+
+                yield self.master.data.updates.set_step_locks_acquired_at(self.stepid)
+
                 yield self.addTestResultSets()
                 try:
                     self._running = True
