@@ -20,7 +20,8 @@ import {
   ChunkSearchResults, findNextSearchResult, findPrevSearchResult,
   findTextInChunkRaw,
   overlaySearchResultsOnLine,
-  resultsListToLineIndexMap
+  resultsListToLineIndexMap,
+  getMatcher,
 } from "./LogChunkSearch";
 
 describe('LogChunkSearch', () => {
@@ -115,7 +116,7 @@ describe('LogChunkSearch', () => {
 
   describe('findTextInChunkRaw', () => {
     it('no escapes', () => {
-      expect(findTextInChunkRaw(parseLogChunk(20, 'oaaa\nboaaabaaa\no\noaaab\n', 's'), 'aaa'))
+      expect(findTextInChunkRaw(parseLogChunk(20, 'oaaa\nboaaabaaa\no\noaaab\n', 's'), getMatcher('aaa')))
         .toEqual([
           {lineIndex: 20, lineStart: 0},
           {lineIndex: 21, lineStart: 1},
@@ -125,7 +126,7 @@ describe('LogChunkSearch', () => {
     });
     it('many escapes', () => {
       expect(findTextInChunkRaw(parseLogChunk(20,
-          'oaaa\nboa\x1b[36maabaa\x1b[36ma\no\no\x1b[36maaa\x1b[36mb\n', 's', true), 'aaa'))
+          'oaaa\nboa\x1b[36maabaa\x1b[36ma\no\no\x1b[36maaa\x1b[36mb\n', 's', true), getMatcher('aaa')))
         .toEqual([
           {lineIndex: 20, lineStart: 0},
           {lineIndex: 21, lineStart: 1},
@@ -136,7 +137,18 @@ describe('LogChunkSearch', () => {
     it('some escapes', () => {
       expect(findTextInChunkRaw(parseLogChunk(20,
           'o\no\no\no\no\no\noaaa\nboa\x1b[36maabaa\x1b[36ma\no\no\x1b[36maaa\x1b[36mb\n', 's'),
-          'aaa'))
+          getMatcher('aaa')))
+        .toEqual([
+          {lineIndex: 26, lineStart: 0},
+          {lineIndex: 27, lineStart: 1},
+          {lineIndex: 27, lineStart: 5},
+          {lineIndex: 29, lineStart: 0},
+        ]);
+    });
+    it('case insensitive', () => {
+      expect(findTextInChunkRaw(parseLogChunk(20,
+          'o\no\no\no\no\no\noaaa\nboa\x1b[36maabaa\x1b[36ma\no\no\x1b[36maaa\x1b[36mb\n', 's'),
+          getMatcher('aAa', {caseInsensitive: true})))
         .toEqual([
           {lineIndex: 26, lineStart: 0},
           {lineIndex: 27, lineStart: 1},
