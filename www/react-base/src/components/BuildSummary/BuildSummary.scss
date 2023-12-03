@@ -1,3 +1,5 @@
+@import "bootstrap/scss/bootstrap";
+
 .bb-build-summary {
   .card-header {
     color: #333333;
@@ -30,5 +32,25 @@
   .group-results > li .bb-build-request-summary > div {
     margin-bottom: 0px;
     margin-top: 0px;
+  }
+}
+
+.bb-build-summary-step-line {
+  position:relative;
+
+  &.list-group-item.bb-anchor-target {
+    border: 2px solid #ffff00;
+  }
+  .bb-build-summary-step-anchor-link {
+    display: none;
+    color: $gray-500;
+    position: absolute;
+    left: 0.5em;
+  }
+}
+
+.bb-build-summary-step-line:hover {
+  .bb-build-summary-step-anchor-link {
+    display: inline-block;
   }
 }
