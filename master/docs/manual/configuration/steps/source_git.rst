@@ -34,6 +34,9 @@ The Git step takes the following arguments:
    When initializing/updating a Git repository, this tells Buildbot whether to handle Git submodules.
    If ``remoteSubmodules`` is ``True``, then this tells Buildbot to use remote submodules: `Git Remote Submodules <https://git-scm.com/docs/git-submodule#Documentation/git-submodule.txt---remote>`_
 
+``tags`` (optional, default: ``False``)
+    Download tags in addition to the requested revision when updating repository.
+
 ``shallow`` (optional)
    Instructs Git to attempt shallow clones (``--depth 1``).
    The depth defaults to 1 and can be changed by passing an integer instead of ``True``.
