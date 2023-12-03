@@ -433,23 +433,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.remote = remote
 
         yield self.addStep()
-        self.locks = yield self.build.render(self.locks)
 
-        # convert all locks into their real form
-        botmaster = self.build.builder.botmaster
-        self.locks = yield botmaster.getLockFromLockAccesses(self.locks, self.build.config_version)
-
-        # then narrow WorkerLocks down to the worker that this build is being
-        # run on
-        self.locks = [(l.getLockForWorker(self.build.workerforbuilder.worker.workername),
-                       la)
-                      for l, la in self.locks]
-
-        for l, _ in self.locks:
-            if l in self.build.locks:
-                log.msg(f"Hey, lock {l} is claimed by both a Step ({self}) and the"
-                        f" parent Build ({self.build})")
-                raise RuntimeError("lock claimed by both Step and Build")
+        yield self._setup_locks()
 
         try:
             # set up locks
@@ -538,6 +523,27 @@ class BuildStep(results.ResultComputingConfigMixin,
                                                   hidden)
 
         return self.results
+
+    @defer.inlineCallbacks
+    def _setup_locks(self):
+
+        self.locks = yield self.build.render(self.locks)
+
+        # convert all locks into their real form
+        botmaster = self.build.builder.botmaster
+        self.locks = yield botmaster.getLockFromLockAccesses(self.locks, self.build.config_version)
+
+        # then narrow WorkerLocks down to the worker that this build is being
+        # run on
+        self.locks = [(l.getLockForWorker(self.build.workerforbuilder.worker.workername),
+                       la)
+                      for l, la in self.locks]
+
+        for l, _ in self.locks:
+            if l in self.build.locks:
+                log.msg(f"Hey, lock {l} is claimed by both a Step ({self}) and the"
+                        f" parent Build ({self.build})")
+                raise RuntimeError("lock claimed by both Step and Build")
 
     @defer.inlineCallbacks
     def _render_renderables(self):
