@@ -40,6 +40,7 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.11 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.12 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
 
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=dev_virtualenv
 
