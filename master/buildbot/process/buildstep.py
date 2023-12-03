@@ -433,47 +433,9 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.remote = remote
 
         yield self.addStep()
-        self.locks = yield self.build.render(self.locks)
-
-        # convert all locks into their real form
-        botmaster = self.build.builder.botmaster
-        self.locks = yield botmaster.getLockFromLockAccesses(self.locks, self.build.config_version)
-
-        # then narrow WorkerLocks down to the worker that this build is being
-        # run on
-        self.locks = [(l.getLockForWorker(self.build.workerforbuilder.worker.workername),
-                       la)
-                      for l, la in self.locks]
-
-        for l, _ in self.locks:
-            if l in self.build.locks:
-                log.msg(f"Hey, lock {l} is claimed by both a Step ({self}) and the"
-                        f" parent Build ({self.build})")
-                raise RuntimeError("lock claimed by both Step and Build")
 
         try:
-            # set up locks
-            yield self.acquireLocks()
-
-            if self.stopped:
-                raise BuildStepCancelled
-
-            yield self.master.data.updates.set_step_locks_acquired_at(self.stepid)
-
-            # render renderables in parallel
-            renderables = []
-            accumulateClassList(self.__class__, 'renderables', renderables)
-
-            def setRenderable(res, attr):
-                setattr(self, attr, res)
-
-            dl = []
-            for renderable in renderables:
-                d = self.build.render(getattr(self, renderable))
-                d.addCallback(setRenderable, renderable)
-                dl.append(d)
-            yield defer.gatherResults(dl)
-            self.rendered = True
+            yield self._render_renderables()
             # we describe ourselves only when renderables are interpolated
             self.updateSummary()
 
@@ -483,8 +445,17 @@ class BuildStep(results.ResultComputingConfigMixin,
             else:
                 doStep = yield self.doStepIf(self)
 
-            # run -- or skip -- the step
             if doStep:
+                yield self._setup_locks()
+
+                # set up locks
+                yield self.acquireLocks()
+
+                if self.stopped:
+                    raise BuildStepCancelled
+
+                yield self.master.data.updates.set_step_locks_acquired_at(self.stepid)
+
                 yield self.addTestResultSets()
                 try:
                     self._running = True
@@ -551,6 +522,44 @@ class BuildStep(results.ResultComputingConfigMixin,
                                                   hidden)
 
         return self.results
+
+    @defer.inlineCallbacks
+    def _setup_locks(self):
+
+        self.locks = yield self.build.render(self.locks)
+
+        # convert all locks into their real form
+        botmaster = self.build.builder.botmaster
+        self.locks = yield botmaster.getLockFromLockAccesses(self.locks, self.build.config_version)
+
+        # then narrow WorkerLocks down to the worker that this build is being
+        # run on
+        self.locks = [(l.getLockForWorker(self.build.workerforbuilder.worker.workername),
+                       la)
+                      for l, la in self.locks]
+
+        for l, _ in self.locks:
+            if l in self.build.locks:
+                log.msg(f"Hey, lock {l} is claimed by both a Step ({self}) and the"
+                        f" parent Build ({self.build})")
+                raise RuntimeError("lock claimed by both Step and Build")
+
+    @defer.inlineCallbacks
+    def _render_renderables(self):
+        # render renderables in parallel
+        renderables = []
+        accumulateClassList(self.__class__, 'renderables', renderables)
+
+        def setRenderable(res, attr):
+            setattr(self, attr, res)
+
+        dl = []
+        for renderable in renderables:
+            d = self.build.render(getattr(self, renderable))
+            d.addCallback(setRenderable, renderable)
+            dl.append(d)
+        yield defer.gatherResults(dl)
+        self.rendered = True
 
     def setBuildData(self, name, value, source):
         # returns a Deferred that yields nothing
