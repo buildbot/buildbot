@@ -410,12 +410,13 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
 
         @defer.inlineCallbacks
         def on_command(cmd):
-            cmd.conn.set_expect_interrupt()
-            cmd.conn.set_block_on_interrupt()
+            conn = cmd.conn
+            conn.set_expect_interrupt()
+            conn.set_block_on_interrupt()
             d1 = step.interrupt('interrupt reason')
             d2 = step.interrupt(failure.Failure(error.ConnectionLost()))
 
-            cmd.conn.unblock_waiters()
+            conn.unblock_waiters()
             yield d1
             yield d2
 
