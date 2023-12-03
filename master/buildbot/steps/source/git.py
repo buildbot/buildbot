@@ -143,11 +143,9 @@ class Git(Source, GitStepMixin):
                 yield self.patch(patch)
             yield self.parseGotRevision()
             res = yield self.parseCommitDescription()
-            yield self._removeSshPrivateKeyIfNeeded()
             return res
-        except Exception:
+        finally:
             yield self._removeSshPrivateKeyIfNeeded()
-            raise
 
     @defer.inlineCallbacks
     def mode_full(self):
