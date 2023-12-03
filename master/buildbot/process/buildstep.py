@@ -647,12 +647,8 @@ class BuildStep(results.ResultComputingConfigMixin,
                 lock.stopWaitingUntilAvailable(self, access, d)
             self._acquiringLocks = []
 
-        if self._waitingForLocks:
-            yield self.addCompleteLog(
-                'cancelled while waiting for locks', str(reason))
-        else:
-            yield self.addCompleteLog('cancelled', str(reason))
-
+        log_name = "cancelled while waiting for locks" if self._waitingForLocks else "cancelled"
+        yield self.addCompleteLog(log_name, str(reason))
         yield self._maybe_interrupt_cmd(reason)
 
     def releaseLocks(self):
