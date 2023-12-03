@@ -53,6 +53,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
 from buildbot.util import bytes2unicode
 from buildbot.util import debounce
+from buildbot.util import deferwaiter
 from buildbot.util import flatten
 from buildbot.util.test_result_submitter import TestResultSubmitter
 from buildbot.warnings import warn_deprecated
@@ -285,6 +286,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.stepid = None
         self.results = None
         self._start_unhandled_deferreds = None
+        self._interrupt_deferwaiter = deferwaiter.DeferWaiter()
         self._test_result_submitters = {}
 
     def __new__(klass, *args, **kwargs):
@@ -558,6 +560,9 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     @defer.inlineCallbacks
     def _cleanup_logs(self):
+        # Wait until any in-progress interrupt() to finish (that function may add new logs)
+        yield self._interrupt_deferwaiter.wait()
+
         all_success = True
         not_finished_logs = [v for (k, v) in self.logs.items() if not v.finished]
         finish_logs = yield defer.DeferredList([v.finish() for v in not_finished_logs],
@@ -632,8 +637,13 @@ class BuildStep(results.ResultComputingConfigMixin,
         except Exception as e:
             log.err(e, 'while cancelling command')
 
-    @defer.inlineCallbacks
     def interrupt(self, reason):
+        # Note that this method may be run outside usual step lifecycle (e.g. after run() has
+        # already completed), so extra care needs to be taken to prevent race conditions.
+        return self._interrupt_deferwaiter.add(self._interrupt_impl(reason))
+
+    @defer.inlineCallbacks
+    def _interrupt_impl(self, reason):
         if self.stopped:
             # If we are in the process of interruption and connection is lost then we must tell
             # the command not to wait for the interruption to complete.

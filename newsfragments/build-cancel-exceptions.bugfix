@@ -1,0 +1,1 @@
+Fixed a race condition resulting in ``EXCEPTION`` build results when build steps that are about to end are cancelled.
