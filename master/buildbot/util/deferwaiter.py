@@ -24,7 +24,7 @@ class DeferWaiter:
     """ This class manages a set of Deferred objects and allows waiting for their completion
     """
     def __init__(self):
-        self._waited = {}
+        self._waited_count = 0
         self._finish_notifier = Notifier()
 
     def _finished(self, result, d):
@@ -32,8 +32,8 @@ class DeferWaiter:
         if isinstance(result, failure.Failure):
             log.err(result)
 
-        self._waited.pop(id(d))
-        if not self._waited:
+        self._waited_count -= 1
+        if self._waited_count == 0:
             self._finish_notifier.notify(None)
         return result
 
@@ -41,21 +41,16 @@ class DeferWaiter:
         if not isinstance(d, defer.Deferred):
             return None
 
-        self._waited[id(d)] = d
+        self._waited_count += 1
         d.addBoth(self._finished, d)
         return d
 
-    def cancel(self):
-        for d in list(self._waited.values()):
-            d.cancel()
-        self._waited.clear()
-
     def has_waited(self):
-        return bool(self._waited)
+        return self._waited_count > 0
 
     @defer.inlineCallbacks
     def wait(self):
-        if not self._waited:
+        if self._waited_count == 0:
             return
         yield self._finish_notifier.wait()
 
