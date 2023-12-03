@@ -460,20 +460,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
             yield self.master.data.updates.set_step_locks_acquired_at(self.stepid)
 
-            # render renderables in parallel
-            renderables = []
-            accumulateClassList(self.__class__, 'renderables', renderables)
-
-            def setRenderable(res, attr):
-                setattr(self, attr, res)
-
-            dl = []
-            for renderable in renderables:
-                d = self.build.render(getattr(self, renderable))
-                d.addCallback(setRenderable, renderable)
-                dl.append(d)
-            yield defer.gatherResults(dl)
-            self.rendered = True
+            yield self._render_renderables()
             # we describe ourselves only when renderables are interpolated
             self.updateSummary()
 
@@ -551,6 +538,23 @@ class BuildStep(results.ResultComputingConfigMixin,
                                                   hidden)
 
         return self.results
+
+    @defer.inlineCallbacks
+    def _render_renderables(self):
+        # render renderables in parallel
+        renderables = []
+        accumulateClassList(self.__class__, 'renderables', renderables)
+
+        def setRenderable(res, attr):
+            setattr(self, attr, res)
+
+        dl = []
+        for renderable in renderables:
+            d = self.build.render(getattr(self, renderable))
+            d.addCallback(setRenderable, renderable)
+            dl.append(d)
+        yield defer.gatherResults(dl)
+        self.rendered = True
 
     def setBuildData(self, name, value, source):
         # returns a Deferred that yields nothing
