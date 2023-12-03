@@ -16,6 +16,7 @@
 # Method to add build step taken from here
 # https://seasonofcode.com/posts/how-to-add-custom-build-steps-and-commands-to-setuppy.html
 import datetime
+import logging
 import os
 import re
 import shutil
@@ -27,9 +28,8 @@ from subprocess import Popen
 
 import setuptools.command.build_py
 import setuptools.command.egg_info
+from setuptools import Command
 from setuptools import setup
-
-import distutils.cmd  # isort:skip
 
 old_listdir = os.listdir
 
@@ -182,7 +182,7 @@ def getVersion(init_file):
 # This is why we override both egg_info and build, and the first run build
 # the js.
 
-class BuildJsCommand(distutils.cmd.Command):
+class BuildJsCommand(Command):
     """A custom command to run JS build."""
 
     description = 'run JS build'
@@ -228,12 +228,13 @@ class BuildJsCommand(distutils.cmd.Command):
 
             for command in commands:
                 self.announce('Running command: {}'.format(str(" ".join(command))),
-                              level=distutils.log.INFO)
+                              level=logging.INFO)
                 subprocess.check_call(command, shell=shell)
 
         self.copy_tree(os.path.join(package, 'static'), os.path.join(
             "build", "lib", package, "static"))
 
+        assert self.distribution.metadata.version is not None, "version is not set"
         with open(os.path.join("build", "lib", package, "VERSION"), "w") as f:
             f.write(self.distribution.metadata.version)
 
