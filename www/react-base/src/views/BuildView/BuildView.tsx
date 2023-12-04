@@ -19,7 +19,7 @@ import './BuildView.scss';
 import {observer} from "mobx-react";
 import {FaSpinner} from "react-icons/fa";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Link, useNavigate, useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
@@ -180,9 +180,11 @@ const BuildView = observer(() => {
   const worker = workersQuery.getNthOrNull(0);
   const project = projectsQuery.getNthOrNull(0);
 
-  if (buildsQuery.resolved && build === null) {
-    navigate(`/builders/${builderid}`);
-  }
+  useEffect(() => {
+    if (buildsQuery.resolved && build === null) {
+      navigate(`/builders/${builderid}`);
+    }
+  }, [buildsQuery.resolved, build === null]);
 
   const responsibleUsers = computed(() => getResponsibleUsers(propertiesQuery, changesQuery)).get();
   /*
