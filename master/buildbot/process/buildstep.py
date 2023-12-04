@@ -264,6 +264,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     descriptionSuffix = None  # extra information to append to suffix
     updateBuildSummaryPolicy = None
     locks = []
+    _locks_to_acquire = []
     progressMetrics = ()  # 'time' is implicit
     useProgress = True  # set to False if step is really unpredictable
     build = None
@@ -600,19 +601,20 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def _setup_locks(self):
 
-        self.locks = yield self.build.render(self.locks)
+        locks = yield self.build.render(self.locks)
 
         # convert all locks into their real form
         botmaster = self.build.builder.botmaster
-        self.locks = yield botmaster.getLockFromLockAccesses(self.locks, self.build.config_version)
+        locks = yield botmaster.getLockFromLockAccesses(locks, self.build.config_version)
 
         # then narrow WorkerLocks down to the worker that this build is being
         # run on
-        self.locks = [(l.getLockForWorker(self.build.workerforbuilder.worker.workername),
-                       la)
-                      for l, la in self.locks]
+        self._locks_to_acquire = [
+            (l.getLockForWorker(self.build.workerforbuilder.worker.workername), la)
+            for l, la in locks
+        ]
 
-        for l, _ in self.locks:
+        for l, _ in self._locks_to_acquire:
             if l in self.build.locks:
                 log.msg(f"Hey, lock {l} is claimed by both a Step ({self}) and the"
                         f" parent Build ({self.build})")
@@ -677,12 +679,12 @@ class BuildStep(results.ResultComputingConfigMixin,
                                                             line=line, duration_ns=duration_ns)
 
     def acquireLocks(self, res=None):
-        if not self.locks:
+        if not self._locks_to_acquire:
             return defer.succeed(None)
         if self.stopped:
             return defer.succeed(None)
-        log.msg(f"acquireLocks(step {self}, locks {self.locks})")
-        for lock, access in self.locks:
+        log.msg(f"acquireLocks(step {self}, locks {self._locks_to_acquire})")
+        for lock, access in self._locks_to_acquire:
             for waited_lock, _, _ in self._acquiringLocks:
                 if lock is waited_lock:
                     continue
@@ -695,7 +697,7 @@ class BuildStep(results.ResultComputingConfigMixin,
                 d.addCallback(self.acquireLocks)
                 return d
         # all locks are available, claim them all
-        for lock, access in self.locks:
+        for lock, access in self._locks_to_acquire:
             lock.claim(self, access)
         self._acquiringLocks = []
         self._waitingForLocks = False
@@ -743,8 +745,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         yield self._maybe_interrupt_cmd(reason)
 
     def releaseLocks(self):
-        log.msg(f"releaseLocks({self}): {self.locks}")
-        for lock, access in self.locks:
+        log.msg(f"releaseLocks({self}): {self._locks_to_acquire}")
+        for lock, access in self._locks_to_acquire:
             if lock.isOwner(self, access):
                 lock.release(self, access)
             else:
