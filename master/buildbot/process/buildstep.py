@@ -133,16 +133,16 @@ class _BuildStepFactory(util.ComparableMixin):
     """
     compare_attrs = ('factory', 'args', 'kwargs')
 
-    def __init__(self, factory, *args, **kwargs):
-        self.factory = factory
+    def __init__(self, step_class, *args, **kwargs):
+        self.step_class = step_class
         self.args = args
         self.kwargs = kwargs
 
     def buildStep(self):
         try:
-            return self.factory(*self.args, **self.kwargs)
+            return self.step_class(*self.args, **self.kwargs)
         except Exception:
-            log.msg(f"error while creating step, factory={self.factory}, args={self.args}, "
+            log.msg(f"error while creating step, step_class={self.step_class}, args={self.args}, "
                     f"kwargs={self.kwargs}")
             raise
 
