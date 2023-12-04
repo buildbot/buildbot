@@ -1,0 +1,30 @@
+@import "bootstrap/scss/bootstrap";
+
+.bb-pending-build-request-table-line {
+
+  &.bb-anchor-target {
+    td {
+      border-top: 2px solid #ffff00;
+      border-bottom: 2px solid #ffff00;
+    }
+    td:first-child {
+      border-left: 2px solid #ffff00;
+    }
+    td:last-child {
+      border-right: 2px solid #ffff00;
+    }
+  }
+
+  .bb-pending-build-request-anchor-link {
+    display: inline-block;
+    color: transparent;
+    left: 1em;
+    width: 1em;
+  }
+}
+
+.bb-pending-build-request-table-line:hover {
+  .bb-pending-build-request-anchor-link {
+    color: $gray-500;
+  }
+}

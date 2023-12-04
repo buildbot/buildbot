@@ -50,6 +50,7 @@ import {LogPreview} from "../LogPreview/LogPreview";
 import {BuildRequestSummary} from "../BuildRequestSummary/BuildRequestSummary";
 import {Card} from "react-bootstrap";
 import {useScrollToAnchor} from "../../util/AnchorLinks";
+import {AnchorLink} from "../AnchorLink/AnchorLink";
 
 enum DetailLevel {
   None = 0,
@@ -221,11 +222,10 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
   return (
     <li key={step.id} className="bb-build-summary-step-line list-group-item" id={`bb-step-${step.number}`}>
       <div onClick={() => setFullDisplay(!fullDisplay)}>
-        <Link className="bb-build-summary-step-anchor-link"
-              to={`/builders/${build.builderid}/builds/${build.number}#bb-step-${step.number}`}
-              onClick={e => e.stopPropagation()}>
+        <AnchorLink className="bb-build-summary-step-anchor-link"
+                    anchor={`bb-step-${step.number}`}>
           #
-        </Link>
+        </AnchorLink>
         <BadgeRound className={results2class(step, 'pulse')}>{step.number.toString()}</BadgeRound>
         &nbsp;
         {maybeRenderArrowExpander()}
