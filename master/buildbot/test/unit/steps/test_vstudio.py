@@ -20,6 +20,7 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process import results
+from buildbot.process.buildstep import create_step_from_step_or_factory
 from buildbot.process.properties import Property
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
@@ -55,7 +56,7 @@ real_log = r"""
 class TestAddEnvPath(unittest.TestCase):
 
     def do_test(self, initial_env, name, value, expected_env):
-        step = vstudio.VisualStudio()
+        step = create_step_from_step_or_factory(vstudio.VisualStudio())
         step.env = initial_env
         step.add_env_path(name, value)
         self.assertEqual(step.env, expected_env)

@@ -21,6 +21,7 @@ from buildbot.config import BuilderConfig
 from buildbot.interfaces import IBuildStepFactory
 from buildbot.machine.base import Machine
 from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import create_step_from_step_or_factory
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import CANCELLED
@@ -45,7 +46,8 @@ class StepController:
 
     def buildStep(self):
         step_deferred = defer.Deferred()
-        step = ControllableStep(step_deferred, **self.kwargs)
+        step = create_step_from_step_or_factory(
+            ControllableStep(step_deferred, **self.kwargs))
         self.steps.append((step, step_deferred))
         return step
 
@@ -213,7 +215,8 @@ class Tests(RunFakeMasterTestCase):
                           workernames=['local1'],
                           factory=BuildFactory()),
         ]
-        config_dict['workers'] = [self.createLocalWorker('local1', max_builds=2)]
+        config_dict['workers'] = [
+            self.createLocalWorker('local1', max_builds=2)]
 
         # reconfig should succeed
         yield self.reconfig_master(config_dict)
@@ -230,7 +233,8 @@ class Tests(RunFakeMasterTestCase):
         config_dict = {
             'builders': [
                 BuilderConfig(name="builder", workernames=['local'],
-                              properties={'worker': Interpolate("%(worker:numcpus)s")},
+                              properties={'worker': Interpolate(
+                                  "%(worker:numcpus)s")},
                               factory=BuildFactory([stepcontroller.step])),
             ],
             'workers': [controller.worker],

@@ -330,7 +330,9 @@ class Build(properties.PropertiesMixin):
         # the preparation step counts the time needed for preparing the worker and getting the
         # locks.
         # we cannot use a real step as we don't have a worker yet.
-        self.preparation_step = buildstep.BuildStep(name="worker_preparation")
+        self.preparation_step = buildstep.create_step_from_step_or_factory(
+            buildstep.BuildStep(name="worker_preparation")
+        )
         self.preparation_step.setBuild(self)
         yield self.preparation_step.addStep()
 

@@ -158,8 +158,7 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
     name = 'shell'
 
     def __init__(self, **kwargs):
-
-        if self.__class__ is ShellCommand:
+        if self.is_exact_step_class(ShellCommand):
             if 'command' not in kwargs:
                 config.error("ShellCommand's `command' argument is not specified")
 
@@ -263,7 +262,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
             self.warningExtractor = WarningCountingShellCommand.warnExtractWholeLine
         self.maxWarnCount = maxWarnCount
 
-        if self.__class__ is WarningCountingShellCommand and not kwargs.get('command'):
+        if self.is_exact_step_class(WarningCountingShellCommand) and not kwargs.get('command'):
             # WarningCountingShellCommand class is directly instantiated.
             # Explicitly check that command is set to prevent runtime error
             # later.

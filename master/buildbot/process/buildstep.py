@@ -140,7 +140,10 @@ class _BuildStepFactory(util.ComparableMixin):
 
     def buildStep(self):
         try:
-            return self.step_class(*self.args, **self.kwargs)
+            step = object.__new__(self.step_class)
+            step._factory = self
+            step.__init__(*self.args, **self.kwargs)  # noqa pylint: disable=unnecessary-dunder-call
+            return step
         except Exception:
             log.msg(f"error while creating step, step_class={self.step_class}, args={self.args}, "
                     f"kwargs={self.kwargs}")
@@ -163,6 +166,43 @@ def get_factory_from_step_or_factory(step_or_factory):
 
 def create_step_from_step_or_factory(step_or_factory):
     return get_factory_from_step_or_factory(step_or_factory).buildStep()
+
+
+class BuildStepWrapperMixin:
+    __init_completed = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__init_completed = True
+
+    def __setattr__(self, name, value):
+        if self.__init_completed:
+            warn_deprecated(
+                "3.10.0",
+                "Changes to attributes of a BuildStep instance are ignored, this is a bug. "
+                "Use set_step_arg(name, value) for that."
+            )
+        super().__setattr__(name, value)
+
+
+# This is also needed for comparisons to work because ComparableMixin requires type(x) and
+# x.__class__ to be equal in order to perform comparison at all.
+_buildstep_wrapper_cache = {}
+
+
+def _create_buildstep_wrapper_class(klass):
+    class_id = id(klass)
+    cached = _buildstep_wrapper_cache.get(class_id, None)
+    if cached is not None:
+        return cached
+
+    wrapper = type(
+        klass.__qualname__,
+        (BuildStepWrapperMixin, klass),
+        {}
+    )
+    _buildstep_wrapper_cache[class_id] = wrapper
+    return wrapper
 
 
 @implementer(interfaces.IBuildStep)
@@ -295,9 +335,25 @@ class BuildStep(results.ResultComputingConfigMixin,
         self._test_result_submitters = {}
 
     def __new__(klass, *args, **kwargs):
-        self = object.__new__(klass)
+        # The following code prevents changing BuildStep attributes after an instance
+        # is created during config time. Such attribute changes don't affect the factory,
+        # so they will be lost when actual build step is created.
+        #
+        # This is implemented by dynamically creating a subclass that disallows attribute
+        # writes after __init__ completes.
+        self = object.__new__(_create_buildstep_wrapper_class(klass))
         self._factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
+
+    def is_exact_step_class(self, klass):
+        # Due to wrapping BuildStep in __new__, it's not possible to compare self.__class__ to
+        # check if self is an instance of some class (but not subclass).
+        if self.__class__ is klass:
+            return True
+        mro = self.__class__.mro()
+        if len(mro) >= 3 and mro[1] is BuildStepWrapperMixin and mro[2] is klass:
+            return True
+        return False
 
     def __str__(self):
         args = [repr(x) for x in self._factory.args]
@@ -351,6 +407,15 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def get_step_factory(self):
         return self._factory
+
+    def set_step_arg(self, name, value):
+        self._factory.kwargs[name] = value
+        # check if buildstep can still be constructed with the new arguments
+        try:
+            self._factory.buildStep()
+        except Exception:
+            log.msg(f"Cannot set step factory attribute {name} to {value}: step creation fails")
+            raise
 
     def setupProgress(self):
         # this function temporarily does nothing
