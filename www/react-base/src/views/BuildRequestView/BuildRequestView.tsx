@@ -17,7 +17,7 @@
 
 import {observer} from "mobx-react";
 import {FaSpinner, FaStop} from "react-icons/fa";
-import {Fragment, useState} from "react";
+import {Fragment, useEffect, useState} from "react";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
@@ -112,10 +112,12 @@ export const BuildRequestView = observer(() => {
     {caption: buildRequestId.toString(), route: `/buildrequests/${buildRequestId}`},
   ]));
 
-  if (buildsQuery.array.length > 0 && redirectToBuild) {
-    const build = buildsQuery.getNthOrNull(0);
-    navigate(`/builders/${build?.builderid}/builds/${build?.number}`);
-  }
+  useEffect(() => {
+    if (buildsQuery.array.length > 0 && redirectToBuild) {
+      const build = buildsQuery.getNthOrNull(0);
+      navigate(`/builders/${build?.builderid}/builds/${build?.number}`);
+    }
+  }, [buildsQuery.array.length > 0]);
 
   const cancelBuildRequest = () => {
     if (isCancelling) {
