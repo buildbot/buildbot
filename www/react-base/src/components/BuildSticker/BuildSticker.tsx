@@ -15,7 +15,8 @@
   Copyright Buildbot Team Members
 */
 
-import './BuildSticker.scss'
+import './BuildSticker.scss';
+import {observer} from "mobx-react";
 import {Link} from "react-router-dom";
 import { Card } from 'react-bootstrap';
 import {Build, Builder, results2class, results2text} from "buildbot-data-js";
@@ -26,7 +27,7 @@ type BuildStickerProps = {
   builder: Builder;
 }
 
-export const BuildSticker = ({build, builder}: BuildStickerProps) => {
+export const BuildSticker = observer(({build, builder}: BuildStickerProps) => {
   const now = useCurrentTime();
 
   return (
@@ -49,4 +50,4 @@ export const BuildSticker = ({build, builder}: BuildStickerProps) => {
       </Card.Body>
     </Card>
   );
-}
+});
