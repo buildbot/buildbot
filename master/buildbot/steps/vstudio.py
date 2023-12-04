@@ -512,7 +512,7 @@ class MsBuild4(VisualStudio):
         if self.platform is None:
             config.error('platform is mandatory. Please specify a string such as "Win32"')
 
-        yield self.updateSummary()
+        self.updateSummary()
 
         command = (f'"%VCENV_BAT%" x86 && msbuild "{self.projectfile}" '
                    f'/p:Configuration="{self.config}" /p:Platform="{self.platform}" /maxcpucount')
@@ -572,7 +572,7 @@ class MsBuild141(VisualStudio):
 
         self.description = 'building ' + self.describe_project()
         self.descriptionDone = 'built ' + self.describe_project()
-        yield self.updateSummary()
+        self.updateSummary()
 
         command = ('FOR /F "tokens=*" %%I in '
                    f'(\'vswhere.exe -version "{self.version_range}" -products * '

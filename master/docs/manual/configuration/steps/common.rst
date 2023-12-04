@@ -9,6 +9,9 @@ All :class:`BuildStep`\s accept some common parameters.
 Some of these control how their individual status affects the overall build.
 Others are used to specify which `Locks` (see :ref:`Interlocks`) should be acquired before allowing the step to run.
 
+Note that it is not possible to change the configuration of the ``BuildStep`` by adjusting its attributes after construction.
+Use ``set_step_arg(name, value)`` function for that.
+
 Arguments common to all :class:`BuildStep` subclasses:
 
 ``name``

@@ -44,9 +44,8 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin,
 
     def _run_simple_test(self, source, destination, expected_args=None, expected_code=0,
                          expected_res=SUCCESS, **kwargs):
-        s = mswin.Robocopy(source, destination, **kwargs)
-        self.setup_step(s)
-        s.rendered = True
+        self.setup_step(mswin.Robocopy(source, destination, **kwargs))
+        self.step.rendered = True
 
         command = ['robocopy', source, destination]
         if expected_args:

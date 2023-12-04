@@ -17,6 +17,10 @@ BuildStep
     All constructor arguments must be given as keyword arguments.
     Each constructor parameter is copied to the corresponding attribute.
 
+    All arguments passed to constructor of the ``BuildStep`` subclass being constructed are also copied to a separate internal storage.
+    This is used to create new instances in the same way the original instance is created without any interference that the constructors themselves may have.
+    The copying of arguments is done by overriding ``__new__``.
+
     .. py:attribute:: name
 
         The name of the step.

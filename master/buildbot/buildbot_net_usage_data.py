@@ -89,7 +89,7 @@ def getName(obj):
     def sanitize(name):
         return name.replace(".", "/")
     if isinstance(obj, _BuildStepFactory):
-        klass = obj.factory
+        klass = obj.step_class
     else:
         klass = type(obj)
     name = ""

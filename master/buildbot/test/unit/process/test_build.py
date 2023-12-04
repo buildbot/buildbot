@@ -26,6 +26,7 @@ from buildbot import interfaces
 from buildbot.locks import WorkerLock
 from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import create_step_from_step_or_factory
 from buildbot.process.metrics import MetricLogObserver
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -172,7 +173,7 @@ class _ControllableStep(BuildStep):
 
 
 def makeControllableStepFactory():
-    step = _ControllableStep()
+    step = create_step_from_step_or_factory(_ControllableStep())
     controller = _StepController(step)
     return controller, FakeStepFactory(step)
 
@@ -208,10 +209,13 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         states = "".join(self.master.data.updates.stepStateString.values())
         self.assertIn(states, reason)
 
+    def create_fake_build_step(self):
+        return create_step_from_step_or_factory(FakeBuildStep())
+
     def testRunSuccessfulBuild(self):
         b = self.build
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
         b.startBuild(self.workerforbuilder)
@@ -221,7 +225,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStopBuild(self):
         b = self.build
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
         def startStep(*args, **kw):
@@ -239,7 +243,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def test_build_retry_when_worker_substantiate_returns_false(self):
         b = self.build
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
         self.workerforbuilder.substantiate_if_needed = lambda _: False
@@ -250,7 +254,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def test_build_cancelled_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
         d = defer.Deferred()
@@ -264,7 +268,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def test_build_retry_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
         d = defer.Deferred()
@@ -284,10 +288,10 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         # the second one is marked with alwaysRun=True
         b = self.build
 
-        step1 = FakeBuildStep()
+        step1 = self.create_fake_build_step()
         step1.alwaysRun = False
         step1.results = None
-        step2 = FakeBuildStep()
+        step2 = self.create_fake_build_step()
         step2.alwaysRun = True
         step2.results = None
         b.setStepFactories([
@@ -320,7 +324,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def test_start_step_throws_exception(self):
         b = self.build
 
-        step1 = FakeBuildStep()
+        step1 = self.create_fake_build_step()
         b.setStepFactories([
             FakeStepFactory(step1),
         ])
@@ -425,7 +429,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         real_lock.claim = claim
         yield b.setLocks([lock_access])
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
         b.startBuild(self.workerforbuilder)
@@ -469,7 +473,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         fakeBuildAccess = lock.access('counting')
         realLock.claim(fakeBuild, fakeBuildAccess)
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         eBuild.setStepFactories([FakeStepFactory(step)])
         cBuild.setStepFactories([FakeStepFactory(step)])
 
@@ -503,7 +507,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         real_lock.claim = claim
         yield b.setLocks([lock_access])
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
         real_lock.claim(Mock(), lock.access('counting'))
@@ -527,7 +531,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         yield b.setLocks([lock_access])
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.alwaysRun = False
         b.setStepFactories([FakeStepFactory(step)])
 
@@ -557,7 +561,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         yield b.setLocks([lock_access])
 
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.alwaysRun = False
         b.setStepFactories([FakeStepFactory(step)])
 
@@ -585,7 +589,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
         real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
 
-        step = BuildStep(locks=[lock_access])
+        step = create_step_from_step_or_factory(BuildStep(locks=[lock_access]))
         b.setStepFactories([FakeStepFactory(step)])
 
         real_lock.claim(Mock(), lock.access('counting'))
@@ -608,7 +612,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDone(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         terminate = b.stepDone(SUCCESS, step)
         self.assertFalse(terminate.result)
         self.assertEqual(b.results, SUCCESS)
@@ -616,7 +620,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneHaltOnFailure(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.haltOnFailure = True
         terminate = b.stepDone(FAILURE, step)
         self.assertTrue(terminate.result)
@@ -625,7 +629,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneHaltOnFailureNoFlunkOnFailure(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.flunkOnFailure = False
         step.haltOnFailure = True
         terminate = b.stepDone(FAILURE, step)
@@ -635,7 +639,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneFlunkOnWarningsFlunkOnFailure(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.flunkOnFailure = True
         step.flunkOnWarnings = True
         b.stepDone(WARNINGS, step)
@@ -646,7 +650,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneNoWarnOnWarnings(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.warnOnWarnings = False
         terminate = b.stepDone(WARNINGS, step)
         self.assertFalse(terminate.result)
@@ -655,7 +659,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneWarnings(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         terminate = b.stepDone(WARNINGS, step)
         self.assertFalse(terminate.result)
         self.assertEqual(b.results, WARNINGS)
@@ -663,7 +667,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneFail(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         terminate = b.stepDone(FAILURE, step)
         self.assertFalse(terminate.result)
         self.assertEqual(b.results, FAILURE)
@@ -671,7 +675,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneFailOverridesWarnings(self):
         b = self.build
         b.results = WARNINGS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         terminate = b.stepDone(FAILURE, step)
         self.assertFalse(terminate.result)
         self.assertEqual(b.results, FAILURE)
@@ -679,7 +683,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneWarnOnFailure(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.warnOnFailure = True
         step.flunkOnFailure = False
         terminate = b.stepDone(FAILURE, step)
@@ -689,7 +693,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneFlunkOnWarnings(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.flunkOnWarnings = True
         terminate = b.stepDone(WARNINGS, step)
         self.assertFalse(terminate.result)
@@ -698,7 +702,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneHaltOnFailureFlunkOnWarnings(self):
         b = self.build
         b.results = SUCCESS
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.flunkOnWarnings = True
         self.haltOnFailure = True
         terminate = b.stepDone(WARNINGS, step)
@@ -708,7 +712,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneWarningsDontOverrideFailure(self):
         b = self.build
         b.results = FAILURE
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         terminate = b.stepDone(WARNINGS, step)
         self.assertFalse(terminate.result)
         self.assertEqual(b.results, FAILURE)
@@ -716,7 +720,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testStepDoneRetryOverridesAnythingElse(self):
         b = self.build
         b.results = RETRY
-        step = FakeBuildStep()
+        step = self.create_fake_build_step()
         step.alwaysRun = True
         b.stepDone(WARNINGS, step)
         b.stepDone(FAILURE, step)
@@ -744,7 +748,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps = []
 
         def create_fake_step(name):
-            step = FakeBuildStep()
+            step = self.create_fake_build_step()
             step.name = name
             return step
 
@@ -758,7 +762,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b = self.build
         b.setProperty("foo", "bar", "test")
 
-        step = FakeBuildStep()
+        step = create_step_from_step_or_factory(self.create_fake_build_step())
         b.setStepFactories([FakeStepFactory(step)])
 
         yield b.startBuild(self.workerforbuilder)

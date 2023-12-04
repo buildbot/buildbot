@@ -60,7 +60,7 @@ class ConfiguratorMixin:
         for step_class in step_classes:
             found = [
                 step
-                for step in builder.factory.steps if step.factory == step_class
+                for step in builder.factory.steps if step.step_class == step_class
             ]
             if not found:
                 self.fail(f"expected a buildstep of {step_class!r} in {name}")

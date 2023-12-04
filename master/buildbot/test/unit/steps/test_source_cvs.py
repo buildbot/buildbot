@@ -19,6 +19,7 @@ from twisted.internet import error
 from twisted.trial import unittest
 
 from buildbot.process import remotetransfer
+from buildbot.process.buildstep import create_step_from_step_or_factory
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
@@ -59,7 +60,9 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             return time.struct_time((2012, 9, 9, 12, 9, 33, 6, 253, 0))
         self.patch(time, 'gmtime', gmtime)
 
-        step = cvs.CVS(cvsroot="x", cvsmodule="m", mode='full', method='clean')
+        step = create_step_from_step_or_factory(
+            cvs.CVS(cvsroot="x", cvsmodule="m", mode='full', method='clean')
+        )
         props = []
 
         def updateSourceProperty(prop, name):
