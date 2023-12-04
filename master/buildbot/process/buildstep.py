@@ -287,6 +287,11 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.results = None
         self._start_unhandled_deferreds = None
         self._interrupt_deferwaiter = deferwaiter.DeferWaiter()
+        self._update_summary_debouncer = debounce.Debouncer(
+            1.0,
+            self._update_summary_impl,
+            lambda: self.master.reactor
+        )
         self._test_result_submitters = {}
 
     def __new__(klass, *args, **kwargs):
@@ -387,9 +392,11 @@ class BuildStep(results.ResultComputingConfigMixin,
             summary['build'] = summary['step']
         return summary
 
-    @debounce.method(wait=1)
-    @defer.inlineCallbacks
     def updateSummary(self):
+        self._update_summary_debouncer()
+
+    @defer.inlineCallbacks
+    def _update_summary_impl(self):
         def methodInfo(m):
             lines = inspect.getsourcelines(m)
             return "\nat {}:{}:\n {}".format(inspect.getsourcefile(m), lines[1],
@@ -513,7 +520,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # update the summary one last time, make sure that completes,
         # and then don't update it any more.
         self.updateSummary()
-        yield self.updateSummary.stop()
+        yield self._update_summary_debouncer.stop()
 
         for sub in self._test_result_submitters.values():
             yield sub.finish()
