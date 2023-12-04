@@ -3,9 +3,9 @@
 
 .bb-log-search-field {
   position: relative;
-  width: 270px;
+  width: 300px;
   display: inline-block;
-  margin-right: 1rem;
+  margin-right: 0.5rem;
 }
 
 .bb-log-search-field-icon {
@@ -28,6 +28,28 @@
   padding: 0.5rem;
 }
 
+.bb-log-search-field-options {
+  position: absolute;
+  top: 0.4rem;
+  color: $body-color;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.bb-log-search-field-options-toggled {
+  border: rgb(0, 0, 255);
+  background-color: rgba(0, 0, 255, 0.4);
+}
+.bb-log-search-field-options-untoggled {
+  border: none;
+  background-color: rgba(255, 255, 255, 0);
+}
+
+.bb-log-search-field-options-case {
+  margin-left: 1.75rem;
+}
+
 .bb-log-search-field-nav-button {
   border-radius: 0.25rem;
   border: 0px solid transparent;
@@ -44,7 +66,7 @@
 
 .bb-log-search-field-text {
   width: 100%;
-  padding: 0.375rem 0.75rem 0.375rem 2rem;
+  padding: 0.375rem 0.75rem 0.375rem 3rem;
   border-radius: 0.25rem;
   overflow: visible;
 }

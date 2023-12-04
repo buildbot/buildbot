@@ -27,6 +27,7 @@ import {
   parseLogChunk
 } from "../../util/LogChunkParsing";
 import {
+  ChunkSearchOptions,
   ChunkSearchResults, findNextSearchResult, findPrevSearchResult, findTextInChunk,
   overlaySearchResultsOnLine
 } from "../../util/LogChunkSearch";
@@ -111,6 +112,7 @@ export class LogTextManager {
 
   // Current search string or null if no search is being performed at the moment
   searchString: string|null = null;
+  searchOptions: ChunkSearchOptions = {caseInsensitive: false}
   // Valid only if searchString !== null. Indices are the same as this.chunks
   chunkSearchResults: ChunkSearchResults[] = [];
   // Valid only if searchString !== null
@@ -448,19 +450,33 @@ export class LogTextManager {
     this.maybeUpdatePendingRequest(0, 0);
   }
 
+  setSearchCaseSensitivity(sensitive: boolean) {
+    const caseInsensitive = !sensitive;
+    if (this.searchOptions.caseInsensitive === caseInsensitive) {
+      return;
+    }
+    this.searchOptions.caseInsensitive = caseInsensitive;
+
+    this.onSearchInputChanged();
+  }
+
   setSearchString(searchString: string|null) {
     if (searchString === this.searchString) {
       return;
     }
+    this.searchString = searchString;
 
+    this.onSearchInputChanged();
+  }
+
+  private onSearchInputChanged() {
     this.currentSearchResultChunkIndex = -1;
     this.currentSearchResultIndexInChunk = -1;
     this.currentSearchResultIndex = -1;
     this.totalSearchResultCount = 0;
 
-    if (searchString === null) {
+    if (this.searchString === null) {
       this.chunkSearchResults = [];
-      this.searchString = null;
       this.renderedLinesForSearch = [];
       this.onStateChange();
       return;
@@ -470,14 +486,13 @@ export class LogTextManager {
       this.searchWasEnabled = true;
       this.maybeUpdatePendingRequest(0, 0);
     }
-    this.searchString = searchString;
     this.chunkSearchResults = new Array(this.chunks.length);
     this.renderedLinesForSearch = [];
     this.totalSearchResultCount = 0;
     this.currentSearchResultIndex = 0;
 
     for (let i = 0; i < this.chunks.length; ++i) {
-      const newResult = findTextInChunk(this.chunks[i], this.searchString);
+      const newResult = findTextInChunk(this.chunks[i], this.searchString, this.searchOptions);
       this.chunkSearchResults[i] = newResult;
       this.totalSearchResultCount += newResult.results.length;
       if (this.currentSearchResultChunkIndex < 0 && newResult.results.length > 0) {
@@ -537,7 +552,7 @@ export class LogTextManager {
     if (this.searchString === null) {
       return;
     }
-    const newResult = findTextInChunk(this.chunks[insertIndex], this.searchString!);
+    const newResult = findTextInChunk(this.chunks[insertIndex], this.searchString!, this.searchOptions);
     this.chunkSearchResults.splice(insertIndex, 0, newResult);
     this.totalSearchResultCount += newResult.results.length;
 
@@ -558,7 +573,7 @@ export class LogTextManager {
       return;
     }
     const prevResult = this.chunkSearchResults[mergeIndex];
-    const newResult = findTextInChunk(this.chunks[mergeIndex], this.searchString!);
+    const newResult = findTextInChunk(this.chunks[mergeIndex], this.searchString!, this.searchOptions);
     const additionalResultsCount = newResult.results.length - prevResult!.results.length;
 
     this.chunkSearchResults[mergeIndex] = newResult;
