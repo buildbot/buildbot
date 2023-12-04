@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './PendingBuildRequestsTable.scss';
 import {observer} from "mobx-react";
 import {Table} from "react-bootstrap";
 import {Link} from "react-router-dom";
@@ -26,6 +27,8 @@ import {
   useDataApiQuery
 } from "buildbot-data-js";
 import {BadgeRound, dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui";
+import {useScrollToAnchor} from "../../util/AnchorLinks";
+import {AnchorLink} from "../AnchorLink/AnchorLink";
 
 export type PendingBuildRequestsTableProps = {
   buildRequestsQuery: DataCollection<Buildrequest>;
@@ -40,6 +43,8 @@ export const PendingBuildRequestsTable = observer(({buildRequestsQuery}: Pending
   const buildersQuery = useDataApiQuery(() =>
     buildRequestsQuery.getRelated(br => Builder.getAll(accessor, {id: br.builderid.toString()})));
 
+  useScrollToAnchor(buildRequestsQuery.array.map(buildRequest => buildRequest.id));
+
   const renderBuildRequests = () => {
     return buildRequestsQuery.array.map(buildRequest => {
       const builder = buildersQuery.getNthOfParentOrNull(buildRequest.id, 0);
@@ -52,8 +57,14 @@ export const PendingBuildRequestsTable = observer(({buildRequestsQuery}: Pending
       });
 
       return (
-        <tr key={buildRequest.id}>
+        <tr key={buildRequest.id}
+            className="bb-pending-build-request-table-line"
+            id={`bb-buildrequest-${buildRequest.id}`}>
           <td>
+            <AnchorLink className="bb-pending-build-request-anchor-link"
+                        anchor={`bb-buildrequest-${buildRequest.id}`}>
+              #
+            </AnchorLink>
             <Link to={`/buildrequests/${buildRequest.id}`}>
               <BadgeRound className=''>{buildRequest.id.toString()}</BadgeRound>
             </Link>
