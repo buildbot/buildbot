@@ -55,7 +55,7 @@ hvac==2.0.0
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.4.1
-importlib-metadata==6.8.0
+importlib-metadata==7.0.0
 importlib-resources==6.1.1
 incremental==22.10.0
 ipaddress==1.0.23
