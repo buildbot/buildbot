@@ -5,7 +5,7 @@
     "main": "buildbot_waterfall_view/static/scripts.js",
     "style": "buildbot_waterfall_view/static/styles.css",
     "scripts": {
-        "build": "rimraf buildbot_waterfall_view/static && webpack --bail --progress --profile --env prod",
+        "build": "export SET NODE_OPTIONS=--openssl-legacy-provider && rimraf buildbot_waterfall_view/static && webpack --bail --progress --profile --env prod",
         "build-dev": "rimraf buildbot_waterfall_view/static && webpack --bail --progress --profile --env dev",
         "dev": "webpack --bail --progress --profile --watch --env dev",
         "test": "karma start",
