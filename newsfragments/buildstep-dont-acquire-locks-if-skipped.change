@@ -1,2 +1,0 @@
-Buildbot will render step properties and check if step should be skipped before acquiring locks.
-This allows to skip waiting for locks in case step is skipped.

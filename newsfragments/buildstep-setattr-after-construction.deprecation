@@ -1,8 +1,0 @@
-BuildStep instances are now more strict about when their attributes can be changed.
-Changing attributes of BuildStep instances that are not yet part of any build is most likely an error.
-This is because such instances are only being used to configure a build.
-In this scenario any attribute changes are ignored as far as build configuration is concerned.
-
-Such changing of attributes has been deprecated and will become an error in the future release.
-
-For customizing BuildStep after an instance has already been created `set_step_arg(name, value)` function has been added.

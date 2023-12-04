@@ -1,1 +1,0 @@
-Addressed a number of timing errors in ``Nightly`` scheduler by upgrading ``croniter`` code.

@@ -1,1 +1,0 @@
-- `P4` step now use the rev-spec format `//{p4client}/...@{revision}` when syncing with a revision
