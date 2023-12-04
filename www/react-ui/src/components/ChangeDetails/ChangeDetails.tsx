@@ -17,6 +17,7 @@
 
 import './ChangeDetails.scss';
 import {useState} from "react";
+import {observer} from "mobx-react";
 import {OverlayTrigger, Popover, Table} from "react-bootstrap";
 import {Change, parseChangeAuthorNameAndEmail} from "buildbot-data-js";
 import {dateFormat, durationFromNowFormat, useCurrentTime} from "../../util/Moment";
@@ -30,7 +31,7 @@ type ChangeDetailsProps = {
   setShowDetails: (show: boolean) => void;
 }
 
-export const ChangeDetails = ({change, compact, showDetails, setShowDetails}: ChangeDetailsProps) => {
+export const ChangeDetails = observer(({change, compact, showDetails, setShowDetails}: ChangeDetailsProps) => {
   const now = useCurrentTime();
   const [showProps, setShowProps] = useState(false);
 
@@ -137,4 +138,4 @@ export const ChangeDetails = ({change, compact, showDetails, setShowDetails}: Ch
       {showDetails ? renderChangeDetails() : <></>}
     </div>
   );
-}
+});
