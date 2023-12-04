@@ -1,1 +1,0 @@
-``buildbot.steps.source.p4.P4`` can now take a ``p4client_type`` argument to set the client type (More information on client type [here](https://www.perforce.com/manuals/p4sag/Content/P4SAG/performance.readonly.html))

@@ -96,3 +96,13 @@ Endpoint attributes
 
 ``buildbot.data.base.Endpoint`` no longer provides ``isRaw`` and ``isCollection`` attributes.
 The equivalent in Buildbot 4.x is setting the ``kind`` attribute to ``EndpointKind.RAW`` and ``EndpointKind.COLLECTION`` respectively.
+
+Changes to BuildStep attributes
+-------------------------------
+
+BuildBot no longer supports changing ``BuildStep`` attributes after a step is created during configuration.
+Changing attributes of BuildStep instances that are not yet part of any build is most likely an error.
+This is because such instances are only being used to configure a builder as a source to create real steps from.
+In this scenario any attribute changes are ignored as far as build configuration is concerned.
+
+For customizing BuildStep after an instance has already been created `set_step_arg(name, value)` function has been added.

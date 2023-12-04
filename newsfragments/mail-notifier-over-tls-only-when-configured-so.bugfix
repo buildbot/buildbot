@@ -1,1 +1,0 @@
-``MailNotifier`` now works correctly when SSL packages are installed but ``useTls=False`` and auth (``smtpUser``, ``smtpPassword``) is not set. (:issue:`5609`)

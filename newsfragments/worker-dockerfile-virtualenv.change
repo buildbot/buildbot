@@ -1,1 +1,0 @@
-The published Docker image for the worker now runs Buildbot in virtualenv.

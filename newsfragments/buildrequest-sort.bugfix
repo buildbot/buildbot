@@ -1,1 +1,0 @@
-Buildrequests are now selected by priority and then by buildrequestid (previously, we used the age as the secondary sort parameter). This preserves the property of choosing the oldest buildrequest, but makes it predictable which buildrequest will be selected, as there might be multiple buildrequests with the same age.

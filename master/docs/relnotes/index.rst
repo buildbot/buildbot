@@ -8,6 +8,96 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.10.0`` ( ``2023-12-04`` )
+======================================
+
+Bug fixes
+---------
+
+- ``buildbot.changes.bitbucket.BitbucketPullrequestPoller`` has been updated to emit the change files.
+- Fixed build status key sent to Bitbucket exceeding length limits (:issue:`7049`).
+- Fixed a race condition resulting in ``EXCEPTION`` build results when build steps that are about to end are cancelled.
+- Buildrequests are now selected by priority and then by buildrequestid (previously, Buildbot used the age as the secondary sort parameter).
+  This preserves the property of choosing the oldest buildrequest, but makes it predictable which buildrequest will be selected, as there might be multiple buildrequests with the same age.
+- Fixed worker to fail a step ``uploadDirectory`` instead of throwing an exception when directory is not available. (:issue:`5878`)
+- Added missing ``parent_buildid`` and ``parent_relationship`` keys to the buildset completion event in the Data API.
+- Improved handling of Docker containers that fail before worker attaches to master.
+  In such case build will be restarted immediately instead of waiting for a timeout to expire.
+- Enhanced the accessibility of secret files by enabling group-readability.
+  Previously, secret files were exclusively accessible to the owner. Now,
+  accessibility has been expanded to allow group members access as well. This
+  enhancement is particularly beneficial when utilizing Systemd's LoadCredential
+  feature, which configures secrets with group-readable (0o440) permissions.
+- ``MailNotifier`` now works correctly when SSL packages are installed but ``useTls=False`` and auth (``smtpUser``, ``smtpPassword``) is not set. (:issue:`5609`)
+- - `P4` now reports the correct `got_revision` when syncing a changelist that only delete files
+- - `P4` step now use the rev-spec format `//{p4client}/...@{revision}` when syncing with a revision
+- Fixed incorrect propagation of option ``--proxy-connection-string`` into buildbot.tac when creating new Worker.
+- Fixed link to Builder in React Grid View.
+- Addressed a number of timing errors in ``Nightly`` scheduler by upgrading ``croniter`` code.
+
+Changes
+-------
+
+- Buildbot will render step properties and check if step should be skipped before acquiring locks.
+  This allows to skip waiting for locks in case step is skipped.
+- The ``isRaw`` and ``isCollection`` attributes of the ``Endpoint`` type have been deprecated.
+  ``Endpoint`` is used to extend the Buildbot API.
+  Us a replacement use the new ``kind`` attribute.
+- ``AbstractLatentWorker.check_instance()`` now accepts error message being supplied in case instance is not good.
+  The previous API has been deprecated.
+- The published Docker image for the worker now uses Debian 11 (Bullseye) as base image.
+- The published Docker image for the worker now runs Buildbot in virtualenv.
+
+Improved Documentation
+----------------------
+
+- Describe an existing bug with Libvirt latent workers that does not use a copy of the image (:issue `7122`).
+
+Features
+--------
+
+- The new React-based web frontend is no longer experimental.
+  To enable please see :ref:`the documentation on upgrading to 4.0 <4.0_Upgrading>` for more information.
+  The new web frontend includes the following improvements compared to legacy AngularJS web frontend:
+
+    - Project support (initially released in Buildbot 3.9.0).
+    - Steps now show the amount of time spent waiting for locks.
+    - The log viewer now supports huge logs without problems.
+    - The log viewer now includes a search box that downloads entire log on-demand without additional button click.
+    - The log viewer now supports downloading log file both as a file and also showing it inline in the browser.
+    - The colors of the website can be adjusted from Buildbot configuration via ``www["theme"]`` key.
+    - Buildsteps and pending buildrequests have anchor links which allows linking directly to them from external web pages.
+
+- Workers can now be created to use ``connection string`` right out of the box when new option ``--connection-string=`` is used.
+- Docker Latent workers will now show last logs in Buildbot UI when their startup fails.
+- Added ``EndpointKind.RAW_INLINE`` data API endpoint type which will show the response data inline in the browser instead of downloading as a file.
+- Implemented a way to specify volumes for containers spawned by ``KubeLatentWorker``.
+- ``Nightly`` scheduler now supports forcing builds at specific times even if ``onlyIfChanged`` parameter was true and there were no important changes.
+- ``buildbot.steps.source.p4.P4`` can now take a ``p4client_type`` argument to set the client type (More information on client type [here](https://www.perforce.com/manuals/p4sag/Content/P4SAG/performance.readonly.html))
+- Added data and REST APIs to retrieve only projects with active builders.
+- Improved step result reporting to specify whether step failed due to a time out.
+- Added ``tags`` option to the ``Git`` source step to download tags when updating repository.
+- Worker now sends ``failure_reason`` update when the command it was running timed out.
+
+Deprecations and Removals
+-------------------------
+
+- Legacy AngularJS web frontend will be removed in Buildbot 4.0.
+  Fixes to React web frontend that are regressions from AngularJS web frontend will be backported to 3.x Buildbot series to make migration easier.
+- Buildbot Master now requires Python 3.8 or newer.
+  Python 3.7 is no longer supported.
+- ``buildbot.util.croniter`` module has been deprecated in favor of using Pypi ``croniter`` package.
+- ``master.data.updates.setWorkerState()`` has been deprecated.
+  Use ``master.data.updates.set_worker_paused()`` and ``master.data.updates.set_worker_graceful()`` as replacements.
+- Buildbot now requires ``docker`` of version v4.0.0 or newer for Docker support.
+- BuildStep instances are now more strict about when their attributes can be changed.
+  Changing attributes of BuildStep instances that are not yet part of any build is most likely an error.
+  This is because such instances are only being used to configure a builder as a source to create real steps from.
+  In this scenario any attribute changes are ignored as far as build configuration is concerned.
+
+  Such changing of attributes has been deprecated and will become an error in the future release.
+
+  For customizing BuildStep after an instance has already been created `set_step_arg(name, value)` function has been added.
 
 Buildbot ``3.9.2`` ( ``2023-09-02`` )
 =====================================

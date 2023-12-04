@@ -1,1 +1,0 @@
-- `P4` now reports the correct `got_revision` when syncing a changelist that only delete files

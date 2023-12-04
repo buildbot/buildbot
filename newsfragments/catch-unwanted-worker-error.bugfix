@@ -1,1 +1,0 @@
-Fix worker to fail a step uploadDirectory instead of throwing an exception when directory is not available. (:issue:`5878`)

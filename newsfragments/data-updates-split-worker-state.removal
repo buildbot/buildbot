@@ -1,2 +1,0 @@
-``master.data.updates.setWorkerState()`` has been deprecated.
-Use ``master.data.updates.set_worker_paused()`` and ``master.data.updates.set_worker_graceful()`` as replacements.
