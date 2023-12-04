@@ -301,36 +301,65 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
         self.assertTrue(real_worker_lock.locks['workername'].isAvailable(self, lock_accesses[1]))
 
     @defer.inlineCallbacks
+    def test_regular_locks_skip_step(self):
+        # BuildStep should not try to acquire locks when it's skipped
+        lock = locks.MasterLock("masterlock")
+        lock_access = locks.LockAccess(lock, "exclusive")
+
+        self.setup_step(buildstep.BuildStep(
+            locks=[locks.LockAccess(lock, "counting")],
+            doStepIf=False
+        ))
+
+        real_lock = yield self.build.builder.botmaster.getLockByID(lock, 0)
+        real_lock.claim(self, lock_access)
+
+        self.expect_outcome(result=SKIPPED)
+        yield self.run_step()
+
+    @defer.inlineCallbacks
     def test_cancelWhileLocksAvailable(self):
 
         def _owns_lock(step, lock):
-            access = [step_access for step_lock, step_access in step.locks if step_lock == lock][0]
+            access = [
+                step_access for step_lock, step_access in step._locks_to_acquire
+                if step_lock == lock
+            ][0]
             return lock.isOwner(step, access)
 
         def _lock_available(step, lock):
-            access = [step_access for step_lock, step_access in step.locks if step_lock == lock][0]
+            access = [
+                step_access for step_lock, step_access in step._locks_to_acquire
+                if step_lock == lock
+            ][0]
             return lock.isAvailable(step, access)
 
         lock1 = locks.MasterLock("masterlock1")
-        real_lock1 = locks.RealMasterLock(lock1)
         lock2 = locks.MasterLock("masterlock2")
-        real_lock2 = locks.RealMasterLock(lock2)
 
         stepa = self.setup_step(self.FakeBuildStep(locks=[
-            (real_lock1, locks.LockAccess(lock1, 'exclusive'))
+            locks.LockAccess(lock1, 'exclusive')
         ]))
         stepb = self.setup_step(self.FakeBuildStep(locks=[
-            (real_lock2, locks.LockAccess(lock2, 'exclusive'))
+            locks.LockAccess(lock2, 'exclusive')
         ]))
 
         stepc = self.setup_step(self.FakeBuildStep(locks=[
-            (real_lock1, locks.LockAccess(lock1, 'exclusive')),
-            (real_lock2, locks.LockAccess(lock2, 'exclusive'))
+            locks.LockAccess(lock1, 'exclusive'),
+            locks.LockAccess(lock2, 'exclusive')
         ]))
         stepd = self.setup_step(self.FakeBuildStep(locks=[
-            (real_lock1, locks.LockAccess(lock1, 'exclusive')),
-            (real_lock2, locks.LockAccess(lock2, 'exclusive'))
+            locks.LockAccess(lock1, 'exclusive'),
+            locks.LockAccess(lock2, 'exclusive')
         ]))
+
+        real_lock1 = yield self.build.builder.botmaster.getLockByID(lock1, 0)
+        real_lock2 = yield self.build.builder.botmaster.getLockByID(lock2, 0)
+
+        yield stepa._setup_locks()
+        yield stepb._setup_locks()
+        yield stepc._setup_locks()
+        yield stepd._setup_locks()
 
         # Start all the steps
         yield stepa.acquireLocks()
