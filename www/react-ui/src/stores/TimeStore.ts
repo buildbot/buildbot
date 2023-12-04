@@ -19,11 +19,10 @@ import {action, makeObservable, observable} from "mobx";
 import moment from "moment";
 
 export class TimeStore {
-  @observable now: number;
+  @observable now: number = 0;
 
   constructor() {
     makeObservable(this);
-    this.now = 0;
   }
 
   @action setTime(now: number) {
