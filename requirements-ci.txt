@@ -110,7 +110,7 @@ snowballstemmer==2.2.0
 # Buildbot supports only sqlalchemy >= 1.3.0, < 1.5
 SQLAlchemy==1.4.40  # pyup: ignore
 sqlparse==0.4.4
-termcolor==2.3.0
+termcolor==2.4.0
 testtools==2.7.1
 toml==0.10.2
 tomli==2.0.1
