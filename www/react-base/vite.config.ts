@@ -125,6 +125,7 @@ export default defineConfig({
     dedupe: [
       'axios',
       'mobx',
+      'mobx-react',
       'moment',
       'react',
       'react-dom',

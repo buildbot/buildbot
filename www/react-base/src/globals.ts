@@ -3,6 +3,7 @@
 
 import axios from 'axios';
 import * as mobx from 'mobx';
+import * as mobxReact from 'mobx-react';
 import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -14,6 +15,7 @@ declare global {
   interface Window {
     axios: any;
     mobx: any;
+    mobxReact: any;
     React: any;
     ReactRouterDOM: any;
     jQuery: any;
@@ -24,6 +26,7 @@ declare global {
 
 window.axios = axios;
 window.mobx = mobx;
+window.mobxReact = mobxReact;
 window.moment = moment;
 window.React = React;
 window.ReactDOM = ReactDOM as any;
