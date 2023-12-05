@@ -16,6 +16,7 @@
 import os
 import shutil
 import stat
+import sys
 import tempfile
 
 
@@ -46,5 +47,8 @@ class PrivateTemporaryDirectory:
                 """
                 os.chmod(path, stat.S_IWRITE)
                 func(path)
-            shutil.rmtree(self.name, onerror=remove_readonly)
+            if sys.version_info >= (3, 12):
+                shutil.rmtree(self.name, onexc=remove_readonly)
+            else:
+                shutil.rmtree(self.name, onerror=remove_readonly)
             self._cleanup_needed = False
