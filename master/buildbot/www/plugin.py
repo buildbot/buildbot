@@ -14,6 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+try:
+    import importlib.resources as importlib_resources
+except ImportError:
+    import importlib_resources
+
 import importlib_resources
 
 from twisted.web import static

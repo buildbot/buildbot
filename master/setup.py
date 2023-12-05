@@ -478,7 +478,7 @@ setup_args['install_requires'] = [
     'Jinja2 >= 2.1',
     'msgpack >= 0.6.0',
     "croniter >= 1.3.0",
-    'importlib-resources >= 5',
+    "importlib-resources >= 5;python_version<'3.9'",
     # required for tests, but Twisted requires this anyway
     'zope.interface >= 4.1.1',
     'sqlalchemy >= 1.3.0, < 1.5',
