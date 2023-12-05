@@ -30,14 +30,14 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
 
   @observable byParentId = observable.map<string, Collection>();
   @observable sortedParentIds = observable.array<string>();
-  callback: (child: ParentDataType) => Collection;
+  callback: (parent: ParentDataType) => Collection;
   private disposer: IReactionDisposer;
 
   constructor(accessor: IDataAccessor,
               parentArray: IObservableArray<ParentDataType> | null,
               parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
               parentFilteredIds: IObservableArray<string> | null,
-              callback: (child: ParentDataType) => Collection) {
+              callback: (parent: ParentDataType) => Collection) {
     makeObservable(this);
 
     this.accessor = accessor;
