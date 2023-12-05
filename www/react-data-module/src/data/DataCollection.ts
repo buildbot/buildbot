@@ -99,7 +99,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
   }
 
   getRelated<ChildDataType extends BaseClass>(
-      callback: (child: DataType) => DataCollection<ChildDataType>) {
+      callback: (parent: DataType) => DataCollection<ChildDataType>) {
     return new DataMultiCollection<DataType, ChildDataType>(this.accessor, this.array, null, null,
       callback);
   }
