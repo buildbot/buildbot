@@ -159,3 +159,9 @@ warnings.filterwarnings('ignore', r"the \(type, exc, tb\) signature of throw\(\)
 # See https://github.com/graphql-python/graphql-core/issues/211
 warnings.filterwarnings('ignore', "'typing.ByteString' is deprecated and slated for removal in "
                         "Python 3.14", category=DeprecationWarning)
+
+# When using Python 3.12, this generates some dependent package
+warnings.filterwarnings('ignore', r"datetime.datetime.utcnow\(\) is deprecated and scheduled for "
+                        r"removal in a future version. Use timezone-aware objects to represent "
+                        r"datetimes in UTC: datetime.datetime.now\(datetime.UTC\).",
+                        category=DeprecationWarning)
