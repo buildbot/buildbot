@@ -18,6 +18,7 @@ import multiprocessing
 import os
 import signal
 import socket
+import sys
 
 from twisted.internet import defer
 
@@ -89,12 +90,21 @@ def run_proxy(queue):
 
     try:
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
         except RuntimeError:
-            # We can get RuntimeError due to current thread being not main thread on Python 3.8.
-            # It's not clear why that happens, so work around it.
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            # https://github.com/python/cpython/issues/83710
+            if sys.version_info <= (3, 10, 8):
+                # Workaround for bugs.python.org/issue39529.
+                try:
+                    loop = asyncio.get_event_loop_policy().get_event_loop()
+                except RuntimeError:
+                    # We can get RuntimeError due to current thread being not main thread
+                    # on Python 3.8. It's not clear why that happens, so work around it.
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+            else:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
 
         coro = asyncio.start_server(handle_client, host="127.0.0.1")
         server = loop.run_until_complete(coro)
