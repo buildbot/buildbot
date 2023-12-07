@@ -1,7 +1,7 @@
 Sphinx==7.1.2;  python_version < "3.9" # pyup: ignore
 Sphinx==7.2.6;  python_version >= "3.9"
 sphinx-jinja==2.0.2
-sphinx-rtd-theme==2.0.0rc4
+sphinx-rtd-theme==2.0.0
 sphinxcontrib-applehelp==1.0.4;  python_version < "3.9" # pyup: ignore
 sphinxcontrib-applehelp==1.0.7;  python_version >= "3.9"
 sphinxcontrib-devhelp==1.0.2;  python_version < "3.9" # pyup: ignore
@@ -17,5 +17,5 @@ sphinxcontrib-serializinghtml==1.1.9;  python_version >= "3.9"
 sphinxcontrib-spelling==8.0.0
 sphinxcontrib-websupport==1.2.4;  python_version < "3.9" # pyup: ignore
 sphinxcontrib-websupport==1.2.6;  python_version >= "3.9"
-Pygments==2.17.1
+Pygments==2.17.2
 towncrier==21.9.0

@@ -6,7 +6,7 @@ buildbot-www==3.9.2
 
 autobahn==23.6.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
-boto3==1.29.3
+boto3==1.33.6
 flake8==6.1.0;  python_version >= "3.8.1"
 msgpack==1.0.7
 Markdown==3.5.1
@@ -27,7 +27,7 @@ Automat==22.10.0
 Babel==2.13.1
 backports.functools-lru-cache==1.6.6
 boto==2.49.0
-botocore==1.32.3
+botocore==1.33.6
 certifi==2023.11.17
 cffi==1.16.0
 chardet==5.2.0
@@ -39,7 +39,7 @@ constantly==15.1.0
 cookies==2.2.1
 coverage==7.3.2
 croniter==2.0.1
-cryptography==41.0.6
+cryptography==41.0.7
 decorator==5.1.1
 dicttoxml==1.7.16
 dill==0.3.7
@@ -55,7 +55,7 @@ hvac==1.2.1
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.4.1
-importlib-metadata==6.8.0
+importlib-metadata==7.0.0
 importlib-resources==6.1.1
 incremental==22.10.0
 ipaddress==1.0.23
@@ -67,12 +67,12 @@ lazy-object-proxy==1.9.0  # pyup: ignore (required by astroid)
 ldap3==2.9.1
 lz4==4.3.2
 Mako==1.3.0
-markdown2==2.4.10
+markdown2==2.4.11
 MarkupSafe==2.1.3
 mccabe==0.7.0
 more-itertools==10.1.0
-moto==4.2.9
-olefile==0.46
+moto==4.2.11
+olefile==0.47
 packaging==23.2
 parameterized==0.9.0
 pathlib2==2.3.7.post1
@@ -83,7 +83,7 @@ platformdirs==4.0.0
 psutil==5.9.6
 pyaml==23.9.7
 pyasn1-modules==0.3.0
-pyasn1==0.5.0
+pyasn1==0.5.1
 pycodestyle==2.11.1;  python_version >= "3.8.1"
 pycparser==2.21
 pyenchant==3.2.2
@@ -100,7 +100,7 @@ requests==2.31.0
 responses==0.24.1
 ruamel.yaml==0.18.5
 ruamel.yaml.clib==0.2.8
-s3transfer==0.7.0
+s3transfer==0.8.2
 scandir==1.10.0
 service-identity==23.1.0
 setuptools-trial==0.6.0
@@ -110,7 +110,7 @@ snowballstemmer==2.2.0
 # Buildbot supports only sqlalchemy >= 1.3.0, < 1.5
 SQLAlchemy==1.4.40  # pyup: ignore
 sqlparse==0.4.4
-termcolor==2.3.0
+termcolor==2.4.0
 testtools==2.7.1
 toml==0.10.2
 tomli==2.0.1
@@ -126,7 +126,7 @@ unidiff==0.7.5
 # botocore depends on urllib3<1.27
 urllib3==1.26.18  # pyup: ignore
 webcolors==1.13
-websocket-client==1.6.4
+websocket-client==1.7.0
 Werkzeug==3.0.1
 wrapt==1.16.0
 xmltodict==0.13.0
