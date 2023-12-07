@@ -173,6 +173,7 @@ class Buildset(base.ResourceType):
             "bsid": bsid,
             "external_idstring": external_idstring,
             "reason": reason,
+            "parent_buildid": parent_buildid,
             "submitted_at": submitted_at,
             "complete": False,
             "complete_at": None,
