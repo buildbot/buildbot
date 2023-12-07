@@ -65,6 +65,11 @@ properties:
     reason:
         description: the reason this buildset was scheduled
         type: string
+    rebuilt_buildid?:
+        description: |
+            optional id of a build which was rebuilt or None if there was no rebuild. In case of
+            repeated rebuilds, only initial build id is tracked
+        type: integer
     results?:
         description: the results of the buildset (see :ref:`Build-Result-Codes`), or None if not complete
         type: integer

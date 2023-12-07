@@ -49,6 +49,7 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.db.buildsets.addBuildset)
         def addBuildset(self, sourcestamps, reason, properties,
                         builderids, waited_for, external_idstring=None, submitted_at=None,
+                        rebuilt_buildid=None,
                         parent_buildid=None, parent_relationship=None, priority=0):
             pass
 
@@ -95,6 +96,7 @@ class Tests(interfaces.InterfaceTests):
             "complete": False,
             "complete_at": None,
             "results": -1,
+            "rebuilt_buildid": None,
             "parent_buildid": None,
             "parent_relationship": None,
             "bsid": bsid
@@ -118,6 +120,7 @@ class Tests(interfaces.InterfaceTests):
             "complete": False,
             "complete_at": None,
             "results": -1,
+            "rebuilt_buildid": None,
             "parent_buildid": None,
             "parent_relationship": None,
             "bsid": bsdict['bsid']
@@ -168,6 +171,7 @@ class Tests(interfaces.InterfaceTests):
             "complete_at": epoch2datetime(0),
             "results": -1,
             "bsid": 91,
+            "rebuilt_buildid": None,
             "parent_buildid": None,
             "parent_relationship": None
         })
@@ -192,6 +196,7 @@ class Tests(interfaces.InterfaceTests):
             "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
             "results": -1,
             "bsid": 91,
+            "rebuilt_buildid": None,
             "parent_buildid": None,
             "parent_relationship": None
         })
@@ -240,6 +245,7 @@ class Tests(interfaces.InterfaceTests):
                 "complete": False,
                 "results": -1,
                 "bsid": 91,
+                "rebuilt_buildid": None,
                 "parent_buildid": None,
                 "parent_relationship": None
             }, {
@@ -251,6 +257,7 @@ class Tests(interfaces.InterfaceTests):
                 "complete": True,
                 "results": 7,
                 "bsid": 92,
+                "rebuilt_buildid": None,
                 "parent_buildid": None,
                 "parent_relationship": None
             },
@@ -273,6 +280,7 @@ class Tests(interfaces.InterfaceTests):
                 "complete": True,
                 "results": 7,
                 "bsid": 92,
+                "rebuilt_buildid": None,
                 "parent_buildid": None,
                 "parent_relationship": None
             },
@@ -295,6 +303,7 @@ class Tests(interfaces.InterfaceTests):
                 "complete": False,
                 "results": -1,
                 "bsid": 91,
+                "rebuilt_buildid": None,
                 "parent_buildid": None,
                 "parent_relationship": None
             },
@@ -377,6 +386,7 @@ class Tests(interfaces.InterfaceTests):
                 "complete": False,
                 "results": -1,
                 "bsid": 91,
+                "rebuilt_buildid": None,
                 "parent_buildid": None,
                 "parent_relationship": None
             }, {
@@ -388,6 +398,7 @@ class Tests(interfaces.InterfaceTests):
                 "complete": True,
                 "results": 7,
                 "bsid": 92,
+                "rebuilt_buildid": None,
                 "parent_buildid": None,
                 "parent_relationship": None
             }
@@ -410,6 +421,7 @@ class Tests(interfaces.InterfaceTests):
                 "complete": True,
                 "results": 7,
                 "bsid": 92,
+                "rebuilt_buildid": None,
                 "parent_buildid": None,
                 "parent_relationship": None
             },

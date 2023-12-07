@@ -73,7 +73,7 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.data.updates.addBuildset)
         def addBuildset(self, waited_for, scheduler=None, sourcestamps=None,
                         reason='', properties=None, builderids=None,
-                        external_idstring=None,
+                        external_idstring=None, rebuilt_buildid=None,
                         parent_buildid=None, parent_relationship=None,
                         priority=0):
             pass

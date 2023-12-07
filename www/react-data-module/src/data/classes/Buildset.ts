@@ -32,6 +32,7 @@ export class Buildset extends BaseClass {
   @observable parent_buildid!: number|null;
   @observable parent_relationship!: string|null;
   @observable reason!: string;
+  @observable rebuilt_buildid!: number|null;
   @observable results!: number|null;
   @observable sourcestamps!: BuildsetSourcestamps[];
   @observable submitted_at!: number|null;
@@ -50,6 +51,7 @@ export class Buildset extends BaseClass {
     this.parent_buildid = object.parent_buildid;
     this.parent_relationship = object.parent_relationship;
     this.reason = object.reason;
+    this.rebuilt_buildid = object.rebuilt_buildid;
     this.results = object.results;
     this.sourcestamps = object.sourcestamps;
     this.submitted_at = object.submitted_at;
@@ -64,6 +66,7 @@ export class Buildset extends BaseClass {
       parent_buildid: this.parent_buildid,
       parent_relationship: this.parent_relationship,
       reason: this.reason,
+      rebuilt_buildid: this.rebuilt_buildid,
       results: this.results,
       sourcestamps: this.sourcestamps,
       submitted_at: this.submitted_at,

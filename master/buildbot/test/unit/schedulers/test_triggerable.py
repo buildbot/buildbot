@@ -87,6 +87,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
                 'reason': "The Triggerable scheduler named 'n' triggered this build",
                 'results': -1,
                 'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
+                'rebuilt_buildid': None,
                 'parent_buildid': None,
                 'parent_relationship': None,
             }

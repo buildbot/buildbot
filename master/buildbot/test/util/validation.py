@@ -467,6 +467,7 @@ dbdict['bsdict'] = DictValidator(
     complete=BooleanValidator(),
     complete_at=NoneOk(DateTimeValidator()),
     results=NoneOk(IntValidator()),
+    rebuilt_buildid=NoneOk(IntValidator()),
     parent_buildid=NoneOk(IntValidator()),
     parent_relationship=NoneOk(StringValidator()),
 )
