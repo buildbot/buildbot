@@ -19,6 +19,7 @@ import warnings
 from unittest import mock
 
 import setuptools  # force import setuptools before any other distutils imports
+from sqlalchemy.exc import RemovedIn20Warning
 
 from buildbot import monkeypatches
 from buildbot.test.util.warnings import assertProducesWarning  # noqa pylint: disable=wrong-import-position
@@ -144,3 +145,12 @@ warnings.filterwarnings("ignore", "twisted.web.resource.NoResource was deprecate
 
 # Buildbot shows this warning after upgrading to Twisted 23.10
 warnings.filterwarnings('ignore', ".*unclosed event loop.*", category=Warning)
+
+# Ignore sqlalchemy 1.5 warning
+# sqlalchemy.exc.RemovedIn20Warning: Deprecated API features detected! These feature(s) are not
+# compatible with SQLAlchemy 2.0. To prevent incompatible upgrades prior to updating applications,
+# ensure requirements files are pinned to "sqlalchemy<2.0". Set environment variable
+# SQLALCHEMY_WARN_20=1 to show all deprecation warnings.  Set environment variable
+# SQLALCHEMY_SILENCE_UBER_WARNING=1 to silence this message. (Background on SQLAlchemy 2.0
+# at: https://sqlalche.me/e/b8d9) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+warnings.filterwarnings("ignore", category=RemovedIn20Warning)
