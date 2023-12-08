@@ -153,7 +153,8 @@ class Row:
             "schedulerid": db.schedulers.getScheduler,
             "brid": db.buildrequests.getBuildRequest,
             "stepid": db.steps.getStep,
-            "masterid": db.masters.getMaster
+            "masterid": db.masters.getMaster,
+            "rebuilt_buildid": db.builds.getBuild
         }
         for foreign_key in self.foreignKeys:
             if foreign_key in accessors:

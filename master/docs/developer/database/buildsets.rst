@@ -19,13 +19,15 @@ Buildsets connector
     * ``bsid``
     * ``external_idstring`` (arbitrary string for mapping builds externally)
     * ``reason`` (string; reason these builds were triggered)
+    * ``rebuilt_buildid`` (integer; id of a build which was rebuilt or None if there was no rebuild.
+        In case of repeated rebuilds, only initial build id is tracked)
     * ``sourcestamps`` (list of sourcestamps for this buildset, by ID)
     * ``submitted_at`` (datetime object; time this buildset was created)
     * ``complete`` (boolean; true if all of the builds for this buildset are complete)
     * ``complete_at`` (datetime object; time this buildset was completed)
     * ``results`` (aggregate result of this buildset; see :ref:`Build-Result-Codes`)
 
-    .. py:method:: addBuildset(sourcestamps, reason, properties, builderids, external_idstring=None, parent_buildid=None, parent_relationship=None)
+    .. py:method:: addBuildset(sourcestamps, reason, properties, builderids, rebuilt_buildid=None, external_idstring=None, parent_buildid=None, parent_relationship=None)
 
         :param sourcestamps: sourcestamps for the new buildset; see below
         :type sourcestamps: list
@@ -40,6 +42,7 @@ Buildsets connector
         :param datetime submitted_at: time this buildset was created; defaults to the current time
         :param int parent_buildid: optional build id that is the parent for this buildset
         :param unicode parent_relationship: relationship identifier for the parent. This is the configured relationship between the parent build and the child buildsets
+        :param int rebuilt_buildid: optional rebuilt build id
         :returns: buildset ID and buildrequest IDs, via a Deferred
 
         Add a new buildset to the database, along with build requests for each builder, returning the resulting bsid via a Deferred.

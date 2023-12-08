@@ -60,6 +60,7 @@ class Db2DataMixin:
         'bsid': 'buildsets.id',
         'external_idstring': 'buildsets.external_idstring',
         'reason': 'buildsets.reason',
+        'rebuilt_buildid': 'buildsets.rebuilt_buildid',
         'submitted_at': 'buildsets.submitted_at',
         'complete': 'buildsets.complete',
         'complete_at': 'buildsets.complete_at',
@@ -123,6 +124,7 @@ class Buildset(base.ResourceType):
         bsid = types.Integer()
         external_idstring = types.NoneOk(types.String())
         reason = types.String()
+        rebuilt_buildid = types.NoneOk(types.Integer())
         submitted_at = types.Integer()
         complete = types.Boolean()
         complete_at = types.NoneOk(types.Integer())
@@ -137,7 +139,7 @@ class Buildset(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
-                    properties=None, builderids=None, external_idstring=None,
+                    properties=None, builderids=None, external_idstring=None, rebuilt_buildid=None,
                     parent_buildid=None, parent_relationship=None, priority=0):
         if sourcestamps is None:
             sourcestamps = []
@@ -147,7 +149,7 @@ class Buildset(base.ResourceType):
             builderids = []
         submitted_at = int(self.master.reactor.seconds())
         bsid, brids = yield self.master.db.buildsets.addBuildset(
-            sourcestamps=sourcestamps, reason=reason,
+            sourcestamps=sourcestamps, reason=reason, rebuilt_buildid=rebuilt_buildid,
             properties=properties, builderids=builderids,
             waited_for=waited_for, external_idstring=external_idstring,
             submitted_at=epoch2datetime(submitted_at),
@@ -174,6 +176,7 @@ class Buildset(base.ResourceType):
             "external_idstring": external_idstring,
             "reason": reason,
             "parent_buildid": parent_buildid,
+            "rebuilt_buildid": rebuilt_buildid,
             "submitted_at": submitted_at,
             "complete": False,
             "complete_at": None,
@@ -245,6 +248,7 @@ class Buildset(base.ResourceType):
             "bsid": bsid,
             "external_idstring": bsdict['external_idstring'],
             "reason": bsdict['reason'],
+            "rebuilt_buildid": bsdict['rebuilt_buildid'],
             "sourcestamps": sourcestamps,
             "submitted_at": bsdict['submitted_at'],
             "complete": True,

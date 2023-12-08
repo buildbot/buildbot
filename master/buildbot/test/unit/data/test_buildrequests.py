@@ -551,10 +551,136 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         self.assertEqual(buildset, {'bsid': 200, 'complete_at': None, 'submitted_at': 0,
                                     'sourcestamps': None, 'parent_buildid': None,
                                     'results': -1, 'parent_relationship': None,
-                                    'reason': 'rebuild',
+                                    'reason': 'rebuild', 'rebuilt_buildid': None,
                                     'external_idstring': 'extid',
                                     'complete': False})
 
         properties = yield self.master.data.get(('buildsets', new_bsid, 'properties'))
         self.assertEqual(
             properties, {'prop1': ('one', 'fake1'), 'prop2': ('two', 'fake2')})
+
+    @defer.inlineCallbacks
+    def test_rebuild_buildrequest_rebuilt_build(self):
+        self.master.db.insert_test_data(
+            [
+                fakedb.Builder(id=77, name="builder"),
+                fakedb.Master(id=88),
+                fakedb.Worker(id=13, name="wrk"),
+                fakedb.Buildset(id=8822),
+                fakedb.SourceStamp(id=234),
+                fakedb.BuildsetSourceStamp(buildsetid=8822, sourcestampid=234),
+                fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
+                fakedb.Build(id=123, buildrequestid=82),
+            ]
+        )
+        buildrequest = yield self.master.data.get(("buildrequests", 82))
+        new_bsid, brid_dict = yield self.rtype.rebuildBuildrequest(buildrequest)
+
+        self.assertEqual(list(brid_dict.keys()), [77])
+        buildrequest = yield self.master.data.get(("buildrequests", brid_dict[77]))
+        # submitted_at is the time of the test, so better not depend on it
+        self.assertEqual(
+            buildrequest,
+            {
+                "buildrequestid": 1001,
+                "complete": False,
+                "waited_for": False,
+                "claimed_at": None,
+                "results": -1,
+                "claimed": False,
+                "buildsetid": 200,
+                "complete_at": None,
+                "submitted_at": epoch2datetime(0),
+                "builderid": 77,
+                "claimed_by_masterid": None,
+                "priority": 0,
+                "properties": None,
+            },
+        )
+        buildset = yield self.master.data.get(("buildsets", new_bsid))
+        oldbuildset = yield self.master.data.get(("buildsets", 8822))
+
+        # assert same sourcestamp
+        self.assertEqual(buildset["sourcestamps"], oldbuildset["sourcestamps"])
+        buildset["sourcestamps"] = None
+        self.assertEqual(
+            buildset,
+            {
+                "bsid": 200,
+                "complete_at": None,
+                "submitted_at": 0,
+                "sourcestamps": None,
+                "parent_buildid": None,
+                "results": -1,
+                "parent_relationship": None,
+                "reason": "rebuild",
+                "rebuilt_buildid": 123,
+                "external_idstring": "extid",
+                "complete": False,
+            },
+        )
+
+    @defer.inlineCallbacks
+    def test_rebuild_buildrequest_repeated_rebuilt_build(self):
+        self.master.db.insert_test_data(
+            [
+                fakedb.Builder(id=77, name="builder"),
+                fakedb.Master(id=88),
+                fakedb.Worker(id=13, name="wrk"),
+                fakedb.Buildset(id=8821),
+                # build already has been rebuilt from build_id = 122
+                fakedb.Buildset(id=8822, rebuilt_buildid=122),
+                fakedb.SourceStamp(id=234),
+                fakedb.BuildsetSourceStamp(buildsetid=8822, sourcestampid=234),
+                fakedb.BuildRequest(id=81, buildsetid=8821, builderid=77),
+                fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
+                fakedb.Build(id=122, buildrequestid=81),
+                fakedb.Build(id=123, buildrequestid=82),
+            ]
+        )
+        buildrequest = yield self.master.data.get(("buildrequests", 82))
+        new_bsid, brid_dict = yield self.rtype.rebuildBuildrequest(buildrequest)
+
+        self.assertEqual(list(brid_dict.keys()), [77])
+        buildrequest = yield self.master.data.get(("buildrequests", brid_dict[77]))
+        # submitted_at is the time of the test, so better not depend on it
+        self.assertEqual(
+            buildrequest,
+            {
+                "buildrequestid": 1001,
+                "complete": False,
+                "waited_for": False,
+                "claimed_at": None,
+                "results": -1,
+                "claimed": False,
+                "buildsetid": 200,
+                "complete_at": None,
+                "submitted_at": epoch2datetime(0),
+                "builderid": 77,
+                "claimed_by_masterid": None,
+                "priority": 0,
+                "properties": None,
+            },
+        )
+        buildset = yield self.master.data.get(("buildsets", new_bsid))
+        oldbuildset = yield self.master.data.get(("buildsets", 8822))
+
+        # assert same sourcestamp
+        self.assertEqual(buildset["sourcestamps"], oldbuildset["sourcestamps"])
+        buildset["sourcestamps"] = None
+        self.assertEqual(
+            buildset,
+            {
+                "bsid": 200,
+                "complete_at": None,
+                "submitted_at": 0,
+                "sourcestamps": None,
+                "parent_buildid": None,
+                "results": -1,
+                "parent_relationship": None,
+                "reason": "rebuild",
+                "rebuilt_buildid": 122,
+                "external_idstring": "extid",
+                "complete": False,
+            },
+        )

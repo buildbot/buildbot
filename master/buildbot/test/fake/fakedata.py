@@ -137,7 +137,7 @@ class FakeUpdates(service.AsyncService):
 
     @defer.inlineCallbacks
     def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
-                    properties=None, builderids=None, external_idstring=None,
+                    properties=None, builderids=None, external_idstring=None, rebuilt_buildid=None,
                     parent_buildid=None, parent_relationship=None, priority=0):
         if sourcestamps is None:
             sourcestamps = []
@@ -167,6 +167,7 @@ class FakeUpdates(service.AsyncService):
             sourcestamps=sourcestamps, reason=reason,
             properties=properties, builderids=builderids,
             waited_for=waited_for, external_idstring=external_idstring,
+            rebuilt_buildid=rebuilt_buildid,
             parent_buildid=parent_buildid, parent_relationship=parent_relationship)
         return (bsid, brids)
 
