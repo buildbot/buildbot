@@ -13,13 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-
 import base64
 import bz2
 import textwrap
 import zlib
+from datetime import datetime
+from datetime import timedelta
 
 import sqlalchemy as sa
+from parameterized import parameterized
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -30,6 +32,7 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
 from buildbot.util import bytes2unicode
+from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
 
 
@@ -141,7 +144,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_deleteOldLogChunks(self):
         @self.assertArgSpecMatches(self.db.logs.deleteOldLogChunks)
-        def deleteOldLogChunks(self, older_than_timestamp):
+        def deleteOldLogChunks(self, older_than_timestamp=None, horizonPerBuilder=None):
             pass
 
     # method tests
@@ -570,6 +573,66 @@ class RealTests(Tests):
             # we make sure we can still getLogLines, it will just return empty value
             lines = yield self.db.logs.getLogLines(logid, 0, logdict['num_lines'])
             self.assertEqual(lines, '')
+
+    @parameterized.expand([
+        (
+        {
+            "b1": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            },
+            "b7": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            }
+        }, 30),
+        (
+        {
+            "b2": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            },
+            "b7": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            }
+        }, 10),
+        (
+        {
+            "b%": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            },
+            "b7": {
+                "logHorizon": timedelta(weeks=1),
+                "buildDataHorizon": timedelta(weeks=1)
+            }
+        }, 40)
+    ])
+    @defer.inlineCallbacks
+    def test_deleteOldLogChunks_horizonPerBuilder(self, config, exp_deleted):
+        yield self.insertTestData(self.backgroundData + [
+            fakedb.Builder(id=89, name='b2'),
+            fakedb.Build(id=31, buildrequestid=41, number=7,
+                masterid=88, builderid=89, workerid=47),
+            fakedb.Step(id=107, buildid=30, number=3, name='three',
+                started_at=datetime2epoch(datetime.now() - timedelta(weeks=2))),
+            fakedb.Step(id=108, buildid=31, number=4, name='four',
+                started_at=datetime2epoch(datetime.now() - timedelta(weeks=2))),
+            fakedb.Step(id=109, buildid=30, number=5, name='five',
+                started_at=datetime2epoch(datetime.now())),
+            fakedb.Step(id=110, buildid=31, number=6, name='six',
+                started_at=datetime2epoch(datetime.now()))])
+        logids = []
+        for stepid in (101, 102, 107, 108, 109, 110):
+            for i in range(10):
+                logid = yield self.db.logs.addLog(
+                    stepid=stepid, name='another' + str(i), slug='another' + str(i), type='s')
+                yield self.db.logs.appendLog(logid, 'xyz\n')
+                logids.append(logid)
+
+        num_deleted = yield self.db.logs.deleteOldLogChunks(horizonPerBuilder=config)
+        self.assertEqual(num_deleted, exp_deleted)
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):

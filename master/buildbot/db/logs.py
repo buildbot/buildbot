@@ -15,6 +15,7 @@
 
 import bz2
 import zlib
+from datetime import datetime
 
 import sqlalchemy as sa
 
@@ -22,6 +23,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.db import base
+from buildbot.util import datetime2epoch
 
 try:
     # lz4 > 0.9.0
@@ -356,16 +358,17 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         return saved
 
     # returns a Deferred that returns a value
-    def deleteOldLogChunks(self, older_than_timestamp):
-        def thddeleteOldLogs(conn):
-            model = self.db.model
+    def deleteOldLogChunks(self, older_than_timestamp=None, horizonPerBuilder=None):
+        model = self.db.model
+
+        def countLogchunks(conn):
             res = conn.execute(sa.select([sa.func.count(model.logchunks.c.logid)]))
-            count1 = res.fetchone()[0]
+            count = res.fetchone()[0]
             res.close()
+            return count
 
-            # update log types older than timestamps
-            # we do it first to avoid having UI discrepancy
-
+        # find the steps.id at the upper bound of steps
+        def getStepidMax(conn, older_than_timestamp):
             # N.B.: we utilize the fact that steps.id is auto-increment, thus steps.started_at
             # times are effectively sorted and we only need to find the steps.id at the upper
             # bound of steps to update.
@@ -383,18 +386,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             if res_list:
                 stepid_max = res_list[0]
             res.close()
+            return stepid_max
 
-            # UPDATE logs SET logs.type = 'd' WHERE logs.stepid <= stepid_max AND type != 'd';
-            if stepid_max:
-                res = conn.execute(
-                    model.logs.update()
-                    .where(sa.and_(model.logs.c.stepid <= stepid_max,
-                                   model.logs.c.type != 'd'))
-                    .values(type='d')
-                )
-                res.close()
-
-            # query all logs with type 'd' and delete their chunks.
+        # query all logs with type 'd' and delete their chunks.
+        def deleteLogsWithTypeD(conn):
             if self.db._engine.dialect.name == 'sqlite':
                 # sqlite does not support delete with a join, so for this case we use a subquery,
                 # which is much slower
@@ -411,10 +406,49 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
             res = conn.execute(q)
             res.close()
-            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.logid)]))
-            count2 = res.fetchone()[0]
-            res.close()
-            return count1 - count2
+
+        def thddeleteOldLogs(conn):
+            count_before = countLogchunks(conn)
+
+            # update log types older than timestamps
+            # we do it first to avoid having UI discrepancy
+
+            if horizonPerBuilder:
+                for builderName in horizonPerBuilder:
+                    older_than_timestamp_ = datetime2epoch(datetime.now() -
+                        horizonPerBuilder[builderName]["logHorizon"])
+                    stepid_max = getStepidMax(conn, older_than_timestamp_)
+                    if stepid_max:
+                        subquery = sa.select([model.steps.c.id]).where(
+                            sa.and_(model.steps.c.buildid == model.builds.c.id,
+                            model.builds.c.builderid == model.builders.c.id,
+                            model.builders.c.name.like(builderName)))
+                        res = conn.execute(
+                            model.logs.update()
+                            .where(sa.and_(model.logs.c.stepid.in_(subquery),
+                                           model.logs.c.stepid <= stepid_max,
+                                           model.logs.c.type != 'd'))
+                            .values(type='d')
+                        )
+                        res.close()
+            else:
+                stepid_max = getStepidMax(conn, older_than_timestamp)
+                if stepid_max:
+                    # UPDATE logs SET logs.type = 'd'
+                    # WHERE logs.stepid <= stepid_max AND type != 'd';
+                    res = conn.execute(
+                        model.logs.update()
+                        .where(sa.and_(model.logs.c.stepid <= stepid_max,
+                                       model.logs.c.type != 'd'))
+                        .values(type='d')
+                    )
+                    res.close()
+
+            deleteLogsWithTypeD(conn)
+
+            count_after = countLogchunks(conn)
+
+            return count_before - count_after
         return self.db.pool.do(thddeleteOldLogs)
 
     def _logdictFromRow(self, row):

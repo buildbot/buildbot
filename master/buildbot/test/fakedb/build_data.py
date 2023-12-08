@@ -92,7 +92,7 @@ class FakeBuildDataComponent(FakeDBComponent):
         return defer.succeed(ret)
 
     # returns a Deferred
-    def deleteOldBuildData(self, older_than_timestamp):
+    def deleteOldBuildData(self, older_than_timestamp=None, horizonPerBuilder=None):
         buildids_to_keep = []
         for build_dict in self.db.builds.builds.values():
             if build_dict['complete_at'] is None or \

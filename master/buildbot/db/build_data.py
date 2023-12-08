@@ -13,12 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from datetime import datetime
+
 import sqlalchemy as sa
 
 from twisted.internet import defer
 
 from buildbot.db import NULL
 from buildbot.db import base
+from buildbot.util import datetime2epoch
 
 
 class BuildDataDict(dict):
@@ -123,9 +126,10 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         return res
 
     @defer.inlineCallbacks
-    def deleteOldBuildData(self, older_than_timestamp):
+    def deleteOldBuildData(self, older_than_timestamp=None, horizonPerBuilder=None):
         build_data = self.db.model.build_data
         builds = self.db.model.builds
+        builders = self.db.model.builders
 
         def count_build_datum(conn):
             res = conn.execute(sa.select([sa.func.count(build_data.c.id)]))
@@ -136,22 +140,49 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             count_before = count_build_datum(conn)
 
-            if self.db._engine.dialect.name == 'sqlite':
-                # sqlite does not support delete with a join, so for this case we use a subquery,
-                # which is much slower
+            if horizonPerBuilder is not None:
+                for builderName in horizonPerBuilder:
+                    older_than_timestamp_ = datetime2epoch(datetime.now() -
+                        horizonPerBuilder[builderName]["buildDataHorizon"])
+                    if self.db._engine.dialect.name == 'sqlite':
+                        # sqlite does not support delete with a join,
+                        # so for this case we use a subquery,
+                        # which is much slower
 
-                q = sa.select([builds.c.id])
-                q = q.where((builds.c.complete_at >= older_than_timestamp) |
-                            (builds.c.complete_at == NULL))
+                        q = sa.select([builds.c.id])
+                        q = q.where(sa.and_((builds.c.complete_at < older_than_timestamp_),
+                                    builds.c.builderid == builders.c.id,
+                                    builders.c.name.like(builderName)))
 
-                q = build_data.delete().where(build_data.c.buildid.notin_(q))
+                        q = build_data.delete().where(build_data.c.buildid.in_(q))
+
+                    else:
+                        q = build_data.delete()
+                        q = q.where(sa.and_(builds.c.id == build_data.c.buildid,
+                                    builds.c.builderid == builders.c.id,
+                                    builds.c.complete_at < older_than_timestamp_,
+                                    builders.c.name.like(builderName)))
+
+                    res = conn.execute(q)
+                    res.close()
             else:
-                q = build_data.delete()
-                q = q.where(builds.c.id == build_data.c.buildid)
-                q = q.where((builds.c.complete_at >= older_than_timestamp) |
-                            (builds.c.complete_at == NULL))
-            res = conn.execute(q)
-            res.close()
+                if self.db._engine.dialect.name == 'sqlite':
+                    # sqlite does not support delete with a join,
+                    # so for this case we use a subquery,
+                    # which is much slower
+
+                    q = sa.select([builds.c.id])
+                    q = q.where((builds.c.complete_at >= older_than_timestamp) |
+                                (builds.c.complete_at == NULL))
+
+                    q = build_data.delete().where(build_data.c.buildid.notin_(q))
+                else:
+                    q = build_data.delete()
+                    q = q.where(builds.c.id == build_data.c.buildid)
+                    q = q.where((builds.c.complete_at >= older_than_timestamp) |
+                                (builds.c.complete_at == NULL))
+                res = conn.execute(q)
+                res.close()
 
             count_after = count_build_datum(conn)
             return count_before - count_after
