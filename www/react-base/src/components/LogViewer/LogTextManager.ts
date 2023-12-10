@@ -401,7 +401,7 @@ export class LogTextManager {
       const chunkSearchResults = this.chunkSearchResults[chunkIndex];
       const lineLength = lineEndInChunk - lineStartInChunk;
       const lineCssClassesForSearch =
-        overlaySearchResultsOnLine(this.searchString, chunkSearchResults, index, lineLength,
+        overlaySearchResultsOnLine(chunkSearchResults, index, lineLength,
           lineCssClassesWithText === undefined ? null : lineCssClassesWithText[1],
           "bb-logviewer-result-begin", "bb-logviewer-result", "bb-logviewer-result-end");
 
@@ -427,7 +427,7 @@ export class LogTextManager {
           lineIndexToFirstChunkIndex: new Map<number, number>([[index, 0]]),
         }
         const lineCssClassesForSearchHighlight =
-            overlaySearchResultsOnLine(this.searchString!, fakeHighlightedChunkResult, index,
+            overlaySearchResultsOnLine(fakeHighlightedChunkResult, index,
                 lineLength, lineCssClassesForSearch,
                 "", "bb-logviewer-result-current", "");
 
