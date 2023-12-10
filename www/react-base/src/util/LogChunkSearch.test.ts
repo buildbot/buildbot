@@ -156,6 +156,24 @@ describe('LogChunkSearch', () => {
           {lineIndex: 29, lineStart: 0, lineEnd: 3},
         ]);
     });
+    it('use regex', () => {
+      expect(findTextInChunkRaw(parseLogChunk(20, 'oaaa\nboaaabaaa\no\noaaab\n', 's'), getMatcher('a+', {useRegex: true})))
+        .toEqual([
+          {lineIndex: 20, lineStart: 0, lineEnd: 3},
+          {lineIndex: 21, lineStart: 1, lineEnd: 4},
+          {lineIndex: 21, lineStart: 5, lineEnd: 8},
+          {lineIndex: 23, lineStart: 0, lineEnd: 3},
+        ]);
+    });
+    it('use regex with empty match', () => {
+      expect(findTextInChunkRaw(parseLogChunk(20, 'oaaa\nboaaabaaa\no\noaaab\n', 's'), getMatcher('a*', {useRegex: true})))
+        .toEqual([
+          {lineIndex: 20, lineStart: 0, lineEnd: 3},
+          {lineIndex: 21, lineStart: 1, lineEnd: 4},
+          {lineIndex: 21, lineStart: 5, lineEnd: 8},
+          {lineIndex: 23, lineStart: 0, lineEnd: 3},
+        ]);
+    });
   });
 
   function testResultsListToLineIndexMap(lineIndexes: number[], expected: Map<number, number>) {
