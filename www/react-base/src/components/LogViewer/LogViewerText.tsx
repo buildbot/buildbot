@@ -99,9 +99,10 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
     return [overscanStartIndex, overscanStopIndex, visibleStartIndex, visibleStopIndex];
   }
 
-  const onSearchInputChanged = (text: string, caseSensitive: boolean) => {
+  const onSearchInputChanged = (text: string, caseSensitive: boolean, useRegex: boolean) => {
     manager.setSearchString(text === '' ? null : text);
     manager.setSearchCaseSensitivity(caseSensitive);
+    manager.setUseRegex(useRegex);
   }
 
   const listRef = useRef<FixedSizeList<any>>(null);
