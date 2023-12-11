@@ -1,0 +1,1 @@
+Add a "Workers" tab to the Builder view listing workers that are assigned to this builder (:issue:`7162`)
