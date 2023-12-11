@@ -38,6 +38,7 @@ import {ForceBuildModal} from "../../components/ForceBuildModal/ForceBuildModal"
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 import {FaStop, FaSpinner} from "react-icons/fa";
 import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
+import { Tab, Tabs } from "react-bootstrap";
 
 const anyCancellableBuilds = (builds: DataCollection<Build>,
                               buildrequests: DataCollection<Buildrequest>) => {
@@ -198,7 +199,14 @@ export const BuilderView = observer(() => {
         ? renderDescription(builder)
         : <></>
       }
-      <BuildRequestsTable buildrequests={buildrequests}/>
+      <div>
+        <Tabs defaultActiveKey={1}>
+          <Tab eventKey={1} title="Build requests">
+            <BuildRequestsTable buildrequests={buildrequests}/>
+          </Tab>
+        </Tabs>
+      </div>
+
       <BuildsTable builds={builds} builders={null}/>
       {shownForceScheduler !== null
         ? <ForceBuildModal scheduler={shownForceScheduler} builderid={builderid}
