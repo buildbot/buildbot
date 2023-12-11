@@ -16,8 +16,6 @@
 */
 
 import {Table} from "react-bootstrap";
-import Tab from 'react-bootstrap/Tab';
-import Tabs from 'react-bootstrap/Tabs';
 import {observer} from "mobx-react";
 import {Link} from "react-router-dom";
 import {
@@ -97,13 +95,5 @@ export const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableP
     );
   }
 
-  return (
-    <div>
-      <Tabs defaultActiveKey={1}>
-        <Tab eventKey={1} title="Build requests">
-          {buildrequests.array.length === 0 ? <span>None</span> : tableElement()}
-        </Tab>
-      </Tabs>
-    </div>
-  )
+  return buildrequests.array.length === 0 ? <span>None</span> : tableElement();
 });
