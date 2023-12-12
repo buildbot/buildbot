@@ -13,8 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+import sys
 
-import importlib_resources
+if sys.version_info[:2] >= (3, 9):
+    # We need importlib.resources.files, which is added in Python 3.9
+    # https://docs.python.org/3/library/importlib.resources.html
+    import importlib.resources as importlib_resources
+else:
+    import importlib_resources
 
 from twisted.web import static
 
