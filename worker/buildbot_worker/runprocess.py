@@ -19,10 +19,6 @@ Support for running 'shell commands'
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import PY3
-from future.utils import iteritems
-from future.utils import string_types
-from future.utils import text_type
 
 import os
 import pprint
@@ -34,6 +30,11 @@ import sys
 import traceback
 from codecs import getincrementaldecoder
 from tempfile import NamedTemporaryFile
+
+from six import PY3
+from six import iteritems
+from six import string_types
+from six import text_type
 
 from twisted.internet import defer
 from twisted.internet import error

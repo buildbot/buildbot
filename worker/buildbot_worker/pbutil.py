@@ -19,7 +19,8 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import iteritems
+
+from six import iteritems
 
 from twisted.application.internet import backoffPolicy
 from twisted.cred import error

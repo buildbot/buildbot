@@ -67,12 +67,13 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from future.builtins import range
 
 import os
 import sys
 import threading
 from contextlib import contextmanager
+
+from six.moves import range
 
 import pywintypes
 import servicemanager

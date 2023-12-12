@@ -152,7 +152,7 @@ twisted_ver = ">= 18.7.0"
 if setuptools is not None:
     setup_args['install_requires'] = [
         'twisted ' + twisted_ver,
-        'future',
+        'six',
     ]
 
     if sys.version_info >= (3, 6):
