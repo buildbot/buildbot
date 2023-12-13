@@ -298,12 +298,26 @@ class RunProcess(object):
         @param useProcGroup: (default True) use a process group for non-PTY
             process invocations
         """
-<<<<<<< HEAD
-        self.secret_string = "########"
-=======
         self.command_id = command
+        command_tmp = command
 
->>>>>>> 09a54abffc1ea98dae2fe39df058759c2930a118
+        def mosaic_sensitive_info(cmd, arrPattern=None, strMosaic="######"):
+            """
+            The arrPattern is only for small request now. The list of pattern
+            is open for future.
+            The function finds the sensitive information from the command-lines
+            and prevent it revealing in the stdout.
+            """
+            arrPattern = [r"(?<=https\:\/\/)(.*?)(?=\@)"]
+            strTmp = ""
+            for pattern in arrPattern:
+                try:
+                    strTmp = re.sub(pattern, strMosaic, cmd)
+                except TypeError:
+                    strTmp = re.sub(pattern, strMosaic, str(cmd))
+            print("Go things cover")
+            return strTmp
+
         if logfiles is None:
             logfiles = {}
 
@@ -314,8 +328,7 @@ class RunProcess(object):
                     return util.Obfuscated(w[1], w[2])
                 return w
             command = [obfus(w) for w in command]
-            # Hacky fix: Fixing the problem of revealing the token if using https:// method.
-            command_tmp = [ obfus(re.sub("(?<=https\:\/\/)(.*?)(?=\@)", self.secret_string, w)) for w in command      ]
+            command_tmp = [obfus(mosaic_sensitive_info(w)) for w in command]
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the worker.  This is mostly platform
         # specific, but can be overridden in the worker's buildbot.tac file.

@@ -1,0 +1,1 @@
+adding a cover-up to the fake_command to prevent sensitive information (i.e. token) passing to stdout
