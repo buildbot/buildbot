@@ -255,8 +255,8 @@ class MessageFormatterFunction(MessageFormatterBase):
         self._function = function
 
     @defer.inlineCallbacks
-    def format_message_for_build(self, master, build, **kwargs):
-        msgdict = yield self.render_message_dict(master, {'build': build})
+    def format_message_for_build(self, master, build, message=None, **kwargs):
+        msgdict = yield self.render_message_dict(master, {'build': build, 'message': message})
         return msgdict
 
     def render_message_body(self, context):

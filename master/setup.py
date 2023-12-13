@@ -334,6 +334,7 @@ setup_args = {
                 'BuildRequestGenerator'
             ]),
             ('buildbot.reporters.generators.buildset', ['BuildSetStatusGenerator']),
+            ('buildbot.reporters.generators.comment', ['BuildCodeIssueCommentsGenerator']),
             ('buildbot.reporters.generators.worker', ['WorkerMissingGenerator']),
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.pushjet', ['PushjetNotifier']),
@@ -349,7 +350,11 @@ setup_args = {
             ('buildbot.reporters.gerrit_verify_status',
              ['GerritVerifyStatusPush']),
             ('buildbot.reporters.http', ['HttpStatusPush']),
-            ('buildbot.reporters.github', ['GitHubStatusPush', 'GitHubCommentPush']),
+            ('buildbot.reporters.github', [
+                'GitHubStatusPush',
+                'GitHubCommentPush',
+                'GitHubCodeCommentPush',
+            ]),
             ('buildbot.reporters.gitlab', ['GitLabStatusPush']),
             ('buildbot.reporters.bitbucketserver', [
                 'BitbucketServerStatusPush',

@@ -19,6 +19,7 @@ import re
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -285,5 +286,114 @@ class GitHubCommentPush(GitHubStatusPush):
             return None
 
         url = '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments'])
+        ret = yield self._http.post(url, json=payload)
+        return ret
+
+
+class GitHubCodeCommentPush(GitHubStatusPush):
+    name = "GitHubCodeCommentPush"
+
+    def setup_context(self, context):
+        return ''
+
+    def _create_default_generators(self):
+        config.error("{}: generators argument is mandatory".format(self.__class__.__name__))
+
+    @defer.inlineCallbacks
+    def sendMessage(self, reports):
+        for report in reports:
+            if 'type' not in report or report['type'] != 'code_comments':
+                log.msg('{}: report contains unsupported data of type {}, ignoring'.format(
+                    self, report['type'] if 'type' in report else '(None)'))
+                continue
+
+            build = report['builds'][0]
+
+            sourcestamps = build['buildset'].get('sourcestamps')
+            if not sourcestamps:
+                continue
+
+            comments = report['body']
+            comment_codebases = [c['codebase'] for c in comments]
+
+            props = Properties.fromDict(build['properties'])
+            props.master = self.master
+            issue = self._extract_issue(props)
+
+            if issue is None:
+                log.msg('{}: Skipped status update for build {} as issue is not specified'.format(
+                            self, build['id']))
+                return
+
+            github_info_by_codebase = self._get_github_info_by_codebase(sourcestamps,
+                                                                        comment_codebases, issue)
+
+            for comment in comments:
+                codebase = comment['codebase']
+                if codebase not in github_info_by_codebase:
+                    log.err('{}: Comment has unknown codebase {} (known: {})'.format(
+                        self, codebase, list(github_info_by_codebase)))
+                    continue
+
+                _, repo_owner, repo_name, sha = github_info_by_codebase[codebase]
+                path = comment['path']
+                line = comment['line']
+
+                response = None
+                try:
+                    if self.verbose:
+                        log.msg(("{}: Adding comment to github github status: {}/{}/{} at {}:{}"
+                                 ).format(self, repo_owner, repo_name, issue, path, line))
+                    response = yield self._post_comment(repo_owner, repo_name, issue, sha,
+                                                        path, line, comment['body'])
+
+                    if not self.is_status_2xx(response.code):
+                        raise Exception()
+
+                except Exception as e:
+                    if response:
+                        content = yield response.content()
+                        code = response.code
+                    else:
+                        content = code = "n/a"
+                    log.err(e, ('{}: Failed to send comment to {}/{}/{} at {}:{}. HTTP {}, {}'
+                                ).format(self, repo_owner, repo_name, issue, path, line, code,
+                                         content))
+
+    def _get_github_info_by_codebase(self, sourcestamps, valid_codebases, issue):
+        info_by_codebase = {}
+        for sourcestamp in sourcestamps:
+            repo_owner, repo_name = self._extract_github_info(sourcestamp)
+            sha = sourcestamp['revision']
+
+            codebase = sourcestamp['codebase']
+            if codebase not in valid_codebases:
+                continue
+
+            if not repo_owner or not repo_name:
+                log.msg(('{}: Skipped comments because required repo ' +
+                         'information is missing.').format(self))
+                continue
+
+            if not sha:
+                log.msg(('{}: Skipped status update for codebase {}, issue {}.'
+                         ).format(self, codebase, issue))
+                continue
+
+            info_by_codebase[codebase] = (sourcestamp, repo_owner, repo_name, sha)
+        return info_by_codebase
+
+    @defer.inlineCallbacks
+    def _post_comment(self, repo_user, repo_name, issue, sha, path, line, comment):
+
+        payload = {
+            'path': path,
+            'line': line,
+            'side': 'RIGHT',
+            'commit_id': sha,
+            'body': comment
+        }
+
+        url = '/'.join(['/repos', repo_user, repo_name, 'pulls', issue, 'comments'])
         ret = yield self._http.post(url, json=payload)
         return ret
