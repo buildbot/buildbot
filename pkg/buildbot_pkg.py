@@ -227,8 +227,7 @@ class BuildJsCommand(Command):
             ]
 
             for command in commands:
-                self.announce('Running command: {}'.format(str(" ".join(command))),
-                              level=logging.INFO)
+                logging.info('Running command: {}'.format(str(" ".join(command))))
                 subprocess.check_call(command, shell=shell)
 
         self.copy_tree(os.path.join(package, 'static'), os.path.join(
