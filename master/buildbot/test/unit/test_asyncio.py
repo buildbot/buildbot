@@ -40,8 +40,7 @@ class TestAsyncioTestLoop(TestReactorMixin, unittest.TestCase):
         d1.callback(None)
         return defer.Deferred.fromFuture(f)
 
-    @defer.inlineCallbacks
-    def test_asyncio_gather(self):
+    async def test_asyncio_gather(self):
         self.calls = 0
 
         async def coro1():
