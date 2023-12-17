@@ -36,6 +36,7 @@ matrix:
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
     - env: PYTHON=3.9 TWISTED=18.7.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.9 TWISTED=22.4.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.8 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
