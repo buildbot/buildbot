@@ -58,6 +58,7 @@ global_defaults = {
     "properties": properties.Properties(),
     "collapseRequests": None,
     "prioritizeBuilders": None,
+    "select_next_worker": None,
     "protocols": {},
     "multiMaster": False,
     "manhole": None,
@@ -527,6 +528,16 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_prioritizeBuilders_invalid(self):
         with capture_config_errors() as errors:
             self.cfg.load_global(self.filename, {'prioritizeBuilders': 'yes'})
+
+        self.assertConfigError(errors, "must be a callable")
+
+    def test_load_global_select_next_worker_callable(self):
+        callable = lambda: None
+        self.do_test_load_global({"select_next_worker": callable}, select_next_worker=callable)
+
+    def test_load_global_select_next_worker_invalid(self):
+        with capture_config_errors() as errors:
+            self.cfg.load_global(self.filename, {"select_next_worker": "yes"})
 
         self.assertConfigError(errors, "must be a callable")
 

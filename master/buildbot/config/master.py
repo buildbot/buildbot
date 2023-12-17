@@ -144,6 +144,7 @@ class MasterConfig(util.ComparableMixin):
         self.collapseRequests = None
         self.codebaseGenerator = None
         self.prioritizeBuilders = None
+        self.select_next_worker = None
         self.multiMaster = False
         self.manhole = None
         self.protocols = {}
@@ -212,6 +213,7 @@ class MasterConfig(util.ComparableMixin):
         "revlink",
         "schedulers",
         "secretsProviders",
+        "select_next_worker",
         "services",
         "title",
         "titleURL",
@@ -396,6 +398,12 @@ class MasterConfig(util.ComparableMixin):
             error("prioritizeBuilders must be a callable")
         else:
             self.prioritizeBuilders = prioritizeBuilders
+
+        select_next_worker = config_dict.get("select_next_worker")
+        if select_next_worker is not None and not callable(select_next_worker):
+            error("select_next_worker must be a callable")
+        else:
+            self.select_next_worker = select_next_worker
 
         protocols = config_dict.get('protocols', {})
         if isinstance(protocols, dict):

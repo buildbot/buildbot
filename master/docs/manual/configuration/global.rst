@@ -413,6 +413,28 @@ This parameter controls the order that the buildmaster can start builds, and is 
 It does not affect the order in which a builder processes the build requests in its queue.
 For that purpose, see :ref:`Prioritizing-Builds`.
 
+.. bb:cfg:: select_next_worker
+
+Prioritizing Workers
+~~~~~~~~~~~~~~~~~~~~
+
+By default Buildbot will select worker for a build randomly from available workers. This can be
+adjusted by ``select_next_worker`` function in global master configuration and additionally by
+``nextWorker`` per-builder configuration parameter. These two functions work exactly the same:
+
+The function is passed three arguments, the :class:`Builder` object which is assigning a new job,
+a list of :class:`WorkerForBuilder` objects and the :class:`BuildRequest`.
+
+The function should return one of the :class:`WorkerForBuilder` objects, or ``None`` if none of the
+available workers should be used. The function can optionally return a Deferred, which should fire
+with the same results.
+
+.. code-block:: python
+
+   def select_next_worker(builder, workers, buildrequest):
+       ...
+   c["select_next_worker"] = select_next_worker
+
 .. bb:cfg:: protocols
 
 .. _Setting-the-PB-Port-for-Workers:

@@ -159,6 +159,8 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.nextWorker = self.bldr.config.nextWorker
         if not self.nextWorker:
+            self.nextWorker = self.master.config.select_next_worker
+        if not self.nextWorker:
             self.nextWorker = lambda _, workers, __: random.choice(
                 workers) if workers else None
 
