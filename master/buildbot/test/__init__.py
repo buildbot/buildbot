@@ -135,3 +135,7 @@ warnings.filterwarnings('ignore', "SelectableGroups dict interface is deprecated
 # boto3 shows this warning when on old Python
 warnings.filterwarnings('ignore', ".*Boto3 will no longer support Python .*",
                         category=Warning)
+
+# autobahn is not updated for Twisted 22.04 and newer
+warnings.filterwarnings("ignore", "twisted.web.resource.NoResource was deprecated in",
+                        category=DeprecationWarning)
