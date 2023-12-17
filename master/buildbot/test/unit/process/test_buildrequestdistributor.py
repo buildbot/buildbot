@@ -27,10 +27,8 @@ from buildbot.process import factory
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
-from buildbot.warnings import DeprecatedApiWarning
 
 
 def nth_worker(n):
@@ -740,19 +738,13 @@ class TestMaybeStartBuilds(TestBRDBase):
     # nextWorker
     @defer.inlineCallbacks
     def do_test_nextWorker(self, nextWorker, exp_choice=None, exp_warning=False):
-
-        def makeBuilderConfig():
-            return config.BuilderConfig(name='bldrconf',
-                                        workernames=['wk1', 'wk2'],
-                                        builddir='bdir',
-                                        factory=factory.BuildFactory(),
-                                        nextWorker=nextWorker)
-        if exp_warning:
-            with assertProducesWarning(DeprecatedApiWarning,
-                                       message_pattern=r"nextWorker now takes a 3rd argument"):
-                builder_config = makeBuilderConfig()
-        else:
-            builder_config = makeBuilderConfig()
+        builder_config = config.BuilderConfig(
+            name='bldrconf',
+            workernames=['wk1', 'wk2'],
+            builddir='bdir',
+            factory=factory.BuildFactory(),
+            nextWorker=nextWorker
+        )
 
         self.bldr = yield self.createBuilder('B', builderid=78,
                                              builder_config=builder_config)
