@@ -19,7 +19,9 @@ import os
 from binascii import hexlify
 
 import jwt
+from packaging.version import parse as parse_version
 
+import twisted
 from twisted.application import strports
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
@@ -275,7 +277,13 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def configPlugins(self, root, new_config):
         plugin_root = root
         if self.base_plugin_name == 'base_react':
-            plugin_root = resource.NoResource()
+            current_version = parse_version(twisted.__version__)
+            if current_version < parse_version("22.10.0"):
+                from twisted.web.resource import NoResource
+                plugin_root = NoResource()
+            else:
+                from twisted.web.pages import notFound
+                plugin_root = notFound()
             root.putChild(b"plugins", plugin_root)
 
         known_plugins = set(new_config.www.get('plugins', {})) | set([self.base_plugin_name])
