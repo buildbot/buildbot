@@ -1,1 +1,1 @@
-Implement support for customizing `affinity` field in Kubernetes pod spec for Kubernetes worker.
+Implement support for customizing `affinity` and `nodeSelector` fields in Kubernetes pod spec for Kubernetes worker.
