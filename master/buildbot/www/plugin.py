@@ -15,6 +15,10 @@
 
 import sys
 
+from twisted.web import static
+
+from buildbot.util import bytes2unicode
+
 if sys.version_info[:2] >= (3, 9):
     # We need importlib.resources.files, which is added in Python 3.9
     # https://docs.python.org/3/library/importlib.resources.html
@@ -22,9 +26,7 @@ if sys.version_info[:2] >= (3, 9):
 else:
     import importlib_resources
 
-from twisted.web import static
 
-from buildbot.util import bytes2unicode
 
 
 class Application:
