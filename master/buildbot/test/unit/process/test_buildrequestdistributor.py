@@ -16,6 +16,8 @@
 import random
 from unittest import mock
 
+from parameterized import parameterized
+
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.trial import unittest
@@ -27,10 +29,8 @@ from buildbot.process import factory
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
-from buildbot.warnings import DeprecatedApiWarning
 
 
 def nth_worker(n):
@@ -739,20 +739,23 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     # nextWorker
     @defer.inlineCallbacks
-    def do_test_nextWorker(self, nextWorker, exp_choice=None, exp_warning=False):
-
-        def makeBuilderConfig():
-            return config.BuilderConfig(name='bldrconf',
-                                        workernames=['wk1', 'wk2'],
-                                        builddir='bdir',
-                                        factory=factory.BuildFactory(),
-                                        nextWorker=nextWorker)
-        if exp_warning:
-            with assertProducesWarning(DeprecatedApiWarning,
-                                       message_pattern=r"nextWorker now takes a 3rd argument"):
-                builder_config = makeBuilderConfig()
+    def do_test_nextWorker(self, nextWorker, global_select_next_worker, exp_choice=None):
+        if global_select_next_worker:
+            self.master.config.select_next_worker = nextWorker
+            builder_config = config.BuilderConfig(
+                name='bldrconf',
+                workernames=['wk1', 'wk2'],
+                builddir='bdir',
+                factory=factory.BuildFactory()
+            )
         else:
-            builder_config = makeBuilderConfig()
+            builder_config = config.BuilderConfig(
+                name='bldrconf',
+                workernames=['wk1', 'wk2'],
+                builddir='bdir',
+                factory=factory.BuildFactory(),
+                nextWorker=nextWorker
+            )
 
         self.bldr = yield self.createBuilder('B', builderid=78,
                                              builder_config=builder_config)
@@ -777,39 +780,66 @@ class TestMaybeStartBuilds(TestBRDBase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=exp_claims, exp_builds=exp_builds)
 
-    def test_nextWorker_gets_buildrequest(self):
+    @parameterized.expand([True, False])
+    def test_nextWorker_gets_buildrequest(self, global_select_next_worker):
         def nextWorker(bldr, lst, br=None):
             self.assertNotEqual(br, None)
-        return self.do_test_nextWorker(nextWorker)
+        return self.do_test_nextWorker(
+            nextWorker,
+            global_select_next_worker=global_select_next_worker
+        )
 
-    def test_nextWorker_default(self):
+    @parameterized.expand([True, False])
+    def test_nextWorker_default(self, global_select_next_worker):
         self.patch(random, 'choice', nth_worker(2))
-        return self.do_test_nextWorker(None, exp_choice=2)
+        return self.do_test_nextWorker(
+            None,
+            exp_choice=2,
+            global_select_next_worker=global_select_next_worker
+        )
 
-    def test_nextWorker_simple(self):
+    @parameterized.expand([True, False])
+    def test_nextWorker_simple(self, global_select_next_worker):
         def nextWorker(bldr, lst, br=None):
             self.assertIdentical(bldr, self.bldr)
             return lst[1]
-        return self.do_test_nextWorker(nextWorker, exp_choice=1)
+        return self.do_test_nextWorker(
+            nextWorker,
+            global_select_next_worker=global_select_next_worker,
+            exp_choice=1
+        )
 
-    def test_nextWorker_deferred(self):
+    @parameterized.expand([True, False])
+    def test_nextWorker_deferred(self, global_select_next_worker):
         def nextWorker(bldr, lst, br=None):
             self.assertIdentical(bldr, self.bldr)
             return defer.succeed(lst[1])
-        return self.do_test_nextWorker(nextWorker, exp_choice=1)
+        return self.do_test_nextWorker(
+            nextWorker,
+            global_select_next_worker=global_select_next_worker,
+            exp_choice=1
+        )
 
+    @parameterized.expand([True, False])
     @defer.inlineCallbacks
-    def test_nextWorker_exception(self):
+    def test_nextWorker_exception(self, global_select_next_worker):
         def nextWorker(bldr, lst, br=None):
             raise RuntimeError("")
-        yield self.do_test_nextWorker(nextWorker)
+        yield self.do_test_nextWorker(
+            nextWorker,
+            global_select_next_worker=global_select_next_worker
+        )
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
+    @parameterized.expand([True, False])
     @defer.inlineCallbacks
-    def test_nextWorker_failure(self):
+    def test_nextWorker_failure(self, global_select_next_worker):
         def nextWorker(bldr, lst, br=None):
             return defer.fail(failure.Failure(RuntimeError()))
-        yield self.do_test_nextWorker(nextWorker)
+        yield self.do_test_nextWorker(
+            nextWorker,
+            global_select_next_worker=global_select_next_worker
+        )
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     # _nextBuild

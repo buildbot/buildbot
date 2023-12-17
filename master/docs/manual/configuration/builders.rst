@@ -79,6 +79,8 @@ Other optional keys may be set on each ``BuilderConfig``:
      As an example, for each ``worker`` in the list, ``worker.worker`` will be a :class:`Worker` object, and ``worker.worker.workername`` is the worker's name.
      The function can optionally return a Deferred, which should fire with the same results.
 
+    To control worker selection globally for all builders, use :bb:cfg:`select_next_worker`.
+
 ``nextBuild``
     (function, optional).
 
