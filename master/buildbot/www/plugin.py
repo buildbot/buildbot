@@ -27,8 +27,6 @@ else:
     import importlib_resources
 
 
-
-
 class Application:
 
     def __init__(self, modulename, description, ui=True):
