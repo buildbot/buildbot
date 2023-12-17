@@ -467,7 +467,7 @@ py_38 = sys.version_info[0] > 3 or (
 if not py_38:
     raise RuntimeError("Buildbot master requires at least Python-3.8")
 
-twisted_ver = ">= 18.7.0, <=22.10.0"
+twisted_ver = ">= 18.7.0, <=23.10.0"
 
 bundle_version = version.split("-")[0]
 
