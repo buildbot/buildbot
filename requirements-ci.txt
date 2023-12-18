@@ -49,7 +49,7 @@ extras==1.0.0
 fixtures==4.1.0
 funcsigs==1.0.2
 graphql-core==3.2.3
-greenlet==3.0.1
+greenlet==3.0.2
 hvac==1.2.1
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
