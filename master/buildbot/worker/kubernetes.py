@@ -28,6 +28,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
                        DockerBaseWorker):
 
     instance = None
+    _kube = None
 
     @defer.inlineCallbacks
     def getPodSpec(self, build):
@@ -84,8 +85,8 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
                     **kwargs):
 
         super().checkConfig(name, None, **kwargs)
-        kubeclientservice.KubeClientService.checkAvailable(
-            self.__class__.__name__)
+        # Check if KubeClientService supports the given configuration
+        kubeclientservice.KubeClientService(kube_config=kube_config)
 
     @defer.inlineCallbacks
     def reconfigService(self,
@@ -104,16 +105,20 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
             masterFQDN = self.get_ip
         if callable(masterFQDN):
             masterFQDN = masterFQDN()
+        if self._kube is not None:
+            yield self._kube.disownServiceParent()
         yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
-        self._kube = yield kubeclientservice.KubeClientService.getService(
-            self.master, kube_config=kube_config)
+        self._kube = kubeclientservice.KubeClientService(kube_config=kube_config)
+        yield self._kube.setServiceParent(self.master)
+        yield self._kube.reconfigService(kube_config=kube_config)
+
         self.namespace = namespace or self._kube.namespace
 
     @defer.inlineCallbacks
     def start_instance(self, build):
-        yield self.stop_instance(reportFailure=False)
-        pod_spec = yield self.renderWorkerPropsOnStart(build)
         try:
+            yield self.stop_instance(reportFailure=False)
+            pod_spec = yield self.renderWorkerPropsOnStart(build)
             yield self._kube.createPod(self.namespace, pod_spec)
         except kubeclientservice.KubeError as e:
             raise LatentWorkerFailedToSubstantiate(str(e)) from e
@@ -125,7 +130,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
         self.resetWorkerPropsOnStop()
         try:
             yield self._kube.deletePod(self.namespace, self.getContainerName())
-        except kubeclientservice.KubeError as e:
+        except kubeclientservice.KubeJsonError as e:
             if reportFailure and e.reason != 'NotFound':
                 raise
         if fast:

@@ -17,7 +17,7 @@ import copy
 import time
 
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
-from buildbot.util.kubeclientservice import KubeError
+from buildbot.util.kubeclientservice import KubeJsonError
 
 
 class KubeClientService(fakehttpclientservice.HTTPClientService):
@@ -31,7 +31,7 @@ class KubeClientService(fakehttpclientservice.HTTPClientService):
 
     def createPod(self, namespace, spec):
         if 'metadata' not in spec:
-            raise KubeError({
+            raise KubeJsonError(400, {
                 'message':
                     'Pod "" is invalid: metadata.name: '
                     'Required value: name or generateName is required'
@@ -47,9 +47,7 @@ class KubeClientService(fakehttpclientservice.HTTPClientService):
 
     def deletePod(self, namespace, name, graceperiod=0):
         if namespace + '/' + name not in self.pods:
-            raise KubeError({
-                'message': 'Pod not found',
-                'reason': 'NotFound'})
+            raise KubeJsonError(400, {"message": "Pod not found", "reason": "NotFound"})
 
         spec = self.pods[namespace + '/' + name]
 

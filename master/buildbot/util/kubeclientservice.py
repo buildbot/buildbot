@@ -26,6 +26,7 @@ from twisted.python.failure import Failure
 
 from buildbot import config
 from buildbot.util import asyncSleep
+from buildbot.util import httpclientservice
 from buildbot.util.httpclientservice import HTTPClientService
 from buildbot.util.protocol import LineProcessProtocol
 from buildbot.util.service import BuildbotService
@@ -197,57 +198,100 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
 
 class KubeError(RuntimeError):
-    def __init__(self, response_json):
+    pass
+
+
+class KubeJsonError(KubeError):
+    def __init__(self, code, response_json):
         super().__init__(response_json['message'])
+        self.code = code
         self.json = response_json
         self.reason = response_json.get('reason')
 
 
-class KubeClientService(HTTPClientService):
-    def __init__(self, kube_config=None):
-        self.config = kube_config
-        super().__init__('')
-        self._namespace = None
-        kube_config.setServiceParent(self)
+class KubeTextError(KubeError):
+    def __init__(self, code, response):
+        super().__init__(response)
+        self.code = code
+
+
+class KubeClientService(BuildbotService):
+
+    name = "KubeClientService"
 
     @defer.inlineCallbacks
-    def _prepareRequest(self, ep, kwargs):
-        config = self.config.getConfig()
-        self._base_url = config['master_url']
-        url, req_kwargs = super()._prepareRequest(ep, kwargs)
+    def checkConfig(self, kube_config=None, **kwargs):
+        yield super().checkConfig(**kwargs)
+        HTTPClientService.checkAvailable(self.__class__.__name__)
 
-        if 'headers' not in req_kwargs:
-            req_kwargs['headers'] = {}
-        if 'headers' in config:
-            req_kwargs['headers'].update(config['headers'])
+    @defer.inlineCallbacks
+    def reconfigService(self, kube_config=None, **kwargs):
+        yield super().reconfigService(**kwargs)
+        yield kube_config.setServiceParent(self)
+
+        self.config = kube_config
+        self._namespace = None
+
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, self.config.getConfig()["master_url"]
+        )
+
+    @defer.inlineCallbacks
+    def _get_request_kwargs(self):
+        config = self.config.getConfig()
+
+        kwargs = {}
+
+        if "headers" in config and config["headers"]:
+            kwargs.setdefault("headers", {}).update(config["headers"])
 
         auth = yield self.config.getAuthorization()
         if auth is not None:
-            req_kwargs['headers']['Authorization'] = auth
+            kwargs.setdefault("headers", {})['Authorization'] = auth
 
         # warning: this only works with txrequests! not treq
         for arg in ['cert', 'verify']:
             if arg in config:
-                req_kwargs[arg] = config[arg]
+                kwargs[arg] = config[arg]
 
-        return (url, req_kwargs)
+        return kwargs
+
+    @defer.inlineCallbacks
+    def _raise_decode_failure_error(self, res):
+        content = yield res.content()
+        msg = "Failed to decode: " + content.decode("utf-8", errors="ignore")[0:200]
+        raise KubeTextError(res.code, msg)
 
     @defer.inlineCallbacks
     def createPod(self, namespace, spec):
         url = f'/api/v1/namespaces/{namespace}/pods'
-        res = yield self.post(url, json=spec)
-        res_json = yield res.json()
+        res = yield self._http.post(url, json=spec, **(yield self._get_request_kwargs()))
+
+        try:
+            res_json = yield res.json()
+        except Exception:
+            yield self._raise_decode_failure_error(res)
+
         if res.code not in (200, 201, 202):
-            raise KubeError(res_json)
+            raise KubeJsonError(res.code, res_json)
         return res_json
 
     @defer.inlineCallbacks
     def deletePod(self, namespace, name, graceperiod=0):
         url = f'/api/v1/namespaces/{namespace}/pods/{name}'
-        res = yield self.delete(url, params={'graceperiod': graceperiod})
-        res_json = yield res.json()
+        res = yield self._http.delete(
+            url,
+            params={'graceperiod': graceperiod},
+            **(yield self._get_request_kwargs())
+        )
+
+        try:
+            res_json = yield res.json()
+        except Exception:
+            yield self._raise_decode_failure_error(res)
+
         if res.code != 200:
-            raise KubeError(res_json)
+            raise KubeJsonError(res.code, res_json)
         return res_json
 
     @defer.inlineCallbacks
@@ -257,12 +301,17 @@ class KubeClientService(HTTPClientService):
         while True:
             if time.time() - t1 > timeout:
                 raise TimeoutError(f"Did not see pod {name} terminate after {timeout}s")
-            res = yield self.get(url)
-            res_json = yield res.json()
+            res = yield self._http.get(url, **(yield self._get_request_kwargs()))
+
+            try:
+                res_json = yield res.json()
+            except Exception:
+                yield self._raise_decode_failure_error(res)
+
             if res.code == 404:
                 break  # 404 means the pod has terminated
             if res.code != 200:
-                raise KubeError(res_json)
+                raise KubeJsonError(res.code, res_json)
             yield asyncSleep(1)
         return res_json
 

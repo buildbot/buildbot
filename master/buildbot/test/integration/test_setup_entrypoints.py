@@ -122,6 +122,8 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.kubeclientservice.KubeClientService',
             'buildbot.util.kubeclientservice.KubeConfigLoaderBase',
             'buildbot.util.kubeclientservice.KubeError',
+            'buildbot.util.kubeclientservice.KubeJsonError',
+            'buildbot.util.kubeclientservice.KubeTextError',
             'buildbot.util.latent.CompatibleLatentWorkerMixin',
             'buildbot.util.lineboundaries.LineBoundaryFinder',
             'buildbot.util.lru.AsyncLRUCache',
