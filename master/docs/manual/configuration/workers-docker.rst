@@ -426,6 +426,19 @@ All those methods take props object which is a L{IProperties} allowing to get so
                     }
                 ]
 
+    .. py:method:: get_node_selector(self, props)
+
+        This method computes the `nodeSelector <https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#scheduling>`_ part of the pod spec.
+
+        Example:
+
+        .. code-block:: python
+
+            def get_node_selector(self, props):
+                return {
+                    "my-label": "my-label-value"
+                }
+
     .. py:method:: get_affinity(self, props)
 
         This method computes the `affinity <https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#scheduling>`_ part of the pod spec.

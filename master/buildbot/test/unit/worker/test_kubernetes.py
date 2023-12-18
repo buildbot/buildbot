@@ -137,6 +137,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                     "volumeMounts": []
                 }
             ],
+            "nodeSelector": {},
             "restartPolicy": "Never",
             "volumes": []
         }
@@ -265,6 +266,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                     "volumeMounts": []
                 }
             ],
+            "nodeSelector": {},
             "restartPolicy": "Never",
             "volumes": []
         }
