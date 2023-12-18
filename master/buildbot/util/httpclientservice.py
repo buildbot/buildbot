@@ -216,8 +216,8 @@ class HTTPClientService(service.SharedService):
     def _doTReq(self, method, ep, **kwargs):
         url, kwargs = yield self._prepareRequest(ep, kwargs)
         # treq requires header values to be an array
-        kwargs['headers'] = {k: [v]
-                             for k, v in kwargs['headers'].items()}
+        if "headers" in kwargs:
+            kwargs['headers'] = {k: [v] for k, v in kwargs["headers"].items()}
         kwargs['agent'] = self._agent
 
         res = yield getattr(treq, method)(url, **kwargs)
