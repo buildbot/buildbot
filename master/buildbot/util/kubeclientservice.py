@@ -55,6 +55,11 @@ class KubeConfigLoaderBase(BuildbotService):
         }
         """
 
+    def get_master_url(self):
+        # This function may be called before reconfigService() is called.
+        # The function must be overridden in case getConfig() is not fully setup in such situation.
+        return self.getConfig()["master_url"]
+
     def getAuthorization(self):
         return None
 
@@ -136,6 +141,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
     def checkConfig(self, proxy_port=8001, namespace="default"):
         self.pp = None
         self.process = None
+        self.proxy_port = proxy_port
 
     @defer.inlineCallbacks
     def ensureSubprocessKilled(self):
@@ -182,8 +188,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
     def reconfigService(self):
         self.config = {}
-        self.config['master_url'] = os.environ['KUBERNETES_PORT'].replace(
-            'tcp', 'https')
+        self.config['master_url'] = self.get_master_url()
         self.config['verify'] = self.kube_cert_file
         with open(self.kube_token_file, encoding="utf-8") as token_content:
             token = token_content.read().strip()
@@ -195,6 +200,9 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
     def getConfig(self):
         return self.config
+
+    def get_master_url(self):
+        return os.environ["KUBERNETES_PORT"].replace("tcp", "https")
 
 
 class KubeError(RuntimeError):
@@ -233,7 +241,8 @@ class KubeClientService(BuildbotService):
         self._namespace = None
 
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, self.config.getConfig()["master_url"]
+            self.master,
+            self.config.get_master_url()
         )
 
     @defer.inlineCallbacks
