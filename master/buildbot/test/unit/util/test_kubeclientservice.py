@@ -434,7 +434,7 @@ class RealKubeClientServiceTest(TestReactorMixin, unittest.TestCase):
             },
             code=400,
             content_json=content)
-        with self.assertRaises(kubeclientservice.KubeError):
+        with self.assertRaises(kubeclientservice.KubeJsonError):
             yield self.kube.createPod(self.kube.namespace, spec)
 
     @defer.inlineCallbacks
@@ -452,7 +452,7 @@ class RealKubeClientServiceTest(TestReactorMixin, unittest.TestCase):
             json=None,
             code=404,
             content_json=content)
-        with self.assertRaises(kubeclientservice.KubeError):
+        with self.assertRaises(kubeclientservice.KubeJsonError):
             yield self.kube.deletePod(self.kube.namespace, 'pod-example')
 
     @defer.inlineCallbacks

@@ -116,9 +116,9 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
 
     @defer.inlineCallbacks
     def start_instance(self, build):
-        yield self.stop_instance(reportFailure=False)
-        pod_spec = yield self.renderWorkerPropsOnStart(build)
         try:
+            yield self.stop_instance(reportFailure=False)
+            pod_spec = yield self.renderWorkerPropsOnStart(build)
             yield self._kube.createPod(self.namespace, pod_spec)
         except kubeclientservice.KubeError as e:
             raise LatentWorkerFailedToSubstantiate(str(e)) from e
@@ -130,7 +130,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
         self.resetWorkerPropsOnStop()
         try:
             yield self._kube.deletePod(self.namespace, self.getContainerName())
-        except kubeclientservice.KubeError as e:
+        except kubeclientservice.KubeJsonError as e:
             if reportFailure and e.reason != 'NotFound':
                 raise
         if fast:

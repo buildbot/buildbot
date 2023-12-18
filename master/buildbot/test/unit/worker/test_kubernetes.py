@@ -26,8 +26,8 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
 from buildbot.test.fake.fakeprotocol import FakeTrivialConnection as FakeBot
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.util.kubeclientservice import KubeError
 from buildbot.util.kubeclientservice import KubeHardcodedConfig
+from buildbot.util.kubeclientservice import KubeJsonError
 from buildbot.worker import kubernetes
 
 
@@ -66,12 +66,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         yield worker.setServiceParent(self.master)
         yield self.master.startService()
         self.assertTrue(config.running)
-
-        def cleanup():
-            worker._kube.delete = mock_delete
-
         self.addCleanup(self.master.stopService)
-        self.addCleanup(cleanup)
         return worker
 
     def test_instantiate(self):
@@ -189,7 +184,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.expect_pod_delete_nonexisting()
 
         def createPod(namespace, spec):
-            raise KubeError({'message': "yeah, but no"})
+            raise KubeJsonError(400, {'message': "yeah, but no"})
 
         with mock.patch.object(worker._kube, 'createPod', createPod):
             with self.assertRaises(LatentWorkerFailedToSubstantiate):
@@ -221,3 +216,71 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         yield worker.start_instance(build1)
         self.assertFalse((yield worker.isCompatibleWithBuild(build2)))
         yield worker.stop_instance()
+
+    @defer.inlineCallbacks
+    def test_start_worker_delete_non_json_response(self):
+        worker = yield self.setupWorker('worker')
+        self._http.expect(
+            "delete",
+            "/api/v1/namespaces/default/pods/buildbot-worker-87de7e",
+            params={"graceperiod": 0},
+            code=404,
+            content="not json"
+        )
+        self.expect_pod_delete_nonexisting()
+
+        with self.assertRaises(LatentWorkerFailedToSubstantiate) as e:
+            yield worker.substantiate(None, FakeBuild())
+        self.assertIn("Failed to decode: not json", e.exception.args[0])
+
+    @defer.inlineCallbacks
+    def test_start_worker_create_non_json_response(self):
+        worker = yield self.setupWorker('worker')
+        self.expect_pod_delete_nonexisting()
+        expected_metadata = {
+            "name": "buildbot-worker-87de7e"
+        }
+        expected_spec = {
+            "containers": [
+                {
+                    "name": "buildbot-worker-87de7e",
+                    "image": "rendered:buildbot/buildbot-worker",
+                    "env": [
+                        {
+                            "name": "BUILDMASTER", "value": "buildbot-master"
+                        },
+                        {
+                            "name": "WORKERNAME", "value": "worker"
+                        },
+                        {
+                            "name": "WORKERPASS", "value": "random_pw"
+                        },
+                        {
+                            "name": "BUILDMASTER_PORT", "value": "1234"
+                        }
+                    ],
+                    "resources": {},
+                    "volumeMounts": []
+                }
+            ],
+            "restartPolicy": "Never",
+            "volumes": []
+        }
+
+        self._http.expect(
+            "post",
+            "/api/v1/namespaces/default/pods",
+            json={
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "metadata": expected_metadata,
+                "spec": expected_spec
+            },
+            code=200,
+            content="not json"
+        )
+        self.expect_pod_delete_nonexisting()
+
+        with self.assertRaises(LatentWorkerFailedToSubstantiate) as e:
+            yield worker.substantiate(None, FakeBuild())
+        self.assertIn("Failed to decode: not json", e.exception.args[0])

@@ -198,10 +198,21 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
 
 class KubeError(RuntimeError):
-    def __init__(self, response_json):
+    pass
+
+
+class KubeJsonError(KubeError):
+    def __init__(self, code, response_json):
         super().__init__(response_json['message'])
+        self.code = code
         self.json = response_json
         self.reason = response_json.get('reason')
+
+
+class KubeTextError(KubeError):
+    def __init__(self, code, response):
+        super().__init__(response)
+        self.code = code
 
 
 class KubeClientService(BuildbotService):
@@ -246,12 +257,23 @@ class KubeClientService(BuildbotService):
         return kwargs
 
     @defer.inlineCallbacks
+    def _raise_decode_failure_error(self, res):
+        content = yield res.content()
+        msg = "Failed to decode: " + content.decode("utf-8", errors="ignore")[0:200]
+        raise KubeTextError(res.code, msg)
+
+    @defer.inlineCallbacks
     def createPod(self, namespace, spec):
         url = f'/api/v1/namespaces/{namespace}/pods'
         res = yield self._http.post(url, json=spec, **(yield self._get_request_kwargs()))
-        res_json = yield res.json()
+
+        try:
+            res_json = yield res.json()
+        except Exception:
+            yield self._raise_decode_failure_error(res)
+
         if res.code not in (200, 201, 202):
-            raise KubeError(res_json)
+            raise KubeJsonError(res.code, res_json)
         return res_json
 
     @defer.inlineCallbacks
@@ -262,9 +284,14 @@ class KubeClientService(BuildbotService):
             params={'graceperiod': graceperiod},
             **(yield self._get_request_kwargs())
         )
-        res_json = yield res.json()
+
+        try:
+            res_json = yield res.json()
+        except Exception:
+            yield self._raise_decode_failure_error(res)
+
         if res.code != 200:
-            raise KubeError(res_json)
+            raise KubeJsonError(res.code, res_json)
         return res_json
 
     @defer.inlineCallbacks
@@ -275,11 +302,16 @@ class KubeClientService(BuildbotService):
             if time.time() - t1 > timeout:
                 raise TimeoutError(f"Did not see pod {name} terminate after {timeout}s")
             res = yield self._http.get(url, **(yield self._get_request_kwargs()))
-            res_json = yield res.json()
+
+            try:
+                res_json = yield res.json()
+            except Exception:
+                yield self._raise_decode_failure_error(res)
+
             if res.code == 404:
                 break  # 404 means the pod has terminated
             if res.code != 200:
-                raise KubeError(res_json)
+                raise KubeJsonError(res.code, res_json)
             yield asyncSleep(1)
         return res_json
 
