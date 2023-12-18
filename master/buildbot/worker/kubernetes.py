@@ -42,6 +42,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
                 "name": self.getContainerName()
             },
             "spec": {
+                "affinity": (yield self.get_affinity(build)),
                 "containers": [{
                     "name": self.getContainerName(),
                     "image": image,
@@ -63,6 +64,9 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
 
     def get_build_container_volume_mounts(self, build):
         return []
+
+    def get_affinity(self, build):
+        return {}
 
     def get_volumes(self, build):
         return []

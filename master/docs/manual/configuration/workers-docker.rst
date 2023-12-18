@@ -426,6 +426,33 @@ All those methods take props object which is a L{IProperties} allowing to get so
                     }
                 ]
 
+    .. py:method:: get_affinity(self, props)
+
+        This method computes the `affinity <https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#scheduling>`_ part of the pod spec.
+
+        Example:
+
+        .. code-block:: python
+
+            def get_affinity(self, props):
+                return {
+                    "nodeAffinity": {
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                "matchExpressions": [
+                                    {
+                                        "key": "topology.kubernetes.io/zone",
+                                        "operator": "In",
+                                        "values": [
+                                            "antarctica-east1"
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                }
+
     .. py:method:: getServicesContainers(self, props)
 
         This method compute a list of containers spec to put alongside the worker container.
