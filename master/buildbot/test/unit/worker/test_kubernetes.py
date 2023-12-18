@@ -114,6 +114,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             "name": "buildbot-worker-87de7e"
         }
         expected_spec = {
+            "affinity": {},
             "containers": [
                 {
                     "name": "buildbot-worker-87de7e",
@@ -136,6 +137,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                     "volumeMounts": []
                 }
             ],
+            "nodeSelector": {},
             "restartPolicy": "Never",
             "volumes": []
         }
@@ -241,6 +243,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             "name": "buildbot-worker-87de7e"
         }
         expected_spec = {
+            "affinity": {},
             "containers": [
                 {
                     "name": "buildbot-worker-87de7e",
@@ -263,6 +266,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                     "volumeMounts": []
                 }
             ],
+            "nodeSelector": {},
             "restartPolicy": "Never",
             "volumes": []
         }

@@ -42,6 +42,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
                 "name": self.getContainerName()
             },
             "spec": {
+                "affinity": (yield self.get_affinity(build)),
                 "containers": [{
                     "name": self.getContainerName(),
                     "image": image,
@@ -52,6 +53,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
                     "resources": (yield self.getBuildContainerResources(build)),
                     "volumeMounts": (yield self.get_build_container_volume_mounts(build)),
                 }] + (yield self.getServicesContainers(build)),
+                "nodeSelector": (yield self.get_node_selector(build)),
                 "restartPolicy": "Never",
                 "volumes": (yield self.get_volumes(build)),
             }
@@ -63,6 +65,12 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
 
     def get_build_container_volume_mounts(self, build):
         return []
+
+    def get_affinity(self, build):
+        return {}
+
+    def get_node_selector(self, build):
+        return {}
 
     def get_volumes(self, build):
         return []
