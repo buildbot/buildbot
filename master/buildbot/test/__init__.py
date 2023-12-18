@@ -167,3 +167,11 @@ warnings.filterwarnings('ignore', r"datetime.datetime.utcnow\(\) is deprecated a
                         r"removal in a future version. Use timezone-aware objects to represent "
                         r"datetimes in UTC: datetime.datetime.now\(datetime.UTC\).",
                         category=DeprecationWarning)
+
+# Python3.12 generates deprecation warnings like:
+# "This process (pid=6558) is multi-threaded, use of fork() may lead to deadlocks in the child."
+# Tracked in https://github.com/buildbot/buildbot/issues/7276
+warnings.filterwarnings("ignore",
+                        r"This process \(pid=\d+\) is multi-threaded, use of fork\(\) may lead "
+                        r"to deadlocks in the child\.",
+                        category=DeprecationWarning)
