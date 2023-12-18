@@ -139,9 +139,10 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
             self.terminated_deferred.callback(None)
 
     def checkConfig(self, proxy_port=8001, namespace="default"):
+        self.proxy_port = proxy_port
+        self.namespace = namespace
         self.pp = None
         self.process = None
-        self.proxy_port = proxy_port
 
     @defer.inlineCallbacks
     def ensureSubprocessKilled(self):
