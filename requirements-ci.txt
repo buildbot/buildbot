@@ -80,7 +80,7 @@ pbr==6.0.0
 pep8==1.7.1
 Pillow==10.1.0
 platformdirs==4.1.0
-psutil==5.9.6
+psutil==5.9.7
 pyaml==23.9.7
 pyasn1-modules==0.3.0
 pyasn1==0.5.1
