@@ -98,8 +98,21 @@ class HTTPClientService(service.SharedService):
     # tests should ensure this has been called
     checkAvailable = mock.Mock()
 
-    def expect(self, method, ep, params=None, headers=None, data=None, json=None, code=200,
-               content=None, content_json=None, files=None):
+    def expect(
+        self,
+        method,
+        ep,
+        params=None,
+        headers=None,
+        data=None,
+        json=None,
+        code=200,
+        content=None,
+        content_json=None,
+        files=None,
+        verify=None,
+        cert=None
+    ):
         if content is not None and content_json is not None:
             return ValueError("content and content_json cannot be both specified")
 
@@ -107,18 +120,37 @@ class HTTPClientService(service.SharedService):
             content = jsonmodule.dumps(content_json, default=toJson)
 
         self._expected.append({
-            "method": method, "ep": ep,
-            "params": params, "headers": headers,
-            "data": data, "json": json,
-            "code": code, "content": content, "files": files})
+            "method": method,
+            "ep": ep,
+            "params": params,
+            "headers": headers,
+            "data": data,
+            "json": json,
+            "code": code,
+            "content": content,
+            "files": files,
+            "verify": verify,
+            "cert": cert
+        })
         return None
 
     def assertNoOutstanding(self):
         self.case.assertEqual(0, len(self._expected),
                               f"expected more http requests:\n {self._expected!r}")
 
-    def _doRequest(self, method, ep, params=None, headers=None, data=None, json=None, files=None,
-            timeout=None):
+    def _doRequest(
+        self,
+        method,
+        ep,
+        params=None,
+        headers=None,
+        data=None,
+        json=None,
+        files=None,
+        timeout=None,
+        verify=None,
+        cert=None
+    ):
         if ep.startswith('http://') or ep.startswith('https://'):
             pass
         else:
@@ -139,17 +171,39 @@ class HTTPClientService(service.SharedService):
                 f"files={files!r}")
         expect = self._expected.pop(0)
         # pylint: disable=too-many-boolean-expressions
-        if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
-                expect['headers'] != headers or expect['data'] != data or
-                expect['json'] != json or expect['files'] != files):
+        if (
+            expect["method"] != method
+            or expect["ep"] != ep
+            or expect["params"] != params
+            or expect["headers"] != headers
+            or expect["data"] != data
+            or expect["json"] != json
+            or expect["files"] != files
+            or expect["verify"] != verify
+            or expect["cert"] != cert
+        ):
             raise AssertionError(
                 "expecting:\n"
-                f"method={expect['method']!r}, ep={expect['ep']!r}, params={expect['params']!r}, "
-                f"headers={expect['headers']!r}, data={expect['data']!r}, json={expect['json']!r}, "
-                f"files={expect['files']!r}\n"
-                "got      :\n"
-                f"method={method!r}, ep={ep!r}, params={params!r}, headers={headers!r}, "
-                f"data={data!r}, json={json!r}, files={files!r}")
+                f"method={expect['method']!r}, "
+                f"ep={expect['ep']!r}, "
+                f"params={expect['params']!r}, "
+                f"headers={expect['headers']!r}, "
+                f"data={expect['data']!r}, "
+                f"json={expect['json']!r}, "
+                f"files={expect['files']!r}, "
+                f"verify={expect['verify']!r}, "
+                f"cert={expect['cert']!r}"
+                "\ngot      :\n"
+                f"method={method!r}, "
+                f"ep={ep!r}, "
+                f"params={params!r}, "
+                f"headers={headers!r}, "
+                f"data={data!r}, "
+                f"json={json!r}, "
+                f"files={files!r}, "
+                f"verify={verify!r}, "
+                f"cert={cert!r}"
+            )
         if not self.quiet:
             log.debug("{method} {ep} -> {code} {content!r}",
                       method=method, ep=ep, code=expect['code'], content=expect['content'])
