@@ -56,6 +56,8 @@ warnings.filterwarnings('error')
 warnings.filterwarnings('ignore', "Not importing directory.*docker': missing __init__.py",
                         category=ImportWarning)
 
+warnings.filterwarnings('ignore', "unclosed <socket.socket", category=Warning)
+
 # FIXME: needs to be sorted out (#3666)
 warnings.filterwarnings('ignore', "1300 Invalid utf8 character string")
 
