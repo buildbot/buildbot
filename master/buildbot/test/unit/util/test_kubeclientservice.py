@@ -13,28 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
-import base64
-import copy
 import os
 import sys
-import textwrap
 from io import StringIO
 from unittest import mock
 from unittest.case import SkipTest
-
-import yaml
 
 from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
-from buildbot.process.properties import Interpolate
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
-from buildbot.test.fake import kube as fakekube
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import config
 from buildbot.util import kubeclientservice
+from buildbot.util import service
 
 
 class MockFileBase:
@@ -141,60 +135,6 @@ class KubeClientServiceTestKubeHardcodedConfig(
             'headers': {}
         })
 
-    @defer.inlineCallbacks
-    def test_verify_is_forwarded(self):
-        self.config = kubeclientservice.KubeHardcodedConfig(
-            master_url="http://localhost:8001",
-            namespace="default",
-            verify="/path/to/pem"
-        )
-        self._http.expect(
-            "delete",
-            "/api/v1/namespaces/ns/pods/pod_name",
-            params={"graceperiod": 0},
-            verify="/path/to/pem",
-            code=200,
-            content_json={}
-        )
-        service = kubeclientservice.KubeClientService()
-        yield service.setServiceParent(self.master)
-        yield service.reconfigService(self.config)
-        yield service.deletePod("ns", "pod_name")
-
-    @defer.inlineCallbacks
-    def test_verify_headers_are_forwarded(self):
-        self.config = kubeclientservice.KubeHardcodedConfig(
-            master_url="http://localhost:8001",
-            namespace="default",
-            verify="/path/to/pem",
-            headers={'Test': '10'}
-        )
-
-        self._http.expect(
-            "delete",
-            "/api/v1/namespaces/ns/pods/pod_name",
-            params={"graceperiod": 0},
-            headers={'Test': '10'},
-            verify="/path/to/pem",
-            code=200,
-            content_json={}
-        )
-        service = kubeclientservice.KubeClientService()
-        yield service.setServiceParent(self.master)
-        yield service.reconfigService(self.config)
-        yield service.deletePod("ns", "pod_name")
-
-    @defer.inlineCallbacks
-    def test_the_configuration_parent_is_set_to_the_service(self):
-        # This is needed to allow secret expansion
-        self.config = kubeclientservice.KubeHardcodedConfig(
-            master_url="http://localhost:8001"
-        )
-        service = kubeclientservice.KubeClientService()
-        yield service.setServiceParent(self.master)
-        yield service.reconfigService(self.config)
-        self.assertEqual(service, self.config.parent)
-
     def test_cannot_pass_both_bearer_and_basic_auth(self):
         with self.assertRaises(Exception):
             kubeclientservice.KubeHardcodedConfig(
@@ -203,51 +143,6 @@ class KubeClientServiceTestKubeHardcodedConfig(
                 verify="/path/to/pem",
                 basicAuth="Bla",
                 bearerToken="Bla")
-
-    @defer.inlineCallbacks
-    def test_verify_bearer_token_is_rendered(self):
-        self.config = kubeclientservice.KubeHardcodedConfig(
-            master_url="http://localhost:8001",
-            namespace="default",
-            verify="/path/to/pem",
-            bearerToken=Interpolate("%(kw:test)s", test=10)
-        )
-
-        self._http.expect(
-            "delete",
-            "/api/v1/namespaces/ns/pods/pod_name",
-            params={"graceperiod": 0},
-            headers={"Authorization": "Bearer 10"},
-            verify="/path/to/pem",
-            code=200,
-            content_json={}
-        )
-        service = kubeclientservice.KubeClientService()
-        yield service.setServiceParent(self.master)
-        yield service.reconfigService(self.config)
-        yield service.deletePod("ns", "pod_name")
-
-    @defer.inlineCallbacks
-    def test_verify_basicAuth_is_expanded(self):
-        self.config = kubeclientservice.KubeHardcodedConfig(
-            master_url="http://localhost:8001",
-            namespace="default",
-            verify="/path/to/pem",
-            basicAuth={'user': 'name', 'password': Interpolate("%(kw:test)s", test=10)})
-
-        self._http.expect(
-            "delete",
-            "/api/v1/namespaces/ns/pods/pod_name",
-            params={"graceperiod": 0},
-            headers={"Authorization": "Basic " + str(base64.b64encode("name:10".encode("utf-8")))},
-            verify="/path/to/pem",
-            code=200,
-            content_json={}
-        )
-        service = kubeclientservice.KubeClientService()
-        yield service.setServiceParent(self.master)
-        yield service.reconfigService(self.config)
-        yield service.deletePod("ns", "pod_name")
 
 
 class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
@@ -260,16 +155,16 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
                    'kube_ctl_proxy_cmd', [sys.executable, "-c", cmd])
 
     def tearDown(self):
-        if self.config is not None:
+        if self.config is not None and self.config.running:
             return self.config.stopService()
         return None
 
     @defer.inlineCallbacks
     def test_basic(self):
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
-        self.config = config = kubeclientservice.KubeCtlProxyConfigLoader()
-        yield config.startService()
-        self.assertEqual(config.getConfig(), {
+        self.config = kubeclientservice.KubeCtlProxyConfigLoader()
+        yield self.config.startService()
+        self.assertEqual(self.config.getConfig(), {
             'master_url': 'http://localhost:8001',
             'namespace': 'default'
         })
@@ -277,217 +172,125 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
     @defer.inlineCallbacks
     def test_config_args(self):
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
-        self.config = config = kubeclientservice.KubeCtlProxyConfigLoader(
-            proxy_port=8002, namespace="system")
-        yield config.startService()
-        self.assertEqual(config.kube_proxy_output,
+        self.config = kubeclientservice.KubeCtlProxyConfigLoader(
+            proxy_port=8002,
+            namespace="system"
+        )
+        yield self.config.startService()
+        self.assertEqual(self.config.kube_proxy_output,
                          b'Starting to serve on 127.0.0.1:8002')
-        self.assertEqual(config.getConfig(), {
+        self.assertEqual(self.config.getConfig(), {
             'master_url': 'http://localhost:8002',
             'namespace': 'system'
         })
-        yield config.stopService()
+        yield self.config.stopService()
+
+    @defer.inlineCallbacks
+    def test_reconfig(self):
+        self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
+        self.config = kubeclientservice.KubeCtlProxyConfigLoader(
+            proxy_port=8002,
+            namespace="system"
+        )
+        yield self.config.startService()
+        self.assertEqual(self.config.kube_proxy_output,
+                         b'Starting to serve on 127.0.0.1:8002')
+        self.assertEqual(self.config.getConfig(), {
+            'master_url': 'http://localhost:8002',
+            'namespace': 'system'
+        })
+        yield self.config.reconfigService(proxy_port=8003, namespace="system2")
+        self.assertEqual(self.config.kube_proxy_output,
+                         b'Starting to serve on 127.0.0.1:8003')
+        self.assertEqual(self.config.getConfig(), {
+            'master_url': 'http://localhost:8003',
+            'namespace': 'system2'
+        })
+        yield self.config.stopService()
 
     @defer.inlineCallbacks
     def test_config_with_error(self):
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE_ERROR)
-        self.config = config = kubeclientservice.KubeCtlProxyConfigLoader()
+        self.config = kubeclientservice.KubeCtlProxyConfigLoader()
         with self.assertRaises(RuntimeError):
-            yield config.startService()
+            yield self.config.startService()
 
 
-# integration tests for KubeClientService
-class RealKubeClientServiceTest(TestReactorMixin, unittest.TestCase):
-    timeout = 200
-    POD_SPEC = yaml.safe_load(
-        textwrap.dedent("""
-    apiVersion: v1
-    kind: Pod
-    metadata:
-        name: pod-example
-    spec:
-        containers:
-        - name: alpine
-          image: alpine
-          command: ["sleep"]
-          args: ["100"]
-    """))
-
-    def createKube(self):
-        if "TEST_KUBERNETES" not in os.environ:
-            raise SkipTest(
-                "kubernetes integration tests only run when environment "
-                "variable TEST_KUBERNETES is set")
-
-        self.kube = kubeclientservice.KubeClientService(
-            kubeclientservice.KubeCtlProxyConfigLoader())
-
-    def expect(self, *args, **kwargs):
-        pass
+class KubeClientServiceTest(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
-        yield self.createKube()
-        yield self.kube.setServiceParent(self.master)
-        yield self.master.startService()
+        self.parent = service.BuildbotService(name="parent")
+        self.client = kubeclientservice.KubeClientService()
+        yield self.client.setServiceParent(self.parent)
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.master.stopService()
-
-    kube = None
-
-    @defer.inlineCallbacks
-    def test_create_and_delete_pod(self):
-        content = {'kind': 'Pod', 'metadata': {'name': 'pod-example'}}
-        self.expect(
-            method='post',
-            ep='/api/v1/namespaces/default/pods',
-            params=None,
-            data=None,
-            json={
-                'apiVersion': 'v1',
-                'kind': 'Pod',
-                'metadata': {
-                    'name': 'pod-example'
-                },
-                'spec': {
-                    'containers': [{
-                        'name': 'alpine',
-                        'image': 'alpine',
-                        'command': ['sleep'],
-                        'args': ['100']
-                    }]
-                }
-            },
-            content_json=content)
-        res = yield self.kube.createPod(self.kube.namespace, self.POD_SPEC)
-        self.assertEqual(res['kind'], 'Pod')
-        self.assertEqual(res['metadata']['name'], 'pod-example')
-        self.assertNotIn('deletionTimestamp', res['metadata'])
-
-        content['metadata']['deletionTimestamp'] = 'now'
-        self.expect(
-            method='delete',
-            ep='/api/v1/namespaces/default/pods/pod-example',
-            params={'graceperiod': 0},
-            data=None,
-            json=None,
-            code=200,
-            content_json=content)
-
-        res = yield self.kube.deletePod(self.kube.namespace, 'pod-example')
-        self.assertEqual(res['kind'], 'Pod')
-        self.assertIn('deletionTimestamp', res['metadata'])
-
-        # first time present
-        self.expect(
-            method='get',
-            ep='/api/v1/namespaces/default/pods/pod-example/status',
-            params=None,
-            data=None,
-            json=None,
-            code=200,
-            content_json=content)
-        # second time deleted
-        content = {'kind': 'Status', 'reason': 'NotFound'}
-        self.expect(
-            method='get',
-            ep='/api/v1/namespaces/default/pods/pod-example/status',
-            params=None,
-            data=None,
-            json=None,
-            code=404,
-            content_json=content)
-
-        res = yield self.kube.waitForPodDeletion(
-            self.kube.namespace, 'pod-example', timeout=200)
-        self.assertEqual(res['kind'], 'Status')
-        self.assertEqual(res['reason'], 'NotFound')
+        if self.parent.running:
+            yield self.parent.stopService()
 
     @defer.inlineCallbacks
-    def test_create_bad_spec(self):
-        spec = copy.deepcopy(self.POD_SPEC)
-        del spec['metadata']
-        content = {
-            'kind': 'Status',
-            'reason': 'MissingName',
-            'message': 'need name'
-        }
-        self.expect(
-            method='post',
-            ep='/api/v1/namespaces/default/pods',
-            params=None,
-            data=None,
-            json={
-                'apiVersion': 'v1',
-                'kind': 'Pod',
-                'spec': {
-                    'containers': [{
-                        'name': 'alpine',
-                        'image': 'alpine',
-                        'command': ['sleep'],
-                        'args': ['100']
-                    }]
-                }
-            },
-            code=400,
-            content_json=content)
-        with self.assertRaises(kubeclientservice.KubeJsonError):
-            yield self.kube.createPod(self.kube.namespace, spec)
+    def test_stopped(self):
+        worker = mock.Mock(name="worker1")
+        config = service.BuildbotService(name="config")
+
+        yield self.client.register(worker, config)
+        self.assertEqual(config.running, 0)
+        yield self.client.unregister(worker)
+        self.assertEqual(config.running, 0)
 
     @defer.inlineCallbacks
-    def test_delete_not_existing(self):
-        content = {
-            'kind': 'Status',
-            'reason': 'NotFound',
-            'message': 'no container by that name'
-        }
-        self.expect(
-            method='delete',
-            ep='/api/v1/namespaces/default/pods/pod-example',
-            params={'graceperiod': 0},
-            data=None,
-            json=None,
-            code=404,
-            content_json=content)
-        with self.assertRaises(kubeclientservice.KubeJsonError):
-            yield self.kube.deletePod(self.kube.namespace, 'pod-example')
+    def test_started(self):
+        yield self.parent.startService()
+
+        worker = mock.Mock(name="worker1")
+        config = service.BuildbotService(name="config")
+
+        yield self.client.register(worker, config)
+        self.assertEqual(config.running, 1)
+        yield self.client.unregister(worker)
+        self.assertEqual(config.running, 0)
 
     @defer.inlineCallbacks
-    def test_wait_for_delete_not_deleting(self):
-        yield self.kube.createPod(self.kube.namespace, self.POD_SPEC)
-        with self.assertRaises(TimeoutError):
-            yield self.kube.waitForPodDeletion(
-                self.kube.namespace, 'pod-example', timeout=2)
-        res = yield self.kube.deletePod(self.kube.namespace, 'pod-example')
-        self.assertEqual(res['kind'], 'Pod')
-        self.assertIn('deletionTimestamp', res['metadata'])
-        yield self.kube.waitForPodDeletion(
-            self.kube.namespace, 'pod-example', timeout=100)
+    def test_started_but_stop(self):
+        yield self.parent.startService()
 
+        worker = mock.Mock(name="worker1")
+        config = service.BuildbotService(name="config")
 
-class FakeKubeClientServiceTest(RealKubeClientServiceTest):
-    def createKube(self):
-        self.kube = fakekube.KubeClientService(
-            kubeclientservice.KubeHardcodedConfig(master_url='http://m'))
+        yield self.client.register(worker, config)
+        self.assertEqual(config.running, 1)
 
+        yield self.parent.stopService()
+        self.assertEqual(config.running, 0)
 
-class PatchedKubeClientServiceTest(RealKubeClientServiceTest):
     @defer.inlineCallbacks
-    def createKube(self):
-        self.http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master,
-            self,
-            "http://m"
-        )
-        self.kube = kubeclientservice.KubeClientService(
-            kubeclientservice.KubeHardcodedConfig(master_url='http://m'))
+    def test_stopped_but_start(self):
+        worker = mock.Mock(name="worker1")
+        config = service.BuildbotService(name="config")
 
-    def expect(self, *args, **kwargs):
-        return self.http.expect(*args, **kwargs)
+        yield self.client.register(worker, config)
+        self.assertEqual(config.running, 0)
 
-    def test_wait_for_delete_not_deleting(self):
-        # no need to describe the expect flow for that case
-        pass
+        yield self.parent.startService()
+        self.assertEqual(config.running, 1)
+
+        yield self.parent.stopService()
+        self.assertEqual(config.running, 0)
+
+    @defer.inlineCallbacks
+    def test_two_workers(self):
+        yield self.parent.startService()
+
+        worker1 = mock.Mock(name="worker1")
+        worker2 = mock.Mock(name="worker2")
+        config = service.BuildbotService(name="config")
+
+        yield self.client.register(worker1, config)
+        self.assertEqual(config.running, 1)
+        yield self.client.register(worker2, config)
+        self.assertEqual(config.running, 1)
+        yield self.client.unregister(worker1)
+        self.assertEqual(config.running, 1)
+        yield self.client.unregister(worker2)
+        self.assertEqual(config.running, 0)
