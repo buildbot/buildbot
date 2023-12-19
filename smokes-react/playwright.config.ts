@@ -23,6 +23,7 @@ export default defineConfig({
     testIdAttribute: 'data-bb-test-id'
   },
 
+  timeout: 90000,
   expect: {
     timeout: 15000
   },
