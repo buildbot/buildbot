@@ -50,6 +50,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
     instance = None
     _namespace = None
     _kube = None
+    _kube_config = None
 
     @defer.inlineCallbacks
     def getPodSpec(self, build):
@@ -139,14 +140,28 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
             kube_config.get_master_url()
         )
 
-        if self._kube is not None:
-            yield self._kube.disownServiceParent()
-        yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
-        self._kube = kubeclientservice.KubeClientService(kube_config=kube_config)
-        yield self._kube.setServiceParent(self.master)
-        yield self._kube.reconfigService(kube_config=kube_config)
+        if self.running and self._kube is not None:
+            yield self._kube.unregister(self)
+
+        self._kube = yield kubeclientservice.KubeClientService.getService(self.master)
+        self._kube_config = kube_config
+
+        if self.running:
+            yield self._kube.register(self, kube_config)
 
         self._namespace = namespace or kube_config.getConfig()['namespace']
+
+        yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
+
+    @defer.inlineCallbacks
+    def startService(self):
+        yield super().startService()
+        yield self._kube.register(self, self._kube_config)
+
+    @defer.inlineCallbacks
+    def stopService(self):
+        yield self._kube.unregister(self)
+        yield super().stopService()
 
     @defer.inlineCallbacks
     def start_instance(self, build):
@@ -177,14 +192,14 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
 
     @defer.inlineCallbacks
     def _get_request_kwargs(self):
-        config = self._kube.config.getConfig()
+        config = self._kube_config.getConfig()
 
         kwargs = {}
 
         if "headers" in config and config["headers"]:
             kwargs.setdefault("headers", {}).update(config["headers"])
 
-        auth = yield self._kube.config.getAuthorization()
+        auth = yield self._kube_config.getAuthorization()
         if auth is not None:
             kwargs.setdefault("headers", {})['Authorization'] = auth
 

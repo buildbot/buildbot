@@ -28,6 +28,7 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import config
 from buildbot.util import kubeclientservice
+from buildbot.util import service
 
 
 class MockFileBase:
@@ -154,7 +155,7 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
                    'kube_ctl_proxy_cmd', [sys.executable, "-c", cmd])
 
     def tearDown(self):
-        if self.config is not None:
+        if self.config is not None and self.config.running:
             return self.config.stopService()
         return None
 
@@ -185,8 +186,111 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
         yield self.config.stopService()
 
     @defer.inlineCallbacks
+    def test_reconfig(self):
+        self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
+        self.config = kubeclientservice.KubeCtlProxyConfigLoader(
+            proxy_port=8002,
+            namespace="system"
+        )
+        yield self.config.startService()
+        self.assertEqual(self.config.kube_proxy_output,
+                         b'Starting to serve on 127.0.0.1:8002')
+        self.assertEqual(self.config.getConfig(), {
+            'master_url': 'http://localhost:8002',
+            'namespace': 'system'
+        })
+        yield self.config.reconfigService(proxy_port=8003, namespace="system2")
+        self.assertEqual(self.config.kube_proxy_output,
+                         b'Starting to serve on 127.0.0.1:8003')
+        self.assertEqual(self.config.getConfig(), {
+            'master_url': 'http://localhost:8003',
+            'namespace': 'system2'
+        })
+        yield self.config.stopService()
+
+    @defer.inlineCallbacks
     def test_config_with_error(self):
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE_ERROR)
         self.config = kubeclientservice.KubeCtlProxyConfigLoader()
         with self.assertRaises(RuntimeError):
             yield self.config.startService()
+
+
+class KubeClientServiceTest(unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.parent = service.BuildbotService(name="parent")
+        self.client = kubeclientservice.KubeClientService()
+        yield self.client.setServiceParent(self.parent)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        if self.parent.running:
+            yield self.parent.stopService()
+
+    @defer.inlineCallbacks
+    def test_stopped(self):
+        worker = mock.Mock(name="worker1")
+        config = service.BuildbotService(name="config")
+
+        yield self.client.register(worker, config)
+        self.assertEqual(config.running, 0)
+        yield self.client.unregister(worker)
+        self.assertEqual(config.running, 0)
+
+    @defer.inlineCallbacks
+    def test_started(self):
+        yield self.parent.startService()
+
+        worker = mock.Mock(name="worker1")
+        config = service.BuildbotService(name="config")
+
+        yield self.client.register(worker, config)
+        self.assertEqual(config.running, 1)
+        yield self.client.unregister(worker)
+        self.assertEqual(config.running, 0)
+
+    @defer.inlineCallbacks
+    def test_started_but_stop(self):
+        yield self.parent.startService()
+
+        worker = mock.Mock(name="worker1")
+        config = service.BuildbotService(name="config")
+
+        yield self.client.register(worker, config)
+        self.assertEqual(config.running, 1)
+
+        yield self.parent.stopService()
+        self.assertEqual(config.running, 0)
+
+    @defer.inlineCallbacks
+    def test_stopped_but_start(self):
+        worker = mock.Mock(name="worker1")
+        config = service.BuildbotService(name="config")
+
+        yield self.client.register(worker, config)
+        self.assertEqual(config.running, 0)
+
+        yield self.parent.startService()
+        self.assertEqual(config.running, 1)
+
+        yield self.parent.stopService()
+        self.assertEqual(config.running, 0)
+
+    @defer.inlineCallbacks
+    def test_two_workers(self):
+        yield self.parent.startService()
+
+        worker1 = mock.Mock(name="worker1")
+        worker2 = mock.Mock(name="worker2")
+        config = service.BuildbotService(name="config")
+
+        yield self.client.register(worker1, config)
+        self.assertEqual(config.running, 1)
+        yield self.client.register(worker2, config)
+        self.assertEqual(config.running, 1)
+        yield self.client.unregister(worker1)
+        self.assertEqual(config.running, 1)
+        yield self.client.unregister(worker2)
+        self.assertEqual(config.running, 0)

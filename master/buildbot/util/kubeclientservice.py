@@ -24,15 +24,15 @@ from twisted.logger import Logger
 from twisted.python.failure import Failure
 
 from buildbot import config
+from buildbot.util import service
 from buildbot.util.protocol import LineProcessProtocol
-from buildbot.util.service import BuildbotService
 
 log = Logger()
 
 
 # this is a BuildbotService, so that it can be started and destroyed.
 # this is needed to implement kubectl proxy lifecycle
-class KubeConfigLoaderBase(BuildbotService):
+class KubeConfigLoaderBase(service.BuildbotService):
     name = "KubeConfig"
 
     @abc.abstractmethod
@@ -141,7 +141,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
         self.process = None
 
     @defer.inlineCallbacks
-    def ensureSubprocessKilled(self):
+    def ensure_subprocess_killed(self):
         if self.pp is not None:
             try:
                 self.process.signalProcess("TERM")
@@ -153,7 +153,13 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
     def reconfigService(self, proxy_port=8001, namespace="default"):
         self.proxy_port = proxy_port
         self.namespace = namespace
-        yield self.ensureSubprocessKilled()
+
+        if self.running:
+            yield self.ensure_subprocess_killed()
+            yield self.start_subprocess()
+
+    @defer.inlineCallbacks
+    def start_subprocess(self):
         self.pp = self.LocalPP()
         self.process = reactor.spawnProcess(
             self.pp,
@@ -162,8 +168,19 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
             env=None)
         self.kube_proxy_output = yield self.pp.got_output_deferred
 
+    @defer.inlineCallbacks
+    def startService(self):
+        try:
+            yield self.start_subprocess()
+        except Exception:
+            yield self.ensure_subprocess_killed()
+            raise
+        yield super().startService()
+
+    @defer.inlineCallbacks
     def stopService(self):
-        return self.ensureSubprocessKilled()
+        yield self.ensure_subprocess_killed()
+        yield super().stopService()
 
     def getConfig(self):
         return {
@@ -202,17 +219,60 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
         return os.environ["KUBERNETES_PORT"].replace("tcp", "https")
 
 
-class KubeClientService(BuildbotService):
+class KubeClientService(service.SharedService):
 
     name = "KubeClientService"
 
-    @defer.inlineCallbacks
-    def checkConfig(self, kube_config=None, **kwargs):
-        yield super().checkConfig(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._config_id_to_workers = {}
+        self._worker_to_config = {}
+        self._lock = defer.DeferredLock()
 
     @defer.inlineCallbacks
-    def reconfigService(self, kube_config=None, **kwargs):
-        yield super().reconfigService(**kwargs)
-        yield kube_config.setServiceParent(self)
+    def register(self, worker, config):
+        yield self._lock.acquire()
+        try:
+            if worker.name in self._worker_to_config:
+                raise ValueError(f"Worker {worker.name} registered multiple times")
+            self._worker_to_config[worker.name] = config
+            config_id = id(config)
+            if config_id in self._config_id_to_workers:
+                self._config_id_to_workers[config_id].append(worker.name)
+            else:
+                self._config_id_to_workers[config_id] = [worker.name]
+                yield config.setServiceParent(self)
+        finally:
+            self._lock.release()
 
-        self.config = kube_config
+    @defer.inlineCallbacks
+    def unregister(self, worker):
+        yield self._lock.acquire()
+        try:
+            if worker.name not in self._worker_to_config:
+                raise ValueError(f"Worker {worker.name} was not registered")
+            config = self._worker_to_config.pop(worker.name)
+            config_id = id(config)
+            worker_list = self._config_id_to_workers[config_id]
+            worker_list.remove(worker.name)
+            if not worker_list:
+                del self._config_id_to_workers[config_id]
+                yield config.disownServiceParent()
+        finally:
+            self._lock.release()
+
+    @defer.inlineCallbacks
+    def startService(self):
+        yield self._lock.acquire()
+        try:
+            yield super().startService()
+        finally:
+            self._lock.release()
+
+    @defer.inlineCallbacks
+    def stopService(self):
+        yield self._lock.acquire()
+        try:
+            yield super().stopService()
+        finally:
+            self._lock.release()
