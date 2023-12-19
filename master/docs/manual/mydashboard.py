@@ -1,1 +1,0 @@
-../../../smokes/mydashboard.py

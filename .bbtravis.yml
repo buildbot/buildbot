@@ -29,7 +29,6 @@ matrix:
     # add js tests in separate job. Start it early because it is quite long
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=1G
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=1G
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=smokes NUM_CPU=4 MEMORY_SIZE=2G
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_whl NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_tgz NUM_CPU=2 MEMORY_SIZE=2G
 
@@ -144,7 +143,7 @@ script:
     cmd: |
       export NODE_OPTIONS=--openssl-legacy-provider
       export PATH=/tmp/bbvenv/bin/:$PATH
-      make frontend_tests_headless
+      make frontend_tests
 
   - title: master and worker tests
     condition: TESTS in ("dev_virtualenv", "trial")
@@ -200,25 +199,11 @@ script:
       make docs-release-spelling
 
   - title: maketarballs
-    condition: TESTS in ("smokes", "e2e_react_whl", "e2e_react_tgz")
+    condition: TESTS in ("e2e_react_whl", "e2e_react_tgz")
     cmd:  |
       export NODE_OPTIONS=--openssl-legacy-provider
       export PATH=/tmp/bbvenv/bin/:$PATH
       make tarballs
-
-  - title: protractor tests
-    condition: TESTS == "smokes"
-    cmd:  |
-      export NODE_OPTIONS=--openssl-legacy-provider
-      export PATH=/tmp/bbvenv/bin/:$PATH
-      ./common/smokedist.sh whl
-
-  - title: tarballs protractor tests
-    condition: TESTS == "smokes" and not TRAVIS_PULL_REQUEST
-    cmd:  |
-      export NODE_OPTIONS=--openssl-legacy-provider
-      export PATH=/tmp/bbvenv/bin/:$PATH
-      ./common/smokedist.sh tar.gz
 
   - title: end to end tests
     condition: TESTS == "e2e_react_whl"
