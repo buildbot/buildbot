@@ -58,6 +58,7 @@ export class ForcePage {
   static async clickStartButtonAndWaitRedirectToBuild(page: Page) {
     await ForcePage.clickStartButtonAndWait(page);
     await page.waitForURL(/\/#\/builders\/[0-9]\/builds\/[0-9]+$/);
+    await BasePage.waitUntilFinishedLoading(page);
   }
 
   static async clickCancelWholeQueue(page: Page) {

@@ -54,7 +54,6 @@ test.describe('forceandstop', function() {
 
     await BuilderPage.gotoForce(page, "slowruntests", "force");
     await ForcePage.clickStartButtonAndWaitRedirectToBuild(page);
-    await expect.poll(() => page.url()).toMatch(/\/#\/builders\/[1-9]+\/builds\/[1-9]+/);
     await BuilderPage.clickStopButton(page);
 
     await expect.poll(async () => {
