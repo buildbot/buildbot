@@ -48,7 +48,6 @@ docutils==0.18.1  # pyup: ignore (sphinx-rtd-theme 1.2.0 requires docutils<0.19)
 extras==1.0.0
 fixtures==4.1.0
 funcsigs==1.0.2
-future==0.18.3
 graphql-core==3.2.3
 greenlet==3.0.1
 hvac==1.2.1

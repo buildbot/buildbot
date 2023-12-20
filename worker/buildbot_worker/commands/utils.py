@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
 import os
 
 from twisted.python import log
@@ -67,9 +63,9 @@ if runtime.platformType == 'win32':  # pragma: no cover
         # Thus, if a non-unicode-named dir contains a unicode filename, that filename will get
         # garbled.
         # So force dir to be unicode.
-        if not isinstance(dir, text_type):
+        if not isinstance(dir, str):
             try:
-                dir = text_type(dir, "utf-8")
+                dir = str(dir, "utf-8")
             except UnicodeDecodeError:
                 log.err("rmdirRecursive: decoding from UTF-8 failed (ignoring)")
 

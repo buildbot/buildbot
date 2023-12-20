@@ -19,20 +19,7 @@ Helpers for handling compatibility differences
 between Python 2 and Python 3.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
-if str != bytes:
-    # On Python 3 and higher, str and bytes
-    # are not equivalent.  We must use StringIO for
-    # doing io on native strings.
-    from io import StringIO as NativeStringIO
-else:
-    # On Python 2 and older, str and bytes
-    # are equivalent.  We must use BytesIO for
-    # doing io on native strings.
-    from io import BytesIO as NativeStringIO
+from io import StringIO as NativeStringIO
 
 
 def bytes2NativeString(x, encoding='utf-8'):
@@ -60,13 +47,12 @@ def unicode2bytes(x, encoding='utf-8', errors='strict'):
     """
     Convert a unicode string to C{bytes}.
 
-    @param x: a unicode string, of type C{unicode} on Python 2,
-              or C{str} on Python 3.
+    @param x: a unicode string, of type C{str}.
     @param encoding: an optional codec, default: 'utf-8'
     @param errors: error handling scheme, default 'strict'
     @return: a string of type C{bytes}
     """
-    if isinstance(x, text_type):
+    if isinstance(x, str):
         x = x.encode(encoding, errors)
     return x
 
@@ -75,16 +61,15 @@ def bytes2unicode(x, encoding='utf-8', errors='strict'):
     """
     Convert a C{bytes} to a unicode string.
 
-    @param x: a unicode string, of type C{unicode} on Python 2,
-              or C{str} on Python 3.
+    @param x: a unicode string, of type C{str}.
     @param encoding: an optional codec, default: 'utf-8'
     @param errors: error handling scheme, default 'strict'
     @return: a unicode string of type C{unicode} on Python 2, or
              C{str} on Python 3.
     """
-    if isinstance(x, (text_type, type(None))):
+    if isinstance(x, (str, type(None))):
         return x
-    return text_type(x, encoding, errors)
+    return str(x, encoding, errors)
 
 
 __all__ = [

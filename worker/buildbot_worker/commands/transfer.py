@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import os
 import tarfile
 import tempfile
@@ -210,29 +207,24 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         # Create temporary archive
         fd, self.tarname = tempfile.mkstemp(prefix='buildbot-transfer-')
         self.fp = os.fdopen(fd, "rb+")
-
         if self.compress == 'bz2':
             mode = 'w|bz2'
         elif self.compress == 'gz':
             mode = 'w|gz'
         else:
             mode = 'w'
-        # TODO: Use 'with' when depending on Python 2.7
-        # Not possible with older versions:
-        # exceptions.AttributeError: 'TarFile' object has no attribute '__exit__'
-        archive = tarfile.open(mode=mode, fileobj=self.fp)
-        try:
-            archive.add(self.path, '')
-        except OSError as e:
-            # if directory does not exist, bail out with an error
-            self.stderr = "Cannot read directory '{0}' for upload: {1}".format(self.path, e)
-            self.rc = 1
-            archive.close()
-            d = defer.succeed(False)
-            d.addCallback(self.finished)
-            return d
 
-        archive.close()
+        with tarfile.open(mode=mode, fileobj=self.fp) as archive:
+            try:
+                archive.add(self.path, '')
+            except OSError as e:
+                # if directory does not exist, bail out with an error
+                self.stderr = "Cannot read directory '{0}' for upload: {1}".format(self.path, e)
+                self.rc = 1
+                archive.close()  # need to close it before self.finished() runs below
+                d = defer.succeed(False)
+                d.addCallback(self.finished)
+                return d
 
         # Transfer it
         self.fp.seek(0)

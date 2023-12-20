@@ -13,46 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
-# We cannot use the builtins module here from Python-Future.
-# We need to use the native __builtin__ module on Python 2,
-# and builtins module on Python 3, because we need to override
-# the actual native open method.
-
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import PY3
-from future.utils import string_types
-
+import builtins
 import errno
 import os
 import re
 import shutil
 import sys
-from io import BytesIO
 from io import StringIO
+from unittest import mock
 
 from twisted.python import log
 
 from buildbot_worker.scripts import base
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock
-
-try:
-    # Python 2
-    import __builtin__ as builtins
-except ImportError:
-    # Python 3
-    import builtins
 
 
 def nl(s):
     """Convert the given string to the native newline format, assuming it is
     already in normal UNIX newline format (\n).  Use this to create the
     appropriate expectation in an assertEqual"""
-    if not isinstance(s, string_types):
+    if not isinstance(s, str):
         return s
     return s.replace('\n', os.linesep)
 
@@ -227,16 +206,7 @@ class StdoutAssertionsMixin(object):
     """
 
     def setUpStdoutAssertions(self):
-        #
-        # sys.stdout is implemented differently
-        # in Python 2 and Python 3, so we need to
-        # override it differently.
-        # In Python 2, sys.stdout is a byte stream.
-        # In Python 3, sys.stdout is a text stream.
-        if PY3:
-            self.stdout = StringIO()
-        else:
-            self.stdout = BytesIO()
+        self.stdout = StringIO()
         self.patch(sys, 'stdout', self.stdout)
 
     def assertWasQuiet(self):

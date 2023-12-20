@@ -18,9 +18,6 @@
 # pylint: disable=no-method-argument
 # pylint: disable=inherit-non-class
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from zope.interface import Interface
 
 
