@@ -27,7 +27,7 @@ function finish {
 trap finish EXIT
 rm -rf workdir
 buildbot create-master workdir
-ln -s ../templates ../mydashboard.py ../master.cfg workdir
+ln -s ../templates ../master.cfg workdir
 buildbot-worker create-worker workdir/worker localhost example-worker pass
 buildbot checkconfig workdir
 # on docker buildbot might be a little bit slower to start, so sleep another 20s in case of start to slow.
