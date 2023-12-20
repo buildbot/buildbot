@@ -22,7 +22,7 @@ export const LoadingIndicator = () => {
   // FIXME: implement spinning
   return (
     <div className="bb-load-indicator">
-      <div className="spinner">
+      <div data-bb-test-id="loading" className="spinner">
         <FaCircleNotch className="fa-spin"/>
         <p>loading</p>
       </div>
