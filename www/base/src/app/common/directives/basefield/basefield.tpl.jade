@@ -1,5 +1,0 @@
-div
-    div.form-group(ng-class="{'has-warning': field.warnings,'has-error': field.haserrors}")
-        div(ng-transclude,
-            uib-popover="{{field.errors}}", popover-title="{{field.label}}",
-            popover-is-open="field.haserrors", popover-trigger="none")

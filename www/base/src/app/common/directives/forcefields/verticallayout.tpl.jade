@@ -1,8 +1,0 @@
-.panel.panel-default
-    .panel-heading(ng-if="field.label")
-        | {{field.label}}
-    .panel-body
-        div.form-horizontal
-            div(ng-repeat='cfield in field.fields | filter:{hide:false}',
-                class="{{column_class}}")
-                forcefield(field="cfield")

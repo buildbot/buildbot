@@ -1251,7 +1251,6 @@ Writing Dashboards with Flask_ or Bottle_
 
 Buildbot Nine UI is written in Javascript.
 This allows it to be reactive and real time, but comes at a price of a fair complexity.
-Sometimes, you need a dashboard displaying your build results in your own manner but learning AngularJS for that is just too much.
 
 There is a Buildbot plugin which allows to write a server side generated dashboard, and integrate it in the UI.
 
@@ -1302,21 +1301,6 @@ There is a Buildbot plugin which allows to write a server side generated dashboa
 
   - It can use some of the AngularJS directives defined by Buildbot UI (currently only buildsummary is usable).
   - It has full access to the application JS context.
-
-Here is an example of code that you can use in your ``master.cfg`` to create a simple dashboard:
-
-
-
-.. literalinclude:: mydashboard.py
-   :language: python
-
-
-Then you need a ``templates/mydashboard.html`` file near your ``master.cfg``.
-
-This template is a standard Jinja_ template which is the default templating engine of Flask_.
-
-.. literalinclude:: mydashboard.html
-   :language: html+django
 
 
 .. _Flask: http://flask.pocoo.org/

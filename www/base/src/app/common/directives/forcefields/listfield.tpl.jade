@@ -1,7 +1,0 @@
-basefield
-    label.control-label.col-sm-2(for="{{field.name}}")
-        | {{field.label}}
-    .col-sm-10
-        select.form-control(ng-model="field.value", ng-if="!field.multiple", ng-options="v for v in field.choices")
-        select.form-control(ng-model="field.value", multiple, ng-multiple="true", ng-if="field.multiple", ng-options="v for v in field.choices")
-        input.select-editable.form-control(ng-if="!field.strict && !field.multiple", type='text', ng-model="field.value")

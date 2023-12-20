@@ -213,4 +213,4 @@ To run locally, install a Chrome-compatible browser and execute the following:
 
     pip install -r requirements-ci.txt
     make tarballs
-    ./common/smokedist.sh whl
+    ./common/smokedist-react.sh whl

@@ -1,7 +1,0 @@
-div
-    uib-tabset(justified="true")
-        uib-tab(ng-repeat='field in field.fields | filter:{hide:false}',
-            heading="{{field.tablabel}}",
-            class="{{column_class}}")
-            forcefield(recursive,
-                       field="field")
