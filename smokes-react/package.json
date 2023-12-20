@@ -4,7 +4,7 @@
   "description": "smoke tests for buildbot with cypress",
   "main": "index.js",
   "dependencies": {
-    "@playwright/test": "^1.37.0",
+    "@playwright/test": "^1.40.1",
     "qs": "^6.11",
     "request": "^2.88.2",
     "typescript": "^4.4.2"
