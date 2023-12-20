@@ -21,7 +21,7 @@ import {BasePage} from "./base";
 export class ForcePage {
   static async setInputText(page: Page, fieldName: string, value: string) {
     const input = page.getByTestId(`force-field-${fieldName}`);
-    expect.poll(() => input.count()).toEqual(1);
+    await expect.poll(() => input.count()).toEqual(1);
     await input.fill(value);
   }
 
