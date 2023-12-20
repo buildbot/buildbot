@@ -6,7 +6,7 @@
 # Use a multi-stage build:
 # https://docs.docker.com/develop/develop-images/multistage-build/
 
-# Provides a base Debian (10) image with latest buildbot mater installed
+# Provides a base Debian (11) image with latest buildbot mater installed
 # the master image is not optimized for size, but rather uses Debian for wider package availability
 
 # Provide an intermediate Docker image named "buildbot-build".
