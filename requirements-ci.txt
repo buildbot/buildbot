@@ -35,7 +35,7 @@ charset-normalizer==3.3.2
 click-default-group==1.2.4
 click==8.1.7
 configparser==6.0.0
-constantly==15.1.0
+constantly==23.10.4
 cookies==2.2.1
 coverage==7.3.3
 croniter==2.0.1
@@ -115,7 +115,8 @@ toml==0.10.2
 tomli==2.0.1
 tomlkit==0.12.3
 towncrier==21.9.0
-treq==22.2.0
+treq==23.11.0;  python_version >= "3.9"
+treq==22.2.0;  python_version < "3.9" # pyup: ignore
 Twisted==23.10.0
 txaio==23.1.1
 txrequests==0.9.6
