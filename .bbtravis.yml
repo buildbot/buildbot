@@ -52,7 +52,6 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
 
     # Worker tests on python and twisted package combinations.
-    # We support worker on Python 2.7, on which Twisted 20.3.0 is the last version that works
     - env: PYTHON=3.9 TWISTED=18.7.0 SQLALCHEMY=latest TESTS=trial_worker
 
     # Configuration when SQLite database is persistent between running tests
@@ -74,13 +73,7 @@ install:
   - title: setup virtualenv
     cmd: |
       rm -rf /tmp/bbvenv
-      if [ "$PYTHON" = "2.7" ]; then
-        # system virtualenv doesn't work properly with python installed via pyenv
-        virtualenv --python=python2.7 --pip=20.3.0 /tmp/bbvenv
-        /tmp/bbvenv/bin/pip install -U --force-reinstall pip setuptools
-      else
-        python$PYTHON -m venv /tmp/bbvenv
-      fi
+      python$PYTHON -m venv /tmp/bbvenv
   - /tmp/bbvenv/bin/pip install -U pip wheel
   - condition: TESTS not in ("dev_virtualenv", "smokes", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt
@@ -96,13 +89,7 @@ install:
     cmd: |
       set -e
       rm -rf /tmp/bbworkervenv
-      if [ "$PYTHON" = "2.7" ]; then
-        # system virtualenv doesn't work properly with python installed via pyenv
-        virtualenv --python=python2.7 --pip=20.3.0 /tmp/bbworkervenv
-        /tmp/bbworkervenv/bin/pip install -U --force-reinstall pip setuptools
-      else
-        python$PYTHON -m venv /tmp/bbworkervenv
-      fi
+      python$PYTHON -m venv /tmp/bbworkervenv
       /tmp/bbworkervenv/bin/pip install -e worker
   - title: pip installs for backward compat
     cmd: |
