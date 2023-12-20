@@ -126,7 +126,10 @@ class DirectoryWriter(FileWriter):
 
         # Unpack archive and clean up after self
         with tarfile.open(name=self.tarname, mode=mode) as archive:
-            archive.extractall(path=self.destroot)
+            if hasattr(tarfile, 'data_filter'):
+                archive.extractall(path=self.destroot, filter='data')
+            else:
+                archive.extractall(path=self.destroot)
         os.remove(self.tarname)
 
 
