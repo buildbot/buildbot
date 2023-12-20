@@ -32,7 +32,6 @@ certifi==2023.11.17
 cffi==1.16.0
 chardet==5.2.0
 charset-normalizer==3.3.2
-click-default-group==1.2.4
 click==8.1.7
 configparser==6.0.0
 constantly==23.10.4
