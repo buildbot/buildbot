@@ -40,10 +40,10 @@ jobs:
           command: |
             . .venv/bin/activate
             make docs-release
-            NODE_OPTIONS=--openssl-legacy-provider make tarballs
+            make tarballs
             # Note that installing www/react-base depends on frontend_deps target being built, which is
             # a dependency of the tarballs target.
-            NODE_OPTIONS=--openssl-legacy-provider pip install -e www/react-base
+            pip install -e www/react-base
             pyinstaller pyinstaller/buildbot-worker.spec
             # we test the new generated binary with the global virtualenv
             SANDBOXED_WORKER_PATH=`pwd`/dist/buildbot-worker trial --reporter=text --rterrors buildbot.test.integration.interop

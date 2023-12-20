@@ -127,21 +127,18 @@ script:
   - title: frontend build tests
     condition: TESTS == "js_build" and TRAVIS_PULL_REQUEST
     cmd: |
-      export NODE_OPTIONS=--openssl-legacy-provider
       export PATH=/tmp/bbvenv/bin/:$PATH
       make frontend
 
   - title: full frontend tests
     condition: TESTS == "js_build" and not TRAVIS_PULL_REQUEST
     cmd: |
-      export NODE_OPTIONS=--openssl-legacy-provider
       export PATH=/tmp/bbvenv/bin/:$PATH
       make frontend_install_tests
 
   - title: frontend unit tests
     condition: TESTS == "js_unit"
     cmd: |
-      export NODE_OPTIONS=--openssl-legacy-provider
       export PATH=/tmp/bbvenv/bin/:$PATH
       make frontend_tests
 
@@ -201,7 +198,6 @@ script:
   - title: maketarballs
     condition: TESTS in ("e2e_react_whl", "e2e_react_tgz")
     cmd:  |
-      export NODE_OPTIONS=--openssl-legacy-provider
       export PATH=/tmp/bbvenv/bin/:$PATH
       make tarballs
 
