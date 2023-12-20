@@ -2,15 +2,15 @@
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==3.9.2
+buildbot-www==3.10.0
 
 autobahn==23.6.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
-boto3==1.33.6
+boto3==1.34.2
 flake8==6.1.0;  python_version >= "3.8.1"
 msgpack==1.0.7
 Markdown==3.5.1
-pylint==3.0.2
+pylint==3.0.3
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
@@ -21,13 +21,13 @@ alabaster==0.7.13
 alembic==1.11.3
 appdirs==1.4.4
 asn1crypto==1.5.1
-astroid==3.0.1
+astroid==3.0.2
 attrs==23.1.0
 Automat==22.10.0
-Babel==2.13.1
-backports.functools-lru-cache==1.6.6
+Babel==2.14.0
+backports.functools-lru-cache==2.0.0
 boto==2.49.0
-botocore==1.33.6
+botocore==1.34.2
 certifi==2023.11.17
 cffi==1.16.0
 chardet==5.2.0
@@ -37,19 +37,19 @@ click==8.1.7
 configparser==6.0.0
 constantly==15.1.0
 cookies==2.2.1
-coverage==7.3.2
+coverage==7.3.3
 croniter==2.0.1
 cryptography==41.0.7
 decorator==5.1.1
 dicttoxml==1.7.16
 dill==0.3.7
-docker==6.1.3
+docker==7.0.0
 docutils==0.18.1  # pyup: ignore (sphinx-rtd-theme 1.2.0 requires docutils<0.19)
 extras==1.0.0
 fixtures==4.1.0
 funcsigs==1.0.2
 graphql-core==3.2.3
-greenlet==3.0.1
+greenlet==3.0.2
 hvac==1.2.1
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
@@ -66,11 +66,11 @@ lazy-object-proxy==1.9.0  # pyup: ignore (required by astroid)
 ldap3==2.9.1
 lz4==4.3.2
 Mako==1.3.0
-markdown2==2.4.11
+markdown2==2.4.12
 MarkupSafe==2.1.3
 mccabe==0.7.0
 more-itertools==10.1.0
-moto==4.2.11
+moto==4.2.12
 olefile==0.47
 packaging==23.2
 parameterized==0.9.0
@@ -78,8 +78,8 @@ pathlib2==2.3.7.post1
 pbr==6.0.0
 pep8==1.7.1
 Pillow==10.1.0
-platformdirs==4.0.0
-psutil==5.9.6
+platformdirs==4.1.0
+psutil==5.9.7
 pyaml==23.9.7
 pyasn1-modules==0.3.0
 pyasn1==0.5.1
@@ -99,7 +99,7 @@ requests==2.31.0
 responses==0.24.1
 ruamel.yaml==0.18.5
 ruamel.yaml.clib==0.2.8
-s3transfer==0.8.2
+s3transfer==0.9.0
 scandir==1.10.0
 service-identity==23.1.0
 setuptools-trial==0.6.0
@@ -120,7 +120,7 @@ Twisted==23.10.0
 txaio==23.1.1
 txrequests==0.9.6
 types-PyYAML==6.0.12.12
-typing_extensions==4.8.0
+typing_extensions==4.9.0
 unidiff==0.7.5
 # botocore depends on urllib3<1.27
 urllib3==1.26.18  # pyup: ignore

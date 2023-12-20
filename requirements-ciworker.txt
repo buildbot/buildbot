@@ -21,14 +21,14 @@ parameterized==0.9.0;  python_version >= "3.6"
 pbr==6.0.0
 # pin PyHamcrest, because 2.x no longer supports Python 2.7
 PyHamcrest==1.9.0  # pyup: ignore
-psutil==5.9.6
+psutil==5.9.7
 pycparser==2.21;  python_version >= "3.6"
 six==1.16.0
 Twisted==23.10.0;  python_version >= "3.6"
 Twisted==20.3.0;  python_version < "3.6"  # pyup: ignore
 txaio==23.1.1;  python_version >= "3.6"
-typing-extensions==4.8.0;  python_version >= "3.7"
-typing-extensions==4.8.0;  python_version < "3.7" and python_version >= "3.5"
+typing-extensions==4.9.0;  python_version >= "3.7"
+typing-extensions==4.9.0;  python_version < "3.7" and python_version >= "3.5"
 zope.interface==5.4.0;  python_version < "3.6"  # pyup: ignore
 zope.interface==6.1;  python_version >= "3.6"
 -e worker
