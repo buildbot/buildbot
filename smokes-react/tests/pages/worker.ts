@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {Page} from "@playwright/test";
+import {expect, Page} from "@playwright/test";
 import {BasePage} from "./base";
 
 export class WorkerPage {
@@ -34,6 +34,7 @@ export class WorkerPage {
     await BasePage.waitUntilUrlChanged(page, async () => {
       await page.locator("tr")
         .filter({has: page.locator("td").nth(0).getByText(builderName)})
+        .filter({has: page.locator("td").nth(1).getByText(buildNumber.toString())})
         .locator("td").nth(1).getByText(buildNumber.toString()).click();
     });
     await BasePage.waitUntilFinishedLoading(page);
