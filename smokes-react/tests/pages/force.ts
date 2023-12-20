@@ -21,7 +21,7 @@ import {BasePage} from "./base";
 export class ForcePage {
   static async setInputText(page: Page, fieldName: string, value: string) {
     const input = page.getByTestId(`force-field-${fieldName}`);
-    expect.poll(() => input.count()).toEqual(1);
+    await expect.poll(() => input.count()).toEqual(1);
     await input.fill(value);
   }
 
@@ -58,6 +58,7 @@ export class ForcePage {
   static async clickStartButtonAndWaitRedirectToBuild(page: Page) {
     await ForcePage.clickStartButtonAndWait(page);
     await page.waitForURL(/\/#\/builders\/[0-9]\/builds\/[0-9]+$/);
+    await BasePage.waitUntilFinishedLoading(page);
   }
 
   static async clickCancelWholeQueue(page: Page) {

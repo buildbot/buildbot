@@ -27,7 +27,7 @@ import {
   useDataApiQuery
 } from "buildbot-data-js";
 import {useContext} from "react";
-import {Config, ConfigContext} from "buildbot-ui";
+import {Config, ConfigContext, LoadingIndicator} from "buildbot-ui";
 import {BuildSticker} from "../../components/BuildSticker/BuildSticker";
 import {Link} from "react-router-dom";
 import {Card} from "react-bootstrap";
@@ -103,8 +103,14 @@ export const HomeView = observer(() => {
           <Card.Body>
             <h2>Welcome to buildbot</h2>
               <TableHeading>
-                {buildsRunning.array.length} build{buildsRunning.array.length === 1 ? ' ' : 's '}
-                running currently
+                {
+                  !buildsRunning.resolved
+                  ? <LoadingIndicator/>
+                  : <>
+                      {buildsRunning.array.length} build{buildsRunning.array.length === 1 ? ' ' : 's '}
+                      running currently
+                    </>
+                }
               </TableHeading>
             <ul>
               {

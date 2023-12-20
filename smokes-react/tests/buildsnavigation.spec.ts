@@ -16,6 +16,7 @@
 */
 
 import {expect, test} from "@playwright/test";
+import {BasePage} from "./pages/base";
 import {BuilderPage} from './pages/builder';
 import {ForcePage} from "./pages/force";
 import {HomePage} from './pages/home';
@@ -42,9 +43,9 @@ test.describe('previousnextlink', function() {
     await BuilderPage.gotoBuild(page, "runtests", `${lastbuild + 2}`);
     const lastBuildURL = page.url();
     await BuilderPage.clickPreviousButtonAndWait(page);
-    expect.poll(() => page.url()).not.toMatch(lastBuildURL);
+    await expect.poll(() => page.url()).not.toMatch(lastBuildURL);
     await BuilderPage.clickNextButtonAndWait(page);
-    expect.poll(() => page.url()).toMatch(lastBuildURL);
+    await expect.poll(() => page.url()).toMatch(lastBuildURL);
   });
 });
 
@@ -54,7 +55,6 @@ test.describe('forceandstop', function() {
 
     await BuilderPage.gotoForce(page, "slowruntests", "force");
     await ForcePage.clickStartButtonAndWaitRedirectToBuild(page);
-    await expect.poll(() => page.url()).toMatch(/\/#\/builders\/[1-9]+\/builds\/[1-9]+/);
     await BuilderPage.clickStopButton(page);
 
     await expect.poll(async () => {

@@ -16,10 +16,13 @@
 */
 
 import {expect, Page} from "@playwright/test";
+import {BasePage} from "./base";
 
 export class HomePage {
   static async goto(page: Page) {
     await page.goto('/#/');
+    await page.waitForURL(/\/#\/$/);
+    await BasePage.waitUntilFinishedLoading(page);
   }
 
   static getBuilderCard(page: Page) {
