@@ -18,12 +18,12 @@
 import './LogSearchField.scss'
 import {Ref, useState} from "react";
 import {FaChevronDown, FaChevronUp, FaSearch} from "react-icons/fa";
-import {VscCaseSensitive} from "react-icons/vsc";
+import {VscCaseSensitive, VscRegex} from "react-icons/vsc";
 
 export type LogSearchButtonProps = {
   currentResult: number;
   totalResults: number;
-  onSearchInputChanged: (text: string, caseSensitive: boolean) => void;
+  onSearchInputChanged: (text: string, caseSensitive: boolean, useRegex: boolean) => void;
   onPrevClicked: () => void;
   onNextClicked: () => void;
   inputRef: Ref<HTMLInputElement>;
@@ -35,16 +35,23 @@ export const LogSearchField = ({currentResult, totalResults,
   const [searchText, setSearchText] = useState<string>('');
   const [hasFocus, setHasFocus] = useState<boolean>(false);
   const [isCaseSensitive, setIsCaseSensitive] = useState<boolean>(true);
+  const [useRegex, setUseRegex] = useState<boolean>(false);
 
   const onSearchTextChanged = (text: string) => {
     setSearchText(text);
-    onSearchInputChanged(text, isCaseSensitive);
+    onSearchInputChanged(text, isCaseSensitive, useRegex);
   };
 
   const onCaseInsensitiveToggled = () => {
     const newValue = !isCaseSensitive;
     setIsCaseSensitive(newValue);
-    onSearchInputChanged(searchText, newValue);
+    onSearchInputChanged(searchText, newValue, useRegex);
+  }
+
+  const onUseRegexToggled = () => {
+    const newValue = !useRegex;
+    setUseRegex(newValue);
+    onSearchInputChanged(searchText, isCaseSensitive, newValue);
   }
 
   const optionButtonClass = (optionName: string, isToggled: boolean) => {
@@ -60,6 +67,11 @@ export const LogSearchField = ({currentResult, totalResults,
         className={optionButtonClass('case', isCaseSensitive)}
         onClick={onCaseInsensitiveToggled}>
         <VscCaseSensitive />
+      </button>
+      <button
+        className={optionButtonClass('regex', useRegex)}
+        onClick={onUseRegexToggled}>
+        <VscRegex />
       </button>
     </>
   );

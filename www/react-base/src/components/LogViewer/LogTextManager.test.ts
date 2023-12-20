@@ -333,6 +333,14 @@ describe('LogTextManager', () => {
       manager.setSearchCaseSensitivity(false);
 
       expect(manager.totalSearchResultCount).toEqual(100);
+
+      manager.setSearchString("a{5}");
+
+      expect(manager.totalSearchResultCount).toEqual(0);
+
+      manager.setUseRegex(true);
+
+      expect(manager.totalSearchResultCount).toEqual(100);
     });
   });
 });

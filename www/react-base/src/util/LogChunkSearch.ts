@@ -23,6 +23,7 @@ import {regexEscape} from "./Regex";
 
 export type ChunkSearchOptions = {
   caseInsensitive?: boolean;
+  useRegex?: boolean;
 };
 
 export type ChunkSearchResult = {
@@ -30,6 +31,7 @@ export type ChunkSearchResult = {
   lineIndex: number;
   // The location of the found search string occurrence
   lineStart: number;
+  lineEnd: number;
 };
 
 export type ChunkSearchResults = {
@@ -43,7 +45,10 @@ export type MatcherFn = (text: string, pos?: number) => MatchInfo | null;
 // Search options require the use of a regex
 // Keep the indexOf path for simple search as it's more efficient
 export function getMatcher(searchString: string, options?: ChunkSearchOptions): MatcherFn {
-  if (options === undefined || options.caseInsensitive !== true) {
+  if (options === undefined || (
+    options.caseInsensitive !== true &&
+    options.useRegex !== true
+  )) {
     return (text: string, pos?: number) => {
       const foundPos = text.indexOf(searchString, pos ?? 0);
       return foundPos >= 0 ? {pos: foundPos, length: searchString.length} : null;
@@ -51,12 +56,22 @@ export function getMatcher(searchString: string, options?: ChunkSearchOptions): 
   }
 
   const searchStringRegex = new RegExp(
-    regexEscape(searchString),
-    "g" + (options?.caseInsensitive ? "i" : ""),
+    (options?.useRegex ? searchString : regexEscape(searchString)),
+    (
+      "g" +
+      (options?.caseInsensitive ? "i" : "") +
+      (options?.useRegex ? "m" : "")
+    ),
   );
   return (text: string, pos?: number) => {
     searchStringRegex.lastIndex = pos ?? 0;
-    const match = searchStringRegex.exec(text);
+    let match = searchStringRegex.exec(text);
+    // regex search such as 'a*' can result in a match that is empty
+    // this is not interesting in our case, skip to the next relevant match
+    while (match !== null && match[0].length <= 0) {
+      searchStringRegex.lastIndex += 1;
+      match = searchStringRegex.exec(text);
+    }
     return match !== null ? {pos: match.index, length: match[0].length} : null;
   };
 }
@@ -158,6 +173,7 @@ function findTextInLine(results: ChunkSearchResult[], text: string, lineIndex: n
     results.push({
       lineIndex: lineIndex,
       lineStart: match.pos,
+      lineEnd: match.pos + match.length,
     });
     match = matcherFn(text, match.pos + match.length);
   }
@@ -180,7 +196,8 @@ export function findTextInChunkRaw(chunk: ParsedLogChunk,
       lineIndex = maybeAdvanceLineIndexToBound(lineIndex, match.pos, lineBounds);
       results.push({
         lineIndex: lineIndex + chunk.firstLine,
-        lineStart: match.pos - lineBounds[lineIndex]
+        lineStart: match.pos - lineBounds[lineIndex],
+        lineEnd: (match.pos - lineBounds[lineIndex]) + match.length,
       });
       match = matcherFn(text, match.pos + match.length);
     }
@@ -232,7 +249,8 @@ export function findTextInChunkRaw(chunk: ParsedLogChunk,
 
     results.push({
       lineIndex: lineIndex + chunk.firstLine,
-      lineStart: match.pos - lineBounds[lineIndex]
+      lineStart: match.pos - lineBounds[lineIndex],
+      lineEnd: (match.pos - lineBounds[lineIndex]) + match.length,
     });
     match = matcherFn(text, match.pos + match.length);
   }
@@ -256,8 +274,7 @@ export function findTextInChunk(chunk: ParsedLogChunk,
 }
 
 // Returns null if no overlay is needed
-export function overlaySearchResultsOnLine(searchString: string,
-                                           chunkResults: ChunkSearchResults,
+export function overlaySearchResultsOnLine(chunkResults: ChunkSearchResults,
                                            lineIndex: number,
                                            lineLength: number,
                                            lineCssClasses: LineCssClasses[]|null,
@@ -280,12 +297,14 @@ export function overlaySearchResultsOnLine(searchString: string,
       break;
     }
     const beginPos = result.lineStart;
-    const endPos = beginPos + searchString.length;
+    const endPos = result.lineEnd;
 
-    if (searchString.length === 1) {
+    const highlighLen = endPos - beginPos;
+
+    if (highlighLen === 1) {
       lineCssClasses = addOverlayToCssClasses(lineLength, lineCssClasses,
         beginPos, endPos, beginEndCssClassesAll);
-    } else if (searchString.length === 2) {
+    } else if (highlighLen === 2) {
       lineCssClasses = addOverlayToCssClasses(lineLength, lineCssClasses,
         beginPos, beginPos + 1, beginCssClassesAll);
       lineCssClasses = addOverlayToCssClasses(lineLength, lineCssClasses,

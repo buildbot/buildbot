@@ -112,7 +112,7 @@ export class LogTextManager {
 
   // Current search string or null if no search is being performed at the moment
   searchString: string|null = null;
-  searchOptions: ChunkSearchOptions = {caseInsensitive: false}
+  searchOptions: ChunkSearchOptions = {caseInsensitive: false, useRegex: false}
   // Valid only if searchString !== null. Indices are the same as this.chunks
   chunkSearchResults: ChunkSearchResults[] = [];
   // Valid only if searchString !== null
@@ -401,7 +401,7 @@ export class LogTextManager {
       const chunkSearchResults = this.chunkSearchResults[chunkIndex];
       const lineLength = lineEndInChunk - lineStartInChunk;
       const lineCssClassesForSearch =
-        overlaySearchResultsOnLine(this.searchString, chunkSearchResults, index, lineLength,
+        overlaySearchResultsOnLine(chunkSearchResults, index, lineLength,
           lineCssClassesWithText === undefined ? null : lineCssClassesWithText[1],
           "bb-logviewer-result-begin", "bb-logviewer-result", "bb-logviewer-result-end");
 
@@ -427,7 +427,7 @@ export class LogTextManager {
           lineIndexToFirstChunkIndex: new Map<number, number>([[index, 0]]),
         }
         const lineCssClassesForSearchHighlight =
-            overlaySearchResultsOnLine(this.searchString!, fakeHighlightedChunkResult, index,
+            overlaySearchResultsOnLine(fakeHighlightedChunkResult, index,
                 lineLength, lineCssClassesForSearch,
                 "", "bb-logviewer-result-current", "");
 
@@ -456,6 +456,16 @@ export class LogTextManager {
       return;
     }
     this.searchOptions.caseInsensitive = caseInsensitive;
+
+    this.onSearchInputChanged();
+  }
+
+  setUseRegex(value: boolean) {
+    const useRegex = value;
+    if (this.searchOptions.useRegex === useRegex) {
+      return;
+    }
+    this.searchOptions.useRegex = useRegex;
 
     this.onSearchInputChanged();
   }
