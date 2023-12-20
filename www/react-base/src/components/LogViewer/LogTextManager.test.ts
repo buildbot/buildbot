@@ -325,6 +325,14 @@ describe('LogTextManager', () => {
         {offset: 90, limit: 10},
       ]);
       expect(manager.totalSearchResultCount).toEqual(100);
+
+      manager.setSearchString("aaAAa");
+
+      expect(manager.totalSearchResultCount).toEqual(0);
+
+      manager.setSearchCaseSensitivity(false);
+
+      expect(manager.totalSearchResultCount).toEqual(100);
     });
   });
 });
