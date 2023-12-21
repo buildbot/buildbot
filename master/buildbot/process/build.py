@@ -205,8 +205,12 @@ class Build(properties.PropertiesMixin):
         return self.workername
 
     @staticmethod
-    def setupPropertiesKnownBeforeBuildStarts(props, requests, builder,
-                                              workerforbuilder=None):
+    def setup_properties_known_before_build_starts(
+        props,
+        requests,
+        builder,
+        workerforbuilder=None
+    ):
         # Note that this function does not setup the 'builddir' worker property
         # It's not possible to know it until before the actual worker has
         # attached.
@@ -232,6 +236,8 @@ class Build(properties.PropertiesMixin):
         # object that came from the config, and get its properties
         if workerforbuilder is not None:
             workerforbuilder.worker.setupProperties(props)
+
+        return defer.succeed(None)
 
     @staticmethod
     def setupBuildProperties(props, requests, sources=None, number=None):

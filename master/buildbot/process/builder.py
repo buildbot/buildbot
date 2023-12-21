@@ -305,6 +305,17 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return [wfb for wfb in self.workers if wfb.isAvailable()]
 
     @defer.inlineCallbacks
+    def _setup_props_if_needed(self, props, workerforbuilder, buildrequest):
+        # don't unnecessarily setup properties for build
+        if props is not None:
+            return props
+        props = Properties()
+        yield Build.setup_properties_known_before_build_starts(
+            props, [buildrequest], self, workerforbuilder
+        )
+        return props
+
+    @defer.inlineCallbacks
     def canStartBuild(self, workerforbuilder, buildrequest):
         can_start = True
 
@@ -314,20 +325,11 @@ class Builder(util_service.ReconfigurableServiceMixin,
         worker = workerforbuilder.worker
         props = None
 
-        # don't unnecessarily setup properties for build
-        def setupPropsIfNeeded(props):
-            if props is not None:
-                return props
-            props = Properties()
-            Build.setupPropertiesKnownBeforeBuildStarts(props, [buildrequest],
-                                                        self, workerforbuilder)
-            return props
-
         if worker.builds_may_be_incompatible:
             # Check if the latent worker is actually compatible with the build.
             # The instance type of the worker may depend on the properties of
             # the build that substantiated it.
-            props = setupPropsIfNeeded(props)
+            props = yield self._setup_props_if_needed(props, workerforbuilder, buildrequest)
             can_start = yield worker.isCompatibleWithBuild(props)
             if not can_start:
                 return False
@@ -335,7 +337,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if IRenderable.providedBy(locks):
             # collect properties that would be set for a build if we
             # started it now and render locks using it
-            props = setupPropsIfNeeded(props)
+            props = yield self._setup_props_if_needed(props, workerforbuilder, buildrequest)
             locks = yield props.render(locks)
 
         locks = yield self.botmaster.getLockFromLockAccesses(locks, self.config_version)
@@ -360,8 +362,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # give the properties a reference back to this build
         props.build = build
 
-        Build.setupPropertiesKnownBeforeBuildStarts(
-            props, build.requests, build.builder, workerforbuilder)
+        yield Build.setup_properties_known_before_build_starts(
+            props, build.requests, build.builder, workerforbuilder
+        )
 
         log.msg(f"starting build {build} using worker {workerforbuilder}")
 

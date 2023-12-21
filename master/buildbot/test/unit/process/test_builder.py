@@ -350,7 +350,7 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
                 'buildbot.process.build.Build._canAcquireLocks',
                 mock.Mock(return_value=False)):
             with mock.patch(
-                    'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
+                    'buildbot.process.build.Build.setup_properties_known_before_build_starts',
                     mock.Mock()):
                 startable = yield self.bldr.canStartBuild(wfb, 100)
                 self.assertEqual(startable, False)
@@ -365,7 +365,7 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
         wfb.worker = FakeLatentWorker(is_compatible_with_build=False)
 
         with mock.patch(
-                'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
+                'buildbot.process.build.Build.setup_properties_known_before_build_starts',
                 mock.Mock()):
             startable = yield self.bldr.canStartBuild(wfb, 100)
         self.assertFalse(startable)
@@ -392,7 +392,7 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
                 'buildbot.process.build.Build._canAcquireLocks',
                 mock.Mock(return_value=False)):
             with mock.patch(
-                    'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
+                    'buildbot.process.build.Build.setup_properties_known_before_build_starts',
                     mock.Mock()):
                 startable = yield self.bldr.canStartBuild(wfb, 100)
                 self.assertEqual(startable, False)
