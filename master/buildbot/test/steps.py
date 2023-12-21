@@ -621,6 +621,9 @@ class TestBuildStepMixin:
         self.patch(runprocess, "create_process", self._patched_create_process)
         self._master_run_process_expect_env = {}
 
+        self.worker = worker.FakeWorker(self.master)
+        self.worker.attached(None)
+
     def tear_down_test_build_step(self):
         pass
 
@@ -668,14 +671,8 @@ class TestBuildStepMixin:
         # watch for properties being set
         self.properties = self.build.getProperties()
 
-        # step.progress
-
         self.step.progress = mock.Mock(name="progress")
-
-        # step.worker
-
-        self.worker = self.step.worker = worker.FakeWorker(self.master)
-        self.worker.attached(None)
+        self.step.worker = self.worker
 
         # step overrides
 
