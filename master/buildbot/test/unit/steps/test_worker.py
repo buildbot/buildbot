@@ -57,9 +57,9 @@ class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin,
         self.worker.worker_environ = {
             "one": "1", "two": None, "six": "6", "FIVE": "555"}
         self.worker.worker_system = 'linux'
-        self.properties.setProperty("four", 4, "them")
-        self.properties.setProperty("five", 5, "them")
-        self.properties.setProperty("six", 99, "them")
+        self.build.setProperty("four", 4, "them")
+        self.build.setProperty("five", 5, "them")
+        self.build.setProperty("six", 99, "them")
         self.expect_outcome(result=SUCCESS,
                            state_string="Set")
         self.expect_property('one', "1", source='me')
@@ -128,7 +128,7 @@ class TestFileExists(TestBuildStepMixin, TestReactorMixin,
 
     def test_render(self):
         self.setup_step(worker.FileExists(file=properties.Property("x")))
-        self.properties.setProperty('x', 'XXX', 'here')
+        self.build.setProperty('x', 'XXX', 'here')
         self.expect_commands(
             ExpectStat(file='XXX')
             .exit(1)
@@ -197,8 +197,8 @@ class TestCopyDirectory(TestBuildStepMixin, TestReactorMixin,
     def test_render(self):
         self.setup_step(worker.CopyDirectory(
             src=properties.Property("x"), dest=properties.Property("y")))
-        self.properties.setProperty('x', 'XXX', 'here')
-        self.properties.setProperty('y', 'YYY', 'here')
+        self.build.setProperty('x', 'XXX', 'here')
+        self.build.setProperty('y', 'YYY', 'here')
         self.expect_commands(
             ExpectCpdir(fromdir='XXX', todir='YYY', timeout=120)
             .exit(0)
@@ -239,7 +239,7 @@ class TestRemoveDirectory(TestBuildStepMixin, TestReactorMixin,
 
     def test_render(self):
         self.setup_step(worker.RemoveDirectory(dir=properties.Property("x")))
-        self.properties.setProperty('x', 'XXX', 'here')
+        self.build.setProperty('x', 'XXX', 'here')
         self.expect_commands(
             ExpectRmdir(dir='XXX')
             .exit(0)
@@ -279,7 +279,7 @@ class TestMakeDirectory(TestBuildStepMixin, TestReactorMixin,
 
     def test_render(self):
         self.setup_step(worker.MakeDirectory(dir=properties.Property("x")))
-        self.properties.setProperty('x', 'XXX', 'here')
+        self.build.setProperty('x', 'XXX', 'here')
         self.expect_commands(
             ExpectMkdir(dir='XXX')
             .exit(0)

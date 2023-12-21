@@ -409,7 +409,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                                                    ],
                               gotRevisionsInBuild={'': 23456},
                               )
-        self.properties.setProperty('usess', False, 'me')
+        self.build.setProperty('usess', False, 'me')
         self.expect_outcome(result=SUCCESS)
         # didn't use got_revision
         self.expectTriggeredWith(
@@ -428,7 +428,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                                                    ],
                               gotRevisionsInBuild={'': 23456},
                               )
-        self.properties.setProperty('usess', True, 'me')
+        self.build.setProperty('usess', True, 'me')
         self.expect_outcome(result=SUCCESS)
         # didn't use got_revision
         self.expectTriggeredWith(
@@ -457,7 +457,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                                                                   repository='x',
                                                                   revision=11111)
                                                   ])
-        self.properties.setProperty('aul', False, 'me')
+        self.build.setProperty('aul', False, 'me')
         self.expect_outcome(result=SUCCESS)
         # didn't use latest
         self.expectTriggeredWith(
@@ -472,7 +472,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                                                                   repository='x',
                                                                   revision=11111)
                                                   ])
-        self.properties.setProperty('aul', True, 'me')
+        self.build.setProperty('aul', True, 'me')
         self.expect_outcome(result=SUCCESS)
         # didn't use latest
         self.expectTriggeredWith(b=(False, [], {}))
@@ -535,7 +535,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_sourceStamp_prop(self):
         ss = {"revision": properties.Property('rev'), "branch": 'dev'}
         yield self.setup_step(trigger.Trigger(schedulerNames=['b'], sourceStamp=ss))
-        self.properties.setProperty('rev', 602, 'me')
+        self.build.setProperty('rev', 602, 'me')
         expected_ss = {"revision": 602, "branch": 'dev'}
         self.expect_outcome(result=SUCCESS)
         self.expectTriggeredWith(b=(False, [expected_ss], {}))
@@ -609,7 +609,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.setup_step(trigger.Trigger(
             schedulerNames=['a'],
             set_properties={"x": properties.Property('X'), "y": 2}))
-        self.properties.setProperty('X', 'xxx', 'here')
+        self.build.setProperty('X', 'xxx', 'here')
         self.expect_outcome(result=SUCCESS)
         self.expectTriggeredWith(a=(False, [],
                                     {"x": ('xxx', 'Trigger'), "y": (2, 'Trigger')}))
@@ -619,9 +619,9 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_copy_properties(self):
         yield self.setup_step(trigger.Trigger(schedulerNames=['a'],
                                              copy_properties=['a', 'b']))
-        self.properties.setProperty('a', 'A', 'AA')
-        self.properties.setProperty('b', 'B', 'BB')
-        self.properties.setProperty('c', 'C', 'CC')
+        self.build.setProperty('a', 'A', 'AA')
+        self.build.setProperty('b', 'B', 'BB')
+        self.build.setProperty('c', 'C', 'CC')
         self.expect_outcome(result=SUCCESS)
         self.expectTriggeredWith(a=(False, [],
                                     {"a": ('A', 'Trigger'), "b": ('B', 'Trigger')}))

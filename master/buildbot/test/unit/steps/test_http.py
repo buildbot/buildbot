@@ -209,8 +209,7 @@ OK:key1=value1''')
     def test_params_renderable(self):
         url = self.getURL()
         self.setup_step(http.GET(url, params=properties.Property("x")))
-        self.properties.setProperty(
-            'x', {'param_1': 'param_1', 'param_2': 2}, 'here')
+        self.build.setProperty("x", {"param_1": "param_1", "param_2": 2}, "here")
         self.expect_log_file('log',
             f"URL: {url}?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK")
         self.expect_log_file('content', "OK")

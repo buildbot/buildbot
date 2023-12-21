@@ -73,7 +73,7 @@ TestBuildStepMixin
         This attribute is available after ``setup_step()`` is run.
 
     ..
-        TODO: build, progress, worker, properties attributes
+        TODO: build, progress, worker attributes
 
     .. py:method:: expect_commands(*commands)
 

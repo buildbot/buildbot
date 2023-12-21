@@ -667,10 +667,6 @@ class TestBuildStepMixin:
 
         self.build = self._setup_fake_build(worker_version, worker_env, build_files)
         self.step.setBuild(self.build)
-
-        # watch for properties being set
-        self.properties = self.build.getProperties()
-
         self.step.progress = mock.Mock(name="progress")
         self.step.worker = self.worker
 
@@ -829,17 +825,20 @@ class TestBuildStepMixin:
                 stepStateString[stepids[0]],
                 f"expected state_string {self.exp_state_string!r}, got "
                 f"{stepStateString[stepids[0]]!r}")
+
+        properties = self.build.getProperties()
+
         for pn, (pv, ps) in self.exp_properties.items():
-            self.assertTrue(self.properties.hasProperty(pn), f"missing property '{pn}'")
-            self.assertEqual(self.properties.getProperty(pn), pv, f"property '{pn}'")
+            self.assertTrue(properties.hasProperty(pn), f"missing property '{pn}'")
+            self.assertEqual(properties.getProperty(pn), pv, f"property '{pn}'")
             if ps is not None:
                 self.assertEqual(
-                    self.properties.getPropertySource(pn), ps,
+                    properties.getPropertySource(pn), ps,
                     f"property {pn!r} source has source "
-                    f"{self.properties.getPropertySource(pn)!r}")
+                    f"{properties.getPropertySource(pn)!r}")
 
         for pn in self.exp_missing_properties:
-            self.assertFalse(self.properties.hasProperty(pn), f"unexpected property '{pn}'")
+            self.assertFalse(properties.hasProperty(pn), f"unexpected property '{pn}'")
 
         for l, exp in self.exp_logfiles.items():
             got = self.step.logs[l].stdout
