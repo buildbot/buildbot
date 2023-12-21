@@ -26,6 +26,7 @@ from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.process import metrics
 from buildbot.process import properties
+from buildbot.process.locks import get_real_locks_from_accesses
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -130,10 +131,7 @@ class Build(properties.PropertiesMixin):
 
     @defer.inlineCallbacks
     def _setup_locks(self):
-        workername = self.workerforbuilder.worker.workername
-        locks = yield self.render(self.locks)
-        locks = yield self.builder.botmaster.getLockFromLockAccesses(locks, self.config_version)
-        self._locks_to_acquire = [(l.getLockForWorker(workername), a) for l, a in locks]
+        self._locks_to_acquire = yield get_real_locks_from_accesses(self.locks, self)
 
     def setWorkerEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute
