@@ -55,11 +55,14 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
         self.sp = GitLabStatusPush(Interpolate('XXYYZZ'))
         yield self.sp.setServiceParent(self.master)
 
+        def setup_properties(props):
+            props.setProperty("buildername", "Builder0", "Builder")
+            return defer.succeed(None)
+
         builder = mock.Mock(spec=Builder)
         builder.master = self.master
         builder.name = "Builder0"
-        builder.setupProperties = lambda props: props.setProperty(
-            "buildername", "Builder0", "Builder")
+        builder.setup_properties = setup_properties
         self.master.botmaster.getBuilderById = mock.Mock(return_value=builder)
 
     def tearDown(self):

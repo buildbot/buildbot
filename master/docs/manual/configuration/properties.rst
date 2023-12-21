@@ -66,6 +66,11 @@ The following build properties are set when the build is started, and are availa
     This is a string that indicates which :class:`Builder` the build was a part of.
     The combination of buildername and buildnumber uniquely identify a build.
 
+.. index:: single: Properties; builderid
+
+``builderid``
+    This is a number that indicates which :class:`Builder` the build was a part of.
+
 .. index:: single: Properties; buildnumber
 
 ``buildnumber``

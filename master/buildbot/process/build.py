@@ -205,8 +205,13 @@ class Build(properties.PropertiesMixin):
         return self.workername
 
     @staticmethod
-    def setupPropertiesKnownBeforeBuildStarts(props, requests, builder,
-                                              workerforbuilder=None):
+    @defer.inlineCallbacks
+    def setup_properties_known_before_build_starts(
+        props,
+        requests,
+        builder,
+        workerforbuilder=None
+    ):
         # Note that this function does not setup the 'builddir' worker property
         # It's not possible to know it until before the actual worker has
         # attached.
@@ -225,7 +230,7 @@ class Build(properties.PropertiesMixin):
             props.updateFromProperties(rq.properties)
 
         # get builder properties
-        builder.setupProperties(props)
+        yield builder.setup_properties(props)
 
         # get worker properties
         # navigate our way back to the L{buildbot.worker.Worker}

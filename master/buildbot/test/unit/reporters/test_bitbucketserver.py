@@ -196,11 +196,14 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
+        def setup_properties(props):
+            props.setProperty("buildername", "Builder0", "Builder")
+            return defer.succeed(None)
+
         builder = Mock(spec=Builder)
         builder.master = self.master
         builder.name = "Builder0"
-        builder.setupProperties = lambda props: props.setProperty(
-            "buildername", "Builder0", "Builder")
+        builder.setup_properties = setup_properties
         self.master.botmaster.getBuilderById = Mock(return_value=builder)
 
         http_headers = {} if token is None else {'Authorization': 'Bearer tokentoken'}
