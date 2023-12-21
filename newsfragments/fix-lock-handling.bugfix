@@ -1,0 +1,2 @@
+Fixed an issue in lock handling which caused step locks to be acquired in excess of their
+configured capacity under certain conditions (:issue:`5655`, :issue:`5987`).
