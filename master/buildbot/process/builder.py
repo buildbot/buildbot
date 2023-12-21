@@ -368,9 +368,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         log.msg(f"starting build {build} using worker {workerforbuilder}")
 
-        # set up locks
-        locks = yield build.render(self.config.locks)
-        yield build.setLocks(locks)
+        build.setLocks(self.config.locks)
 
         if self.config.env:
             build.setWorkerEnvironment(self.config.env)
