@@ -32,6 +32,7 @@ from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process.buildstep import create_step_from_step_or_factory
+from buildbot.process.locks import get_real_locks_from_accesses
 from buildbot.process.properties import renderer
 from buildbot.process.results import ALL_RESULTS
 from buildbot.process.results import CANCELLED
@@ -95,17 +96,10 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
 
         @defer.inlineCallbacks
         def run(self):
-            botmaster = self.build.builder.botmaster
-            real_master_lock = yield botmaster.getLockFromLockAccess(self.lock_accesses[0],
-                                                                     self.build.config_version)
-            real_worker_lock = yield botmaster.getLockFromLockAccess(self.lock_accesses[1],
-                                                                     self.build.config_version)
+            locks = yield get_real_locks_from_accesses(self.lock_accesses, self.build)
 
-            self.testcase.assertFalse(real_master_lock.isAvailable(self.testcase,
-                                                                   self.lock_accesses[0]))
-            self.testcase.assertIn('workername', real_worker_lock.locks)
-            self.testcase.assertFalse(real_worker_lock.locks['workername'].isAvailable(
-                self.testcase, self.lock_accesses[1]))
+            self.testcase.assertFalse(locks[0][0].isAvailable(self.testcase, self.lock_accesses[0]))
+            self.testcase.assertFalse(locks[1][0].isAvailable(self.testcase, self.lock_accesses[1]))
             return SUCCESS
 
     def setUp(self):
@@ -255,14 +249,8 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
 
         self.assertEqual(len(lock_accesses), 2)
 
-        botmaster = self.step.build.builder.botmaster
-        real_master_lock = yield botmaster.getLockFromLockAccess(lock_accesses[0],
-                                                                 self.build.config_version)
-        real_worker_lock = yield botmaster.getLockFromLockAccess(lock_accesses[1],
-                                                                 self.build.config_version)
-        self.assertTrue(real_master_lock.isAvailable(self, lock_accesses[0]))
-        self.assertIn('workername', real_worker_lock.locks)
-        self.assertTrue(real_worker_lock.locks['workername'].isAvailable(self, lock_accesses[1]))
+        self.assertTrue(self.step._locks_to_acquire[0][0].isAvailable(self, lock_accesses[0]))
+        self.assertTrue(self.step._locks_to_acquire[1][0].isAvailable(self, lock_accesses[1]))
 
     def test_compare(self):
         lbs1 = buildstep.BuildStep(name="me")
@@ -291,14 +279,8 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
 
-        botmaster = self.step.build.builder.botmaster
-        real_master_lock = yield botmaster.getLockFromLockAccess(lock_accesses[0],
-                                                                 self.build.config_version)
-        real_worker_lock = yield botmaster.getLockFromLockAccess(lock_accesses[1],
-                                                                 self.build.config_version)
-        self.assertTrue(real_master_lock.isAvailable(self, lock_accesses[0]))
-        self.assertIn('workername', real_worker_lock.locks)
-        self.assertTrue(real_worker_lock.locks['workername'].isAvailable(self, lock_accesses[1]))
+        self.assertTrue(self.step._locks_to_acquire[0][0].isAvailable(self, lock_accesses[0]))
+        self.assertTrue(self.step._locks_to_acquire[1][0].isAvailable(self, lock_accesses[1]))
 
     @defer.inlineCallbacks
     def test_regular_locks_skip_step(self):
@@ -311,8 +293,8 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
             doStepIf=False
         ))
 
-        real_lock = yield self.build.builder.botmaster.getLockByID(lock, 0)
-        real_lock.claim(self, lock_access)
+        locks_list = yield get_real_locks_from_accesses([lock_access], self.build)
+        locks_list[0][0].claim(self, lock_access)
 
         self.expect_outcome(result=SKIPPED)
         yield self.run_step()
@@ -353,13 +335,13 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
             locks.LockAccess(lock2, 'exclusive')
         ]))
 
-        real_lock1 = yield self.build.builder.botmaster.getLockByID(lock1, 0)
-        real_lock2 = yield self.build.builder.botmaster.getLockByID(lock2, 0)
-
         yield stepa._setup_locks()
         yield stepb._setup_locks()
         yield stepc._setup_locks()
         yield stepd._setup_locks()
+
+        real_lock1 = stepd._locks_to_acquire[0][0]
+        real_lock2 = stepd._locks_to_acquire[1][0]
 
         # Start all the steps
         yield stepa.acquireLocks()

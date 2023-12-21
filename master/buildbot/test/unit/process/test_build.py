@@ -27,6 +27,7 @@ from buildbot.locks import WorkerLock
 from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import create_step_from_step_or_factory
+from buildbot.process.locks import get_real_locks_from_accesses
 from buildbot.process.metrics import MetricLogObserver
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -584,15 +585,13 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         lock = WorkerLock('lock')
         lock_access = lock.access('counting')
-        lock.access = lambda mode: lock_access
 
-        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
-        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
+        locks = yield get_real_locks_from_accesses([lock_access], b)
 
         step = create_step_from_step_or_factory(BuildStep(locks=[lock_access]))
         b.setStepFactories([FakeStepFactory(step)])
 
-        real_lock.claim(Mock(), lock.access('counting'))
+        locks[0][0].claim(Mock(), lock.access('counting'))
 
         gotLocks = [False]
 
