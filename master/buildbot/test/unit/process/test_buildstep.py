@@ -651,7 +651,7 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
     def test_step_renders_flunkOnFailure(self):
         self.setup_step(
             TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))
-        self.properties.setProperty('fOF', 'yes', 'test')
+        self.build.setProperty('fOF', 'yes', 'test')
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
         self.assertEqual(self.step.flunkOnFailure, 'yes')
@@ -1280,7 +1280,7 @@ class TestShellMixin(TestBuildStepMixin,
     def test_build_workdir_renderable(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = properties.Property("myproperty")
-        self.properties.setProperty("myproperty", "/myproperty", "test")
+        self.build.setProperty("myproperty", "/myproperty", "test")
         self.expect_commands(
             ExpectShell(workdir='/myproperty', command=['cmd', 'arg'])
             .exit(0)

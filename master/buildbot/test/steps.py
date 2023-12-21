@@ -621,6 +621,9 @@ class TestBuildStepMixin:
         self.patch(runprocess, "create_process", self._patched_create_process)
         self._master_run_process_expect_env = {}
 
+        self.worker = worker.FakeWorker(self.master)
+        self.worker.attached(None)
+
     def tear_down_test_build_step(self):
         pass
 
@@ -664,18 +667,8 @@ class TestBuildStepMixin:
 
         self.build = self._setup_fake_build(worker_version, worker_env, build_files)
         self.step.setBuild(self.build)
-
-        # watch for properties being set
-        self.properties = self.build.getProperties()
-
-        # step.progress
-
         self.step.progress = mock.Mock(name="progress")
-
-        # step.worker
-
-        self.worker = self.step.worker = worker.FakeWorker(self.master)
-        self.worker.attached(None)
+        self.step.worker = self.worker
 
         # step overrides
 
@@ -832,17 +825,20 @@ class TestBuildStepMixin:
                 stepStateString[stepids[0]],
                 f"expected state_string {self.exp_state_string!r}, got "
                 f"{stepStateString[stepids[0]]!r}")
+
+        properties = self.build.getProperties()
+
         for pn, (pv, ps) in self.exp_properties.items():
-            self.assertTrue(self.properties.hasProperty(pn), f"missing property '{pn}'")
-            self.assertEqual(self.properties.getProperty(pn), pv, f"property '{pn}'")
+            self.assertTrue(properties.hasProperty(pn), f"missing property '{pn}'")
+            self.assertEqual(properties.getProperty(pn), pv, f"property '{pn}'")
             if ps is not None:
                 self.assertEqual(
-                    self.properties.getPropertySource(pn), ps,
+                    properties.getPropertySource(pn), ps,
                     f"property {pn!r} source has source "
-                    f"{self.properties.getPropertySource(pn)!r}")
+                    f"{properties.getPropertySource(pn)!r}")
 
         for pn in self.exp_missing_properties:
-            self.assertFalse(self.properties.hasProperty(pn), f"unexpected property '{pn}'")
+            self.assertFalse(properties.hasProperty(pn), f"unexpected property '{pn}'")
 
         for l, exp in self.exp_logfiles.items():
             got = self.step.logs[l].stdout

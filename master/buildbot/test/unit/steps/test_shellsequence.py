@@ -80,7 +80,7 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_step(
             shellsequence.ShellSequence(commands=[arg1],
                                         workdir='build'))
-        self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
+        self.build.setProperty("project", "BUILDBOT-TEST", "TEST")
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST').exit(0))
         # TODO: need to factor command-summary stuff into a utility method and
         # use it here
@@ -169,7 +169,7 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
 
         # First "build"
         self.setup_step(step)
-        self.properties.setProperty("project", "BUILDBOT-TEST-1", "TEST")
+        self.build.setProperty("project", "BUILDBOT-TEST-1", "TEST")
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
         self.expect_outcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-1'")
@@ -177,7 +177,7 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
 
         # Second "build"
         self.setup_step(step)
-        self.properties.setProperty("project", "BUILDBOT-TEST-2", "TEST")
+        self.build.setProperty("project", "BUILDBOT-TEST-2", "TEST")
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2').exit(0))
         self.expect_outcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-2'")

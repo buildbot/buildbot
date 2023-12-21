@@ -128,7 +128,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
     def test_prop_rendering(self):
         self.setup_step(master.MasterShellCommand(command=Interpolate('%(prop:project)s-BUILD'),
                                                   workdir='build'))
-        self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
+        self.build.setProperty("project", "BUILDBOT-TEST", "TEST")
 
         if runtime.platformType == 'win32':
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'BUILDBOT-TEST-BUILD']
@@ -177,9 +177,9 @@ class TestSetProperty(TestBuildStepMixin, TestReactorMixin,
     def test_simple(self):
         self.setup_step(master.SetProperty(property="testProperty", value=Interpolate(
             "sch=%(prop:scheduler)s, worker=%(prop:workername)s")))
-        self.properties.setProperty(
+        self.build.setProperty(
             'scheduler', 'force', source='SetProperty', runtime=True)
-        self.properties.setProperty(
+        self.build.setProperty(
             'workername', 'testWorker', source='SetProperty', runtime=True)
         self.expect_outcome(result=SUCCESS, state_string="Set")
         self.expect_property(
@@ -200,10 +200,8 @@ class TestLogRenderable(TestBuildStepMixin, TestReactorMixin,
     def test_simple(self):
         self.setup_step(master.LogRenderable(
             content=Interpolate('sch=%(prop:scheduler)s, worker=%(prop:workername)s')))
-        self.properties.setProperty(
-            'scheduler', 'force', source='TestSetProperty', runtime=True)
-        self.properties.setProperty(
-            'workername', 'testWorker', source='TestSetProperty', runtime=True)
+        self.build.setProperty("scheduler", "force", source="TestSetProperty", runtime=True)
+        self.build.setProperty("workername", "testWorker", source="TestSetProperty", runtime=True)
         self.expect_outcome(result=SUCCESS, state_string='Logged')
         self.expect_log_file(
             'Output', pprint.pformat('sch=force, worker=testWorker'))
@@ -256,14 +254,14 @@ class TestAssert(TestBuildStepMixin, TestReactorMixin,
     def test_eq_pass(self):
         self.setup_step(master.Assert(
             Property("test_prop") == "foo"))
-        self.properties.setProperty("test_prop", "foo", "bar")
+        self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_eq_fail(self):
         self.setup_step(master.Assert(
             Property("test_prop") == "bar"))
-        self.properties.setProperty("test_prop", "foo", "bar")
+        self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
@@ -272,7 +270,7 @@ class TestAssert(TestBuildStepMixin, TestReactorMixin,
         def test_renderer(props):
             return props.getProperty("test_prop") == "foo"
         self.setup_step(master.Assert(test_renderer))
-        self.properties.setProperty("test_prop", "foo", "bar")
+        self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
@@ -281,6 +279,6 @@ class TestAssert(TestBuildStepMixin, TestReactorMixin,
         def test_renderer(props):
             return props.getProperty("test_prop") == "bar"
         self.setup_step(master.Assert(test_renderer))
-        self.properties.setProperty("test_prop", "foo", "bar")
+        self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=FAILURE)
         return self.run_step()

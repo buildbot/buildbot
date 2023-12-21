@@ -56,7 +56,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         if _is_windows:
             workspace_dir = r'C:\Users\username\Workspace'
             self.build.path_module = reflect.namedModule("ntpath")
-        self.properties.setProperty('builddir', workspace_dir, 'P4')
+        self.build.setProperty('builddir', workspace_dir, 'P4')
 
     def test_no_empty_step_config(self):
         with self.assertRaisesConfigError('You must provide p4base or p4viewspec'):

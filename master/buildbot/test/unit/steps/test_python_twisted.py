@@ -209,7 +209,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(python_twisted.Trial(workdir='build',
                                             tests=Property('test_list'),
                                             testpath=None))
-        self.properties.setProperty('test_list', ['testname'], 'Test')
+        self.build.setProperty('test_list', ['testname'], 'Test')
 
         self.expect_commands(
             ExpectShell(workdir='build',
@@ -334,7 +334,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                                             tests='testname',
                                             jobs=Property('jobs_count'),
                                             testpath=None))
-        self.properties.setProperty('jobs_count', '2', 'Test')
+        self.build.setProperty('jobs_count', '2', 'Test')
 
         self.expect_commands(
             ExpectShell(workdir='build',

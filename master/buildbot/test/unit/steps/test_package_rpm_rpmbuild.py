@@ -101,7 +101,7 @@ class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_renderable_dist(self):
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec",
                                          dist=Interpolate('%(prop:renderable_dist)s')))
-        self.properties.setProperty('renderable_dist', '.el7', 'test')
+        self.build.setProperty('renderable_dist', '.el7', 'test')
         self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '

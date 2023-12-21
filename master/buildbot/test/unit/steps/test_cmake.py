@@ -70,7 +70,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         value = 'Real_CMAKE'
 
         self.setup_step(CMake(cmake=Property(prop)))
-        self.properties.setProperty(prop, value, source='test')
+        self.build.setProperty(prop, value, source='test')
 
         self.expect_commands(
             ExpectShell(command=[value], workdir='wkdir').exit(0))
@@ -100,13 +100,13 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         }
 
         self.setup_step(CMake(definitions=definitions))
-        self.properties.setProperty('b', 'real_b', source='test')
+        self.build.setProperty('b', 'real_b', source='test')
         self.expect_and_run_command('-Da=real_b')
 
     def test_definitions_renderable(self):
         definitions = Property('b')
         self.setup_step(CMake(definitions=definitions))
-        self.properties.setProperty('b', {'a': 'real_b'}, source='test')
+        self.build.setProperty('b', {'a': 'real_b'}, source='test')
         self.expect_and_run_command('-Da=real_b')
 
     def test_generator(self):
@@ -119,7 +119,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         value = 'Our_GENERATOR'
 
         self.setup_step(CMake(generator=Property('GENERATOR')))
-        self.properties.setProperty('GENERATOR', value, source='test')
+        self.build.setProperty('GENERATOR', value, source='test')
 
         self.expect_and_run_command('-G', value)
 
@@ -134,7 +134,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         value = 'value'
 
         self.setup_step(CMake(options=(Property(prop),)))
-        self.properties.setProperty(prop, value, source='test')
+        self.build.setProperty(prop, value, source='test')
         self.expect_and_run_command(value)
 
     def test_path(self):
@@ -148,7 +148,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         value = 'some/path'
 
         self.setup_step(CMake(path=Property(prop)))
-        self.properties.setProperty(prop, value, source='test')
+        self.build.setProperty(prop, value, source='test')
         self.expect_and_run_command(value)
 
     def test_options_path(self):
