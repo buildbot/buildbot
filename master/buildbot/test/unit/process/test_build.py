@@ -352,59 +352,6 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.assertEqual(b.results, EXCEPTION)
         self.flushLoggedErrors(TestException)
 
-    @defer.inlineCallbacks
-    def testBuild_canAcquireLocks(self):
-        b = self.build
-
-        workerforbuilder1 = Mock()
-        workerforbuilder2 = Mock()
-
-        lock = WorkerLock('lock')
-        counting_access = lock.access('counting')
-
-        real_lock = yield b.builder.botmaster.getLockByID(lock, 0)
-
-        # no locks, so both these pass (call twice to verify there's no
-        # state/memory)
-        lock_list = [(real_lock, counting_access)]
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-
-        worker_lock_1 = real_lock.getLockForWorker(
-            workerforbuilder1.worker.workername)
-        worker_lock_2 = real_lock.getLockForWorker(
-            workerforbuilder2.worker.workername)
-
-        # then have workerforbuilder2 claim its lock:
-        worker_lock_2.claim(workerforbuilder2, counting_access)
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertFalse(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        self.assertFalse(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        worker_lock_2.release(workerforbuilder2, counting_access)
-
-        # then have workerforbuilder1 claim its lock:
-        worker_lock_1.claim(workerforbuilder1, counting_access)
-        self.assertFalse(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertFalse(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        worker_lock_1.release(workerforbuilder1, counting_access)
-
     def testBuilddirPropType(self):
 
         b = self.build

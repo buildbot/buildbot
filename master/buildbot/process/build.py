@@ -474,15 +474,6 @@ class Build(properties.PropertiesMixin):
             yield self.master.data.updates.finishStep(self.preparation_step.stepid,
                                                       EXCEPTION, False)
 
-    @staticmethod
-    def _canAcquireLocks(lockList, workerforbuilder):
-        for lock, access in lockList:
-            worker_lock = lock.getLockForWorker(
-                workerforbuilder.worker.workername)
-            if not worker_lock.isAvailable(None, access):
-                return False
-        return True
-
     def acquireLocks(self, res=None):
         self._acquiringLock = None
         if not self._locks_to_acquire:

@@ -17,9 +17,20 @@ from twisted.internet import defer
 
 
 @defer.inlineCallbacks
-def get_real_locks_from_accesses(locks, build):
-    workername = build.workerforbuilder.worker.workername
+def get_real_locks_from_accesses_raw(locks, props, builder, workerforbuilder, config_version):
+    workername = workerforbuilder.worker.workername
 
-    locks = yield build.render(locks)
-    locks = yield build.builder.botmaster.getLockFromLockAccesses(locks, build.config_version)
+    if props is not None:
+        locks = yield props.render(locks)
+
+    if not locks:
+        return []
+
+    locks = yield builder.botmaster.getLockFromLockAccesses(locks, config_version)
     return [(l.getLockForWorker(workername), a) for l, a in locks]
+
+
+def get_real_locks_from_accesses(locks, build):
+    return get_real_locks_from_accesses_raw(
+        locks, build, build.builder, build.workerforbuilder, build.config_version
+    )
