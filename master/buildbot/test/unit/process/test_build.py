@@ -115,8 +115,8 @@ class FakeBuilder:
     def getBuilderId(self):
         return defer.succeed(self.builderid)
 
-    def setupProperties(self, props):
-        pass
+    def setup_properties(self, props):
+        return defer.succeed(None)
 
     def buildFinished(self, build, workerforbuilder):
         pass

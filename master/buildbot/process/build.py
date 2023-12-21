@@ -205,6 +205,7 @@ class Build(properties.PropertiesMixin):
         return self.workername
 
     @staticmethod
+    @defer.inlineCallbacks
     def setup_properties_known_before_build_starts(
         props,
         requests,
@@ -229,15 +230,13 @@ class Build(properties.PropertiesMixin):
             props.updateFromProperties(rq.properties)
 
         # get builder properties
-        builder.setupProperties(props)
+        yield builder.setup_properties(props)
 
         # get worker properties
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
         if workerforbuilder is not None:
             workerforbuilder.worker.setupProperties(props)
-
-        return defer.succeed(None)
 
     @staticmethod
     def setupBuildProperties(props, requests, sources=None, number=None):

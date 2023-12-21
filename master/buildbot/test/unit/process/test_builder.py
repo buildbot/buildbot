@@ -471,7 +471,7 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
         yield self.makeBuilder(defaultProperties={'bar': 'onoes', 'cuckoo': 42})
 
-        self.bldr.setupProperties(props)
+        yield self.bldr.setup_properties(props)
 
         self.assertEquals(props.getProperty('bar'), 'bleh')
         self.assertEquals(props.getProperty('cuckoo'), 42)
