@@ -61,6 +61,14 @@ class BuildStepWithFailingLogObserver(buildstep.BuildStep):
         raise RuntimeError('fail')
 
 
+class SucceedingCustomStep(buildstep.BuildStep):
+
+    flunkOnFailure = True
+
+    def run(self):
+        return defer.succeed(results.SUCCESS)
+
+
 class FailingCustomStep(buildstep.BuildStep):
 
     flunkOnFailure = True
@@ -142,3 +150,29 @@ class RunSteps(RunFakeMasterTestCase):
         yield self.assertLogs(1, {
             'xx': 'o\N{CENT SIGN}\n',
         })
+
+    @defer.inlineCallbacks
+    def test_all_properties(self):
+        builder_id = yield self.create_config_for_step(SucceedingCustomStep())
+
+        yield self.do_test_build(builder_id)
+
+        properties = yield self.master.data.get(("builds", 1, "properties"))
+
+        self.assertIn("builddir", properties)
+        properties.pop("builddir")
+
+        self.assertEqual(
+            properties,
+            {
+                "buildername": ("builder", "Builder"),
+                "builderid": (1, "Builder"),
+                "workername": ("worker1", "Worker"),
+                "buildnumber": (1, "Build"),
+                "branch": (None, "Build"),
+                "revision": (None, "Build"),
+                "repository": ("", "Build"),
+                "codebase": ("", "Build"),
+                "project": ("", "Build"),
+            }
+        )

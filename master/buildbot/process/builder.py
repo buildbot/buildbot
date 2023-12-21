@@ -397,8 +397,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         return True
 
+    @defer.inlineCallbacks
     def setup_properties(self, props):
+        builderid = yield self.getBuilderId()
+
         props.setProperty("buildername", self.name, "Builder")
+        props.setProperty("builderid", builderid, "Builder")
         if self.config.properties:
             for propertyname in self.config.properties:
                 props.setProperty(propertyname,
@@ -410,8 +414,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
                     props.setProperty(propertyname,
                                       self.config.defaultProperties[propertyname],
                                       "Builder")
-
-        return defer.succeed(None)
 
     def buildFinished(self, build, wfb):
         """This is called when the Build has finished (either success or
