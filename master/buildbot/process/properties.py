@@ -636,8 +636,7 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
             return f'Interpolate({repr(self.fmtstring)}, **{repr(self.kwargs)})'
         return f'Interpolate({repr(self.fmtstring)})'
 
-    @staticmethod
-    def _parse_prop(arg):
+    def _parse_substitution_prop(self, arg):
         try:
             prop, repl = arg.split(":", 1)
         except ValueError:
@@ -648,16 +647,14 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
 
         return _thePropertyDict, prop, repl
 
-    @staticmethod
-    def _parse_secret(arg):
+    def _parse_substitution_secret(self, arg):
         try:
             secret, repl = arg.split(":", 1)
         except ValueError:
             secret, repl = arg, None
         return _SecretIndexer(), secret, repl
 
-    @staticmethod
-    def _parse_src(arg):
+    def _parse_substitution_src(self, arg):
         # TODO: Handle changes
         try:
             codebase, attr, repl = arg.split(":", 2)
@@ -678,14 +675,14 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
             codebase = attr = repl = None
         return _SourceStampDict(codebase), attr, repl
 
-    def _parse_worker(self, arg):
+    def _parse_substitution_worker(self, arg):
         try:
             prop, repl = arg.split(":", 1)
         except ValueError:
             prop, repl = arg, None
         return _theWorkerPropertyDict, prop, repl
 
-    def _parse_kw(self, arg):
+    def _parse_substitution_kw(self, arg):
         try:
             kw, repl = arg.split(":", 1)
         except ValueError:
@@ -695,6 +692,14 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
             kw = repl = None
         return _Lazy(self.kwargs), kw, repl
 
+    _substitutions = {
+        "prop": _parse_substitution_prop,
+        "secret": _parse_substitution_secret,
+        "src": _parse_substitution_src,
+        "worker": _parse_substitution_worker,
+        "kw": _parse_substitution_kw,
+    }
+
     def _parseSubstitution(self, fmt):
         try:
             key, arg = fmt.split(":", 1)
@@ -702,11 +707,11 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
             config.error(f"invalid Interpolate substitution without selector '{fmt}'")
             return None
 
-        fn = getattr(self, "_parse_" + key, None)
+        fn = self._substitutions.get(key, None)
         if not fn:
             config.error(f"invalid Interpolate selector '{key}'")
             return None
-        return fn(arg)
+        return fn(self, arg)
 
     @staticmethod
     def _splitBalancedParen(delim, arg):
