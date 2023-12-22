@@ -30,6 +30,9 @@ docs-towncrier:
 	if command -v towncrier >/dev/null 2>&1 ;\
 	then \
 	towncrier --draft | grep  'No significant changes.' || yes n | towncrier ;\
+	echo "---- Diff start ----"; \
+	git --no-pager diff --cached; \
+	echo "---- Diff end ----"; \
 	fi
 
 docs-spelling:
