@@ -306,8 +306,10 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         self.reconfigurableResources = []
 
-        # we're going to need at least the base plugin (buildbot-www)
+        # we're going to need at least the base plugin (buildbot-www or buildbot-www-react)
         if self.base_plugin_name not in self.apps:
+            if self.base_plugin_name == 'base_react':
+                raise RuntimeError("could not find buildbot-www-react; is it installed?")
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
         root = self.apps.get(self.base_plugin_name).resource
