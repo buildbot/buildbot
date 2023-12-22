@@ -27,9 +27,13 @@ docs:
 	@echo "You can now open master/docs/_build/html/index.html"
 
 docs-towncrier:
+	# Check that master/docs/relnotes/index.rst is not already generated (so it's in the the staging area).
+	# If docs-release and docs-release-spelling are called one after the other, then towncrier will report duplicate release notes.
+	if ! git diff --name-only --cached | grep -q "master/docs/relnotes/index.rst"; then \
 	if command -v towncrier >/dev/null 2>&1 ;\
 	then \
 	towncrier --draft | grep  'No significant changes.' || yes n | towncrier ;\
+	fi \
 	fi
 
 docs-spelling:
