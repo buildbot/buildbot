@@ -107,7 +107,7 @@ singledispatch==4.1.0
 six==1.16.0
 snowballstemmer==2.2.0
 # Buildbot supports only sqlalchemy >= 1.3.0, < 1.5
-SQLAlchemy==1.4.40  # pyup: ignore
+SQLAlchemy==1.4.50  # pyup: ignore
 sqlparse==0.4.4
 termcolor==2.4.0
 testtools==2.7.1
