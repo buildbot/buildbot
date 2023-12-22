@@ -27,6 +27,7 @@ from buildbot.locks import WorkerLock
 from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import create_step_from_step_or_factory
+from buildbot.process.locks import get_real_locks_from_accesses
 from buildbot.process.metrics import MetricLogObserver
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -195,6 +196,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.builder = FakeBuilder(self.master)
         self.build = Build([r])
         self.build.conn = fakeprotocol.FakeConnection(self.worker)
+        self.build.workername = self.worker.workername
 
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.worker
@@ -202,6 +204,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.workerforbuilder.ping = lambda: True
 
         self.build.setBuilder(self.builder)
+        self.build.workerforbuilder = self.workerforbuilder
         self.build.text = []
         self.build.buildid = 666
 
@@ -211,6 +214,16 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
     def create_fake_build_step(self):
         return create_step_from_step_or_factory(FakeBuildStep())
+
+    def _setup_lock_claim_log(self, lock, claim_log):
+        if hasattr(lock, "_old_claim"):
+            return
+
+        def claim(owner, access):
+            claim_log.append(owner)
+            return lock._old_claim(owner, access)
+        lock._old_claim = lock.claim
+        lock.claim = claim
 
     def testRunSuccessfulBuild(self):
         b = self.build
@@ -339,59 +352,6 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.assertEqual(b.results, EXCEPTION)
         self.flushLoggedErrors(TestException)
 
-    @defer.inlineCallbacks
-    def testBuild_canAcquireLocks(self):
-        b = self.build
-
-        workerforbuilder1 = Mock()
-        workerforbuilder2 = Mock()
-
-        lock = WorkerLock('lock')
-        counting_access = lock.access('counting')
-
-        real_lock = yield b.builder.botmaster.getLockByID(lock, 0)
-
-        # no locks, so both these pass (call twice to verify there's no
-        # state/memory)
-        lock_list = [(real_lock, counting_access)]
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-
-        worker_lock_1 = real_lock.getLockForWorker(
-            workerforbuilder1.worker.workername)
-        worker_lock_2 = real_lock.getLockForWorker(
-            workerforbuilder2.worker.workername)
-
-        # then have workerforbuilder2 claim its lock:
-        worker_lock_2.claim(workerforbuilder2, counting_access)
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertFalse(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        self.assertFalse(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        worker_lock_2.release(workerforbuilder2, counting_access)
-
-        # then have workerforbuilder1 claim its lock:
-        worker_lock_1.claim(workerforbuilder1, counting_access)
-        self.assertFalse(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertFalse(
-            Build._canAcquireLocks(lock_list, workerforbuilder1))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        self.assertTrue(
-            Build._canAcquireLocks(lock_list, workerforbuilder2))
-        worker_lock_1.release(workerforbuilder1, counting_access)
-
     def testBuilddirPropType(self):
 
         b = self.build
@@ -415,19 +375,14 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b = self.build
 
         lock = WorkerLock('lock')
-        claimCount = [0]
+        claim_log = []
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
 
-        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
-        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
+        b.setLocks([lock_access])
+        yield b._setup_locks()
 
-        def claim(owner, access):
-            claimCount[0] += 1
-            return real_lock.old_claim(owner, access)
-        real_lock.old_claim = real_lock.claim
-        real_lock.claim = claim
-        yield b.setLocks([lock_access])
+        self._setup_lock_claim_log(b._locks_to_acquire[0][0], claim_log)
 
         step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
@@ -435,7 +390,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, SUCCESS)
-        self.assertEqual(claimCount[0], 1)
+        self.assertEqual(len(claim_log), 1)
 
     @defer.inlineCallbacks
     def testBuildLocksOrder(self):
@@ -444,6 +399,8 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         eBuild = self.build
         cBuilder = FakeBuilder(self.master)
         cBuild = Build([self.request])
+        cBuild.workerforbuilder = self.workerforbuilder
+        cBuild.workername = self.worker.workername
         cBuild.setBuilder(cBuilder)
 
         eWorker = Mock()
@@ -455,23 +412,22 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         eWorker.ping = cWorker.ping = lambda: True
 
         lock = WorkerLock('lock', 2)
-        claimLog = []
+        claim_log = []
 
-        real_workerlock = yield self.master.botmaster.getLockByID(lock, 0)
-        realLock = real_workerlock.getLockForWorker(self.worker.workername)
+        eBuild.setLocks([lock.access('exclusive')])
+        yield eBuild._setup_locks()
 
-        def claim(owner, access):
-            claimLog.append(owner)
-            return realLock.oldClaim(owner, access)
-        realLock.oldClaim = realLock.claim
-        realLock.claim = claim
+        cBuild.setLocks([lock.access('counting')])
+        yield cBuild._setup_locks()
 
-        yield eBuild.setLocks([lock.access('exclusive')])
-        yield cBuild.setLocks([lock.access('counting')])
+        self._setup_lock_claim_log(eBuild._locks_to_acquire[0][0], claim_log)
+        self._setup_lock_claim_log(cBuild._locks_to_acquire[0][0], claim_log)
 
-        fakeBuild = Mock()
-        fakeBuildAccess = lock.access('counting')
-        realLock.claim(fakeBuild, fakeBuildAccess)
+        real_lock = eBuild._locks_to_acquire[0][0]
+
+        b3 = Mock()
+        b3_access = lock.access('counting')
+        real_lock.claim(b3, b3_access)
 
         step = self.create_fake_build_step()
         eBuild.setStepFactories([FakeStepFactory(step)])
@@ -481,40 +437,35 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         c = cBuild.startBuild(cWorker)
         d = defer.DeferredList([e, c])
 
-        realLock.release(fakeBuild, fakeBuildAccess)
+        real_lock.release(b3, b3_access)
 
         yield d
         self.assertEqual(eBuild.results, SUCCESS)
         self.assertEqual(cBuild.results, SUCCESS)
-        self.assertEqual(claimLog, [fakeBuild, eBuild, cBuild])
+        self.assertEqual(claim_log, [b3, eBuild, cBuild])
 
     @defer.inlineCallbacks
     def testBuildWaitingForLocks(self):
         b = self.build
 
+        claim_log = []
+
         lock = WorkerLock('lock')
-        claimCount = [0]
         lock_access = lock.access('counting')
-        lock.access = lambda mode: lock_access
 
-        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
-        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
-
-        def claim(owner, access):
-            claimCount[0] += 1
-            return real_lock.old_claim(owner, access)
-        real_lock.old_claim = real_lock.claim
-        real_lock.claim = claim
-        yield b.setLocks([lock_access])
+        b.setLocks([lock_access])
+        yield b._setup_locks()
+        self._setup_lock_claim_log(b._locks_to_acquire[0][0], claim_log)
 
         step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
+        real_lock = b._locks_to_acquire[0][0]
         real_lock.claim(Mock(), lock.access('counting'))
 
         b.startBuild(self.workerforbuilder)
 
-        self.assertEqual(claimCount[0], 1)
+        self.assertEqual(len(claim_log), 1)
         self.assertTrue(b.currentStep is None)
         self.assertTrue(b._acquiringLock is not None)
 
@@ -524,17 +475,15 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         lock = WorkerLock('lock')
         lock_access = lock.access('counting')
-        lock.access = lambda mode: lock_access
 
-        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
-        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
-
-        yield b.setLocks([lock_access])
+        b.setLocks([lock_access])
+        yield b._setup_locks()
 
         step = self.create_fake_build_step()
         step.alwaysRun = False
         b.setStepFactories([FakeStepFactory(step)])
 
+        real_lock = b._locks_to_acquire[0][0]
         real_lock.claim(Mock(), lock.access('counting'))
 
         def acquireLocks(res=None):
@@ -556,15 +505,14 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
 
-        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
-        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
-
-        yield b.setLocks([lock_access])
+        b.setLocks([lock_access])
+        yield b._setup_locks()
 
         step = self.create_fake_build_step()
         step.alwaysRun = False
         b.setStepFactories([FakeStepFactory(step)])
 
+        real_lock = b._locks_to_acquire[0][0]
         real_lock.claim(Mock(), lock.access('counting'))
 
         def acquireLocks(res=None):
@@ -584,15 +532,13 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         lock = WorkerLock('lock')
         lock_access = lock.access('counting')
-        lock.access = lambda mode: lock_access
 
-        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
-        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
+        locks = yield get_real_locks_from_accesses([lock_access], b)
 
         step = create_step_from_step_or_factory(BuildStep(locks=[lock_access]))
         b.setStepFactories([FakeStepFactory(step)])
 
-        real_lock.claim(Mock(), lock.access('counting'))
+        locks[0][0].claim(Mock(), lock.access('counting'))
 
         gotLocks = [False]
 

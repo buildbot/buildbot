@@ -40,6 +40,7 @@ from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process import results
+from buildbot.process.locks import get_real_locks_from_accesses
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import ALL_RESULTS
@@ -600,20 +601,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     @defer.inlineCallbacks
     def _setup_locks(self):
-
-        locks = yield self.build.render(self.locks)
-
-        # convert all locks into their real form
-        botmaster = self.build.builder.botmaster
-        locks = yield botmaster.getLockFromLockAccesses(locks, self.build.config_version)
-
-        # then narrow WorkerLocks down to the worker that this build is being
-        # run on
-        self._locks_to_acquire = [
-            (l.getLockForWorker(self.build.workerforbuilder.worker.workername), la)
-            for l, la in locks
-        ]
-
+        self._locks_to_acquire = yield get_real_locks_from_accesses(self.locks, self.build)
         for l, _ in self._locks_to_acquire:
             if l in self.build.locks:
                 log.msg(f"Hey, lock {l} is claimed by both a Step ({self}) and the"

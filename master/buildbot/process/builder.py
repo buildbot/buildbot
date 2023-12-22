@@ -26,6 +26,7 @@ from buildbot.interfaces import IRenderable
 from buildbot.process import buildrequest
 from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
+from buildbot.process.locks import get_real_locks_from_accesses_raw
 from buildbot.process.properties import Properties
 from buildbot.process.results import RETRY
 from buildbot.util import bytes2unicode
@@ -338,19 +339,28 @@ class Builder(util_service.ReconfigurableServiceMixin,
             # collect properties that would be set for a build if we
             # started it now and render locks using it
             props = yield self._setup_props_if_needed(props, workerforbuilder, buildrequest)
-            locks = yield props.render(locks)
+        else:
+            props = None
 
-        locks = yield self.botmaster.getLockFromLockAccesses(locks, self.config_version)
+        locks_to_acquire = yield get_real_locks_from_accesses_raw(
+            locks, props, self, workerforbuilder, self.config_version
+        )
 
-        if locks:
-            can_start = Build._canAcquireLocks(locks, workerforbuilder)
-            if can_start is False:
-                return can_start
+        if locks_to_acquire:
+            can_start = self._can_acquire_locks(locks_to_acquire)
+            if not can_start:
+                return False
 
         if callable(self.config.canStartBuild):
             can_start = yield self.config.canStartBuild(self, workerforbuilder,
                                                         buildrequest)
         return can_start
+
+    def _can_acquire_locks(self, lock_list):
+        for lock, access in lock_list:
+            if not lock.isAvailable(None, access):
+                return False
+        return True
 
     @defer.inlineCallbacks
     def _startBuildFor(self, workerforbuilder, buildrequests):
@@ -368,9 +378,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         log.msg(f"starting build {build} using worker {workerforbuilder}")
 
-        # set up locks
-        locks = yield build.render(self.config.locks)
-        yield build.setLocks(locks)
+        build.setLocks(self.config.locks)
 
         if self.config.env:
             build.setWorkerEnvironment(self.config.env)

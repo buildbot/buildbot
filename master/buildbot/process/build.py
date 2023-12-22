@@ -26,6 +26,7 @@ from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.process import metrics
 from buildbot.process import properties
+from buildbot.process.locks import get_real_locks_from_accesses
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -79,7 +80,8 @@ class Build(properties.PropertiesMixin):
 
     def __init__(self, requests):
         self.requests = requests
-        self.locks = []
+        self.locks = []  # list of lock accesses
+        self._locks_to_acquire = []  # list of (real_lock, access) tuples
         # build a source stamp
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
@@ -124,10 +126,12 @@ class Build(properties.PropertiesMixin):
         self.master = builder.master
         self.config_version = builder.config_version
 
-    @defer.inlineCallbacks
     def setLocks(self, lockList):
-        self.locks = yield self.builder.botmaster.getLockFromLockAccesses(lockList,
-                                                                          self.config_version)
+        self.locks = lockList
+
+    @defer.inlineCallbacks
+    def _setup_locks(self):
+        self._locks_to_acquire = yield get_real_locks_from_accesses(self.locks, self)
 
     def setWorkerEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute
@@ -354,9 +358,7 @@ class Build(properties.PropertiesMixin):
                                    self.sources, self.number)
 
         # then narrow WorkerLocks down to the right worker
-        self.locks = [(l.getLockForWorker(self.workername),
-                       a)
-                      for l, a in self.locks]
+        yield self._setup_locks()
         metrics.MetricCountEvent.log('active_builds', 1)
 
         # make sure properties are available to people listening on 'new'
@@ -472,23 +474,14 @@ class Build(properties.PropertiesMixin):
             yield self.master.data.updates.finishStep(self.preparation_step.stepid,
                                                       EXCEPTION, False)
 
-    @staticmethod
-    def _canAcquireLocks(lockList, workerforbuilder):
-        for lock, access in lockList:
-            worker_lock = lock.getLockForWorker(
-                workerforbuilder.worker.workername)
-            if not worker_lock.isAvailable(None, access):
-                return False
-        return True
-
     def acquireLocks(self, res=None):
         self._acquiringLock = None
-        if not self.locks:
+        if not self._locks_to_acquire:
             return defer.succeed(None)
         if self.stopped:
             return defer.succeed(None)
-        log.msg(f"acquireLocks(build {self}, locks {self.locks})")
-        for lock, access in self.locks:
+        log.msg(f"acquireLocks(build {self}, locks {self._locks_to_acquire})")
+        for lock, access in self._locks_to_acquire:
             if not lock.isAvailable(self, access):
                 log.msg(f"Build {self} waiting for lock {lock}")
                 d = lock.waitUntilMaybeAvailable(self, access)
@@ -496,7 +489,7 @@ class Build(properties.PropertiesMixin):
                 self._acquiringLock = (lock, access, d)
                 return d
         # all locks are available, claim them all
-        for lock, access in self.locks:
+        for lock, access in self._locks_to_acquire:
             lock.claim(self, access)
         return defer.succeed(None)
 
@@ -749,10 +742,10 @@ class Build(properties.PropertiesMixin):
                           'serious error - please file a bug at http://buildbot.net')
 
     def releaseLocks(self):
-        if self.locks:
-            log.msg(f"releaseLocks({self}): {self.locks}")
+        if self._locks_to_acquire:
+            log.msg(f"releaseLocks({self}): {self._locks_to_acquire}")
 
-        for lock, access in self.locks:
+        for lock, access in self._locks_to_acquire:
             if lock.isOwner(self, access):
                 lock.release(self, access)
 
@@ -778,7 +771,7 @@ class Build(properties.PropertiesMixin):
         self._locks_released = self._locks_released or locks_released
         self._build_finished = self._build_finished or build_finished
 
-        if not self.locks:
+        if not self._locks_to_acquire:
             return
 
         if self._locks_released and self._build_finished:
