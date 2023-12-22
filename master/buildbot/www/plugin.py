@@ -29,11 +29,11 @@ else:
 
 class Application:
 
-    def __init__(self, modulename, description, ui=True):
+    def __init__(self, package_name, description, ui=True):
         self.description = description
-        self.version = importlib_resources.files(modulename).joinpath("VERSION")
+        self.version = importlib_resources.files(package_name).joinpath("VERSION")
         self.version = bytes2unicode(self.version.read_bytes())
-        self.static_dir = importlib_resources.files(modulename) / "static"
+        self.static_dir = importlib_resources.files(package_name) / "static"
         self.resource = static.File(self.static_dir)
         self.ui = ui
 
