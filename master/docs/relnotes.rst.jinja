@@ -15,6 +15,7 @@
 {% for text, values in sections[section][category]|dictsort(by='value') %}
 - {{ text }}
 {% endfor %}
+
 {% else %}
 - {{ sections[section][category]['']|sort|join(', ') }}
 
