@@ -143,5 +143,5 @@ class Api:
 
 
 # create the interface for the setuptools entry point
-ep = Application(__name__, "Buildbot badges", ui=False)
+ep = Application(__package__, "Buildbot badges", ui=False)
 ep.resource = Api(ep).app.resource()

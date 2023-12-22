@@ -1,0 +1,3 @@
+``buildbot.www.plugin.Application`` no longer accepts module name as the first parameter.
+It requires the name of package. In most cases where ``__name__`` was being passed, ``__package__``
+is now required.

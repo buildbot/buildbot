@@ -16,4 +16,4 @@
 from buildbot.www.plugin import Application
 
 # create the interface for the setuptools entry point
-ep = Application(__name__, "Buildbot Grid View plugin")
+ep = Application(__package__, "Buildbot Grid View plugin")

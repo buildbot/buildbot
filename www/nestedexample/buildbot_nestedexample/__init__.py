@@ -64,6 +64,6 @@ class NestedExample(NestedParameter):
 
 
 # create the interface for the setuptools entry point
-ep = Application(__name__, "Buildbot nested parameter example")
+ep = Application(__package__, "Buildbot nested parameter example")
 api = Api(ep)
 ep.resource.putChild("api", api.app.resource())
