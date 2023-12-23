@@ -115,6 +115,14 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                               attributes=[
                                   self.accountEmail, self.accountFullName] +
                               self.accountExtraFields)
+            # active directory delivers references in addition to the search
+            # results - filter them out
+            if len(res) > 1:
+                tmp = []
+                for elem in res:
+                    if elem['type'] == 'searchResEntry':
+                        tmp.append(elem)
+                res = tmp
             if len(res) != 1:
                 raise KeyError(f"ldap search \"{pattern}\" returned {len(res)} results")
             dn, ldap_infos = res[0]['dn'], res[0]['attributes']
