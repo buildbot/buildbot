@@ -1,0 +1,88 @@
+name: CI (DB)
+on:
+  push:
+    branches:
+    - master
+    - release
+
+permissions:
+  contents: read
+
+jobs:
+  db:
+    name: DB / ${{ matrix.name }}
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: MySQL 5
+            database: mysql:5
+            connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
+            check: mysqladmin ping
+
+          - name: MySQL latest
+            database: mysql:latest
+            connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
+            check: mysqladmin ping
+
+          - name: PostgreSQL 9 / psycopg2
+            database: postgres:9
+            connection: 'postgresql+psycopg2://buildbot:buildbot@127.0.0.1:5432/bbtest'
+            check: pg_isready
+
+          - name: PostgreSQL 9 / pg8000
+            database: postgres:9
+            connection: 'postgresql+pg8000://buildbot:buildbot@127.0.0.1:5432/bbtest'
+            check: pg_isready
+
+          - name: PostgreSQL latest / psycopg2
+            database: postgres:latest
+            connection: 'postgresql+psycopg2://buildbot:buildbot@127.0.0.1:5432/bbtest'
+            check: pg_isready
+
+          - name: PostgreSQL latest / pg8000
+            database: postgres:latest
+            connection: 'postgresql+pg8000://buildbot:buildbot@127.0.0.1:5432/bbtest'
+            check: pg_isready
+
+    env:
+      BUILDBOT_TEST_DB_URL: ${{ matrix.connection }}
+
+    services:
+      database:
+        image: ${{ matrix.database }}
+        env:
+          MYSQL_USER: buildbot
+          MYSQL_PASSWORD: buildbot
+          MYSQL_DATABASE: bbtest
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          POSTGRES_USER: buildbot
+          POSTGRES_PASSWORD: buildbot
+          POSTGRES_DB: bbtest
+        ports:
+          - '3306:3306'
+          - '5432:5432'
+        options: --health-cmd "${{ matrix.check }}" --health-interval 10s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: sudo apt-get install aspell aspell-en enchant iamerican ispell
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-ci.txt', 'requirements-cidb.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - run: pip install -U pip wheel
+      - run: pip install -r requirements-ci.txt -r requirements-cidb.txt
+      - run: $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
