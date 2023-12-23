@@ -50,6 +50,7 @@ class FakeBuild(properties.PropertiesMixin):
         self.number = 13
         self.workdir = 'build'
         self.locks = []
+        self._locks_to_acquire = []
 
         self.sources = {}
         if props is None:
