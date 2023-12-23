@@ -602,11 +602,14 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def _setup_locks(self):
         self._locks_to_acquire = yield get_real_locks_from_accesses(self.locks, self.build)
-        for l, _ in self._locks_to_acquire:
-            if l in self.build.locks:
-                log.msg(f"Hey, lock {l} is claimed by both a Step ({self}) and the"
-                        f" parent Build ({self.build})")
-                raise RuntimeError("lock claimed by both Step and Build")
+
+        if self.build._locks_to_acquire:
+            build_locks = [l for l, _ in self.build._locks_to_acquire]
+            for l, _ in self._locks_to_acquire:
+                if l in build_locks:
+                    log.err(f"{self}: lock {l} is claimed by both a Step ({self}) and the"
+                            f" parent Build ({self.build})")
+                    raise RuntimeError(f"lock claimed by both Step and Build ({l})")
 
     @defer.inlineCallbacks
     def _render_renderables(self):

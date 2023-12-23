@@ -456,6 +456,22 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
         self.assertTrue(_is_lock_owned_by_step(stepc, real_lock))
 
     @defer.inlineCallbacks
+    def test_checks_step_and_builder_locks_not_same(self):
+        lock = locks.MasterLock("masterlock1")
+
+        step = self.setup_step(self.FakeBuildStep(locks=[lock.access("exclusive")]))
+
+        lock_list = yield get_real_locks_from_accesses([lock.access("counting")], self.build)
+        self.build._locks_to_acquire = lock_list
+
+        with self.assertRaises(RuntimeError) as e:
+            yield step._setup_locks()
+        self.assertEqual(
+            e.exception.args,
+            ("lock claimed by both Step and Build (<MasterLock(masterlock1, 1)>)",)
+        )
+
+    @defer.inlineCallbacks
     def test_multiple_cancel(self):
         step = self.setup_step(CustomActionBuildStep())
 
@@ -924,6 +940,7 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
         step = create_step_from_step_or_factory(NewStyleStep())
         step.master = mock.Mock()
         step.build = mock.Mock()
+        step.build._locks_to_acquire = []
         step.build.builder.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])
         step.locks = []
         step.renderables = []
