@@ -8,6 +8,19 @@ Release Notes
 
 .. towncrier release notes start
 
+
+Buildbot ``3.10.1`` ( ``2023-12-26`` )
+======================================
+
+Bug fixes
+---------
+
+- Fixed support for Twisted 23.10 and Python 3.12.
+- Fixed Data API to have "parent_buildid" key-value pair in messages for rebuilt buildsets (:issue `7222`).
+- Improved security of tarfile extraction to help avoid CVE-2007-4559. See more details in https://peps.python.org/pep-0706/. Buildbot uses filter='data' now. (:issue:`7294`)
+- Fixed web frontend package build on certain Python versions (e.g. 3.9).
+
+
 Buildbot ``3.10.0`` ( ``2023-12-04`` )
 ======================================
 
