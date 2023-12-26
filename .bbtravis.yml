@@ -41,7 +41,7 @@ matrix:
     - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.11 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
 
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=dev_virtualenv
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=dev_virtualenv
 
     # Worker-master interoperability tests
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.9
@@ -144,7 +144,7 @@ script:
 
   - title: master and worker tests
     condition: TESTS in ("dev_virtualenv", "trial")
-    cmd: /tmp/bbvenv/bin/trial -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
+    cmd: /tmp/bbvenv/bin/trial -j8 --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   - title: interop tests
     condition: TESTS == "interop"
@@ -160,7 +160,7 @@ script:
   # run tests under coverage for latest only (it's slower..)
   - title: coverage tests
     condition: TESTS == "ci/coverage"
-    cmd: /tmp/bbvenv/bin/coverage run --rcfile=.coveragerc /tmp/bbvenv/bin/trial -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
+    cmd: /tmp/bbvenv/bin/coverage run --rcfile=.coveragerc /tmp/bbvenv/bin/trial -j8 --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   # Run additional tests in their separate job
   - title: pylint
