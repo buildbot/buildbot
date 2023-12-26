@@ -286,7 +286,8 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
     def current_utc_offset(self, tm):
         return (
-            datetime.datetime.fromtimestamp(tm) - datetime.datetime.utcfromtimestamp(tm)
+            datetime.datetime.fromtimestamp(tm).replace(tzinfo=datetime.timezone.utc)
+            - datetime.datetime.fromtimestamp(tm, datetime.timezone.utc)
         ).total_seconds()
 
     @defer.inlineCallbacks
