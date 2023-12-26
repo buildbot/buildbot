@@ -22,23 +22,6 @@ from asyncio import events
 from twisted.internet import defer
 
 
-def deferred_await(self):
-    # if a deferred is awaited from a asyncio loop context, we must return
-    # the future wrapper, but if it is awaited from normal twisted loop
-    # we must return self.
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        return self
-
-    if isinstance(loop, AsyncIOLoopWithTwisted):
-        return self.asFuture(asyncio.get_event_loop())
-    return self
-
-
-defer.Deferred.__await__ = deferred_await
-
-
 def as_deferred(f):
     return asyncio.get_event_loop().as_deferred(f)
 
