@@ -132,7 +132,7 @@ class BuildbotSession(server.Session):
 
         This should actually only be used for cookie generation
         """
-        exp = datetime.datetime.utcnow() + self.expDelay
+        exp = datetime.datetime.now(datetime.timezone.utc) + self.expDelay
         claims = {
             'user_info': self.user_info,
             # Note that we use JWT standard 'exp' field to implement session expiration

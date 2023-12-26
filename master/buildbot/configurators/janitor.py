@@ -32,7 +32,7 @@ JANITOR_NAME = "__Janitor"  # If you read this code, you may want to patch this 
 
 def now():
     """patchable now (datetime is not patchable as builtin)"""
-    return datetime.datetime.utcnow()
+    return datetime.datetime.now(datetime.timezone.utc)
 
 
 class LogChunksJanitor(BuildStep):
