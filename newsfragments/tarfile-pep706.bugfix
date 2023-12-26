@@ -1,1 +1,0 @@
-Improved security of tarfile extraction to help avoid CVE-2007-4559. See more details in https://peps.python.org/pep-0706/. Buildbot uses filter='data' now. (:issue:`7294`)

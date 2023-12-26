@@ -1,1 +1,0 @@
-Fix web frontend package build on certain Python versions (e.g. 3.9).

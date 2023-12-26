@@ -1,1 +1,0 @@
-Rebuilt buildsets Data API messages now have "parent_buildid" key-value pair (:issue `7222`).
