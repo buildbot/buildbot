@@ -86,6 +86,9 @@ install:
   - /tmp/bbvenv/bin/pip install -U pip wheel
   - condition: TESTS not in ("dev_virtualenv", "smokes", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt
+  # On python 3.12 workaround done in dcbc28d1431e1aae892f7fdc0e266253365bc11e is no longer enough.
+  - condition: TESTS not in ("dev_virtualenv", "smokes", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
+    cmd: /tmp/bbvenv/bin/pip install -e master -e worker
   - condition: TESTS == "dev_virtualenv"
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
   - condition: TESTS == "trial_worker"
