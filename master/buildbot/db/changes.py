@@ -250,6 +250,28 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def _getDataFromRow(self, row):
         return row.changeid
 
+    @defer.inlineCallbacks
+    def getChangesForBranch(self, branch, order, count):
+        def thd(conn):
+            changes_tbl = self.db.model.changes
+            bsss_tbl = self.db.model.buildset_sourcestamps
+
+            from_clause = changes_tbl.join(bsss_tbl,
+                                           changes_tbl.c.sourcestampid == bsss_tbl.c.sourcestampid)
+            if branch == 'all':
+                q = sa.select([changes_tbl.c.changeid.distinct()]).select_from(
+                    from_clause)
+            else:
+                q = sa.select([changes_tbl.c.changeid.distinct()]).select_from(
+                    from_clause).where(changes_tbl.c.branch == branch)
+            q = q.limit(count).order_by(changes_tbl.c.changeid.desc())
+            rp = conn.execute(q)
+            changeids = [self._getDataFromRow(row) for row in rp]
+            rp.close()
+            return changeids
+        res = yield self.db.pool.do(thd)
+        return res
+
     def getChanges(self, resultSpec=None):
         def thd(conn):
             # get the changeids from the 'changes' table

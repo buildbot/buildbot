@@ -95,8 +95,17 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
         resultSpec.fieldMapping = self.fieldMapping
-        d = self.master.db.buildsets.getBuildsets(
-            complete=complete, resultSpec=resultSpec)
+
+        branch = resultSpec.popStringFilter('branch')
+        if branch is not None:
+            count = None
+            if resultSpec.limit:
+                count = resultSpec.limit
+            d = self.master.db.buildsets.getRecentBuildsets(complete=complete,
+                    branch=branch, count=count)
+        else:
+            d = self.master.db.buildsets.getBuildsets(
+                complete=complete, resultSpec=resultSpec)
 
         @d.addCallback
         def db2data(buildsets):
