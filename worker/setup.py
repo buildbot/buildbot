@@ -22,18 +22,11 @@ Standard setup script.
 import os
 import sys
 
-from buildbot_worker import version
+from setuptools import Command
+from setuptools import setup
+from setuptools.command.sdist import sdist
 
-try:
-    # If setuptools is installed, then we'll add setuptools-specific arguments
-    # to the setup args.
-    import setuptools
-    from setuptools import Command, setup
-    from setuptools.command.sdist import sdist
-except ImportError:
-    setuptools = None
-    from distutils.command.sdist import sdist
-    from distutils.core import setup
+from buildbot_worker import version
 
 BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
 
@@ -144,60 +137,59 @@ if sys.platform == "win32":
 
 twisted_ver = ">= 18.7.0"
 
-if setuptools is not None:
-    setup_args['install_requires'] = [
-        'twisted ' + twisted_ver,
-        'future',
+setup_args['install_requires'] = [
+    'twisted ' + twisted_ver,
+    'future',
+]
+
+if sys.version_info >= (3, 6):
+    # Message pack is only supported on Python 3.6 and newer
+    setup_args['install_requires'] += [
+        'autobahn >= 0.16.0',
+        'msgpack >= 0.6.0',
+    ]
+else:
+    # Automat 20.2.0 is the last version that supports Python 2.7. Unfortunately the package
+    # did not update its metadata and thus newer versions advertise Python 2.7 support even
+    # though they are broken.
+    setup_args['install_requires'] += [
+        'Automat <= 20.2.0',
     ]
 
-    if sys.version_info >= (3, 6):
-        # Message pack is only supported on Python 3.6 and newer
-        setup_args['install_requires'] += [
-            'autobahn >= 0.16.0',
-            'msgpack >= 0.6.0',
-        ]
-    else:
-        # Automat 20.2.0 is the last version that supports Python 2.7. Unfortunately the package
-        # did not update its metadata and thus newer versions advertise Python 2.7 support even
-        # though they are broken.
-        setup_args['install_requires'] += [
-            'Automat <= 20.2.0',
-        ]
+# buildbot_worker_windows_service needs pywin32
+if sys.platform == "win32":
+    setup_args['install_requires'].append('pywin32')
 
-    # buildbot_worker_windows_service needs pywin32
-    if sys.platform == "win32":
-        setup_args['install_requires'].append('pywin32')
-
-    # Unit test hard dependencies.
-    test_deps = [
-        'psutil',
+# Unit test hard dependencies.
+test_deps = [
+    'psutil',
+]
+if sys.version_info < (3, 3):
+    # unittest.mock added in Python 3.3
+    test_deps += [
+        'mock',
     ]
-    if sys.version_info < (3, 3):
-        # unittest.mock added in Python 3.3
-        test_deps += [
-            'mock',
-        ]
 
-    setup_args['tests_require'] = test_deps
+setup_args['tests_require'] = test_deps
 
-    setup_args['extras_require'] = {
-        'test': [
-            'pep8',
-            # spellcheck introduced in version 1.4.0
-            'pylint>=1.4.0',
-            'pyenchant',
-            'flake8~=3.9.0',
-        ]
-        + test_deps,
-    }
+setup_args['extras_require'] = {
+    'test': [
+        'pep8',
+        # spellcheck introduced in version 1.4.0
+        'pylint>=1.4.0',
+        'pyenchant',
+        'flake8~=3.9.0',
+    ]
+    + test_deps,
+}
 
-    if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
-        setup_args['setup_requires'] = [
-            'setuptools_trial',
-        ]
+if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
+    setup_args['setup_requires'] = [
+        'setuptools_trial',
+    ]
 
-    if os.getenv('NO_INSTALL_REQS'):
-        setup_args['install_requires'] = None
-        setup_args['extras_require'] = None
+if os.getenv('NO_INSTALL_REQS'):
+    setup_args['install_requires'] = None
+    setup_args['extras_require'] = None
 
 setup(**setup_args)
