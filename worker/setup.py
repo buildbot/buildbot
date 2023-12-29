@@ -92,8 +92,6 @@ setup_args = {
         'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
