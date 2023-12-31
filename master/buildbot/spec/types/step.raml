@@ -23,11 +23,13 @@ description: |
             Note that the name may be different from the requested name if that name was already in use.
             The state strings for the new step will be set to 'pending'.
 
-        .. py:method:: startStep(stepid, started_at=None)
+        .. py:method:: startStep(stepid, started_at=None, locks_acquired=False)
 
             :param integer stepid: the step to modify
             :param integer started_at: optionally specify the startup time value. If not
                 specified, then `int(self.master.reactor.seconds())` will be used.
+            :param boolean locks_acquired: `True` if all locks are already acquired at the step
+                startup. This effectively calls `set_step_locks_acquired_at(stepid, locks_acquired_at=started_at)`
 
             Start the step.
 

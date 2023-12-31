@@ -239,7 +239,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.startStep,
             self.rtype.startStep)
-        def addStep(self, stepid, started_at=None):
+        def addStep(self, stepid, started_at=None, locks_acquired=False):
             pass
 
     @defer.inlineCallbacks
@@ -281,6 +281,50 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             'urls': [],
             'hidden': False,
         })
+
+    @defer.inlineCallbacks
+    def test_startStep_no_locks(self):
+        self.reactor.advance(TIME1)
+        yield self.master.db.steps.addStep(buildid=10, name="ten", state_string="pending")
+        yield self.rtype.startStep(stepid=100, locks_acquired=True)
+
+        msgBody = {
+            "buildid": 10,
+            "complete": False,
+            "complete_at": None,
+            "name": "ten",
+            "number": 0,
+            "results": None,
+            "started_at": epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME1),
+            "state_string": "pending",
+            "stepid": 100,
+            "urls": [],
+            "hidden": False,
+        }
+        self.master.mq.assertProductions(
+            [
+                (("builds", "10", "steps", str(100), "started"), msgBody),
+                (("steps", str(100), "started"), msgBody),
+            ]
+        )
+        step = yield self.master.db.steps.getStep(100)
+        self.assertEqual(
+            step,
+            {
+                "buildid": 10,
+                "complete_at": None,
+                "id": 100,
+                "name": "ten",
+                "number": 0,
+                "results": None,
+                "started_at": epoch2datetime(TIME1),
+                "locks_acquired_at": epoch2datetime(TIME1),
+                "state_string": "pending",
+                "urls": [],
+                "hidden": False,
+            }
+        )
 
     @defer.inlineCallbacks
     def test_startStep_acquire_locks(self):

@@ -364,7 +364,7 @@ class FakeUpdates(service.AsyncService):
         self.stepUrls.setdefault(stepid, []).append((name, url))
         return defer.succeed(None)
 
-    def startStep(self, stepid, started_at=None):
+    def startStep(self, stepid, started_at=None, locks_acquired=False):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
         validation.verifyType(
@@ -372,6 +372,12 @@ class FakeUpdates(service.AsyncService):
             "started_at",
             started_at,
             validation.NoneOk(validation.IntValidator())
+        )
+        validation.verifyType(
+            self.testcase,
+            "locks_acquired",
+            locks_acquired,
+            validation.BooleanValidator()
         )
         return defer.succeed(None)
 

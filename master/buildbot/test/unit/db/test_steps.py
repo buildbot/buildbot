@@ -107,7 +107,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_startStep(self):
         @self.assertArgSpecMatches(self.db.steps.startStep)
-        def addStep(self, stepid, started_at):
+        def addStep(self, stepid, started_at, locks_acquired):
             pass
 
     def test_signature_setStepStateString(self):
@@ -188,7 +188,7 @@ class Tests(interfaces.InterfaceTests):
         stepid, number, name = yield self.db.steps.addStep(buildid=30,
                                                            name='new',
                                                            state_string='new')
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1)
+        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
@@ -206,12 +206,39 @@ class Tests(interfaces.InterfaceTests):
             'hidden': False})
 
     @defer.inlineCallbacks
-    def test_addStep_getStep_locks_acquiced(self):
+    def test_addStep_getStep_locks_acquired_already(self):
         yield self.insert_test_data(self.backgroundData)
         stepid, number, name = yield self.db.steps.addStep(buildid=30,
                                                            name='new',
                                                            state_string='new')
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1)
+        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=True)
+        self.assertEqual((number, name), (0, 'new'))
+        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        validation.verifyDbDict(self, 'stepdict', stepdict)
+        self.assertEqual(
+            stepdict,
+            {
+                "id": stepid,
+                "buildid": 30,
+                "name": "new",
+                "number": 0,
+                "started_at": epoch2datetime(TIME1),
+                "locks_acquired_at": epoch2datetime(TIME1),
+                "complete_at": None,
+                "results": None,
+                "state_string": "new",
+                "urls": [],
+                "hidden": False
+            }
+        )
+
+    @defer.inlineCallbacks
+    def test_addStep_getStep_locks_acquired_later(self):
+        yield self.insert_test_data(self.backgroundData)
+        stepid, number, name = yield self.db.steps.addStep(buildid=30,
+                                                           name='new',
+                                                           state_string='new')
+        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         yield self.db.steps.set_step_locks_acquired_at(stepid=stepid, locks_acquired_at=TIME2)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
@@ -234,7 +261,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[0]])
         stepid, number, name = yield self.db.steps.addStep(
             buildid=30, name='new', state_string='new')
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1)
+        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (1, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
@@ -251,7 +278,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         stepid, number, name = yield self.db.steps.addStep(
             buildid=30, name='new', state_string='new')
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1)
+        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (4, 'new_3'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
@@ -335,7 +362,7 @@ class RealTests(Tests):
         ])
         stepid, number, name = yield self.db.steps.addStep(
             buildid=30, name='a' * 49, state_string='new')
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1)
+        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (2, 'a' * 48 + '_2'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
@@ -353,7 +380,7 @@ class RealTests(Tests):
                   ])
         stepid, number, name = yield self.db.steps.addStep(
             buildid=30, name='a' * 50, state_string='new')
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1)
+        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (100, 'a' * 46 + '_100'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)

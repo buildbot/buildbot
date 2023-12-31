@@ -118,11 +118,14 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def startStep(self, stepid, started_at):
+    def startStep(self, stepid, started_at, locks_acquired):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=tbl.c.id == stepid)
-            conn.execute(q, started_at=started_at)
+            if locks_acquired:
+                conn.execute(q, started_at=started_at, locks_acquired_at=started_at)
+            else:
+                conn.execute(q, started_at=started_at)
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
