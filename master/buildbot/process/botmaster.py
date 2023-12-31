@@ -24,6 +24,7 @@ from buildbot.process.buildrequestdistributor import BuildRequestDistributor
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import RETRY
 from buildbot.process.workerforbuilder import States
+from buildbot.util import debounce
 from buildbot.util import service
 from buildbot.util.render_description import render_description
 
@@ -101,6 +102,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         # a distributor for incoming build requests; see below
         self.brd = BuildRequestDistributor(self)
         self.brd.setServiceParent(self)
+        self._pending_builderids = set()
 
     @defer.inlineCallbacks
     def cleanShutdown(self, quickMode=False, stopReactor=True):
@@ -213,29 +215,38 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     def getBuilders(self):
         return list(self.builders.values())
 
-    @defer.inlineCallbacks
+    def _buildrequest_added(self, key, msg):
+        self._pending_builderids.add(msg['builderid'])
+        self._flush_pending_builders()
+
+    # flush pending builders needs to be debounced, as per design the
+    # buildrequests events will arrive in burst.
+    # We debounce them to let the brd manage them as a whole
+    # without having to debounce the brd itself
+    @debounce.method(wait=.1, until_idle=True)
+    def _flush_pending_builders(self):
+        if not self._pending_builderids:
+            return
+        buildernames = []
+        for builderid in self._pending_builderids:
+            builder = self.getBuilderById(builderid)
+            if builder:
+                buildernames.append(builder.name)
+        self._pending_builderids.clear()
+        self.brd.maybeStartBuildsOn(buildernames)
+
     def getBuilderById(self, builderid):
-        for builder in self.getBuilders():
-            if builderid == (yield builder.getBuilderId()):
-                return builder
-        return None
+        return self._builders_byid.get(builderid)
 
     @defer.inlineCallbacks
     def startService(self):
-        @defer.inlineCallbacks
-        def buildRequestAdded(key, msg):
-            builderid = msg['builderid']
-            builder = yield self.getBuilderById(builderid)
-            if builder is not None:
-                self.maybeStartBuildsForBuilder(builder.name)
-
-        # consume both 'new' and 'unclaimed' build requests
+        # consume both 'new' and 'unclaimed' build requests events
         startConsuming = self.master.mq.startConsuming
         self.buildrequest_consumer_new = yield startConsuming(
-            buildRequestAdded,
+            self._buildrequest_added,
             ('buildrequests', None, "new"))
         self.buildrequest_consumer_unclaimed = yield startConsuming(
-            buildRequestAdded,
+            self._buildrequest_added,
             ('buildrequests', None, 'unclaimed'))
         yield super().startService()
 
@@ -310,6 +321,9 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                 yield builder.setServiceParent(self)
 
         self.builderNames = list(self.builders)
+        self._builders_byid = {}
+        for builder in self.builders.values():
+            self._builders_byid[(yield builder.getBuilderId())] = builder
 
         yield self.master.data.updates.updateBuilderList(
             self.master.masterid,
@@ -327,6 +341,8 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         if self.buildrequest_consumer_unclaimed:
             self.buildrequest_consumer_unclaimed.stopConsuming()
             self.buildrequest_consumer_unclaimed = None
+        self._pending_builderids.clear()
+        self._flush_pending_builders.stop()
         return super().stopService()
 
     def maybeStartBuildsForBuilder(self, buildername):

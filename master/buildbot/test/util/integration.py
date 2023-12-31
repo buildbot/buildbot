@@ -151,6 +151,8 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
             ],
             properties=properties,
         )
+        # run debounced calls
+        self.master.reactor.advance(1)
         return ret
 
     @defer.inlineCallbacks
