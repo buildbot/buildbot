@@ -176,6 +176,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                         "masterid": masterid,
                         "started_at": started_at,
                         "complete_at": None,
+                        "locks_duration_s": 0,
                         "state_string": state_string
                     })
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
@@ -251,6 +252,17 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                              {"value": value_js, "source": source})
         yield self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
+    def add_build_locks_duration(self, buildid, duration_s):
+        def thd(conn):
+            builds_tbl = self.db.model.builds
+            conn.execute(
+                builds_tbl.update(builds_tbl.c.id == buildid).values(
+                    locks_duration_s=builds_tbl.c.locks_duration_s + duration_s
+                )
+            )
+        yield self.db.pool.do(thd)
+
     def _builddictFromRow(self, row):
         return {
             "id": row.id,
@@ -261,6 +273,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             "masterid": row.masterid,
             "started_at": epoch2datetime(row.started_at),
             "complete_at": epoch2datetime(row.complete_at),
+            "locks_duration_s": row.locks_duration_s,
             "state_string": row.state_string,
             "results": row.results
         }

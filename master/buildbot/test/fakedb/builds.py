@@ -32,9 +32,19 @@ class Build(Row):
     def __init__(self, id=None, number=29, buildrequestid=None, builderid=None,
                  workerid=-1, masterid=None,
                  started_at=1304262222, complete_at=None, state_string="test", results=None):
-        super().__init__(id=id, number=number, buildrequestid=buildrequestid, builderid=builderid,
-                         workerid=workerid, masterid=masterid, started_at=started_at,
-                         complete_at=complete_at, state_string=state_string, results=results)
+        super().__init__(
+            id=id,
+            number=number,
+            buildrequestid=buildrequestid,
+            builderid=builderid,
+            workerid=workerid,
+            masterid=masterid,
+            started_at=started_at,
+            complete_at=complete_at,
+            locks_duration_s=0,
+            state_string=state_string,
+            results=results
+        )
 
 
 class BuildProperty(Row):
@@ -82,6 +92,7 @@ class FakeBuildsComponent(FakeDBComponent):
             "workerid": row['workerid'],
             "started_at": epoch2datetime(row['started_at']),
             "complete_at": epoch2datetime(row['complete_at']),
+            "locks_duration_s": row["locks_duration_s"],
             "state_string": row['state_string'],
             "results": row['results']
         }
@@ -131,6 +142,7 @@ class FakeBuildsComponent(FakeDBComponent):
             "masterid": masterid,
             "state_string": state_string,
             "started_at": self.reactor.seconds(),
+            "locks_duration_s": 0,
             "complete_at": None,
             "results": None
         }
@@ -197,6 +209,7 @@ class FakeBuildsComponent(FakeDBComponent):
                     result['masterid'] = build['masterid']
                     result['started_at'] = epoch2datetime(1304262222)
                     result['complete_at'] = build['complete_at']
+                    result["locks_duration_s"] = build["locks_duration_s"]
                     result['state_string'] = build['state_string']
                     result['results'] = build['results']
 
@@ -204,3 +217,9 @@ class FakeBuildsComponent(FakeDBComponent):
             del result['buildsetid']
 
         return results
+
+    def add_build_locks_duration(self, buildid, duration_s):
+        b = self.builds.get(buildid)
+        if b:
+            b["locks_duration_s"] += duration_s
+        return defer.succeed(None)

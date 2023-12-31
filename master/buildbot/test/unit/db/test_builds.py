@@ -61,22 +61,45 @@ class Tests(interfaces.InterfaceTests):
     ]
 
     threeBdicts = {
-        50: {'id': 50, 'buildrequestid': 42, 'builderid': 77,
-             'masterid': 88, 'number': 5, 'workerid': 13,
-             'started_at': epoch2datetime(TIME1),
-             'complete_at': None, 'state_string': 'build 5',
-             'results': None},
-        51: {'id': 51, 'buildrequestid': 41, 'builderid': 88,
-             'masterid': 88, 'number': 6, 'workerid': 13,
-             'started_at': epoch2datetime(TIME2),
-             'complete_at': None, 'state_string': 'build 6',
-             'results': None},
-        52: {'id': 52, 'buildrequestid': 42, 'builderid': 77,
-             'masterid': 88, 'number': 7, 'workerid': 12,
-             'started_at': epoch2datetime(TIME3),
-             'complete_at': epoch2datetime(TIME4),
-             'state_string': 'build 7',
-             'results': 5},
+        50: {
+            "id": 50,
+            "buildrequestid": 42,
+            "builderid": 77,
+            "masterid": 88,
+            "number": 5,
+            "workerid": 13,
+            "started_at": epoch2datetime(TIME1),
+            "complete_at": None,
+            "locks_duration_s": 0,
+            "state_string": "build 5",
+            "results": None,
+        },
+        51: {
+            "id": 51,
+            "buildrequestid": 41,
+            "builderid": 88,
+            "masterid": 88,
+            "number": 6,
+            "workerid": 13,
+            "started_at": epoch2datetime(TIME2),
+            "complete_at": None,
+            "locks_duration_s": 0,
+            "state_string": "build 6",
+            "results": None,
+        },
+        52: {
+            "id": 52,
+            "buildrequestid": 42,
+            "builderid": 77,
+            "masterid": 88,
+            "number": 7,
+            "workerid": 12,
+            "started_at": epoch2datetime(TIME3),
+            "complete_at": epoch2datetime(TIME4),
+            "locks_duration_s": 0,
+            "state_string": "build 7",
+            "results": 5,
+        },
     }
 
     # signature tests
@@ -108,6 +131,11 @@ class Tests(interfaces.InterfaceTests):
         def setBuildStateString(self, buildid, state_string):
             pass
 
+    def test_signature_add_build_locks_duration(self):
+        @self.assertArgSpecMatches(self.db.builds.add_build_locks_duration)
+        def setBuildStateString(self, buildid, duration_s):
+            pass
+
     def test_signature_finishBuild(self):
         @self.assertArgSpecMatches(self.db.builds.finishBuild)
         def finishBuild(self, buildid, results):
@@ -130,18 +158,22 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.backgroundData + [self.threeBuilds[0]])
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
-        self.assertEqual(bdict, {
-            "id": 50,
-            "number": 5,
-            "buildrequestid": 42,
-            "masterid": 88,
-            "builderid": 77,
-            "workerid": 13,
-            "started_at": epoch2datetime(TIME1),
-            "complete_at": None,
-            "state_string": 'build 5',
-            "results": None
-        })
+        self.assertEqual(
+            bdict,
+            {
+                "id": 50,
+                "number": 5,
+                "buildrequestid": 42,
+                "masterid": 88,
+                "builderid": 77,
+                "workerid": 13,
+                "started_at": epoch2datetime(TIME1),
+                "complete_at": None,
+                "locks_duration_s": 0,
+                "state_string": 'build 5',
+                "results": None
+            }
+        )
 
     @defer.inlineCallbacks
     def test_getBuild_missing(self):
@@ -222,17 +254,21 @@ class Tests(interfaces.InterfaceTests):
                              builderid=77, state_string="test", workerid=13,
                              started_at=1304262222, results=1), ]
 
-        expected = [{
-            'id': 50,
-            'number': 5,
-            'builderid': 77,
-            'buildrequestid': 19,
-            'workerid': 13,
-            'masterid': 88,
-            'started_at': epoch2datetime(1304262222),
-            'complete_at': None,
-            'state_string': 'test',
-            'results': 1}]
+        expected = [
+            {
+                'id': 50,
+                'number': 5,
+                'builderid': 77,
+                'buildrequestid': 19,
+                'workerid': 13,
+                'masterid': 88,
+                'started_at': epoch2datetime(1304262222),
+                'complete_at': None,
+                "locks_duration_s": 0,
+                'state_string': 'test',
+                'results': 1
+            }
+        ]
 
         return self.do_test_getBuildsForChange(rows, 14, expected)
 
@@ -255,11 +291,22 @@ class Tests(interfaces.InterfaceTests):
                                                    state_string='test test2')
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
-        self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
-                                 'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
-                                 'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_string': 'test test2',
-                                 'results': None})
+        self.assertEqual(
+            bdict,
+            {
+                "buildrequestid": 41,
+                "builderid": 77,
+                "id": id,
+                "masterid": 88,
+                "number": number,
+                "workerid": 13,
+                "started_at": epoch2datetime(TIME1),
+                "complete_at": None,
+                "locks_duration_s": 0,
+                "state_string": "test test2",
+                "results": None,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_addBuild_existing(self):
@@ -275,11 +322,22 @@ class Tests(interfaces.InterfaceTests):
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(number, 11)
-        self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
-                                 'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
-                                 'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_string': 'test test2',
-                                 'results': None})
+        self.assertEqual(
+            bdict,
+            {
+                "buildrequestid": 41,
+                "builderid": 77,
+                "id": id,
+                "masterid": 88,
+                "number": number,
+                "workerid": 13,
+                "started_at": epoch2datetime(TIME1),
+                "complete_at": None,
+                "locks_duration_s": 0,
+                "state_string": "test test2",
+                "results": None,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_setBuildStateString(self):
@@ -297,9 +355,33 @@ class Tests(interfaces.InterfaceTests):
             "workerid": 13,
             "started_at": epoch2datetime(TIME1),
             "complete_at": None,
+            "locks_duration_s": 0,
             "state_string": 'test test2',
             "results": None
         })
+
+    @defer.inlineCallbacks
+    def test_add_build_locks_duration(self):
+        yield self.insert_test_data(self.backgroundData + [self.threeBuilds[0]])
+        yield self.db.builds.add_build_locks_duration(buildid=50, duration_s=12)
+        bdict = yield self.db.builds.getBuild(50)
+        validation.verifyDbDict(self, 'dbbuilddict', bdict)
+        self.assertEqual(
+            bdict,
+            {
+                "id": 50,
+                "number": 5,
+                "buildrequestid": 42,
+                "masterid": 88,
+                "builderid": 77,
+                "workerid": 13,
+                "started_at": epoch2datetime(TIME1),
+                "complete_at": None,
+                "locks_duration_s": 12,
+                "state_string": "build 5",
+                "results": None
+            }
+        )
 
     @defer.inlineCallbacks
     def test_finishBuild(self):
@@ -317,6 +399,7 @@ class Tests(interfaces.InterfaceTests):
             "workerid": 13,
             "started_at": epoch2datetime(TIME1),
             "complete_at": epoch2datetime(TIME4),
+            "locks_duration_s": 0,
             "state_string": 'build 5',
             "results": 7
         })
@@ -393,10 +476,19 @@ class RealTests(Tests):
         def raceHook(conn):
             if not numbers:
                 return
-            conn.execute(self.db.model.builds.insert(),
-                         {'number': numbers.pop(0), 'buildrequestid': 41,
-                          'masterid': 88, 'workerid': 13, 'builderid': 77,
-                          'started_at': TIME1, 'state_string': "hi"})
+            conn.execute(
+                self.db.model.builds.insert(),
+                {
+                    "number": numbers.pop(0),
+                    "buildrequestid": 41,
+                    "masterid": 88,
+                    "workerid": 13,
+                    "builderid": 77,
+                    "started_at": TIME1,
+                    "locks_duration_s": 0,
+                    "state_string": "hi",
+                },
+            )
 
         id, number = yield self.db.builds.addBuild(builderid=77,
                                                    buildrequestid=41,
@@ -406,11 +498,22 @@ class RealTests(Tests):
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(number, 8)
-        self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
-                                 'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
-                                 'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_string': 'test test2',
-                                 'results': None})
+        self.assertEqual(
+            bdict,
+            {
+                "buildrequestid": 41,
+                "builderid": 77,
+                "id": id,
+                "masterid": 88,
+                "number": number,
+                "workerid": 13,
+                "started_at": epoch2datetime(TIME1),
+                "complete_at": None,
+                "locks_duration_s": 0,
+                "state_string": "test test2",
+                "results": None,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getBuilds_resultSpecFilter(self):
