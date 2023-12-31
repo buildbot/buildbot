@@ -23,9 +23,11 @@ description: |
             Note that the name may be different from the requested name if that name was already in use.
             The state strings for the new step will be set to 'pending'.
 
-        .. py:method:: startStep(stepid)
+        .. py:method:: startStep(stepid, started_at=None)
 
             :param integer stepid: the step to modify
+            :param integer started_at: optionally specify the startup time value. If not
+                specified, then `int(self.master.reactor.seconds())` will be used.
 
             Start the step.
 

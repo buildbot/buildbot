@@ -118,9 +118,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def startStep(self, stepid):
-        started_at = int(self.master.reactor.seconds())
-
+    def startStep(self, stepid, started_at):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=tbl.c.id == stepid)

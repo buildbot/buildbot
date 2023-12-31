@@ -140,8 +140,10 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def startStep(self, stepid):
-        yield self.master.db.steps.startStep(stepid=stepid)
+    def startStep(self, stepid, started_at=None):
+        if started_at is None:
+            started_at = int(self.master.reactor.seconds())
+        yield self.master.db.steps.startStep(stepid=stepid, started_at=started_at)
         yield self.generateEvent(stepid, 'started')
 
     @base.updateMethod

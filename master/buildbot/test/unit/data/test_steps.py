@@ -237,9 +237,9 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_startStep(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.startStep,  # fake
-            self.rtype.startStep)  # real
-        def addStep(self, stepid):
+            self.master.data.updates.startStep,
+            self.rtype.startStep)
+        def addStep(self, stepid, started_at=None):
             pass
 
     @defer.inlineCallbacks
