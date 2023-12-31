@@ -314,6 +314,13 @@ class FakeUpdates(service.AsyncService):
                               validation.StringValidator())
         return defer.succeed(None)
 
+    def add_build_locks_duration(self, buildid, duration_s):
+        validation.verifyType(self.testcase, 'buildid', buildid,
+                              validation.IntValidator())
+        validation.verifyType(self.testcase, 'duration_s', duration_s,
+                              validation.IntValidator())
+        return defer.succeed(None)
+
     def finishBuild(self, buildid, results):
         validation.verifyType(self.testcase, 'buildid', buildid,
                               validation.IntValidator())

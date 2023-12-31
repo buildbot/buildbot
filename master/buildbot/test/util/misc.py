@@ -148,11 +148,26 @@ class BuildDictLookAlike:
 
     def __init__(self, extra_keys=None, expected_missing_keys=None, **assertions):
         self.keys = [
-            'builder', 'builderid', 'buildid', 'buildrequest', 'buildrequestid',
-            'buildset', 'complete', 'complete_at', 'masterid', 'number',
-            'parentbuild', 'parentbuilder', 'properties', 'results',
-            'started_at', 'state_string', 'url', 'workerid'
-            ]
+            "builder",
+            "builderid",
+            "buildid",
+            "buildrequest",
+            "buildrequestid",
+            "buildset",
+            "complete",
+            "complete_at",
+            "locks_duration_s",
+            "masterid",
+            "number",
+            "parentbuild",
+            "parentbuilder",
+            "properties",
+            "results",
+            "started_at",
+            "state_string",
+            "url",
+            "workerid",
+        ]
         if extra_keys:
             self.keys.extend(extra_keys)
         if expected_missing_keys is not None:
