@@ -87,6 +87,7 @@ class Build(properties.PropertiesMixin):
         self.reason = requests[0].mergeReasons(requests[1:])
 
         self._preparation_step = None
+        self._locks_acquire_step = None
         self.currentStep = None
 
         self.workerEnvironment = {}
@@ -346,23 +347,26 @@ class Build(properties.PropertiesMixin):
         )
         self._preparation_step.setBuild(self)
         yield self._preparation_step.addStep()
-        yield self.master.data.updates.startStep(self._preparation_step.stepid)
-
-        # TODO: the time consuming actions during worker preparation are as follows:
-        #  - worker substantiation
-        #  - acquiring build locks
-        # Since locks_acquire_at calculates the time since beginning of the step until the end,
-        # it's impossible to represent this sequence using a single step. In the future it makes
-        # sense to add two steps: one for worker substantiation and another for acquiring build
-        # locks.
-        yield self.master.data.updates.set_step_locks_acquired_at(self._preparation_step.stepid)
+        yield self.master.data.updates.startStep(
+            self._preparation_step.stepid, locks_acquired=True
+        )
 
         Build.setupBuildProperties(self.getProperties(), self.requests,
                                    self.sources, self.number)
 
-        # then narrow WorkerLocks down to the right worker
         yield self._setup_locks()
         metrics.MetricCountEvent.log('active_builds', 1)
+
+        if self._locks_to_acquire:
+            # Note that most of the time locks will already free because build distributor does
+            # not start builds that cannot acquire locks immediately. However on a loaded master
+            # it may happen that more builds are cleared to start than there are free locks. In
+            # such case some of the builds will be blocked and wait for the locks.
+            self._locks_acquire_step = buildstep.create_step_from_step_or_factory(
+                buildstep.BuildStep(name="locks_acquire")
+            )
+            self._locks_acquire_step.setBuild(self)
+            yield self._locks_acquire_step.addStep()
 
         # make sure properties are available to people listening on 'new'
         # events
@@ -425,6 +429,11 @@ class Build(properties.PropertiesMixin):
             yield self.buildFinished(["worker", "not", "pinged"], RETRY)
             return
 
+        yield self.master.data.updates.setStepStateString(
+            self._preparation_step.stepid, f"worker {self.getWorkerName()} ready"
+        )
+        yield self.master.data.updates.finishStep(self._preparation_step.stepid, SUCCESS, False)
+
         self.conn = workerforbuilder.worker.conn
 
         # To retrieve the builddir property, the worker must be attached as we
@@ -443,13 +452,18 @@ class Build(properties.PropertiesMixin):
             yield self.buildFinished(["worker", "not", "building"], RETRY)
             return
 
-        yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           'acquiring locks')
-        yield self.acquireLocks()
-
-        readymsg = f"worker {self.getWorkerName()} ready"
-        yield self.master.data.updates.setStepStateString(self._preparation_step.stepid, readymsg)
-        yield self.master.data.updates.finishStep(self._preparation_step.stepid, SUCCESS, False)
+        if self._locks_to_acquire:
+            yield self.master.data.updates.setBuildStateString(self.buildid, "acquiring locks")
+            yield self.master.data.updates.startStep(self._locks_acquire_step.stepid)
+            yield self.acquireLocks()
+            yield self.master.data.updates.set_step_locks_acquired_at(
+                self._locks_acquire_step.stepid
+            )
+            yield self.master.data.updates.setStepStateString(
+                self._locks_acquire_step.stepid, "locks acquired")
+            yield self.master.data.updates.finishStep(
+                self._locks_acquire_step.stepid, SUCCESS, False
+            )
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            'building')
