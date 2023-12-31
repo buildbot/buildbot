@@ -128,9 +128,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def set_step_locks_acquired_at(self, stepid):
-        locks_acquired_at = int(self.master.reactor.seconds())
-
+    def set_step_locks_acquired_at(self, stepid, locks_acquired_at):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=tbl.c.id == stepid)

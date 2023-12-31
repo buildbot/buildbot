@@ -146,8 +146,13 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def set_step_locks_acquired_at(self, stepid):
-        yield self.master.db.steps.set_step_locks_acquired_at(stepid=stepid)
+    def set_step_locks_acquired_at(self, stepid, locks_acquired_at=None):
+        if locks_acquired_at is None:
+            locks_acquired_at = int(self.master.reactor.seconds())
+
+        yield self.master.db.steps.set_step_locks_acquired_at(
+            stepid=stepid, locks_acquired_at=locks_acquired_at
+        )
         yield self.generateEvent(stepid, 'updated')
 
     @base.updateMethod

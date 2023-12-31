@@ -215,7 +215,7 @@ class Tests(interfaces.InterfaceTests):
                                                            state_string='new')
         yield self.db.steps.startStep(stepid=stepid)
         self.reactor.advance(TIME2 - TIME1)
-        yield self.db.steps.set_step_locks_acquired_at(stepid=stepid)
+        yield self.db.steps.set_step_locks_acquired_at(stepid=stepid, locks_acquired_at=TIME2)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)

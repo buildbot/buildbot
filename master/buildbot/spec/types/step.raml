@@ -29,9 +29,11 @@ description: |
 
             Start the step.
 
-        .. py:method:: set_step_locks_acquired_at(stepid)
+        .. py:method:: set_step_locks_acquired_at(stepid, locks_acquired_at=None)
 
             :param integer stepid: the step to modify
+            :param integer locks_acquired_at: optionally specify the timestamp value. If not
+                    specified, then `int(self.master.reactor.seconds())` will be used.
 
             Update step locks_acquired_at timestamp.
 

@@ -362,9 +362,15 @@ class FakeUpdates(service.AsyncService):
                               validation.IntValidator())
         return defer.succeed(None)
 
-    def set_step_locks_acquired_at(self, stepid):
+    def set_step_locks_acquired_at(self, stepid, locks_acquired_at=None):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
+        validation.verifyType(
+            self.testcase,
+            "locks_acquired_at",
+            locks_acquired_at,
+            validation.NoneOk(validation.IntValidator())
+        )
         return defer.succeed(None)
 
     def setStepStateString(self, stepid, state_string):
