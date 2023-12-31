@@ -346,6 +346,7 @@ class Build(properties.PropertiesMixin):
         )
         self._preparation_step.setBuild(self)
         yield self._preparation_step.addStep()
+        yield self.master.data.updates.startStep(self._preparation_step.stepid)
 
         # TODO: the time consuming actions during worker preparation are as follows:
         #  - worker substantiation

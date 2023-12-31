@@ -502,13 +502,13 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
             buildid=self.build.buildid,
             name=util.bytes2unicode(self.name))
-        yield self.master.data.updates.startStep(self.stepid)
 
     @defer.inlineCallbacks
     def startStep(self, remote):
         self.remote = remote
 
         yield self.addStep()
+        yield self.master.data.updates.startStep(self.stepid)
 
         try:
             yield self._render_renderables()
