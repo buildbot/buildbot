@@ -1,3 +1,6 @@
+# Enable more strict mode for shell
+.SHELLFLAGS := -eu -c
+
 # developer utilities
 DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg https_proxy=$$https_proxy
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
