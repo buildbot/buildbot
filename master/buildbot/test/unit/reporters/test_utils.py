@@ -201,6 +201,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                 },
                 'complete': False,
                 'complete_at': None,
+                "locks_duration_s": 0,
                 'masterid': 92,
                 'number': 2,
                 'prev_build': {
@@ -209,6 +210,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                     'buildrequestid': 9,
                     'complete': False,
                     'complete_at': None,
+                    "locks_duration_s": 0,
                     'masterid': 92,
                     'number': 0,
                     'properties': {},
@@ -308,6 +310,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                 },
                 'complete': False,
                 'complete_at': None,
+                "locks_duration_s": 0,
                 'masterid': 92,
                 'number': 3,
                 'prev_build': {
@@ -316,6 +319,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                     'buildrequestid': 11,
                     'complete': False,
                     'complete_at': None,
+                    "locks_duration_s": 0,
                     'masterid': 92,
                     'number': 2,
                     'properties': {},

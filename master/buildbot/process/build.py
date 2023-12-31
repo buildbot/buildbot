@@ -86,7 +86,10 @@ class Build(properties.PropertiesMixin):
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
 
+        self._preparation_step = None
+        self._locks_acquire_step = None
         self.currentStep = None
+
         self.workerEnvironment = {}
         self.buildid = None
         self._buildid_notifier = Notifier()
@@ -339,27 +342,31 @@ class Build(properties.PropertiesMixin):
         # the preparation step counts the time needed for preparing the worker and getting the
         # locks.
         # we cannot use a real step as we don't have a worker yet.
-        self.preparation_step = buildstep.create_step_from_step_or_factory(
+        self._preparation_step = buildstep.create_step_from_step_or_factory(
             buildstep.BuildStep(name="worker_preparation")
         )
-        self.preparation_step.setBuild(self)
-        yield self.preparation_step.addStep()
-
-        # TODO: the time consuming actions during worker preparation are as follows:
-        #  - worker substantiation
-        #  - acquiring build locks
-        # Since locks_acquire_at calculates the time since beginning of the step until the end,
-        # it's impossible to represent this sequence using a single step. In the future it makes
-        # sense to add two steps: one for worker substantiation and another for acquiring build
-        # locks.
-        yield self.master.data.updates.set_step_locks_acquired_at(self.preparation_step.stepid)
+        self._preparation_step.setBuild(self)
+        yield self._preparation_step.addStep()
+        yield self.master.data.updates.startStep(
+            self._preparation_step.stepid, locks_acquired=True
+        )
 
         Build.setupBuildProperties(self.getProperties(), self.requests,
                                    self.sources, self.number)
 
-        # then narrow WorkerLocks down to the right worker
         yield self._setup_locks()
         metrics.MetricCountEvent.log('active_builds', 1)
+
+        if self._locks_to_acquire:
+            # Note that most of the time locks will already free because build distributor does
+            # not start builds that cannot acquire locks immediately. However on a loaded master
+            # it may happen that more builds are cleared to start than there are free locks. In
+            # such case some of the builds will be blocked and wait for the locks.
+            self._locks_acquire_step = buildstep.create_step_from_step_or_factory(
+                buildstep.BuildStep(name="locks_acquire")
+            )
+            self._locks_acquire_step.setBuild(self)
+            yield self._locks_acquire_step.addStep()
 
         # make sure properties are available to people listening on 'new'
         # events
@@ -422,6 +429,11 @@ class Build(properties.PropertiesMixin):
             yield self.buildFinished(["worker", "not", "pinged"], RETRY)
             return
 
+        yield self.master.data.updates.setStepStateString(
+            self._preparation_step.stepid, f"worker {self.getWorkerName()} ready"
+        )
+        yield self.master.data.updates.finishStep(self._preparation_step.stepid, SUCCESS, False)
+
         self.conn = workerforbuilder.worker.conn
 
         # To retrieve the builddir property, the worker must be attached as we
@@ -440,13 +452,25 @@ class Build(properties.PropertiesMixin):
             yield self.buildFinished(["worker", "not", "building"], RETRY)
             return
 
-        yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           'acquiring locks')
-        yield self.acquireLocks()
-
-        readymsg = f"worker {self.getWorkerName()} ready"
-        yield self.master.data.updates.setStepStateString(self.preparation_step.stepid, readymsg)
-        yield self.master.data.updates.finishStep(self.preparation_step.stepid, SUCCESS, False)
+        if self._locks_to_acquire:
+            yield self.master.data.updates.setBuildStateString(self.buildid, "acquiring locks")
+            locks_acquire_start_at = int(self.master.reactor.seconds())
+            yield self.master.data.updates.startStep(
+                self._locks_acquire_step.stepid, started_at=locks_acquire_start_at
+            )
+            yield self.acquireLocks()
+            locks_acquired_at = int(self.master.reactor.seconds())
+            yield self.master.data.updates.set_step_locks_acquired_at(
+                self._locks_acquire_step.stepid, locks_acquired_at=locks_acquired_at
+            )
+            yield self.master.data.updates.add_build_locks_duration(
+                self.buildid, duration_s=locks_acquired_at - locks_acquire_start_at
+            )
+            yield self.master.data.updates.setStepStateString(
+                self._locks_acquire_step.stepid, "locks acquired")
+            yield self.master.data.updates.finishStep(
+                self._locks_acquire_step.stepid, SUCCESS, False
+            )
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            'building')
@@ -460,18 +484,18 @@ class Build(properties.PropertiesMixin):
             # if self.stopped, then this failure is a LatentWorker's failure to substantiate
             # which we triggered on purpose in stopBuild()
             log.msg("worker stopped while " + state_string, why)
-            yield self.master.data.updates.finishStep(self.preparation_step.stepid,
+            yield self.master.data.updates.finishStep(self._preparation_step.stepid,
                                                       CANCELLED, False)
         else:
             log.err(why, "while " + state_string)
             self.workerforbuilder.worker.putInQuarantine()
             if isinstance(why, failure.Failure):
-                yield self.preparation_step.addLogWithFailure(why)
+                yield self._preparation_step.addLogWithFailure(why)
             elif isinstance(why, Exception):
-                yield self.preparation_step.addLogWithException(why)
-            yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
+                yield self._preparation_step.addLogWithException(why)
+            yield self.master.data.updates.setStepStateString(self._preparation_step.stepid,
                                                             "error while " + state_string)
-            yield self.master.data.updates.finishStep(self.preparation_step.stepid,
+            yield self.master.data.updates.finishStep(self._preparation_step.stepid,
                                                       EXCEPTION, False)
 
     def acquireLocks(self, res=None):

@@ -586,6 +586,7 @@ dbdict['dbbuilddict'] = buildbase = DictValidator(
     masterid=IntValidator(),
     started_at=DateTimeValidator(),
     complete_at=NoneOk(DateTimeValidator()),
+    locks_duration_s=IntValidator(),
     state_string=StringValidator(),
     results=NoneOk(IntValidator()),
 )

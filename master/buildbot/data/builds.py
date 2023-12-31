@@ -51,6 +51,7 @@ class Db2DataMixin:
             'masterid': dbdict['masterid'],
             'started_at': dbdict['started_at'],
             'complete_at': dbdict['complete_at'],
+            "locks_duration_s": dbdict["locks_duration_s"],
             'complete': dbdict['complete_at'] is not None,
             'state_string': dbdict['state_string'],
             'results': dbdict['results'],
@@ -66,6 +67,7 @@ class Db2DataMixin:
         'masterid': 'builds.masterid',
         'started_at': 'builds.started_at',
         'complete_at': 'builds.complete_at',
+        "locks_duration_s": "builds.locks_duration_s",
         'state_string': 'builds.state_string',
         'results': 'builds.results',
     }
@@ -210,6 +212,7 @@ class Build(base.ResourceType):
         started_at = types.DateTime()
         complete = types.Boolean()
         complete_at = types.NoneOk(types.DateTime())
+        locks_duration_s = types.Integer()
         results = types.NoneOk(types.Integer())
         state_string = types.String()
         properties = types.NoneOk(types.SourcedProperties())
@@ -243,6 +246,12 @@ class Build(base.ResourceType):
             buildid=buildid, state_string=state_string)
         yield self.generateEvent(buildid, "update")
         return res
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def add_build_locks_duration(self, buildid, duration_s):
+        yield self.master.db.builds.add_build_locks_duration(buildid=buildid, duration_s=duration_s)
+        yield self.generateEvent(buildid, "update")
 
     @base.updateMethod
     @defer.inlineCallbacks

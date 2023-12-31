@@ -25,6 +25,8 @@ Builds connector
     * ``masterid`` (the ID of the master on which this build was performed)
     * ``started_at`` (datetime at which this build began)
     * ``complete_at`` (datetime at which this build finished, or None if it is ongoing)
+    * ``locks_duration_s`` (the amount of time spent acquiring locks so far, not including
+      any running steps)
     * ``state_string`` (short string describing the build's state)
     * ``results`` (results of this build; see :ref:`Build-Result-Codes`)
 
@@ -85,6 +87,14 @@ Builds connector
         :returns: Deferred
 
         Update the state strings for the given build.
+
+    .. py:method:: add_build_locks_duration(buildid, duration_s):
+
+        :param integer buildid: build id
+        :param integer duration_s: time duration to add
+        :returns: Deferred
+
+        Adds the given duration to the ``locks_duration_s`` field of the build.
 
     .. py:method:: finishBuild(buildid, results)
 

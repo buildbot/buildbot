@@ -1669,6 +1669,7 @@ workerdir
 workerenvironment
 workerforbuilder
 workerforbuilders
+workerid
 workerlock
 workermanager
 workername

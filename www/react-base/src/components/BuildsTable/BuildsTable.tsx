@@ -27,8 +27,8 @@ import {
 } from "buildbot-data-js";
 import {
   BuildLinkWithSummaryTooltip,
+  buildDurationFormatWithLocks,
   dateFormat,
-  durationFormat,
   durationFromNowFormat,
   useCurrentTime
 } from "buildbot-ui";
@@ -51,12 +51,9 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
       ? <></>
       : <td>{builder === null ? "" : builder.name}</td>
 
+    const durationString = buildDurationFormatWithLocks(build, now);
     const buildCompleteInfoElement = build.complete
-      ? (
-        <span title={durationFormat(build.complete_at! - build.started_at)}>
-          {durationFormat(build.complete_at! - build.started_at)}
-        </span>
-      )
+      ? <span title={durationString}>{durationString}</span>
       : <></>;
 
     return (

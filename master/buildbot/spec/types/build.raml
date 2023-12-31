@@ -82,6 +82,9 @@ properties:
     complete_at?:
         description: time at which this build was complete, or None if it's still running
         type: date
+    locks_duration_s:
+        description: time spent acquiring locks so far, not including any running steps
+        type: integer
     properties?:
         description: a dictionary of properties attached to build.
         type: sourcedproperties

@@ -26,7 +26,8 @@ import {
   BadgeStatus,
   ConfigContext,
   analyzeStepUrls,
-  durationFormat,
+  buildDurationFormatWithLocks,
+  stepDurationFormatWithLocks,
   useCurrentTime,
   useStateWithParentTrackingWithDefaultIfNotSet,
   useStepUrlAnalyzer
@@ -103,32 +104,6 @@ type BuildSummaryStepLineProps = {
   parentFullDisplay: boolean
 }
 
-function getTimeTextForStep(step: Step, now: number) {
-  const lockDuration = step.locks_acquired_at !== null
-    ? step.locks_acquired_at - step.started_at!
-    : 0;
-
-  if (step.complete) {
-    const stepDurationText = durationFormat(step.complete_at! - step.started_at!);
-
-    if (lockDuration > 1) {
-      // Since lock delay includes general step setup overhead, then sometimes the started_at and locks_acquired_at
-      // may fall into different seconds. However, it's unlikely that step setup would take more than one second.
-      return `${stepDurationText} (${durationFormat(lockDuration)} spent waiting for locks)`
-    }
-    return stepDurationText;
-  }
-
-  const ongoingStepDurationText = durationFormat(now - step.started_at!);
-  if (lockDuration > 1) {
-    // Since lock delay includes general step setup overhead, then sometimes the started_at and locks_acquired_at
-    // may fall into different seconds. However, it's unlikely that step setup would take more than one second.
-    return `${ongoingStepDurationText} (${durationFormat(lockDuration)} spent waiting for locks)`
-  }
-
-  return ongoingStepDurationText;
-}
-
 const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: BuildSummaryStepLineProps) => {
   const config = useContext(ConfigContext);
   const now = useCurrentTime();
@@ -149,7 +124,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
 
     return (
       <span className="bb-build-summary-time">
-          {getTimeTextForStep(step, now)}
+          {stepDurationFormatWithLocks(step, now)}
         &nbsp;
         {step.state_string}
         </span>
@@ -303,6 +278,8 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
                           parentFullDisplay={fullDisplay}/>
   ));
 
+  const durationString = buildDurationFormatWithLocks(build, now);
+
   return (
     <Card className={"bb-build-summary " + results2class(build, null)}>
       <Card.Header>
@@ -324,11 +301,7 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
         }
         {reason !== null ? <span>| {reason}</span> : <></>}
         <div className={"bb-build-summary-details"}>
-          {
-            build.complete
-              ? <span>{durationFormat(build.complete_at! - build.started_at)}&nbsp;</span>
-              : <span>{durationFormat(now - build.started_at)}&nbsp;</span>
-          }
+          <span>{durationString}&nbsp;</span>
           <span>{build.state_string}&nbsp;</span>
           <BadgeStatus className={results2class(build, null)}>{results2text(build)}</BadgeStatus>
           {renderParentBuildLink()}

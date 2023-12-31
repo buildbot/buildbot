@@ -137,16 +137,18 @@ class FakeStepsComponent(FakeDBComponent):
 
         return defer.succeed((id, number, name))
 
-    def startStep(self, stepid):
+    def startStep(self, stepid, started_at, locks_acquired):
         b = self.steps.get(stepid)
         if b:
-            b['started_at'] = self.reactor.seconds()
+            b['started_at'] = started_at
+            if locks_acquired:
+                b["locks_acquired_at"] = started_at
         return defer.succeed(None)
 
-    def set_step_locks_acquired_at(self, stepid):
+    def set_step_locks_acquired_at(self, stepid, locks_acquired_at):
         b = self.steps.get(stepid)
         if b:
-            b['locks_acquired_at'] = self.reactor.seconds()
+            b['locks_acquired_at'] = locks_acquired_at
         return defer.succeed(None)
 
     def setStepStateString(self, stepid, state_string):

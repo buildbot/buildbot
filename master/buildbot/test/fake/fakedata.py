@@ -314,6 +314,13 @@ class FakeUpdates(service.AsyncService):
                               validation.StringValidator())
         return defer.succeed(None)
 
+    def add_build_locks_duration(self, buildid, duration_s):
+        validation.verifyType(self.testcase, 'buildid', buildid,
+                              validation.IntValidator())
+        validation.verifyType(self.testcase, 'duration_s', duration_s,
+                              validation.IntValidator())
+        return defer.succeed(None)
+
     def finishBuild(self, buildid, results):
         validation.verifyType(self.testcase, 'buildid', buildid,
                               validation.IntValidator())
@@ -357,14 +364,32 @@ class FakeUpdates(service.AsyncService):
         self.stepUrls.setdefault(stepid, []).append((name, url))
         return defer.succeed(None)
 
-    def startStep(self, stepid):
+    def startStep(self, stepid, started_at=None, locks_acquired=False):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
+        validation.verifyType(
+            self.testcase,
+            "started_at",
+            started_at,
+            validation.NoneOk(validation.IntValidator())
+        )
+        validation.verifyType(
+            self.testcase,
+            "locks_acquired",
+            locks_acquired,
+            validation.BooleanValidator()
+        )
         return defer.succeed(None)
 
-    def set_step_locks_acquired_at(self, stepid):
+    def set_step_locks_acquired_at(self, stepid, locks_acquired_at=None):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
+        validation.verifyType(
+            self.testcase,
+            "locks_acquired_at",
+            locks_acquired_at,
+            validation.NoneOk(validation.IntValidator())
+        )
         return defer.succeed(None)
 
     def setStepStateString(self, stepid, state_string):

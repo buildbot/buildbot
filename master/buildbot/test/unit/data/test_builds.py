@@ -297,6 +297,7 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
                        'workerid': 20,
                        'complete': False,
                        'complete_at': None,
+                       "locks_duration_s": 0,
                        'masterid': 824,
                        'number': 1,
                        'results': None,
@@ -311,13 +312,20 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.rtype = builds.Build(self.master)
 
     @defer.inlineCallbacks
-    def do_test_callthrough(self, dbMethodName, method, exp_args=None,
-                            exp_kwargs=None, *args, **kwargs):
-        rv = (1, 2)
-        m = mock.Mock(return_value=defer.succeed(rv))
+    def do_test_callthrough(
+        self,
+        dbMethodName,
+        method,
+        exp_retval=(1, 2),
+        exp_args=None,
+        exp_kwargs=None,
+        *args,
+        **kwargs
+    ):
+        m = mock.Mock(return_value=defer.succeed(exp_retval))
         setattr(self.master.db.builds, dbMethodName, m)
         res = yield method(*args, **kwargs)
-        self.assertIdentical(res, rv)
+        self.assertIdentical(res, exp_retval)
         m.assert_called_with(*(exp_args or args), **(exp_kwargs or kwargs))
 
     @defer.inlineCallbacks
@@ -375,6 +383,22 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         return self.do_test_callthrough('setBuildStateString',
                                         self.rtype.setBuildStateString,
                                         buildid=10, state_string='a b')
+
+    def test_signature_add_build_locks_duration(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.add_build_locks_duration,
+            self.rtype.add_build_locks_duration)
+        def add_build_locks_duration(self, buildid, duration_s):
+            pass
+
+    def test_add_build_locks_duration(self):
+        return self.do_test_callthrough(
+            "add_build_locks_duration",
+            self.rtype.add_build_locks_duration,
+            exp_retval=None,
+            buildid=10,
+            duration_s=5
+        )
 
     def test_signature_finishBuild(self):
         @self.assertArgSpecMatches(

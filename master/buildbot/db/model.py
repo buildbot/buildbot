@@ -186,6 +186,9 @@ class Model(base.DBConnectorComponent):
         # start/complete times
         sa.Column('started_at', sa.Integer, nullable=False),
         sa.Column('complete_at', sa.Integer),
+        # Contains total duration that completed steps spent waiting for locks. Currently running
+        # step is not included.
+        sa.Column("locks_duration_s", sa.Integer, nullable=False),
         sa.Column('state_string', sa.Text, nullable=False),
         sa.Column('results', sa.Integer),
     )
