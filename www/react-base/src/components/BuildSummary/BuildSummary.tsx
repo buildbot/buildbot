@@ -27,7 +27,7 @@ import {
   ConfigContext,
   analyzeStepUrls,
   buildDurationFormatWithLocks,
-  durationFormat,
+  stepDurationFormatWithLocks,
   useCurrentTime,
   useStateWithParentTrackingWithDefaultIfNotSet,
   useStepUrlAnalyzer
@@ -104,32 +104,6 @@ type BuildSummaryStepLineProps = {
   parentFullDisplay: boolean
 }
 
-function getTimeTextForStep(step: Step, now: number) {
-  const lockDuration = step.locks_acquired_at !== null
-    ? step.locks_acquired_at - step.started_at!
-    : 0;
-
-  if (step.complete) {
-    const stepDurationText = durationFormat(step.complete_at! - step.started_at!);
-
-    if (lockDuration > 1) {
-      // Since lock delay includes general step setup overhead, then sometimes the started_at and locks_acquired_at
-      // may fall into different seconds. However, it's unlikely that step setup would take more than one second.
-      return `${stepDurationText} (${durationFormat(lockDuration)} spent waiting for locks)`
-    }
-    return stepDurationText;
-  }
-
-  const ongoingStepDurationText = durationFormat(now - step.started_at!);
-  if (lockDuration > 1) {
-    // Since lock delay includes general step setup overhead, then sometimes the started_at and locks_acquired_at
-    // may fall into different seconds. However, it's unlikely that step setup would take more than one second.
-    return `${ongoingStepDurationText} (${durationFormat(lockDuration)} spent waiting for locks)`
-  }
-
-  return ongoingStepDurationText;
-}
-
 const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: BuildSummaryStepLineProps) => {
   const config = useContext(ConfigContext);
   const now = useCurrentTime();
@@ -150,7 +124,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
 
     return (
       <span className="bb-build-summary-time">
-          {getTimeTextForStep(step, now)}
+          {stepDurationFormatWithLocks(step, now)}
         &nbsp;
         {step.state_string}
         </span>

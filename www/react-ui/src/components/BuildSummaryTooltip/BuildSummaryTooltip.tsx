@@ -29,8 +29,8 @@ import {
   results2text
 } from "buildbot-data-js";
 import {ConfigContext} from "../../contexts/Config";
-import {buildDurationFormatWithLocks} from "../../util/DataUtils";
-import {durationFormat, useCurrentTime} from "../../util/Moment";
+import {buildDurationFormatWithLocks, stepDurationFormatWithLocks} from "../../util/DataUtils";
+import {useCurrentTime} from "../../util/Moment";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
 import {BadgeRound} from "../BadgeRound/BadgeRound";
 import {BadgeStatus} from "../BadgeStatus/BadgeStatus";
@@ -125,11 +125,7 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
     if (step.started_at !== null) {
       stepInfoWhenStarted = (
         <span className="bb-buildsummary-tooltip-step-time">
-            {
-              step.complete
-                ? <span>{durationFormat(step.complete_at! - step.started_at)}</span>
-                : <span>{durationFormat(now - step.started_at)}</span>
-            }
+            { stepDurationFormatWithLocks(step, now) }
           &nbsp;
           {limitStringLength(step.state_string, 40)}
         </span>
