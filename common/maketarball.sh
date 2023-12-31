@@ -4,13 +4,13 @@ pkg=$1
 (
     cd ${pkg}
     rm -rf MANIFEST dist
-    if [ ${pkg} == "master" ] || [ ${pkg} == "worker" ]; then
-        python setup.py sdist
+    if [ ${pkg} == "master" ] || [ ${pkg} == "worker" ] || [ ${pkg} == "pkg" ]; then
+        python -m build --no-isolation --sdist
         # wheels must be build separately in order to properly omit tests
-        python setup.py bdist_wheel
+        python -m build --no-isolation --wheel
     else
         # retry once to workaround instabilities
-        python setup.py sdist bdist_wheel || (git clean -xdf; python setup.py sdist bdist_wheel)
+        python -m build --no-isolation || (git clean -xdf; python -m build --no-isolation)
     fi
 )
 cp ${pkg}/dist/* dist/
