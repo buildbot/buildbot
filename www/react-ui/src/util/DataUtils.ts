@@ -15,7 +15,8 @@
   Copyright Buildbot Team Members
 */
 
-import {Builder, DataCollection, Master} from "buildbot-data-js";
+import {Build, Builder, DataCollection, Master} from "buildbot-data-js";
+import {durationFormat} from "./Moment";
 
 export function hasActiveMaster(builder: Builder, masters: DataCollection<Master>) {
   if ((builder.masterids == null)) {
@@ -33,3 +34,14 @@ export function hasActiveMaster(builder: Builder, masters: DataCollection<Master
   }
   return active;
 };
+
+export function buildDurationFormatWithLocks(build: Build, now: number) {
+  let res = build.complete
+    ? durationFormat(build.complete_at! - build.started_at)
+    : durationFormat(now - build.started_at);
+
+  if (build.locks_duration_s > 0) {
+    res += ` (locks: ${durationFormat(build.locks_duration_s!)})`;
+  }
+  return res;
+}

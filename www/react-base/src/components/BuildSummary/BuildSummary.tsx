@@ -26,6 +26,7 @@ import {
   BadgeStatus,
   ConfigContext,
   analyzeStepUrls,
+  buildDurationFormatWithLocks,
   durationFormat,
   useCurrentTime,
   useStateWithParentTrackingWithDefaultIfNotSet,
@@ -303,6 +304,8 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
                           parentFullDisplay={fullDisplay}/>
   ));
 
+  const durationString = buildDurationFormatWithLocks(build, now);
+
   return (
     <Card className={"bb-build-summary " + results2class(build, null)}>
       <Card.Header>
@@ -324,11 +327,7 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
         }
         {reason !== null ? <span>| {reason}</span> : <></>}
         <div className={"bb-build-summary-details"}>
-          {
-            build.complete
-              ? <span>{durationFormat(build.complete_at! - build.started_at)}&nbsp;</span>
-              : <span>{durationFormat(now - build.started_at)}&nbsp;</span>
-          }
+          <span>{durationString}&nbsp;</span>
           <span>{build.state_string}&nbsp;</span>
           <BadgeStatus className={results2class(build, null)}>{results2text(build)}</BadgeStatus>
           {renderParentBuildLink()}

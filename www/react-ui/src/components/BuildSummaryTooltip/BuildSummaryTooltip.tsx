@@ -29,6 +29,7 @@ import {
   results2text
 } from "buildbot-data-js";
 import {ConfigContext} from "../../contexts/Config";
+import {buildDurationFormatWithLocks} from "../../util/DataUtils";
 import {durationFormat, useCurrentTime} from "../../util/Moment";
 import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
 import {BadgeRound} from "../BadgeRound/BadgeRound";
@@ -91,11 +92,7 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
     headerElements.push((
       <div key="result" className="flex-row">
         <div className="flex-grow-1">
-          {
-            build.complete
-              ? <span>{durationFormat(build.complete_at! - build.started_at)}</span>
-              : <span>{durationFormat(now - build.started_at)}</span>
-          }
+          { buildDurationFormatWithLocks(build, now) }
           &nbsp;
           { limitStringLength(build.state_string, 80) }
           &nbsp;
