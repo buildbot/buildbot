@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {Builder, DataCollection, Master} from "../../../react-data-module";
+import {Builder, DataCollection, Master} from "buildbot-data-js";
 
 export function hasActiveMaster(builder: Builder, masters: DataCollection<Master>) {
   if ((builder.masterids == null)) {
