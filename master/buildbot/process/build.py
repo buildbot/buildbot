@@ -454,10 +454,17 @@ class Build(properties.PropertiesMixin):
 
         if self._locks_to_acquire:
             yield self.master.data.updates.setBuildStateString(self.buildid, "acquiring locks")
-            yield self.master.data.updates.startStep(self._locks_acquire_step.stepid)
+            locks_acquire_start_at = int(self.master.reactor.seconds())
+            yield self.master.data.updates.startStep(
+                self._locks_acquire_step.stepid, started_at=locks_acquire_start_at
+            )
             yield self.acquireLocks()
+            locks_acquired_at = int(self.master.reactor.seconds())
             yield self.master.data.updates.set_step_locks_acquired_at(
-                self._locks_acquire_step.stepid
+                self._locks_acquire_step.stepid, locks_acquired_at=locks_acquired_at
+            )
+            yield self.master.data.updates.add_build_locks_duration(
+                self.buildid, duration_s=locks_acquired_at - locks_acquire_start_at
             )
             yield self.master.data.updates.setStepStateString(
                 self._locks_acquire_step.stepid, "locks acquired")

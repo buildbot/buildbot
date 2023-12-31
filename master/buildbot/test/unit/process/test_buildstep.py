@@ -939,6 +939,7 @@ class TestBuildStep(TestBuildStepMixin, config.ConfigErrorsMixin,
     def testRunRaisesException(self):
         step = create_step_from_step_or_factory(NewStyleStep())
         step.master = mock.Mock()
+        step.master.reactor = self.reactor
         step.build = mock.Mock()
         step.build._locks_to_acquire = []
         step.build.builder.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])

@@ -508,7 +508,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.remote = remote
 
         yield self.addStep()
-        yield self.master.data.updates.startStep(self.stepid)
+        started_at = int(self.master.reactor.seconds())
+        yield self.master.data.updates.startStep(self.stepid, started_at=started_at)
 
         try:
             yield self._render_renderables()
@@ -525,12 +526,30 @@ class BuildStep(results.ResultComputingConfigMixin,
                 yield self._setup_locks()
 
                 # set up locks
-                yield self.acquireLocks()
+                if self._locks_to_acquire:
+                    yield self.acquireLocks()
 
-                if self.stopped:
-                    raise BuildStepCancelled
+                    if self.stopped:
+                        raise BuildStepCancelled
 
-                yield self.master.data.updates.set_step_locks_acquired_at(self.stepid)
+                    locks_acquired_at = int(self.master.reactor.seconds())
+                    yield defer.DeferredList(
+                        [
+                            self.master.data.updates.set_step_locks_acquired_at(
+                                self.stepid, locks_acquired_at=locks_acquired_at
+                            ),
+                            self.master.data.updates.add_build_locks_duration(
+                                self.build.buildid, duration_s=locks_acquired_at - started_at
+                            )
+                        ]
+                    )
+                else:
+                    yield self.master.data.updates.set_step_locks_acquired_at(
+                        self.stepid, locks_acquired_at=started_at
+                    )
+
+                    if self.stopped:
+                        raise BuildStepCancelled
 
                 yield self.addTestResultSets()
                 try:
