@@ -22,7 +22,7 @@ alembic==1.13.1
 appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==3.0.2
-attrs==23.1.0
+attrs==23.2.0
 Automat==22.10.0
 Babel==2.14.0
 backports.functools-lru-cache==2.0.0
