@@ -51,7 +51,8 @@ test.describe('previousnextlink', function() {
 
 test.describe('forceandstop', function() {
   test('should create a build with a dedicated reason and stop it during execution',
-      async ({page}) => {
+      async ({page, browserName}) => {
+    test.skip(browserName === 'webkit', 'https://github.com/buildbot/buildbot/issues/7307');
 
     await BuilderPage.gotoForce(page, "slowruntests", "force");
     await ForcePage.clickStartButtonAndWaitRedirectToBuild(page);
