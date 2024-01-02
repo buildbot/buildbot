@@ -419,7 +419,14 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
     template_type = 'plain'
     uses_default_body_template = False
 
-    def __init__(self, template=None, subject=None, template_type=None, **kwargs):
+    def __init__(
+        self,
+        template=None,
+        subject=None,
+        template_type=None,
+        extra_info_cb=None,
+        **kwargs
+    ):
         if template_type is not None:
             self.template_type = template_type
 
@@ -441,6 +448,7 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
         self.body_template = jinja2.Template(template)
         self.subject_template = jinja2.Template(subject)
+        self.extra_info_cb = extra_info_cb
 
         super().__init__(**kwargs)
 
@@ -461,6 +469,11 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
     def render_message_subject(self, context):
         return self.subject_template.render(context)
+
+    def render_message_extra_info(self, context):
+        if self.extra_info_cb is None:
+            return None
+        return self.extra_info_cb(context)
 
 
 class MessageFormatter(MessageFormatterBaseJinja):
