@@ -158,6 +158,15 @@ class FakeSourceStampsComponent(FakeDBComponent):
             return None
 
     @defer.inlineCallbacks
+    def get_sourcestamps_for_buildset(self, buildsetid):
+        bset = yield self.db.buildsets.getBuildset(buildsetid)
+
+        results = []
+        for ssid in bset["sourcestamps"]:
+            results.append((yield self.getSourceStamp(ssid)))
+        return results
+
+    @defer.inlineCallbacks
     def getSourceStampsForBuild(self, buildid):
         build = yield self.db.builds.getBuild(buildid)
         breq = yield self.db.buildrequests.getBuildRequest(build['buildrequestid'])

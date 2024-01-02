@@ -113,6 +113,28 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
+    def get_sourcestamps_for_buildset(self, buildsetid):
+        def thd(conn):
+            bsets_tbl = self.db.model.buildsets
+            bsss_tbl = self.db.model.buildset_sourcestamps
+            sstamps_tbl = self.db.model.sourcestamps
+
+            from_clause = bsets_tbl.join(
+                bsss_tbl, bsets_tbl.c.id == bsss_tbl.c.buildsetid
+            ).join(sstamps_tbl, bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
+
+            q = (
+                sa.select([sstamps_tbl])
+                .select_from(from_clause)
+                .where(bsets_tbl.c.id == buildsetid)
+            )
+
+            res = conn.execute(q)
+            return [self._rowToSsdict_thd(conn, row) for row in res.fetchall()]
+
+        return self.db.pool.do(thd)
+
+    # returns a Deferred that returns a value
     def getSourceStampsForBuild(self, buildid):
         assert buildid > 0
 

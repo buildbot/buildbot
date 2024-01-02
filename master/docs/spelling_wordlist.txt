@@ -110,6 +110,7 @@ buildrequestid
 buildrequests
 buildset
 Buildset
+buildsetid
 buildsetids
 buildsets
 Buildsets
