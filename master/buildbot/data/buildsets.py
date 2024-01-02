@@ -99,22 +99,21 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     """
     rootLinkName = 'buildsets'
 
+    @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
         resultSpec.fieldMapping = self.fieldMapping
-        d = self.master.db.buildsets.getBuildsets(
-            complete=complete, resultSpec=resultSpec)
+        buildsets = yield self.master.db.buildsets.getBuildsets(
+            complete=complete,
+            resultSpec=resultSpec
+        )
 
-        @d.addCallback
-        def db2data(buildsets):
-            d = defer.DeferredList([self.db2data(bs) for bs in buildsets],
-                                   fireOnOneErrback=True, consumeErrors=True)
+        buildsets = yield defer.gatherResults(
+            [self.db2data(bs) for bs in buildsets],
+            consumeErrors=True
+        )
 
-            @d.addCallback
-            def getResults(res):
-                return [r[1] for r in res]
-            return d
-        return d
+        return buildsets
 
 
 class Buildset(base.ResourceType):
