@@ -129,15 +129,8 @@ before_script:
 
 # Tests running commands
 script:
-  # make frontend_install_tests takes 17 min, so we only do it post submit
-  - title: frontend build tests
-    condition: TESTS == "js_build" and TRAVIS_PULL_REQUEST
-    cmd: |
-      export PATH=/tmp/bbvenv/bin/:$PATH
-      make frontend
-
-  - title: full frontend tests
-    condition: TESTS == "js_build" and not TRAVIS_PULL_REQUEST
+  - title: frontend tests
+    condition: TESTS == "js_build"
     cmd: |
       export PATH=/tmp/bbvenv/bin/:$PATH
       make frontend_install_tests
