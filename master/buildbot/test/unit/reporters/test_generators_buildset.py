@@ -61,7 +61,8 @@ class TestBuildSetGeneratorBase(
             message = {
                 "body": "body",
                 "type": "text",
-                "subject": "subject"
+                "subject": "subject",
+                "extra_info": None,
             }
         if db_args is None:
             db_args = {}
@@ -120,6 +121,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
             'body': 'body',
             'subject': 'subject',
             'type': 'text',
+            "extra_info": None,
             'results': SUCCESS,
             'builds': [build],
             "buildset": buildset,
@@ -142,6 +144,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
             'body': 'body',
             'subject': 'subject',
             'type': 'text',
+            "extra_info": None,
             'results': None,
             'builds': [build],
             "buildset": buildset,
@@ -161,6 +164,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
             "body": "body",
             "type": "text",
             "subject": None,  # deprecated unspecified subject
+            "extra_info": None,
         }
 
         g, build, buildset = yield self.setup_generator(
@@ -179,6 +183,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
             'body': 'body',
             'subject': 'Buildbot not finished in Buildbot on whole buildset',
             'type': 'text',
+            "extra_info": None,
             'results': None,
             'builds': [build],
             "buildset": buildset,
@@ -201,6 +206,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
             'body': 'body',
             'subject': 'subject',
             'type': 'text',
+            "extra_info": None,
             'results': SUCCESS,
             'builds': [build],
             "buildset": buildset,
@@ -272,6 +278,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
             "body": "body",
             "subject": "subject",
             "type": "text",
+            "extra_info": None,
             "results": SUCCESS,
             "builds": [build],
             "buildset": buildset,
@@ -298,6 +305,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
             "body": "body",
             "subject": "subject",
             "type": "text",
+            "extra_info": None,
             "results": SUCCESS,
             "builds": [],
             "buildset": buildset,
@@ -330,6 +338,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
             "body": "body",
             "subject": "subject",
             "type": "text",
+            "extra_info": None,
             "results": None,
             "builds": [build],
             "buildset": buildset,
@@ -357,6 +366,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
             "body": "body",
             "subject": "subject",
             "type": "text",
+            "extra_info": None,
             "results": None,
             "builds": [],
             "buildset": buildset,
@@ -371,6 +381,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
             "body": "body",
             "type": "text",
             "subject": None,  # deprecated unspecified subject
+            "extra_info": None,
         }
 
         g, build, buildset = yield self.setup_generator(message=message)
@@ -394,6 +405,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
             "body": "body",
             "subject": None,
             "type": "text",
+            "extra_info": None,
             "results": SUCCESS,
             "builds": [build],
             "buildset": buildset,
@@ -411,6 +423,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
             "body": "body",
             "subject": "subject",
             "type": "text",
+            "extra_info": None,
             "results": SUCCESS,
             "builds": [],
             "buildset": buildset,
@@ -433,6 +446,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
             "body": "body",
             "subject": "subject",
             "type": "text",
+            "extra_info": None,
             "results": SUCCESS,
             "builds": [build],
             "buildset": buildset,

@@ -189,7 +189,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         formatter.format_message_for_build.return_value = {
             "body": "body",
             "type": "text",
-            "subject": "subject"
+            "subject": "subject",
+            "extra_info": None,
         }
         formatter.want_properties = False
         formatter.want_steps = False
@@ -329,7 +330,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         formatter.format_message_for_build.return_value = {
             "body": "body",
             "type": "text",
-            "subject": "subject"
+            "subject": "subject",
+            "extra_info": None,
         }
         formatter.want_properties = False
         formatter.want_steps = False
@@ -477,6 +479,7 @@ def create_msgdict(funny_chars='\u00E5\u00E4\u00F6'):
     msg_dict = {
         "body": unibody,
         "subject": "testsubject",
-        "type": 'plain'
+        "type": 'plain',
+        "extra_info": None,
     }
     return msg_dict
