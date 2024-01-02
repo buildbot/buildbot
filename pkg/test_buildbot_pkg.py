@@ -25,8 +25,8 @@ from twisted.trial import unittest
 
 class BuildbotWWWPkg(unittest.TestCase):
     pkgName = "buildbot_www"
-    pkgPaths = ["www", "base"]
-    epName = "base"
+    pkgPaths = ["www", "react-base"]
+    epName = "base_react"
 
     loadTestScript = dedent("""
         from importlib.metadata import entry_points
@@ -88,18 +88,19 @@ class BuildbotWWWPkg(unittest.TestCase):
 
 
 class BuildbotConsolePkg(BuildbotWWWPkg):
-    pkgName = "buildbot-console-view"
-    pkgPaths = ["www", "console_view"]
-    epName = "console_view"
+    pkgName = "buildbot-react-console-view"
+    pkgPaths = ["www", "react-console_view"]
+    epName = "react_console_view"
+
+
+class BuildbotGridPkg(BuildbotWWWPkg):
+    pkgName = "buildbot-react-waterfall-view"
+    pkgPaths = ["www", "react-grid_view"]
+    epName = "react_grid_view"
 
 
 class BuildbotWaterfallPkg(BuildbotWWWPkg):
-    pkgName = "buildbot-waterfall-view"
-    pkgPaths = ["www", "waterfall_view"]
-    epName = "waterfall_view"
+    pkgName = "buildbot-react-waterfall-view"
+    pkgPaths = ["www", "react-waterfall_view"]
+    epName = "react_waterfall_view"
 
-
-class BuildbotCodeparameterPkg(BuildbotWWWPkg):
-    pkgName = "buildbot-codeparameter"
-    pkgPaths = ["www", "codeparameter"]
-    epName = "codeparameter"
