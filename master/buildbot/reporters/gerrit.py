@@ -25,7 +25,9 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
+from zope.interface import implementer
 
+from buildbot import interfaces
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
@@ -33,8 +35,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.reporters import utils
+from buildbot.reporters.base import ReporterBase
 from buildbot.util import bytes2unicode
-from buildbot.util import service
 
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600
@@ -128,7 +130,217 @@ class DEFAULT_SUMMARY:
     pass
 
 
-class GerritStatusPush(service.BuildbotService):
+def extract_project_revision(report):
+    build = report["builds"][0]
+
+    def getProperty(build, name):
+        return build['properties'].get(name, [None])[0]
+    # Gerrit + Repo
+    downloads = getProperty(build, "repo_downloads")
+    downloaded = getProperty(build, "repo_downloaded")
+    if downloads is not None and downloaded is not None:
+        downloaded = downloaded.split(" ")
+        if downloads and 2 * len(downloads) == len(downloaded):
+            for i, download in enumerate(downloads):
+                try:
+                    project, change1 = download.split(" ")
+                except ValueError:
+                    return None, None  # something is wrong, abort
+                change2 = downloaded[2 * i]
+                revision = downloaded[2 * i + 1]
+                if change1 == change2:
+                    return project, revision
+                else:
+                    return None, None
+        return None, None
+
+    # Gerrit + Git
+    # used only to verify Gerrit source
+    if getProperty(build, "event.change.id") is not None:
+        project = getProperty(build, "event.change.project")
+        codebase = getProperty(build, "codebase")
+        revision = (getProperty(build, "event.patchSet.revision") or
+                    getProperty(build, "got_revision") or
+                    getProperty(build, "revision"))
+
+        if isinstance(revision, dict):
+            # in case of the revision is a codebase revision, we just take
+            # the revisionfor current codebase
+            if codebase is not None:
+                revision = revision[codebase]
+            else:
+                revision = None
+
+        return project, revision
+
+    return None, None
+
+
+class GerritStatusGeneratorBase:
+
+    def __init__(self, callback, callback_arg, builders, want_steps, want_logs):
+        self.callback = callback
+        self.callback_arg = callback_arg
+        self.builders = builders
+        self.want_steps = want_steps
+        self.want_logs = want_logs
+
+    def is_build_reported(self, build):
+        return self.builders is None or build["builder"]["name"] in self.builders
+
+    @defer.inlineCallbacks
+    def get_build_details(self, master, build):
+        br = yield master.data.get(("buildrequests", build["buildrequestid"]))
+        buildset = yield master.data.get(("buildsets", br["buildsetid"]))
+        yield utils.getDetailsForBuilds(
+            master,
+            buildset,
+            [build],
+            want_properties=True,
+            want_steps=self.want_steps
+        )
+
+
+@implementer(interfaces.IReportGenerator)
+class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
+    wanted_event_keys = [
+        ("buildsets", None, "complete"),
+    ]
+
+    def check(self):
+        pass
+
+    @defer.inlineCallbacks
+    def generate(self, master, reporter, key, message):
+        bsid = message["bsid"]
+        res = yield utils.getDetailsForBuildset(
+            master,
+            bsid,
+            want_properties=True,
+            want_steps=self.want_steps,
+            want_logs=self.want_logs,
+            want_logs_content=self.want_logs
+        )
+
+        builds = res["builds"]
+        buildset = res["buildset"]
+
+        builds = [build for build in builds if self.is_build_reported(build)]
+        if not builds:
+            return None
+
+        def get_build_info(build):
+            result = build["results"]
+            resultText = {
+                SUCCESS: "succeeded",
+                FAILURE: "failed",
+                WARNINGS: "completed with warnings",
+                EXCEPTION: "encountered an exception",
+            }.get(result, f"completed with unknown result {result}")
+
+            return {
+                "name": build["builder"]["name"],
+                "result": result,
+                "resultText": resultText,
+                "text": build["state_string"],
+                "url": utils.getURLForBuild(
+                    master,
+                    build["builder"]["builderid"],
+                    build["number"]
+                ),
+                "build": build
+            }
+
+        build_info_list = sorted(
+            [get_build_info(build) for build in builds], key=lambda bi: bi["name"]
+        )
+
+        result = yield self.callback(
+            build_info_list,
+            Results[buildset["results"]],
+            master,
+            self.callback_arg
+        )
+
+        result = _handleLegacyResult(result)
+
+        return {
+            "body": result.get("message", None),
+            "extra_info": {
+                "labels": result.get("labels"),
+            },
+            "builds": [builds[0]],
+            "buildset": buildset,
+        }
+
+
+@implementer(interfaces.IReportGenerator)
+class GerritBuildStartStatusGenerator(GerritStatusGeneratorBase):
+    wanted_event_keys = [
+        ("builds", None, "new"),
+    ]
+
+    def check(self):
+        pass
+
+    @defer.inlineCallbacks
+    def generate(self, master, reporter, key, message):
+        build = message
+        yield self.get_build_details(master, build)
+        if not self.is_build_reported(build):
+            return None
+
+        result = yield self.callback(build["builder"]["name"], build, self.callback_arg)
+
+        result = _handleLegacyResult(result)
+
+        return {
+            "body": result.get("message", None),
+            "extra_info": {
+                "labels": result.get("labels"),
+            },
+            "builds": [build],
+            "buildset": build["buildset"],
+        }
+
+
+@implementer(interfaces.IReportGenerator)
+class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
+    wanted_event_keys = [
+        ('builds', None, 'finished'),
+    ]
+
+    def check(self):
+        pass
+
+    @defer.inlineCallbacks
+    def generate(self, master, reporter, key, message):
+        build = message
+        yield self.get_build_details(master, build)
+        if not self.is_build_reported(build):
+            return None
+
+        result = yield self.callback(
+            build['builder']['name'],
+            build,
+            build['results'],
+            master,
+            self.callback_arg
+        )
+
+        result = _handleLegacyResult(result)
+
+        return {
+            "body": result.get("message", None),
+            "extra_info": {
+                "labels": result.get("labels"),
+            },
+            "builds": [build],
+            "buildset": build["buildset"],
+        }
+
+
+class GerritStatusPush(ReporterBase):
 
     """Event streamer to a gerrit ssh server."""
     name = "GerritStatusPush"
@@ -138,22 +350,96 @@ class GerritStatusPush(service.BuildbotService):
     gerrit_version_time = None
     gerrit_version = None
     gerrit_identity_file = None
-    reviewCB = None
-    reviewArg = None
-    startCB = None
-    startArg = None
-    summaryCB = None
-    summaryArg = None
-    wantSteps = False
-    wantLogs = False
     _gerrit_notify = None
 
-    def reconfigService(self, server, username, reviewCB=DEFAULT_REVIEW,
-                        startCB=None, port=29418, reviewArg=None,
-                        startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
-                        identity_file=None, builders=None, notify=None,
-                        wantSteps=False, wantLogs=False):
+    def checkConfig(
+        self,
+        server,
+        username,
+        reviewCB=DEFAULT_REVIEW,
+        startCB=None,
+        port=29418,
+        reviewArg=None,
+        startArg=None,
+        summaryCB=DEFAULT_SUMMARY,
+        summaryArg=None,
+        identity_file=None,
+        builders=None,
+        notify=None,
+        wantSteps=False,
+        wantLogs=False,
+        generators=None,
+        **kwargs
+    ):
+        if generators is None:
+            generators = self._create_generators_from_old_args(
+                reviewCB,
+                startCB,
+                reviewArg,
+                startArg,
+                summaryCB,
+                summaryArg,
+                builders,
+                wantSteps,
+                wantLogs
+            )
 
+        super().checkConfig(generators=generators, **kwargs)
+
+    def reconfigService(
+        self,
+        server,
+        username,
+        reviewCB=DEFAULT_REVIEW,
+        startCB=None,
+        port=29418,
+        reviewArg=None,
+        startArg=None,
+        summaryCB=DEFAULT_SUMMARY,
+        summaryArg=None,
+        identity_file=None,
+        builders=None,
+        notify=None,
+        wantSteps=False,
+        wantLogs=False,
+        generators=None,
+        **kwargs
+    ):
+        self.gerrit_server = server
+        self.gerrit_username = username
+        self.gerrit_port = port
+        self.gerrit_version = None
+        self.gerrit_version_time = 0
+        self.gerrit_identity_file = identity_file
+        self._gerrit_notify = notify
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(
+                reviewCB,
+                startCB,
+                reviewArg,
+                startArg,
+                summaryCB,
+                summaryArg,
+                builders,
+                wantSteps,
+                wantLogs
+            )
+
+        super().reconfigService(generators=generators, **kwargs)
+
+    def _create_generators_from_old_args(
+        self,
+        reviewCB,
+        startCB,
+        reviewArg,
+        startArg,
+        summaryCB,
+        summaryArg,
+        builders,
+        wantSteps,
+        wantLogs
+    ):
         # If neither reviewCB nor summaryCB were specified, default to sending
         # out "summary" reviews. But if we were given a reviewCB and only a
         # reviewCB, disable the "summary" reviews, so we don't send out both
@@ -165,23 +451,43 @@ class GerritStatusPush(service.BuildbotService):
             reviewCB = None
         if summaryCB is DEFAULT_SUMMARY:
             summaryCB = None
-        # Parameters.
-        self.gerrit_server = server
-        self.gerrit_username = username
-        self.gerrit_port = port
-        self.gerrit_version = None
-        self.gerrit_version_time = 0
-        self.gerrit_identity_file = identity_file
-        self.reviewCB = reviewCB
-        self.reviewArg = reviewArg
-        self.startCB = startCB
-        self.startArg = startArg
-        self.summaryCB = summaryCB
-        self.summaryArg = summaryArg
-        self.builders = builders
-        self._gerrit_notify = notify
-        self.wantSteps = wantSteps
-        self.wantLogs = wantLogs
+
+        generators = []
+
+        if startCB is not None:
+            generators.append(
+                GerritBuildStartStatusGenerator(
+                    callback=startCB,
+                    callback_arg=startArg,
+                    builders=builders,
+                    want_steps=wantSteps,
+                    want_logs=wantLogs
+                )
+            )
+
+        if reviewCB is not None:
+            generators.append(
+                GerritBuildEndStatusGenerator(
+                    callback=reviewCB,
+                    callback_arg=reviewArg,
+                    builders=builders,
+                    want_steps=wantSteps,
+                    want_logs=wantLogs
+                )
+            )
+
+        if summaryCB is not None:
+            generators.append(
+                GerritBuildSetStatusGenerator(
+                    callback=summaryCB,
+                    callback_arg=summaryArg,
+                    builders=builders,
+                    want_steps=wantSteps,
+                    want_logs=wantLogs
+                )
+            )
+
+        return generators
 
     def _gerritCmd(self, *args):
         '''Construct a command as a list of strings suitable for
@@ -260,171 +566,26 @@ class GerritStatusPush(service.BuildbotService):
             else:
                 log.msg("gerrit status: OK")
 
-    @defer.inlineCallbacks
-    def startService(self):
-        yield super().startService()
-        startConsuming = self.master.mq.startConsuming
-        self._buildsetCompleteConsumer = yield startConsuming(
-            self.buildsetComplete,
-            ('buildsets', None, 'complete'))
+    def sendMessage(self, reports):
+        report = reports[0]
 
-        self._buildCompleteConsumer = yield startConsuming(
-            self.buildComplete,
-            ('builds', None, 'finished'))
+        project, revision = extract_project_revision(report)
 
-        self._buildStartedConsumer = yield startConsuming(
-            self.buildStarted,
-            ('builds', None, 'new'))
+        if report["body"] is None or project is None or revision is None:
+            return defer.succeed(None)
 
-    def stopService(self):
-        self._buildsetCompleteConsumer.stopConsuming()
-        self._buildCompleteConsumer.stopConsuming()
-        self._buildStartedConsumer.stopConsuming()
+        labels = None
+        extra_info = report.get("extra_info", None)
+        if extra_info is not None:
+            labels = extra_info.get("labels", None)
 
-    @defer.inlineCallbacks
-    def _got_event(self, key, msg):
-        # This function is used only from tests
-        if key[0] == 'builds':
-            if key[2] == 'new':
-                yield self.buildStarted(key, msg)
-                return
-            elif key[2] == 'finished':
-                yield self.buildComplete(key, msg)
-                return
-        if key[0] == 'buildsets' and key[2] == 'complete':  # pragma: no cover
-            yield self.buildsetComplete(key, msg)
-            return
-        raise RuntimeError(f'Invalid key for _got_event: {key}')  # pragma: no cover
+        self.send_code_review(project, revision, report["body"], labels)
+        return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def buildStarted(self, key, build):
-        if self.startCB is None:
-            return
-        yield self.getBuildDetails(build)
-        if self.isBuildReported(build):
-            result = yield self.startCB(build['builder']['name'], build, self.startArg)
-            self.sendCodeReviews(build, result)
-
-    @defer.inlineCallbacks
-    def buildComplete(self, key, build):
-        if self.reviewCB is None:
-            return
-        yield self.getBuildDetails(build)
-        if self.isBuildReported(build):
-            result = yield self.reviewCB(build['builder']['name'], build, build['results'],
-                                         self.master, self.reviewArg)
-            result = _handleLegacyResult(result)
-            self.sendCodeReviews(build, result)
-
-    @defer.inlineCallbacks
-    def getBuildDetails(self, build):
-        br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
-        buildset = yield self.master.data.get(("buildsets", br['buildsetid']))
-        yield utils.getDetailsForBuilds(self.master,
-                                        buildset,
-                                        [build],
-                                        want_properties=True,
-                                        want_steps=self.wantSteps)
-
-    def isBuildReported(self, build):
-        return self.builders is None or build['builder']['name'] in self.builders
-
-    @defer.inlineCallbacks
-    def buildsetComplete(self, key, msg):
-        if not self.summaryCB:
-            return
-        bsid = msg['bsid']
-        res = yield utils.getDetailsForBuildset(self.master, bsid, want_properties=True,
-                                                want_steps=self.wantSteps, want_logs=self.wantLogs,
-                                                want_logs_content=self.wantLogs)
-        builds = res['builds']
-        buildset = res['buildset']
-        self.sendBuildSetSummary(buildset, builds)
-
-    @defer.inlineCallbacks
-    def sendBuildSetSummary(self, buildset, builds):
-        builds = [build for build in builds if self.isBuildReported(build)]
-        if builds and self.summaryCB:
-            def getBuildInfo(build):
-                result = build['results']
-                resultText = {
-                    SUCCESS: "succeeded",
-                    FAILURE: "failed",
-                    WARNINGS: "completed with warnings",
-                    EXCEPTION: "encountered an exception",
-                }.get(result, f"completed with unknown result {result}")
-
-                return {'name': build['builder']['name'],
-                        'result': result,
-                        'resultText': resultText,
-                        'text': build['state_string'],
-                        'url': utils.getURLForBuild(self.master, build['builder']['builderid'],
-                                                    build['number']),
-                        'build': build
-                        }
-            buildInfoList = sorted(
-                [getBuildInfo(build) for build in builds], key=lambda bi: bi['name'])
-
-            result = yield self.summaryCB(buildInfoList,
-                                          Results[buildset['results']],
-                                          self.master,
-                                          self.summaryArg)
-
-            result = _handleLegacyResult(result)
-            self.sendCodeReviews(builds[0], result)
-
-    def sendCodeReviews(self, build, result):
-        message = result.get('message', None)
-        if message is None:
-            return
-
-        def getProperty(build, name):
-            return build['properties'].get(name, [None])[0]
-        # Gerrit + Repo
-        downloads = getProperty(build, "repo_downloads")
-        downloaded = getProperty(build, "repo_downloaded")
-        if downloads is not None and downloaded is not None:
-            downloaded = downloaded.split(" ")
-            if downloads and 2 * len(downloads) == len(downloaded):
-                for i, download in enumerate(downloads):
-                    try:
-                        project, change1 = download.split(" ")
-                    except ValueError:
-                        return  # something is wrong, abort
-                    change2 = downloaded[2 * i]
-                    revision = downloaded[2 * i + 1]
-                    if change1 == change2:
-                        self.sendCodeReview(project, revision, result)
-                    else:
-                        return  # something is wrong, abort
-            return
-
-        # Gerrit + Git
-        # used only to verify Gerrit source
-        if getProperty(build, "event.change.id") is not None:
-            project = getProperty(build, "event.change.project")
-            codebase = getProperty(build, "codebase")
-            revision = (getProperty(build, "event.patchSet.revision") or
-                        getProperty(build, "got_revision") or
-                        getProperty(build, "revision"))
-
-            if isinstance(revision, dict):
-                # in case of the revision is a codebase revision, we just take
-                # the revisionfor current codebase
-                if codebase is not None:
-                    revision = revision[codebase]
-                else:
-                    revision = None
-
-            if project is not None and revision is not None:
-                self.sendCodeReview(project, revision, result)
-                return
-
-    def sendCodeReview(self, project, revision, result):
+    def send_code_review(self, project, revision, message, labels):
         gerrit_version = self.getCachedVersion()
         if gerrit_version is None:
-            self.callWithVersion(
-                lambda: self.sendCodeReview(project, revision, result))
+            self.callWithVersion(lambda: self.send_code_review(project, revision, message, labels))
             return
 
         assert gerrit_version
@@ -436,12 +597,10 @@ class GerritStatusPush(service.BuildbotService):
         if self._gerrit_notify is not None:
             command.append(f'--notify {str(self._gerrit_notify)}')
 
-        message = result.get('message', None)
         if message:
             message = message.replace("'", "\"")
             command.append(f"--message '{message}'")
 
-        labels = result.get('labels', None)
         if labels:
             if gerrit_version < parse_version("2.6"):
                 add_label = _old_add_label
