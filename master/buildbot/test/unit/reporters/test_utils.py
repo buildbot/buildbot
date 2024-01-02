@@ -445,6 +445,29 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(sorted(res), sorted(["me@foo", "him", "her"]))
 
     @defer.inlineCallbacks
+    def test_get_responsible_users_for_buildset_with_owner(self):
+        self.setupDb()
+
+        self.db.insert_test_data(
+            [
+                fakedb.BuildsetProperty(
+                    buildsetid=98,
+                    property_name="owner",
+                    property_value='["buildset_owner", "fakedb"]'
+                ),
+            ]
+        )
+
+        res = yield utils.get_responsible_users_for_buildset(self.master, 98)
+        self.assertEqual(sorted(res), sorted(["buildset_owner"]))
+
+    @defer.inlineCallbacks
+    def test_get_responsible_users_for_buildset_no_owner(self):
+        self.setupDb()
+        res = yield utils.get_responsible_users_for_buildset(self.master, 99)
+        self.assertEqual(sorted(res), sorted([]))
+
+    @defer.inlineCallbacks
     def test_getPreviousBuild(self):
         self.setupDb()
         build = yield self.master.data.get(("builds", 21))
