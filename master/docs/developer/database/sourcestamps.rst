@@ -88,6 +88,13 @@ Source stamps connector
         You probably don't want to do this!
         This method will be extended to allow appropriate filtering.
 
+    .. py:method:: get_sourcestamps_for_buildset(buildsetid)
+
+        :param buildsetid: buildset ID
+        :returns: list of ssdict, via Deferred
+
+        Get sourcestamps related to a buildset.
+
     .. py:method:: getSourceStampsForBuild(buildid)
 
         :param buildid: build ID
