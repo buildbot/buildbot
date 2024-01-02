@@ -68,3 +68,6 @@ This documents frequently used keys within the dictionaries that are passed to t
     - ``stepname`` (string) The name of the step that produced the log.
 
     - ``content`` (string) The content of the log.
+
+ - ``extra_info`` (a dictionary of dictionaries with string keys in both)
+    A list of additional reporter-specific data to apply.

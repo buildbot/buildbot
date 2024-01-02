@@ -297,3 +297,24 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
     def test_merge_body(self, name, old, new, expected_result):
         g = self.create_generator()
         self.assertEqual(g._merge_body(old, new), expected_result)
+
+    @parameterized.expand([
+        ("both_none", None, None, (None, True)),
+        ("old_none", None, {"k": "v"}, ({"k": "v"}, True)),
+        ("new_none", {"k": "v"}, None, ({"k": "v"}, True)),
+        (
+            "both_same_key",
+            {"k": {"kk1": "vv1"}},
+            {"k": {"kk2": "vv2"}},
+            ({"k": {"kk1": "vv1", "kk2": "vv2"}}, True)
+        ),
+        (
+            "both_same_key_conflict",
+            {"k": {"kk1": "vv1"}},
+            {"k": {"kk1": "vv2"}},
+            ({"k": {"kk1": "vv1"}}, True)
+        ),
+    ])
+    def test_merge_info(self, name, old, new, expected_result):
+        g = self.create_generator()
+        self.assertEqual(g._merge_extra_info(old, new), expected_result)
