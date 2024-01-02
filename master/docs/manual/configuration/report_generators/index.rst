@@ -14,6 +14,7 @@ Report Generators
     worker
     formatter
     formatter_function
+    formatter_function_raw
     formatter_renderable
     formatter_missing_worker
 
@@ -50,11 +51,21 @@ The following report generators are available:
 The report generators may customize the reports using message formatters.
 The following message formatter classes are provided:
 
- * :ref:`MessageFormatter` (used in ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator``,
-   ``BuildSetCombinedStatusGenerator`` and ``BuildSetStatusGenerator``)
- * :ref:`MessageFormatterRenderable` (used in ``BuildStatusGenerator`` and ``BuildStartEndStatusGenerator``)
- * :ref:`MessageFormatterFunction` (used in ``BuildStatusGenerator`` and ``BuildStartEndStatusGenerator``)
- * :ref:`MessageFormatterMissingWorkers` (used in ``WorkerMissingGenerator``)
+ * :ref:`MessageFormatter` (commonly used in
+   ``BuildStatusGenerator``,
+   ``BuildStartEndStatusGenerator``,
+   ``BuildSetCombinedStatusGenerator`` and
+   ``BuildSetStatusGenerator``)
+ * :ref:`MessageFormatterRenderable` (commonly used in ``BuildStatusGenerator`` and
+   ``BuildStartEndStatusGenerator``)
+ * :ref:`MessageFormatterFunction` (commonly used in ``BuildStatusGenerator`` and
+   ``BuildStartEndStatusGenerator``)
+ * :ref:`MessageFormatterFunctionRaw` (commonly used in
+   ``BuildStatusGenerator``,
+   ``BuildStartEndStatusGenerator``,
+   ``BuildSetCombinedStatusGenerator`` and
+   ``BuildSetStatusGenerator``)
+ * :ref:`MessageFormatterMissingWorkers` (commonly used in ``WorkerMissingGenerator``)
 
 Message formatters produce the following information that is later used by the report generators:
 

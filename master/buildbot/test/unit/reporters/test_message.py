@@ -196,6 +196,38 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
                                                        users=["him@bar", "me@foo"])
         return res
 
+    @defer.inlineCallbacks
+    def do_one_test_buildset(
+        self,
+        formatter,
+        lastresults,
+        results,
+        mode="all",
+        with_steps=False,
+        extra_build_properties=None
+    ):
+        self.setup_db(
+            lastresults,
+            results,
+            with_steps=with_steps,
+            extra_build_properties=extra_build_properties
+        )
+
+        res = yield utils.getDetailsForBuildset(
+            self.master,
+            99,
+            want_properties=formatter.want_properties,
+            want_steps=formatter.want_steps,
+            want_previous_build=True,
+            want_logs=formatter.want_logs,
+            want_logs_content=formatter.want_logs_content
+        )
+
+        res = yield formatter.format_message_for_buildset(
+            self.master, res["buildset"], res["builds"], mode=mode, users=["him@bar", "me@foo"]
+        )
+        return res
+
 
 class TestMessageFormatter(MessageFormatterTestBase):
 
@@ -461,24 +493,42 @@ class TestMessageFormatterFunction(MessageFormatterTestBase):
             "extra_info": None,
         })
 
+
+class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
     @defer.inlineCallbacks
-    def test_renderable(self):
-        function = mock.Mock(side_effect=lambda x: {'key': 'value'})
-
-        formatter = message.MessageFormatterFunction(function, 'json')
-
+    def test_basic(self):
+        function = mock.Mock(side_effect=lambda master, ctx: {
+            "body": {"key": "value"},
+            "type": "json",
+            "subject": "sub1",
+            "extra_info": {"key": {"kk": "vv"}},
+        })
+        formatter = message.MessageFormatterFunctionRaw(function)
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
 
-        function.assert_called_with({
-            'build': BuildDictLookAlike(extra_keys=['prev_build'],
-                                        expected_missing_keys=['parentbuilder', 'buildrequest',
-                                                               'parentbuild'])
-        })
         self.assertEqual(res, {
-            'body': {'key': 'value'},
-            'type': 'json',
-            'subject': None,
-            "extra_info": None,
+            "body": {"key": "value"},
+            "type": "json",
+            "subject": "sub1",
+            "extra_info": {"key": {"kk": "vv"}},
+        })
+
+    @defer.inlineCallbacks
+    def test_basic_buildset(self):
+        function = mock.Mock(side_effect=lambda master, ctx: {
+            "body": {"key": "value"},
+            "type": "json",
+            "subject": "sub1",
+            "extra_info": {"key": {"kk": "vv"}},
+        })
+        formatter = message.MessageFormatterFunctionRaw(function)
+        res = yield self.do_one_test_buildset(formatter, SUCCESS, SUCCESS)
+
+        self.assertEqual(res, {
+            "body": {"key": "value"},
+            "type": "json",
+            "subject": "sub1",
+            "extra_info": {"key": {"kk": "vv"}},
         })
 
 
