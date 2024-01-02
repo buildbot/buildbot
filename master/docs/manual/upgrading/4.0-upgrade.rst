@@ -79,6 +79,31 @@ The equivalent is setting both ``want_logs`` and ``want_logs_content`` to the pr
 
 The ``wantSteps`` and ``wantProperties`` arguments have been renamed to ``want_steps`` and ``want_properties`` respectively.
 
+GerritStatusPush
+----------------
+
+The ``reviewCB``, ``reviewArg``, ``startCB``, ``startArg``, ``summaryCB``, ``summaryArg``,
+``builders`` , ``wantSteps``, ``wantLogs`` arguments of ``GerritStatusPush`` have been deprecated.
+The upgrade strategy is as follows:
+
+ - ``reviewCB``, ``reviewArg``, ``startCB``, ``startArg``:
+   Use :bb:reportgen:`BuildStartEndStatusGenerator` report generator (``generators`` argument).
+   Depending on ``reviewCB`` complexity, use :ref:`MessageFormatter` or
+   :ref:`MessageFormatterFunctionRaw` message formatters. To override default handling of
+   ``Verified`` and ``Reviewed`` labels, adjust extra information emitted by message formatter.
+   E.g. ``{"labels": {"Verified": 1}}``.
+
+ - ``summaryCB``, ``summaryArg``:
+   Use :bb:reportgen:`BuildSetStatusGenerator` or :bb:reportgen:`BuildSetCombinedStatusGenerator`
+   report generator  (``generators`` argument). Depending on ``summaryCB`` complexity,
+   use :ref:`MessageFormatter` or :ref:`MessageFormatterFunctionRaw` message formatters.
+   To override default handling of ``Verified`` and ``Reviewed`` labels, adjust extra
+   information emitted by message formatter. E.g. ``{"labels": {"Verified": 1}}``.
+
+ - ``builders`` - use ``builders`` argument of replacement report generator
+ - ``wantSteps`` - use ``want_steps`` argument of replacement message formatter.
+ - ``wantLogs`` - use ``want_logs`` argument of replacement message formatter
+
 buildbot.util.croniter
 ----------------------
 

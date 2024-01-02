@@ -27,6 +27,7 @@ from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
 from zope.interface import implementer
 
+from buildbot import config
 from buildbot import interfaces
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -37,6 +38,7 @@ from buildbot.process.results import Results
 from buildbot.reporters import utils
 from buildbot.reporters.base import ReporterBase
 from buildbot.util import bytes2unicode
+from buildbot.warnings import warn_deprecated
 
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600
@@ -371,6 +373,31 @@ class GerritStatusPush(ReporterBase):
         generators=None,
         **kwargs
     ):
+        old_arg_names = {
+            "reviewCB": reviewCB is not DEFAULT_REVIEW,
+            "startCB": startCB is not None,
+            "reviewArg": reviewArg is not None,
+            "startArg": startArg is not None,
+            "summaryCB": summaryCB is not DEFAULT_SUMMARY,
+            "summaryArg": summaryArg is not None,
+            "builders": builders is not None,
+            "wantSteps": wantSteps is not False,
+            "wantLogs": wantLogs is not False,
+        }
+
+        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
+
+        if passed_old_arg_names:
+            old_arg_names_msg = ', '.join(passed_old_arg_names)
+            if generators is not None:
+                config.error("can't specify generators and deprecated GerritStatusPush "
+                             f"arguments ({old_arg_names_msg}) at the same time")
+            warn_deprecated(
+                "3.11.0",
+                f"The arguments {old_arg_names_msg} passed to {self.__class__.__name__} "
+                "have been deprecated. Use generators instead"
+            )
+
         if generators is None:
             generators = self._create_generators_from_old_args(
                 reviewCB,
@@ -578,6 +605,31 @@ class GerritStatusPush(ReporterBase):
         extra_info = report.get("extra_info", None)
         if extra_info is not None:
             labels = extra_info.get("labels", None)
+
+        if labels is None and report.get("builds", None):
+            # At least one build
+            success = False
+            failure = False
+            pending = False
+
+            for build in report["builds"]:
+                if build["results"] is None:
+                    pending = True
+                elif build["results"] == SUCCESS:
+                    success = True
+                else:
+                    failure = True
+
+            if failure:
+                verified = -1
+            elif pending:
+                verified = 0
+            elif success:
+                verified = 1
+            else:
+                verified = -1
+
+            labels = {GERRIT_LABEL_VERIFIED: verified}
 
         self.send_code_review(project, revision, report["body"], labels)
         return defer.succeed(None)
