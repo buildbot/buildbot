@@ -76,10 +76,16 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
-            fakedb.SourceStamp(id=13),
-            fakedb.SourceStamp(id=14),
-        ])
+        self.db.insert_test_data(
+            [
+                fakedb.Buildset(id=30, reason="foo", submitted_at=1300305712, results=-1),
+                fakedb.SourceStamp(id=13),
+                fakedb.SourceStamp(id=14),
+                fakedb.SourceStamp(id=15),
+                fakedb.BuildsetSourceStamp(sourcestampid=13, buildsetid=30),
+                fakedb.BuildsetSourceStamp(sourcestampid=14, buildsetid=30),
+            ]
+        )
 
     def tearDown(self):
         self.tearDownEndpoint()
@@ -91,8 +97,21 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         for m in sourcestamps:
             self.validateData(m)
 
-        self.assertEqual(sorted([m['ssid'] for m in sourcestamps]),
-                         [13, 14])
+        self.assertEqual(sorted([m['ssid'] for m in sourcestamps]), [13, 14, 15])
+
+    @defer.inlineCallbacks
+    def test_get_by_buildsetid_no_buildset(self):
+        sourcestamps = yield self.callGet(("buildsets", 101, "sourcestamps"))
+        self.assertEqual(sourcestamps, [])
+
+    @defer.inlineCallbacks
+    def test_get_by_buildsetid(self):
+        sourcestamps = yield self.callGet(("buildsets", 30, "sourcestamps"))
+
+        for m in sourcestamps:
+            self.validateData(m)
+
+        self.assertEqual(sorted([m['ssid'] for m in sourcestamps]), [13, 14])
 
 
 class SourceStamp(unittest.TestCase):

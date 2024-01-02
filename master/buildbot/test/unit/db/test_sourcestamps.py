@@ -51,6 +51,16 @@ class Tests(interfaces.InterfaceTests):
         def getSourceStamps(self):
             pass
 
+    def test_signature_getSourceStampsForBuild(self):
+        @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStampsForBuild)
+        def getSourceStampsForBuild(self, buildid):
+            pass
+
+    def test_signature_get_sourcestamps_for_buildset(self):
+        @self.assertArgSpecMatches(self.db.sourcestamps.get_sourcestamps_for_buildset)
+        def get_sourcestamps_for_buildset(self, buildsetid):
+            pass
+
     @defer.inlineCallbacks
     def test_findSourceStampId_simple(self):
         self.reactor.advance(CREATED_AT)
@@ -249,10 +259,130 @@ class Tests(interfaces.InterfaceTests):
 
         self.assertEqual(sourcestamps, [])
 
-    def test_signature_getSourceStampsForBuild(self):
-        @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStampsForBuild)
-        def getSourceStampsForBuild(self, buildid):
-            pass
+    @defer.inlineCallbacks
+    def test_get_sourcestamps_for_buildset_one_codebase(self):
+        yield self.insert_test_data(
+            [
+                fakedb.Master(id=88, name="bar"),
+                fakedb.Worker(id=13, name="one"),
+                fakedb.Builder(id=77, name="A"),
+                fakedb.SourceStamp(id=234, codebase="A", created_at=CREATED_AT, revision="aaa"),
+                fakedb.Buildset(
+                    id=30,
+                    reason="foo",
+                    submitted_at=1300305712,
+                    results=-1
+                ),
+                fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+            ]
+        )
+
+        sourcestamps = yield self.db.sourcestamps.get_sourcestamps_for_buildset(30)
+
+        expected = [
+            {
+                "branch": "master",
+                "codebase": "A",
+                "created_at": epoch2datetime(CREATED_AT),
+                "patch_author": None,
+                "patch_body": None,
+                "patch_comment": None,
+                "patch_level": None,
+                "patch_subdir": None,
+                "patchid": None,
+                "project": "proj",
+                "repository": "repo",
+                "revision": "aaa",
+                "ssid": 234
+            }
+        ]
+
+        self.assertEqual(
+            sorted(sourcestamps, key=sourceStampKey),
+            sorted(expected, key=sourceStampKey)
+        )
+
+    @defer.inlineCallbacks
+    def test_get_sourcestamps_for_buildset_three_codebases(self):
+        yield self.insert_test_data(
+            [
+                fakedb.Master(id=88, name="bar"),
+                fakedb.Worker(id=13, name="one"),
+                fakedb.Builder(id=77, name="A"),
+                fakedb.SourceStamp(id=234, codebase="A", created_at=CREATED_AT, revision="aaa"),
+                fakedb.SourceStamp(
+                    id=235,
+                    codebase="B",
+                    created_at=CREATED_AT + 10,
+                    revision="bbb"
+                ),
+                fakedb.SourceStamp(
+                    id=236,
+                    codebase="C",
+                    created_at=CREATED_AT + 20,
+                    revision="ccc"
+                ),
+                fakedb.Buildset(id=30, reason="foo", submitted_at=1300305712, results=-1),
+                fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+                fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=30),
+                fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=30)
+            ]
+        )
+
+        sourcestamps = yield self.db.sourcestamps.get_sourcestamps_for_buildset(30)
+
+        expected = [
+            {
+                "branch": "master",
+                "codebase": "A",
+                "created_at": epoch2datetime(CREATED_AT),
+                "patch_author": None,
+                "patch_body": None,
+                "patch_comment": None,
+                "patch_level": None,
+                "patch_subdir": None,
+                "patchid": None,
+                "project": "proj",
+                "repository": "repo",
+                "revision": "aaa",
+                "ssid": 234
+            },
+            {
+                "branch": "master",
+                "codebase": "B",
+                "created_at": epoch2datetime(CREATED_AT + 10),
+                "patch_author": None,
+                "patch_body": None,
+                "patch_comment": None,
+                "patch_level": None,
+                "patch_subdir": None,
+                "patchid": None,
+                "project": "proj",
+                "repository": "repo",
+                "revision": "bbb",
+                "ssid": 235
+            },
+            {
+                "branch": "master",
+                "codebase": "C",
+                "created_at": epoch2datetime(CREATED_AT + 20),
+                "patch_author": None,
+                "patch_body": None,
+                "patch_comment": None,
+                "patch_level": None,
+                "patch_subdir": None,
+                "patchid": None,
+                "project": "proj",
+                "repository": "repo",
+                "revision": "ccc",
+                "ssid": 236
+            }
+        ]
+
+        self.assertEqual(
+            sorted(sourcestamps, key=sourceStampKey),
+            sorted(expected, key=sourceStampKey)
+        )
 
     @defer.inlineCallbacks
     def do_test_getSourceStampsForBuild(self, rows, buildid, expected):
