@@ -120,7 +120,8 @@ class BaseDispatcher(service.AsyncService):
     def stopService(self):
         # stop listening on the port when shut down
         assert self.port
-        port, self.port = self.port, None
+        port = self.port
+        self.port = None
         yield port.stopListening()
         yield super().stopService()
 

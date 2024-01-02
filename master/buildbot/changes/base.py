@@ -76,7 +76,8 @@ class ReconfigurablePollingChangeSource(ChangeSource):
     @defer.inlineCallbacks
     def reconfigService(self, name=None, pollInterval=60 * 10, pollAtLaunch=False,
                         pollRandomDelayMin=0, pollRandomDelayMax=0):
-        self.pollInterval, prevPollInterval = pollInterval, self.pollInterval
+        prevPollInterval = self.pollInterval
+        self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
         self.pollRandomDelayMin = pollRandomDelayMin
         self.pollRandomDelayMax = pollRandomDelayMax

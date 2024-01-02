@@ -70,6 +70,9 @@ class LatentController(SeverWorkerConnectionMixin):
         self.auto_connect_worker = True
         self.auto_disconnect_worker = True
 
+        self._start_deferred = None
+        self._stop_deferred = None
+
         self.kind = kind
         self._started_kind = None
         self._started_kind_deferred = None
@@ -98,7 +101,8 @@ class LatentController(SeverWorkerConnectionMixin):
     @defer.inlineCallbacks
     def start_instance(self, result):
         yield self.do_start_instance(result)
-        d, self._start_deferred = self._start_deferred, None
+        d = self._start_deferred
+        self._start_deferred = None
         d.callback(result)
 
     @defer.inlineCallbacks
@@ -117,7 +121,8 @@ class LatentController(SeverWorkerConnectionMixin):
     @defer.inlineCallbacks
     def stop_instance(self, result):
         yield self.do_stop_instance()
-        d, self._stop_deferred = self._stop_deferred, None
+        d = self._stop_deferred
+        self._stop_deferred = None
         d.callback(result)
 
     @defer.inlineCallbacks

@@ -321,7 +321,10 @@ class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):
     compare_attrs = ('fn',)
 
     def __init__(self, v1, v2, cstr, comparator):
-        self.v1, self.v2, self.comparator, self.cstr = v1, v2, comparator, cstr
+        self.v1 = v1
+        self.v2 = v2
+        self.comparator = comparator
+        self.cstr = cstr
 
     @defer.inlineCallbacks
     def getRenderingFor(self, props):
@@ -641,10 +644,12 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         try:
             prop, repl = arg.split(":", 1)
         except ValueError:
-            prop, repl = arg, None
+            prop = arg
+            repl = None
         if not Interpolate.identifier_re.match(prop):
             config.error(f"Property name must be alphanumeric for prop Interpolation '{arg}'")
-            prop = repl = None
+            prop = None
+            repl = None
 
         return _thePropertyDict, prop, repl
 
@@ -653,7 +658,8 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         try:
             secret, repl = arg.split(":", 1)
         except ValueError:
-            secret, repl = arg, None
+            secret = arg
+            repl = None
         return _SecretIndexer(), secret, repl
 
     @staticmethod
@@ -682,14 +688,16 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         try:
             prop, repl = arg.split(":", 1)
         except ValueError:
-            prop, repl = arg, None
+            prop = arg
+            repl = None
         return _theWorkerPropertyDict, prop, repl
 
     def _parse_kw(self, arg):
         try:
             kw, repl = arg.split(":", 1)
         except ValueError:
-            kw, repl = arg, None
+            kw = arg
+            repl = None
         if not Interpolate.identifier_re.match(kw):
             config.error(f"Keyword must be alphanumeric for kw Interpolation '{arg}'")
             kw = repl = None

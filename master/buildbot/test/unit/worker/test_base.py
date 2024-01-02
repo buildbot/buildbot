@@ -202,8 +202,10 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
 
     @defer.inlineCallbacks
     def test_constructor_full(self):
-        lock1, lock2 = locks.MasterLock('lock1'), locks.MasterLock('lock2')
-        access1, access2 = lock1.access('counting'), lock2.access('counting')
+        lock1 = locks.MasterLock('lock1')
+        lock2 = locks.MasterLock('lock2')
+        access1 = lock1.access('counting')
+        access2 = lock2.access('counting')
 
         bs = yield self.createWorker('bot', 'pass',
                             max_builds=2,

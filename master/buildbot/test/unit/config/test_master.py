@@ -1073,7 +1073,8 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
                 return lock
             return locks.LockAccess(lock, "counting", count=1)
 
-        b1, b2 = bldr('b1'), bldr('b2')
+        b1 = bldr('b1')
+        b2 = bldr('b2')
         self.cfg.builders = [b1, b2]
         if builder_lock:
             b1.locks.append(lock(builder_lock))

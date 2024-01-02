@@ -75,7 +75,8 @@ def nt_expanduser(path, worker_environ):
     tilde = '~'
     if not path.startswith(tilde):
         return path
-    i, n = 1, len(path)
+    i = 1
+    n = len(path)
     while i < n and path[i] not in ntpath._get_bothseps(path):
         i += 1
 

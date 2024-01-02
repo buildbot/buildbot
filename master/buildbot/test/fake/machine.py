@@ -44,7 +44,8 @@ class LatentMachineController:
 
     def start_machine(self, result):
         assert self.machine.state == MachineStates.STARTING
-        d, self._start_deferred = self._start_deferred, None
+        d = self._start_deferred
+        self._start_deferred = None
         if isinstance(result, Exception):
             d.errback(result)
         else:
@@ -52,7 +53,8 @@ class LatentMachineController:
 
     def stop_machine(self, result=True):
         assert self.machine.state == MachineStates.STOPPING
-        d, self._stop_deferred = self._stop_deferred, None
+        d = self._stop_deferred
+        self._stop_deferred = None
         if isinstance(result, Exception):
             d.errback(result)
         else:

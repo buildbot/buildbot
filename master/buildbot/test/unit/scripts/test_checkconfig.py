@@ -57,14 +57,16 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
             with open(fn, "w", encoding='utf-8') as f:
                 f.write(contents)
 
-        old_stdout, old_stderr = sys.stdout, sys.stderr
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
         stdout = sys.stdout = StringIO()
         stderr = sys.stderr = StringIO()
         try:
             checkconfig._loadConfig(
                 basedir=self.configdir, configFile="master.cfg", quiet=False)
         finally:
-            sys.stdout, sys.stderr = old_stdout, old_stderr
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
         if stdout_re:
             stdout = stdout.getvalue()
             self.assertTrue(stdout_re.search(stdout), stdout)

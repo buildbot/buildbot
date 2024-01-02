@@ -686,9 +686,13 @@ class TelegramStatusBot(StatusBot):
             try:
                 data = self.query_cache[int(data)]
             except ValueError:
-                text, data, notify = data, {}, None
+                text = data
+                data = {}
+                notify = None
             except KeyError:
-                text, data, notify = None, {}, "Sorry, button is no longer valid!"
+                text = None
+                data = {}
+                notify = "Sorry, button is no longer valid!"
                 if original_message:
                     try:
                         self.edit_keyboard(
@@ -705,7 +709,9 @@ class TelegramStatusBot(StatusBot):
                     except KeyError:
                         notify = None
                 else:
-                    text, data, notify = data, {}, None
+                    text = data
+                    data = {}
+                    notify = None
             data['tquery'] = query
             self.answer_query(query['id'], notify)
             message = {
@@ -729,7 +735,8 @@ class TelegramStatusBot(StatusBot):
 
         contact = self.getContact(user=user, channel=chat)
         data['tmessage'] = message
-        template, contact.template = contact.template, None
+        template = contact.template
+        contact.template = None
         if text.startswith(self.commandPrefix):
             result = yield contact.handleMessage(text, **data)
         else:
@@ -790,11 +797,13 @@ class TelegramStatusBot(StatusBot):
                 reply_to_message_id = None  # we only mark first message as a reply
 
             if len(message) <= 4096:
-                params['text'], message = message, None
+                params['text'] = message
+                message = None
             else:
                 n = message[:4096].rfind('\n')
                 n = n + 1 if n != -1 else 4096
-                params['text'], message = message[:n].rstrip(), message[n:].lstrip()
+                params['text'] = message[:n].rstrip()
+                message = message[n:].lstrip()
 
             if not message and reply_markup is not None:
                 params['reply_markup'] = reply_markup
