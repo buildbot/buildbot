@@ -493,26 +493,6 @@ class TestMessageFormatterFunction(MessageFormatterTestBase):
             "extra_info": None,
         })
 
-    @defer.inlineCallbacks
-    def test_renderable(self):
-        function = mock.Mock(side_effect=lambda x: {'key': 'value'})
-
-        formatter = message.MessageFormatterFunction(function, 'json')
-
-        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
-
-        function.assert_called_with({
-            'build': BuildDictLookAlike(extra_keys=['prev_build'],
-                                        expected_missing_keys=['parentbuilder', 'buildrequest',
-                                                               'parentbuild'])
-        })
-        self.assertEqual(res, {
-            'body': {'key': 'value'},
-            'type': 'json',
-            'subject': None,
-            "extra_info": None,
-        })
-
 
 class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
     @defer.inlineCallbacks
