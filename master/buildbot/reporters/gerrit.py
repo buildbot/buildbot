@@ -132,14 +132,23 @@ class DEFAULT_SUMMARY:
     pass
 
 
-def extract_project_revision(report):
-    build = report["builds"][0]
+@defer.inlineCallbacks
+def extract_project_revision(master, report):
+    props = None
+    if report["builds"]:
+        props = report["builds"][0].get("properties", None)
 
-    def getProperty(build, name):
-        return build['properties'].get(name, [None])[0]
+    if props is None:
+        props = yield master.data.get(("buildsets", report["buildset"]["bsid"], "properties"))
+
+    def get_property(props, name):
+        if props is None:
+            return None
+        return props.get(name, [None])[0]
+
     # Gerrit + Repo
-    downloads = getProperty(build, "repo_downloads")
-    downloaded = getProperty(build, "repo_downloaded")
+    downloads = get_property(props, "repo_downloads")
+    downloaded = get_property(props, "repo_downloaded")
     if downloads is not None and downloaded is not None:
         downloaded = downloaded.split(" ")
         if downloads and 2 * len(downloads) == len(downloaded):
@@ -158,12 +167,14 @@ def extract_project_revision(report):
 
     # Gerrit + Git
     # used only to verify Gerrit source
-    if getProperty(build, "event.change.id") is not None:
-        project = getProperty(build, "event.change.project")
-        codebase = getProperty(build, "codebase")
-        revision = (getProperty(build, "event.patchSet.revision") or
-                    getProperty(build, "got_revision") or
-                    getProperty(build, "revision"))
+    if get_property(props, "event.change.id") is not None:
+        project = get_property(props, "event.change.project")
+        codebase = get_property(props, "codebase")
+        revision = (
+            get_property(props, "event.patchSet.revision") or
+            get_property(props, "got_revision") or
+            get_property(props, "revision")
+        )
 
         if isinstance(revision, dict):
             # in case of the revision is a codebase revision, we just take
@@ -593,13 +604,14 @@ class GerritStatusPush(ReporterBase):
             else:
                 log.msg("gerrit status: OK")
 
+    @defer.inlineCallbacks
     def sendMessage(self, reports):
         report = reports[0]
 
-        project, revision = extract_project_revision(report)
+        project, revision = yield extract_project_revision(self.master, report)
 
         if report["body"] is None or project is None or revision is None:
-            return defer.succeed(None)
+            return None
 
         labels = None
         extra_info = report.get("extra_info", None)
@@ -632,7 +644,7 @@ class GerritStatusPush(ReporterBase):
             labels = {GERRIT_LABEL_VERIFIED: verified}
 
         self.send_code_review(project, revision, report["body"], labels)
-        return defer.succeed(None)
+        return None
 
     def send_code_review(self, project, revision, message, labels):
         gerrit_version = self.getCachedVersion()

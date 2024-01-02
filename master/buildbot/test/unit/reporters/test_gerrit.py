@@ -37,9 +37,11 @@ from buildbot.reporters.gerrit import GERRIT_LABEL_VERIFIED
 from buildbot.reporters.gerrit import GerritStatusPush
 from buildbot.reporters.gerrit import defaultReviewCB
 from buildbot.reporters.gerrit import defaultSummaryCB
+from buildbot.reporters.gerrit import extract_project_revision
 from buildbot.reporters.gerrit import makeReviewResult
 from buildbot.reporters.message import MessageFormatterFunctionRaw
 from buildbot.reporters.message import MessageFormatterRenderable
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
@@ -646,3 +648,42 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
     def test_default_name(self):
         reporter = GerritStatusPush('gerrit.server.com', 'password')
         self.assertEqual(reporter.name, 'GerritStatusPush')
+
+    @defer.inlineCallbacks
+    def test_extract_project_revision(self):
+        self.insert_test_data([SUCCESS], SUCCESS)
+        res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
+        report = {"builds": res["builds"], "buildset": res["buildset"]}
+
+        project, revision = yield extract_project_revision(self.master, report)
+        self.assertEqual(project, "testProject")
+        self.assertEqual(revision, "d34db33fd43db33f")
+
+    @defer.inlineCallbacks
+    def test_extract_project_revision_no_build(self):
+        self.insert_test_data([], SUCCESS)
+        self.db.insert_test_data(
+            [
+                fakedb.BuildsetProperty(
+                    buildsetid=98,
+                    property_name="event.change.id",
+                    property_value='["12345", "fakedb"]'
+                ),
+                fakedb.BuildsetProperty(
+                    buildsetid=98,
+                    property_name="event.change.project",
+                    property_value='["project1", "fakedb"]'
+                ),
+                fakedb.BuildsetProperty(
+                    buildsetid=98,
+                    property_name="event.patchSet.revision",
+                    property_value='["abcdabcd", "fakedb"]'
+                ),
+            ]
+        )
+        res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
+        report = {"builds": res["builds"], "buildset": res["buildset"]}
+
+        project, revision = yield extract_project_revision(self.master, report)
+        self.assertEqual(project, "project1")
+        self.assertEqual(revision, "abcdabcd")
