@@ -158,7 +158,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def setupGerritStatusPush(self, *args, **kwargs):
         gsp = yield self.setupGerritStatusPushSimple(*args, **kwargs)
-        gsp.sendCodeReview = Mock()
+        gsp.send_code_review = Mock()
         return gsp
 
     @defer.inlineCallbacks
@@ -213,11 +213,12 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         msg = yield self.run_fake_summary_build(gsp, buildResults, finalResult,
                                                 resultText)
 
-        result = makeReviewResult(msg,
-                                  (GERRIT_LABEL_VERIFIED, verifiedScore))
-        gsp.sendCodeReview.assert_called_once_with(self.reporter_test_project,
-                                                   self.reporter_test_revision,
-                                                   result)
+        gsp.send_code_review.assert_called_once_with(
+            self.reporter_test_project,
+            self.reporter_test_revision,
+            msg,
+            {GERRIT_LABEL_VERIFIED: verifiedScore}
+        )
 
     @defer.inlineCallbacks
     def check_summary_build(self, buildResults, finalResult, resultText,
@@ -227,11 +228,12 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         msg = yield self.run_fake_summary_build(gsp, buildResults, finalResult,
                                                 resultText)
 
-        result = makeReviewResult(msg,
-                                  (GERRIT_LABEL_VERIFIED, verifiedScore))
-        gsp.sendCodeReview.assert_called_once_with(self.reporter_test_project,
-                                                   self.reporter_test_revision,
-                                                   result)
+        gsp.send_code_review.assert_called_once_with(
+            self.reporter_test_project,
+            self.reporter_test_revision,
+            msg,
+            {GERRIT_LABEL_VERIFIED: verifiedScore}
+        )
 
     @defer.inlineCallbacks
     def check_summary_build_legacy(self, buildResults, finalResult, resultText,
@@ -241,12 +243,12 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         msg = yield self.run_fake_summary_build(gsp, buildResults, finalResult,
                                                 resultText, expWarning=True)
 
-        result = makeReviewResult(msg,
-                                  (GERRIT_LABEL_VERIFIED, verifiedScore),
-                                  (GERRIT_LABEL_REVIEWED, 0))
-        gsp.sendCodeReview.assert_called_once_with(self.reporter_test_project,
-                                                   self.reporter_test_revision,
-                                                   result)
+        gsp.send_code_review.assert_called_once_with(
+            self.reporter_test_project,
+            self.reporter_test_revision,
+            msg,
+            {GERRIT_LABEL_VERIFIED: verifiedScore, GERRIT_LABEL_REVIEWED: 0}
+        )
 
     @defer.inlineCallbacks
     def test_gerrit_ssh_cmd(self):
@@ -327,7 +329,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                           ["failed", "failed"])
 
         self.assertFalse(
-            gsp.sendCodeReview.called, "sendCodeReview should not be called")
+            gsp.send_code_review.called, "send_code_review should not be called"
+        )
 
     @defer.inlineCallbacks
     def test_buildsetComplete_filtered_matching_builder(self):
@@ -337,7 +340,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                           ["failed", "failed"])
 
         self.assertTrue(
-            gsp.sendCodeReview.called, "sendCodeReview should be called")
+            gsp.send_code_review.called, "send_code_review should be called")
 
     @defer.inlineCallbacks
     def run_fake_single_build(self, gsp, buildResult, expWarning=False):
@@ -362,13 +365,21 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                                startCB=sampleStartCB)
 
         msg = yield self.run_fake_single_build(gsp, buildResult)
-        start = makeReviewResult(str({'name': self.reporter_test_builder_name}),
-                                 (GERRIT_LABEL_REVIEWED, 0))
-        result = makeReviewResult(msg,
-                                  (GERRIT_LABEL_VERIFIED, verifiedScore))
-        calls = [call(self.reporter_test_project, self.reporter_test_revision, start),
-                 call(self.reporter_test_project, self.reporter_test_revision, result)]
-        gsp.sendCodeReview.assert_has_calls(calls)
+        calls = [
+            call(
+                self.reporter_test_project,
+                self.reporter_test_revision,
+                str({'name': self.reporter_test_builder_name}),
+                {GERRIT_LABEL_REVIEWED: 0}
+            ),
+            call(
+                self.reporter_test_project,
+                self.reporter_test_revision,
+                msg,
+                {GERRIT_LABEL_VERIFIED: verifiedScore}
+            )
+        ]
+        gsp.send_code_review.assert_has_calls(calls)
 
     # same goes for check_single_build and check_single_build_legacy
     @defer.inlineCallbacks
@@ -378,13 +389,21 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                                startCB=sampleStartCBDeferred)
 
         msg = yield self.run_fake_single_build(gsp, buildResult)
-        start = makeReviewResult(str({'name': self.reporter_test_builder_name}),
-                                 (GERRIT_LABEL_REVIEWED, 0))
-        result = makeReviewResult(msg,
-                                  (GERRIT_LABEL_VERIFIED, verifiedScore))
-        calls = [call(self.reporter_test_project, self.reporter_test_revision, start),
-                 call(self.reporter_test_project, self.reporter_test_revision, result)]
-        gsp.sendCodeReview.assert_has_calls(calls)
+        calls = [
+            call(
+                self.reporter_test_project,
+                self.reporter_test_revision,
+                str({'name': self.reporter_test_builder_name}),
+                {GERRIT_LABEL_REVIEWED: 0}
+            ),
+            call(
+                self.reporter_test_project,
+                self.reporter_test_revision,
+                msg,
+                {GERRIT_LABEL_VERIFIED: verifiedScore}
+            )
+        ]
+        gsp.send_code_review.assert_has_calls(calls)
 
     @defer.inlineCallbacks
     def check_single_build_legacy(self, buildResult, verifiedScore):
@@ -392,15 +411,21 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                                startCB=sampleStartCB)
 
         msg = yield self.run_fake_single_build(gsp, buildResult, expWarning=True)
-
-        start = makeReviewResult(str({'name': self.reporter_test_builder_name}),
-                                 (GERRIT_LABEL_REVIEWED, 0))
-        result = makeReviewResult(msg,
-                                  (GERRIT_LABEL_VERIFIED, verifiedScore),
-                                  (GERRIT_LABEL_REVIEWED, 0))
-        calls = [call(self.reporter_test_project, self.reporter_test_revision, start),
-                 call(self.reporter_test_project, self.reporter_test_revision, result)]
-        gsp.sendCodeReview.assert_has_calls(calls)
+        calls = [
+            call(
+                self.reporter_test_project,
+                self.reporter_test_revision,
+                str({'name': self.reporter_test_builder_name}),
+                {GERRIT_LABEL_REVIEWED: 0}
+            ),
+            call(
+                self.reporter_test_project,
+                self.reporter_test_revision,
+                msg,
+                {GERRIT_LABEL_VERIFIED: verifiedScore, GERRIT_LABEL_REVIEWED: 0}
+            )
+        ]
+        gsp.send_code_review.assert_has_calls(calls)
 
     def test_buildComplete_success_sends_review(self):
         return self.check_single_build(SUCCESS, 1)
@@ -424,12 +449,12 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         gsp.builders = ["Builder0"]
         yield self.run_fake_single_build(gsp, SUCCESS)
         self.assertTrue(
-            gsp.sendCodeReview.called, "sendCodeReview should be called")
-        gsp.sendCodeReview = Mock()
+            gsp.send_code_review.called, "send_code_review should be called")
+        gsp.send_code_review = Mock()
         gsp.builders = ["foo"]
         yield self.run_fake_single_build(gsp, SUCCESS)
         self.assertFalse(
-            gsp.sendCodeReview.called, "sendCodeReview should not be called")
+            gsp.send_code_review.called, "send_code_review should not be called")
 
     def test_defaultReviewCBSuccess(self):
         res = defaultReviewCB("builderName", {}, SUCCESS, None, None)
@@ -452,16 +477,14 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         gsp = yield self.setupGerritStatusPushSimple()
         spawnSkipFirstArg = Mock()
         gsp.spawnProcess = lambda _, *a, **k: spawnSkipFirstArg(*a, **k)
-        yield gsp.sendCodeReview("project", "revision",
-                                {"message": "bla", "labels": {'Verified': 1}})
+        yield gsp.send_code_review("project", "revision", "bla", {'Verified': 1})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'version'],
             env=None)
         gsp.processVersion(parse_version("2.6"), lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview("project", "revision",
-                                {"message": "bla", "labels": {'Verified': 1}})
+        yield gsp.send_code_review("project", "revision", "bla", {'Verified': 1})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',
@@ -471,8 +494,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         # <=2.5 uses other syntax
         gsp.processVersion(parse_version("2.4"), lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview("project", "revision",
-                                 {"message": "bla", "labels": {'Verified': 1}})
+        yield gsp.send_code_review("project", "revision", "bla", {'Verified': 1})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',
@@ -484,8 +506,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         gsp._gerrit_notify = 'OWNER'
         gsp.processVersion(parse_version('2.6'), lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview('project', 'revision',
-                                 {'message': 'bla', 'labels': {'Verified': 1}})
+        yield gsp.send_code_review('project', 'revision', "bla", {'Verified': 1})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',
@@ -496,8 +517,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         # gerrit versions <= 2.5 uses other syntax
         gsp.processVersion(parse_version('2.4'), lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview('project', 'revision',
-                                 {'message': 'bla', 'labels': {'Verified': 1}})
+        yield gsp.send_code_review('project', 'revision', "bla", {'Verified': 1})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',
@@ -506,8 +526,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
         gsp.processVersion(parse_version("2.13"), lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview("project", "revision",
-                                 {"message": "bla", "labels": {'Verified': 1}})
+        yield gsp.send_code_review("project", "revision", "bla", {'Verified': 1})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',

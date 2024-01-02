@@ -128,6 +128,52 @@ class DEFAULT_SUMMARY:
     pass
 
 
+def extract_project_revision(report):
+    build = report["builds"][0]
+
+    def getProperty(build, name):
+        return build['properties'].get(name, [None])[0]
+    # Gerrit + Repo
+    downloads = getProperty(build, "repo_downloads")
+    downloaded = getProperty(build, "repo_downloaded")
+    if downloads is not None and downloaded is not None:
+        downloaded = downloaded.split(" ")
+        if downloads and 2 * len(downloads) == len(downloaded):
+            for i, download in enumerate(downloads):
+                try:
+                    project, change1 = download.split(" ")
+                except ValueError:
+                    return None, None  # something is wrong, abort
+                change2 = downloaded[2 * i]
+                revision = downloaded[2 * i + 1]
+                if change1 == change2:
+                    return project, revision
+                else:
+                    return None, None
+        return None, None
+
+    # Gerrit + Git
+    # used only to verify Gerrit source
+    if getProperty(build, "event.change.id") is not None:
+        project = getProperty(build, "event.change.project")
+        codebase = getProperty(build, "codebase")
+        revision = (getProperty(build, "event.patchSet.revision") or
+                    getProperty(build, "got_revision") or
+                    getProperty(build, "revision"))
+
+        if isinstance(revision, dict):
+            # in case of the revision is a codebase revision, we just take
+            # the revisionfor current codebase
+            if codebase is not None:
+                revision = revision[codebase]
+            else:
+                revision = None
+
+        return project, revision
+
+    return None, None
+
+
 class GerritStatusPush(service.BuildbotService):
 
     """Event streamer to a gerrit ssh server."""
@@ -303,7 +349,7 @@ class GerritStatusPush(service.BuildbotService):
         yield self.getBuildDetails(build)
         if self.isBuildReported(build):
             result = yield self.startCB(build['builder']['name'], build, self.startArg)
-            self.sendCodeReviews(build, result)
+            self.send_message_old(build["buildset"], build, result)
 
     @defer.inlineCallbacks
     def buildComplete(self, key, build):
@@ -314,7 +360,7 @@ class GerritStatusPush(service.BuildbotService):
             result = yield self.reviewCB(build['builder']['name'], build, build['results'],
                                          self.master, self.reviewArg)
             result = _handleLegacyResult(result)
-            self.sendCodeReviews(build, result)
+            self.send_message_old(build["buildset"], build, result)
 
     @defer.inlineCallbacks
     def getBuildDetails(self, build):
@@ -371,60 +417,35 @@ class GerritStatusPush(service.BuildbotService):
                                           self.summaryArg)
 
             result = _handleLegacyResult(result)
-            self.sendCodeReviews(builds[0], result)
+            self.send_message_old(buildset, builds[0], result)
 
-    def sendCodeReviews(self, build, result):
-        message = result.get('message', None)
-        if message is None:
-            return
+    def send_message_old(self, buildset, build, result):
+        self.sendMessage(
+            [
+                {
+                    "body": result.get("message", None),
+                    "labels": result.get("labels"),
+                    "builds": [build],
+                    "buildset": buildset,
+                }
+            ]
+        )
 
-        def getProperty(build, name):
-            return build['properties'].get(name, [None])[0]
-        # Gerrit + Repo
-        downloads = getProperty(build, "repo_downloads")
-        downloaded = getProperty(build, "repo_downloaded")
-        if downloads is not None and downloaded is not None:
-            downloaded = downloaded.split(" ")
-            if downloads and 2 * len(downloads) == len(downloaded):
-                for i, download in enumerate(downloads):
-                    try:
-                        project, change1 = download.split(" ")
-                    except ValueError:
-                        return  # something is wrong, abort
-                    change2 = downloaded[2 * i]
-                    revision = downloaded[2 * i + 1]
-                    if change1 == change2:
-                        self.sendCodeReview(project, revision, result)
-                    else:
-                        return  # something is wrong, abort
-            return
+    def sendMessage(self, reports):
+        report = reports[0]
 
-        # Gerrit + Git
-        # used only to verify Gerrit source
-        if getProperty(build, "event.change.id") is not None:
-            project = getProperty(build, "event.change.project")
-            codebase = getProperty(build, "codebase")
-            revision = (getProperty(build, "event.patchSet.revision") or
-                        getProperty(build, "got_revision") or
-                        getProperty(build, "revision"))
+        project, revision = extract_project_revision(report)
 
-            if isinstance(revision, dict):
-                # in case of the revision is a codebase revision, we just take
-                # the revisionfor current codebase
-                if codebase is not None:
-                    revision = revision[codebase]
-                else:
-                    revision = None
+        if report["body"] is None or project is None or revision is None:
+            return defer.succeed(None)
 
-            if project is not None and revision is not None:
-                self.sendCodeReview(project, revision, result)
-                return
+        self.send_code_review(project, revision, report["body"], report.get("labels", None))
+        return defer.succeed(None)
 
-    def sendCodeReview(self, project, revision, result):
+    def send_code_review(self, project, revision, message, labels):
         gerrit_version = self.getCachedVersion()
         if gerrit_version is None:
-            self.callWithVersion(
-                lambda: self.sendCodeReview(project, revision, result))
+            self.callWithVersion(lambda: self.send_code_review(project, revision, message, labels))
             return
 
         assert gerrit_version
@@ -436,12 +457,10 @@ class GerritStatusPush(service.BuildbotService):
         if self._gerrit_notify is not None:
             command.append(f'--notify {str(self._gerrit_notify)}')
 
-        message = result.get('message', None)
         if message:
             message = message.replace("'", "\"")
             command.append(f"--message '{message}'")
 
-        labels = result.get('labels', None)
         if labels:
             if gerrit_version < parse_version("2.6"):
                 add_label = _old_add_label
