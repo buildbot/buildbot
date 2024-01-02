@@ -209,6 +209,7 @@ buildroot
 build's
 buildset
 buildsetcomplete
+buildsetid
 buildset's
 buildsets
 buildsetsubmitted
