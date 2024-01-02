@@ -290,6 +290,9 @@ class MessageFormatterRenderable(MessageFormatterBase):
 
     @defer.inlineCallbacks
     def render_message_subject(self, context):
+        if self.subject is None:
+            return None
+
         props = Properties.fromDict(context['build']['properties'])
         props.master = context['master']
 
