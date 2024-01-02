@@ -109,9 +109,13 @@ class ReporterBase(service.BuildbotService):
             reports = []
             for g in self.generators:
                 if self._does_generator_want_key(g, key):
-                    report = yield g.generate(self.master, self, key, msg)
-                    if report is not None:
-                        reports.append(report)
+                    try:
+                        report = yield g.generate(self.master, self, key, msg)
+                        if report is not None:
+                            reports.append(report)
+                    except Exception as e:
+                        log.err(e, "Got exception when handling reporter events: "
+                                f"key: {key} generator: {g}")
 
             if reports:
                 yield self.sendMessage(reports)
