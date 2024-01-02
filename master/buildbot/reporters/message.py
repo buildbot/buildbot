@@ -145,6 +145,26 @@ def create_context_for_build(mode, build, is_buildset, master, blamelist):
     }
 
 
+def create_context_for_buildset(mode, buildset, builds, master, blamelist):
+    ss_list = buildset['sourcestamps']
+    results = buildset["results"]
+
+    return {
+        "results": results,
+        "result_names": Results,
+        "mode": mode,
+        "buildset": buildset,
+        "builds": builds,
+        "is_buildset": True,
+        "projects": get_projects_text(ss_list, master),
+        "status_detected": get_detected_status_text(mode, results, None),
+        "buildbot_title": master.config.title,
+        "buildbot_url": master.config.buildbotURL,
+        "blamelist": blamelist,
+        "sourcestamps": get_message_source_stamp_text(ss_list)
+    }
+
+
 def create_context_for_worker(master, worker):
     return {
         'buildbot_title': master.config.title,
@@ -237,6 +257,10 @@ class MessageFormatterBase(util.ComparableMixin):
         # Known kwargs keys: mode, users, is_buildset
         raise NotImplementedError
 
+    def format_message_for_buildset(self, master, buildset, builds, **kwargs):
+        # Known kwargs keys: mode, users, is_buildset
+        raise NotImplementedError
+
 
 class MessageFormatterEmpty(MessageFormatterBase):
     def format_message_for_build(self, master, build, **kwargs):
@@ -244,6 +268,13 @@ class MessageFormatterEmpty(MessageFormatterBase):
             'body': None,
             'type': 'plain',
             'subject': None
+        }
+
+    def format_message_for_buildset(self, master, buildset, builds, **kwargs):
+        return {
+            "body": None,
+            "type": "plain",
+            "subject": None
         }
 
 
@@ -257,6 +288,11 @@ class MessageFormatterFunction(MessageFormatterBase):
     @defer.inlineCallbacks
     def format_message_for_build(self, master, build, **kwargs):
         msgdict = yield self.render_message_dict(master, {'build': build})
+        return msgdict
+
+    @defer.inlineCallbacks
+    def format_message_for_buildset(self, master, buildset, builds, **kwargs):
+        msgdict = yield self.render_message_dict(master, {"buildset": buildset, "builds": builds})
         return msgdict
 
     def render_message_body(self, context):
@@ -280,6 +316,9 @@ class MessageFormatterRenderable(MessageFormatterBase):
         msgdict = yield self.render_message_dict(master, {'build': build, 'master': master})
         return msgdict
 
+    def format_message_for_buildset(self, master, buildset, builds, **kwargs):
+        raise NotImplementedError
+
     @defer.inlineCallbacks
     def render_message_body(self, context):
         props = Properties.fromDict(context['build']['properties'])
@@ -290,6 +329,9 @@ class MessageFormatterRenderable(MessageFormatterBase):
 
     @defer.inlineCallbacks
     def render_message_subject(self, context):
+        if self.subject is None:
+            return None
+
         props = Properties.fromDict(context['build']['properties'])
         props.master = context['master']
 
@@ -410,6 +452,12 @@ class MessageFormatter(MessageFormatterBaseJinja):
     @defer.inlineCallbacks
     def format_message_for_build(self, master, build, is_buildset=False, users=None, mode=None):
         ctx = create_context_for_build(mode, build, is_buildset, master, users)
+        msgdict = yield self.render_message_dict(master, ctx)
+        return msgdict
+
+    @defer.inlineCallbacks
+    def format_message_for_buildset(self, master, buildset, builds, users=None, mode=None):
+        ctx = create_context_for_buildset(mode, buildset, builds, master, users)
         msgdict = yield self.render_message_dict(master, ctx)
         return msgdict
 

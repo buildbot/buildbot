@@ -10,7 +10,17 @@ As opposed to :ref:`MessageFormatterRenderable`, more information is made availa
 
 .. py:class:: MessageFormatterFunction(function, template_type, want_properties=True, wantProperties=None, want_steps=False, wantSteps=None, wantLogs=None, want_logs=False, want_logs_content=False)
 
-    :param callable function: A callable that will be called with a dictionary that contains ``build`` key with the value that contains the build dictionary as received from the data API.
+    :param callable function: A callable that will be called with a dictionary.
+
+        If the message formatter is used to format a build, the dictionary contains ``build`` key
+        with the build dictionary as received from the data API.
+
+        If the message formatter is used to format a buildset (e.g. when used from
+        :bb:reportgen:`BuildSetCombinedStatusGenerator`), the dictionary contains the following:
+
+         - ``buildset`` key with the buildset dictionary as received from the data API.
+         - ``builds`` key with the builds dictionaries as received from the data API.
+
     :param string template_type: either ``plain``, ``html`` or ``json`` depending on the output of the formatter.
         JSON output must not be encoded.
     :param boolean want_properties: include 'properties' in the build dictionary

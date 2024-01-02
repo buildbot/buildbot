@@ -10,6 +10,7 @@ Report Generators
     build
     build_start_end
     buildset
+    buildset_combined
     worker
     formatter
     formatter_function
@@ -43,12 +44,14 @@ The following report generators are available:
  * :ref:`Reportgen-BuildStatusGenerator`
  * :ref:`Reportgen-BuildStartEndStatusGenerator`
  * :ref:`Reportgen-BuildSetStatusGenerator`
+ * :ref:`Reportgen-BuildSetCombinedStatusGenerator`
  * :ref:`Reportgen-WorkerMissingGenerator`
 
 The report generators may customize the reports using message formatters.
 The following message formatter classes are provided:
 
- * :ref:`MessageFormatter` (used in ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator`` and ``BuildSetStatusGenerator``)
+ * :ref:`MessageFormatter` (used in ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator``,
+   ``BuildSetCombinedStatusGenerator`` and ``BuildSetStatusGenerator``)
  * :ref:`MessageFormatterRenderable` (used in ``BuildStatusGenerator`` and ``BuildStartEndStatusGenerator``)
  * :ref:`MessageFormatterFunction` (used in ``BuildStatusGenerator`` and ``BuildStartEndStatusGenerator``)
  * :ref:`MessageFormatterMissingWorkers` (used in ``WorkerMissingGenerator``)

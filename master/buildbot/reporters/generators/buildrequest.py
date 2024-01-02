@@ -88,6 +88,7 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
             'type': buildmsg['type'],
             'results': build['results'],
             'builds': [build],
+            "buildset": build["buildset"],
             'users': list(users),
             'patches': patches,
             'logs': []

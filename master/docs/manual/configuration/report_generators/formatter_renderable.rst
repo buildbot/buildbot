@@ -9,6 +9,9 @@ This formatter is used to format messages in :ref:`Reportgen-BuildStatusGenerato
 
 It renders any renderable using the properties of the build that was passed by the status generator.
 
+This message formatter does not support formatting complete buildsets (
+:bb:reportgen:`BuildSetCombinedStatusGenerator`).
+
 The constructor of the class takes the following arguments:
 
 ``template``
