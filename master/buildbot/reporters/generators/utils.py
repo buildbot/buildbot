@@ -91,7 +91,6 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         return False
 
     def is_message_needed_by_props(self, build):
-        # here is where we actually do something.
         builder = build['builder']
         scheduler = build['properties'].get('scheduler', [None])[0]
         branch = build['properties'].get('branch', [None])[0]
