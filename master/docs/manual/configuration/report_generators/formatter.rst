@@ -66,10 +66,11 @@ The constructor of the class takes the following arguments:
     This implies ``want_logs`` and ``wantSteps`` to be `True`.
     Use it only when mandatory, as this greatly increases the overhead in terms of CPU and memory on the master.
 
-Context
-~~~~~~~
+Context (build)
+~~~~~~~~~~~~~~~
 
-The context that is given to the template consists of the following data:
+In the case the message formatter is used to create message for a build the context that is given
+to the template consists of the following data:
 
 ``results``
     The results of the build as an integer.
@@ -162,6 +163,54 @@ The context that is given to the template consists of the following data:
 
 ``sourcestamps``
     A string identifying the source stamps for which the build was made.
+
+Context (buildset)
+~~~~~~~~~~~~~~~~~~
+
+In the case the message formatter is used to create message for an buildset itself (see
+``BuildSetCombinedStatusGenerator``), the context that is given to the template consists of the
+following data:
+
+``results``
+    The results of the buildset as an integer.
+    Equivalent to ``build['results']``.
+
+``result_names``
+    A collection that allows accessing a textual identifier of build result.
+    The intended usage is ``result_names[results]``.
+
+    The following are possible values: ``success``, ``warnings``, ``failure``, ``skipped``, ``exception``, ``retry``, ``cancelled``.
+
+``mode``
+    The mode argument that has been passed to the report generator.
+
+``buildset``
+    The :bb:rtype:`buildset` dictionary from data API.
+
+``builds``
+    A list of  :bb:rtype:`build` dictionaries from data API. The builds are part of the buildset
+    that is being formatted.
+
+``is_buildset``
+    Always ``True``.
+
+``projects``
+    A string identifying the projects that the buildset was built for.
+
+``status_detected``
+    String that describes the build in terms of current buildset results, previous build results and ``mode``.
+
+``buildbot_title``
+    The title of the Buildbot instance as per ``c['title']`` from the ``master.cfg``
+
+``buildbot_url``
+    The URL of the Buildbot instance as per ``c['buildbotURL']`` from the ``master.cfg``
+
+``blamelist``
+    The list of users responsible for the buildset.
+
+``sourcestamps``
+    A string identifying the source stamps for which the buildset was made.
 
 Examples
 ~~~~~~~~

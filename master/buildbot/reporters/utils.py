@@ -222,6 +222,20 @@ def getResponsibleUsersForBuild(master, buildid):
     return blamelist
 
 
+# perhaps we need data api for users with buildsets/:id/users
+@defer.inlineCallbacks
+def get_responsible_users_for_buildset(master, buildsetid):
+    props = yield master.data.get(("buildsets", buildsetid, "properties"))
+
+    # TODO: This currently does not track what changes were in the buildset. getChangesForBuild()
+    # would walk the change graph until it finds last successful build and uses the authors of
+    # the changes as blame list. Probably this needs to be done here too
+    owner = props.get("owner", None)
+    if owner:
+        return [owner[0]]
+    return []
+
+
 def getURLForBuild(master, builderid, build_number):
     prefix = master.config.buildbotURL
     return prefix + f"#/builders/{builderid}/builds/{build_number}"
