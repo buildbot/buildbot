@@ -374,6 +374,24 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
+    def test_inline_templates_extra_info(self):
+        formatter = message.MessageFormatter(
+            template="URL: {{ build_url }} -- {{ summary }}",
+            subject="subject",
+            extra_info_cb=lambda ctx: {"key1", ctx["build"]["state_string"]}
+        )
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        self.assertEqual(
+            res,
+            {
+                "type": "plain",
+                "subject": "subject",
+                "extra_info": {"key1", "test"},
+                "body": "URL: http://localhost:8080/#/builders/80/builds/1 -- Build succeeded!"
+            }
+        )
+
+    @defer.inlineCallbacks
     def test_message_failure(self):
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, FAILURE)
