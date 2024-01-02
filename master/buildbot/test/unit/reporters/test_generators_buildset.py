@@ -58,7 +58,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
             db_args = {}
 
         build = yield self.insert_build_finished_get_props(results, **db_args)
-        buildset = yield self.master.data.get(("buildsets", 98))
+        buildset = yield self.get_inserted_buildset()
 
         g = BuildSetStatusGenerator(**kwargs)
 
@@ -71,11 +71,11 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         return (g, build, buildset)
 
     @defer.inlineCallbacks
-    def buildset_message(self, g, builds, results=SUCCESS):
+    def buildset_message(self, g, builds, buildset):
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
-        report = yield g.buildset_message(g.formatter, self.master, reporter, builds, results)
+        report = yield g.buildset_message(g.formatter, self.master, reporter, builds, buildset)
         return report
 
     @defer.inlineCallbacks
@@ -88,8 +88,8 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
 
     @defer.inlineCallbacks
     def test_buildset_message_nominal(self):
-        g, build, _ = yield self.setup_generator(mode=("change",))
-        report = yield self.buildset_message(g, [build])
+        g, build, buildset = yield self.setup_generator(mode=("change",))
+        report = yield self.buildset_message(g, [build], buildset)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
                                                                 is_buildset=True, mode=('change',),
@@ -101,6 +101,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
             'type': 'text',
             'results': SUCCESS,
             'builds': [build],
+            "buildset": buildset,
             'users': [],
             'patches': [],
             'logs': []
@@ -108,8 +109,9 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
 
     @defer.inlineCallbacks
     def test_buildset_message_no_result(self):
-        g, build, _ = yield self.setup_generator(results=None, mode=("change",))
-        report = yield self.buildset_message(g, [build], results=None)
+        g, build, buildset = yield self.setup_generator(results=None, mode=("change",))
+        buildset["results"] = None
+        report = yield self.buildset_message(g, [build], buildset)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
                                                                 is_buildset=True,
@@ -121,6 +123,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
             'type': 'text',
             'results': None,
             'builds': [build],
+            "buildset": buildset,
             'users': [],
             'patches': [],
             'logs': []
@@ -139,8 +142,13 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
             "subject": None,  # deprecated unspecified subject
         }
 
-        g, build, _ = yield self.setup_generator(results=None, message=message, mode=("change",))
-        report = yield self.buildset_message(g, [build], results=None)
+        g, build, buildset = yield self.setup_generator(
+            results=None,
+            message=message,
+            mode=("change",)
+        )
+        buildset["results"] = None
+        report = yield self.buildset_message(g, [build], buildset)
 
         g.formatter.format_message_for_build.assert_called_with(self.master, build,
                                                                 is_buildset=True,
@@ -152,6 +160,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
             'type': 'text',
             'results': None,
             'builds': [build],
+            "buildset": buildset,
             'users': [],
             'patches': [],
             'logs': []
@@ -173,6 +182,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
             'type': 'text',
             'results': SUCCESS,
             'builds': [build],
+            "buildset": buildset,
             'users': [],
             'patches': [],
             'logs': []

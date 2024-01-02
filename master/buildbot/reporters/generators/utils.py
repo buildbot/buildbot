@@ -197,6 +197,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             'type': buildmsg['type'],
             'results': results,
             'builds': [build],
+            "buildset": build["buildset"],
             'users': list(users),
             'patches': patches,
             'logs': logs

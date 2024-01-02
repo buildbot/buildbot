@@ -68,12 +68,11 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         if not builds:
             return None
 
-        report = yield self.buildset_message(self.formatter, master, reporter, builds,
-                                             buildset['results'])
+        report = yield self.buildset_message(self.formatter, master, reporter, builds, buildset)
         return report
 
     @defer.inlineCallbacks
-    def buildset_message(self, formatter, master, reporter, builds, results):
+    def buildset_message(self, formatter, master, reporter, builds, buildset):
         # The given builds must refer to builds from a single buildset
         patches = []
         logs = []
@@ -81,6 +80,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         subject = None
         msgtype = None
         users = set()
+        results = buildset["results"]
         for build in builds:
             patches.extend(self._get_patches_for_build(build))
 
@@ -115,6 +115,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
             'type': msgtype,
             'results': results,
             'builds': builds,
+            "buildset": buildset,
             'users': list(users),
             'patches': patches,
             'logs': logs
