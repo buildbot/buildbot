@@ -162,6 +162,9 @@ class ReporterTestMixin:
 
         self.setup_fake_get_changes_for_build()
 
+    def get_inserted_buildset(self):
+        return self.master.data.get(("buildsets", 98))
+
     def setup_fake_get_changes_for_build(self, has_change=True):
         @defer.inlineCallbacks
         def getChangesForBuild(buildid):

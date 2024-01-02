@@ -80,6 +80,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
     def test_build_message_start_no_result(self):
         g = yield self.setup_generator()
         buildrequest = yield self.insert_buildrequest_new()
+        buildset = yield self.get_inserted_buildset()
         build = yield g.partial_build_dict(self.master, buildrequest)
         report = yield g.buildrequest_message(self.master, build)
 
@@ -94,6 +95,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
             'type': 'plain',
             'results': None,
             'builds': [build],
+            "buildset": buildset,
             'users': [],
             'patches': [],
             'logs': []
@@ -128,6 +130,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
     def test_generate_new(self):
         g = yield self.setup_generator(add_patch=True)
         buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
+        buildset = yield self.get_inserted_buildset()
         build = yield g.partial_build_dict(self.master, buildrequest)
         report = yield g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)
 
@@ -137,6 +140,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
             'type': 'plain',
             'results': None,
             'builds': [build],
+            "buildset": buildset,
             'users': [],
             'patches': [],
             'logs': []
@@ -147,6 +151,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
         self.maxDiff = None
         g = yield self.setup_generator(add_patch=True)
         buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
+        buildset = yield self.get_inserted_buildset()
         build = yield g.partial_build_dict(self.master, buildrequest)
         report = yield g.generate(self.master, None, ('buildrequests', 11, 'cancel'), buildrequest)
 
@@ -159,6 +164,7 @@ class TestBuildRequestGenerator(ConfigErrorsMixin, TestReactorMixin,
             'type': 'plain',
             'results': CANCELLED,
             'builds': [build],
+            "buildset": buildset,
             'users': [],
             'patches': [],
             'logs': []
