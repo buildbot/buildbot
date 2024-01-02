@@ -55,7 +55,8 @@ def timed_do_fn(f):
         locals = frame.f_locals
 
         # invent a unique ID for the description
-        id, _debug_id = _debug_id, _debug_id + 1
+        id = _debug_id
+        _debug_id = _debug_id + 1
 
         descr = f"{name}-{id:08x}"
 

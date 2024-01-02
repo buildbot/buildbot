@@ -61,7 +61,8 @@ class MaildirSource(MaildirService, util.ComparableMixin):
         with self.moveToCurDir(filename) as f:
             chtuple = self.parse_file(f, self.prefix)
 
-        src, chdict = None, None
+        src = None
+        chdict = None
         if chtuple:
             src, chdict = chtuple
         if chdict:

@@ -35,7 +35,8 @@ class Notifier:
         return d
 
     def notify(self, result):
-        waiters, self._waiters = self._waiters, []
+        waiters = self._waiters
+        self._waiters = []
         for waiter in waiters:
             waiter.callback(result)
 

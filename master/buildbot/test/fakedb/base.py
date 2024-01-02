@@ -31,7 +31,8 @@ class FakeDBComponent:
 
     def mapOrder(self, o, fieldMapping):
         if o.startswith('-'):
-            reverse, o = o[0], o[1:]
+            reverse = o[0]
+            o = o[1:]
         else:
             reverse = ""
         o = fieldMapping[o].split(".")[-1]
@@ -50,7 +51,8 @@ class FakeDBComponent:
             order = [self.mapOrder(o, rs.fieldMapping)
                      for o in rs.order if applicable(o)]
         if len(filters) == len(rs.filters) and rs.order is not None and len(order) == len(rs.order):
-            offset, limit = rs.offset, rs.limit
+            offset = rs.offset
+            limit = rs.limit
         rs = resultspec.ResultSpec(
             filters=filters, order=order, limit=limit, offset=offset)
         return rs.apply(data)

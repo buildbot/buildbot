@@ -88,7 +88,8 @@ class LBF(unittest.TestCase):
         input = 'a\nb\r\nc\rd\n\re'
 
         for splitpoint in range(1, len(input) - 1):
-            a, b = input[:splitpoint], input[splitpoint:]
+            a = input[:splitpoint]
+            b = input[splitpoint:]
             lines_info = []
             lines_info.append(self.lbf.append(a, 2.0))
             lines_info.append(self.lbf.append(b, 2.0))

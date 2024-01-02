@@ -94,7 +94,8 @@ class FakeChangesComponent(FakeDBComponent):
 
             elif isinstance(row, ChangeProperty):
                 ch = self.changes[row.changeid]
-                n, vs = row.property_name, row.property_value
+                n = row.property_name
+                vs = row.property_value
                 v, s = json.loads(vs)
                 ch['properties'][n] = (v, s)
 
