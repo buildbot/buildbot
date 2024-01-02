@@ -79,6 +79,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         body = None
         subject = None
         msgtype = None
+        extra_info = None
         users = set()
         results = buildset["results"]
         for build in builds:
@@ -103,6 +104,10 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
             if not ok:
                 continue
 
+            extra_info, ok = self._merge_extra_info(extra_info, buildmsg["extra_info"])
+            if not ok:
+                continue
+
         if subject is None and self.subject is not None:
             subject = self.subject % {'result': statusToString(results),
                                       'projectName': master.config.title,
@@ -118,7 +123,8 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
             "buildset": buildset,
             'users': list(users),
             'patches': patches,
-            'logs': logs
+            'logs': logs,
+            "extra_info": extra_info,
         }
 
     def _want_previous_build(self):
@@ -175,6 +181,7 @@ class BuildSetCombinedStatusGenerator:
             "body": buildmsg["body"],
             "subject": buildmsg["subject"],
             "type": buildmsg["type"],
+            "extra_info": buildmsg["extra_info"],
             "results": buildset["results"],
             "builds": builds,
             "buildset": buildset,
