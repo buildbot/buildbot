@@ -5,8 +5,10 @@ MessageFormatterFunction
 
 .. py:currentmodule:: buildbot.reporters.message
 
-This formatter can be used to generate arbitrary messages according to arbitrary calculations.
+This formatter can be used to generate arbitrary messages bodies according to arbitrary calculations.
+
 As opposed to :ref:`MessageFormatterRenderable`, more information is made available to this reporter.
+As opposed to :ref:`MessageFormatterFunctionRaw`, only the message body can be customized.
 
 .. py:class:: MessageFormatterFunction(function, template_type, want_properties=True, wantProperties=None, want_steps=False, wantSteps=None, wantLogs=None, want_logs=False, want_logs_content=False)
 
