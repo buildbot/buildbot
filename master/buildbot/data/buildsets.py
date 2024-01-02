@@ -36,7 +36,17 @@ class Db2DataMixin:
         if not bsdict:
             return None
 
-        buildset = bsdict.copy()
+        buildset = {
+            "bsid": bsdict["bsid"],
+            "external_idstring": bsdict["external_idstring"],
+            "reason": bsdict["reason"],
+            "submitted_at": datetime2epoch(bsdict["submitted_at"]),
+            "complete": bsdict["complete"],
+            "complete_at": datetime2epoch(bsdict["complete_at"]),
+            "results": bsdict["results"],
+            "parent_buildid": bsdict["parent_buildid"],
+            "parent_relationship": bsdict["parent_relationship"],
+        }
 
         # gather the actual sourcestamps, in parallel
         sourcestamps = []
@@ -46,14 +56,10 @@ class Db2DataMixin:
             ss = yield self.master.data.get(('sourcestamps', str(ssid)))
             sourcestamps.append(ss)
         yield defer.DeferredList([getSs(id)
-                                  for id in buildset['sourcestamps']],
+                                  for id in bsdict['sourcestamps']],
                                  fireOnOneErrback=True, consumeErrors=True)
+
         buildset['sourcestamps'] = sourcestamps
-
-        # minor modifications
-        buildset['submitted_at'] = datetime2epoch(buildset['submitted_at'])
-        buildset['complete_at'] = datetime2epoch(buildset['complete_at'])
-
         return buildset
 
     fieldMapping = {
