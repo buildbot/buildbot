@@ -18,6 +18,7 @@ from unittest.mock import Mock
 from unittest.mock import call
 
 from packaging.version import parse as parse_version
+from parameterized import parameterized
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -190,8 +191,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
     def run_fake_summary_build(self, gsp, buildResults, finalResult,
                                resultText, expWarning=False):
         buildset, builds = yield self.setupBuildResults(buildResults, finalResult)
-        yield gsp.buildsetComplete('buildset.98.complete'.split("."),
-                                   buildset)
+        yield gsp._got_event(("buildsets", 98, "complete"), buildset)
 
         info = self.makeBuildInfo(buildResults, resultText, builds)
         if expWarning:
@@ -321,26 +321,17 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                             verifiedScore=-1)
         return d
 
+    @parameterized.expand([
+        ("matched", ["Builder1"], True),
+        ("not_matched", ["foo"], False),
+    ])
     @defer.inlineCallbacks
-    def test_buildsetComplete_filtered_builder(self):
-        gsp = yield self.setupGerritStatusPush(summaryCB=sampleSummaryCB)
-        gsp.builders = ["foo"]
+    def test_buildset_complete_filtered_builder(self, name, builders, should_call):
+        gsp = yield self.setupGerritStatusPush(summaryCB=sampleSummaryCB, builders=builders)
         yield self.run_fake_summary_build(gsp, [FAILURE, FAILURE], FAILURE,
                                           ["failed", "failed"])
 
-        self.assertFalse(
-            gsp.send_code_review.called, "send_code_review should not be called"
-        )
-
-    @defer.inlineCallbacks
-    def test_buildsetComplete_filtered_matching_builder(self):
-        gsp = yield self.setupGerritStatusPush(summaryCB=sampleSummaryCB)
-        gsp.builders = ["Builder1"]
-        yield self.run_fake_summary_build(gsp, [FAILURE, FAILURE], FAILURE,
-                                          ["failed", "failed"])
-
-        self.assertTrue(
-            gsp.send_code_review.called, "send_code_review should be called")
+        self.assertEqual(gsp.send_code_review.called, should_call)
 
     @defer.inlineCallbacks
     def run_fake_single_build(self, gsp, buildResult, expWarning=False):
@@ -440,21 +431,21 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         return self.check_single_build_legacy(FAILURE, -1)
 
     # same goes for check_single_build and check_single_build_legacy
+    @parameterized.expand([
+        ("matched", ["Builder0"], True),
+        ("not_matched", ["foo"], False),
+    ])
     @defer.inlineCallbacks
-    def test_single_build_filtered(self):
+    def test_single_build_filtered(self, name, builders, should_call):
 
-        gsp = yield self.setupGerritStatusPush(reviewCB=sampleReviewCB,
-                                               startCB=sampleStartCB)
+        gsp = yield self.setupGerritStatusPush(
+            reviewCB=sampleReviewCB,
+            startCB=sampleStartCB,
+            builders=builders
+        )
 
-        gsp.builders = ["Builder0"]
         yield self.run_fake_single_build(gsp, SUCCESS)
-        self.assertTrue(
-            gsp.send_code_review.called, "send_code_review should be called")
-        gsp.send_code_review = Mock()
-        gsp.builders = ["foo"]
-        yield self.run_fake_single_build(gsp, SUCCESS)
-        self.assertFalse(
-            gsp.send_code_review.called, "send_code_review should not be called")
+        self.assertEqual(gsp.send_code_review.called, should_call)
 
     def test_defaultReviewCBSuccess(self):
         res = defaultReviewCB("builderName", {}, SUCCESS, None, None)
