@@ -190,6 +190,7 @@ class WorkerController(SeverWorkerConnectionMixin):
         if self.remote_worker is None:
             return
 
-        self.remote_worker, worker = None, self.remote_worker
+        worker = self.remote_worker
+        self.remote_worker = None
         disconnect_master_side_worker(self.worker)
         yield worker.disownServiceParent()

@@ -317,9 +317,11 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         conn = pb.Connection(self.master, self.worker, self.mind)
         conn.remoteSetBuilderList(builders)
 
-        RCInstance, builder_name, commandID = base.RemoteCommandImpl(
-        ), "builder", None
-        remote_command, args = "command", {"args": 'args'}
+        RCInstance = base.RemoteCommandImpl()
+        builder_name = "builder"
+        commandID = None
+        remote_command = "command"
+        args = {"args": 'args'}
 
         conn.remoteStartCommand(
             RCInstance, builder_name, commandID, remote_command, args)

@@ -542,7 +542,8 @@ class AbstractLatentWorker(AbstractWorker):
                                   States.INSUBSTANTIATING_SUBSTANTIATING]
 
             if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
-                build, self.substantiation_build = self.substantiation_build, None
+                build = self.substantiation_build
+                self.substantiation_build = None
                 self.state = States.SUBSTANTIATING
                 self._substantiate(build)
             else:  # self.state == States.INSUBSTANTIATING:

@@ -90,7 +90,8 @@ class PersistentQueueRef(QueueRef):
         self.active = True
 
         # invoke for every message that was missed
-        queue, self.queue = self.queue, []
+        queue = self.queue
+        self.queue = []
         for routingKey, data in queue:
             self.invoke(routingKey, data)
 

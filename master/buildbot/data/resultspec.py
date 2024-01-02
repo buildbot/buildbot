@@ -346,7 +346,8 @@ class ResultSpec:
         return query, count_query
 
     def thd_execute(self, conn, q, dictFromRow):
-        offset, limit = self.offset, self.limit
+        offset = self.offset
+        limit = self.limit
         q, qc = self.applyToSQLQuery(q)
         res = conn.execute(q)
         rv = [dictFromRow(row) for row in res.fetchall()]
@@ -354,7 +355,9 @@ class ResultSpec:
         if qc is not None and (offset or limit):
             total = conn.execute(qc).scalar()
             rv = base.ListResult(rv)
-            rv.offset, rv.total, rv.limit = offset, total, limit
+            rv.offset = offset
+            rv.total = total
+            rv.limit = limit
         return rv
 
     def apply(self, data):
@@ -385,10 +388,12 @@ class ResultSpec:
                 # if pagination was applied, then fields, etc. must be empty
                 assert not fields and not order and not filters, \
                     "endpoint must apply fields, order, and filters if it performs pagination"
-                offset, total = data.offset, data.total
+                offset = data.offset
+                total = data.total
                 limit = data.limit
             else:
-                offset, total = None, None
+                offset = None
+                total = None
                 limit = None
 
             if fields:
@@ -445,7 +450,8 @@ class ResultSpec:
                 limit = self.limit
 
             rv = base.ListResult(data)
-            rv.offset, rv.total = offset, total
+            rv.offset = offset
+            rv.total = total
             rv.limit = limit
             return rv
 

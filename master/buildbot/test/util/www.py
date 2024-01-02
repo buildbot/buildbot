@@ -211,7 +211,8 @@ class WwwTestMixin(RequiresWwwMixin):
                       responseCode=None, contentDisposition=None, headers=None):
         if headers is None:
             headers = {}
-        got, exp = {}, {}
+        got = {}
+        exp = {}
         if content is not None:
             got['content'] = self.request.written
             exp['content'] = content

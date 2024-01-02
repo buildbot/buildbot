@@ -116,7 +116,8 @@ class LBF(unittest.TestCase):
         r"multi-character newlines, split across chunks, are converted"
         input = 'a\nb\r\nc\rd\n\re'
         for splitpoint in range(1, len(input) - 1):
-            a, b = input[:splitpoint], input[splitpoint:]
+            a = input[:splitpoint]
+            b = input[splitpoint:]
             yield self.lbf.append(a)
             yield self.lbf.append(b)
             yield self.lbf.flush()
