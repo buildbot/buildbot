@@ -42,7 +42,8 @@ class _SimpleCallQueue:
         # flush all the messages that are currently in the queue. If anything
         # gets added to the queue while we're doing this, those events will
         # be put off until the next turn.
-        events, self._events = self._events, []
+        events = self._events
+        self._events = []
         for cb, args, kwargs in events:
             try:
                 cb(*args, **kwargs)
@@ -52,7 +53,8 @@ class _SimpleCallQueue:
         if self._events and not self._timer:
             self._timer = self._reactor.callLater(0, self._turn)
         if not self._events:
-            observers, self._flushObservers = self._flushObservers, []
+            observers = self._flushObservers
+            self._flushObservers = []
             for o in observers:
                 o.callback(None)
 

@@ -84,7 +84,8 @@ class BaseLock:
     def isAvailable(self, requester, access):
         """ Return a boolean whether the lock is available for claiming """
         debuglog(f"{self} isAvailable({requester}, {access}): self.owners={repr(self.owners)}")
-        num_excl, num_counting = self._claimed_excl, self._claimed_counting
+        num_excl = self._claimed_excl
+        num_counting = self._claimed_counting
 
         if not access.count:
             return True

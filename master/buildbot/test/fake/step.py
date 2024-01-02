@@ -32,11 +32,13 @@ class BuildStepController:
         self.step = ControllableBuildStep(self, **kwargs)
         self.running = False
         self.auto_finish_results = None
+        self._run_deferred = None
 
     def finish_step(self, result):
         assert self.running
         self.running = False
-        d, self._run_deferred = self._run_deferred, None
+        d = self._run_deferred
+        self._run_deferred = None
         d.callback(result)
 
     def auto_finish_step(self, result):

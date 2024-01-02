@@ -186,9 +186,8 @@ class DataConnector(service.AsyncService):
                     raise exceptions.InvalidQueryParameter(f"no such field '{k}'")
 
         limit = offset = order = fields = None
-        filters, properties = [], []
-        limit = offset = order = fields = None
-        filters, properties = [], []
+        filters = []
+        properties = []
         for arg in req_args:
             argStr = bytes2unicode(arg)
             if argStr == 'order':

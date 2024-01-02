@@ -70,7 +70,8 @@ class LineBoundaryFinder:
                 i = text.rfind('\n')
                 if i >= 0:
                     i = i + 1
-                    text, self.partialLine = text[:i], text[i:]
+                    self.partialLine = text[i:]
+                    text = text[:i]
                 else:
                     self.partialLine = text
                     return None

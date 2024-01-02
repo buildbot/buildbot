@@ -78,7 +78,8 @@ class FakeWorkerWorker(pb.Referenceable):
 
         def fire_deferreds():
             self._detached = True
-            self._detach_deferreds, deferreds = None, self._detach_deferreds
+            deferreds = self._detach_deferreds
+            self._detach_deferreds = None
             for d in deferreds:
                 d.callback(None)
         persp.broker.notifyOnDisconnect(fire_deferreds)
@@ -136,7 +137,8 @@ class MyWorker(worker.Worker):
 
     def detached(self):
         super().detached()
-        self.detach_d, d = None, self.detach_d
+        d = self.detach_d
+        self.detach_d = None
         d.callback(None)
 
 

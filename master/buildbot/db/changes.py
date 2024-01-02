@@ -327,7 +327,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                                'change_properties', 'changes', 'change_users'):
                 remaining = ids_to_delete[:]
                 while remaining:
-                    batch, remaining = remaining[:100], remaining[100:]
+                    batch = remaining[:100]
+                    remaining = remaining[100:]
                     table = self.db.model.metadata.tables[table_name]
                     conn.execute(
                         table.delete(table.c.changeid.in_(batch)))

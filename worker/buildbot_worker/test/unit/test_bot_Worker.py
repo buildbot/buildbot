@@ -47,7 +47,8 @@ class MasterPerspective(pb.Avatar):
 
     def perspective_keepalive(self):
         if self.on_keepalive:
-            on_keepalive, self.on_keepalive = self.on_keepalive, None
+            on_keepalive = self.on_keepalive
+            self.on_keepalive = None
             on_keepalive()
 
 

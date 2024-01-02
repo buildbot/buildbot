@@ -189,7 +189,8 @@ class Channel(service.AsyncService):
     @defer.inlineCallbacks
     def unsubscribe_from_build_events(self):
         # Cancel all the subscriptions we have
-        old_list, self.subscribed = self.subscribed, []
+        old_list = self.subscribed
+        self.subscribed = []
         for handle in old_list:
             yield handle.stopConsuming()
 

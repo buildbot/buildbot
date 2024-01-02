@@ -72,7 +72,8 @@ def getDetailsForBuild(master, build, want_properties=False, want_steps=False,
                        want_previous_build=False, want_logs=False, want_logs_content=False):
     buildrequest = yield master.data.get(("buildrequests", build['buildrequestid']))
     buildset = yield master.data.get(("buildsets", buildrequest['buildsetid']))
-    build['buildrequest'], build['buildset'] = buildrequest, buildset
+    build['buildrequest'] = buildrequest
+    build['buildset'] = buildset
 
     parentbuild = None
     parentbuilder = None

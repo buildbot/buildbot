@@ -71,12 +71,16 @@ class Tests(interfaces.InterfaceTests):
 
     BOGUS_NAME = 'bogus'
 
-    W1_NAME, W1_ID, W1_INFO = 'w1', 100, {'a': 1}
+    W1_NAME = "w1"
+    W1_ID = 100
+    W1_INFO = {'a': 1}
     worker1_rows = [
         fakedb.Worker(id=W1_ID, name=W1_NAME, info=W1_INFO),
     ]
 
-    W2_NAME, W2_ID, W2_INFO = 'w2', 200, {'a': 1, 'b': 2}
+    W2_NAME = "w2"
+    W2_ID = 200
+    W2_INFO = {'a': 1, 'b': 2}
     worker2_rows = [
         fakedb.Worker(id=W2_ID, name=W2_NAME, info=W2_INFO),
     ]
