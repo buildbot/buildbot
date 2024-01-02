@@ -42,7 +42,9 @@ test.describe('force and cancel', function() {
     await ForcePage.clickCancelButton(page);
   });
 
-  test('should create a build with a dedicated reason and Start it', async ({page}) => {
+  test('should create a build with a dedicated reason and Start it',
+      async ({page, browserName}) => {
+    test.skip(browserName === 'webkit', 'https://github.com/buildbot/buildbot/issues/7355');
     await BuilderPage.gotoBuildersList(page);
     await BuilderPage.goto(page, "runtests");
     await BuilderPage.gotoForce(page, "runtests", "force");
