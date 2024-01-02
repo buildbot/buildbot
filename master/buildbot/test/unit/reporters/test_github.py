@@ -316,7 +316,7 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
 class TestGitHubCommentPush(TestGitHubStatusPush):
 
     def createService(self):
-        return GitHubCommentPush('XXYYZZ')
+        return GitHubCommentPush('XXYYZZ', base_re=r"test\_repo\/(.+?)\/")
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -401,6 +401,74 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         # note that the first sourcestamp only has revision, second only branch and only the third
         # has both
         self.master.db.insert_test_data([
+            fakedb.Master(id=92),
+            fakedb.Worker(id=13, name='wrk'),
+            fakedb.Builder(id=79, name='Builder0'),
+            fakedb.Buildset(id=98, results=SUCCESS, reason="test_reason1"),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=235),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=236),
+            fakedb.SourceStamp(id=234, project=project, branch=None, revision='rev1',
+                               repository=repository, codebase=codebase1),
+            fakedb.SourceStamp(id=235, project=project, branch=branch2, revision=None,
+                               repository=repository, codebase=codebase2),
+            fakedb.SourceStamp(id=236, project=project, branch=branch3, revision='rev3',
+                               repository=repository, codebase=codebase3),
+            fakedb.BuildRequest(id=11, buildsetid=98, builderid=79),
+            fakedb.Build(id=20, number=0, builderid=79, buildrequestid=11,
+                         workerid=13, masterid=92, results=SUCCESS, state_string="build_text"),
+            fakedb.BuildProperty(buildid=20, name="buildername", value="Builder0"),
+            fakedb.BuildProperty(buildid=20, name="branch", value=branch2),
+        ])
+
+        self.setup_fake_get_changes_for_build(has_change=False)
+
+        build = yield self.master.data.get(("builds", 20))
+
+        build['complete'] = False
+        yield self.sp._got_event(('builds', 20, 'new'), build)
+        build['complete'] = True
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        build['results'] = SUCCESS
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
+
+
+# Testing HOSTED_BASE_REGEX
+class TestGitHubRegEX(TestGitHubStatusPush):
+
+    def createService(self):
+        return GitHubCommentPush('XXYYZZ', base_re=r"test\_repo\/(.+?)\/")
+
+    @defer.inlineCallbacks
+    def test_source_stamps(self):
+        repository = 'http://test_repo'
+        project = 'test_user/test_project'
+        codebase1 = 'test_codebase1'
+        codebase2 = 'test_codebase2'
+        codebase3 = 'test_codebase3'
+        branch2 = 'refs/pull/4192/merge'
+        branch3 = 'refs/pull/4193/merge'
+
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/issues/4192/comments',
+            json={'body': 'Build done.'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/issues/4192/comments',
+            json={'body': 'Build done.'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/issues/4192/comments',
+            json={'body': 'Build done.'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/issues/4192/comments',
+            json={'body': 'Build done.'})
+
+        # note that the first sourcestamp only has revision, second only branch and only the third
+        # has both
+        self.master.db.insertTestData([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
