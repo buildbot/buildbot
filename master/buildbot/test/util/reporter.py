@@ -48,6 +48,20 @@ class ReporterTestMixin:
         return build
 
     @defer.inlineCallbacks
+    def insert_buildset_no_builds(
+        self,
+        results,
+        insert_ss=True,
+        parent_plan=False,
+        insert_patch=False
+    ):
+        self.insert_test_data(
+            [], results, insertSS=insert_ss, parentPlan=parent_plan, insert_patch=insert_patch
+        )
+        buildset = yield self.master.data.get(("buildsets", 98))
+        return buildset
+
+    @defer.inlineCallbacks
     def insert_build_finished(self, results=SUCCESS, **kwargs):
         return (yield self.insert_build(results=results, **kwargs))
 

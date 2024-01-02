@@ -334,7 +334,12 @@ setup_args = {
             ('buildbot.reporters.generators.buildrequest', [
                 'BuildRequestGenerator'
             ]),
-            ('buildbot.reporters.generators.buildset', ['BuildSetStatusGenerator']),
+            ("buildbot.reporters.generators.buildset",
+                [
+                    "BuildSetCombinedStatusGenerator",
+                    "BuildSetStatusGenerator",
+                ]
+             ),
             ('buildbot.reporters.generators.worker', ['WorkerMissingGenerator']),
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.pushjet', ['PushjetNotifier']),

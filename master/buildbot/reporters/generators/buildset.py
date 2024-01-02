@@ -123,3 +123,62 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
 
     def _want_previous_build(self):
         return "change" in self.mode or "problem" in self.mode
+
+
+@implementer(interfaces.IReportGenerator)
+class BuildSetCombinedStatusGenerator:
+
+    wanted_event_keys = [
+        ("buildsets", None, "complete"),
+    ]
+
+    compare_attrs = ["formatter"]
+
+    def __init__(self, message_formatter):
+        self.formatter = message_formatter
+
+    @defer.inlineCallbacks
+    def generate(self, master, reporter, key, message):
+        bsid = message["bsid"]
+
+        res = yield utils.getDetailsForBuildset(
+            master,
+            bsid,
+            want_properties=self.formatter.want_properties,
+            want_steps=self.formatter.want_steps,
+            want_logs=self.formatter.want_logs,
+            want_logs_content=self.formatter.want_logs_content
+        )
+
+        builds = res['builds']
+        buildset = res['buildset']
+
+        report = yield self.buildset_message(self.formatter, master, reporter, buildset, builds)
+
+        return report
+
+    def check(self):
+        pass
+
+    @defer.inlineCallbacks
+    def buildset_message(self, formatter, master, reporter, buildset, builds):
+        buildmsg = yield formatter.format_message_for_buildset(
+            master,
+            buildset,
+            builds,
+            is_buildset=True,
+            mode=("passing",),
+            users=[]
+        )
+
+        return {
+            "body": buildmsg["body"],
+            "subject": buildmsg["subject"],
+            "type": buildmsg["type"],
+            "results": buildset["results"],
+            "builds": builds,
+            "buildset": buildset,
+            "users": [],
+            "patches": [],
+            "logs": []
+        }
