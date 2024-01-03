@@ -111,6 +111,7 @@ disable=
   not-context-manager,
   unspecified-encoding,
   unnecessary-lambda-assignment,
+  line-too-long, # we use ruff format to trim long lines
 
 [REPORTS]
 
