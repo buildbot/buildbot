@@ -162,6 +162,8 @@ class CPAN(BuildFactory):
         self.addStep(PerlModuleTest(command=["make", "test"]))
 
 
+# deprecated, use Distutils
+@deprecate.deprecated(versions.Version("buildbot", 4, 0, 0))
 class Distutils(BuildFactory):
     def __init__(self, source, python="python", test=None):
         super().__init__([source])
