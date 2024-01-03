@@ -13,6 +13,7 @@ max-line-length = 100
 #      (pep8 seems to misdiagnose this)
 # E126 continuation line over-indented for hanging indent
 # E128 continuation line under-indented for visual indent
+# E203 whitespace before ':' (we rely on ruff format for that)
 # E211 whitespace before '('
 # E711 comparison to None should be 'if cond is None:'
 # E712 comparison to False should be 'if cond is False:' or 'if not cond:'
@@ -26,4 +27,4 @@ max-line-length = 100
 # H306 sorted import (we rely on isort for that)
 # E501 line too long (we rely on ruff format for that)
 
-ignore = E122,E123,E126,E128,E211,E711,E712,E721,E731,E741,W503,W504,H302,H306,H301,E501
+ignore = E122,E123,E126,E128,E203,E211,E711,E712,E721,E731,E741,W503,W504,H302,H306,H301,E501
