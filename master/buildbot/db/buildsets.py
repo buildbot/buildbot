@@ -28,10 +28,6 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 
-class BsDict(dict):
-    pass
-
-
 class BsProps(dict):
     pass
 
@@ -245,12 +241,15 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                         conn.execute(sa.select([tbl.c.sourcestampid],
                                                (tbl.c.buildsetid == row.id))).fetchall()]
 
-        return BsDict(external_idstring=row.external_idstring,
-                      reason=row.reason,
-                      submitted_at=epoch2datetime(row.submitted_at),
-                      complete=bool(row.complete),
-                      complete_at=epoch2datetime(row.complete_at),
-                      results=row.results,
-                      bsid=row.id, sourcestamps=sourcestamps,
-                      parent_buildid=row.parent_buildid,
-                      parent_relationship=row.parent_relationship)
+        return {
+            "external_idstring": row.external_idstring,
+            "reason": row.reason,
+            "submitted_at": epoch2datetime(row.submitted_at),
+            "complete": bool(row.complete),
+            "complete_at": epoch2datetime(row.complete_at),
+            "results": row.results,
+            "bsid": row.id,
+            "sourcestamps": sourcestamps,
+            "parent_buildid": row.parent_buildid,
+            "parent_relationship": row.parent_relationship
+        }
