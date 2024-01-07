@@ -50,6 +50,7 @@ class GraphQLConnector(service.AsyncService):
     be transformed with as_deferred, and they should themselves transform normal data api results
     with as_future()
     """
+
     data = None
     asyncio_loop = None
 
@@ -174,8 +175,7 @@ class GraphQLConnector(service.AsyncService):
                 for op in sorted(operators):
                     if op in ["in", "notin"]:
                         if field_type_graphql in ["String", "Int"]:
-                            query_fields.append(
-                                f"{field}__{op}: [{field_type_graphql}]")
+                            query_fields.append(f"{field}__{op}: [{field_type_graphql}]")
                     else:
                         query_fields.append(f"{field}__{op}: {field_type_graphql}")
 
@@ -198,9 +198,7 @@ class GraphQLConnector(service.AsyncService):
             field_type_graphql = field_type.toGraphQLTypeName()
             keyfields.append(f"{field}: {field_type_graphql}")
 
-            queries_schema += (
-                f"  {rtype.name}{format_query_fields(keyfields)}: {typename}\n"
-            )
+            queries_schema += f"  {rtype.name}{format_query_fields(keyfields)}: {typename}\n"
             return queries_schema
 
         operators = set(resultspec.Filter.singular_operators)

@@ -33,8 +33,9 @@ def extract_filter_values(values, filter_name):
 
 def extract_filter_values_branch(values, filter_name):
     if not isinstance(values, (list, str, type(None))):
-        raise ValueError(f"Values of filter {filter_name} must be list of strings, "
-                         "a string or None")
+        raise ValueError(
+            f"Values of filter {filter_name} must be list of strings, " "a string or None"
+        )
     if isinstance(values, (str, type(None))):
         values = [values]
     else:
@@ -46,8 +47,9 @@ def extract_filter_values_branch(values, filter_name):
 
 def extract_filter_values_regex(values, filter_name):
     if not isinstance(values, (list, str, re.Pattern)):
-        raise ValueError(f"Values of filter {filter_name} must be list of strings, "
-                         "a string or regex")
+        raise ValueError(
+            f"Values of filter {filter_name} must be list of strings, " "a string or regex"
+        )
     if isinstance(values, (str, re.Pattern)):
         values = [values]
     else:
@@ -209,22 +211,32 @@ def _create_property_filters(eq, not_eq, regex, not_regex, arg_prefix):
 
 
 class SourceStampFilter(ComparableMixin):
-
     compare_attrs = (
         'filter_fn',
         'filters',
     )
 
-    def __init__(self,
-                 # gets a SourceStamp dictionary, returns boolean
-                 filter_fn=None,
-
-                 project_eq=None, project_not_eq=None, project_re=None, project_not_re=None,
-                 repository_eq=None, repository_not_eq=None,
-                 repository_re=None, repository_not_re=None,
-                 branch_eq=NotABranch, branch_not_eq=NotABranch, branch_re=None, branch_not_re=None,
-                 codebase_eq=None, codebase_not_eq=None, codebase_re=None, codebase_not_re=None):
-
+    def __init__(
+        self,
+        # gets a SourceStamp dictionary, returns boolean
+        filter_fn=None,
+        project_eq=None,
+        project_not_eq=None,
+        project_re=None,
+        project_not_re=None,
+        repository_eq=None,
+        repository_not_eq=None,
+        repository_re=None,
+        repository_not_re=None,
+        branch_eq=NotABranch,
+        branch_not_eq=NotABranch,
+        branch_re=None,
+        branch_not_re=None,
+        codebase_eq=None,
+        codebase_not_eq=None,
+        codebase_re=None,
+        codebase_not_re=None,
+    ):
         self.filter_fn = filter_fn
         self.filters = _create_filters(
             project_eq,

@@ -24,7 +24,6 @@ from buildbot.test.util.integration import RunMasterBase
 # with one builders and a shellcommand step
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
-
     def create_config(self):
         c = {}
         from buildbot.config import BuilderConfig
@@ -32,19 +31,13 @@ class ShellMaster(RunMasterBase):
         from buildbot.process.factory import BuildFactory
 
         c['schedulers'] = [
-            schedulers.AnyBranchScheduler(
-                name="sched1",
-                builderNames=["testy1"]),
-            schedulers.ForceScheduler(
-                name="sched2",
-                builderNames=["testy2"])
+            schedulers.AnyBranchScheduler(name="sched1", builderNames=["testy1"]),
+            schedulers.ForceScheduler(name="sched2", builderNames=["testy2"]),
         ]
         f = BuildFactory()
         f.addStep(steps.ShellCommand(command='echo hello'))
         c['builders'] = [
-            BuilderConfig(name=name,
-                          workernames=["local1"],
-                          factory=f)
+            BuilderConfig(name=name, workernames=["local1"], factory=f)
             for name in ['testy1', 'testy2']
         ]
         return c
@@ -61,16 +54,12 @@ class ShellMaster(RunMasterBase):
             "committer": "me@foo.com",
             "comments": "good stuff",
             "revision": "HEAD",
-            "project": "none"
+            "project": "none",
         }
         # switch the configuration of the scheduler, and make sure the correct builder is run
         cfg['schedulers'] = [
-            schedulers.AnyBranchScheduler(
-                name="sched1",
-                builderNames=["testy2"]),
-            schedulers.ForceScheduler(
-                name="sched2",
-                builderNames=["testy1"])
+            schedulers.AnyBranchScheduler(name="sched1", builderNames=["testy2"]),
+            schedulers.ForceScheduler(name="sched2", builderNames=["testy1"]),
         ]
         yield self.master.reconfig()
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)

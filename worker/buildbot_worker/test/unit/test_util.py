@@ -20,7 +20,6 @@ from buildbot_worker import util
 
 
 class remove_userpassword(unittest.TestCase):
-
     def assertUrl(self, real_url, expected_url):
         new_url = util.remove_userpassword(real_url)
         self.assertEqual(expected_url, new_url)
@@ -29,23 +28,19 @@ class remove_userpassword(unittest.TestCase):
         self.assertUrl('http://myurl.com/myrepo', 'http://myurl.com/myrepo')
 
     def test_url_with_user_and_password(self):
-        self.assertUrl(
-            'http://myuser:mypass@myurl.com/myrepo', 'http://myurl.com/myrepo')
+        self.assertUrl('http://myuser:mypass@myurl.com/myrepo', 'http://myurl.com/myrepo')
 
     def test_another_url_with_no_user_and_password(self):
-        self.assertUrl(
-            'http://myurl2.com/myrepo2', 'http://myurl2.com/myrepo2')
+        self.assertUrl('http://myurl2.com/myrepo2', 'http://myurl2.com/myrepo2')
 
     def test_another_url_with_user_and_password(self):
-        self.assertUrl(
-            'http://myuser2:mypass2@myurl2.com/myrepo2', 'http://myurl2.com/myrepo2')
+        self.assertUrl('http://myuser2:mypass2@myurl2.com/myrepo2', 'http://myurl2.com/myrepo2')
 
     def test_with_different_protocol_without_user_and_password(self):
         self.assertUrl('ssh://myurl3.com/myrepo3', 'ssh://myurl3.com/myrepo3')
 
     def test_with_different_protocol_with_user_and_password(self):
-        self.assertUrl(
-            'ssh://myuser3:mypass3@myurl3.com/myrepo3', 'ssh://myurl3.com/myrepo3')
+        self.assertUrl('ssh://myuser3:mypass3@myurl3.com/myrepo3', 'ssh://myurl3.com/myrepo3')
 
     def test_file_path(self):
         self.assertUrl('/home/me/repos/my-repo', '/home/me/repos/my-repo')
@@ -58,7 +53,6 @@ class remove_userpassword(unittest.TestCase):
 
 
 class TestObfuscated(unittest.TestCase):
-
     def testSimple(self):
         c = util.Obfuscated('real', '****')
         self.assertEqual(str(c), '****')
@@ -67,29 +61,22 @@ class TestObfuscated(unittest.TestCase):
     def testObfuscatedCommand(self):
         cmd = ['echo', util.Obfuscated('password', '*******')]
         cmd_bytes = [b'echo', util.Obfuscated(b'password', b'*******')]
-        cmd_unicode = [u'echo', util.Obfuscated(u'password', u'привет')]
+        cmd_unicode = ['echo', util.Obfuscated('password', 'привет')]
 
-        self.assertEqual(
-            ['echo', 'password'], util.Obfuscated.get_real(cmd))
-        self.assertEqual(
-            ['echo', '*******'], util.Obfuscated.get_fake(cmd))
-        self.assertEqual(
-            [b'echo', b'password'], util.Obfuscated.get_real(cmd_bytes))
-        self.assertEqual(
-            [b'echo', b'*******'], util.Obfuscated.get_fake(cmd_bytes))
-        self.assertEqual(
-            [u'echo', u'password'], util.Obfuscated.get_real(cmd_unicode))
-        self.assertEqual(
-            [u'echo', u'привет'], util.Obfuscated.get_fake(cmd_unicode))
+        self.assertEqual(['echo', 'password'], util.Obfuscated.get_real(cmd))
+        self.assertEqual(['echo', '*******'], util.Obfuscated.get_fake(cmd))
+        self.assertEqual([b'echo', b'password'], util.Obfuscated.get_real(cmd_bytes))
+        self.assertEqual([b'echo', b'*******'], util.Obfuscated.get_fake(cmd_bytes))
+        self.assertEqual(['echo', 'password'], util.Obfuscated.get_real(cmd_unicode))
+        self.assertEqual(['echo', 'привет'], util.Obfuscated.get_fake(cmd_unicode))
 
     def testObfuscatedNonString(self):
         cmd = ['echo', 1]
         cmd_bytes = [b'echo', 2]
-        cmd_unicode = [u'привет', 3]
+        cmd_unicode = ['привет', 3]
         self.assertEqual(['echo', '1'], util.Obfuscated.get_real(cmd))
         self.assertEqual([b'echo', '2'], util.Obfuscated.get_fake(cmd_bytes))
-        self.assertEqual([u'привет', u'3'],
-                         util.Obfuscated.get_fake(cmd_unicode))
+        self.assertEqual(['привет', '3'], util.Obfuscated.get_fake(cmd_unicode))
 
     def testObfuscatedNonList(self):
         cmd = 1
@@ -98,7 +85,6 @@ class TestObfuscated(unittest.TestCase):
 
 
 class TestRewrap(unittest.TestCase):
-
     def test_main(self):
         tests = [
             ("", "", None),
@@ -106,30 +92,37 @@ class TestRewrap(unittest.TestCase):
             ("\n  ", "\n", None),
             ("  \n", "\n", None),
             ("  \n  ", "\n", None),
-            ("""
+            (
+                """
                 multiline
                 with
                 indent
                 """,
-             "\nmultiline with indent",
-             None),
-            ("""\
+                "\nmultiline with indent",
+                None,
+            ),
+            (
+                """\
                 multiline
                 with
                 indent
 
                 """,
-             "multiline with indent\n",
-             None),
-            ("""\
+                "multiline with indent\n",
+                None,
+            ),
+            (
+                """\
                  multiline
                  with
                  indent
 
                  """,
-             "multiline with indent\n",
-             None),
-            ("""\
+                "multiline with indent\n",
+                None,
+            ),
+            (
+                """\
                 multiline
                 with
                 indent
@@ -137,9 +130,11 @@ class TestRewrap(unittest.TestCase):
                   and
                    formatting
                 """,
-             "multiline with indent\n  and\n   formatting\n",
-             None),
-            ("""\
+                "multiline with indent\n  and\n   formatting\n",
+                None,
+            ),
+            (
+                """\
                 multiline
                 with
                 indent
@@ -148,8 +143,9 @@ class TestRewrap(unittest.TestCase):
                   and
                    formatting
                 """,
-             "multiline with\nindent and\nwrapping\n  and\n   formatting\n",
-             15),
+                "multiline with\nindent and\nwrapping\n  and\n   formatting\n",
+                15,
+            ),
         ]
 
         for text, expected, width in tests:

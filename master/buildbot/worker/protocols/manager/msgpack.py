@@ -274,11 +274,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     def send_response_msg(self, msg, result, is_exception):
-        dict_output = {
-            'op': 'response',
-            'seq_number': msg['seq_number'],
-            'result': result
-        }
+        dict_output = {'op': 'response', 'seq_number': msg['seq_number'], 'result': result}
         if is_exception:
             dict_output['is_exception'] = True
 
@@ -331,8 +327,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             # stop waiting for a response of this command
             del self.seq_num_to_waiters_map[seq_number]
         else:
-            self.send_response_msg(msg, f"Command {msg['op']} does not exist.",
-                                   is_exception=True)
+            self.send_response_msg(msg, f"Command {msg['op']} does not exist.", is_exception=True)
 
     @defer.inlineCallbacks
     def get_message_result(self, msg):
@@ -400,7 +395,6 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
 
 class Dispatcher(BaseDispatcher):
-
     DUMMY_PORT = 1
 
     def __init__(self, config_portstr, portstr):

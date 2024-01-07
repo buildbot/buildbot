@@ -28,7 +28,6 @@ from buildbot.test.util import dirs
 
 
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
-
     def setUp(self):
         # config dir must be unique so that the python runtime does not optimize its list of module
         self.configdir = self.mktemp()
@@ -39,8 +38,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
     # tests
 
-    def do_test_load(self, config='', other_files=None,
-                     stdout_re=None, stderr_re=None):
+    def do_test_load(self, config='', other_files=None, stdout_re=None, stderr_re=None):
         if other_files is None:
             other_files = {}
         configFile = os.path.join(self.configdir, 'master.cfg')
@@ -62,8 +60,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         stdout = sys.stdout = StringIO()
         stderr = sys.stderr = StringIO()
         try:
-            checkconfig._loadConfig(
-                basedir=self.configdir, configFile="master.cfg", quiet=False)
+            checkconfig._loadConfig(basedir=self.configdir, configFile="master.cfg", quiet=False)
         finally:
             sys.stdout = old_stdout
             sys.stderr = old_stderr
@@ -76,7 +73,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
     def test_success(self):
         len_sys_path = len(sys.path)
-        config = textwrap.dedent("""\
+        config = textwrap.dedent(
+            """\
                 c = BuildmasterConfig = {}
                 c['multiMaster'] = True
                 c['schedulers'] = []
@@ -91,17 +89,19 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                     Worker('worker', 'pass'),
                 ]
                 c['protocols'] = {'pb': {'port': 9989}}
-                """)
-        self.do_test_load(config=config,
-                          stdout_re=re.compile('Config file is good!'))
+                """
+        )
+        self.do_test_load(config=config, stdout_re=re.compile('Config file is good!'))
 
         # (regression) check that sys.path hasn't changed
         self.assertEqual(len(sys.path), len_sys_path)
 
     def test_failure_ImportError(self):
-        config = textwrap.dedent("""\
+        config = textwrap.dedent(
+            """\
                 import test_scripts_checkconfig_does_not_exist
-                """)
+                """
+        )
         # Python 3 displays this error:
         #   No module named 'test_scripts_checkconfig_does_not_exist'
         #
@@ -109,40 +109,46 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         #   No module named test_scripts_checkconfig_does_not_exist
         #
         # We need a regexp that matches both.
-        self.do_test_load(config=config,
-                          stderr_re=re.compile(
-                              "No module named '?test_scripts_checkconfig_does_not_exist'?"))
+        self.do_test_load(
+            config=config,
+            stderr_re=re.compile("No module named '?test_scripts_checkconfig_does_not_exist'?"),
+        )
         self.flushLoggedErrors()
 
     def test_failure_no_workers(self):
-        config = textwrap.dedent("""\
+        config = textwrap.dedent(
+            """\
                 BuildmasterConfig={}
-                """)
-        self.do_test_load(config=config,
-                          stderr_re=re.compile('no workers'))
+                """
+        )
+        self.do_test_load(config=config, stderr_re=re.compile('no workers'))
         self.flushLoggedErrors()
 
     def test_success_imports(self):
-        config = textwrap.dedent("""\
+        config = textwrap.dedent(
+            """\
                 from othermodule import port
                 c = BuildmasterConfig = {}
                 c['schedulers'] = []
                 c['builders'] = []
                 c['workers'] = []
                 c['protocols'] = {'pb': {'port': port}}
-                """)
+                """
+        )
         other_files = {'othermodule.py': 'port = 9989'}
         self.do_test_load(config=config, other_files=other_files)
 
     def test_success_import_package(self):
-        config = textwrap.dedent("""\
+        config = textwrap.dedent(
+            """\
                 from otherpackage.othermodule import port
                 c = BuildmasterConfig = {}
                 c['schedulers'] = []
                 c['builders'] = []
                 c['workers'] = []
                 c['protocols'] = {'pb': {'port': 9989}}
-                """)
+                """
+        )
         other_files = {
             ('otherpackage', '__init__.py'): '',
             ('otherpackage', 'othermodule.py'): 'port = 9989',
@@ -151,10 +157,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
 
 class TestCheckconfig(unittest.TestCase):
-
     def setUp(self):
-        self.loadConfig = mock.Mock(
-            spec=checkconfig._loadConfig, return_value=3)
+        self.loadConfig = mock.Mock(spec=checkconfig._loadConfig, return_value=3)
         # checkconfig is decorated with @in_reactor, so strip that decoration
         # since the reactor is already running
         self.patch(checkconfig, 'checkconfig', checkconfig.checkconfig._orig)
@@ -162,33 +166,28 @@ class TestCheckconfig(unittest.TestCase):
 
     def test_checkconfig_default(self):
         self.assertEqual(checkconfig.checkconfig({}), 3)
-        self.loadConfig.assert_called_with(basedir=os.getcwd(),
-                                           configFile='master.cfg', quiet=None)
+        self.loadConfig.assert_called_with(basedir=os.getcwd(), configFile='master.cfg', quiet=None)
 
     def test_checkconfig_given_dir(self):
         self.assertEqual(checkconfig.checkconfig({"configFile": '.'}), 3)
-        self.loadConfig.assert_called_with(basedir='.', configFile='master.cfg',
-                                           quiet=None)
+        self.loadConfig.assert_called_with(basedir='.', configFile='master.cfg', quiet=None)
 
     def test_checkconfig_given_file(self):
         config = {"configFile": 'master.cfg'}
         self.assertEqual(checkconfig.checkconfig(config), 3)
-        self.loadConfig.assert_called_with(basedir=os.getcwd(),
-                                           configFile='master.cfg', quiet=None)
+        self.loadConfig.assert_called_with(basedir=os.getcwd(), configFile='master.cfg', quiet=None)
 
     def test_checkconfig_quiet(self):
         config = {"configFile": 'master.cfg', "quiet": True}
         self.assertEqual(checkconfig.checkconfig(config), 3)
-        self.loadConfig.assert_called_with(basedir=os.getcwd(),
-                                           configFile='master.cfg', quiet=True)
+        self.loadConfig.assert_called_with(basedir=os.getcwd(), configFile='master.cfg', quiet=True)
 
     def test_checkconfig_syntaxError_quiet(self):
         """
         When C{base.getConfigFileFromTac} raises L{SyntaxError},
         C{checkconfig.checkconfig} return an error.
         """
-        mockGetConfig = mock.Mock(spec=base.getConfigFileFromTac,
-                                  side_effect=SyntaxError)
+        mockGetConfig = mock.Mock(spec=base.getConfigFileFromTac, side_effect=SyntaxError)
         self.patch(checkconfig, 'getConfigFileFromTac', mockGetConfig)
         config = {"configFile": '.', "quiet": True}
         self.assertEqual(checkconfig.checkconfig(config), 1)

@@ -35,7 +35,6 @@ class RemoteException(Exception):
 
 
 class RemoteCommand(base.RemoteCommandImpl):
-
     # class-level unique identifier generator for command ids
     _commandCounter = 0
 
@@ -43,9 +42,16 @@ class RemoteCommand(base.RemoteCommandImpl):
     rc = None
     debug = False
 
-    def __init__(self, remote_command, args, ignore_updates=False,
-                 collectStdout=False, collectStderr=False, decodeRC=None,
-                 stdioLogName='stdio'):
+    def __init__(
+        self,
+        remote_command,
+        args,
+        ignore_updates=False,
+        collectStdout=False,
+        collectStderr=False,
+        decodeRC=None,
+        stdioLogName='stdio',
+    ):
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
         self.logs = {}
@@ -141,9 +147,9 @@ class RemoteCommand(base.RemoteCommandImpl):
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
-        d = self.conn.remoteStartCommand(self, self.builder_name,
-                                         self.commandID, self.remote_command,
-                                         self.args)
+        d = self.conn.remoteStartCommand(
+            self, self.builder_name, self.commandID, self.remote_command, self.args
+        )
         return d
 
     @defer.inlineCallbacks
@@ -160,7 +166,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         if not self._is_conn_test_fake:
             timeout = 10
             while self.rc is None and timeout > 0:
-                yield util.asyncSleep(.1)
+                yield util.asyncSleep(0.1)
                 timeout -= 1
 
         try:
@@ -193,8 +199,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         # when the interrupt command has been delivered.
 
         try:
-            yield self.conn.remoteInterruptCommand(self.builder_name,
-                                                   self.commandID, str(why))
+            yield self.conn.remoteInterruptCommand(self.builder_name, self.commandID, str(why))
             # the worker may not have remote_interruptCommand
         except Exception as e:
             log.msg("RemoteCommand.interrupt failed", self, e)
@@ -234,7 +239,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         updates = decode(updates)
         self.worker.messageReceivedFromWorker()
         max_updatenum = 0
-        for (update, num) in updates:  # noqa pylint: disable=too-many-nested-blocks
+        for update, num in updates:  # noqa pylint: disable=too-many-nested-blocks
             # log.msg("update[%d]:" % num)
             try:
                 if self.active and not self.ignore_updates:
@@ -415,8 +420,9 @@ class RemoteCommand(base.RemoteCommandImpl):
             # workaround http://twistedmatrix.com/trac/ticket/5507
             # CopiedFailure cannot be raised back, this make debug difficult
             if isinstance(maybeFailure, pb.CopiedFailure):
-                maybeFailure.value = RemoteException(f"{maybeFailure.type}: {maybeFailure.value}"
-                                                     f"\n{maybeFailure.traceback}")
+                maybeFailure.value = RemoteException(
+                    f"{maybeFailure.type}: {maybeFailure.value}" f"\n{maybeFailure.traceback}"
+                )
                 maybeFailure.type = RemoteException
             maybeFailure.raiseException()
 
@@ -435,15 +441,26 @@ LoggedRemoteCommand = RemoteCommand
 
 
 class RemoteShellCommand(RemoteCommand):
-
-    def __init__(self, workdir, command, env=None,
-                 want_stdout=1, want_stderr=1,
-                 timeout=20 * 60, maxTime=None, sigtermTime=None,
-                 logfiles=None, usePTY=None, logEnviron=True,
-                 collectStdout=False, collectStderr=False,
-                 interruptSignal=None,
-                 initialStdin=None, decodeRC=None,
-                 stdioLogName='stdio'):
+    def __init__(
+        self,
+        workdir,
+        command,
+        env=None,
+        want_stdout=1,
+        want_stderr=1,
+        timeout=20 * 60,
+        maxTime=None,
+        sigtermTime=None,
+        logfiles=None,
+        usePTY=None,
+        logEnviron=True,
+        collectStdout=False,
+        collectStderr=False,
+        interruptSignal=None,
+        initialStdin=None,
+        decodeRC=None,
+        stdioLogName='stdio',
+    ):
         if logfiles is None:
             logfiles = {}
         if decodeRC is None:
@@ -458,6 +475,7 @@ class RemoteShellCommand(RemoteCommand):
                 if isinstance(arg, tuple) and len(arg) == 3 and arg[0] == 'obfuscated':
                     return arg[2]
                 return arg
+
             self.fake_command = [obfuscate(c) for c in self.command]
 
         if env is not None:
@@ -466,24 +484,29 @@ class RemoteShellCommand(RemoteCommand):
             # able to modify the original.
             env = env.copy()
 
-        args = {'workdir': workdir,
-                'env': env,
-                'want_stdout': want_stdout,
-                'want_stderr': want_stderr,
-                'logfiles': logfiles,
-                'timeout': timeout,
-                'maxTime': maxTime,
-                'sigtermTime': sigtermTime,
-                'usePTY': usePTY,
-                'logEnviron': logEnviron,
-                'initial_stdin': initialStdin
-                }
+        args = {
+            'workdir': workdir,
+            'env': env,
+            'want_stdout': want_stdout,
+            'want_stderr': want_stderr,
+            'logfiles': logfiles,
+            'timeout': timeout,
+            'maxTime': maxTime,
+            'sigtermTime': sigtermTime,
+            'usePTY': usePTY,
+            'logEnviron': logEnviron,
+            'initial_stdin': initialStdin,
+        }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
-        super().__init__("shell", args, collectStdout=collectStdout,
-                         collectStderr=collectStderr,
-                         decodeRC=decodeRC,
-                         stdioLogName=stdioLogName)
+        super().__init__(
+            "shell",
+            args,
+            collectStdout=collectStdout,
+            collectStderr=collectStderr,
+            decodeRC=decodeRC,
+            stdioLogName=stdioLogName,
+        )
 
     def _start(self):
         if self.args['usePTY'] is None:

@@ -84,10 +84,11 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
 
     def quote(e):
         if not e:
-            return u'""'
+            return '""'
         e = bytes2unicode(e, unicode_encoding)
         return pipes.quote(e)
-    return u" ".join([quote(e) for e in cmd_list])
+
+    return " ".join([quote(e) for e in cmd_list])
 
 
 class LogFileWatcher(object):
@@ -169,8 +170,8 @@ class LogFileWatcher(object):
 
 
 if runtime.platformType == 'posix':
-    class ProcGroupProcess(Process):
 
+    class ProcGroupProcess(Process):
         """Simple subclass of Process to also make the spawned process a process
         group leader, so we can kill all members of the process group."""
 
@@ -252,11 +253,11 @@ class RunProcessPP(protocol.ProcessProtocol):
 
 
 class RunProcess(object):
-
     """
     This is a helper class, used by worker commands to run programs in a child
     shell.
     """
+
     BACKUP_TIMEOUT = 5
     interruptSignal = "KILL"
 
@@ -272,12 +273,28 @@ class RunProcess(object):
     # Then changes to the system clock during a run wouldn't effect the "elapsed
     # time" results.
 
-    def __init__(self, command_id, command, workdir, unicode_encoding, send_update, environ=None,
-                 sendStdout=True, sendStderr=True, sendRC=True,
-                 timeout=None, maxTime=None, sigtermTime=None,
-                 initialStdin=None, keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles=None, usePTY=False,
-                 useProcGroup=True):
+    def __init__(
+        self,
+        command_id,
+        command,
+        workdir,
+        unicode_encoding,
+        send_update,
+        environ=None,
+        sendStdout=True,
+        sendStderr=True,
+        sendRC=True,
+        timeout=None,
+        maxTime=None,
+        sigtermTime=None,
+        initialStdin=None,
+        keepStdout=False,
+        keepStderr=False,
+        logEnviron=True,
+        logfiles=None,
+        usePTY=False,
+        useProcGroup=True,
+    ):
         """
 
         @param keepStdout: if True, we keep a copy of all the stdout text
@@ -297,11 +314,12 @@ class RunProcess(object):
             logfiles = {}
 
         if isinstance(command, list):
+
             def obfus(w):
-                if (isinstance(w, tuple) and len(w) == 3 and
-                        w[0] == 'obfuscated'):
+                if isinstance(w, tuple) and len(w) == 3 and w[0] == 'obfuscated':
                     return util.Obfuscated(w[1], w[2])
                 return w
+
             command = [obfus(w) for w in command]
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the worker.  This is mostly platform
@@ -354,6 +372,7 @@ class RunProcess(object):
 
             def subst(match):
                 return os.environ.get(match.group(1), "")
+
             newenv = {}
             for key in os.environ:
                 # setting a key to None will delete it from the worker
@@ -363,8 +382,10 @@ class RunProcess(object):
             for key, v in environ.items():
                 if v is not None:
                     if not isinstance(v, str):
-                        raise RuntimeError("'env' values must be strings or "
-                                           "lists; key '{0}' is incorrect".format(key))
+                        raise RuntimeError(
+                            "'env' values must be strings or "
+                            "lists; key '{0}' is incorrect".format(key)
+                        )
                     newenv[key] = p.sub(subst, v)
 
             self.environ = newenv
@@ -381,9 +402,10 @@ class RunProcess(object):
         self.keepStdout = keepStdout
         self.keepStderr = keepStderr
 
-        assert usePTY in (True, False), \
-            "Unexpected usePTY argument value: {!r}. Expected boolean.".format(
-                usePTY)
+        assert usePTY in (
+            True,
+            False,
+        ), "Unexpected usePTY argument value: {!r}. Expected boolean.".format(usePTY)
         self.usePTY = usePTY
 
         # usePTY=True is a convenience for cleaning up all children and
@@ -414,13 +436,11 @@ class RunProcess(object):
                 filename = filevalue['filename']
                 follow = filevalue.get('follow', False)
 
-            w = LogFileWatcher(self, name,
-                               os.path.join(self.workdir, filename),
-                               follow=follow)
+            w = LogFileWatcher(self, name, os.path.join(self.workdir, filename), follow=follow)
             self.logFileWatchers.append(w)
 
     def log_msg(self, msg):
-        log.msg(u"(command {0}): {1}".format(self.command_id, msg))
+        log.msg("(command {0}): {1}".format(self.command_id, msg))
 
     def __repr__(self):
         return "<{0} '{1}'>".format(self.__class__.__name__, self.fake_command)
@@ -473,10 +493,10 @@ class RunProcess(object):
             # So, for .exe's that we have absolute paths to, we can call directly
             # Otherwise, we should run under COMSPEC (usually cmd.exe) to
             # handle path searching, etc.
-            if (runtime.platformType == 'win32' and
-                not (bytes2unicode(self.command[0],
-                     self.unicode_encoding).lower().endswith(".exe") and
-                     os.path.isabs(self.command[0]))):
+            if runtime.platformType == 'win32' and not (
+                bytes2unicode(self.command[0], self.unicode_encoding).lower().endswith(".exe")
+                and os.path.isabs(self.command[0])
+            ):
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
@@ -499,55 +519,55 @@ class RunProcess(object):
 
         # self.stdin is handled in RunProcessPP.connectionMade
 
-        self.log_msg(u" " + display)
-        self.send_update([(u'header', display + u"\n")])
+        self.log_msg(" " + display)
+        self.send_update([('header', display + "\n")])
 
         # then comes the secondary information
-        msg = u" in dir {0}".format(self.workdir)
+        msg = " in dir {0}".format(self.workdir)
         if self.timeout:
             if self.timeout == 1:
-                unit = u"sec"
+                unit = "sec"
             else:
-                unit = u"secs"
-            msg += u" (timeout {0} {1})".format(self.timeout, unit)
+                unit = "secs"
+            msg += " (timeout {0} {1})".format(self.timeout, unit)
         if self.maxTime:
             if self.maxTime == 1:
-                unit = u"sec"
+                unit = "sec"
             else:
-                unit = u"secs"
-            msg += u" (maxTime {0} {1})".format(self.maxTime, unit)
-        self.log_msg(u" " + msg)
-        self.send_update([(u'header', msg + u"\n")])
+                unit = "secs"
+            msg += " (maxTime {0} {1})".format(self.maxTime, unit)
+        self.log_msg(" " + msg)
+        self.send_update([('header', msg + "\n")])
 
         msg = " watching logfiles {0}".format(self.logfiles)
         self.log_msg(" " + msg)
-        self.send_update([('header', msg + u"\n")])
+        self.send_update([('header', msg + "\n")])
 
         # then the obfuscated command array for resolving unambiguity
-        msg = u" argv: {0}".format(self.fake_command)
-        self.log_msg(u" " + msg)
-        self.send_update([('header', msg + u"\n")])
+        msg = " argv: {0}".format(self.fake_command)
+        self.log_msg(" " + msg)
+        self.send_update([('header', msg + "\n")])
 
         # then the environment, since it sometimes causes problems
         if self.logEnviron:
-            msg = u" environment:\n"
+            msg = " environment:\n"
             env_names = sorted(self.environ.keys())
             for name in env_names:
-                msg += u"  {0}={1}\n".format(bytes2unicode(name,
-                                                           encoding=self.unicode_encoding),
-                                             bytes2unicode(self.environ[name],
-                                                           encoding=self.unicode_encoding))
-            self.log_msg(u" environment:\n{0}".format(pprint.pformat(self.environ)))
-            self.send_update([(u'header', msg)])
+                msg += "  {0}={1}\n".format(
+                    bytes2unicode(name, encoding=self.unicode_encoding),
+                    bytes2unicode(self.environ[name], encoding=self.unicode_encoding),
+                )
+            self.log_msg(" environment:\n{0}".format(pprint.pformat(self.environ)))
+            self.send_update([('header', msg)])
 
         if self.initialStdin:
-            msg = u" writing {0} bytes to stdin".format(len(self.initialStdin))
-            self.log_msg(u" " + msg)
-            self.send_update([(u'header', msg + u"\n")])
+            msg = " writing {0} bytes to stdin".format(len(self.initialStdin))
+            self.log_msg(" " + msg)
+            self.send_update([('header', msg + "\n")])
 
-        msg = u" using PTY: {0}".format(bool(self.usePTY))
-        self.log_msg(u" " + msg)
-        self.send_update([(u'header', msg + u"\n")])
+        msg = " using PTY: {0}".format(bool(self.usePTY))
+        self.log_msg(" " + msg)
+        self.send_update([('header', msg + "\n")])
 
         # put data into stdin and close it, if necessary.  This will be
         # buffered until connectionMade is called
@@ -559,26 +579,32 @@ class RunProcess(object):
         # start the process
 
         self.process = self._spawnProcess(
-            self.pp, argv[0], argv,
-            self.environ,
-            self.workdir,
-            usePTY=self.usePTY)
+            self.pp, argv[0], argv, self.environ, self.workdir, usePTY=self.usePTY
+        )
 
         # set up timeouts
 
         if self.timeout:
-            self.ioTimeoutTimer = self._reactor.callLater(
-                self.timeout, self.doTimeout)
+            self.ioTimeoutTimer = self._reactor.callLater(self.timeout, self.doTimeout)
 
         if self.maxTime:
-            self.maxTimeoutTimer = self._reactor.callLater(
-                self.maxTime, self.doMaxTimeout)
+            self.maxTimeoutTimer = self._reactor.callLater(self.maxTime, self.doMaxTimeout)
 
         for w in self.logFileWatchers:
             w.start()
 
-    def _spawnProcess(self, processProtocol, executable, args=(), env=None,
-                      path=None, uid=None, gid=None, usePTY=False, childFDs=None):
+    def _spawnProcess(
+        self,
+        processProtocol,
+        executable,
+        args=(),
+        env=None,
+        path=None,
+        uid=None,
+        gid=None,
+        usePTY=False,
+        childFDs=None,
+    ):
         """private implementation of reactor.spawnProcess, to allow use of
         L{ProcGroupProcess}"""
         if env is None:
@@ -587,26 +613,25 @@ class RunProcess(object):
         # use the ProcGroupProcess class, if available
         if runtime.platformType == 'posix':
             if self.useProcGroup and not usePTY:
-                return ProcGroupProcess(reactor, executable, args, env, path,
-                                        processProtocol, uid, gid, childFDs)
+                return ProcGroupProcess(
+                    reactor, executable, args, env, path, processProtocol, uid, gid, childFDs
+                )
 
         # fall back
         if self.using_comspec:
-            return self._spawnAsBatch(processProtocol, executable, args, env,
-                                      path, usePTY=usePTY)
-        return reactor.spawnProcess(processProtocol, executable, args, env,
-                                    path, usePTY=usePTY)
+            return self._spawnAsBatch(processProtocol, executable, args, env, path, usePTY=usePTY)
+        return reactor.spawnProcess(processProtocol, executable, args, env, path, usePTY=usePTY)
 
-    def _spawnAsBatch(self, processProtocol, executable, args, env,
-                      path, usePTY):
+    def _spawnAsBatch(self, processProtocol, executable, args, env, path, usePTY):
         """A cheat that routes around the impedance mismatch between
         twisted and cmd.exe with respect to escaping quotes"""
 
-        tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
-                                delete=False, encoding=self.unicode_encoding)
+        tf = NamedTemporaryFile(
+            mode='w+', dir='.', suffix=".bat", delete=False, encoding=self.unicode_encoding
+        )
 
         # echo off hides this cheat from the log files.
-        tf.write(u"@echo off\n")
+        tf.write("@echo off\n")
         if isinstance(self.command, (str, bytes)):
             tf.write(bytes2NativeString(self.command, self.unicode_encoding))
         else:
@@ -621,10 +646,10 @@ class RunProcess(object):
         def unlink_temp(result):
             os.unlink(tf.name)
             return result
+
         self.deferred.addBoth(unlink_temp)
 
-        return reactor.spawnProcess(processProtocol, executable, argv, env,
-                                    path, usePTY=usePTY)
+        return reactor.spawnProcess(processProtocol, executable, argv, env, path, usePTY=usePTY)
 
     def addStdout(self, data):
         if self.sendStdout:
@@ -652,8 +677,11 @@ class RunProcess(object):
 
     def finished(self, sig, rc):
         self.elapsedTime = util.now(self._reactor) - self.startTime
-        self.log_msg(("command finished with signal {0}, exit code {1}, " +
-                      "elapsedTime: {2:0.6f}").format(sig, rc, self.elapsedTime))
+        self.log_msg(
+            ("command finished with signal {0}, exit code {1}, " + "elapsedTime: {2:0.6f}").format(
+                sig, rc, self.elapsedTime
+            )
+        )
         for w in self.logFileWatchers:
             # this will send the final updates
             w.stop()
@@ -684,16 +712,17 @@ class RunProcess(object):
 
     def doTimeout(self):
         self.ioTimeoutTimer = None
-        msg = (
-            "command timed out: {0} seconds without output running {1}".format(
-            self.timeout, self.fake_command))
+        msg = "command timed out: {0} seconds without output running {1}".format(
+            self.timeout, self.fake_command
+        )
         self.send_update([("failure_reason", "timeout_without_output")])
         self.kill(msg)
 
     def doMaxTimeout(self):
         self.maxTimeoutTimer = None
         msg = "command timed out: {0} seconds elapsed running {1}".format(
-            self.maxTime, self.fake_command)
+            self.maxTime, self.fake_command
+        )
         self.send_update([("failure_reason", "timeout")])
         self.kill(msg)
 
@@ -728,8 +757,7 @@ class RunProcess(object):
         if self.deferred:
             # finished ought to be called momentarily. Just in case it doesn't,
             # set a timer which will abandon the command.
-            self.killTimer = self._reactor.callLater(self.BACKUP_TIMEOUT,
-                                                     self.doBackupTimeout)
+            self.killTimer = self._reactor.callLater(self.BACKUP_TIMEOUT, self.doBackupTimeout)
 
     def sendSig(self, interruptSignal):
         hit = 0
@@ -751,8 +779,9 @@ class RunProcess(object):
                     self.process.pgid = None
                     hit = 1
                 except OSError:
-                    self.log_msg('failed to kill process group (ignored): {0}'.format(
-                            (sys.exc_info()[1])))
+                    self.log_msg(
+                        'failed to kill process group (ignored): {0}'.format((sys.exc_info()[1]))
+                    )
                     # probably no-such-process, maybe because there is no process
                     # group
 
@@ -819,8 +848,7 @@ class RunProcess(object):
         sendSigterm = self.sigtermTime is not None
         if sendSigterm:
             self.sendSig("TERM")
-            self.sigtermTimer = self._reactor.callLater(
-                self.sigtermTime, self.checkProcess)
+            self.sigtermTimer = self._reactor.callLater(self.sigtermTime, self.checkProcess)
         else:
             hit = self.sendSig(self.interruptSignal)
             self.cleanUp(hit)

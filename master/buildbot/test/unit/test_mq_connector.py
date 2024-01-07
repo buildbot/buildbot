@@ -26,7 +26,6 @@ from buildbot.util import service
 
 
 class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
-
     new_config = "not_called"
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
@@ -41,7 +40,6 @@ class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
 
 class MQConnector(TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -51,10 +49,13 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
         yield self.conn.setServiceParent(self.master)
 
     def patchFakeMQ(self, name='fake'):
-        self.patch(connector.MQConnector, 'classes',
-                   {name:
-                    {'class': 'buildbot.test.unit.test_mq_connector.FakeMQ'},
-                    })
+        self.patch(
+            connector.MQConnector,
+            'classes',
+            {
+                name: {'class': 'buildbot.test.unit.test_mq_connector.FakeMQ'},
+            },
+        )
 
     @defer.inlineCallbacks
     def test_setup_unknown_type(self):
@@ -69,8 +70,7 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
         yield self.conn.setup()
         self.assertIsInstance(self.conn.impl, FakeMQ)
         self.assertEqual(self.conn.impl.produce, self.conn.produce)
-        self.assertEqual(self.conn.impl.startConsuming,
-                         self.conn.startConsuming)
+        self.assertEqual(self.conn.impl.startConsuming, self.conn.startConsuming)
 
     @defer.inlineCallbacks
     def test_reconfigServiceWithBuildbotConfig(self):

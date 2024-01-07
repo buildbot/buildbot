@@ -117,15 +117,21 @@ class Endpoint:
         self.rtype = rtype
         self.master = master
         if hasattr(self, "isRaw"):
-            warn_deprecated("3.10.0", "Endpoint.isRaw has been deprecated, "
-                            "please set \"kind\" attribute instead. "
-                            "isRaw = True is equivalent to kind = EndpointKind.RAW")
+            warn_deprecated(
+                "3.10.0",
+                "Endpoint.isRaw has been deprecated, "
+                "please set \"kind\" attribute instead. "
+                "isRaw = True is equivalent to kind = EndpointKind.RAW",
+            )
             if self.isRaw:
                 self.kind = EndpointKind.RAW
         if hasattr(self, "isCollection"):
-            warn_deprecated("3.10.0", "Endpoint.isCollection has been deprecated, "
-                            "please set \"kind\" attribute instead. "
-                            "isCollection = True is equivalent to kind = EndpointKind.COLLECTION")
+            warn_deprecated(
+                "3.10.0",
+                "Endpoint.isCollection has been deprecated, "
+                "please set \"kind\" attribute instead. "
+                "isCollection = True is equivalent to kind = EndpointKind.COLLECTION",
+            )
             if self.isCollection:
                 self.kind = EndpointKind.COLLECTION
 
@@ -158,9 +164,7 @@ class Endpoint:
     def get_kwargs_from_graphql(self, parent, resolve_info, args):
         if self.kind == EndpointKind.COLLECTION or self.isPseudoCollection:
             if parent is not None:
-                return self.get_kwargs_from_graphql_parent(
-                    parent, resolve_info.parent_type.name
-                )
+                return self.get_kwargs_from_graphql_parent(parent, resolve_info.parent_type.name)
             return {'graphql': True}
         ret = {'graphql': True}
         k = self.rtype.keyField
@@ -174,7 +178,6 @@ class Endpoint:
 
 
 class BuildNestingMixin:
-
     """
     A mixin for methods to decipher the many ways a various entities can be specified.
     """
@@ -190,8 +193,8 @@ class BuildNestingMixin:
             if builderid is None:
                 return None
             build = yield self.master.db.builds.getBuildByNumber(
-                builderid=builderid,
-                number=kwargs['build_number'])
+                builderid=builderid, number=kwargs['build_number']
+            )
             if not build:
                 return None
             return build['id']
@@ -205,10 +208,9 @@ class BuildNestingMixin:
             if buildid is None:
                 return None
 
-            dbdict = yield self.master.db.steps.getStep(buildid=buildid,
-                                                        number=kwargs.get(
-                                                            'step_number'),
-                                                        name=kwargs.get('step_name'))
+            dbdict = yield self.master.db.steps.getStep(
+                buildid=buildid, number=kwargs.get('step_number'), name=kwargs.get('step_name')
+            )
             if not dbdict:
                 return None
             return dbdict['id']
@@ -226,11 +228,9 @@ class BuildNestingMixin:
 
 
 class ListResult(UserList):
-
     __slots__ = ['offset', 'total', 'limit']
 
-    def __init__(self, values,
-                 offset=None, total=None, limit=None):
+    def __init__(self, values, offset=None, total=None, limit=None):
         super().__init__(values)
 
         # if set, this is the index in the overall results of the first element of
@@ -244,18 +244,25 @@ class ListResult(UserList):
         self.limit = limit
 
     def __repr__(self):
-        return (f"ListResult({repr(self.data)}, offset={repr(self.offset)}, "
-                f"total={repr(self.total)}, limit={repr(self.limit)})")
+        return (
+            f"ListResult({repr(self.data)}, offset={repr(self.offset)}, "
+            f"total={repr(self.total)}, limit={repr(self.limit)})"
+        )
 
     def __eq__(self, other):
         if isinstance(other, ListResult):
-            return self.data == other.data \
-                and self.offset == other.offset \
-                and self.total == other.total \
+            return (
+                self.data == other.data
+                and self.offset == other.offset
+                and self.total == other.total
                 and self.limit == other.limit
-        return self.data == other \
-            and self.offset is None and self.limit is None\
+            )
+        return (
+            self.data == other
+            and self.offset is None
+            and self.limit is None
             and (self.total is None or self.total == len(other))
+        )
 
     def __ne__(self, other):
         return not self == other

@@ -27,15 +27,13 @@ from buildbot.test.util import interfaces
 
 
 class Tests(TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
 
     @defer.inlineCallbacks
     def makeLog(self, type, logEncoding='utf-8'):
-        logid = yield self.master.data.updates.addLog(
-            stepid=27, name='testlog', type=str(type))
+        logid = yield self.master.data.updates.addLog(stepid=27, name='testlog', type=str(type))
         return log.Log.new(self.master, 'testlog', type, logid, logEncoding)
 
     @defer.inlineCallbacks
@@ -70,13 +68,15 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log.addContent('world\nthis is a second line')  # unfinished
         yield _log.finish()
 
-        self.assertEqual(self.master.data.updates.logs[_log.logid], {
-            'content': ['hello\n', 'hello cruel world\n',
-                        'this is a second line\n'],
-            'finished': True,
-            'type': 't',
-            'name': 'testlog',
-        })
+        self.assertEqual(
+            self.master.data.updates.logs[_log.logid],
+            {
+                'content': ['hello\n', 'hello cruel world\n', 'this is a second line\n'],
+                'finished': True,
+                'type': 't',
+                'name': 'testlog',
+            },
+        )
 
     @defer.inlineCallbacks
     def test_updates_different_encoding(self):
@@ -85,8 +85,9 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log.addContent('$ and \xa2\n')
         yield _log.finish()
 
-        self.assertEqual(self.master.data.updates.logs[_log.logid]['content'],
-                         ['$ and \N{CENT SIGN}\n'])
+        self.assertEqual(
+            self.master.data.updates.logs[_log.logid]['content'], ['$ and \N{CENT SIGN}\n']
+        )
 
     @defer.inlineCallbacks
     def test_updates_unicode_input(self):
@@ -94,8 +95,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log.addContent('\N{SNOWMAN}\n')
         yield _log.finish()
 
-        self.assertEqual(self.master.data.updates.logs[_log.logid]['content'],
-                         ['\N{SNOWMAN}\n'])
+        self.assertEqual(self.master.data.updates.logs[_log.logid]['content'], ['\N{SNOWMAN}\n'])
 
     @defer.inlineCallbacks
     def test_subscription_plain(self):
@@ -113,8 +113,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         yield _log.addContent('cruel ')
         self.assertEqual(calls, [])
         yield _log.addContent('world\nthis is a second line\n')
-        self.assertEqual(calls, [
-            (None, 'hello cruel world\nthis is a second line\n')])
+        self.assertEqual(calls, [(None, 'hello cruel world\nthis is a second line\n')])
         calls = []
 
         yield _log.finish()
@@ -153,14 +152,11 @@ class Tests(TestReactorMixin, unittest.TestCase):
         calls = []
 
         yield _log.addStdout('world\nthis is a second line')  # unfinished
-        self.assertEqual(calls, [
-            ('o', 'hello cruel world\n')])
+        self.assertEqual(calls, [('o', 'hello cruel world\n')])
         calls = []
 
         yield _log.finish()
-        self.assertEqual(calls, [
-            ('o', 'this is a second line\n'),
-            (None, None)])
+        self.assertEqual(calls, [('o', 'this is a second line\n'), (None, None)])
 
     @defer.inlineCallbacks
     def test_updates_stream(self):
@@ -173,13 +169,15 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log.addStderr('bad things!')  # unfinished
         yield _log.finish()
 
-        self.assertEqual(self.master.data.updates.logs[_log.logid], {
-            'content': ['ohello\n', 'eoh noes!\n', 'ohello cruel world\n',
-                        'ebad things!\n'],
-            'finished': True,
-            'name': 'testlog',
-            'type': 's',
-        })
+        self.assertEqual(
+            self.master.data.updates.logs[_log.logid],
+            {
+                'content': ['ohello\n', 'eoh noes!\n', 'ohello cruel world\n', 'ebad things!\n'],
+                'finished': True,
+                'name': 'testlog',
+                'type': 's',
+            },
+        )
 
     @defer.inlineCallbacks
     def test_unyielded_finish(self):
@@ -205,7 +203,6 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
 
 class InterfaceTests(interfaces.InterfaceTests):
-
     # for compatibility between old-style and new-style steps, both
     # buildbot.status.logfile.LogFile and buildbot.process.log.StreamLog must
     # meet this interface, at least until support for old-style steps is
@@ -285,26 +282,23 @@ class InterfaceTests(interfaces.InterfaceTests):
 
 
 class TestProcessItfc(unittest.TestCase, InterfaceTests):
-
     def setUp(self):
-        self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's',
-                                 101, str)
+        self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's', 101, str)
 
 
 class TestFakeLogFile(unittest.TestCase, InterfaceTests):
-
     def setUp(self):
         self.log = fakelogfile.FakeLogFile('stdio')
 
 
 class TestErrorRaised(unittest.TestCase):
-
     def instrumentTestedLoggerForError(self, testedLog):
         def addRawLines(msg):
             d = defer.Deferred()
 
             def raiseError(_):
                 d.errback(RuntimeError('DB has gone away'))
+
             reactor.callLater(10 ** (-6), raiseError, None)
             return d
 
@@ -314,8 +308,8 @@ class TestErrorRaised(unittest.TestCase):
     @defer.inlineCallbacks
     def testErrorOnStreamLog(self):
         tested_log = self.instrumentTestedLoggerForError(
-            log.StreamLog(mock.Mock(name='master'), 'stdio', 's',
-                          101, str))
+            log.StreamLog(mock.Mock(name='master'), 'stdio', 's', 101, str)
+        )
 
         correct_error_raised = False
         try:
@@ -327,8 +321,8 @@ class TestErrorRaised(unittest.TestCase):
     @defer.inlineCallbacks
     def testErrorOnPlainLog(self):
         tested_log = self.instrumentTestedLoggerForError(
-            log.PlainLog(mock.Mock(name='master'), 'stdio', 's',
-                         101, str))
+            log.PlainLog(mock.Mock(name='master'), 'stdio', 's', 101, str)
+        )
         correct_error_raised = False
         try:
             yield tested_log.addContent('msg\n')
@@ -339,8 +333,8 @@ class TestErrorRaised(unittest.TestCase):
     @defer.inlineCallbacks
     def testErrorOnPlainLogFlush(self):
         tested_log = self.instrumentTestedLoggerForError(
-            log.PlainLog(mock.Mock(name='master'), 'stdio', 's',
-                         101, str))
+            log.PlainLog(mock.Mock(name='master'), 'stdio', 's', 101, str)
+        )
         correct_error_raised = False
         try:
             yield tested_log.addContent('msg')

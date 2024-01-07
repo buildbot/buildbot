@@ -66,14 +66,16 @@ class KubeConfigLoaderBase(service.BuildbotService):
 
 
 class KubeHardcodedConfig(KubeConfigLoaderBase):
-    def reconfigService(self,
-                        master_url=None,
-                        bearerToken=None,
-                        basicAuth=None,
-                        headers=None,
-                        cert=None,
-                        verify=None,
-                        namespace="default"):
+    def reconfigService(
+        self,
+        master_url=None,
+        bearerToken=None,
+        basicAuth=None,
+        headers=None,
+        cert=None,
+        verify=None,
+        namespace="default",
+    ):
         self.config = {'master_url': master_url, 'namespace': namespace, 'headers': {}}
         if headers is not None:
             self.config['headers'] = headers
@@ -107,12 +109,13 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
 
 
 class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
-    """ We use kubectl proxy to connect to kube master.
+    """We use kubectl proxy to connect to kube master.
     Parsing the config and setting up SSL is complex.
     So for now, we use kubectl proxy to load the config and connect to master.
     This will run the kube proxy as a subprocess, and return configuration with
     http://localhost:PORT
     """
+
     kube_ctl_proxy_cmd = ['kubectl', 'proxy']  # for tests override
 
     class LocalPP(LineProcessProtocol):
@@ -165,7 +168,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
             self.pp,
             self.kube_ctl_proxy_cmd[0],
             self.kube_ctl_proxy_cmd + ["-p", str(self.proxy_port)],
-            env=os.environ
+            env=os.environ,
         )
         self.kube_proxy_output = yield self.pp.got_output_deferred
 
@@ -184,10 +187,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
         yield super().stopService()
 
     def getConfig(self):
-        return {
-            'master_url': f"http://localhost:{self.proxy_port}",
-            'namespace': self.namespace
-        }
+        return {'master_url': f"http://localhost:{self.proxy_port}", 'namespace': self.namespace}
 
 
 class KubeInClusterConfigLoader(KubeConfigLoaderBase):
@@ -207,9 +207,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
         self.config['verify'] = self.kube_cert_file
         with open(self.kube_token_file, encoding="utf-8") as token_content:
             token = token_content.read().strip()
-            self.config['headers'] = {
-                'Authorization': f'Bearer {token}'.format(token)
-            }
+            self.config['headers'] = {'Authorization': f'Bearer {token}'.format(token)}
         with open(self.kube_namespace_file, encoding="utf-8") as namespace_content:
             self.config['namespace'] = namespace_content.read().strip()
 
@@ -221,7 +219,6 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
 
 class KubeClientService(service.SharedService):
-
     name = "KubeClientService"
 
     def __init__(self, *args, **kwargs):

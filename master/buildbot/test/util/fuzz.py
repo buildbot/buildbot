@@ -22,7 +22,6 @@ from twisted.trial import unittest
 
 
 class FuzzTestCase(unittest.TestCase):
-
     # run each test case for 10s
     FUZZ_TIME = 10
 

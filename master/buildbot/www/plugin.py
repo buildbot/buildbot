@@ -28,7 +28,6 @@ else:
 
 
 class Application:
-
     def __init__(self, package_name, description, ui=True):
         self.description = description
         self.version = importlib_resources.files(package_name).joinpath("VERSION")
@@ -44,6 +43,8 @@ class Application:
         self.config = config
 
     def __repr__(self):
-        return ("www.plugin.Application(version=%(version)s, "
-                "description=%(description)s, "
-                "static_dir=%(static_dir)s)") % self.__dict__
+        return (
+            "www.plugin.Application(version=%(version)s, "
+            "description=%(description)s, "
+            "static_dir=%(static_dir)s)"
+        ) % self.__dict__

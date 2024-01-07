@@ -28,7 +28,6 @@ from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestChangeManager(unittest.TestCase, TestReactorMixin):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -59,7 +58,7 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_reconfigService_remove(self):
-        src1, = self.make_sources(1)
+        (src1,) = self.make_sources(1)
         yield src1.setServiceParent(self.cm)
         self.new_config.change_sources = []
 
@@ -70,10 +69,10 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_reconfigService_change_reconfigurable(self):
-        src1, = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=1)
+        (src1,) = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=1)
         yield src1.setServiceParent(self.cm)
 
-        src2, = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=2)
+        (src2,) = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=2)
 
         self.new_config.change_sources = [src2]
 
@@ -87,14 +86,16 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_reconfigService_change_legacy(self):
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern="use ReconfigurablePollingChangeSource"):
-            src1, = self.make_sources(1, base.PollingChangeSource, pollInterval=1)
+        with assertProducesWarnings(
+            DeprecatedApiWarning, message_pattern="use ReconfigurablePollingChangeSource"
+        ):
+            (src1,) = self.make_sources(1, base.PollingChangeSource, pollInterval=1)
         yield src1.setServiceParent(self.cm)
 
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern="use ReconfigurablePollingChangeSource"):
-            src2, = self.make_sources(1, base.PollingChangeSource, pollInterval=2)
+        with assertProducesWarnings(
+            DeprecatedApiWarning, message_pattern="use ReconfigurablePollingChangeSource"
+        ):
+            (src2,) = self.make_sources(1, base.PollingChangeSource, pollInterval=2)
 
         self.new_config.change_sources = [src2]
 

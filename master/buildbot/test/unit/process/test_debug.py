@@ -31,7 +31,6 @@ class FakeManhole(service.AsyncService):
 
 
 class TestDebugServices(TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         self.master = mock.Mock(name='master')

@@ -54,7 +54,6 @@ real_log = r"""
 
 
 class TestAddEnvPath(unittest.TestCase):
-
     def do_test(self, initial_env, name, value, expected_env):
         step = create_step_from_step_or_factory(vstudio.VisualStudio())
         step.env = initial_env
@@ -62,28 +61,22 @@ class TestAddEnvPath(unittest.TestCase):
         self.assertEqual(step.env, expected_env)
 
     def test_new(self):
-        self.do_test({}, 'PATH', r'C:\NOTHING',
-                     {'PATH': r'C:\NOTHING;'})
+        self.do_test({}, 'PATH', r'C:\NOTHING', {'PATH': r'C:\NOTHING;'})
 
     def test_new_semi(self):
-        self.do_test({}, 'PATH', r'C:\NOTHING;',
-                     {'PATH': r'C:\NOTHING;'})
+        self.do_test({}, 'PATH', r'C:\NOTHING;', {'PATH': r'C:\NOTHING;'})
 
     def test_existing(self):
-        self.do_test({'PATH': '/bin'}, 'PATH', r'C:\NOTHING',
-                     {'PATH': r'/bin;C:\NOTHING;'})
+        self.do_test({'PATH': '/bin'}, 'PATH', r'C:\NOTHING', {'PATH': r'/bin;C:\NOTHING;'})
 
     def test_existing_semi(self):
-        self.do_test({'PATH': '/bin;'}, 'PATH', r'C:\NOTHING',
-                     {'PATH': r'/bin;C:\NOTHING;'})
+        self.do_test({'PATH': '/bin;'}, 'PATH', r'C:\NOTHING', {'PATH': r'/bin;C:\NOTHING;'})
 
     def test_existing_both_semi(self):
-        self.do_test({'PATH': '/bin;'}, 'PATH', r'C:\NOTHING;',
-                     {'PATH': r'/bin;C:\NOTHING;'})
+        self.do_test({'PATH': '/bin;'}, 'PATH', r'C:\NOTHING;', {'PATH': r'/bin;C:\NOTHING;'})
 
 
 class MSLogLineObserver(unittest.TestCase):
-
     def setUp(self):
         self.warnings = []
         lw = Mock()
@@ -105,8 +98,16 @@ class MSLogLineObserver(unittest.TestCase):
         for line in lines:
             self.llo.outLineReceived(line)
 
-    def assertResult(self, nbFiles=0, nbProjects=0, nbWarnings=0, nbErrors=0,
-                     errors=None, warnings=None, progress=None):
+    def assertResult(
+        self,
+        nbFiles=0,
+        nbProjects=0,
+        nbWarnings=0,
+        nbErrors=0,
+        errors=None,
+        warnings=None,
+        progress=None,
+    ):
         if errors is None:
             errors = []
         if warnings is None:
@@ -121,16 +122,17 @@ class MSLogLineObserver(unittest.TestCase):
                 "nbErrors": self.llo.nbErrors,
                 "errors": self.errors,
                 "warnings": self.warnings,
-                "progress": self.progress
-            }, {
+                "progress": self.progress,
+            },
+            {
                 "nbFiles": nbFiles,
                 "nbProjects": nbProjects,
                 "nbWarnings": nbWarnings,
                 "nbErrors": nbErrors,
                 "errors": errors,
                 "warnings": warnings,
-                "progress": progress
-            }
+                "progress": progress,
+            },
         )
 
     def test_outLineReceived_empty(self):
@@ -143,9 +145,9 @@ class MSLogLineObserver(unittest.TestCase):
             "123>----- some project 2 -----",
         ]
         self.receiveLines(*lines)
-        self.assertResult(nbProjects=2, progress={"projects": 2},
-                          errors=[('o', l) for l in lines],
-                          warnings=lines)
+        self.assertResult(
+            nbProjects=2, progress={"projects": 2}, errors=[('o', l) for l in lines], warnings=lines
+        )
 
     def test_outLineReceived_files(self):
         lines = [
@@ -162,8 +164,7 @@ class MSLogLineObserver(unittest.TestCase):
             "def : warning DEF456: wxy!",
         ]
         self.receiveLines(*lines)
-        self.assertResult(nbWarnings=2, progress={"warnings": 2},
-                          warnings=lines)
+        self.assertResult(nbWarnings=2, progress={"warnings": 2}, warnings=lines)
 
     def test_outLineReceived_errors(self):
         lines = [
@@ -173,24 +174,26 @@ class MSLogLineObserver(unittest.TestCase):
             " error: bar",  # NOTE: not matched
         ]
         self.receiveLines(*lines)
-        self.assertResult(nbErrors=3,  # note: no progress
-                          errors=[
-                              ('e', "error ABC123: foo"),
-                              ('e', " error DEF456 : bar"),
-                              ('e', " error : bar"),
-                          ])
+        self.assertResult(
+            nbErrors=3,  # note: no progress
+            errors=[
+                ('e', "error ABC123: foo"),
+                ('e', " error DEF456 : bar"),
+                ('e', " error : bar"),
+            ],
+        )
 
     def test_outLineReceived_real(self):
         # based on a real logfile donated by Ben Allard
         lines = real_log.split("\n")
         self.receiveLines(*lines)
         errors = [
-            ('o',
-             '1>------ Build started: Project: lib1, Configuration: debug Win32 ------'),
-            ('o',
-             '2>------ Build started: Project: product, Configuration: debug Win32 ------'),
-            ('e',
-             '2>LINK : fatal error LNK1168: cannot open ../../debug/directory/dllname.dll for writing')  # noqa pylint: disable=line-too-long
+            ('o', '1>------ Build started: Project: lib1, Configuration: debug Win32 ------'),
+            ('o', '2>------ Build started: Project: product, Configuration: debug Win32 ------'),
+            (
+                'e',
+                '2>LINK : fatal error LNK1168: cannot open ../../debug/directory/dllname.dll for writing',
+            ),  # noqa pylint: disable=line-too-long
         ]
         warnings = [
             '1>------ Build started: Project: lib1, Configuration: debug Win32 ------',
@@ -202,20 +205,24 @@ class MSLogLineObserver(unittest.TestCase):
             "1>c:\\absolute\\path\\to\\systemlog.cpp(22) : warning C4100: 'op' : unreferenced formal parameter",  # noqa pylint: disable=line-too-long
             '2>------ Build started: Project: product, Configuration: debug Win32 ------',
         ]
-        self.assertResult(nbFiles=1, nbErrors=1, nbProjects=2, nbWarnings=6,
-                          progress={'files': 1, 'projects': 2, 'warnings': 6},
-                          errors=errors, warnings=warnings)
+        self.assertResult(
+            nbFiles=1,
+            nbErrors=1,
+            nbProjects=2,
+            nbWarnings=6,
+            progress={'files': 1, 'projects': 2, 'warnings': 6},
+            errors=errors,
+            warnings=warnings,
+        )
 
 
 class VCx(vstudio.VisualStudio):
-
     def run(self):
         self.command = ["command", "here"]
         return super().run()
 
 
 class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-
     """
     Test L{VisualStudio} with a simple subclass, L{VCx}.
     """
@@ -233,11 +240,7 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_simple(self):
         self.setup_step(VCx())
-        self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['command', 'here'])
-            .exit(0)
-        )
+        self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
@@ -251,54 +254,49 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_installdir(self):
         self.setup_step(VCx(installdir=r'C:\I'))
         self.step.exp_installdir = r'C:\I'
-        self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['command', 'here'])
-            .exit(0)
-        )
+        self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
         self.assertEqual(self.step.installdir, r'C:\I')
 
     def test_evaluate_result_failure(self):
         self.setup_step(VCx())
-        self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['command', 'here'])
-            .exit(1)
-        )
+        self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(1))
         self.expect_outcome(result=FAILURE, state_string="compile 0 projects 0 files (failure)")
         return self.run_step()
 
     def test_evaluate_result_errors(self):
         self.setup_step(VCx())
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['command', 'here'])
+            ExpectShell(workdir='wkdir', command=['command', 'here'])
             .stdout('error ABC123: foo\r\n')
             .exit(0)
         )
-        self.expect_outcome(result=FAILURE,
-                            state_string="compile 0 projects 0 files 1 errors (failure)")
+        self.expect_outcome(
+            result=FAILURE, state_string="compile 0 projects 0 files 1 errors (failure)"
+        )
         return self.run_step()
 
     def test_evaluate_result_warnings(self):
         self.setup_step(VCx())
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['command', 'here'])
+            ExpectShell(workdir='wkdir', command=['command', 'here'])
             .stdout('foo: warning ABC123: foo\r\n')
             .exit(0)
         )
-        self.expect_outcome(result=WARNINGS,
-                            state_string="compile 0 projects 0 files 1 warnings (warnings)")
+        self.expect_outcome(
+            result=WARNINGS, state_string="compile 0 projects 0 files 1 warnings (warnings)"
+        )
         return self.run_step()
 
     def test_env_setup(self):
-        self.setup_step(VCx(
-            INCLUDE=[r'c:\INC1', r'c:\INC2'],
-            LIB=[r'c:\LIB1', r'C:\LIB2'],
-            PATH=[r'c:\P1', r'C:\P2']))
+        self.setup_step(
+            VCx(
+                INCLUDE=[r'c:\INC1', r'c:\INC2'],
+                LIB=[r'c:\LIB1', r'C:\LIB2'],
+                PATH=[r'c:\P1', r'C:\P2'],
+            )
+        )
         self.expect_commands(
             ExpectShell(
                 workdir="wkdir",
@@ -314,10 +312,13 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     def test_env_setup_existing(self):
-        self.setup_step(VCx(
-            INCLUDE=[r'c:\INC1', r'c:\INC2'],
-            LIB=[r'c:\LIB1', r'C:\LIB2'],
-            PATH=[r'c:\P1', r'C:\P2']))
+        self.setup_step(
+            VCx(
+                INCLUDE=[r'c:\INC1', r'c:\INC2'],
+                LIB=[r'c:\LIB1', r'C:\LIB2'],
+                PATH=[r'c:\P1', r'C:\P2'],
+            )
+        )
         self.expect_commands(
             ExpectShell(
                 workdir="wkdir",
@@ -334,28 +335,20 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_rendering(self):
-        self.setup_step(VCx(
-            projectfile=Property('a'),
-            config=Property('b'),
-            project=Property('c')))
+        self.setup_step(VCx(projectfile=Property('a'), config=Property('b'), project=Property('c')))
         self.build.setProperty('a', 'aa', 'Test')
         self.build.setProperty('b', 'bb', 'Test')
         self.build.setProperty('c', 'cc', 'Test')
-        self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['command', 'here'])
-            .exit(0)
-        )
+        self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
 
         self.assertEqual(
-                [self.step.projectfile, self.step.config, self.step.project],
-                ['aa', 'bb', 'cc'])
+            [self.step.projectfile, self.step.config, self.step.project], ['aa', 'bb', 'cc']
+        )
 
 
 class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -392,67 +385,68 @@ class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         }
 
     def test_args(self):
-        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
-                                   project='pj'))
+        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['msdev', 'pf', '/MAKE',
-                                 'pj - cfg', '/REBUILD'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['msdev', 'pf', '/MAKE', 'pj - cfg', '/REBUILD'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean(self):
-        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
-                                   project='pj', mode='clean'))
+        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg', project='pj', mode='clean'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['msdev', 'pf', '/MAKE',
-                                 'pj - cfg', '/CLEAN'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['msdev', 'pf', '/MAKE', 'pj - cfg', '/CLEAN'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_noproj_build(self):
-        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
-                                   mode='build'))
+        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg', mode='build'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['msdev', 'pf', '/MAKE',
-                                 'ALL - cfg', '/BUILD'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['msdev', 'pf', '/MAKE', 'ALL - cfg', '/BUILD'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_env_prepend(self):
-        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
-                                   project='pj', PATH=['p'], INCLUDE=['i'],
-                                   LIB=['l']))
+        self.setup_step(
+            vstudio.VC6(
+                projectfile='pf', config='cfg', project='pj', PATH=['p'], INCLUDE=['i'], LIB=['l']
+            )
+        )
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['msdev', 'pf', '/MAKE',
-                                 'pj - cfg', '/REBUILD',
-                                 '/USEENV'],  # note extra param
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio',
-                            LIB='l', p='p', i='i'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'msdev',
+                    'pf',
+                    '/MAKE',
+                    'pj - cfg',
+                    '/REBUILD',
+                    '/USEENV',
+                ],  # note extra param
+                env=self.getExpectedEnv(
+                    r'C:\Program Files\Microsoft Visual Studio', LIB='l', p='p', i='i'
+                ),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
 class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -492,58 +486,55 @@ class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         }
 
     def test_args(self):
-        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
-                                   project='pj'))
+        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Rebuild', 'cfg',
-                                 '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Rebuild', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio .NET 2003'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean(self):
-        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
-                                   project='pj', mode='clean'))
+        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg', project='pj', mode='clean'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Clean', 'cfg',
-                                 '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Clean', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio .NET 2003'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_noproj_build(self):
-        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
-                                   mode='build'))
+        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg', mode='build'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Build', 'cfg'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Build', 'cfg'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio .NET 2003'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_env_prepend(self):
-        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
-                                   project='pj', PATH=['p'], INCLUDE=['i'],
-                                   LIB=['l']))
+        self.setup_step(
+            vstudio.VC7(
+                projectfile='pf', config='cfg', project='pj', PATH=['p'], INCLUDE=['i'], LIB=['l']
+            )
+        )
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Rebuild', 'cfg',
-                                 '/UseEnv', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio .NET 2003',
-                            LIB='l', p='p', i='i'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Rebuild', 'cfg', '/UseEnv', '/Project', 'pj'],
+                env=self.getExpectedEnv(
+                    r'C:\Program Files\Microsoft Visual Studio .NET 2003', LIB='l', p='p', i='i'
+                ),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
@@ -590,9 +581,7 @@ class VC8ExpectedEnvMixin:
         }
 
 
-class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,
-              unittest.TestCase):
-
+class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -601,60 +590,51 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,
         return self.tear_down_test_build_step()
 
     def test_args(self):
-        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
-                                   project='pj', arch='arch'))
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', project='pj', arch='arch'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Rebuild',
-                                 'cfg', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 8'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Rebuild', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio 8'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_args_x64(self):
-        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
-                                   project='pj', arch='x64'))
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', project='pj', arch='x64'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Rebuild',
-                                 'cfg', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 8',
-                            x64=True))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Rebuild', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio 8', x64=True),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean(self):
-        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
-                                   project='pj', mode='clean'))
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', project='pj', mode='clean'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Clean',
-                                 'cfg', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 8'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Clean', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio 8'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     @defer.inlineCallbacks
     def test_rendering(self):
-        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
-                                   arch=Property('a')))
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', arch=Property('a')))
         self.build.setProperty('a', 'x64', 'Test')
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Rebuild', 'cfg'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 8',
-                            x64=True))  # property has expected effect
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Rebuild', 'cfg'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio 8', x64=True),
+            ).exit(0)  # property has expected effect
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
@@ -662,10 +642,7 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,
         self.assertEqual(self.step.arch, 'x64')
 
 
-class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin,
-                     TestReactorMixin,
-                     unittest.TestCase):
-
+class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -674,54 +651,55 @@ class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin,
         return self.tear_down_test_build_step()
 
     def test_args(self):
-        self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
-                                          project='pj'))
+        self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['vcexpress', 'pf', '/Rebuild',
-                                 'cfg', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            # note: still uses version 8 (?!)
-                            r'C:\Program Files\Microsoft Visual Studio 8'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['vcexpress', 'pf', '/Rebuild', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(
+                    # note: still uses version 8 (?!)
+                    r'C:\Program Files\Microsoft Visual Studio 8'
+                ),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean(self):
-        self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
-                                          project='pj', mode='clean'))
+        self.setup_step(
+            vstudio.VCExpress9(projectfile='pf', config='cfg', project='pj', mode='clean')
+        )
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['vcexpress', 'pf', '/Clean',
-                                 'cfg', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            # note: still uses version 8 (?!)
-                            r'C:\Program Files\Microsoft Visual Studio 8'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['vcexpress', 'pf', '/Clean', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(
+                    # note: still uses version 8 (?!)
+                    r'C:\Program Files\Microsoft Visual Studio 8'
+                ),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_mode_build_env(self):
-        self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
-                                          project='pj', mode='build', INCLUDE=['i']))
+        self.setup_step(
+            vstudio.VCExpress9(
+                projectfile='pf', config='cfg', project='pj', mode='build', INCLUDE=['i']
+            )
+        )
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['vcexpress', 'pf', '/Build',
-                                 'cfg', '/UseEnv', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 8',
-                            i='i'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['vcexpress', 'pf', '/Build', 'cfg', '/UseEnv', '/Project', 'pj'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio 8', i='i'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
-class TestVC9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,
-              unittest.TestCase):
-
+class TestVC9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -730,23 +708,19 @@ class TestVC9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,
         return self.tear_down_test_build_step()
 
     def test_installdir(self):
-        self.setup_step(vstudio.VC9(projectfile='pf', config='cfg',
-                                   project='pj'))
+        self.setup_step(vstudio.VC9(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Rebuild',
-                                 'cfg', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 9.0'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Rebuild', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio 9.0'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
-class TestVC10(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,
-               unittest.TestCase):
-
+class TestVC10(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -755,23 +729,19 @@ class TestVC10(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,
         return self.tear_down_test_build_step()
 
     def test_installdir(self):
-        self.setup_step(vstudio.VC10(projectfile='pf', config='cfg',
-                                    project='pj'))
+        self.setup_step(vstudio.VC10(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Rebuild',
-                                 'cfg', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 10.0'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Rebuild', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio 10.0'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
-class TestVC11(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,
-               unittest.TestCase):
-
+class TestVC11(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -780,22 +750,19 @@ class TestVC11(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin,
         return self.tear_down_test_build_step()
 
     def test_installdir(self):
-        self.setup_step(vstudio.VC11(projectfile='pf', config='cfg',
-                                    project='pj'))
+        self.setup_step(vstudio.VC11(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['devenv.com', 'pf', '/Rebuild',
-                                 'cfg', '/Project', 'pj'],
-                        env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 11.0'))
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command=['devenv.com', 'pf', '/Rebuild', 'cfg', '/Project', 'pj'],
+                env=self.getExpectedEnv(r'C:\Program Files\Microsoft Visual Studio 11.0'),
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
 class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -805,82 +772,99 @@ class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_no_platform(self):
-        self.setup_step(vstudio.MsBuild(
-                            projectfile='pf', config='cfg', platform=None, project='pj'))
+        self.setup_step(
+            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')
+        )
 
         self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
         yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
     def test_rebuild_project(self):
-        self.setup_step(vstudio.MsBuild(
-            projectfile='pf', config='cfg', platform='Win32', project='pj'))
+        self.setup_step(
+            vstudio.MsBuild(projectfile='pf', config='cfg', platform='Win32', project='pj')
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
+                env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'},
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
     def test_build_project(self):
-        self.setup_step(vstudio.MsBuild(
-            projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'))
+        self.setup_step(
+            vstudio.MsBuild(
+                projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'
+            )
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
+                env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'},
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
     def test_clean_project(self):
-        self.setup_step(vstudio.MsBuild(
-            projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'))
+        self.setup_step(
+            vstudio.MsBuild(
+                projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'
+            )
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
+                env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'},
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
     def test_rebuild_project_with_defines(self):
-        self.setup_step(vstudio.MsBuild(
-            projectfile='pf', config='cfg', platform='Win32', project='pj',
-            defines=['Define1', 'Define2=42']))
+        self.setup_step(
+            vstudio.MsBuild(
+                projectfile='pf',
+                config='cfg',
+                platform='Win32',
+                project='pj',
+                defines=['Define1', 'Define2=42'],
+            )
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
+                env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'},
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
     def test_rebuild_solution(self):
-        self.setup_step(
-            vstudio.MsBuild(projectfile='pf', config='cfg', platform='x64'))
+        self.setup_step(vstudio.MsBuild(projectfile='pf', config='cfg', platform='x64'))
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
+                env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'},
+            ).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="built solution for cfg|x64")
         return self.run_step()
 
 
 class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -890,80 +874,108 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_no_platform(self):
-        self.setup_step(vstudio.MsBuild(
-                            projectfile='pf', config='cfg', platform=None, project='pj'))
+        self.setup_step(
+            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')
+        )
 
         self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
         yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
     def test_rebuild_project(self):
-        self.setup_step(vstudio.MsBuild141(
-            projectfile='pf', config='cfg', platform='Win32', project='pj'))
+        self.setup_step(
+            vstudio.MsBuild141(projectfile='pf', config='cfg', platform='Win32', project='pj')
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
+                env={
+                    'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                    'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};',
+                },
+            ).exit(0)  # noqa pylint: disable=line-too-long
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_build_project(self):
-        self.setup_step(vstudio.MsBuild141(
-            projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'))
+        self.setup_step(
+            vstudio.MsBuild141(
+                projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'
+            )
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
+                env={
+                    'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                    'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};',
+                },
+            ).exit(0)  # noqa pylint: disable=line-too-long
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_clean_project(self):
-        self.setup_step(vstudio.MsBuild141(
-            projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'))
+        self.setup_step(
+            vstudio.MsBuild141(
+                projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'
+            )
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
+                env={
+                    'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                    'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};',
+                },
+            ).exit(0)  # noqa pylint: disable=line-too-long
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_rebuild_project_with_defines(self):
-        self.setup_step(vstudio.MsBuild141(
-            projectfile='pf', config='cfg', platform='Win32', project='pj',
-            defines=['Define1', 'Define2=42']))
+        self.setup_step(
+            vstudio.MsBuild141(
+                projectfile='pf',
+                config='cfg',
+                platform='Win32',
+                project='pj',
+                defines=['Define1', 'Define2=42'],
+            )
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
+                env={
+                    'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                    'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};',
+                },
+            ).exit(0)  # noqa pylint: disable=line-too-long
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
     def test_rebuild_solution(self):
-        self.setup_step(
-            vstudio.MsBuild141(projectfile='pf', config='cfg', platform='x64'))
+        self.setup_step(vstudio.MsBuild141(projectfile='pf', config='cfg', platform='x64'))
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
+                env={
+                    'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                    'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};',
+                },
+            ).exit(0)  # noqa pylint: disable=line-too-long
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
@@ -973,7 +985,6 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestMsBuild16(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -982,22 +993,25 @@ class TestMsBuild16(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tear_down_test_build_step()
 
     def test_version_range_is_correct(self):
-        self.setup_step(vstudio.MsBuild16(
-            projectfile='pf', config='cfg', platform='Win32', project='pj'))
+        self.setup_step(
+            vstudio.MsBuild16(projectfile='pf', config='cfg', platform='Win32', project='pj')
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[16.0,17.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[16.0,17.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
+                env={
+                    'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                    'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};',
+                },
+            ).exit(0)  # noqa pylint: disable=line-too-long
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
 class TestMsBuild17(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -1006,22 +1020,25 @@ class TestMsBuild17(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tear_down_test_build_step()
 
     def test_version_range_is_correct(self):
-        self.setup_step(vstudio.MsBuild17(
-            projectfile='pf', config='cfg', platform='Win32', project='pj'))
+        self.setup_step(
+            vstudio.MsBuild17(projectfile='pf', config='cfg', platform='Win32', project='pj')
+        )
 
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[17.0,18.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
-                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
-                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
-            .exit(0)
+            ExpectShell(
+                workdir='wkdir',
+                command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[17.0,18.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
+                env={
+                    'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                    'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};',
+                },
+            ).exit(0)  # noqa pylint: disable=line-too-long
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
 
 class Aliases(unittest.TestCase):
-
     def test_vs2003(self):
         self.assertIdentical(vstudio.VS2003, vstudio.VC7)
 

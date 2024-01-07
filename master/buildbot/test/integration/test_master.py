@@ -31,7 +31,6 @@ from buildbot.worker import Worker
 
 
 class RunMaster(RunMasterBase, www.RequiresWwwMixin):
-
     proto = 'pb'
 
     @defer.inlineCallbacks
@@ -64,21 +63,21 @@ c['protocols'] = {'pb': {'port': 'tcp:0'}}
 c['change_source'] = []
 c['change_source'] = PBChangeSource()
 c['schedulers'] = []
-c['schedulers'].append(AnyBranchScheduler(name="all",
-                                          change_filter=ChangeFilter(
-                                              project_re='^testy/'),
-                                          treeStableTimer=1 * 60,
-                                          builderNames=['testy', ]))
-c['schedulers'].append(ForceScheduler(
-    name="force",
-    builderNames=["testy"]))
+c['schedulers'].append(
+    AnyBranchScheduler(
+        name="all",
+        change_filter=ChangeFilter(project_re='^testy/'),
+        treeStableTimer=1 * 60,
+        builderNames=[
+            'testy',
+        ],
+    )
+)
+c['schedulers'].append(ForceScheduler(name="force", builderNames=["testy"]))
 f1 = BuildFactory()
 f1.addStep(ShellCommand(command='echo hi'))
 c['builders'] = []
-c['builders'].append(
-    BuilderConfig(name="testy",
-                  workernames=["local1"],
-                  factory=f1))
+c['builders'].append(BuilderConfig(name="testy", workernames=["local1"], factory=f1))
 c['title'] = "test"
 c['titleURL'] = "test"
 c['buildbotURL'] = "http://localhost:8010/"

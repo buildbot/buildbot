@@ -31,10 +31,12 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
 
     name = 'SecretInVault'
 
-    def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None,
-                    apiVersion=1):
-        warn_deprecated("3.4.0", "Use of HashiCorpVaultSecretProvider is deprecated and will be "
-                        "removed in future releases. Use HashiCorpVaultKvSecretProvider instead")
+    def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None, apiVersion=1):
+        warn_deprecated(
+            "3.4.0",
+            "Use of HashiCorpVaultSecretProvider is deprecated and will be "
+            "removed in future releases. Use HashiCorpVaultKvSecretProvider instead",
+        )
         if not isinstance(vaultServer, str):
             config.error(f"vaultServer must be a string while it is {type(vaultServer)}")
         if not isinstance(vaultToken, str):
@@ -43,8 +45,7 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
             config.error(f"apiVersion {apiVersion} is not supported")
 
     @defer.inlineCallbacks
-    def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None,
-                        apiVersion=1):
+    def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None, apiVersion=1):
         if secretsmount is None:
             self.secretsmount = "secret"
         else:
@@ -55,7 +56,8 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         if vaultServer.endswith('/'):
             vaultServer = vaultServer[:-1]
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, self.vaultServer, headers={'X-Vault-Token': self.vaultToken})
+            self.master, self.vaultServer, headers={'X-Vault-Token': self.vaultToken}
+        )
 
     @defer.inlineCallbacks
     def get(self, entry):
@@ -81,8 +83,10 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         proj = yield self._http.get(f"/v1/{path}")
         code = yield proj.code
         if code != 200:
-            raise KeyError(f"The secret {entry} does not exist in Vault provider: request"
-                           f" return code: {code}.")
+            raise KeyError(
+                f"The secret {entry} does not exist in Vault provider: request"
+                f" return code: {code}."
+            )
         json = yield proj.json()
         if self.apiVersion == 1:
             secrets = json.get('data', {})
@@ -91,5 +95,4 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         try:
             return secrets[key]
         except KeyError as e:
-            raise KeyError(
-                f"The secret {entry} does not exist in Vault provider: {e}") from e
+            raise KeyError(f"The secret {entry} does not exist in Vault provider: {e}") from e

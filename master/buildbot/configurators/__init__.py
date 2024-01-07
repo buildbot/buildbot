@@ -27,8 +27,9 @@ from buildbot.interfaces import IConfigurator
 @implementer(IConfigurator)
 class ConfiguratorBase:
     """
-        I provide base helper methods for configurators
+    I provide base helper methods for configurators
     """
+
     def __init__(self):
         pass
 

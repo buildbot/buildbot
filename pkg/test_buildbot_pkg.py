@@ -28,7 +28,8 @@ class BuildbotWWWPkg(unittest.TestCase):
     pkgPaths = ["www", "base"]
     epName = "base"
 
-    loadTestScript = dedent("""
+    loadTestScript = dedent(
+        """
         from importlib.metadata import entry_points
         import re
         apps = {}
@@ -39,7 +40,8 @@ class BuildbotWWWPkg(unittest.TestCase):
         assert("scripts.js" in apps["%(epName)s"].resource.listNames())
         assert(re.match(r'\d+\.\d+\.\d+', apps["%(epName)s"].version) is not None)
         assert(apps["%(epName)s"].description is not None)
-        """)
+        """
+    )
 
     @property
     def path(self):
@@ -61,8 +63,7 @@ class BuildbotWWWPkg(unittest.TestCase):
     def check_correct_installation(self):
         # assert we can import buildbot_www
         # and that it has an endpoint with resource containing file "script.js"
-        check_call([
-            sys.executable, '-c', self.loadTestScript % dict(epName=self.epName)])
+        check_call([sys.executable, '-c', self.loadTestScript % dict(epName=self.epName)])
 
     def test_install(self):
         self.run_setup("install")

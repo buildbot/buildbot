@@ -59,13 +59,15 @@ def _handleLegacyResult(result):
     make sure the result is backward compatible
     """
     if not isinstance(result, dict):
-        warnings.warn('The Gerrit status callback uses the old way to '
-                      'communicate results.  The outcome might be not what is '
-                      'expected.')
+        warnings.warn(
+            'The Gerrit status callback uses the old way to '
+            'communicate results.  The outcome might be not what is '
+            'expected.'
+        )
         message, verified, reviewed = result
-        result = makeReviewResult(message,
-                                  (GERRIT_LABEL_VERIFIED, verified),
-                                  (GERRIT_LABEL_REVIEWED, reviewed))
+        result = makeReviewResult(
+            message, (GERRIT_LABEL_VERIFIED, verified), (GERRIT_LABEL_REVIEWED, reviewed)
+        )
     return result
 
 
@@ -74,8 +76,9 @@ def _old_add_label(label, value):
         return [f"--verified {int(value)}"]
     elif label == GERRIT_LABEL_REVIEWED:
         return [f"--code-review {int(value)}"]
-    warnings.warn('Gerrit older than 2.6 does not support custom labels. '
-                  f'Setting {label} is ignored.')
+    warnings.warn(
+        'Gerrit older than 2.6 does not support custom labels. ' f'Setting {label} is ignored.'
+    )
     return []
 
 
@@ -91,8 +94,7 @@ def defaultReviewCB(builderName, build, result, master, arg):
     message += f"on configuration: {builderName}\n"
     message += f"The result is: {Results[result].upper()}\n"
 
-    return makeReviewResult(message,
-                            (GERRIT_LABEL_VERIFIED, result == SUCCESS or -1))
+    return makeReviewResult(message, (GERRIT_LABEL_VERIFIED, result == SUCCESS or -1))
 
 
 def defaultSummaryCB(buildInfoList, results, master, arg):
@@ -171,9 +173,9 @@ def extract_project_revision(master, report):
         project = get_property(props, "event.change.project")
         codebase = get_property(props, "codebase")
         revision = (
-            get_property(props, "event.patchSet.revision") or
-            get_property(props, "got_revision") or
-            get_property(props, "revision")
+            get_property(props, "event.patchSet.revision")
+            or get_property(props, "got_revision")
+            or get_property(props, "revision")
         )
 
         if isinstance(revision, dict):
@@ -190,7 +192,6 @@ def extract_project_revision(master, report):
 
 
 class GerritStatusGeneratorBase:
-
     def __init__(self, callback, callback_arg, builders, want_steps, want_logs):
         self.callback = callback
         self.callback_arg = callback_arg
@@ -206,11 +207,7 @@ class GerritStatusGeneratorBase:
         br = yield master.data.get(("buildrequests", build["buildrequestid"]))
         buildset = yield master.data.get(("buildsets", br["buildsetid"]))
         yield utils.getDetailsForBuilds(
-            master,
-            buildset,
-            [build],
-            want_properties=True,
-            want_steps=self.want_steps
+            master, buildset, [build], want_properties=True, want_steps=self.want_steps
         )
 
 
@@ -232,7 +229,7 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
             want_properties=True,
             want_steps=self.want_steps,
             want_logs=self.want_logs,
-            want_logs_content=self.want_logs
+            want_logs_content=self.want_logs,
         )
 
         builds = res["builds"]
@@ -256,12 +253,8 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
                 "result": result,
                 "resultText": resultText,
                 "text": build["state_string"],
-                "url": utils.getURLForBuild(
-                    master,
-                    build["builder"]["builderid"],
-                    build["number"]
-                ),
-                "build": build
+                "url": utils.getURLForBuild(master, build["builder"]["builderid"], build["number"]),
+                "build": build,
             }
 
         build_info_list = sorted(
@@ -269,10 +262,7 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
         )
 
         result = yield self.callback(
-            build_info_list,
-            Results[buildset["results"]],
-            master,
-            self.callback_arg
+            build_info_list, Results[buildset["results"]], master, self.callback_arg
         )
 
         result = _handleLegacyResult(result)
@@ -334,11 +324,7 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
             return None
 
         result = yield self.callback(
-            build['builder']['name'],
-            build,
-            build['results'],
-            master,
-            self.callback_arg
+            build['builder']['name'], build, build['results'], master, self.callback_arg
         )
 
         result = _handleLegacyResult(result)
@@ -354,8 +340,8 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
 
 
 class GerritStatusPush(ReporterBase):
-
     """Event streamer to a gerrit ssh server."""
+
     name = "GerritStatusPush"
     gerrit_server = None
     gerrit_username = None
@@ -382,7 +368,7 @@ class GerritStatusPush(ReporterBase):
         wantSteps=False,
         wantLogs=False,
         generators=None,
-        **kwargs
+        **kwargs,
     ):
         old_arg_names = {
             "reviewCB": reviewCB is not DEFAULT_REVIEW,
@@ -401,12 +387,14 @@ class GerritStatusPush(ReporterBase):
         if passed_old_arg_names:
             old_arg_names_msg = ', '.join(passed_old_arg_names)
             if generators is not None:
-                config.error("can't specify generators and deprecated GerritStatusPush "
-                             f"arguments ({old_arg_names_msg}) at the same time")
+                config.error(
+                    "can't specify generators and deprecated GerritStatusPush "
+                    f"arguments ({old_arg_names_msg}) at the same time"
+                )
             warn_deprecated(
                 "3.11.0",
                 f"The arguments {old_arg_names_msg} passed to {self.__class__.__name__} "
-                "have been deprecated. Use generators instead"
+                "have been deprecated. Use generators instead",
             )
 
         if generators is None:
@@ -419,7 +407,7 @@ class GerritStatusPush(ReporterBase):
                 summaryArg,
                 builders,
                 wantSteps,
-                wantLogs
+                wantLogs,
             )
 
         super().checkConfig(generators=generators, **kwargs)
@@ -441,7 +429,7 @@ class GerritStatusPush(ReporterBase):
         wantSteps=False,
         wantLogs=False,
         generators=None,
-        **kwargs
+        **kwargs,
     ):
         self.gerrit_server = server
         self.gerrit_username = username
@@ -461,7 +449,7 @@ class GerritStatusPush(ReporterBase):
                 summaryArg,
                 builders,
                 wantSteps,
-                wantLogs
+                wantLogs,
             )
 
         super().reconfigService(generators=generators, **kwargs)
@@ -476,7 +464,7 @@ class GerritStatusPush(ReporterBase):
         summaryArg,
         builders,
         wantSteps,
-        wantLogs
+        wantLogs,
     ):
         # If neither reviewCB nor summaryCB were specified, default to sending
         # out "summary" reviews. But if we were given a reviewCB and only a
@@ -499,7 +487,7 @@ class GerritStatusPush(ReporterBase):
                     callback_arg=startArg,
                     builders=builders,
                     want_steps=wantSteps,
-                    want_logs=wantLogs
+                    want_logs=wantLogs,
                 )
             )
 
@@ -510,7 +498,7 @@ class GerritStatusPush(ReporterBase):
                     callback_arg=reviewArg,
                     builders=builders,
                     want_steps=wantSteps,
-                    want_logs=wantLogs
+                    want_logs=wantLogs,
                 )
             )
 
@@ -521,28 +509,33 @@ class GerritStatusPush(ReporterBase):
                     callback_arg=summaryArg,
                     builders=builders,
                     want_steps=wantSteps,
-                    want_logs=wantLogs
+                    want_logs=wantLogs,
                 )
             )
 
         return generators
 
     def _gerritCmd(self, *args):
-        '''Construct a command as a list of strings suitable for
+        """Construct a command as a list of strings suitable for
         :func:`subprocess.call`.
-        '''
+        """
         if self.gerrit_identity_file is not None:
             options = ['-i', self.gerrit_identity_file]
         else:
             options = []
-        return ['ssh', '-o', 'BatchMode=yes'] + options + [
-            '@'.join((self.gerrit_username, self.gerrit_server)),
-            '-p', str(self.gerrit_port),
-            'gerrit'
-        ] + list(args)
+        return (
+            ['ssh', '-o', 'BatchMode=yes']
+            + options
+            + [
+                '@'.join((self.gerrit_username, self.gerrit_server)),
+                '-p',
+                str(self.gerrit_port),
+                'gerrit',
+            ]
+            + list(args)
+        )
 
     class VersionPP(ProcessProtocol):
-
         def __init__(self, func):
             self.func = func
             self.gerrit_version = None
@@ -552,7 +545,7 @@ class GerritStatusPush(ReporterBase):
             if not data.startswith(vstr):
                 log.msg(b"Error: Cannot interpret gerrit version info: " + data)
                 return
-            vers = data[len(vstr):].strip()
+            vers = data[len(vstr) :].strip()
             log.msg(b"gerrit version: " + vers)
             self.gerrit_version = parse_version(bytes2unicode(vers))
 
@@ -588,7 +581,6 @@ class GerritStatusPush(ReporterBase):
         self.spawnProcess(self.VersionPP(callback), command[0], command, env=None)
 
     class LocalPP(ProcessProtocol):
-
         def __init__(self, status):
             self.status = status
 

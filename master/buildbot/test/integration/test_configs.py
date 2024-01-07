@@ -27,7 +27,6 @@ from buildbot.warnings import DeprecatedApiWarning
 
 
 class RealConfigs(dirs.DirsMixin, unittest.TestCase):
-
     def setUp(self):
         self.setUpDirs('basedir')
         self.basedir = os.path.abspath('basedir')

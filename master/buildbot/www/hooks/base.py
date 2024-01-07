@@ -94,7 +94,7 @@ class BaseHookHandler:
             "properties": properties,
             "repository": repository,
             "project": project,
-            "codebase": codebase
+            "codebase": codebase,
         }
         return ([chdict], None)
 

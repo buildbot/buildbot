@@ -25,7 +25,6 @@ def ident(x):
 
 
 class Matcher:
-
     def __init__(self):
         self._patterns = {}
         self._dirty = True

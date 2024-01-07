@@ -32,6 +32,7 @@ def add_debugging_monkeypatches():
     failing tests.
     """
     from twisted.application.service import Service
+
     old_startService = Service.startService
     old_stopService = Service.stopService
 
@@ -42,14 +43,17 @@ def add_debugging_monkeypatches():
     def stopService(self):
         assert self.running
         return old_stopService(self)
+
     Service.startService = startService
     Service.stopService = stopService
 
     # versions of Twisted before 9.0.0 did not have a UnitTest.patch that worked
     # on Python-2.7
     if twisted.version.major <= 9 and sys.version_info[:2] == (2, 7):
+
         def nopatch(self, *args):
             raise unittest.SkipTest('unittest.TestCase.patch is not available')
+
         unittest.TestCase.patch = nopatch
 
 
@@ -60,10 +64,10 @@ __all__ = []
 # import mock so we bail out early if it's not installed
 try:
     from unittest import mock
+
     [mock]
 except ImportError:
     try:
         import mock
     except ImportError:
-        raise ImportError("Buildbot tests require the 'mock' module; "
-                          "try 'pip install mock'")
+        raise ImportError("Buildbot tests require the 'mock' module; " "try 'pip install mock'")

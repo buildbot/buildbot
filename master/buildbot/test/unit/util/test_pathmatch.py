@@ -19,13 +19,13 @@ from buildbot.util import pathmatch
 
 
 class Matcher(unittest.TestCase):
-
     def setUp(self):
         self.m = pathmatch.Matcher()
 
     def test_dupe_path(self):
         def set():
             self.m[('abc,')] = 1
+
         set()
         with self.assertRaises(AssertionError):
             set()
@@ -46,23 +46,19 @@ class Matcher(unittest.TestCase):
 
     def test_pattern_variables(self):
         self.m[('A', ':a', 'B', ':b')] = 'AB'
-        self.assertEqual(self.m[('A', 'a', 'B', 'b')],
-                         ('AB', {"a": 'a', "b": 'b'}))
+        self.assertEqual(self.m[('A', 'a', 'B', 'b')], ('AB', {"a": 'a', "b": 'b'}))
 
     def test_pattern_variables_underscore(self):
         self.m[('A', ':a_a_a')] = 'AB'
-        self.assertEqual(self.m[('A', 'a')],
-                         ('AB', {"a_a_a": 'a'}))
+        self.assertEqual(self.m[('A', 'a')], ('AB', {"a_a_a": 'a'}))
 
     def test_pattern_variables_num(self):
         self.m[('A', 'n:a', 'B', 'n:b')] = 'AB'
-        self.assertEqual(self.m[('A', '10', 'B', '-20')],
-                         ('AB', {"a": 10, "b": -20}))
+        self.assertEqual(self.m[('A', '10', 'B', '-20')], ('AB', {"a": 10, "b": -20}))
 
     def test_pattern_variables_ident(self):
         self.m[('A', 'i:a', 'B', 'i:b')] = 'AB'
-        self.assertEqual(self.m[('A', 'abc', 'B', 'x-z-B')],
-                         ('AB', {"a": 'abc', "b": 'x-z-B'}))
+        self.assertEqual(self.m[('A', 'abc', 'B', 'x-z-B')], ('AB', {"a": 'abc', "b": 'x-z-B'}))
 
     def test_pattern_variables_num_invalid(self):
         self.m[('A', 'n:a')] = 'AB'
@@ -85,7 +81,8 @@ class Matcher(unittest.TestCase):
         self.m[('A', ':a', 'B', ':b')] = 'AB'
         self.assertEqual(
             (self.m[('A', 'a1', 'B', 'b')], self.m['A', 'a2']),
-            (('AB', {"a": 'a1', "b": 'b'}), ('A', {"a": 'a2'})))
+            (('AB', {"a": 'a1', "b": 'b'}), ('A', {"a": 'a2'})),
+        )
 
     def test_dirty_again(self):
         self.m[('abc', 'def')] = 2

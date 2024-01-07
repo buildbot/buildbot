@@ -27,7 +27,6 @@ from buildbot.process.results import statusToString
 
 
 class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
-
     """Observe a log that may contain subunit output.
 
     This class extends TestResult to receive the callbacks from the subunit
@@ -43,8 +42,9 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
             from subunit import PROGRESS_SET
             from subunit import TestProtocolServer
         except ImportError as e:
-            raise ImportError("subunit is not importable, but is required for "
-                              "SubunitLogObserver support.") from e
+            raise ImportError(
+                "subunit is not importable, but is required for " "SubunitLogObserver support."
+            ) from e
         self.PROGRESS_CUR = PROGRESS_CUR
         self.PROGRESS_SET = PROGRESS_SET
         self.PROGRESS_PUSH = PROGRESS_PUSH
@@ -83,8 +83,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
 
     def issue(self, test, err):
         """An issue - failing, erroring etc test."""
-        self.step.setProgress('tests failed', len(self.failures) +
-                              len(self.errors))
+        self.step.setProgress('tests failed', len(self.failures) + len(self.errors))
 
     def tags(self, new_tags, gone_tags):
         """Accumulate the seen tags."""

@@ -34,7 +34,6 @@ EARLIER_EPOCH = epoch2datetime(EARLIER)
 
 
 class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = buildsets.BuildsetEndpoint
     resourceTypeClass = buildsets.Buildset
 
@@ -46,7 +45,6 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.SourceStamp(id=93),
             fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=92),
             fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=93),
-
             fakedb.Buildset(id=14, reason='no sourcestamps'),
         ])
 
@@ -75,7 +73,6 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = buildsets.BuildsetsEndpoint
     resourceTypeClass = buildsets.Buildset
 
@@ -104,8 +101,9 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_complete(self):
         f = resultspec.Filter('complete', 'eq', [True])
-        buildsets = yield self.callGet(('buildsets',),
-                         resultSpec=resultspec.ResultSpec(filters=[f]))
+        buildsets = yield self.callGet(
+            ('buildsets',), resultSpec=resultspec.ResultSpec(filters=[f])
+        )
 
         self.assertEqual(len(buildsets), 1)
         self.validateData(buildsets[0])
@@ -114,47 +112,68 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_incomplete(self):
         f = resultspec.Filter('complete', 'eq', [False])
-        buildsets = yield self.callGet(('buildsets',),
-                         resultSpec=resultspec.ResultSpec(filters=[f]))
+        buildsets = yield self.callGet(
+            ('buildsets',), resultSpec=resultspec.ResultSpec(filters=[f])
+        )
 
         self.assertEqual(len(buildsets), 1)
         self.validateData(buildsets[0])
         self.assertEqual(buildsets[0]['bsid'], 14)
 
 
-class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
-               unittest.TestCase):
-
+class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = buildsets.Buildset(self.master)
         return self.master.db.insert_test_data([
-            fakedb.SourceStamp(id=234, branch='br', codebase='cb',
-                               project='pr', repository='rep', revision='rev',
-                               created_at=89834834),
+            fakedb.SourceStamp(
+                id=234,
+                branch='br',
+                codebase='cb',
+                project='pr',
+                repository='rep',
+                revision='rev',
+                created_at=89834834,
+            ),
             fakedb.Builder(id=42, name='bldr1'),
             fakedb.Builder(id=43, name='bldr2'),
         ])
 
-    SS234_DATA = {'branch': 'br', 'codebase': 'cb', 'patch': None,
-                  'project': 'pr', 'repository': 'rep', 'revision': 'rev',
-                  'created_at': epoch2datetime(89834834), 'ssid': 234}
+    SS234_DATA = {
+        'branch': 'br',
+        'codebase': 'cb',
+        'patch': None,
+        'project': 'pr',
+        'repository': 'rep',
+        'revision': 'rev',
+        'created_at': epoch2datetime(89834834),
+        'ssid': 234,
+    }
 
     def test_signature_addBuildset(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.addBuildset,  # fake
-            self.rtype.addBuildset)  # real
-        def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
-                        properties=None, builderids=None, external_idstring=None,
-                        rebuilt_buildid=None,
-                        parent_buildid=None, parent_relationship=None, priority=0):
+            self.rtype.addBuildset,
+        )  # real
+        def addBuildset(
+            self,
+            waited_for,
+            scheduler=None,
+            sourcestamps=None,
+            reason='',
+            properties=None,
+            builderids=None,
+            external_idstring=None,
+            rebuilt_buildid=None,
+            parent_buildid=None,
+            parent_relationship=None,
+            priority=0,
+        ):
             pass
 
     @defer.inlineCallbacks
-    def do_test_addBuildset(self, kwargs, expectedReturn,
-                            expectedMessages, expectedBuildset):
+    def do_test_addBuildset(self, kwargs, expectedReturn, expectedMessages, expectedBuildset):
         """Run a test of addBuildset.
 
         @param kwargs: kwargs to addBuildset
@@ -171,47 +190,54 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         (bsid, brids) = yield self.rtype.addBuildset(**kwargs)
         self.assertEqual((bsid, brids), expectedReturn)
         # check the correct message was received
-        self.master.mq.assertProductions(
-            expectedMessages, orderMatters=False)
+        self.master.mq.assertProductions(expectedMessages, orderMatters=False)
         # and that the correct data was inserted into the db
         self.master.db.buildsets.assertBuildset(bsid, expectedBuildset)
 
     def _buildRequestMessageDict(self, brid, bsid, builderid):
-        return {'builderid': builderid,
-                'buildrequestid': brid,
-                'buildsetid': bsid,
-                'claimed': False,
-                'claimed_at': None,
-                'claimed_by_masterid': None,
-                'complete': False,
-                'complete_at': None,
-                'priority': 0,
-                'results': -1,
-                'submitted_at': epoch2datetime(A_TIMESTAMP),
-                'waited_for': True,
-                'properties': None}
+        return {
+            'builderid': builderid,
+            'buildrequestid': brid,
+            'buildsetid': bsid,
+            'claimed': False,
+            'claimed_at': None,
+            'claimed_by_masterid': None,
+            'complete': False,
+            'complete_at': None,
+            'priority': 0,
+            'results': -1,
+            'submitted_at': epoch2datetime(A_TIMESTAMP),
+            'waited_for': True,
+            'properties': None,
+        }
 
     def _buildRequestMessage1(self, brid, bsid, builderid):
         return (
-            ('buildsets', str(bsid),
-             'builders', str(builderid),
-             'buildrequests', str(brid), 'new'),
-            self._buildRequestMessageDict(brid, bsid, builderid))
+            ('buildsets', str(bsid), 'builders', str(builderid), 'buildrequests', str(brid), 'new'),
+            self._buildRequestMessageDict(brid, bsid, builderid),
+        )
 
     def _buildRequestMessage2(self, brid, bsid, builderid):
         return (
             ('buildrequests', str(brid), 'new'),
-            self._buildRequestMessageDict(brid, bsid, builderid))
+            self._buildRequestMessageDict(brid, bsid, builderid),
+        )
 
     def _buildRequestMessage3(self, brid, bsid, builderid):
         return (
-            ('builders', str(builderid),
-             'buildrequests', str(brid), 'new'),
-            self._buildRequestMessageDict(brid, bsid, builderid))
+            ('builders', str(builderid), 'buildrequests', str(brid), 'new'),
+            self._buildRequestMessageDict(brid, bsid, builderid),
+        )
 
-    def _buildsetMessage(self, bsid, external_idstring='extid',
-                         reason='because', scheduler='fakesched', sourcestampids=None,
-                         submitted_at=A_TIMESTAMP):
+    def _buildsetMessage(
+        self,
+        bsid,
+        external_idstring='extid',
+        reason='because',
+        scheduler='fakesched',
+        sourcestampids=None,
+        submitted_at=A_TIMESTAMP,
+    ):
         if sourcestampids is None:
             sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
@@ -228,29 +254,39 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
                 "scheduler": scheduler,
                 "sourcestamps": [ssmap[ssid] for ssid in sourcestampids],
                 "rebuilt_buildid": None,
-                "submitted_at": submitted_at
-            }
+                "submitted_at": submitted_at,
+            },
         )
 
-    def _buildsetCompleteMessage(self, bsid, complete_at=A_TIMESTAMP_EPOCH,
-                                 submitted_at=A_TIMESTAMP_EPOCH, external_idstring='extid',
-                                 reason='because', results=0, sourcestampids=None):
+    def _buildsetCompleteMessage(
+        self,
+        bsid,
+        complete_at=A_TIMESTAMP_EPOCH,
+        submitted_at=A_TIMESTAMP_EPOCH,
+        external_idstring='extid',
+        reason='because',
+        results=0,
+        sourcestampids=None,
+    ):
         if sourcestampids is None:
             sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
-        return (('buildsets', str(bsid), 'complete'), {
-            "bsid": bsid,
-            "complete": True,
-            "complete_at": complete_at,
-            "external_idstring": external_idstring,
-            "reason": reason,
-            "results": results,
-            "submitted_at": submitted_at,
-            "sourcestamps": [ssmap[ssid] for ssid in sourcestampids],
-            "rebuilt_buildid": None,
-            "parent_buildid": None,
-            "parent_relationship": None,
-        })
+        return (
+            ('buildsets', str(bsid), 'complete'),
+            {
+                "bsid": bsid,
+                "complete": True,
+                "complete_at": complete_at,
+                "external_idstring": external_idstring,
+                "reason": reason,
+                "results": results,
+                "submitted_at": submitted_at,
+                "sourcestamps": [ssmap[ssid] for ssid in sourcestampids],
+                "rebuilt_buildid": None,
+                "parent_buildid": None,
+                "parent_relationship": None,
+            },
+        )
 
     def test_addBuildset_two_builderNames(self):
         kwargs = {
@@ -259,7 +295,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             "sourcestamps": [234],
             "external_idstring": 'extid',
             "builderids": [42, 43],
-            "waited_for": True
+            "waited_for": True,
         }
         expectedReturn = (200, {42: 1000, 43: 1001})
         expectedMessages = [
@@ -277,8 +313,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             "external_idstring": 'extid',
             "rebuilt_buildid": None,
         }
-        return self.do_test_addBuildset(kwargs,
-                                        expectedReturn, expectedMessages, expectedBuildset)
+        return self.do_test_addBuildset(kwargs, expectedReturn, expectedMessages, expectedBuildset)
 
     def test_addBuildset_no_builderNames(self):
         kwargs = {
@@ -286,7 +321,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             "reason": 'because',
             "sourcestamps": [234],
             "external_idstring": 'extid',
-            "waited_for": False
+            "waited_for": False,
         }
         expectedReturn = (200, {})
         expectedMessages = [
@@ -300,24 +335,26 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             "external_idstring": 'extid',
             "rebuilt_buildid": None,
         }
-        return self.do_test_addBuildset(kwargs,
-                                        expectedReturn, expectedMessages, expectedBuildset)
+        return self.do_test_addBuildset(kwargs, expectedReturn, expectedMessages, expectedBuildset)
 
     def test_signature_maybeBuildsetComplete(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.maybeBuildsetComplete,  # fake
-            self.rtype.maybeBuildsetComplete)  # real
+            self.rtype.maybeBuildsetComplete,
+        )  # real
         def maybeBuildsetComplete(self, bsid):
             pass
 
     @defer.inlineCallbacks
-    def do_test_maybeBuildsetComplete(self,
-                                      buildRequestCompletions=None,
-                                      buildRequestResults=None,
-                                      buildsetComplete=False,
-                                      expectComplete=False,
-                                      expectMessage=False,
-                                      expectSuccess=True):
+    def do_test_maybeBuildsetComplete(
+        self,
+        buildRequestCompletions=None,
+        buildRequestResults=None,
+        buildsetComplete=False,
+        expectComplete=False,
+        expectMessage=False,
+        expectSuccess=True,
+    ):
         """Test maybeBuildsetComplete.
 
         @param buildRequestCompletions: dict mapping brid to True if complete,
@@ -347,20 +384,27 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         self.reactor.advance(A_TIMESTAMP)
 
         def mkbr(brid, bsid=72):
-            return fakedb.BuildRequest(id=brid, buildsetid=bsid, builderid=42,
-                                       complete=buildRequestCompletions.get(
-                                           brid),
-                                       results=buildRequestResults.get(brid, SUCCESS))
+            return fakedb.BuildRequest(
+                id=brid,
+                buildsetid=bsid,
+                builderid=42,
+                complete=buildRequestCompletions.get(brid),
+                results=buildRequestResults.get(brid, SUCCESS),
+            )
+
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=42, name='bldr1'),
-            fakedb.Buildset(id=72,
-                            submitted_at=EARLIER,
-                            complete=buildsetComplete,
-                            complete_at=A_TIMESTAMP if buildsetComplete else None),
-            mkbr(42), mkbr(43), mkbr(44),
+            fakedb.Buildset(
+                id=72,
+                submitted_at=EARLIER,
+                complete=buildsetComplete,
+                complete_at=A_TIMESTAMP if buildsetComplete else None,
+            ),
+            mkbr(42),
+            mkbr(43),
+            mkbr(44),
             fakedb.BuildsetSourceStamp(buildsetid=72, sourcestampid=234),
-            fakedb.Buildset(id=73,
-                            complete=False),
+            fakedb.Buildset(id=73, complete=False),
             mkbr(45, bsid=73),
             fakedb.BuildsetSourceStamp(buildsetid=73, sourcestampid=234),
         ])
@@ -369,24 +413,29 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
 
         self.master.db.buildsets.assertBuildsetCompletion(72, expectComplete)
         if expectMessage:
-            self.assertEqual(self.master.mq.productions, [
-                self._buildsetCompleteMessage(72,
-                                              results=SUCCESS if expectSuccess else FAILURE,
-                                              submitted_at=EARLIER_EPOCH),
-            ])
+            self.assertEqual(
+                self.master.mq.productions,
+                [
+                    self._buildsetCompleteMessage(
+                        72,
+                        results=SUCCESS if expectSuccess else FAILURE,
+                        submitted_at=EARLIER_EPOCH,
+                    ),
+                ],
+            )
         else:
             self.assertEqual(self.master.mq.productions, [])
 
     def test_maybeBuildsetComplete_not_yet(self):
         # only brid 42 is complete, so the buildset is not complete
-        return self.do_test_maybeBuildsetComplete(
-            buildRequestCompletions={42: True})
+        return self.do_test_maybeBuildsetComplete(buildRequestCompletions={42: True})
 
     def test_maybeBuildsetComplete_complete(self):
         return self.do_test_maybeBuildsetComplete(
             buildRequestCompletions={42: True, 43: True, 44: True},
             expectComplete=True,
-            expectMessage=True)
+            expectMessage=True,
+        )
 
     def test_maybeBuildsetComplete_complete_failure(self):
         return self.do_test_maybeBuildsetComplete(
@@ -394,11 +443,13 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             buildRequestResults={43: FAILURE},
             expectComplete=True,
             expectMessage=True,
-            expectSuccess=False)
+            expectSuccess=False,
+        )
 
     def test_maybeBuildsetComplete_already_complete(self):
         return self.do_test_maybeBuildsetComplete(
             buildRequestCompletions={42: True, 43: True, 44: True},
             buildsetComplete=True,
             expectComplete=True,
-            expectMessage=False)
+            expectMessage=False,
+        )

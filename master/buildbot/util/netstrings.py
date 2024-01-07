@@ -24,13 +24,11 @@ from buildbot.util import unicode2bytes
 
 @implementer(IAddress)
 class NullAddress:
-
     "an address for NullTransport"
 
 
 @implementer(ITransport)
 class NullTransport:
-
     "a do-nothing transport to make NetstringReceiver happy"
 
     def write(self, data):
@@ -50,7 +48,6 @@ class NullTransport:
 
 
 class NetstringParser(basic.NetstringReceiver):
-
     """
     Adapts the Twisted netstring support (which assumes it is on a socket) to
     work on simple strings, too.  Call the C{feed} method with arbitrary blocks

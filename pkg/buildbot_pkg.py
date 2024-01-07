@@ -40,6 +40,8 @@ def listdir(path):
     if "node_modules" in l:
         l.remove("node_modules")
     return l
+
+
 os.listdir = listdir
 
 
@@ -57,7 +59,9 @@ def gitDescribeToPep440(version):
     # where 20 is the number of commit since last release, and gf0f45ca is the short commit id preceded by 'g'
     # we parse this a transform into a pep440 release version 0.9.9.dev20 (increment last digit and add dev before 20)
 
-    VERSION_MATCH = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?')
+    VERSION_MATCH = re.compile(
+        r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?'
+    )
     v = VERSION_MATCH.search(version)
     if v:
         major = int(v.group('major'))
@@ -85,18 +89,18 @@ def mTimeVersion(init_file):
 
 
 def getVersionFromArchiveId(git_archive_id='$Format:%ct %d$'):
-    """ Extract the tag if a source is from git archive.
+    """Extract the tag if a source is from git archive.
 
-        When source is exported via `git archive`, the git_archive_id init value is modified
-        and placeholders are expanded to the "archived" revision:
+    When source is exported via `git archive`, the git_archive_id init value is modified
+    and placeholders are expanded to the "archived" revision:
 
-            %ct: committer date, UNIX timestamp
-            %d: ref names, like the --decorate option of git-log
+        %ct: committer date, UNIX timestamp
+        %d: ref names, like the --decorate option of git-log
 
-        See man gitattributes(5) and git-log(1) (PRETTY FORMATS) for more details.
+    See man gitattributes(5) and git-log(1) (PRETTY FORMATS) for more details.
     """
     # mangle the magic string to make sure it is not replaced by git archive
-    if not git_archive_id.startswith('$For''mat:'):
+    if not git_archive_id.startswith('$For' 'mat:'):
         # source was modified by git archive, try to parse the version from
         # the value of git_archive_id
 
@@ -182,6 +186,7 @@ def getVersion(init_file):
 # This is why we override both egg_info and build, and the first run build
 # the js.
 
+
 class BuildJsCommand(Command):
     """A custom command to run JS build."""
 
@@ -204,7 +209,6 @@ class BuildJsCommand(Command):
 
         package = self.distribution.packages[0]
         if os.path.exists("package.json"):
-
             shell = bool(os.name == 'nt')
 
             yarn_program = None
@@ -230,8 +234,9 @@ class BuildJsCommand(Command):
                 logging.info('Running command: {}'.format(str(" ".join(command))))
                 subprocess.check_call(command, shell=shell)
 
-        self.copy_tree(os.path.join(package, 'static'), os.path.join(
-            "build", "lib", package, "static"))
+        self.copy_tree(
+            os.path.join(package, 'static'), os.path.join("build", "lib", package, "static")
+        )
 
         assert self.distribution.metadata.version is not None, "version is not set"
         with open(os.path.join("build", "lib", package, "VERSION"), "w") as f:
@@ -264,8 +269,7 @@ def setup_www_plugin(**kw):
     if 'version' not in kw:
         kw['version'] = getVersion(os.path.join(package, "__init__.py"))
 
-    setup(cmdclass=dict(
-        egg_info=EggInfoCommand,
-        build_py=BuildPyCommand,
-        build_js=BuildJsCommand),
-        **kw)
+    setup(
+        cmdclass=dict(egg_info=EggInfoCommand, build_py=BuildPyCommand, build_js=BuildJsCommand),
+        **kw,
+    )

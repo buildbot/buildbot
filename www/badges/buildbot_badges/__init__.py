@@ -42,25 +42,26 @@ class Api:
         "font_size": 11,
         "color_scheme": {
             "exception": "#007ec6",  # blue
-            "failure": "#e05d44",    # red
-            "retry": "#007ec6",      # blue
-            "running": "#007ec6",    # blue
-            "skipped": "a4a61d",     # yellowgreen
-            "success": "#4c1",       # brightgreen
-            "unknown": "#9f9f9f",    # lightgrey
-            "warnings": "#dfb317"    # yellow
-        }
+            "failure": "#e05d44",  # red
+            "retry": "#007ec6",  # blue
+            "running": "#007ec6",  # blue
+            "skipped": "a4a61d",  # yellowgreen
+            "success": "#4c1",  # brightgreen
+            "unknown": "#9f9f9f",  # lightgrey
+            "warnings": "#dfb317",  # yellow
+        },
     }
 
     def __init__(self, ep):
         self.ep = ep
-        self.env = jinja2.Environment(loader=jinja2.ChoiceLoader([
-            jinja2.PackageLoader('buildbot_badges'),
-            jinja2.FileSystemLoader('templates')
-        ]))
+        self.env = jinja2.Environment(
+            loader=jinja2.ChoiceLoader([
+                jinja2.PackageLoader('buildbot_badges'),
+                jinja2.FileSystemLoader('templates'),
+            ])
+        )
 
     def makeConfiguration(self, request):
-
         config = {}
         config.update(self.default)
         for k, v in self.ep.config.items():
@@ -90,8 +91,8 @@ class Api:
 
         # get the last build for that builder using the data api
         last_build = yield self.ep.master.data.get(
-            ("builders", builder, "builds"),
-            limit=1, order=['-number'])
+            ("builders", builder, "builds"), limit=1, order=['-number']
+        )
 
         # get the status text corresponding to results code
         results_txt = "unknown"
@@ -103,39 +104,31 @@ class Api:
             elif results >= 0 and results < len(Results):
                 results_txt = Results[results]
 
-        svgdata = self.makesvg(results_txt, results_txt, left_text=config['left_text'],
-                               config=config)
+        svgdata = self.makesvg(
+            results_txt, results_txt, left_text=config['left_text'], config=config
+        )
         return svgdata
 
     def textwidth(self, text, config):
-        """Calculates the width of the specified text.
-        """
+        """Calculates the width of the specified text."""
         surface = cairo.SVGSurface(None, 1280, 200)
         ctx = cairo.Context(surface)
-        ctx.select_font_face(config['font_face'],
-                             cairo.FONT_SLANT_NORMAL,
-                             cairo.FONT_WEIGHT_NORMAL)
+        ctx.select_font_face(config['font_face'], cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(int(config['font_size']))
         return ctx.text_extents(text)[4]
 
-    def makesvg(self, right_text, status=None, left_text=None,
-                left_color=None, config=None):
-        """Renders an SVG from the template, using the specified data
-        """
+    def makesvg(self, right_text, status=None, left_text=None, left_color=None, config=None):
+        """Renders an SVG from the template, using the specified data"""
         right_color = config['color_scheme'].get(status, "#9f9f9f")  # Grey
 
         left_text = left_text or config['left_text']
         left_color = left_color or config['left_color']
 
-        left = {
-            "color": left_color,
-            "text": left_text,
-            "width": self.textwidth(left_text, config)
-        }
+        left = {"color": left_color, "text": left_text, "width": self.textwidth(left_text, config)}
         right = {
             "color": right_color,
             "text": right_text,
-            "width": self.textwidth(right_text, config)
+            "width": self.textwidth(right_text, config),
         }
 
         template = self.env.get_template(config['template_name'].format(**config))

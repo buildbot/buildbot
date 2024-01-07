@@ -27,15 +27,27 @@ RESERVED_UNDERSCORE_NAMES = ["__Janitor"]
 
 
 class BuilderConfig(util_config.ConfiguredMixin):
-
-    def __init__(self, name=None, workername=None, workernames=None,
-                 builddir=None, workerbuilddir=None, factory=None,
-                 tags=None,
-                 nextWorker=None, nextBuild=None, locks=None, env=None,
-                 properties=None, collapseRequests=None, description=None,
-                 description_format=None,
-                 canStartBuild=None, defaultProperties=None, project=None
-                 ):
+    def __init__(
+        self,
+        name=None,
+        workername=None,
+        workernames=None,
+        builddir=None,
+        workerbuilddir=None,
+        factory=None,
+        tags=None,
+        nextWorker=None,
+        nextBuild=None,
+        locks=None,
+        env=None,
+        properties=None,
+        collapseRequests=None,
+        description=None,
+        description_format=None,
+        canStartBuild=None,
+        defaultProperties=None,
+        project=None,
+    ):
         # name is required, and can't start with '_'
         if not name or type(name) not in (bytes, str):
             error("builder's name is required")
@@ -56,6 +68,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
         if factory is None:
             error(f"builder '{name}' has no factory")
         from buildbot.process.factory import BuildFactory
+
         if factory is not None and not isinstance(factory, BuildFactory):
             error(f"builder '{name}'s factory is not a BuildFactory instance")
         self.factory = factory
@@ -123,21 +136,21 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         self.properties = properties or {}
         for property_name in self.properties:
-            check_param_length(property_name, f'Builder {self.name} property',
-                               Model.property_name_length)
+            check_param_length(
+                property_name, f'Builder {self.name} property', Model.property_name_length
+            )
 
         self.defaultProperties = defaultProperties or {}
         for property_name in self.defaultProperties:
-            check_param_length(property_name, f'Builder {self.name} default property',
-                               Model.property_name_length)
+            check_param_length(
+                property_name, f'Builder {self.name} default property', Model.property_name_length
+            )
 
         self.collapseRequests = collapseRequests
 
         self.description = check_param_str_none(description, self.__class__, "description")
         self.description_format = check_param_str_none(
-            description_format,
-            self.__class__,
-            "description_format"
+            description_format, self.__class__, "description_format"
         )
 
         if self.description_format is None:

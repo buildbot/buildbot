@@ -25,7 +25,6 @@ from buildbot.errors import CaptureCallbackError
 
 
 class Capture:
-
     """
     Base class for all Capture* classes.
     """
@@ -41,10 +40,7 @@ class Capture:
         self.master = None
 
     def _defaultContext(self, msg, builder_name):
-        return {
-            "builder_name": builder_name,
-            "build_number": str(msg['number'])
-        }
+        return {"builder_name": builder_name, "build_number": str(msg['number'])}
 
     @abc.abstractmethod
     def consume(self, routingKey, msg):
@@ -53,12 +49,10 @@ class Capture:
     @defer.inlineCallbacks
     def _store(self, post_data, series_name, context):
         for svc in self.parent_svcs:
-            yield threads.deferToThread(svc.thd_postStatsValue, post_data, series_name,
-                                        context)
+            yield threads.deferToThread(svc.thd_postStatsValue, post_data, series_name, context)
 
 
 class CapturePropertyBase(Capture):
-
     """
     A base class for CaptureProperty* classes.
     """
@@ -89,8 +83,7 @@ class CapturePropertyBase(Capture):
             properties = yield self.master.data.get(("builds", msg['buildid'], "properties"))
 
             if self._regex:
-                filtered_prop_names = [
-                    pn for pn in properties if re.match(self._property_name, pn)]
+                filtered_prop_names = [pn for pn in properties if re.match(self._property_name, pn)]
             else:
                 filtered_prop_names = [self._property_name]
 
@@ -98,16 +91,15 @@ class CapturePropertyBase(Capture):
                 try:
                     ret_val = self._callback(properties, pn)
                 except KeyError as e:
-                    raise CaptureCallbackError("CaptureProperty failed."
-                                               f" The property {pn} not found for build number "
-                                               f"{msg['number']} on"
-                                               f" builder {builder_info['name']}.") from e
+                    raise CaptureCallbackError(
+                        "CaptureProperty failed."
+                        f" The property {pn} not found for build number "
+                        f"{msg['number']} on"
+                        f" builder {builder_info['name']}."
+                    ) from e
                 context = self._defaultContext(msg, builder_info['name'])
                 series_name = f"{builder_info['name']}-{pn}"
-                post_data = {
-                    "name": pn,
-                    "value": ret_val
-                }
+                post_data = {"name": pn, "value": ret_val}
                 yield self._store(post_data, series_name, context)
 
         else:
@@ -119,7 +111,6 @@ class CapturePropertyBase(Capture):
 
 
 class CaptureProperty(CapturePropertyBase):
-
     """
     Convenience wrapper for getting statistics for filtering.
     Filters out build properties specifies in the config file.
@@ -135,7 +126,6 @@ class CaptureProperty(CapturePropertyBase):
 
 
 class CapturePropertyAllBuilders(CapturePropertyBase):
-
     """
     Capture class for filtering out build properties for all builds.
     """
@@ -146,7 +136,6 @@ class CapturePropertyAllBuilders(CapturePropertyBase):
 
 
 class CaptureBuildTimes(Capture):
-
     """
     Capture methods for capturing build start times.
     """
@@ -169,14 +158,14 @@ class CaptureBuildTimes(Capture):
             except Exception as e:
                 # catching generic exceptions is okay here since we propagate
                 # it
-                raise CaptureCallbackError(f"{self._err_msg(msg, builder_info['name'])} "
-                                           f"Exception raised: {type(e).__name__} "
-                                           f"with message: {str(e)}") from e
+                raise CaptureCallbackError(
+                    f"{self._err_msg(msg, builder_info['name'])} "
+                    f"Exception raised: {type(e).__name__} "
+                    f"with message: {str(e)}"
+                ) from e
 
             context = self._defaultContext(msg, builder_info['name'])
-            post_data = {
-                self._time_type: ret_val
-            }
+            post_data = {self._time_type: ret_val}
             series_name = f"{builder_info['name']}-build-times"
             yield self._store(post_data, series_name, context)
 
@@ -184,8 +173,10 @@ class CaptureBuildTimes(Capture):
             yield defer.succeed(None)
 
     def _err_msg(self, build_data, builder_name):
-        msg = (f"{self.__class__.__name__} failed on build {build_data['number']} "
-               f"on builder {builder_name}.")
+        msg = (
+            f"{self.__class__.__name__} failed on build {build_data['number']} "
+            f"on builder {builder_name}."
+        )
         return msg
 
     @abc.abstractmethod
@@ -198,7 +189,6 @@ class CaptureBuildTimes(Capture):
 
 
 class CaptureBuildStartTime(CaptureBuildTimes):
-
     """
     Capture methods for capturing build start times.
     """
@@ -206,6 +196,7 @@ class CaptureBuildStartTime(CaptureBuildTimes):
     def __init__(self, builder_name, callback=None):
         def default_callback(start_time):
             return start_time.isoformat()
+
         if not callback:
             callback = default_callback
         super().__init__(builder_name, callback, "start-time")
@@ -218,7 +209,6 @@ class CaptureBuildStartTime(CaptureBuildTimes):
 
 
 class CaptureBuildStartTimeAllBuilders(CaptureBuildStartTime):
-
     """
     Capture methods for capturing build start times for all builders.
     """
@@ -232,7 +222,6 @@ class CaptureBuildStartTimeAllBuilders(CaptureBuildStartTime):
 
 
 class CaptureBuildEndTime(CaptureBuildTimes):
-
     """
     Capture methods for capturing build end times.
     """
@@ -240,6 +229,7 @@ class CaptureBuildEndTime(CaptureBuildTimes):
     def __init__(self, builder_name, callback=None):
         def default_callback(end_time):
             return end_time.isoformat()
+
         if not callback:
             callback = default_callback
         super().__init__(builder_name, callback, "end-time")
@@ -252,7 +242,6 @@ class CaptureBuildEndTime(CaptureBuildTimes):
 
 
 class CaptureBuildEndTimeAllBuilders(CaptureBuildEndTime):
-
     """
     Capture methods for capturing build end times on all builders.
     """
@@ -266,15 +255,16 @@ class CaptureBuildEndTimeAllBuilders(CaptureBuildEndTime):
 
 
 class CaptureBuildDuration(CaptureBuildTimes):
-
     """
     Capture methods for capturing build start times.
     """
 
     def __init__(self, builder_name, report_in='seconds', callback=None):
         if report_in not in ['seconds', 'minutes', 'hours']:
-            config.error(f"Error during initialization of class {self.__class__.__name__}."
-                         " `report_in` parameter must be one of 'seconds', 'minutes' or 'hours'")
+            config.error(
+                f"Error during initialization of class {self.__class__.__name__}."
+                " `report_in` parameter must be one of 'seconds', 'minutes' or 'hours'"
+            )
 
         def default_callback(start_time, end_time):
             divisor = 1
@@ -301,7 +291,6 @@ class CaptureBuildDuration(CaptureBuildTimes):
 
 
 class CaptureBuildDurationAllBuilders(CaptureBuildDuration):
-
     """
     Capture methods for capturing build durations on all builders.
     """
@@ -315,7 +304,6 @@ class CaptureBuildDurationAllBuilders(CaptureBuildDuration):
 
 
 class CaptureDataBase(Capture):
-
     """
     Base class for CaptureData methods.
     """
@@ -348,10 +336,12 @@ class CaptureDataBase(Capture):
             try:
                 ret_val = self._callback(msg['post_data'])
             except Exception as e:
-                raise CaptureCallbackError(f"CaptureData failed for build {build_data['number']} "
-                                           f"of builder {builder_info['name']}. "
-                                           f"Exception generated: {type(e).__name__} "
-                                           f"with message {str(e)}") from e
+                raise CaptureCallbackError(
+                    f"CaptureData failed for build {build_data['number']} "
+                    f"of builder {builder_info['name']}. "
+                    f"Exception generated: {type(e).__name__} "
+                    f"with message {str(e)}"
+                ) from e
             post_data = ret_val
             series_name = f"{builder_info['name']}-{self._data_name}"
             context = self._defaultContext(build_data, builder_info['name'])
@@ -363,7 +353,6 @@ class CaptureDataBase(Capture):
 
 
 class CaptureData(CaptureDataBase):
-
     """
     Capture methods for arbitrary data that may not be stored in the Buildbot database.
     """
@@ -378,7 +367,6 @@ class CaptureData(CaptureDataBase):
 
 
 class CaptureDataAllBuilders(CaptureDataBase):
-
     """
     Capture methods for arbitrary data that may not be stored in the Buildbot database.
     """

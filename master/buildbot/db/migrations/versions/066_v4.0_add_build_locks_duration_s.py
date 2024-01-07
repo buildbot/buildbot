@@ -19,6 +19,7 @@ Revision ID: 066
 Revises: 065
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -36,8 +37,7 @@ def upgrade():
 
     metadata = sa.MetaData()
     builds_tbl = sautils.Table(
-        "builds", metadata,
-        sa.Column("locks_duration_s", sa.Integer, nullable=True)
+        "builds", metadata, sa.Column("locks_duration_s", sa.Integer, nullable=True)
     )
 
     op.execute(builds_tbl.update(values={builds_tbl.c.locks_duration_s: 0}))

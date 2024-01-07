@@ -35,63 +35,64 @@ from buildbot.test.util import changesource
 
 
 class TestGerritHelpers(unittest.TestCase):
-
     def test_proper_json(self):
-        self.assertEqual("Justin Case <justin.case@example.com>",
-                         gerritchangesource._gerrit_user_to_author({
-                             "username": "justincase",
-                             "name": "Justin Case",
-                             "email": "justin.case@example.com"
-                         }))
+        self.assertEqual(
+            "Justin Case <justin.case@example.com>",
+            gerritchangesource._gerrit_user_to_author({
+                "username": "justincase",
+                "name": "Justin Case",
+                "email": "justin.case@example.com",
+            }),
+        )
 
     def test_missing_username(self):
-        self.assertEqual("Justin Case <justin.case@example.com>",
-                         gerritchangesource._gerrit_user_to_author({
-                             "name": "Justin Case",
-                             "email": "justin.case@example.com"
-                         }))
+        self.assertEqual(
+            "Justin Case <justin.case@example.com>",
+            gerritchangesource._gerrit_user_to_author({
+                "name": "Justin Case",
+                "email": "justin.case@example.com",
+            }),
+        )
 
     def test_missing_name(self):
-        self.assertEqual("unknown <justin.case@example.com>",
-                         gerritchangesource._gerrit_user_to_author({
-                             "email": "justin.case@example.com"
-                         }))
-        self.assertEqual("gerrit <justin.case@example.com>",
-                         gerritchangesource._gerrit_user_to_author({
-                             "email": "justin.case@example.com"
-                         }, "gerrit"))
-        self.assertEqual("justincase <justin.case@example.com>",
-                         gerritchangesource._gerrit_user_to_author({
-                             "username": "justincase",
-                             "email": "justin.case@example.com"
-                         }, "gerrit"))
+        self.assertEqual(
+            "unknown <justin.case@example.com>",
+            gerritchangesource._gerrit_user_to_author({"email": "justin.case@example.com"}),
+        )
+        self.assertEqual(
+            "gerrit <justin.case@example.com>",
+            gerritchangesource._gerrit_user_to_author(
+                {"email": "justin.case@example.com"}, "gerrit"
+            ),
+        )
+        self.assertEqual(
+            "justincase <justin.case@example.com>",
+            gerritchangesource._gerrit_user_to_author(
+                {"username": "justincase", "email": "justin.case@example.com"}, "gerrit"
+            ),
+        )
 
     def test_missing_email(self):
-        self.assertEqual("Justin Case",
-                         gerritchangesource._gerrit_user_to_author({
-                             "username": "justincase",
-                             "name": "Justin Case"
-                         }))
-        self.assertEqual("Justin Case",
-                         gerritchangesource._gerrit_user_to_author({
-                             "name": "Justin Case"
-                         }))
-        self.assertEqual("justincase",
-                         gerritchangesource._gerrit_user_to_author({
-                             "username": "justincase"
-                         }))
-        self.assertEqual("unknown",
-                         gerritchangesource._gerrit_user_to_author({
-                         }))
-        self.assertEqual("gerrit",
-                         gerritchangesource._gerrit_user_to_author({
-                         }, "gerrit"))
+        self.assertEqual(
+            "Justin Case",
+            gerritchangesource._gerrit_user_to_author({
+                "username": "justincase",
+                "name": "Justin Case",
+            }),
+        )
+        self.assertEqual(
+            "Justin Case", gerritchangesource._gerrit_user_to_author({"name": "Justin Case"})
+        )
+        self.assertEqual(
+            "justincase", gerritchangesource._gerrit_user_to_author({"username": "justincase"})
+        )
+        self.assertEqual("unknown", gerritchangesource._gerrit_user_to_author({}))
+        self.assertEqual("gerrit", gerritchangesource._gerrit_user_to_author({}, "gerrit"))
 
 
-class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMixin,
-                             TestReactorMixin,
-                             unittest.TestCase):
-
+class TestGerritChangeSource(
+    MasterRunProcessMixin, changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase
+):
     def setUp(self):
         self.setup_test_reactor()
         self.setup_master_run_process()
@@ -102,8 +103,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def newChangeSource(self, host, user, *args, **kwargs):
-        s = gerritchangesource.GerritChangeSource(
-            host, user, *args, **kwargs)
+        s = gerritchangesource.GerritChangeSource(host, user, *args, **kwargs)
         yield self.attachChangeSource(s)
         s.configureService()
         return s
@@ -137,7 +137,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         "uploader": {
             'name': 'uploader uploader',
             'email': 'uploader@example.com',
-            'username': 'uploader'
+            'username': 'uploader',
         },
         "patchSet": {
             "number": 1,
@@ -147,17 +147,17 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             "uploader": {
                 'name': 'uploader uploader',
                 'email': 'uploader@example.com',
-                'username': 'uploader'
+                'username': 'uploader',
             },
             "createdOn": 1627214047,
             "author": {
                 'name': 'author author',
                 'email': 'author@example.com',
-                'username': 'author'
+                'username': 'author',
             },
             "kind": "REWORK",
             "sizeInsertions": 1,
-            "sizeDeletions": 0
+            "sizeDeletions": 0,
         },
         "change": {
             "project": "test",
@@ -165,21 +165,17 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             "id": "I21234123412341234123412341234",
             "number": 4321,
             "subject": "change subject",
-            "owner": {
-                'name': 'owner owner',
-                'email': 'owner@example.com',
-                'username': 'owner'
-            },
+            "owner": {'name': 'owner owner', 'email': 'owner@example.com', 'username': 'owner'},
             "url": "http://example.com/c/test/+/4321",
             "commitMessage": "test1\n\nChange-Id: I21234123412341234123412341234\n",
             "createdOn": 1627214047,
-            "status": "NEW"
+            "status": "NEW",
         },
         "project": "test",
         "refName": "refs/heads/master",
         "changeKey": {"id": "I21234123412341234123412341234"},
         "type": "patchset-created",
-        "eventCreatedOn": 1627214048
+        "eventCreatedOn": 1627214048,
     }
 
     # this variable is reused in test_steps_source_repo
@@ -255,11 +251,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     comment_added_event = {
         "type": "comment-added",
-        "author": {
-            'name': 'author author',
-            'email': 'author@example.com',
-            'username': 'author'
-        },
+        "author": {'name': 'author author', 'email': 'author@example.com', 'username': 'author'},
         "approvals": [{"type": "Code-Review", "description": "Code-Review", "value": "0"}],
         "comment": "Patch Set 1:\n\ntest comment",
         "patchSet": {
@@ -270,17 +262,17 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             "uploader": {
                 'name': 'uploader uploader',
                 'email': 'uploader@example.com',
-                'username': 'uploader'
+                'username': 'uploader',
             },
             "createdOn": 1627214047,
             "author": {
                 'name': 'author author',
                 'email': 'author@example.com',
-                'username': 'author'
+                'username': 'author',
             },
             "kind": "REWORK",
             "sizeInsertions": 1,
-            "sizeDeletions": 0
+            "sizeDeletions": 0,
         },
         "change": {
             "project": "test",
@@ -288,20 +280,16 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             "id": "I21234123412341234123412341234",
             "number": 4321,
             "subject": "change subject",
-            "owner": {
-                'name': 'owner owner',
-                'email': 'owner@example.com',
-                'username': 'owner'
-            },
+            "owner": {'name': 'owner owner', 'email': 'owner@example.com', 'username': 'owner'},
             "url": "http://example.com/c/test/+/4321",
             "commitMessage": "test1\n\nChange-Id: I21234123412341234123412341234\n",
             "createdOn": 1627214047,
-            "status": "NEW"
+            "status": "NEW",
         },
         "project": "test",
         "refName": "refs/heads/master",
         "changeKey": {"id": "I21234123412341234123412341234"},
-        "eventCreatedOn": 1627214102
+        "eventCreatedOn": 1627214102,
     }
 
     expected_change_comment_added = {
@@ -330,69 +318,75 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
     @defer.inlineCallbacks
     def test_lineReceived_ref_updated(self):
         s = yield self.newChangeSource('somehost', 'someuser')
-        yield s.lineReceived(json.dumps({
-            'type': 'ref-updated',
-            'submitter': {
-                'name': 'tester',
-                'email': 'tester@example.com',
-                'username': 'tester'
-            },
-            'refUpdate': {
-                'oldRev': '12341234',
-                'newRev': '56785678',
-                'refName': 'refs/heads/master',
-                'project': 'test'
-            },
-            'eventCreatedOn': 1614528683
-        }))
+        yield s.lineReceived(
+            json.dumps({
+                'type': 'ref-updated',
+                'submitter': {
+                    'name': 'tester',
+                    'email': 'tester@example.com',
+                    'username': 'tester',
+                },
+                'refUpdate': {
+                    'oldRev': '12341234',
+                    'newRev': '56785678',
+                    'refName': 'refs/heads/master',
+                    'project': 'test',
+                },
+                'eventCreatedOn': 1614528683,
+            })
+        )
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         c = self.master.data.updates.changesAdded[0]
-        self.assertEqual(c, {
-            'files': ['unknown'],
-            'comments': 'Gerrit: commit(s) pushed.',
-            'author': 'tester <tester@example.com>',
-            'committer': None,
-            'revision': '56785678',
-            'when_timestamp': None,
-            'branch': 'master',
-            'category': 'ref-updated',
-            'revlink': '',
-            'properties': {
-                'event.type': 'ref-updated',
-                'event.submitter.name': 'tester',
-                'event.submitter.email':
-                    'tester@example.com',
+        self.assertEqual(
+            c,
+            {
+                'files': ['unknown'],
+                'comments': 'Gerrit: commit(s) pushed.',
+                'author': 'tester <tester@example.com>',
+                'committer': None,
+                'revision': '56785678',
+                'when_timestamp': None,
+                'branch': 'master',
+                'category': 'ref-updated',
+                'revlink': '',
+                'properties': {
+                    'event.type': 'ref-updated',
+                    'event.submitter.name': 'tester',
+                    'event.submitter.email': 'tester@example.com',
                     'event.submitter.username': 'tester',
                     'event.refUpdate.oldRev': '12341234',
                     'event.refUpdate.newRev': '56785678',
                     'event.refUpdate.refName': 'refs/heads/master',
                     'event.refUpdate.project': 'test',
-                    'event.source': 'GerritChangeSource'
+                    'event.source': 'GerritChangeSource',
                 },
-            'repository': 'ssh://someuser@somehost:29418/test',
-            'codebase': None,
-            'project': 'test',
-            'src': None
-        })
+                'repository': 'ssh://someuser@somehost:29418/test',
+                'codebase': None,
+                'project': 'test',
+                'src': None,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_lineReceived_ref_updated_for_change(self):
         s = yield self.newChangeSource('somehost', 'someuser')
-        yield s.lineReceived(json.dumps({
-            'type': 'ref-updated',
-            'submitter': {
-                'name': 'tester',
-                'email': 'tester@example.com',
-                'username': 'tester'
-            },
-            'refUpdate': {
-                'oldRev': '00000000',
-                'newRev': '56785678',
-                'refName': 'refs/changes/12/432112/1',
-                'project': 'test'
-            },
-            'eventCreatedOn': 1614528683
-        }))
+        yield s.lineReceived(
+            json.dumps({
+                'type': 'ref-updated',
+                'submitter': {
+                    'name': 'tester',
+                    'email': 'tester@example.com',
+                    'username': 'tester',
+                },
+                'refUpdate': {
+                    'oldRev': '00000000',
+                    'newRev': '56785678',
+                    'refName': 'refs/changes/12/432112/1',
+                    'project': 'test',
+                },
+                'eventCreatedOn': 1614528683,
+            })
+        )
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
@@ -409,9 +403,11 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_duplicate_non_source_events_not_ignored(self):
-        s = yield self.newChangeSource('somehost', 'someuser',
-                                       handled_events=['patchset-created', 'ref-updated',
-                                                       'change-merged', 'comment-added'])
+        s = yield self.newChangeSource(
+            'somehost',
+            'someuser',
+            handled_events=['patchset-created', 'ref-updated', 'change-merged', 'comment-added'],
+        )
         yield s.lineReceived(json.dumps(self.comment_added_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
@@ -422,28 +418,29 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
     def test_malformed_events_ignored(self):
         s = yield self.newChangeSource('somehost', 'someuser')
         # "change" not in event
-        yield s.lineReceived(json.dumps({
-            "type": "patchset-created",
-            "patchSet": {"revision": 'abcdef', "number": '12'}
-        }))
+        yield s.lineReceived(
+            json.dumps({
+                "type": "patchset-created",
+                "patchSet": {"revision": 'abcdef', "number": '12'},
+            })
+        )
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
         # "patchSet" not in event
-        yield s.lineReceived(json.dumps({
-            "type": "patchset-created",
-            "change": {
-                "branch": "br",
-                # Note that this time "project" is a dictionary
-                "project": {"name": 'pr'},
-                "number": "4321",
-                "owner": {
-                    "name": 'Dustin',
-                    "email": 'dustin@mozilla.com'
+        yield s.lineReceived(
+            json.dumps({
+                "type": "patchset-created",
+                "change": {
+                    "branch": "br",
+                    # Note that this time "project" is a dictionary
+                    "project": {"name": 'pr'},
+                    "number": "4321",
+                    "owner": {"name": 'Dustin', "email": 'dustin@mozilla.com'},
+                    "url": "http://buildbot.net",
+                    "subject": "fix 1234",
                 },
-                "url": "http://buildbot.net",
-                "subject": "fix 1234"
-            },
-        }))
+            })
+        )
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     change_merged_event = {
@@ -454,15 +451,16 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             "number": "4321",
             "owner": {"name": "Chuck", "email": "chuck@norris.com"},
             "url": "http://buildbot.net",
-            "subject": "fix 1234"
+            "subject": "fix 1234",
         },
-        "patchSet": {"revision": "abcdefj", "number": "13"}
+        "patchSet": {"revision": "abcdefj", "number": "13"},
     }
 
     @defer.inlineCallbacks
     def test_handled_events_filter_true(self):
-        s = yield self.newChangeSource('somehost', 'some_choosy_user',
-                                       handled_events=["change-merged"])
+        s = yield self.newChangeSource(
+            'somehost', 'some_choosy_user', handled_events=["change-merged"]
+        )
         yield s.lineReceived(json.dumps(self.change_merged_event))
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
@@ -478,12 +476,14 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_custom_handler(self):
-        s = yield self.newChangeSource('somehost', 'some_choosy_user',
-                                       handled_events=["change-merged"])
+        s = yield self.newChangeSource(
+            'somehost', 'some_choosy_user', handled_events=["change-merged"]
+        )
 
         def custom_handler(self, properties, event):
             event['change']['project'] = "world"
             return self.addChangeFromEvent(properties, event)
+
         # Patches class to not bother with the inheritance
         s.eventReceived_change_merged = types.MethodType(custom_handler, s)
         yield s.lineReceived(json.dumps(self.change_merged_event))
@@ -517,6 +517,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             pp.outReceived(b'{"type":"dropped-output"}\n')
             so = error.ProcessDone(None)
             pp.processEnded(failure.Failure(so))
+
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
         s.startStreamProcess()
@@ -539,17 +540,15 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
                     {"file": "file1", "type": "MODIFIED", "insertions": 7, "deletions": 0},
                     {"file": "file2", "type": "MODIFIED", "insertions": 2, "deletions": -2},
                 ],
-            }
+            },
         ]
     }
 
-    query_files_success_line2 = {
-        "type": "stats", "rowCount": 1
-    }
+    query_files_success_line2 = {"type": "stats", "rowCount": 1}
 
     query_files_success = '\n'.join([
         json.dumps(query_files_success_line1),
-        json.dumps(query_files_success_line2)
+        json.dumps(query_files_success_line2),
     ]).encode('utf8')
 
     query_files_failure = b'{"type":"stats","rowCount":0}'
@@ -578,10 +577,8 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         ]
 
         self.expect_commands(
-            ExpectMasterShell(exp_argv)
-            .stdout(self.query_files_success),
-            ExpectMasterShell(exp_argv)
-            .stdout(self.query_files_failure)
+            ExpectMasterShell(exp_argv).stdout(self.query_files_success),
+            ExpectMasterShell(exp_argv).stdout(self.query_files_failure),
         )
 
         res = yield s.getFiles(1000, 13)
@@ -595,32 +592,30 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
     @defer.inlineCallbacks
     def test_getFilesFromEvent(self):
         self.expect_commands(
-            ExpectMasterShell(
-                [
-                    "ssh",
-                    "-o",
-                    "BatchMode=yes",
-                    "-o",
-                    "ServerAliveInterval=15",
-                    "-o",
-                    "ServerAliveCountMax=3",
-                    "user@host",
-                    "-p",
-                    "29418",
-                    "gerrit",
-                    "query",
-                    "4321",
-                    "--format",
-                    "JSON",
-                    "--files",
-                    "--patch-sets",
-                ]
-            )
-            .stdout(self.query_files_success)
+            ExpectMasterShell([
+                "ssh",
+                "-o",
+                "BatchMode=yes",
+                "-o",
+                "ServerAliveInterval=15",
+                "-o",
+                "ServerAliveCountMax=3",
+                "user@host",
+                "-p",
+                "29418",
+                "gerrit",
+                "query",
+                "4321",
+                "--format",
+                "JSON",
+                "--files",
+                "--patch-sets",
+            ]).stdout(self.query_files_success)
         )
 
-        s = yield self.newChangeSource('host', 'user', get_files=True,
-                                       handled_events=["change-merged"])
+        s = yield self.newChangeSource(
+            'host', 'user', get_files=True, handled_events=["change-merged"]
+        )
 
         yield s.lineReceived(json.dumps(self.change_merged_event))
         c = self.master.data.updates.changesAdded[0]
@@ -629,9 +624,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         self.assert_all_commands_ran()
 
 
-class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
-                               TestReactorMixin,
-                               unittest.TestCase):
+class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase):
     NOW_TIMESTAMP = 1479302598
     EVENT_TIMESTAMP = 1479302599
     NOW_FORMATTED = '2016-11-16 13:23:18'
@@ -653,10 +646,15 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
     def newChangeSource(self, **kwargs):
         auth = kwargs.pop('auth', ('log', 'pass'))
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, 'gerrit', auth=auth)
+            self.master, self, 'gerrit', auth=auth
+        )
         self.changesource = gerritchangesource.GerritEventLogPoller(
-            'gerrit', auth=auth, gitBaseURL="ssh://someuser@somehost:29418", pollAtLaunch=False,
-            **kwargs)
+            'gerrit',
+            auth=auth,
+            gitBaseURL="ssh://someuser@somehost:29418",
+            pollAtLaunch=False,
+            **kwargs,
+        )
 
     @defer.inlineCallbacks
     def startChangeSource(self):
@@ -674,8 +672,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         # describe is not used yet in buildbot nine, but it can still be useful in the future, so
         # lets implement and test it
         yield self.newChangeSource()
-        self.assertSubstring('GerritEventLogPoller',
-                             self.changesource.describe())
+        self.assertSubstring('GerritEventLogPoller', self.changesource.describe())
 
     @defer.inlineCallbacks
     def test_name(self):
@@ -685,15 +682,22 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
     @defer.inlineCallbacks
     def test_lineReceived_patchset_created(self):
         self.master.db.insert_test_data([
-            fakedb.Object(id=self.OBJECTID, name='GerritEventLogPoller:gerrit',
-                          class_name='GerritEventLogPoller')])
+            fakedb.Object(
+                id=self.OBJECTID,
+                name='GerritEventLogPoller:gerrit',
+                class_name='GerritEventLogPoller',
+            )
+        ])
         yield self.newChangeSource(get_files=True)
         self.changesource.now = lambda: datetime.datetime.fromtimestamp(
-            self.NOW_TIMESTAMP, datetime.timezone.utc)
-        thirty_days_ago = (
-            datetime.datetime.fromtimestamp(self.NOW_TIMESTAMP, datetime.timezone.utc)
-            - datetime.timedelta(days=30))
-        self._http.expect(method='get', ep='/plugins/events-log/events/',
+            self.NOW_TIMESTAMP, datetime.timezone.utc
+        )
+        thirty_days_ago = datetime.datetime.fromtimestamp(
+            self.NOW_TIMESTAMP, datetime.timezone.utc
+        ) - datetime.timedelta(days=30)
+        self._http.expect(
+            method='get',
+            ep='/plugins/events-log/events/',
             params={'t1': thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")},
             content_json={
                 "type": "patchset-created",
@@ -701,20 +705,17 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                     "branch": "master",
                     "project": "test",
                     "number": "4321",
-                    "owner": {
-                        "name": 'owner owner',
-                        "email": 'owner@example.com'
-                    },
-                "url": "http://example.com/c/test/+/4321",
-                "subject": "change subject"
+                    "owner": {"name": 'owner owner', "email": 'owner@example.com'},
+                    "url": "http://example.com/c/test/+/4321",
+                    "subject": "change subject",
                 },
                 "eventCreatedOn": self.EVENT_TIMESTAMP,
                 "patchSet": {
                     'revision': "29b73c3eb1aeaa9e6c7da520a940d60810e883db",
                     'number': "1",
-                    'ref': 'refs/changes/21/4321/1'
-                }
-            }
+                    'ref': 'refs/changes/21/4321/1',
+                },
+            },
         )
 
         self._http.expect(
@@ -734,13 +735,14 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
             if k in ('files', 'properties'):
                 continue
             self.assertEqual(expected_change[k], v)
-        self.master.db.state.assertState(
-            self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP)
+        self.master.db.state.assertState(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP)
 
         self.assertEqual(set(c['files']), {'/COMMIT_MSG', 'file1'})
 
         # do a second poll, it should ask for the next events
-        self._http.expect(method='get', ep='/plugins/events-log/events/',
+        self._http.expect(
+            method='get',
+            ep='/plugins/events-log/events/',
             params={'t1': self.EVENT_FORMATTED},
             content_json={
                 "type": "patchset-created",
@@ -750,15 +752,15 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                     "number": "4321",
                     "owner": {"name": 'Dustin', "email": 'dustin@mozilla.com'},
                     "url": "http://buildbot.net",
-                    "subject": "fix 1234"
+                    "subject": "fix 1234",
                 },
                 "eventCreatedOn": self.EVENT_TIMESTAMP + 1,
                 "patchSet": {
                     'revision': "29b73c3eb1aeaa9e6c7da520a940d60810e883db",
                     'number': "1",
-                    'ref': 'refs/changes/21/4321/1'
-                }
-            }
+                    'ref': 'refs/changes/21/4321/1',
+                },
+            },
         )
 
         self._http.expect(
@@ -768,8 +770,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         )
 
         yield self.changesource.poll()
-        self.master.db.state.assertState(
-            self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
+        self.master.db.state.assertState(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
 
     change_revision_dict = {
         '/COMMIT_MSG': {'status': 'A', 'lines_inserted': 9, 'size_delta': 1, 'size': 1},
@@ -793,7 +794,6 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
 
 
 class TestGerritChangeFilter(unittest.TestCase):
-
     def test_event_type(self):
         props = {
             'event.type': 'patchset-created',
@@ -801,19 +801,17 @@ class TestGerritChangeFilter(unittest.TestCase):
         }
 
         ch = Change(**TestGerritChangeSource.expected_change_patchset_created, properties=props)
-        f = gerritchangesource.GerritChangeFilter(
-            branch=["master"], eventtype=["patchset-created"])
+        f = gerritchangesource.GerritChangeFilter(branch=["master"], eventtype=["patchset-created"])
         self.assertTrue(f.filter_change(ch))
-        f = gerritchangesource.GerritChangeFilter(
-            branch="master2", eventtype=["patchset-created"])
+        f = gerritchangesource.GerritChangeFilter(branch="master2", eventtype=["patchset-created"])
         self.assertFalse(f.filter_change(ch))
-        f = gerritchangesource.GerritChangeFilter(
-            branch="master", eventtype="ref-updated")
+        f = gerritchangesource.GerritChangeFilter(branch="master", eventtype="ref-updated")
         self.assertFalse(f.filter_change(ch))
         self.assertEqual(
             repr(f),
             '<GerritChangeFilter on event.type in [\'ref-updated\'] and '
-            'event.change.branch in [\'master\']>')
+            'event.change.branch in [\'master\']>',
+        )
 
     def create_props(self, branch, event_type):
         return {
@@ -823,29 +821,25 @@ class TestGerritChangeFilter(unittest.TestCase):
 
     def test_event_type_re(self):
         f = gerritchangesource.GerritChangeFilter(eventtype_re="patchset-.*")
-        self.assertTrue(f.filter_change(
-            Change(properties=self.create_props("br", "patchset-created"))
-        ))
-        self.assertFalse(f.filter_change(
-            Change(properties=self.create_props("br", "ref-updated"))
-        ))
+        self.assertTrue(
+            f.filter_change(Change(properties=self.create_props("br", "patchset-created")))
+        )
+        self.assertFalse(f.filter_change(Change(properties=self.create_props("br", "ref-updated"))))
 
     def test_event_type_fn(self):
         f = gerritchangesource.GerritChangeFilter(eventtype_fn=lambda t: t == "patchset-created")
-        self.assertTrue(f.filter_change(
-            Change(properties=self.create_props("br", "patchset-created"))
-        ))
-        self.assertFalse(f.filter_change(
-            Change(properties=self.create_props("br", "ref-updated"))
-        ))
+        self.assertTrue(
+            f.filter_change(Change(properties=self.create_props("br", "patchset-created")))
+        )
+        self.assertFalse(f.filter_change(Change(properties=self.create_props("br", "ref-updated"))))
         self.assertEqual(repr(f), '<GerritChangeFilter on <lambda>(eventtype)>')
 
     def test_branch_fn(self):
         f = gerritchangesource.GerritChangeFilter(branch_fn=lambda t: t == "br0")
-        self.assertTrue(f.filter_change(
-            Change(properties=self.create_props("br0", "patchset-created"))
-        ))
-        self.assertFalse(f.filter_change(
-            Change(properties=self.create_props("br1", "ref-updated"))
-        ))
+        self.assertTrue(
+            f.filter_change(Change(properties=self.create_props("br0", "patchset-created")))
+        )
+        self.assertFalse(
+            f.filter_change(Change(properties=self.create_props("br1", "ref-updated")))
+        )
         self.assertEqual(repr(f), '<GerritChangeFilter on <lambda>(branch)>')

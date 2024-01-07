@@ -23,6 +23,14 @@ from buildbot.schedulers.triggerable import Triggerable
 from buildbot.schedulers.trysched import Try_Jobdir
 from buildbot.schedulers.trysched import Try_Userpass
 
-_hush_pyflakes = [Scheduler, AnyBranchScheduler, Dependent,
-                  Periodic, Nightly, Triggerable, Try_Jobdir, Try_Userpass]
+_hush_pyflakes = [
+    Scheduler,
+    AnyBranchScheduler,
+    Dependent,
+    Periodic,
+    Nightly,
+    Triggerable,
+    Try_Jobdir,
+    Try_Userpass,
+]
 del _hush_pyflakes

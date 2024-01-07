@@ -69,8 +69,9 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.changes.base.PollingChangeSource',
             'buildbot.changes.base.ChangeSource',
         }
-        self.verify_plugins_registered('changes', 'buildbot.changes', IChangeSource,
-                                       known_not_exported)
+        self.verify_plugins_registered(
+            'changes', 'buildbot.changes', IChangeSource, known_not_exported
+        )
 
     def test_schedulers(self):
         known_not_exported = {
@@ -81,8 +82,9 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.schedulers.timed.NightlyBase',
             'buildbot.schedulers.basic.Scheduler',
         }
-        self.verify_plugins_registered('schedulers', 'buildbot.schedulers', IScheduler,
-                                       known_not_exported)
+        self.verify_plugins_registered(
+            'schedulers', 'buildbot.schedulers', IScheduler, known_not_exported
+        )
 
     def test_steps(self):
         known_not_exported = {
@@ -216,16 +218,18 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         }
         self.verify_plugins_registered('worker', 'buildbot.worker', IWorker, known_not_exported)
 
-    def verify_plugins_registered(self, plugin_type, module_name, interface,
-                                  known_not_exported=None):
+    def verify_plugins_registered(
+        self, plugin_type, module_name, interface, known_not_exported=None
+    ):
         # This will verify whether we can load plugins, i.e. whether the entry points are valid.
         plugins = get_plugins(plugin_type, interface, load_now=True)
 
         # Now verify that are no unregistered plugins left.
         existing_classes = self.get_existing_classes(module_name, interface)
 
-        exported_classes = {f'{plugins._get_entry(name)._entry.module}.{name}'
-                            for name in plugins.names}
+        exported_classes = {
+            f'{plugins._get_entry(name)._entry.module}.{name}' for name in plugins.names
+        }
         if known_not_exported is None:
             known_not_exported = set()
 

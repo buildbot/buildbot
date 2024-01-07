@@ -21,7 +21,6 @@ from buildbot.data import types
 
 
 class Db2DataMixin:
-
     def db2data(self, dbdict):
         data = {
             'test_resultid': dbdict['id'],
@@ -37,7 +36,6 @@ class Db2DataMixin:
 
 
 class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /test_result_sets/n:test_result_setid/results
@@ -45,16 +43,16 @@ class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        set_dbdict = \
-            yield self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
+        set_dbdict = yield self.master.db.test_result_sets.getTestResultSet(
+            kwargs['test_result_setid']
+        )
 
         if set_dbdict is None:
             return []
 
-        result_dbdicts = \
-            yield self.master.db.test_results.getTestResults(set_dbdict['builderid'],
-                                                             kwargs['test_result_setid'],
-                                                             result_spec=resultSpec)
+        result_dbdicts = yield self.master.db.test_results.getTestResults(
+            set_dbdict['builderid'], kwargs['test_result_setid'], result_spec=resultSpec
+        )
 
         results = []
         for dbdict in result_dbdicts:
@@ -63,7 +61,6 @@ class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
 
 
 class TestResult(base.ResourceType):
-
     name = "test_result"
     plural = "test_results"
     endpoints = [TestResultsEndpoint]
@@ -81,6 +78,7 @@ class TestResult(base.ResourceType):
         line = types.NoneOk(types.Integer())
         duration_ns = types.NoneOk(types.Integer())
         value = types.String()
+
     entityType = EntityType(name, 'TestResult')
 
     @base.updateMethod
@@ -90,5 +88,6 @@ class TestResult(base.ResourceType):
         # will be part of a test result set. The users should wait for a 'complete' event on a
         # test result set and only then fetch the test results, which won't change from that time
         # onward.
-        yield self.master.db.test_results.addTestResults(builderid, test_result_setid,
-                                                         result_values)
+        yield self.master.db.test_results.addTestResults(
+            builderid, test_result_setid, result_values
+        )

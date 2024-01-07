@@ -73,16 +73,11 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             config = KubeHardcodedConfig(master_url="https://kube.example.com")
 
         worker = kubernetes.KubeLatentWorker(
-            *args,
-            masterFQDN="buildbot-master",
-            kube_config=config,
-            **kwargs
+            *args, masterFQDN="buildbot-master", kube_config=config, **kwargs
         )
         self.master = fakemaster.make_master(self, wantData=True)
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master,
-            self,
-            "https://kube.example.com"
+            self.master, self, "https://kube.example.com"
         )
 
         yield worker.setServiceParent(self.master)
@@ -92,9 +87,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         return worker
 
     def get_expected_metadata(self):
-        return {
-            "name": "buildbot-worker-87de7e"
-        }
+        return {"name": "buildbot-worker-87de7e"}
 
     def get_expected_spec(self, image):
         return {
@@ -104,26 +97,18 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                     "name": "buildbot-worker-87de7e",
                     "image": image,
                     "env": [
-                        {
-                            "name": "BUILDMASTER", "value": "buildbot-master"
-                        },
-                        {
-                            "name": "WORKERNAME", "value": "worker"
-                        },
-                        {
-                            "name": "WORKERPASS", "value": "random_pw"
-                        },
-                        {
-                            "name": "BUILDMASTER_PORT", "value": "1234"
-                        }
+                        {"name": "BUILDMASTER", "value": "buildbot-master"},
+                        {"name": "WORKERNAME", "value": "worker"},
+                        {"name": "WORKERPASS", "value": "random_pw"},
+                        {"name": "BUILDMASTER_PORT", "value": "1234"},
                     ],
                     "resources": {},
-                    "volumeMounts": []
+                    "volumeMounts": [],
                 }
             ],
             "nodeSelector": {},
             "restartPolicy": "Never",
-            "volumes": []
+            "volumes": [],
         }
 
     def test_instantiate(self):
@@ -157,7 +142,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             "/api/v1/namespaces/default/pods/buildbot-worker-87de7e",
             params={"graceperiod": 0},
             code=404,
-            content_json={"message": "Pod not found", "reason": "NotFound"}
+            content_json={"message": "Pod not found", "reason": "NotFound"},
         )
 
     def expect_pod_delete_existing(self, image):
@@ -169,8 +154,8 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             content_json={
                 "kind": "Pod",
                 "metadata": self.get_expected_metadata(),
-                "spec": self.get_expected_spec(image)
-            }
+                "spec": self.get_expected_spec(image),
+            },
         )
 
     def expect_pod_status_not_found(self):
@@ -178,7 +163,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             "get",
             "/api/v1/namespaces/default/pods/buildbot-worker-87de7e/status",
             code=404,
-            content_json={"kind": "Status", "reason": "NotFound"}
+            content_json={"kind": "Status", "reason": "NotFound"},
         )
 
     def expect_pod_status_exists(self, image):
@@ -189,8 +174,8 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             content_json={
                 "kind": "Pod",
                 "metadata": self.get_expected_metadata(),
-                "spec": self.get_expected_spec(image)
-            }
+                "spec": self.get_expected_spec(image),
+            },
         )
 
     def expect_pod_startup(self, image):
@@ -201,14 +186,14 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                 "apiVersion": "v1",
                 "kind": "Pod",
                 "metadata": self.get_expected_metadata(),
-                "spec": self.get_expected_spec(image)
+                "spec": self.get_expected_spec(image),
             },
             code=200,
             content_json={
                 "kind": "Pod",
                 "metadata": self.get_expected_metadata(),
-                "spec": self.get_expected_spec(image)
-            }
+                "spec": self.get_expected_spec(image),
+            },
         )
 
     def expect_pod_startup_error(self, image):
@@ -219,14 +204,10 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                 "apiVersion": "v1",
                 "kind": "Pod",
                 "metadata": self.get_expected_metadata(),
-                "spec": self.get_expected_spec(image)
+                "spec": self.get_expected_spec(image),
             },
             code=400,
-            content_json={
-                "kind": "Status",
-                "reason": "MissingName",
-                "message": "need name"
-            }
+            content_json={"kind": "Status", "reason": "MissingName", "message": "need name"},
         )
 
     @defer.inlineCallbacks
@@ -312,7 +293,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             "/api/v1/namespaces/default/pods/buildbot-worker-87de7e",
             params={"graceperiod": 0},
             code=404,
-            content="not json"
+            content="not json",
         )
 
         self.expect_pod_delete_nonexisting()
@@ -345,9 +326,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.expect_pod_delete_nonexisting()
         self.expect_pod_status_not_found()
 
-        expected_metadata = {
-            "name": "buildbot-worker-87de7e"
-        }
+        expected_metadata = {"name": "buildbot-worker-87de7e"}
         expected_spec = {
             "affinity": {},
             "containers": [
@@ -355,26 +334,18 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                     "name": "buildbot-worker-87de7e",
                     "image": "rendered:buildbot/buildbot-worker",
                     "env": [
-                        {
-                            "name": "BUILDMASTER", "value": "buildbot-master"
-                        },
-                        {
-                            "name": "WORKERNAME", "value": "worker"
-                        },
-                        {
-                            "name": "WORKERPASS", "value": "random_pw"
-                        },
-                        {
-                            "name": "BUILDMASTER_PORT", "value": "1234"
-                        }
+                        {"name": "BUILDMASTER", "value": "buildbot-master"},
+                        {"name": "WORKERNAME", "value": "worker"},
+                        {"name": "WORKERPASS", "value": "random_pw"},
+                        {"name": "BUILDMASTER_PORT", "value": "1234"},
                     ],
                     "resources": {},
-                    "volumeMounts": []
+                    "volumeMounts": [],
                 }
             ],
             "nodeSelector": {},
             "restartPolicy": "Never",
-            "volumes": []
+            "volumes": [],
         }
 
         self._http.expect(
@@ -384,10 +355,10 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                 "apiVersion": "v1",
                 "kind": "Pod",
                 "metadata": expected_metadata,
-                "spec": expected_spec
+                "spec": expected_spec,
             },
             code=200,
-            content="not json"
+            content="not json",
         )
         self.expect_pod_delete_nonexisting()
         self.expect_pod_status_not_found()
@@ -399,9 +370,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_hardcoded_config_verify_is_forwarded(self):
         config = KubeHardcodedConfig(
-            master_url="https://kube.example.com",
-            namespace="default",
-            verify="/path/to/pem"
+            master_url="https://kube.example.com", namespace="default", verify="/path/to/pem"
         )
         worker = yield self.setupWorker('worker', config=config)
 
@@ -411,7 +380,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             params={"graceperiod": 0},
             verify="/path/to/pem",
             code=200,
-            content_json={}
+            content_json={},
         )
         self._http.expect(
             "get",
@@ -429,7 +398,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             master_url="https://kube.example.com",
             namespace="default",
             verify="/path/to/pem",
-            headers={"Test": "10"}
+            headers={"Test": "10"},
         )
         worker = yield self.setupWorker('worker', config=config)
 
@@ -440,7 +409,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             headers={'Test': '10'},
             verify="/path/to/pem",
             code=200,
-            content_json={}
+            content_json={},
         )
         self._http.expect(
             "get",
@@ -459,7 +428,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             master_url="https://kube.example.com",
             namespace="default",
             verify="/path/to/pem",
-            bearerToken=Interpolate("%(kw:test)s", test=10)
+            bearerToken=Interpolate("%(kw:test)s", test=10),
         )
         worker = yield self.setupWorker('worker', config=config)
 
@@ -470,7 +439,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             headers={"Authorization": "Bearer 10"},
             verify="/path/to/pem",
             code=200,
-            content_json={}
+            content_json={},
         )
         self._http.expect(
             "get",
@@ -489,7 +458,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             master_url="https://kube.example.com",
             namespace="default",
             verify="/path/to/pem",
-            basicAuth={'user': 'name', 'password': Interpolate("%(kw:test)s", test=10)}
+            basicAuth={'user': 'name', 'password': Interpolate("%(kw:test)s", test=10)},
         )
         worker = yield self.setupWorker('worker', config=config)
 
@@ -500,7 +469,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             headers={"Authorization": "Basic " + str(base64.b64encode("name:10".encode("utf-8")))},
             verify="/path/to/pem",
             code=200,
-            content_json={}
+            content_json={},
         )
         self._http.expect(
             "get",

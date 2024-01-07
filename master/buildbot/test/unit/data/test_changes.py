@@ -31,7 +31,6 @@ from buildbot.util import epoch2datetime
 
 
 class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = changes.ChangeEndpoint
     resourceTypeClass = changes.Change
 
@@ -39,9 +38,15 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.db.insert_test_data([
             fakedb.SourceStamp(id=234),
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                          repository='svn://...', codebase='cbsvn',
-                          project='world-domination', sourcestampid=234),
+            fakedb.Change(
+                changeid=13,
+                branch='trunk',
+                revision='9283',
+                repository='svn://...',
+                codebase='cbsvn',
+                project='world-domination',
+                sourcestampid=234,
+            ),
         ])
 
     def tearDown(self):
@@ -62,7 +67,6 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = changes.ChangesEndpoint
     resourceTypeClass = changes.Change
 
@@ -70,13 +74,25 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.db.insert_test_data([
             fakedb.SourceStamp(id=133),
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                          repository='svn://...', codebase='cbsvn',
-                          project='world-domination', sourcestampid=133),
+            fakedb.Change(
+                changeid=13,
+                branch='trunk',
+                revision='9283',
+                repository='svn://...',
+                codebase='cbsvn',
+                project='world-domination',
+                sourcestampid=133,
+            ),
             fakedb.SourceStamp(id=144),
-            fakedb.Change(changeid=14, branch='devel', revision='9284',
-                          repository='svn://...', codebase='cbsvn',
-                          project='world-domination', sourcestampid=144),
+            fakedb.Change(
+                changeid=14,
+                branch='devel',
+                revision='9284',
+                repository='svn://...',
+                codebase='cbsvn',
+                project='world-domination',
+                sourcestampid=144,
+            ),
             fakedb.Build(buildrequestid=1, masterid=1, workerid=1, builderid=1),
         ])
 
@@ -96,8 +112,9 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_getChanges_from_build(self):
         fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
 
-        mockGetChangeById = mock.Mock(spec=self.db.changes.getChangesForBuild,
-                                      return_value=[fake_change])
+        mockGetChangeById = mock.Mock(
+            spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
+        )
         self.patch(self.db.changes, 'getChangesForBuild', mockGetChangeById)
 
         changes = yield self.callGet(('builds', '1', 'changes'))
@@ -107,15 +124,16 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChanges_from_builder(self):
-
         fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
-        mockGetChangeById = mock.Mock(spec=self.db.changes.getChangesForBuild,
-                                      return_value=[fake_change])
+        mockGetChangeById = mock.Mock(
+            spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
+        )
         self.patch(self.db.changes, 'getChangesForBuild', mockGetChangeById)
 
         fake_build = yield {'id': 1}
-        mockGetBuildByNumber = mock.Mock(spec=self.db.builds.getBuildByNumber,
-                                         return_value=fake_build)
+        mockGetBuildByNumber = mock.Mock(
+            spec=self.db.builds.getBuildByNumber, return_value=fake_build
+        )
         self.patch(self.db.builds, 'getBuildByNumber', mockGetBuildByNumber)
 
         changes = yield self.callGet(('builders', '1', 'builds', '1', 'changes'))
@@ -141,8 +159,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChangesOtherOffset(self):
-        resultSpec = resultspec.ResultSpec(
-            limit=1, offset=1, order=('-changeid',))
+        resultSpec = resultspec.ResultSpec(limit=1, offset=1, order=('-changeid',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         self.assertEqual(len(changes), 1)
@@ -180,24 +197,37 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = changes.Change(self.master)
 
     def test_signature_addChange(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.addChange,  # fake
-            self.rtype.addChange)  # real
-        def addChange(self, files=None, comments=None, author=None, committer=None,
-                      revision=None, when_timestamp=None, branch=None, category=None,
-                      revlink='', properties=None, repository='', codebase=None,
-                      project='', src=None):
+            self.rtype.addChange,
+        )  # real
+        def addChange(
+            self,
+            files=None,
+            comments=None,
+            author=None,
+            committer=None,
+            revision=None,
+            when_timestamp=None,
+            branch=None,
+            category=None,
+            revlink='',
+            properties=None,
+            repository='',
+            codebase=None,
+            project='',
+            src=None,
+        ):
             pass
 
     @defer.inlineCallbacks
-    def do_test_addChange(self, kwargs,
-                          expectedRoutingKey, expectedMessage, expectedRow,
-                          expectedChangeUsers=None):
+    def do_test_addChange(
+        self, kwargs, expectedRoutingKey, expectedMessage, expectedRow, expectedChangeUsers=None
+    ):
         if expectedChangeUsers is None:
             expectedChangeUsers = []
         self.reactor.advance(10000000)
@@ -226,7 +256,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             "revision": '0e92a098b',
             "revlink": 'http://warner/0e92a098b',
             "when_timestamp": 256738404,
-            "properties": {'foo': 20}
+            "properties": {'foo': 20},
         }
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = self.changeEvent
@@ -245,8 +275,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             project='Buildbot',
             sourcestampid=100,
         )
-        return self.do_test_addChange(kwargs,
-                                      expectedRoutingKey, expectedMessage, expectedRow)
+        return self.do_test_addChange(kwargs, expectedRoutingKey, expectedMessage, expectedRow)
 
     @defer.inlineCallbacks
     def test_addChange_src_codebase(self):
@@ -267,7 +296,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             "when_timestamp": 256738404,
             "properties": {'foo': 20},
             "src": 'git',
-            "codebase": 'cb'
+            "codebase": 'cb',
         }
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
@@ -313,19 +342,19 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             project='Buildbot',
             sourcestampid=100,
         )
-        yield self.do_test_addChange(kwargs,
-                                   expectedRoutingKey, expectedMessage, expectedRow,
-                                   expectedChangeUsers=[123])
+        yield self.do_test_addChange(
+            kwargs, expectedRoutingKey, expectedMessage, expectedRow, expectedChangeUsers=[123]
+        )
 
         createUserObject.assert_called_once_with(self.master, 'warner', 'git')
 
     def test_addChange_src_codebaseGenerator(self):
         def preChangeGenerator(**kwargs):
             return kwargs
+
         self.master.config = mock.Mock(name='master.config')
         self.master.config.preChangeGenerator = preChangeGenerator
-        self.master.config.codebaseGenerator = \
-            lambda change: f"cb-{(change['category'])}"
+        self.master.config.codebaseGenerator = lambda change: f"cb-{(change['category'])}"
         kwargs = {
             "author": 'warner',
             "committer": 'david',
@@ -338,7 +367,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             "revision": '0e92a098b',
             "revlink": 'http://warner/0e92a098b',
             "when_timestamp": 256738404,
-            "properties": {'foo': 20}
+            "properties": {'foo': 20},
         }
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
@@ -384,8 +413,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             project='Buildbot',
             sourcestampid=100,
         )
-        return self.do_test_addChange(kwargs,
-                                      expectedRoutingKey, expectedMessage, expectedRow)
+        return self.do_test_addChange(kwargs, expectedRoutingKey, expectedMessage, expectedRow)
 
     def test_addChange_repository_revision(self):
         self.master.config = mock.Mock(name='master.config')
@@ -403,7 +431,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             "codebase": '',
             "revision": '0e92a098b',
             "when_timestamp": 256738404,
-            "properties": {'foo': 20}
+            "properties": {'foo': 20},
         }
         expectedRoutingKey = ('changes', '500', 'new')
         # When no revlink is passed to addChange, but a repository and revision is
@@ -452,5 +480,4 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             project='Buildbot',
             sourcestampid=100,
         )
-        return self.do_test_addChange(kwargs,
-                                      expectedRoutingKey, expectedMessage, expectedRow)
+        return self.do_test_addChange(kwargs, expectedRoutingKey, expectedMessage, expectedRow)

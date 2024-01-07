@@ -21,7 +21,6 @@ from buildbot.test.fake import fakemaster
 
 
 class ChangeSourceMixin:
-
     """
     This class is used for testing change sources, and handles a few things:
 
@@ -95,11 +94,8 @@ class ChangeSourceMixin:
         else:
             name = self.DEFAULT_NAME
 
-        self.master.data.updates.changesourceIds[
-            name] = self.DUMMY_CHANGESOURCE_ID
+        self.master.data.updates.changesourceIds[name] = self.DUMMY_CHANGESOURCE_ID
         if otherMaster:
-            self.master.data.updates.changesourceMasters[
-                self.DUMMY_CHANGESOURCE_ID] = otherMaster
+            self.master.data.updates.changesourceMasters[self.DUMMY_CHANGESOURCE_ID] = otherMaster
         else:
-            del self.master.data.updates.changesourceMasters[
-                self.DUMMY_CHANGESOURCE_ID]
+            del self.master.data.updates.changesourceMasters[self.DUMMY_CHANGESOURCE_ID]

@@ -45,12 +45,11 @@ class Project(Row):
             slug=slug,
             description=description,
             description_format=description_format,
-            description_html=description_html
+            description_html=description_html,
         )
 
 
 class FakeProjectsComponent(FakeDBComponent):
-
     def setUp(self):
         self.projects = {}
 
@@ -103,7 +102,8 @@ class FakeProjectsComponent(FakeDBComponent):
         }
 
         active_projectids = {
-            builder["projectid"] for id, builder in self.db.builders.builders.items()
+            builder["projectid"]
+            for id, builder in self.db.builders.builders.items()
             if id in active_builderids
         }
 
@@ -114,12 +114,7 @@ class FakeProjectsComponent(FakeDBComponent):
         return rv
 
     def update_project_info(
-        self,
-        projectid,
-        slug,
-        description,
-        description_format,
-        description_html
+        self, projectid, slug, description, description_format, description_html
     ):
         if projectid not in self.projects:
             return defer.succeed(None)

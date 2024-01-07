@@ -46,7 +46,8 @@ from buildbot.db import users
 from buildbot.db import workers
 from buildbot.util import service
 
-upgrade_message = textwrap.dedent("""\
+upgrade_message = textwrap.dedent(
+    """\
 
     The Buildmaster database needs to be upgraded before this version of
     buildbot can run.  Use the following command-line
@@ -55,11 +56,11 @@ upgrade_message = textwrap.dedent("""\
 
     to upgrade the database, and try starting the buildmaster again.  You may
     want to make a backup of your buildmaster before doing so.
-    """).strip()
+    """
+).strip()
 
 
-class DBConnector(service.ReconfigurableServiceMixin,
-                  service.AsyncMultiService):
+class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     # The connection between Buildbot and its backend database.  This is
     # generally accessible as master.db, but is also used during upgrades.
     #
@@ -89,13 +90,11 @@ class DBConnector(service.ReconfigurableServiceMixin,
         yield super().setServiceParent(p)
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
-        self.changesources = changesources.ChangeSourcesConnectorComponent(
-            self)
+        self.changesources = changesources.ChangeSourcesConnectorComponent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
         self.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self)
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
-        self.buildrequests = buildrequests.BuildRequestsConnectorComponent(
-            self)
+        self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
         self.build_data = build_data.BuildDataConnectorComponent(self)
@@ -110,8 +109,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
         self.test_results = test_results.TestResultsConnectorComponent(self)
         self.test_result_sets = test_result_sets.TestResultSetsConnectorComponent(self)
 
-        self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
-                                                   self._doCleanup)
+        self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD, self._doCleanup)
         self.cleanup_timer.clock = self.master.reactor
         yield self.cleanup_timer.setServiceParent(self)
 
@@ -122,10 +120,8 @@ class DBConnector(service.ReconfigurableServiceMixin,
         log.msg(f"Setting up database with URL {repr(util.stripUrlPassword(db_url))}")
 
         # set up the engine and pool
-        self._engine = enginestrategy.create_engine(db_url,
-                                                    basedir=self.basedir)
-        self.pool = pool.DBThreadPool(
-            self._engine, reactor=self.master.reactor, verbose=verbose)
+        self._engine = enginestrategy.create_engine(db_url, basedir=self.basedir)
+        self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:

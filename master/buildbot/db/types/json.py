@@ -21,7 +21,6 @@ from sqlalchemy.types import TypeDecorator
 
 
 class JsonObject(TypeDecorator):
-
     """Represents an immutable json-encoded string."""
 
     cache_ok = True

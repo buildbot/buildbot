@@ -21,7 +21,6 @@ from buildbot.util import netstrings
 
 
 class NetstringParser(unittest.TestCase):
-
     def test_valid_netstrings(self):
         p = netstrings.NetstringParser()
         p.feed("5:hello,5:world,")

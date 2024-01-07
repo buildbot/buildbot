@@ -23,9 +23,7 @@ from buildbot.test.util import misc
 
 
 class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
-
     class FakeSender:
-
         def __init__(self, testcase, master, auth, encoding=None):
             self.master = master
             self.auth = auth
@@ -51,6 +49,7 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
         def Sender_constr(*args, **kwargs):
             self.sender = self.FakeSender(self, *args, **kwargs)
             return self.sender
+
         self.patch(sendchange_client, 'Sender', Sender_constr)
 
         # undo the effects of @in_reactor
@@ -76,27 +75,41 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
             "when": 1234.0,
             "comments": 'comm',
             "files": ('a', 'b'),
-            "codebase": 'cb'
+            "codebase": 'cb',
         })
 
-        self.assertEqual((self.sender.master, self.sender.auth,
-                          self.sender.encoding, self.sender.send_kwargs,
-                          self.getStdout(), rc),
-                         ('m', ['a', 'b'], 'utf16', {
-                             'branch': 'br',
-                             'category': 'cat',
-                             'codebase': 'cb',
-                             'comments': 'comm',
-                             'files': ('a', 'b'),
-                             'project': 'prj',
-                             'properties': {'a': 'b'},
-                             'repository': 'rep',
-                             'revision': 'rr',
-                             'revlink': 'rl',
-                             'when': 1234.0,
-                             'who': 'me',
-                             'vc': 'git'},
-                             'change sent successfully', 0))
+        self.assertEqual(
+            (
+                self.sender.master,
+                self.sender.auth,
+                self.sender.encoding,
+                self.sender.send_kwargs,
+                self.getStdout(),
+                rc,
+            ),
+            (
+                'm',
+                ['a', 'b'],
+                'utf16',
+                {
+                    'branch': 'br',
+                    'category': 'cat',
+                    'codebase': 'cb',
+                    'comments': 'comm',
+                    'files': ('a', 'b'),
+                    'project': 'prj',
+                    'properties': {'a': 'b'},
+                    'repository': 'rep',
+                    'revision': 'rr',
+                    'revlink': 'rl',
+                    'when': 1234.0,
+                    'who': 'me',
+                    'vc': 'git',
+                },
+                'change sent successfully',
+                0,
+            ),
+        )
 
     @defer.inlineCallbacks
     def test_sendchange_config_no_codebase(self):
@@ -115,32 +128,45 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
             "revlink": 'rl',
             "when": 1234.0,
             "comments": 'comm',
-            "files": ('a', 'b')
+            "files": ('a', 'b'),
         })
 
-        self.assertEqual((self.sender.master, self.sender.auth,
-                          self.sender.encoding, self.sender.send_kwargs,
-                          self.getStdout(), rc),
-                         ('m', ['a', 'b'], 'utf16', {
-                             'branch': 'br',
-                             'category': 'cat',
-                             'codebase': None,
-                             'comments': 'comm',
-                             'files': ('a', 'b'),
-                             'project': 'prj',
-                             'properties': {'a': 'b'},
-                             'repository': 'rep',
-                             'revision': 'rr',
-                             'revlink': 'rl',
-                             'when': 1234.0,
-                             'who': 'me',
-                             'vc': 'git'},
-                             'change sent successfully', 0))
+        self.assertEqual(
+            (
+                self.sender.master,
+                self.sender.auth,
+                self.sender.encoding,
+                self.sender.send_kwargs,
+                self.getStdout(),
+                rc,
+            ),
+            (
+                'm',
+                ['a', 'b'],
+                'utf16',
+                {
+                    'branch': 'br',
+                    'category': 'cat',
+                    'codebase': None,
+                    'comments': 'comm',
+                    'files': ('a', 'b'),
+                    'project': 'prj',
+                    'properties': {'a': 'b'},
+                    'repository': 'rep',
+                    'revision': 'rr',
+                    'revlink': 'rl',
+                    'when': 1234.0,
+                    'who': 'me',
+                    'vc': 'git',
+                },
+                'change sent successfully',
+                0,
+            ),
+        )
 
     @defer.inlineCallbacks
     def test_sendchange_fail(self):
         self.fail = True
         rc = yield sendchange.sendchange({})
 
-        self.assertEqual((self.getStdout().split('\n')[0], rc),
-                         ('change not sent:', 1))
+        self.assertEqual((self.getStdout().split('\n')[0], rc), ('change not sent:', 1))

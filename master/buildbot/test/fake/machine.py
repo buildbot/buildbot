@@ -34,8 +34,7 @@ class FakeMachineManager(service.AsyncMultiService):
 
 
 class LatentMachineController:
-    """ A controller for ``ControllableLatentMachine``
-    """
+    """A controller for ``ControllableLatentMachine``"""
 
     def __init__(self, name, **kwargs):
         self.machine = ControllableLatentMachine(name, self, **kwargs)
@@ -62,8 +61,8 @@ class LatentMachineController:
 
 
 class ControllableLatentMachine(AbstractLatentMachine):
-    """ A latent machine that can be controlled by tests
-    """
+    """A latent machine that can be controlled by tests"""
+
     def __init__(self, name, controller, **kwargs):
         self._controller = controller
         super().__init__(name, **kwargs)

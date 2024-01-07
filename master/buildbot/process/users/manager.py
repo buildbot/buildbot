@@ -20,8 +20,7 @@ from twisted.internet import defer
 from buildbot.util import service as util_service
 
 
-class UserManagerManager(util_service.ReconfigurableServiceMixin,
-                         service.MultiService):
+class UserManagerManager(util_service.ReconfigurableServiceMixin, service.MultiService):
     # this class manages a fleet of user managers; hence the name..
 
     def __init__(self, master):

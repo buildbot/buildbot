@@ -24,7 +24,6 @@ from buildbot.util import sautils
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
-
     def setUp(self):
         return self.setUpMigrateTest()
 
@@ -38,7 +37,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         hash_length = 40
 
         projects = sautils.Table(
-            'projects', metadata,
+            'projects',
+            metadata,
             sa.Column('id', sa.Integer, primary_key=True),
             sa.Column('name', sa.Text, nullable=False),
             sa.Column('name_hash', sa.String(hash_length), nullable=False),
@@ -47,15 +47,20 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         )
         projects.create()
 
-        conn.execute(projects.insert(), [{
-            "id": 4,
-            "name": "foo",
-            "description": "foo_description",
-            "description_html": None,
-            "description_format": None,
-            "slug": "foo",
-            "name_hash": hashlib.sha1(b'foo').hexdigest()
-        }])
+        conn.execute(
+            projects.insert(),
+            [
+                {
+                    "id": 4,
+                    "name": "foo",
+                    "description": "foo_description",
+                    "description_html": None,
+                    "description_format": None,
+                    "slug": "foo",
+                    "name_hash": hashlib.sha1(b'foo').hexdigest(),
+                }
+            ],
+        )
 
     def test_update(self):
         def setup_thd(conn):
@@ -72,7 +77,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             q = sa.select([
                 projects.c.name,
                 projects.c.description_format,
-                projects.c.description_html
+                projects.c.description_html,
             ])
 
             num_rows = 0

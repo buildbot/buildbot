@@ -20,7 +20,6 @@ from buildbot.db import base
 
 
 class ProjectsConnectorComponent(base.DBConnectorComponent):
-
     def find_project_id(self, name, auto_create=True):
         name_hash = self.hashColumns(name)
         return self.findSomethingId(
@@ -30,7 +29,9 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
                 "name": name,
                 "slug": name,
                 "name_hash": name_hash,
-            }, autoCreate=auto_create)
+            },
+            autoCreate=auto_create,
+        )
 
     @defer.inlineCallbacks
     def get_project(self, projectid):
@@ -46,6 +47,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
                 rv = self._project_dict_from_row(row)
             res.close()
             return rv
+
         return (yield self.db.pool.do(thd))
 
     # returns a Deferred that returns a value
@@ -56,6 +58,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
             q = q.order_by(tbl.c.name)
             res = conn.execute(q)
             return [self._project_dict_from_row(row) for row in res.fetchall()]
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
@@ -65,10 +68,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
             builders_tbl = self.db.model.builders
             bm_tbl = self.db.model.builder_masters
 
-            q = projects_tbl.select() \
-                .join(builders_tbl) \
-                .join(bm_tbl) \
-                .order_by(projects_tbl.c.name)
+            q = projects_tbl.select().join(builders_tbl).join(bm_tbl).order_by(projects_tbl.c.name)
             res = conn.execute(q)
             return [self._project_dict_from_row(row) for row in res.fetchall()]
 
@@ -76,12 +76,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
 
     # returns a Deferred that returns a value
     def update_project_info(
-        self,
-        projectid,
-        slug,
-        description,
-        description_format,
-        description_html
+        self, projectid, slug, description, description_format, description_html
     ):
         def thd(conn):
             q = self.db.model.projects.update(
@@ -94,6 +89,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
                 description_format=description_format,
                 description_html=description_html,
             ).close()
+
         return self.db.pool.do(thd)
 
     def _project_dict_from_row(self, row):

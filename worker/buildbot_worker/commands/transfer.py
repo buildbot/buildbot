@@ -24,7 +24,6 @@ from buildbot_worker.commands.base import Command
 
 
 class TransferCommand(Command):
-
     def finished(self, res):
         if self.debug:
             self.log_msg('finished: stderr={0!r}, rc={1!r}'.format(self.stderr, self.rc))
@@ -49,7 +48,6 @@ class TransferCommand(Command):
 
 
 class WorkerFileUploadCommand(TransferCommand):
-
     """
     Upload a file from worker to build master
     Arguments:
@@ -60,6 +58,7 @@ class WorkerFileUploadCommand(TransferCommand):
         - ['blocksize']: max size for each data block
         - ['keepstamp']: whether to preserve file modified and accessed times
     """
+
     debug = False
 
     requiredArgs = ['path', 'writer', 'blocksize']
@@ -108,9 +107,9 @@ class WorkerFileUploadCommand(TransferCommand):
             yield self.protocol_command.protocol_update_upload_file_close(self.writer)
 
             if self.keepstamp:
-                yield self.protocol_command.protocol_update_upload_file_utime(self.writer,
-                                                                              access_time,
-                                                                              modified_time)
+                yield self.protocol_command.protocol_update_upload_file_utime(
+                    self.writer, access_time, modified_time
+                )
 
         def _close_err(f):
             self.rc = 1
@@ -123,6 +122,7 @@ class WorkerFileUploadCommand(TransferCommand):
             def eb(f2):
                 self.log_msg("ignoring error from remote close():")
                 log.err(f2)
+
             d1.addErrback(eb)
             d1.addBoth(lambda _: f)  # always return _loop failure
             return d1
@@ -142,6 +142,7 @@ class WorkerFileUploadCommand(TransferCommand):
 
         def _err(why):
             fire_when_done.errback(why)
+
         d.addCallbacks(_done, _err)
         return None
 
@@ -159,16 +160,17 @@ class WorkerFileUploadCommand(TransferCommand):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = 'Maximum filesize reached, truncating file \'{0}\''.format(
-                    self.path)
+                self.stderr = 'Maximum filesize reached, truncating file \'{0}\''.format(self.path)
                 self.rc = 1
             data = ''
         else:
             data = self.fp.read(length)
 
         if self.debug:
-            self.log_msg('WorkerFileUploadCommand._writeBlock(): ' +
-                         'allowed={0} readlen={1}'.format(length, len(data)))
+            self.log_msg(
+                'WorkerFileUploadCommand._writeBlock(): '
+                + 'allowed={0} readlen={1}'.format(length, len(data))
+            )
         if not data:
             self.log_msg("EOF: callRemote(close)")
             return True
@@ -240,9 +242,11 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
             def unpack_err(f):
                 self.rc = 1
                 return f
+
             d1.addErrback(unpack_err)
             d1.addCallback(lambda ignored: res)
             return d1
+
         d.addCallback(unpack)
         d.addBoth(self.finished)
         return d
@@ -258,7 +262,6 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
 
 
 class WorkerFileDownloadCommand(TransferCommand):
-
     """
     Download a file from master to worker
     Arguments:
@@ -269,6 +272,7 @@ class WorkerFileDownloadCommand(TransferCommand):
         - ['blocksize']: max size for each data block
         - ['mode']:      access mode for the new file
     """
+
     debug = False
     requiredArgs = ['path', 'reader', 'blocksize']
 
@@ -322,6 +326,7 @@ class WorkerFileDownloadCommand(TransferCommand):
             d1.addErrback(log.err, 'while trying to close reader')
             d1.addCallback(lambda ignored: res)
             return d1
+
         d.addBoth(_close)
         d.addBoth(self.finished)
         return d
@@ -337,6 +342,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         def _err(why):
             fire_when_done.errback(why)
+
         d.addCallbacks(_done, _err)
         return None
 
@@ -354,8 +360,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = "Maximum filesize reached, truncating file '{0}'".format(
-                    self.path)
+                self.stderr = "Maximum filesize reached, truncating file '{0}'".format(self.path)
                 self.rc = 1
             return True
         else:

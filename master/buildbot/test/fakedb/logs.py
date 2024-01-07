@@ -25,28 +25,40 @@ class Log(Row):
     table = "logs"
 
     id_column = 'id'
-    required_columns = ('stepid', )
+    required_columns = ('stepid',)
 
-    def __init__(self, id=None, name='log29', slug='log29', stepid=None, complete=0, num_lines=0,
-                 type='s'):
-        super().__init__(id=id, name=name, slug=slug, stepid=stepid, complete=complete,
-                         num_lines=num_lines, type=type)
+    def __init__(
+        self, id=None, name='log29', slug='log29', stepid=None, complete=0, num_lines=0, type='s'
+    ):
+        super().__init__(
+            id=id,
+            name=name,
+            slug=slug,
+            stepid=stepid,
+            complete=complete,
+            num_lines=num_lines,
+            type=type,
+        )
 
 
 class LogChunk(Row):
     table = "logchunks"
 
-    required_columns = ('logid', )
+    required_columns = ('logid',)
     # 'content' column is sa.LargeBinary, it's bytestring.
     binary_columns = ('content',)
 
     def __init__(self, logid=None, first_line=0, last_line=0, content='', compressed=0):
-        super().__init__(logid=logid, first_line=first_line, last_line=last_line, content=content,
-                         compressed=compressed)
+        super().__init__(
+            logid=logid,
+            first_line=first_line,
+            last_line=last_line,
+            content=content,
+            compressed=compressed,
+        )
 
 
 class FakeLogsComponent(FakeDBComponent):
-
     def setUp(self):
         self.logs = {}
         self.log_lines = {}  # { logid : [ lines ] }
@@ -62,7 +74,7 @@ class FakeLogsComponent(FakeDBComponent):
                 if len(lines) < row.last_line + 1:
                     lines.append([None] * (row.last_line + 1 - len(lines)))
                 row_lines = row.content.decode('utf-8').split('\n')
-                lines[row.first_line:row.last_line + 1] = row_lines
+                lines[row.first_line : row.last_line + 1] = row_lines
 
     # component methods
 
@@ -80,7 +92,7 @@ class FakeLogsComponent(FakeDBComponent):
             "slug": row['slug'],
             "complete": bool(row['complete']),
             "num_lines": row['num_lines'],
-            "type": row['type']
+            "type": row['type'],
         }
 
     def getLog(self, logid):
@@ -100,15 +112,14 @@ class FakeLogsComponent(FakeDBComponent):
 
     def getLogs(self, stepid=None):
         return defer.succeed([
-            self._row2dict(row)
-            for row in self.logs.values()
-            if row['stepid'] == stepid])
+            self._row2dict(row) for row in self.logs.values() if row['stepid'] == stepid
+        ])
 
     def getLogLines(self, logid, first_line, last_line):
         if logid not in self.logs or first_line > last_line:
             return defer.succeed('')
         lines = self.log_lines.get(logid, [])
-        rv = lines[first_line:last_line + 1]
+        rv = lines[first_line : last_line + 1]
         return defer.succeed('\n'.join(rv) + '\n' if rv else '')
 
     def addLog(self, stepid, name, slug, type):
@@ -120,16 +131,14 @@ class FakeLogsComponent(FakeDBComponent):
             "slug": slug,
             "type": type,
             "complete": 0,
-            "num_lines": 0
+            "num_lines": 0,
         }
         self.log_lines[id] = []
         return defer.succeed(id)
 
     def appendLog(self, logid, content):
-        validation.verifyType(self.t, 'logid', logid,
-                              validation.IntValidator())
-        validation.verifyType(self.t, 'content', content,
-                              validation.StringValidator())
+        validation.verifyType(self.t, 'logid', logid, validation.IntValidator())
+        validation.verifyType(self.t, 'content', content, validation.StringValidator())
         self.t.assertEqual(content[-1], '\n')
         content = content[:-1].split('\n')
         lines = self.log_lines[logid]

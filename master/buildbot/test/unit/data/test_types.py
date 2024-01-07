@@ -21,7 +21,6 @@ from buildbot.data import types
 
 
 class TypeMixin:
-
     klass = None
     good = []
     bad = []
@@ -37,16 +36,18 @@ class TypeMixin:
 
     def test_valueFromString(self):
         for string, expValue in self.stringValues:
-            self.assertEqual(self.ty.valueFromString(string), expValue,
-                             f"value of string {repr(string)}")
+            self.assertEqual(
+                self.ty.valueFromString(string), expValue, f"value of string {repr(string)}"
+            )
         for string in self.badStringValues:
             with self.assertRaises(Exception):
                 self.ty.valueFromString(string, f"expected error for {repr(string)}")
 
     def test_cmp(self):
         for val, string, expResult in self.cmpResults:
-            self.assertEqual(self.ty.cmp(val, string), expResult,
-                             f"compare of {repr(val)} and {repr(string)}")
+            self.assertEqual(
+                self.ty.cmp(val, string), expResult, f"compare of {repr(val)} and {repr(string)}"
+            )
 
     def test_validate(self):
         for o in self.good:
@@ -58,7 +59,6 @@ class TypeMixin:
 
 
 class NoneOk(TypeMixin, unittest.TestCase):
-
     def makeInstance(self):
         return types.NoneOk(types.Integer())
 
@@ -70,9 +70,8 @@ class NoneOk(TypeMixin, unittest.TestCase):
 
 
 class Integer(TypeMixin, unittest.TestCase):
-
     klass = types.Integer
-    good = [0, -1, 1000, 100 ** 100]
+    good = [0, -1, 1000, 100**100]
     bad = [None, '', '0']
     stringValues = [('0', 0), ('-10', -10)]
     badStringValues = ['one', '', '0x10']
@@ -80,7 +79,6 @@ class Integer(TypeMixin, unittest.TestCase):
 
 
 class DateTime(TypeMixin, unittest.TestCase):
-
     klass = types.DateTime
     good = [0, 1604843464, datetime(2020, 11, 15, 18, 40, 1, 630219)]
     bad = [int(1e60), 'bad', 1604843464.388657]
@@ -91,7 +89,6 @@ class DateTime(TypeMixin, unittest.TestCase):
 
 
 class String(TypeMixin, unittest.TestCase):
-
     klass = types.String
     good = ['', 'hello', '\N{SNOWMAN}']
     bad = [None, b'', b'hello', 10]
@@ -104,7 +101,6 @@ class String(TypeMixin, unittest.TestCase):
 
 
 class Binary(TypeMixin, unittest.TestCase):
-
     klass = types.Binary
     good = [b'', b'\x01\x80\xfe', '\N{SNOWMAN}'.encode('utf-8')]
     bad = [None, 10, 'xyz']
@@ -113,7 +109,6 @@ class Binary(TypeMixin, unittest.TestCase):
 
 
 class Boolean(TypeMixin, unittest.TestCase):
-
     klass = types.Boolean
     good = [True, False]
     bad = [None, 0, 1]
@@ -140,7 +135,6 @@ class Boolean(TypeMixin, unittest.TestCase):
 
 
 class Identifier(TypeMixin, unittest.TestCase):
-
     def makeInstance(self):
         return types.Identifier(len=5)
 
@@ -149,33 +143,29 @@ class Identifier(TypeMixin, unittest.TestCase):
     stringValues = [
         (b'abcd', 'abcd'),
     ]
-    badStringValues = [
-        b'', r'\N{SNOWMAN}', b'abcdef'
-    ]
+    badStringValues = [b'', r'\N{SNOWMAN}', b'abcdef']
     cmpResults = [
         ('aaaa', b'bbbb', -1),
     ]
 
 
 class List(TypeMixin, unittest.TestCase):
-
     def makeInstance(self):
         return types.List(of=types.Integer())
 
     good = [[], [1], [1, 2]]
     bad = [1, (1,), ['1']]
-    badStringValues = [
-        '1', '1,2'
-    ]
+    badStringValues = ['1', '1,2']
 
 
 class SourcedProperties(TypeMixin, unittest.TestCase):
-
     klass = types.SourcedProperties
 
     good = [{'p': (b'["a"]', 's')}]
     bad = [
-        None, (), [],
+        None,
+        (),
+        [],
         {b'not-unicode': ('["a"]', 'unicode')},
         {'unicode': ('["a"]', b'not-unicode')},
         {'unicode': ('not, json', 'unicode')},
@@ -183,7 +173,6 @@ class SourcedProperties(TypeMixin, unittest.TestCase):
 
 
 class Entity(TypeMixin, unittest.TestCase):
-
     class MyEntity(types.Entity):
         field1 = types.Integer()
         field2 = types.NoneOk(types.String())
@@ -196,7 +185,9 @@ class Entity(TypeMixin, unittest.TestCase):
         {'field1': 1, 'field2': None},
     ]
     bad = [
-        None, [], (),
+        None,
+        [],
+        (),
         {'field1': 1},
         {'field1': 1, 'field2': 'f2', 'field3': 10},
         {'field1': 'one', 'field2': 'f2'},

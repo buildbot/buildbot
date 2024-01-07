@@ -83,8 +83,7 @@ class OAuth2Auth(auth.AuthBase):
     homeUri = None
     sslVerify = None
 
-    def __init__(self,
-                 clientId, clientSecret, autologin=False, **kwargs):
+    def __init__(self, clientId, clientSecret, autologin=False, **kwargs):
         super().__init__(**kwargs)
         self.clientId = clientId
         self.clientSecret = clientSecret
@@ -100,7 +99,7 @@ class OAuth2Auth(auth.AuthBase):
             "name": self.name,
             "oauth2": True,
             "fa_icon": self.faIcon,
-            "autologin": self.autologin
+            "autologin": self.autologin,
         }
 
     def getLoginResource(self):
@@ -114,8 +113,11 @@ class OAuth2Auth(auth.AuthBase):
         p = Properties()
         p.master = self.master
         clientId = yield p.render(self.clientId)
-        oauth_params = {'redirect_uri': self.loginUri,
-                        'client_id': clientId, 'response_type': 'code'}
+        oauth_params = {
+            'redirect_uri': self.loginUri,
+            'client_id': clientId,
+            'response_type': 'code',
+        }
         if redirect_url is not None:
             oauth_params['state'] = urlencode({"redirect": redirect_url})
         oauth_params.update(self.authUriAdditionalParams)
@@ -140,17 +142,14 @@ class OAuth2Auth(auth.AuthBase):
         # everything in deferToThread is not counted with trial  --coverage :-(
         def thd(client_id, client_secret):
             url = self.tokenUri
-            data = {'redirect_uri': self.loginUri, 'code': code,
-                    'grant_type': self.grantType}
+            data = {'redirect_uri': self.loginUri, 'code': code, 'grant_type': self.grantType}
             auth = None
             if self.getTokenUseAuthHeaders:
                 auth = (client_id, client_secret)
             else:
-                data.update(
-                    {'client_id': client_id, 'client_secret': client_secret})
+                data.update({'client_id': client_id, 'client_secret': client_secret})
             data.update(self.tokenUriAdditionalParams)
-            response = requests.post(
-                url, data=data, timeout=30, auth=auth, verify=self.sslVerify)
+            response = requests.post(url, data=data, timeout=30, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
             responseContent = bytes2unicode(response.content)
             try:
@@ -164,6 +163,7 @@ class OAuth2Auth(auth.AuthBase):
 
             session = self.createSessionFromToken(content)
             return self.getUserInfoFromOAuthClient(session)
+
         p = Properties()
         p.master = self.master
         client_id = yield p.render(self.clientId)
@@ -181,10 +181,12 @@ class GoogleAuth(OAuth2Auth):
     resourceEndpoint = "https://www.googleapis.com/oauth2/v1"
     authUri = 'https://accounts.google.com/o/oauth2/auth'
     tokenUri = 'https://accounts.google.com/o/oauth2/token'
-    authUriAdditionalParams = {"scope": ' '.join([
-                                   'https://www.googleapis.com/auth/userinfo.email',
-                                   'https://www.googleapis.com/auth/userinfo.profile'
-                                ])}
+    authUriAdditionalParams = {
+        "scope": ' '.join([
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile',
+        ])
+    }
 
     def getUserInfoFromOAuthClient(self, c):
         data = self.get(c, '/userinfo')
@@ -192,7 +194,7 @@ class GoogleAuth(OAuth2Auth):
             "full_name": data["name"],
             "username": data['email'].split("@")[0],
             "email": data["email"],
-            "avatar_url": data["picture"]
+            "avatar_url": data["picture"],
         }
 
 
@@ -204,7 +206,8 @@ class GitHubAuth(OAuth2Auth):
     tokenUri = 'https://github.com/login/oauth/access_token'
     resourceEndpoint = 'https://api.github.com'
 
-    getUserTeamsGraphqlTpl = textwrap.dedent(r'''
+    getUserTeamsGraphqlTpl = textwrap.dedent(
+        r"""
         {%- if organizations %}
         query getOrgTeamMembership {
           {%- for org_slug, org_name in organizations.items() %}
@@ -221,13 +224,20 @@ class GitHubAuth(OAuth2Auth):
           {%- endfor %}
         }
         {%- endif %}
-    ''')
+    """
+    )
 
-    def __init__(self,
-                 clientId, clientSecret, serverURL=None, autologin=False,
-                 apiVersion=3, getTeamsMembership=False, debug=False,
-                 **kwargs):
-
+    def __init__(
+        self,
+        clientId,
+        clientSecret,
+        serverURL=None,
+        autologin=False,
+        apiVersion=3,
+        getTeamsMembership=False,
+        debug=False,
+        **kwargs,
+    ):
         super().__init__(clientId, clientSecret, autologin, **kwargs)
         self.apiResourceEndpoint = None
         if serverURL is not None:
@@ -249,25 +259,26 @@ class GitHubAuth(OAuth2Auth):
             if getTeamsMembership is True:
                 config.error(
                     'Retrieving team membership information using GitHubAuth is only '
-                    'possible using GitHub api v4.')
+                    'possible using GitHub api v4.'
+                )
         else:
             defaultGraphqlEndpoint = self.serverURL + '/graphql'
             self.apiResourceEndpoint = self.apiResourceEndpoint or defaultGraphqlEndpoint
         if getTeamsMembership:
             # GraphQL name aliases must comply with /^[_a-zA-Z][_a-zA-Z0-9]*$/
             self._orgname_slug_sub_re = re.compile(r'[^_a-zA-Z0-9]')
-            self.getUserTeamsGraphqlTplC = jinja2.Template(
-                self.getUserTeamsGraphqlTpl.strip())
+            self.getUserTeamsGraphqlTplC = jinja2.Template(self.getUserTeamsGraphqlTpl.strip())
         self.getTeamsMembership = getTeamsMembership
         self.debug = debug
 
     def post(self, session, query):
         if self.debug:
-            log.info('{klass} GraphQL POST Request: {endpoint} -> '
-                     'DATA:\n----\n{data}\n----',
-                     klass=self.__class__.__name__,
-                     endpoint=self.apiResourceEndpoint,
-                     data=query)
+            log.info(
+                '{klass} GraphQL POST Request: {endpoint} -> ' 'DATA:\n----\n{data}\n----',
+                klass=self.__class__.__name__,
+                endpoint=self.apiResourceEndpoint,
+                data=query,
+            )
         ret = session.post(self.apiResourceEndpoint, json={'query': query})
         return ret.json()
 
@@ -288,7 +299,7 @@ class GitHubAuth(OAuth2Auth):
             "full_name": user['name'],
             "email": user['email'],
             "username": user['login'],
-            "groups": [org['login'] for org in orgs]
+            "groups": [org['login'] for org in orgs],
         }
 
     def createSessionFromToken(self, token):
@@ -301,7 +312,8 @@ class GitHubAuth(OAuth2Auth):
         return s
 
     def getUserInfoFromOAuthClient_v4(self, c):
-        graphql_query = textwrap.dedent('''
+        graphql_query = textwrap.dedent(
+            """
             query {
               viewer {
                 email
@@ -316,33 +328,36 @@ class GitHubAuth(OAuth2Auth):
                 }
               }
             }
-        ''')
+        """
+        )
         data = self.post(c, graphql_query.strip())
         data = data['data']
         if self.debug:
-            log.info('{klass} GraphQL Response: {response}',
-                     klass=self.__class__.__name__,
-                     response=data)
+            log.info(
+                '{klass} GraphQL Response: {response}', klass=self.__class__.__name__, response=data
+            )
         user_info = {
             "full_name": data['viewer']['name'],
             "email": data['viewer']['email'],
             "username": data['viewer']['login'],
-            "groups": [org['node']['login'] for org in
-                data['viewer']['organizations']['edges']]
+            "groups": [org['node']['login'] for org in data['viewer']['organizations']['edges']],
         }
         if self.getTeamsMembership:
             orgs_name_slug_mapping = {
-                self._orgname_slug_sub_re.sub('_', n): n
-                for n in user_info['groups']}
-            graphql_query = self.getUserTeamsGraphqlTplC.render(
-                {'user_info': user_info,
-                 'organizations': orgs_name_slug_mapping})
+                self._orgname_slug_sub_re.sub('_', n): n for n in user_info['groups']
+            }
+            graphql_query = self.getUserTeamsGraphqlTplC.render({
+                'user_info': user_info,
+                'organizations': orgs_name_slug_mapping,
+            })
             if graphql_query:
                 data = self.post(c, graphql_query)
                 if self.debug:
-                    log.info('{klass} GraphQL Response: {response}',
-                             klass=self.__class__.__name__,
-                             response=data)
+                    log.info(
+                        '{klass} GraphQL Response: {response}',
+                        klass=self.__class__.__name__,
+                        response=data,
+                    )
                 teams = set()
                 for org, team_data in data['data'].items():
                     if team_data is None:
@@ -359,9 +374,11 @@ class GitHubAuth(OAuth2Auth):
                         teams.add(f"{orgs_name_slug_mapping[org]}/{node['node']['slug']}")
                 user_info['groups'].extend(sorted(teams))
         if self.debug:
-            log.info('{klass} User Details: {user_info}',
-                     klass=self.__class__.__name__,
-                     user_info=user_info)
+            log.info(
+                '{klass} User Details: {user_info}',
+                klass=self.__class__.__name__,
+                user_info=user_info,
+            )
         return user_info
 
 
@@ -384,7 +401,7 @@ class GitLabAuth(OAuth2Auth):
             "username": user["username"],
             "email": user["email"],
             "avatar_url": user["avatar_url"],
-            "groups": [g["path"] for g in groups]
+            "groups": [g["path"] for g in groups],
         }
 
 
@@ -407,5 +424,5 @@ class BitbucketAuth(OAuth2Auth):
             "full_name": user['display_name'],
             "email": user['email'],
             "username": user['username'],
-            "groups": [org['slug'] for org in orgs["values"]]
+            "groups": [org['slug'] for org in orgs["values"]],
         }

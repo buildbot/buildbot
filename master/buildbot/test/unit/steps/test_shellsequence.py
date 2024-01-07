@@ -31,14 +31,13 @@ from buildbot.warnings import DeprecatedApiWarning
 
 
 class DynamicRun(shellsequence.ShellSequence):
-
     def run(self):
         return self.runShellSequence(self.dynamicCommands)
 
 
-class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
-                          TestReactorMixin, unittest.TestCase):
-
+class TestOneShellCommand(
+    TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
+):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -47,28 +46,28 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
         return self.tear_down_test_build_step()
 
     def test_shell_arg_warn_deprecated_logfile(self):
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern="logfile is deprecated, use logname"):
+        with assertProducesWarnings(
+            DeprecatedApiWarning, message_pattern="logfile is deprecated, use logname"
+        ):
             shellsequence.ShellArg(command="command", logfile="logfile")
 
     def test_shell_arg_error_logfile_and_logname(self):
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern="logfile is deprecated, use logname"):
+        with assertProducesWarnings(
+            DeprecatedApiWarning, message_pattern="logfile is deprecated, use logname"
+        ):
             with self.assertRaisesConfigError(
-                    "the 'logfile' parameter must not be specified when 'logname' is set"):
+                "the 'logfile' parameter must not be specified when 'logname' is set"
+            ):
                 shellsequence.ShellArg(command="command", logname="logname", logfile="logfile")
 
     def testShellArgInput(self):
-        with self.assertRaisesConfigError(
-             "the 'command' parameter of ShellArg must not be None"):
+        with self.assertRaisesConfigError("the 'command' parameter of ShellArg must not be None"):
             shellsequence.ShellArg(command=None)
         arg1 = shellsequence.ShellArg(command=1)
-        with self.assertRaisesConfigError(
-                "1 is an invalid command, it must be a string or a list"):
+        with self.assertRaisesConfigError("1 is an invalid command, it must be a string or a list"):
             arg1.validateAttributes()
         arg2 = shellsequence.ShellArg(command=["make", 1])
-        with self.assertRaisesConfigError(
-                "['make', 1] must only have strings in it"):
+        with self.assertRaisesConfigError("['make', 1] must only have strings in it"):
             arg2.validateAttributes()
 
         for goodcmd in ["make p1", ["make", "p1"]]:
@@ -77,9 +76,7 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
 
     def testShellArgsAreRendered(self):
         arg1 = shellsequence.ShellArg(command=WithProperties('make %s', 'project'))
-        self.setup_step(
-            shellsequence.ShellSequence(commands=[arg1],
-                                        workdir='build'))
+        self.setup_step(shellsequence.ShellSequence(commands=[arg1], workdir='build'))
         self.build.setProperty("project", "BUILDBOT-TEST", "TEST")
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST').exit(0))
         # TODO: need to factor command-summary stuff into a utility method and
@@ -93,31 +90,27 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsNone(self):
         self.setup_step(self.createDynamicRun(None))
-        self.expect_outcome(result=EXCEPTION,
-                           state_string="finished (exception)")
+        self.expect_outcome(result=EXCEPTION, state_string="finished (exception)")
         return self.run_step()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsString(self):
         self.setup_step(self.createDynamicRun(["one command"]))
-        self.expect_outcome(result=EXCEPTION,
-                           state_string='finished (exception)')
+        self.expect_outcome(result=EXCEPTION, state_string='finished (exception)')
         return self.run_step()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
-        self.setup_step(
-            self.createDynamicRun([shellsequence.ShellArg(command=1)]))
-        self.expect_outcome(result=EXCEPTION,
-                           state_string='finished (exception)')
+        self.setup_step(self.createDynamicRun([shellsequence.ShellArg(command=1)]))
+        self.expect_outcome(result=EXCEPTION, state_string='finished (exception)')
         return self.run_step()
 
     def testMultipleCommandsAreRun(self):
         arg1 = shellsequence.ShellArg(command='make p1')
         arg2 = shellsequence.ShellArg(command='deploy p1')
-        self.setup_step(
-            shellsequence.ShellSequence(commands=[arg1, arg2],
-                                        workdir='build'))
-        self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(0),
-                            ExpectShell(workdir='build', command='deploy p1').exit(0))
+        self.setup_step(shellsequence.ShellSequence(commands=[arg1, arg2], workdir='build'))
+        self.expect_commands(
+            ExpectShell(workdir='build', command='make p1').exit(0),
+            ExpectShell(workdir='build', command='deploy p1').exit(0),
+        )
         self.expect_outcome(result=SUCCESS, state_string="'deploy p1'")
         return self.run_step()
 
@@ -125,24 +118,22 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
         arg1 = shellsequence.ShellArg(command='make p1')
         arg2 = shellsequence.ShellArg(command='')
         arg3 = shellsequence.ShellArg(command='deploy p1')
-        self.setup_step(
-            shellsequence.ShellSequence(commands=[arg1, arg2, arg3],
-                                        workdir='build'))
-        self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(0),
-                            ExpectShell(workdir='build', command='deploy p1').exit(0))
+        self.setup_step(shellsequence.ShellSequence(commands=[arg1, arg2, arg3], workdir='build'))
+        self.expect_commands(
+            ExpectShell(workdir='build', command='make p1').exit(0),
+            ExpectShell(workdir='build', command='deploy p1').exit(0),
+        )
         self.expect_outcome(result=SUCCESS, state_string="'deploy p1'")
         return self.run_step()
 
     def testWarningWins(self):
-        arg1 = shellsequence.ShellArg(command='make p1',
-                                      warnOnFailure=True,
-                                      flunkOnFailure=False)
+        arg1 = shellsequence.ShellArg(command='make p1', warnOnFailure=True, flunkOnFailure=False)
         arg2 = shellsequence.ShellArg(command='deploy p1')
-        self.setup_step(
-            shellsequence.ShellSequence(commands=[arg1, arg2],
-                                        workdir='build'))
-        self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(1),
-                            ExpectShell(workdir='build', command='deploy p1').exit(0))
+        self.setup_step(shellsequence.ShellSequence(commands=[arg1, arg2], workdir='build'))
+        self.expect_commands(
+            ExpectShell(workdir='build', command='make p1').exit(1),
+            ExpectShell(workdir='build', command='deploy p1').exit(0),
+        )
         self.expect_outcome(result=WARNINGS, state_string="'deploy p1' (warnings)")
         return self.run_step()
 
@@ -150,9 +141,7 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
         arg1 = shellsequence.ShellArg(command='make p1', haltOnFailure=True)
         arg2 = shellsequence.ShellArg(command='deploy p1')
 
-        self.setup_step(
-            shellsequence.ShellSequence(commands=[arg1, arg2],
-                                        workdir='build'))
+        self.setup_step(shellsequence.ShellSequence(commands=[arg1, arg2], workdir='build'))
         self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(1))
         self.expect_outcome(result=FAILURE, state_string="'make p1' (failure)")
         return self.run_step()
@@ -171,15 +160,13 @@ class TestOneShellCommand(TestBuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_step(step)
         self.build.setProperty("project", "BUILDBOT-TEST-1", "TEST")
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
-        self.expect_outcome(result=SUCCESS,
-                           state_string="'make BUILDBOT-TEST-1'")
+        self.expect_outcome(result=SUCCESS, state_string="'make BUILDBOT-TEST-1'")
         yield self.run_step()
 
         # Second "build"
         self.setup_step(step)
         self.build.setProperty("project", "BUILDBOT-TEST-2", "TEST")
         self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2').exit(0))
-        self.expect_outcome(result=SUCCESS,
-                           state_string="'make BUILDBOT-TEST-2'")
+        self.expect_outcome(result=SUCCESS, state_string="'make BUILDBOT-TEST-2'")
 
         yield self.run_step()

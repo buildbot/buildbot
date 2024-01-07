@@ -25,7 +25,6 @@ from buildbot.test.util.integration import RunFakeMasterTestCase
 
 
 class TestLogObserver(logobserver.LogObserver):
-
     def __init__(self):
         self.observed = []
 
@@ -34,7 +33,6 @@ class TestLogObserver(logobserver.LogObserver):
 
 
 class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
-
     @defer.inlineCallbacks
     def run(self):
         _log = yield self.addLog('xx')
@@ -45,7 +43,6 @@ class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
 
 
 class BuildStepWithFailingLogObserver(buildstep.BuildStep):
-
     @defer.inlineCallbacks
     def run(self):
         self.addLogObserver('xx', logobserver.LineConsumerLogObserver(self.log_consumer))
@@ -62,7 +59,6 @@ class BuildStepWithFailingLogObserver(buildstep.BuildStep):
 
 
 class SucceedingCustomStep(buildstep.BuildStep):
-
     flunkOnFailure = True
 
     def run(self):
@@ -70,7 +66,6 @@ class SucceedingCustomStep(buildstep.BuildStep):
 
 
 class FailingCustomStep(buildstep.BuildStep):
-
     flunkOnFailure = True
 
     def __init__(self, exception=buildstep.BuildStepFailed, *args, **kwargs):
@@ -84,15 +79,13 @@ class FailingCustomStep(buildstep.BuildStep):
 
 
 class RunSteps(RunFakeMasterTestCase):
-
     @defer.inlineCallbacks
     def create_config_for_step(self, step):
         config_dict = {
             'builders': [
-                BuilderConfig(name="builder",
-                              workernames=["worker1"],
-                              factory=BuildFactory([step])
-                              ),
+                BuilderConfig(
+                    name="builder", workernames=["worker1"], factory=BuildFactory([step])
+                ),
             ],
             'workers': [self.createLocalWorker('worker1')],
             'protocols': {'null': {}},
@@ -121,14 +114,15 @@ class RunSteps(RunFakeMasterTestCase):
 
     @defer.inlineCallbacks
     def test_step_raising_connectionlost_in_start(self):
-        ''' Check whether we can recover from raising ConnectionLost from a step if the worker
-            did not actually disconnect
-        '''
+        """Check whether we can recover from raising ConnectionLost from a step if the worker
+        did not actually disconnect
+        """
         step = FailingCustomStep(exception=error.ConnectionLost)
         builder_id = yield self.create_config_for_step(step)
 
         yield self.do_test_build(builder_id)
         yield self.assertBuildResults(1, results.EXCEPTION)
+
     test_step_raising_connectionlost_in_start.skip = "Results in infinite loop"
 
     @defer.inlineCallbacks
@@ -147,9 +141,12 @@ class RunSteps(RunFakeMasterTestCase):
         builder_id = yield self.create_config_for_step(step)
 
         yield self.do_test_build(builder_id)
-        yield self.assertLogs(1, {
-            'xx': 'o\N{CENT SIGN}\n',
-        })
+        yield self.assertLogs(
+            1,
+            {
+                'xx': 'o\N{CENT SIGN}\n',
+            },
+        )
 
     @defer.inlineCallbacks
     def test_all_properties(self):
@@ -174,5 +171,5 @@ class RunSteps(RunFakeMasterTestCase):
                 "repository": ("", "Build"),
                 "codebase": ("", "Build"),
                 "project": ("", "Build"),
-            }
+            },
         )

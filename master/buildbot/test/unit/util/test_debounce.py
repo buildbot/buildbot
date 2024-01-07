@@ -23,7 +23,6 @@ from buildbot.util import debounce
 
 
 class DebouncedClass:
-
     def __init__(self, reactor):
         self.callDeferred = None
         self.calls = 0
@@ -43,17 +42,16 @@ class DebouncedClass:
             log.msg('debounced function complete')
             self.callDeferred = None
             return x
+
         return self.callDeferred
 
 
 class DebounceTest(unittest.TestCase):
-
     def setUp(self):
         self.clock = task.Clock()
 
     def scenario(self, events):
-        dbs = dict((k, DebouncedClass(self.clock))
-                   for k in {n for n, _, _ in events})
+        dbs = dict((k, DebouncedClass(self.clock)) for k in {n for n, _, _ in events})
         while events:
             n, t, e = events.pop(0)
             db = dbs[n]
@@ -99,7 +97,7 @@ class DebounceTest(unittest.TestCase):
             (1, 4.0, 'called'),
             (1, 5.0, 'check'),
             (1, 6.0, 'complete'),
-            (1, 7.0, 'check')
+            (1, 7.0, 'check'),
         ])
 
     def test_coalesce_calls(self):

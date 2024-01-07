@@ -60,8 +60,9 @@ class BufferManager:
 
     def setup_timeout(self):
         if not self._send_message_timer:
-            self._send_message_timer = self._reactor.callLater(self._buffer_timeout,
-                                                               self.send_message_from_buffer)
+            self._send_message_timer = self._reactor.callLater(
+                self._buffer_timeout, self.send_message_from_buffer
+            )
 
     def append(self, logname, data):
         # add data to the buffer for logname
@@ -139,13 +140,13 @@ class BufferManager:
             pos_substring_end = data[1][pos_end - 1] + 1
             if pos_start != 0:
                 pos_substring_start = data[1][pos_start - 1] + 1
-                line_info = (data[0][pos_substring_start:pos_substring_end],
-                             [index - pos_substring_start for index in data[1][pos_start:pos_end]],
-                             data[2][pos_start: pos_end])
+                line_info = (
+                    data[0][pos_substring_start:pos_substring_end],
+                    [index - pos_substring_start for index in data[1][pos_start:pos_end]],
+                    data[2][pos_start:pos_end],
+                )
             else:
-                line_info = (data[0][:pos_substring_end],
-                             data[1][:pos_end],
-                             data[2][:pos_end])
+                line_info = (data[0][:pos_substring_end], data[1][:pos_end], data[2][:pos_end])
 
             if logname == "log":
                 msg_data = (log, line_info)

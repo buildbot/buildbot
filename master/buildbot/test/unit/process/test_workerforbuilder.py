@@ -20,7 +20,6 @@ from buildbot.worker.base import AbstractWorker
 
 
 class TestAbstractWorkerForBuilder(TestCase):
-
     """
     Tests for ``AbstractWorkerForBuilder``.
     """
@@ -31,6 +30,7 @@ class TestAbstractWorkerForBuilder(TestCase):
         calling ``buildStarted`` on the worker builder calls the method on the
         worker with the workerforbuilder as an argument.
         """
+
         class ConcreteWorker(AbstractWorker):
             _buildStartedCalls = []
 
@@ -52,6 +52,7 @@ class TestAbstractWorkerForBuilder(TestCase):
         ``buildStarted`` method, calling ``buildStarted`` on the worker builder
         doesn't raise an exception.
         """
+
         class ConcreteWorker(AbstractWorker):
             pass
 

@@ -38,8 +38,8 @@ class MQBase(service.AsyncService):
     def waitUntilEvent(self, filter, check_callback):
         d = defer.Deferred()
         buildCompleteConsumer = yield self.startConsuming(
-            lambda key, value: d.callback((key, value)),
-            filter)
+            lambda key, value: d.callback((key, value)), filter
+        )
         check = yield check_callback()
         # we only wait if the check callback return true
         if not check:
@@ -54,7 +54,6 @@ class MQBase(service.AsyncService):
 
 
 class QueueRef:
-
     __slots__ = ['callback']
 
     def __init__(self, callback):

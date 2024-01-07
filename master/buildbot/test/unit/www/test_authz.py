@@ -34,7 +34,6 @@ from buildbot.www.authz.roles import RolesFromOwner
 
 
 class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         authzcfg = authz.Authz(
@@ -47,41 +46,33 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 # defaultDeny=False: if user does not have the admin role, we
                 # continue parsing rules
                 AnyEndpointMatcher(role="admins", defaultDeny=False),
-
                 # rules for viewing builds, builders, step logs
                 # depending on the sourcestamp or buildername
-                ViewBuildsEndpointMatcher(
-                    branch="secretbranch", role="agents"),
-                ViewBuildsEndpointMatcher(
-                    project="secretproject", role="agents"),
+                ViewBuildsEndpointMatcher(branch="secretbranch", role="agents"),
+                ViewBuildsEndpointMatcher(project="secretproject", role="agents"),
                 ViewBuildsEndpointMatcher(branch="*", role="*"),
                 ViewBuildsEndpointMatcher(project="*", role="*"),
-
                 StopBuildEndpointMatcher(role="owner"),
                 RebuildBuildEndpointMatcher(role="owner"),
-
                 # nine-* groups can do stuff on the nine branch
                 BranchEndpointMatcher(branch="nine", role="nine-*"),
                 # eight-* groups can do stuff on the eight branch
                 BranchEndpointMatcher(branch="eight", role="eight-*"),
-
                 # *-try groups can start "try" builds
                 ForceBuildEndpointMatcher(builder="try", role="*-developers"),
                 # *-mergers groups can start "merge" builds
                 ForceBuildEndpointMatcher(builder="merge", role="*-mergers"),
                 # *-releasers groups can start "release" builds
-                ForceBuildEndpointMatcher(
-                    builder="release", role="*-releasers"),
+                ForceBuildEndpointMatcher(builder="release", role="*-releasers"),
                 # finally deny any control endpoint for non-admin users
-                AnyControlEndpointMatcher(role="admins")
+                AnyControlEndpointMatcher(role="admins"),
             ],
             roleMatchers=[
                 RolesFromGroups(groupPrefix="buildbot-"),
-                RolesFromEmails(admins=["homer@springfieldplant.com"],
-                                agents=["007@mi6.uk"]),
+                RolesFromEmails(admins=["homer@springfieldplant.com"], agents=["007@mi6.uk"]),
                 RolesFromOwner(role="owner"),
-                RolesFromDomain(admins=["mi7.uk"])
-            ]
+                RolesFromDomain(admins=["mi7.uk"]),
+            ],
         )
         self.users = {
             "homer": {"email": "homer@springfieldplant.com"},
@@ -89,13 +80,9 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             "moneypenny": {"email": "moneypenny@mi7.uk"},
             "nineuser": {
                 "email": "user@nine.com",
-                "groups": ["buildbot-nine-mergers",
-                "buildbot-nine-developers"]
+                "groups": ["buildbot-nine-mergers", "buildbot-nine-developers"],
             },
-            "eightuser": {
-                "email": "user@eight.com",
-                "groups": ["buildbot-eight-deverlopers"]
-            }
+            "eightuser": {"email": "user@eight.com", "groups": ["buildbot-eight-deverlopers"]},
         }
         self.master = self.make_master(url='h:/a/b/', authz=authzcfg)
         self.authz = self.master.authz
@@ -104,15 +91,19 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
-            fakedb.BuildsetProperty(buildsetid=8822, property_name='owner',
-                                    property_value='["user@nine.com", "force"]'),
+            fakedb.BuildsetProperty(
+                buildsetid=8822, property_name='owner', property_value='["user@nine.com", "force"]'
+            ),
             fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
-            fakedb.Build(id=13, builderid=77, masterid=88, workerid=13,
-                         buildrequestid=82, number=3),
-            fakedb.Build(id=14, builderid=77, masterid=88, workerid=13,
-                         buildrequestid=82, number=4),
-            fakedb.Build(id=15, builderid=77, masterid=88, workerid=13,
-                         buildrequestid=82, number=5),
+            fakedb.Build(
+                id=13, builderid=77, masterid=88, workerid=13, buildrequestid=82, number=3
+            ),
+            fakedb.Build(
+                id=14, builderid=77, masterid=88, workerid=13, buildrequestid=82, number=4
+            ),
+            fakedb.Build(
+                id=15, builderid=77, masterid=88, workerid=13, buildrequestid=82, number=5
+            ),
         ])
 
     def setAllowRules(self, allow_rules):
@@ -128,8 +119,9 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def assertUserForbidden(self, ep, action, options, user):
         try:
-            yield self.authz.assertUserAllowed(tuple(ep.split("/")), action, options,
-                                               self.users[user])
+            yield self.authz.assertUserAllowed(
+                tuple(ep.split("/")), action, options, self.users[user]
+            )
         except authz.Forbidden as err:
             self.assertIn('need to have role', repr(err))
         else:
@@ -213,9 +205,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_fnmatchPatternRoleCheck(self):
         # defaultDeny is True by default so action is denied if no match
-        allow_rules = [
-                        AnyEndpointMatcher(role="[a,b]dmin?")
-        ]
+        allow_rules = [AnyEndpointMatcher(role="[a,b]dmin?")]
 
         self.setAllowRules(allow_rules)
 
@@ -256,7 +246,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         allow_rules = [
             AnyEndpointMatcher(role="not-exists1", defaultDeny=False),
             AnyEndpointMatcher(role="not-exists2", defaultDeny=False),
-            AnyEndpointMatcher(role="not-exists3", defaultDeny=True)
+            AnyEndpointMatcher(role="not-exists3", defaultDeny=True),
         ]
 
         self.setAllowRules(allow_rules)
@@ -270,7 +260,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         allow_rules = [
             AnyEndpointMatcher(role="not-exists1", defaultDeny=True),
             AnyEndpointMatcher(role="not-exists2", defaultDeny=False),
-            AnyEndpointMatcher(role="not-exists3", defaultDeny=False)
+            AnyEndpointMatcher(role="not-exists3", defaultDeny=False),
         ]
 
         self.setAllowRules(allow_rules)

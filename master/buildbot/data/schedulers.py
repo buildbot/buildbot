@@ -23,13 +23,11 @@ from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 
 
 class Db2DataMixin:
-
     @defer.inlineCallbacks
     def db2data(self, dbdict):
         master = None
         if dbdict['masterid'] is not None:
-            master = yield self.master.data.get(
-                ('masters', dbdict['masterid']))
+            master = yield self.master.data.get(('masters', dbdict['masterid']))
         data = {
             'schedulerid': dbdict['id'],
             'name': dbdict['name'],
@@ -40,7 +38,6 @@ class Db2DataMixin:
 
 
 class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /schedulers/n:schedulerid
@@ -49,8 +46,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        dbdict = yield self.master.db.schedulers.getScheduler(
-            kwargs['schedulerid'])
+        dbdict = yield self.master.db.schedulers.getScheduler(kwargs['schedulerid'])
         if 'masterid' in kwargs:
             if dbdict['masterid'] != kwargs['masterid']:
                 return None
@@ -66,7 +62,6 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
 
 class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /schedulers
@@ -76,16 +71,16 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        schedulers = yield self.master.db.schedulers.getSchedulers(
-            masterid=kwargs.get('masterid'))
+        schedulers = yield self.master.db.schedulers.getSchedulers(masterid=kwargs.get('masterid'))
         schdicts = yield defer.DeferredList(
             [self.db2data(schdict) for schdict in schedulers],
-            consumeErrors=True, fireOnOneErrback=True)
+            consumeErrors=True,
+            fireOnOneErrback=True,
+        )
         return [r for (s, r) in schdicts]
 
 
 class Scheduler(base.ResourceType):
-
     name = "scheduler"
     plural = "schedulers"
     endpoints = [SchedulerEndpoint, SchedulersEndpoint]
@@ -99,6 +94,7 @@ class Scheduler(base.ResourceType):
         name = types.String()
         enabled = types.Boolean()
         master = types.NoneOk(masters.Master.entityType)
+
     entityType = EntityType(name, 'Scheduler')
 
     @defer.inlineCallbacks
@@ -119,8 +115,7 @@ class Scheduler(base.ResourceType):
 
     @base.updateMethod
     def trySetSchedulerMaster(self, schedulerid, masterid):
-        d = self.master.db.schedulers.setSchedulerMaster(
-            schedulerid, masterid)
+        d = self.master.db.schedulers.setSchedulerMaster(schedulerid, masterid)
 
         # set is successful: deferred result is True
         d.addCallback(lambda _: True)
@@ -138,7 +133,6 @@ class Scheduler(base.ResourceType):
 
     @defer.inlineCallbacks
     def _masterDeactivated(self, masterid):
-        schedulers = yield self.master.db.schedulers.getSchedulers(
-            masterid=masterid)
+        schedulers = yield self.master.db.schedulers.getSchedulers(masterid=masterid)
         for sch in schedulers:
             yield self.master.db.schedulers.setSchedulerMaster(sch['id'], None)

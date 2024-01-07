@@ -19,5 +19,6 @@ def render_description(description, format):
         return None
     if format == "markdown":
         import markdown
+
         return markdown.markdown(description)
     raise RuntimeError(f"Unsupported description format {format}")

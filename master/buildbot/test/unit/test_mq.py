@@ -26,7 +26,6 @@ from buildbot.test.util import tuplematching
 
 
 class Tests(interfaces.InterfaceTests):
-
     def setUp(self):
         raise NotImplementedError
 
@@ -59,7 +58,6 @@ class Tests(interfaces.InterfaceTests):
 
 
 class RealTests(tuplematching.TupleMatchingMixin, Tests):
-
     # tests that only "real" implementations will pass
 
     # called by the TupleMatchingMixin methods
@@ -130,11 +128,11 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
         self.assertEqual(d.called, True)
         res = yield d
         self.assertEqual(res, (('abc',), {"x": 1}))
+
     timeout = 3  # those tests should not run long
 
 
 class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
-
     def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True)
@@ -143,7 +141,6 @@ class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
 
 
 class TestSimpleMQ(TestReactorMixin, unittest.TestCase, RealTests):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()

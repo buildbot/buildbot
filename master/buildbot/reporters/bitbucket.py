@@ -35,17 +35,26 @@ BITBUCKET_FAILED = 'FAILED'
 
 _BASE_URL = 'https://api.bitbucket.org/2.0/repositories'
 _OAUTH_URL = 'https://bitbucket.org/site/oauth2/access_token'
-_GET_TOKEN_DATA = {
-    'grant_type': 'client_credentials'
-}
+_GET_TOKEN_DATA = {'grant_type': 'client_credentials'}
 
 
 class BitbucketStatusPush(ReporterBase):
     name = "BitbucketStatusPush"
 
-    def checkConfig(self, oauth_key=None, oauth_secret=None, auth=None, base_url=_BASE_URL,
-                    oauth_url=_OAUTH_URL, debug=None, verify=None, status_key=None,
-                    status_name=None, generators=None, **kwargs):
+    def checkConfig(
+        self,
+        oauth_key=None,
+        oauth_secret=None,
+        auth=None,
+        base_url=_BASE_URL,
+        oauth_url=_OAUTH_URL,
+        debug=None,
+        verify=None,
+        status_key=None,
+        status_name=None,
+        generators=None,
+        **kwargs,
+    ):
         if auth is not None and (oauth_key is not None or oauth_secret is not None):
             config.error('Either App Passwords or OAuth can be specified, not both')
 
@@ -56,9 +65,20 @@ class BitbucketStatusPush(ReporterBase):
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, oauth_key=None, oauth_secret=None, auth=None, base_url=_BASE_URL,
-                        oauth_url=_OAUTH_URL, debug=None, verify=None, status_key=None,
-                        status_name=None, generators=None, **kwargs):
+    def reconfigService(
+        self,
+        oauth_key=None,
+        oauth_secret=None,
+        auth=None,
+        base_url=_BASE_URL,
+        oauth_url=_OAUTH_URL,
+        debug=None,
+        verify=None,
+        status_key=None,
+        status_name=None,
+        generators=None,
+        **kwargs,
+    ):
         oauth_key, oauth_secret = yield self.renderSecrets(oauth_key, oauth_secret)
         self.auth = yield self.renderSecrets(auth)
         self.base_url = base_url
@@ -75,20 +95,24 @@ class BitbucketStatusPush(ReporterBase):
         base_url = base_url.rstrip('/')
 
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, base_url,
-            debug=self.debug, verify=self.verify, auth=self.auth)
+            self.master, base_url, debug=self.debug, verify=self.verify, auth=self.auth
+        )
 
         self.oauthhttp = None
         if self.auth is None:
             self.oauthhttp = yield httpclientservice.HTTPClientService.getService(
-                self.master, oauth_url, auth=(oauth_key, oauth_secret),
-                debug=self.debug, verify=self.verify)
+                self.master,
+                oauth_url,
+                auth=(oauth_key, oauth_secret),
+                debug=self.debug,
+                verify=self.verify,
+            )
 
     def _create_default_generators(self):
         return [
             BuildStartEndStatusGenerator(
                 start_formatter=MessageFormatter(subject="", template=''),
-                end_formatter=MessageFormatter(subject="", template='')
+                end_formatter=MessageFormatter(subject="", template=''),
             )
         ]
 
@@ -125,7 +149,7 @@ class BitbucketStatusPush(ReporterBase):
             'key': key_hash(status_key),
             'name': (yield props.render(self.status_name)),
             'description': reports[0]['subject'],
-            'url': build['url']
+            'url': build['url'],
         }
 
         for sourcestamp in build['buildset']['sourcestamps']:

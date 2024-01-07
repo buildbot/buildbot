@@ -22,7 +22,6 @@ from buildbot.test.util import endpoint
 
 
 class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = root.RootEndpoint
     resourceTypeClass = root.Root
 
@@ -42,13 +41,15 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         for rootlink in rootlinks:
             self.validateData(rootlink)
 
-        self.assertEqual(rootlinks, [
-            {'name': 'abc'},
-        ])
+        self.assertEqual(
+            rootlinks,
+            [
+                {'name': 'abc'},
+            ],
+        )
 
 
 class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = root.SpecEndpoint
     resourceTypeClass = root.Spec
 
@@ -74,23 +75,29 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             # only test an endpoint that is reasonably stable
             if s['path'] != "master":
                 continue
-            self.assertEqual(s,
-                             {'path': 'master',
-                              'type': 'master',
-                              'type_spec': {'fields': [{'name': 'active',
-                                                        'type': 'boolean',
-                                                        'type_spec': {'name': 'boolean'}},
-                                                       {'name': 'masterid',
-                                                        'type': 'integer',
-                                                        'type_spec': {'name': 'integer'}},
-                                                       {'name': 'link',
-                                                        'type': 'link',
-                                                        'type_spec': {'name': 'link'}},
-                                                       {'name': 'name',
-                                                        'type': 'string',
-                                                        'type_spec': {'name': 'string'}},
-                                                       {'name': 'last_active',
-                                                        'type': 'datetime',
-                                                        'type_spec': {'name': 'datetime'}}],
-                                            'type': 'master'},
-                              'plural': 'masters'})
+            self.assertEqual(
+                s,
+                {
+                    'path': 'master',
+                    'type': 'master',
+                    'type_spec': {
+                        'fields': [
+                            {'name': 'active', 'type': 'boolean', 'type_spec': {'name': 'boolean'}},
+                            {
+                                'name': 'masterid',
+                                'type': 'integer',
+                                'type_spec': {'name': 'integer'},
+                            },
+                            {'name': 'link', 'type': 'link', 'type_spec': {'name': 'link'}},
+                            {'name': 'name', 'type': 'string', 'type_spec': {'name': 'string'}},
+                            {
+                                'name': 'last_active',
+                                'type': 'datetime',
+                                'type_spec': {'name': 'datetime'},
+                            },
+                        ],
+                        'type': 'master',
+                    },
+                    'plural': 'masters',
+                },
+            )

@@ -31,8 +31,10 @@ from buildbot.test.steps import TestBuildStepMixin
 
 try:
     import txrequests
+
     assert txrequests
     import requests
+
     assert requests
 except ImportError:
     txrequests = requests = None
@@ -40,6 +42,7 @@ except ImportError:
 
 # We use twisted's internal webserver instead of mocking requests
 # to be sure we use the correct requests interfaces
+
 
 class TestPage(Resource):
     isLeaf = True
@@ -62,14 +65,12 @@ class TestPage(Resource):
 
 
 class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-
     timeout = 3  # those tests should not run long
 
     def setUp(self):
         self.setup_test_reactor()
         if txrequests is None:
-            raise unittest.SkipTest(
-                "Need to install txrequests to test http steps")
+            raise unittest.SkipTest("Need to install txrequests to test http steps")
 
         # ignore 'http_proxy' environment variable when running tests
         session = http.getSession()
@@ -116,7 +117,7 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         url = self.getURL("redirect")
         self.setup_step(http.GET(url))
 
-        expected_log = f'''
+        expected_log = f"""
 Redirected 1 times:
 
 URL: {self.get_connection_string()}/redirect
@@ -134,7 +135,7 @@ URL: {self.get_connection_string()}/redirect
 URL: {self.get_connection_string()}/redirected-path
 Status: 200
  ------ Content ------
-OK'''
+OK"""
 
         self.expect_log_file('log', expected_log)
         self.expect_log_file('content', "OK")
@@ -167,8 +168,7 @@ OK'''
         url = self.getURL("path")
         self.setup_step(http.POST(url, data='mydata'))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
-        self.expect_log_file('log',
-                           f"URL: {url}\nStatus: 200\n ------ Content ------\nOK:mydata")
+        self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nOK:mydata")
         self.expect_log_file('content', "OK:mydata")
         return self.run_step()
 
@@ -177,30 +177,36 @@ OK'''
 
         self.setup_step(http.POST(url, data={'key1': 'value1'}))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
-        self.expect_log_file('log', f'''\
+        self.expect_log_file(
+            'log',
+            f"""\
 URL: {url}
 Status: 200
  ------ Content ------
-OK:key1=value1''')
+OK:key1=value1""",
+        )
         self.expect_log_file('content', "OK:key1=value1")
         return self.run_step()
 
     def test_header(self):
         url = self.getURL("header")
         self.setup_step(http.GET(url, headers={"X-Test": "True"}))
-        self.expect_log_file('log',
-                             f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
+        self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
 
     @defer.inlineCallbacks
     def test_hidden_header(self):
         url = self.getURL("header")
-        self.setup_step(http.GET(url, headers={"X-Test": "True"},
-                                hide_request_headers=["X-Test"],
-                                hide_response_headers=["Content-Length"]))
-        self.expect_log_file('log',
-                             f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
+        self.setup_step(
+            http.GET(
+                url,
+                headers={"X-Test": "True"},
+                hide_request_headers=["X-Test"],
+                hide_response_headers=["Content-Length"],
+            )
+        )
+        self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         yield self.run_step()
         self.assertIn("X-Test: <HIDDEN>", self.step.logs['log'].header)
@@ -210,8 +216,9 @@ OK:key1=value1''')
         url = self.getURL()
         self.setup_step(http.GET(url, params=properties.Property("x")))
         self.build.setProperty("x", {"param_1": "param_1", "param_2": 2}, "here")
-        self.expect_log_file('log',
-            f"URL: {url}?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK")
+        self.expect_log_file(
+            'log', f"URL: {url}?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK"
+        )
         self.expect_log_file('content', "OK")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()

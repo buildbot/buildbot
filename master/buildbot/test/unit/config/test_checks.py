@@ -23,7 +23,6 @@ from buildbot.test.util import config
 
 
 class TestCheckParamLength(unittest.TestCase, config.ConfigErrorsMixin):
-
     def test_short_string(self):
         check_param_length('1234567890', 'Step name', 10)
 
@@ -46,7 +45,6 @@ class TestCheckParamLength(unittest.TestCase, config.ConfigErrorsMixin):
 
 
 class TestCheckParamType(unittest.TestCase, config.ConfigErrorsMixin):
-
     def test_str(self):
         check_param_str('abc', self.__class__, 'param')
 

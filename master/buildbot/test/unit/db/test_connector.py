@@ -27,9 +27,7 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
 
 
-class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
-                      unittest.TestCase):
-
+class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin, unittest.TestCase):
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """
@@ -37,11 +35,24 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        yield self.setUpRealDatabase(table_names=[
-            'changes', 'change_properties', 'change_files', 'patches',
-            'sourcestamps', 'buildset_properties', 'buildsets',
-            'sourcestampsets', 'builds', 'builders', 'masters',
-            'buildrequests', 'workers', "projects"])
+        yield self.setUpRealDatabase(
+            table_names=[
+                'changes',
+                'change_properties',
+                'change_files',
+                'patches',
+                'sourcestamps',
+                'buildset_properties',
+                'buildsets',
+                'sourcestampsets',
+                'builds',
+                'builders',
+                'masters',
+                'buildrequests',
+                'workers',
+                "projects",
+            ]
+        )
 
         self.master = fakemaster.make_master(self)
         self.master.config = MasterConfig()
@@ -70,15 +81,13 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
         self.assertTrue(self.db.cleanup_timer.running)
 
     def test_doCleanup_unconfigured(self):
-        self.db.changes.pruneChanges = mock.Mock(
-            return_value=defer.succeed(None))
+        self.db.changes.pruneChanges = mock.Mock(return_value=defer.succeed(None))
         self.db._doCleanup()
         self.assertFalse(self.db.changes.pruneChanges.called)
 
     @defer.inlineCallbacks
     def test_doCleanup_configured(self):
-        self.db.changes.pruneChanges = mock.Mock(
-            return_value=defer.succeed(None))
+        self.db.changes.pruneChanges = mock.Mock(return_value=defer.succeed(None))
         yield self.startService()
 
         self.db._doCleanup()
@@ -86,8 +95,7 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
 
     def test_setup_check_version_bad(self):
         if self.db_url == 'sqlite://':
-            raise unittest.SkipTest(
-                'sqlite in-memory model is always upgraded at connection')
+            raise unittest.SkipTest('sqlite in-memory model is always upgraded at connection')
         d = self.startService(check_version=True)
         return self.assertFailure(d, exceptions.DatabaseNotReadyError)
 

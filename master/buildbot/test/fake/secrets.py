@@ -1,9 +1,7 @@
-
 from buildbot.secrets.providers.base import SecretProviderBase
 
 
 class FakeSecretStorage(SecretProviderBase):
-
     name = "SecretsInFake"
 
     def reconfigService(self, secretdict=None):

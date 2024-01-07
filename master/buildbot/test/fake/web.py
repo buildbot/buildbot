@@ -32,7 +32,6 @@ def fakeMasterForHooks(testcase):
 
 
 class FakeRequest(Mock):
-
     """
     A fake Twisted Web Request object, including some pointers to the
     buildmaster and an addChange method on that master which will append its
@@ -99,8 +98,9 @@ class FakeRequest(Mock):
             self.finish()
             return self.deferred
         elif isinstance(result, str):
-            raise ValueError(f"{resource.render!r} should return bytes, not {type(result)}: "
-                             f"{result!r}")
+            raise ValueError(
+                f"{resource.render!r} should return bytes, not {type(result)}: " f"{result!r}"
+            )
         elif result is server.NOT_DONE_YET:
             return self.deferred
         else:

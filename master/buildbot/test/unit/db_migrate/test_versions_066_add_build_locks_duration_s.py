@@ -22,7 +22,6 @@ from buildbot.util import sautils
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
-
     def setUp(self):
         return self.setUpMigrateTest()
 
@@ -36,7 +35,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         # builderid, buildrequestid, workerid, masterid foreign keys are removed for the
         # purposes of the test
         builds = sautils.Table(
-            'builds', metadata,
+            'builds',
+            metadata,
             sa.Column('id', sa.Integer, primary_key=True),
             sa.Column('number', sa.Integer, nullable=False),
             sa.Column('started_at', sa.Integer, nullable=False),
@@ -57,7 +57,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                     "state_string": "test build",
                     "results": 0,
                 }
-            ]
+            ],
         )
 
     def test_update(self):
@@ -83,7 +83,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                         "state_string": "test build",
                         "results": 0,
                     }
-                ]
+                ],
             )
 
             durations = []

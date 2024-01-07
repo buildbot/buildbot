@@ -44,12 +44,9 @@ class BuildRequestCollapser:
     @defer.inlineCallbacks
     def _getUnclaimedBrs(self, builderid):
         # Retrieve the list of Brs for all unclaimed builds
-        unclaim_brs = yield self.master.data.get(('builders',
-                                                  builderid,
-                                                  'buildrequests'),
-                                                 [resultspec.Filter('claimed',
-                                                                    'eq',
-                                                                    [False])])
+        unclaim_brs = yield self.master.data.get(
+            ('builders', builderid, 'buildrequests'), [resultspec.Filter('claimed', 'eq', [False])]
+        )
         # sort by submitted_at, so the first is the oldest
         unclaim_brs.sort(key=lambda brd: brd['submitted_at'])
         return unclaim_brs
@@ -102,7 +99,7 @@ class TempSourceStamp:
         ('patch_body', 'body'),
         ('patch_subdir', 'subdir'),
         ('patch_author', 'author'),
-        ('patch_comment', 'comment')
+        ('patch_comment', 'comment'),
     )
 
     def __init__(self, ssdict):
@@ -137,8 +134,7 @@ class TempSourceStamp:
             result[patch_attr] = patch.get(attr)
 
         assert all(
-            isinstance(val, (str, int, bytes, type(None)))
-            for attr, val in result.items()
+            isinstance(val, (str, int, bytes, type(None))) for attr, val in result.items()
         ), result
         return result
 
@@ -161,7 +157,6 @@ class TempChange:
 
 
 class BuildRequest:
-
     """
 
     A rolled-up encapsulation of all of the data relevant to a build request.
@@ -238,13 +233,11 @@ class BuildRequest:
         # fetch the buildset properties, and convert to Properties
         buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict['buildsetid'])
 
-        buildrequest.properties = properties.Properties.fromDict(
-            buildset_properties)
+        buildrequest.properties = properties.Properties.fromDict(buildset_properties)
 
         # make a fake sources dict (temporary)
         bsdata = yield master.data.get(('buildsets', str(buildrequest.bsid)))
-        assert bsdata[
-            'sourcestamps'], "buildset must have at least one sourcestamp"
+        assert bsdata['sourcestamps'], "buildset must have at least one sourcestamp"
         buildrequest.sources = {}
         for ssdata in bsdata['sourcestamps']:
             ss = buildrequest.sources[ssdata['codebase']] = TempSourceStamp(ssdata)
@@ -255,8 +248,11 @@ class BuildRequest:
 
     @staticmethod
     def filter_buildset_props_for_collapsing(bs_props):
-        return {name: value for name, (value, source) in bs_props.items()
-                if name != 'scheduler' and source == 'Scheduler'}
+        return {
+            name: value
+            for name, (value, source) in bs_props.items()
+            if name != 'scheduler' and source == 'Scheduler'
+        }
 
     @staticmethod
     @defer.inlineCallbacks
@@ -281,10 +277,8 @@ class BuildRequest:
         otherBuildsets = yield master.data.get(('buildsets', str(old_br['buildsetid'])))
 
         # extract sourcestamps, as dictionaries by codebase
-        selfSources = dict((ss['codebase'], ss)
-                           for ss in selfBuildsets['sourcestamps'])
-        otherSources = dict((ss['codebase'], ss)
-                            for ss in otherBuildsets['sourcestamps'])
+        selfSources = dict((ss['codebase'], ss) for ss in selfBuildsets['sourcestamps'])
+        otherSources = dict((ss['codebase'], ss) for ss in otherBuildsets['sourcestamps'])
 
         # if the sets of codebases do not match, we can't collapse
         if set(selfSources) != set(otherSources):
@@ -333,7 +327,7 @@ class BuildRequest:
         return True
 
     def mergeSourceStampsWith(self, others):
-        """ Returns one merged sourcestamp for every codebase """
+        """Returns one merged sourcestamp for every codebase"""
         # get all codebases from all requests
         all_codebases = set(self.sources)
         for other in others:

@@ -18,7 +18,6 @@ from buildbot.util import service
 
 
 class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
-
     """
     A manager for a collection of caches, each for different types of objects
     and with potentially-overlapping key spaces.
@@ -61,13 +60,12 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.config = new_config.caches
         for name, cache in self._caches.items():
-            cache.set_max_size(new_config.caches.get(name,
-                                                     self.DEFAULT_CACHE_SIZE))
+            cache.set_max_size(new_config.caches.get(name, self.DEFAULT_CACHE_SIZE))
 
         return super().reconfigServiceWithBuildbotConfig(new_config)
 
     def get_metrics(self):
         return {
-            n: {'hits': c.hits, 'refhits': c.refhits,
-                'misses': c.misses, 'max_size': c.max_size}
-            for n, c in self._caches.items()}
+            n: {'hits': c.hits, 'refhits': c.refhits, 'misses': c.misses, 'max_size': c.max_size}
+            for n, c in self._caches.items()
+        }

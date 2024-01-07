@@ -28,7 +28,6 @@ from buildbot.www.hooks.base import BaseHookHandler
 
 
 class GitoriousHandler(BaseHookHandler):
-
     def getChanges(self, request):
         payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
         user = payload['repository']['owner']['name']
@@ -70,7 +69,7 @@ class GitoriousHandler(BaseHookHandler):
                     'branch': branch,
                     'revlink': commit['url'],
                     'repository': repo_url,
-                    'project': project
+                    'project': project,
                 })
 
         return changes

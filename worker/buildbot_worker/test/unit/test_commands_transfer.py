@@ -106,7 +106,6 @@ class FakeMasterMethods(object):
 
 
 class TestUploadFile(CommandTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setUpCommand()
 
@@ -132,57 +131,71 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_simple(self):
-        self.fakemaster.count_writes = True    # get actual byte counts
+        self.fakemaster.count_writes = True  # get actual byte counts
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
-        self.make_command(transfer.WorkerFileUploadCommand, {
-            'path': path,
-            'writer': FakeRemote(self.fakemaster),
-            'maxsize': 1000,
-            'blocksize': 64,
-            'keepstamp': False
-        })
+        self.make_command(
+            transfer.WorkerFileUploadCommand,
+            {
+                'path': path,
+                'writer': FakeRemote(self.fakemaster),
+                'maxsize': 1000,
+                'blocksize': 64,
+                'keepstamp': False,
+            },
+        )
 
         yield self.run_command()
 
         self.assertUpdates([
             ('header', 'sending {0}\n'.format(self.datafile)),
-            'write 64', 'write 64', 'write 52', 'close',
-            ('rc', 0)
+            'write 64',
+            'write 64',
+            'write 52',
+            'close',
+            ('rc', 0),
         ])
 
     @defer.inlineCallbacks
     def test_truncated(self):
-        self.fakemaster.count_writes = True    # get actual byte counts
+        self.fakemaster.count_writes = True  # get actual byte counts
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
-        self.make_command(transfer.WorkerFileUploadCommand, {
-            'path': path,
-            'writer': FakeRemote(self.fakemaster),
-            'maxsize': 100,
-            'blocksize': 64,
-            'keepstamp': False
-        })
+        self.make_command(
+            transfer.WorkerFileUploadCommand,
+            {
+                'path': path,
+                'writer': FakeRemote(self.fakemaster),
+                'maxsize': 100,
+                'blocksize': 64,
+                'keepstamp': False,
+            },
+        )
 
         yield self.run_command()
 
         self.assertUpdates([
             ('header', 'sending {0}\n'.format(self.datafile)),
-            'write 64', 'write 36', 'close',
+            'write 64',
+            'write 36',
+            'close',
             ('rc', 1),
-            ('stderr', "Maximum filesize reached, truncating file '{0}'".format(self.datafile))
+            ('stderr', "Maximum filesize reached, truncating file '{0}'".format(self.datafile)),
         ])
 
     @defer.inlineCallbacks
     def test_missing(self):
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data-nosuch'))
-        self.make_command(transfer.WorkerFileUploadCommand, {
-            'path': path,
-            'writer': FakeRemote(self.fakemaster),
-            'maxsize': 100,
-            'blocksize': 64,
-            'keepstamp': False
-        })
+        self.make_command(
+            transfer.WorkerFileUploadCommand,
+            {
+                'path': path,
+                'writer': FakeRemote(self.fakemaster),
+                'maxsize': 100,
+                'blocksize': 64,
+                'keepstamp': False,
+            },
+        )
 
         yield self.run_command()
 
@@ -191,29 +204,33 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             ('header', 'sending {0}\n'.format(df)),
             'close',
             ('rc', 1),
-            ('stderr', "Cannot open file '{0}' for upload".format(df))
+            ('stderr', "Cannot open file '{0}' for upload".format(df)),
         ])
 
     @defer.inlineCallbacks
     def test_out_of_space(self):
         self.fakemaster.write_out_of_space_at = 70
-        self.fakemaster.count_writes = True    # get actual byte counts
+        self.fakemaster.count_writes = True  # get actual byte counts
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
-        self.make_command(transfer.WorkerFileUploadCommand, {
-            'path': path,
-            'writer': FakeRemote(self.fakemaster),
-            'maxsize': 1000,
-            'blocksize': 64,
-            'keepstamp': False
-        })
+        self.make_command(
+            transfer.WorkerFileUploadCommand,
+            {
+                'path': path,
+                'writer': FakeRemote(self.fakemaster),
+                'maxsize': 1000,
+                'blocksize': 64,
+                'keepstamp': False,
+            },
+        )
 
         yield self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
             ('header', 'sending {0}\n'.format(self.datafile)),
-            'write 64', 'close',
-            ('rc', 1)
+            'write 64',
+            'close',
+            ('rc', 1),
         ])
 
     @defer.inlineCallbacks
@@ -221,13 +238,16 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.delay_write = True  # write very slowly
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
-        self.make_command(transfer.WorkerFileUploadCommand, {
-            'path': path,
-            'writer': FakeRemote(self.fakemaster),
-            'maxsize': 100,
-            'blocksize': 2,
-            'keepstamp': False
-        })
+        self.make_command(
+            transfer.WorkerFileUploadCommand,
+            {
+                'path': path,
+                'writer': FakeRemote(self.fakemaster),
+                'maxsize': 100,
+                'blocksize': 2,
+                'keepstamp': False,
+            },
+        )
 
         d = self.run_command()
 
@@ -238,41 +258,49 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         # and then interrupt the step
         def do_interrupt(_):
             return self.cmd.interrupt()
+
         interrupt_d.addCallback(do_interrupt)
 
         yield defer.DeferredList([d, interrupt_d])
 
         self.assertUpdates([
-            ('header', 'sending {0}\n'.format(self.datafile)), 'write(s)', 'close', ('rc', 1)
+            ('header', 'sending {0}\n'.format(self.datafile)),
+            'write(s)',
+            'close',
+            ('rc', 1),
         ])
 
     @defer.inlineCallbacks
     def test_timestamp(self):
-        self.fakemaster.count_writes = True    # get actual byte counts
-        timestamp = (os.path.getatime(self.datafile),
-                     os.path.getmtime(self.datafile))
+        self.fakemaster.count_writes = True  # get actual byte counts
+        timestamp = (os.path.getatime(self.datafile), os.path.getmtime(self.datafile))
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
-        self.make_command(transfer.WorkerFileUploadCommand, {
-            'path': path,
-            'writer': FakeRemote(self.fakemaster),
-            'maxsize': 1000,
-            'blocksize': 64,
-            'keepstamp': True,
-        })
+        self.make_command(
+            transfer.WorkerFileUploadCommand,
+            {
+                'path': path,
+                'writer': FakeRemote(self.fakemaster),
+                'maxsize': 1000,
+                'blocksize': 64,
+                'keepstamp': True,
+            },
+        )
 
         yield self.run_command()
 
         self.assertUpdates([
             ('header', 'sending {0}\n'.format(self.datafile)),
-            'write 64', 'write 64', 'write 52',
-            'close', 'utime - {0}'.format(timestamp[0]),
-            ('rc', 0)
+            'write 64',
+            'write 64',
+            'write 52',
+            'close',
+            'utime - {0}'.format(timestamp[0]),
+            ('rc', 0),
         ])
 
 
 class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setUpCommand()
 
@@ -298,21 +326,25 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
     def test_simple(self, compress=None):
         self.fakemaster.keep_data = True
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
-        self.make_command(transfer.WorkerDirectoryUploadCommand, {
-            'workdir': 'workdir',
-            'path': path,
-            'writer': FakeRemote(self.fakemaster),
-            'maxsize': None,
-            'blocksize': 512,
-            'compress': compress,
-        })
+        self.make_command(
+            transfer.WorkerDirectoryUploadCommand,
+            {
+                'workdir': 'workdir',
+                'path': path,
+                'writer': FakeRemote(self.fakemaster),
+                'maxsize': None,
+                'blocksize': 512,
+                'compress': compress,
+            },
+        )
 
         yield self.run_command()
 
         self.assertUpdates([
             ('header', 'sending {0}\n'.format(self.datadir)),
-            'write(s)', 'unpack',  # note no 'close"
-            ('rc', 0)
+            'write(s)',
+            'unpack',  # note no 'close"
+            ('rc', 0),
         ])
 
         f = io.BytesIO(self.fakemaster.data)
@@ -342,26 +374,29 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         self.fakemaster.unpack_fail = True
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
 
-        self.make_command(transfer.WorkerDirectoryUploadCommand, {
-            'path': path,
-            'workersrc': 'data',
-            'writer': FakeRemote(self.fakemaster),
-            'maxsize': None,
-            'blocksize': 512,
-            'compress': None
-        })
+        self.make_command(
+            transfer.WorkerDirectoryUploadCommand,
+            {
+                'path': path,
+                'workersrc': 'data',
+                'writer': FakeRemote(self.fakemaster),
+                'maxsize': None,
+                'blocksize': 512,
+                'compress': None,
+            },
+        )
 
         yield self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
             ('header', 'sending {0}\n'.format(self.datadir)),
-            'write(s)', 'unpack',
-            ('rc', 1)
+            'write(s)',
+            'unpack',
+            ('rc', 1),
         ])
 
 
 class TestWorkerDirectoryUploadNoDir(CommandTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setUpCommand()
         self.fakemaster = FakeMasterMethods(self.add_update)
@@ -373,14 +408,17 @@ class TestWorkerDirectoryUploadNoDir(CommandTestMixin, unittest.TestCase):
     def test_directory_not_available(self):
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
 
-        self.make_command(transfer.WorkerDirectoryUploadCommand, {
-            'path': path,
-            'workersrc': 'data',
-            'writer': FakeRemote(self.fakemaster),
-            'maxsize': None,
-            'blocksize': 512,
-            'compress': None
-        })
+        self.make_command(
+            transfer.WorkerDirectoryUploadCommand,
+            {
+                'path': path,
+                'workersrc': 'data',
+                'writer': FakeRemote(self.fakemaster),
+                'maxsize': None,
+                'blocksize': 512,
+                'compress': None,
+            },
+        )
 
         yield self.run_command()
 
@@ -395,7 +433,6 @@ class TestWorkerDirectoryUploadNoDir(CommandTestMixin, unittest.TestCase):
 
 
 class TestDownloadFile(CommandTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setUpCommand()
 
@@ -414,25 +451,25 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_simple(self):
-        self.fakemaster.count_reads = True    # get actual byte counts
+        self.fakemaster.count_reads = True  # get actual byte counts
         self.fakemaster.data = test_data = b'1234' * 13
         assert len(self.fakemaster.data) == 52
 
         path = os.path.join(self.basedir, os.path.expanduser('data'))
-        self.make_command(transfer.WorkerFileDownloadCommand, {
-            'path': path,
-            'reader': FakeRemote(self.fakemaster),
-            'maxsize': None,
-            'blocksize': 32,
-            'mode': 0o777
-        })
+        self.make_command(
+            transfer.WorkerFileDownloadCommand,
+            {
+                'path': path,
+                'reader': FakeRemote(self.fakemaster),
+                'maxsize': None,
+                'blocksize': 32,
+                'mode': 0o777,
+            },
+        )
 
         yield self.run_command()
 
-        self.assertUpdates([
-            'read 32', 'read 32', 'read 32', 'close',
-            ('rc', 0)
-        ])
+        self.assertUpdates(['read 32', 'read 32', 'read 32', 'close', ('rc', 0)])
         datafile = os.path.join(self.basedir, 'data')
         self.assertTrue(os.path.exists(datafile))
         with open(datafile, mode="rb") as f:
@@ -445,22 +482,23 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
     def test_mkdir(self):
         self.fakemaster.data = test_data = b'hi'
 
-        path = os.path.join(self.basedir, 'workdir',
-                            os.path.expanduser(os.path.join('subdir', 'data')))
-        self.make_command(transfer.WorkerFileDownloadCommand, {
-            'path': path,
-            'reader': FakeRemote(self.fakemaster),
-            'maxsize': None,
-            'blocksize': 32,
-            'mode': 0o777
-        })
+        path = os.path.join(
+            self.basedir, 'workdir', os.path.expanduser(os.path.join('subdir', 'data'))
+        )
+        self.make_command(
+            transfer.WorkerFileDownloadCommand,
+            {
+                'path': path,
+                'reader': FakeRemote(self.fakemaster),
+                'maxsize': None,
+                'blocksize': 32,
+                'mode': 0o777,
+            },
+        )
 
         yield self.run_command()
 
-        self.assertUpdates([
-            'read(s)', 'close',
-            ('rc', 0)
-        ])
+        self.assertUpdates(['read(s)', 'close', ('rc', 0)])
         datafile = os.path.join(self.basedir, 'workdir', 'subdir', 'data')
         self.assertTrue(os.path.exists(datafile))
         with open(datafile, mode="rb") as f:
@@ -473,21 +511,26 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         os.makedirs(os.path.join(self.basedir, 'dir'))
         path = os.path.join(self.basedir, os.path.expanduser('dir'))
-        self.make_command(transfer.WorkerFileDownloadCommand, {
-            'path': path,
-            'reader': FakeRemote(self.fakemaster),
-            'maxsize': None,
-            'blocksize': 32,
-            'mode': 0o777
-        })
+        self.make_command(
+            transfer.WorkerFileDownloadCommand,
+            {
+                'path': path,
+                'reader': FakeRemote(self.fakemaster),
+                'maxsize': None,
+                'blocksize': 32,
+                'mode': 0o777,
+            },
+        )
 
         yield self.run_command()
 
         self.assertUpdates([
             'close',
             ('rc', 1),
-            ('stderr', "Cannot open file '{0}' for download".format(
-             os.path.join(self.basedir, 'dir')))
+            (
+                'stderr',
+                "Cannot open file '{0}' for download".format(os.path.join(self.basedir, 'dir')),
+            ),
         ])
 
     @defer.inlineCallbacks
@@ -495,20 +538,28 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.data = test_data = b'tenchars--' * 10
 
         path = os.path.join(self.basedir, os.path.expanduser('data'))
-        self.make_command(transfer.WorkerFileDownloadCommand, {
-            'path': path,
-            'reader': FakeRemote(self.fakemaster),
-            'maxsize': 50,
-            'blocksize': 32,
-            'mode': 0o777
-        })
+        self.make_command(
+            transfer.WorkerFileDownloadCommand,
+            {
+                'path': path,
+                'reader': FakeRemote(self.fakemaster),
+                'maxsize': 50,
+                'blocksize': 32,
+                'mode': 0o777,
+            },
+        )
         yield self.run_command()
 
         self.assertUpdates([
-            'read(s)', 'close',
+            'read(s)',
+            'close',
             ('rc', 1),
-            ('stderr', "Maximum filesize reached, truncating file '{0}'".format(
-             os.path.join(self.basedir, 'data')))
+            (
+                'stderr',
+                "Maximum filesize reached, truncating file '{0}'".format(
+                    os.path.join(self.basedir, 'data')
+                ),
+            ),
         ])
         datafile = os.path.join(self.basedir, 'data')
         self.assertTrue(os.path.exists(datafile))
@@ -522,13 +573,16 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.delay_read = True  # read very slowly
 
         path = os.path.join(self.basedir, os.path.expanduser('data'))
-        self.make_command(transfer.WorkerFileDownloadCommand, {
-            'path': path,
-            'reader': FakeRemote(self.fakemaster),
-            'maxsize': 100,
-            'blocksize': 2,
-            'mode': 0o777
-        })
+        self.make_command(
+            transfer.WorkerFileDownloadCommand,
+            {
+                'path': path,
+                'reader': FakeRemote(self.fakemaster),
+                'maxsize': 100,
+                'blocksize': 2,
+                'mode': 0o777,
+            },
+        )
 
         d = self.run_command()
 
@@ -539,10 +593,9 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         # and then interrupt the step
         def do_interrupt(_):
             return self.cmd.interrupt()
+
         interrupt_d.addCallback(do_interrupt)
 
         yield defer.DeferredList([d, interrupt_d])
 
-        self.assertUpdates([
-            'read(s)', 'close', ('rc', 1)
-        ])
+        self.assertUpdates(['read(s)', 'close', ('rc', 1)])

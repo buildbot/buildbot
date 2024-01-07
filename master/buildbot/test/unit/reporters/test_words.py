@@ -47,12 +47,10 @@ class ContactMixin(TestReactorMixin):
         self.patch(reactor, 'seconds', self.reactor.seconds)
         self.patch(reactor, 'stop', self.reactor.stop)
 
-        self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
-                                             wantDb=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
         for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES):
-            self.master.db.builders.addTestBuilder(
-                builderid=builderid, name=name)
+            self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
 
         self.bot = self.botClass(notify_events={'success': 1, 'failure': 1})
         self.bot.channelClass = self.channelClass
@@ -65,20 +63,20 @@ class ContactMixin(TestReactorMixin):
 
         # fake out clean shutdown
         self.bot.parent = self
-        self.bot.master.botmaster = mock.Mock(
-            name='StatusBot-instance.master.botmaster')
+        self.bot.master.botmaster = mock.Mock(name='StatusBot-instance.master.botmaster')
         self.bot.master.botmaster.shuttingDown = False
 
         def cleanShutdown():
             self.bot.master.botmaster.shuttingDown = True
+
         self.bot.master.botmaster.cleanShutdown = cleanShutdown
 
         def cancelCleanShutdown():
             self.bot.master.botmaster.shuttingDown = False
+
         self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
 
-        self.contact = self.contactClass(user=self.USER,
-                                         channel=self.bot.getChannel(self.CHANNEL))
+        self.contact = self.contactClass(user=self.USER, channel=self.bot.getChannel(self.CHANNEL))
         yield self.contact.channel.setServiceParent(self.master)
         yield self.master.startService()
 
@@ -90,12 +88,21 @@ class ContactMixin(TestReactorMixin):
                 msg = (msg,)
             for m in msg:
                 self.sent.append(m)
+
         self.contact.channel.send = send
 
     @defer.inlineCallbacks
-    def do_test_command(self, command, args='', contact=None, clock_ticks=None,
-                        exp_usage=True, exp_UsageError=False,
-                        shuttingDown=False, **kwargs):
+    def do_test_command(
+        self,
+        command,
+        args='',
+        contact=None,
+        clock_ticks=None,
+        exp_usage=True,
+        exp_UsageError=False,
+        shuttingDown=False,
+        **kwargs,
+    ):
         if contact is None:
             contact = self.contact
 
@@ -122,18 +129,38 @@ class ContactMixin(TestReactorMixin):
     def setupSomeBuilds(self):
         self.master.db.insert_test_data([
             # Three builds on builder#0, One build on builder#1
-            fakedb.Build(id=13, masterid=88, workerid=13,
-                         builderid=self.BUILDER_IDS[0],
-                         buildrequestid=82, number=3),
-            fakedb.Build(id=14, masterid=88, workerid=13,
-                         builderid=self.BUILDER_IDS[0],
-                         buildrequestid=83, number=4),
-            fakedb.Build(id=15, masterid=88, workerid=13,
-                         builderid=self.BUILDER_IDS[1],
-                         buildrequestid=84, number=5),
-            fakedb.Build(id=16, masterid=88, workerid=13,
-                         builderid=self.BUILDER_IDS[0],
-                         buildrequestid=85, number=6),
+            fakedb.Build(
+                id=13,
+                masterid=88,
+                workerid=13,
+                builderid=self.BUILDER_IDS[0],
+                buildrequestid=82,
+                number=3,
+            ),
+            fakedb.Build(
+                id=14,
+                masterid=88,
+                workerid=13,
+                builderid=self.BUILDER_IDS[0],
+                buildrequestid=83,
+                number=4,
+            ),
+            fakedb.Build(
+                id=15,
+                masterid=88,
+                workerid=13,
+                builderid=self.BUILDER_IDS[1],
+                buildrequestid=84,
+                number=5,
+            ),
+            fakedb.Build(
+                id=16,
+                masterid=88,
+                workerid=13,
+                builderid=self.BUILDER_IDS[0],
+                buildrequestid=85,
+                number=6,
+            ),
         ])
         self.master.db.builds.finishBuild(buildid=14, results=SUCCESS)
 
@@ -143,19 +170,14 @@ class ContactMixin(TestReactorMixin):
         self.master.db.insert_test_data([
             fakedb.Worker(id=1, name='linux1', info={}),  # connected one
             fakedb.Worker(id=2, name='linux2', info={}),  # disconnected one
-            fakedb.BuilderMaster(
-                id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
-            fakedb.BuilderMaster(
-                id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
-            fakedb.ConfiguredWorker(id=14013,
-                                    workerid=2, buildermasterid=4012),
-            fakedb.ConfiguredWorker(id=14013,
-                                    workerid=1, buildermasterid=4013),
+            fakedb.BuilderMaster(id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
+            fakedb.BuilderMaster(id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
+            fakedb.ConfiguredWorker(id=14013, workerid=2, buildermasterid=4012),
+            fakedb.ConfiguredWorker(id=14013, workerid=1, buildermasterid=4013),
         ])
 
 
 class TestContact(ContactMixin, unittest.TestCase):
-
     def test_channel_service(self):
         self.assertTrue(self.contact.channel.running)
         self.contact.channel.stopService()
@@ -165,23 +187,16 @@ class TestContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('notify', exp_UsageError=True)
         yield self.do_test_command('notify', args="invalid arg", exp_UsageError=True)
         yield self.do_test_command('notify', args="on")
-        self.assertEqual(
-            self.sent, ["The following events are being notified: finished, started."])
+        self.assertEqual(self.sent, ["The following events are being notified: finished, started."])
         yield self.do_test_command('notify', args="off")
-        self.assertEqual(
-            self.sent, ['No events are being notified.'])
+        self.assertEqual(self.sent, ['No events are being notified.'])
         yield self.do_test_command('notify', args="on started")
-        self.assertEqual(
-            self.sent, ["The following events are being notified: started."])
+        self.assertEqual(self.sent, ["The following events are being notified: started."])
         yield self.do_test_command('notify', args="off started")
-        self.assertEqual(
-            self.sent, ['No events are being notified.'])
-        yield self.assertFailure(
-            self.do_test_command('notify', args="off finished"),
-            KeyError)
+        self.assertEqual(self.sent, ['No events are being notified.'])
+        yield self.assertFailure(self.do_test_command('notify', args="off finished"), KeyError)
         yield self.do_test_command('notify', args="list")
-        self.assertEqual(
-            self.sent, ['No events are being notified.'])
+        self.assertEqual(self.sent, ['No events are being notified.'])
 
     @defer.inlineCallbacks
     def notify_build_test(self, notify_args):
@@ -222,11 +237,9 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.patch_send()
         yield self.do_test_command('notify', args='on worker')
         missing_worker = self.contact.channel.subscribed[2].callback
-        missing_worker((None, None, 'missing'), {
-            "workerid": 1,
-            "name": 'work',
-            "last_connection": 'sometime'
-        })
+        missing_worker(
+            (None, None, 'missing'), {"workerid": 1, "name": 'work', "last_connection": 'sometime'}
+        )
         self.assertEquals(self.sent[1], "Worker `work` is missing. It was seen last on sometime.")
         self.assertIn(1, self.contact.channel.missing_workers)
 
@@ -236,11 +249,10 @@ class TestContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('notify', args='on worker')
         self.contact.channel.missing_workers.add(1)
         missing_worker = self.contact.channel.subscribed[2].callback
-        missing_worker((None, None, 'connected'), {
-            "workerid": 1,
-            "name": 'work',
-            "last_connection": 'sometime'
-        })
+        missing_worker(
+            (None, None, 'connected'),
+            {"workerid": 1, "name": 'work', "last_connection": 'sometime'},
+        )
         self.assertEquals(self.sent[1], "Worker `work` is back online.")
         self.assertNotIn(1, self.contact.channel.missing_workers)
 
@@ -265,9 +277,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_help_dict_command(self):
         self.contact.command_FOO = lambda: None
-        self.contact.command_FOO.usage = {
-            None: 'foo - bar'
-        }
+        self.contact.command_FOO.usage = {None: 'foo - bar'}
         yield self.do_test_command('help', args='foo')
         self.assertIn('Usage: foo - bar', self.sent[0])
 
@@ -281,9 +291,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_help_dict_command_arg(self):
         self.contact.command_FOO = lambda: None
-        self.contact.command_FOO.usage = {
-            'this': 'foo this - bar'
-        }
+        self.contact.command_FOO.usage = {'this': 'foo this - bar'}
         yield self.do_test_command('help', args='foo this')
         self.assertIn('Usage: foo this - bar', self.sent[0])
 
@@ -300,9 +308,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_help_dict_command_arg_subarg(self):
         self.contact.command_FOO = lambda: None
-        self.contact.command_FOO.usage = {
-            ('this', 'first'): 'foo this first - bar'
-        }
+        self.contact.command_FOO.usage = {('this', 'first'): 'foo this first - bar'}
         yield self.do_test_command('help', args='foo this first')
         self.assertIn('Usage: foo this first - bar', self.sent[0])
 
@@ -312,7 +318,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.contact.command_FOO.usage = {
             None: 'foo - bar',
             'this': 'foo this - bar',
-            ('this', 'first'): 'foo this first - bar'
+            ('this', 'first'): 'foo this first - bar',
             # nothing for subarg 'missing'
         }
         yield self.do_test_command('help', args='foo this missing')
@@ -385,9 +391,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_list_workers(self):
         workers = ['worker1', 'worker2']
         for worker in workers:
-            self.master.db.workers.db.insert_test_data([
-                fakedb.Worker(name=worker)
-            ])
+            self.master.db.workers.db.insert_test_data([fakedb.Worker(name=worker)])
         yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
@@ -397,9 +401,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_list_workers_online(self):
         self.setup_multi_builders()
         # Also set the connectedness:
-        self.master.db.insert_test_data([
-            fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)
-        ])
+        self.master.db.insert_test_data([fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)])
         yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         self.assertNotIn('linux1 [disconnected]', self.sent[0])
@@ -407,9 +409,7 @@ class TestContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_list_changes(self):
-        self.master.db.workers.db.insert_test_data([
-            fakedb.Change()
-        ])
+        self.master.db.workers.db.insert_test_data([fakedb.Change()])
         yield self.do_test_command('list', args='2 changes')
         self.assertEqual(len(self.sent), 1)
 
@@ -426,9 +426,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_list_builders_connected(self):
         self.setup_multi_builders()
         # Also set the connectedness:
-        self.master.db.insert_test_data([
-            fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)
-        ])
+        self.master.db.insert_test_data([fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)])
 
         yield self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
@@ -444,9 +442,8 @@ class TestContact(ContactMixin, unittest.TestCase):
         # we are online and we have some finished builds
         self.setup_multi_builders()
         self.master.db.insert_test_data([
-            fakedb.ConfiguredWorker(id=14012,
-                                    workerid=1, buildermasterid=4013),
-            fakedb.ConnectedWorker(id=114, masterid=13, workerid=1)
+            fakedb.ConfiguredWorker(id=14012, workerid=1, buildermasterid=4013),
+            fakedb.ConnectedWorker(id=114, masterid=13, workerid=1),
         ])
         self.setupSomeBuilds()
         self.master.db.builds.finishBuild(buildid=13, results=FAILURE)
@@ -485,14 +482,11 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.setupSomeBuilds()
         self.setup_multi_builders()
         # Also set the connectedness:
-        self.master.db.insert_test_data([
-            fakedb.ConnectedWorker(id=113, masterid=13, workerid=2)
-        ])
+        self.master.db.insert_test_data([fakedb.ConnectedWorker(id=113, masterid=13, workerid=2)])
         yield self.do_test_command('last')
         self.assertEqual(len(self.sent), 1)
         sent = self.sub_seconds(self.sent)
-        self.assertIn(
-            '`builder1`: last build completed successfully (N seconds ago)', sent)
+        self.assertIn('`builder1`: last build completed successfully (N seconds ago)', sent)
 
     @defer.inlineCallbacks
     def test_command_last_all(self):
@@ -500,10 +494,8 @@ class TestContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('last', args='all')
         self.assertEqual(len(self.sent), 1)
         sent = self.sub_seconds(self.sent)
-        self.assertIn(
-            '`builder1`: last build completed successfully (N seconds ago)', sent[0])
-        self.assertIn(
-            '`builder2`: no builds run since last restart', sent[0])
+        self.assertIn('`builder1`: last build completed successfully (N seconds ago)', sent[0])
+        self.assertIn('`builder2`: no builds run since last restart', sent[0])
 
     @defer.inlineCallbacks
     def test_command_last_builder_bogus(self):
@@ -515,16 +507,14 @@ class TestContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('last', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 1)
         sent = self.sub_seconds(self.sent)
-        self.assertIn(
-            '`builder1`: last build completed successfully (N seconds ago)', sent)
+        self.assertIn('`builder1`: last build completed successfully (N seconds ago)', sent)
 
     @defer.inlineCallbacks
     def test_command_last_builder1(self):
         self.setupSomeBuilds()
         yield self.do_test_command('last', args=self.BUILDER_NAMES[1])
         self.assertEqual(len(self.sent), 1)
-        self.assertIn(
-            '`builder2`: no builds run since last restart', self.sent)
+        self.assertIn('`builder2`: no builds run since last restart', self.sent)
 
     @defer.inlineCallbacks
     def test_command_watch(self):
@@ -541,10 +531,16 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.setupSomeBuilds()
         yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 2)
-        self.assertIn('Watching build [#3](http://localhost:8080/#/builders/23/builds/3) of '
-                      '`builder1` until it finishes...', self.sent)
-        self.assertIn('Watching build [#6](http://localhost:8080/#/builders/23/builds/6) of '
-                      '`builder1` until it finishes...', self.sent)
+        self.assertIn(
+            'Watching build [#3](http://localhost:8080/#/builders/23/builds/3) of '
+            '`builder1` until it finishes...',
+            self.sent,
+        )
+        self.assertIn(
+            'Watching build [#6](http://localhost:8080/#/builders/23/builds/6) of '
+            '`builder1` until it finishes...',
+            self.sent,
+        )
 
     @defer.inlineCallbacks
     def test_command_watch_builder0_get_notifications(self):
@@ -555,38 +551,48 @@ class TestContact(ContactMixin, unittest.TestCase):
 
         yield self.sendBuildFinishedMessage(16)
         self.assertEqual(len(self.sent), 1)
-        self.assertIn("Build [#6](http://localhost:8080/#/builders/23/builds/6) of "
-                      "`builder1` completed successfully.", self.sent)
+        self.assertIn(
+            "Build [#6](http://localhost:8080/#/builders/23/builds/6) of "
+            "`builder1` completed successfully.",
+            self.sent,
+        )
 
     @defer.inlineCallbacks
     def test_command_watch_builder1(self):
         self.setupSomeBuilds()
         yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 2)
-        self.assertIn('Watching build [#3](http://localhost:8080/#/builders/23/builds/3) of '
-                      '`builder1` until it finishes...', self.sent)
-        self.assertIn('Watching build [#6](http://localhost:8080/#/builders/23/builds/6) of '
-                      '`builder1` until it finishes...', self.sent)
+        self.assertIn(
+            'Watching build [#3](http://localhost:8080/#/builders/23/builds/3) of '
+            '`builder1` until it finishes...',
+            self.sent,
+        )
+        self.assertIn(
+            'Watching build [#6](http://localhost:8080/#/builders/23/builds/6) of '
+            '`builder1` until it finishes...',
+            self.sent,
+        )
 
     @defer.inlineCallbacks
     def sendBuildFinishedMessage(self, buildid, results=0):
         self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
         build = yield self.master.db.builds.getBuild(buildid)
-        self.master.mq.callConsumer(('builds', str(buildid), 'complete'), {
-            "buildid": buildid,
-            "number": build['number'],
-            "builderid": build['builderid'],
-            "buildrequestid": build['buildrequestid'],
-            "workerid": build['workerid'],
-            "masterid": build['masterid'],
-            "started_at": datetime2epoch(
-                build['started_at']),
-            "complete": True,
-            "complete_at": datetime2epoch(
-                build['complete_at']),
-            "state_string": '',
-            "results": results,
-        })
+        self.master.mq.callConsumer(
+            ('builds', str(buildid), 'complete'),
+            {
+                "buildid": buildid,
+                "number": build['number'],
+                "builderid": build['builderid'],
+                "buildrequestid": build['buildrequestid'],
+                "workerid": build['workerid'],
+                "masterid": build['masterid'],
+                "started_at": datetime2epoch(build['started_at']),
+                "complete": True,
+                "complete_at": datetime2epoch(build['complete_at']),
+                "state_string": '',
+                "results": results,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_command_stop(self):
@@ -594,8 +600,9 @@ class TestContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_stop_bogus_builder(self):
-        yield self.do_test_command('stop', args="build BOGUS 'i have a reason'",
-                                   exp_UsageError=True)
+        yield self.do_test_command(
+            'stop', args="build BOGUS 'i have a reason'", exp_UsageError=True
+        )
 
     @defer.inlineCallbacks
     def test_command_stop_builder0_no_builds(self):
@@ -631,8 +638,11 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_force(self):
         yield self.do_test_command(
             'force',
-            args=('build --branch BRANCH1 --revision REV1 --props=PROP1=VALUE1 '
-                  f'{self.BUILDER_NAMES[0]} REASON'))
+            args=(
+                'build --branch BRANCH1 --revision REV1 --props=PROP1=VALUE1 '
+                f'{self.BUILDER_NAMES[0]} REASON'
+            ),
+        )
 
     @defer.inlineCallbacks
     def test_handleMessage_short_command(self):
@@ -661,11 +671,11 @@ class TestContact(ContactMixin, unittest.TestCase):
 
         def command_TESTY(msg):
             raise RuntimeError("FAIL")
+
         self.contact.command_TESTY = command_TESTY
         yield self.contact.handleMessage('testy boom')
 
-        self.assertEqual(self.sent,
-                         ["Something bad happened (see logs)"])
+        self.assertEqual(self.sent, ["Something bad happened (see logs)"])
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
@@ -674,6 +684,7 @@ class TestContact(ContactMixin, unittest.TestCase):
 
         def command_TESTY(msg):
             raise words.UsageError("oh noes")
+
         self.contact.command_TESTY = command_TESTY
         yield self.contact.handleMessage('testy boom')
 
@@ -703,7 +714,8 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.contact.channel.buildStarted(build)
         self.assertEqual(
             self.sent.pop(),
-            "Build [#3](http://localhost:8080/#/builders/23/builds/3) of `builder1` started.")
+            "Build [#3](http://localhost:8080/#/builders/23/builds/3) of `builder1` started.",
+        )
 
     def test_getCommandMethod_authz_default(self):
         self.bot.authz = words.StatusBot.expand_authz(None)
@@ -714,7 +726,8 @@ class TestContact(ContactMixin, unittest.TestCase):
         'force': ['me'],
         'shutdown': ['notme', 'someone'],
         ('dance', 'notify'): True,
-        '': False}
+        '': False,
+    }
 
     def test_getCommandMethod_explicit_allow(self):
         self.bot.authz = words.StatusBot.expand_authz(self.authz1)
@@ -737,10 +750,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         meth = self.contact.getCommandMethod('help')
         self.assertEqual(meth, self.contact.access_denied)
 
-    authz2 = {
-        'shutdown': False,
-        '': False,
-        '*': True}
+    authz2 = {'shutdown': False, '': False, '*': True}
 
     def test_getCommandMethod_exclamation(self):
         self.bot.authz = words.StatusBot.expand_authz(self.authz2)
@@ -761,8 +771,9 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_bot_loadState(self):
         boid = yield self.bot._get_object_id()
         self.master.db.insert_test_data([
-            fakedb.ObjectState(objectid=boid, name='notify_events',
-                               value_json='[["#channel1", ["warnings"]]]'),
+            fakedb.ObjectState(
+                objectid=boid, name='notify_events', value_json='[["#channel1", ["warnings"]]]'
+            ),
         ])
         yield self.bot.loadState()
         self.assertEqual(self.bot.channels['#channel1'].notify_events, {'warnings'})

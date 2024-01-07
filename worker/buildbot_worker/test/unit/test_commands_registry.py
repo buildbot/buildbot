@@ -20,7 +20,6 @@ from buildbot_worker.commands import shell
 
 
 class Registry(unittest.TestCase):
-
     def test_getFactory(self):
         factory = registry.getFactory('shell')
         self.assertEqual(factory, shell.WorkerShellCommand)

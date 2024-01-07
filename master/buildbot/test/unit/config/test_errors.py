@@ -22,7 +22,6 @@ from buildbot.config.errors import error
 
 
 class ConfigErrorsTest(unittest.TestCase):
-
     def test_constr(self):
         ex = ConfigErrors(['a', 'b'])
         self.assertEqual(ex.errors, ['a', 'b'])

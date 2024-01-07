@@ -20,7 +20,6 @@ from buildbot.util import deferwaiter
 
 
 class TestResultSubmitter:
-
     def __init__(self, batch_n=3000):
         self._batch_n = batch_n
         self._curr_batch = []
@@ -36,8 +35,15 @@ class TestResultSubmitter:
     @defer.inlineCallbacks
     def setup(self, step, description, category, value_unit):
         builderid = yield step.build.getBuilderId()
-        yield self.setup_by_ids(step.master, builderid, step.build.buildid, step.stepid,
-                                description, category, value_unit)
+        yield self.setup_by_ids(
+            step.master,
+            builderid,
+            step.build.buildid,
+            step.stepid,
+            description,
+            category,
+            value_unit,
+        )
 
     @defer.inlineCallbacks
     def setup_by_ids(self, master, builderid, buildid, stepid, description, category, value_unit):
@@ -48,17 +54,17 @@ class TestResultSubmitter:
         self._initialize_pass_fail_recording_if_needed()
 
         self._builderid = builderid
-        self._setid = yield self._master.data.updates.addTestResultSet(builderid, buildid, stepid,
-                                                                       description, category,
-                                                                       value_unit)
+        self._setid = yield self._master.data.updates.addTestResultSet(
+            builderid, buildid, stepid, description, category, value_unit
+        )
 
     @defer.inlineCallbacks
     def finish(self):
         self._submit_batch()
         yield self._waiter.wait()
-        yield self._master.data.updates.completeTestResultSet(self._setid,
-                                                              tests_passed=self._tests_passed,
-                                                              tests_failed=self._tests_failed)
+        yield self._master.data.updates.completeTestResultSet(
+            self._setid, tests_passed=self._tests_passed, tests_failed=self._tests_failed
+        )
 
     def get_test_result_set_id(self):
         return self._setid
@@ -117,8 +123,9 @@ class TestResultSubmitter:
         except Exception as e:
             log.err(e, 'When parsing test result success status')
 
-    def add_test_result(self, value, test_name=None, test_code_path=None, line=None,
-                        duration_ns=None):
+    def add_test_result(
+        self, value, test_name=None, test_code_path=None, line=None, duration_ns=None
+    ):
         if not isinstance(value, str):
             raise TypeError('value must be a string')
         result = {'value': value}

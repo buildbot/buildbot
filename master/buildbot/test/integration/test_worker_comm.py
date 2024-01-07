@@ -41,14 +41,12 @@ PKI_DIR = util.sibpath(__file__, 'pki')
 
 
 class FakeWorkerForBuilder(pb.Referenceable):
-
     """
     Fake worker-side WorkerForBuilder object
     """
 
 
 class FakeWorkerWorker(pb.Referenceable):
-
     """
     Fake worker-side Worker object
 
@@ -74,6 +72,7 @@ class FakeWorkerWorker(pb.Referenceable):
 
         def clear_persp():
             self.master_persp = None
+
         persp.broker.notifyOnDisconnect(clear_persp)
 
         def fire_deferreds():
@@ -82,6 +81,7 @@ class FakeWorkerWorker(pb.Referenceable):
             self._detach_deferreds = None
             for d in deferreds:
                 d.callback(None)
+
         persp.broker.notifyOnDisconnect(fire_deferreds)
 
     def remote_print(self, message):
@@ -97,8 +97,7 @@ class FakeWorkerWorker(pb.Referenceable):
             'none': None,
             'os_release': b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(),
             b'\xe3\x83\xaa\xe3\x83\xaa\xe3\x83\xbc\xe3\x82\xb9\xe3'
-            b'\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode():
-                b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(),
+            b'\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(): b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(),
         }
 
     def remote_getVersion(self):
@@ -115,7 +114,6 @@ class FakeWorkerWorker(pb.Referenceable):
 
 
 class FakeBuilder(builder.Builder):
-
     def attached(self, worker, commands):
         return defer.succeed(None)
 
@@ -130,7 +128,6 @@ class FakeBuilder(builder.Builder):
 
 
 class MyWorker(worker.Worker):
-
     def attached(self, conn):
         self.detach_d = defer.Deferred()
         return super().attached(conn)
@@ -143,7 +140,6 @@ class MyWorker(worker.Worker):
 
 
 class TestWorkerComm(unittest.TestCase, TestReactorMixin):
-
     """
     Test handling of connections from workers as integrated with
      - Twisted Spread
@@ -166,8 +162,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
-                                             wantDb=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
         # set the worker port to a loopback address with unspecified
         # port
@@ -177,8 +172,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         # remove the fakeServiceParent from fake service hierarchy, and replace
         # by a real one
         yield self.master.workers.disownServiceParent()
-        self.workers = self.master.workers = workermanager.WorkerManager(
-            self.master)
+        self.workers = self.master.workers = workermanager.WorkerManager(self.master)
         yield self.workers.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster()
@@ -231,9 +225,11 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         new_config = self.master.config
         new_config.protocols = {"pb": {"port": self.server_connection_string}}
         new_config.workers = [self.buildworker]
-        new_config.builders = [config.BuilderConfig(
-            name='bldr',
-            workername='testworker', factory=factory.BuildFactory())]
+        new_config.builders = [
+            config.BuilderConfig(
+                name='bldr', workername='testworker', factory=factory.BuildFactory()
+            )
+        ]
 
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
         yield self.workers.reconfigServiceWithBuildbotConfig(new_config)
@@ -254,8 +250,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         factory = pb.PBClientFactory()
         creds = credentials.UsernamePassword(b"testworker", b"pw")
         setBuilderList_d = defer.Deferred()
-        workerworker = FakeWorkerWorker(
-            lambda: setBuilderList_d.callback(None))
+        workerworker = FakeWorkerWorker(lambda: setBuilderList_d.callback(None))
 
         login_d = factory.login(creds, workerworker)
 
@@ -265,22 +260,21 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
 
             # set up to hear when the worker side disconnects
             workerworker.detach_d = defer.Deferred()
-            persp.broker.notifyOnDisconnect(
-                lambda: workerworker.detach_d.callback(None))
+            persp.broker.notifyOnDisconnect(lambda: workerworker.detach_d.callback(None))
             self._detach_deferreds.append(workerworker.detach_d)
 
             return workerworker
 
         self.endpoint = clientFromString(
-                reactor, self.client_connection_string_tpl.format(port=self.port))
+            reactor, self.client_connection_string_tpl.format(port=self.port)
+        )
         connected_d = self.endpoint.connect(factory)
 
         dlist = [connected_d, login_d]
         if waitForBuilderList:
             dlist.append(setBuilderList_d)
 
-        d = defer.DeferredList(dlist,
-                               consumeErrors=True, fireOnOneErrback=True)
+        d = defer.DeferredList(dlist, consumeErrors=True, fireOnOneErrback=True)
         d.addCallback(lambda _: workerworker)
         return d
 
@@ -313,14 +307,17 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         on various versions, including PyOpenSSL, service_identity. The CA used
         to generate the testing cert is in ``PKI_DIR/ca``
         """
+
         def escape_colon(path):
             # on windows we can't have \ as it serves as the escape character for :
             return path.replace('\\', '/').replace(':', '\\:')
+
         self.server_connection_string = (
-            "ssl:port=0:certKey={pub}:privateKey={priv}:" +
-            "interface=127.0.0.1").format(
-                pub=escape_colon(os.path.join(PKI_DIR, '127.0.0.1.crt')),
-                priv=escape_colon(os.path.join(PKI_DIR, '127.0.0.1.key')))
+            "ssl:port=0:certKey={pub}:privateKey={priv}:" + "interface=127.0.0.1"
+        ).format(
+            pub=escape_colon(os.path.join(PKI_DIR, '127.0.0.1.crt')),
+            priv=escape_colon(os.path.join(PKI_DIR, '127.0.0.1.key')),
+        )
         self.client_connection_string_tpl = "ssl:host=127.0.0.1:port={port}"
 
         yield self.addWorker()
@@ -340,14 +337,18 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         worker = yield self.connectWorker()
         props = self.buildworker.info
         # check worker info passing
-        self.assertEqual(props.getProperty("info"),
-                         "here")
+        self.assertEqual(props.getProperty("info"), "here")
         # check worker info passing with UTF-8
-        self.assertEqual(props.getProperty("os_release"),
-                         b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode())
-        self.assertEqual(props.getProperty(b'\xe3\x83\xaa\xe3\x83\xaa\xe3\x83\xbc\xe3\x82'
-                                           b'\xb9\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode()),
-                         b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode())
+        self.assertEqual(
+            props.getProperty("os_release"), b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode()
+        )
+        self.assertEqual(
+            props.getProperty(
+                b'\xe3\x83\xaa\xe3\x83\xaa\xe3\x83\xbc\xe3\x82'
+                b'\xb9\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode()
+            ),
+            b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(),
+        )
         self.assertEqual(props.getProperty("none"), None)
         self.assertEqual(props.getProperty("numcpus"), 1)
 
@@ -389,6 +390,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         def remote_print(message):
             worker1.master_persp.broker.transport.loseConnection()
             raise pb.PBConnectionLost("fake!")
+
         worker1.remote_print = remote_print
 
         # connect second worker; this should succeed, and the old worker

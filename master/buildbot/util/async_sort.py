@@ -25,13 +25,11 @@ from twisted.internet import defer
 
 @defer.inlineCallbacks
 def async_sort(l, key, max_parallel=10):
-    """perform an asynchronous sort with parallel run of the key algorithm
-    """
+    """perform an asynchronous sort with parallel run of the key algorithm"""
 
     sem = defer.DeferredSemaphore(max_parallel)
     try:
-        keys = yield defer.gatherResults(
-            [sem.run(key, i) for i in l])
+        keys = yield defer.gatherResults([sem.run(key, i) for i in l])
     except defer.FirstError as e:
         raise e.subFailure.value
 

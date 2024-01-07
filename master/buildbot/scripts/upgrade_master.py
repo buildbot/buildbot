@@ -63,11 +63,14 @@ def upgradeFiles(config):
     webdir = os.path.join(config['basedir'], "public_html")
     if os.path.exists(webdir):
         print("Notice: public_html is not used starting from Buildbot 0.9.0")
-        print("        consider using third party HTTP server for serving "
-              "static files")
+        print("        consider using third party HTTP server for serving " "static files")
 
-    installFile(config, os.path.join(config['basedir'], "master.cfg.sample"),
-                util.sibpath(__file__, "sample.cfg"), overwrite=True)
+    installFile(
+        config,
+        os.path.join(config['basedir'], "master.cfg.sample"),
+        util.sibpath(__file__, "sample.cfg"),
+        overwrite=True,
+    )
 
 
 @defer.inlineCallbacks
@@ -77,17 +80,18 @@ def upgradeDatabase(config, master_cfg):
         print("Warning: Stopping this process might cause data loss")
 
     def sighandler(signum, frame):
-        msg = " ".join("""
+        msg = " ".join(
+            """
         WARNING: ignoring signal {}.
         This process should not be interrupted to avoid database corruption.
         If you really need to terminate it, use SIGKILL.
-        """.split())
+        """.split()
+        )
         print(msg.format(signum))
 
     prev_handlers = {}
     try:
-        for signame in ("SIGTERM", "SIGINT", "SIGQUIT", "SIGHUP",
-                        "SIGUSR1", "SIGUSR2", "SIGBREAK"):
+        for signame in ("SIGTERM", "SIGINT", "SIGQUIT", "SIGHUP", "SIGUSR1", "SIGUSR2", "SIGBREAK"):
             if hasattr(signal, signame):
                 signum = getattr(signal, signame)
                 prev_handlers[signum] = signal.signal(signum, sighandler)
@@ -129,7 +133,6 @@ def upgradeMaster(config):
 
 @defer.inlineCallbacks
 def _upgradeMaster(config, master_cfg):
-
     try:
         upgradeFiles(config)
         yield upgradeDatabase(config, master_cfg)

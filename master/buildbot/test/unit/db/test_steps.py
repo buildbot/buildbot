@@ -34,7 +34,6 @@ TIME5 = 1304262236
 
 
 class Tests(interfaces.InterfaceTests):
-
     # common sample data
 
     backgroundData = [
@@ -43,49 +42,77 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Builder(id=88, name='b1'),
         fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
         fakedb.Master(id=88),
-        fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88,
-                     builderid=88, workerid=47),
-        fakedb.Build(id=31, buildrequestid=41, number=8, masterid=88,
-                     builderid=88, workerid=47),
+        fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88, builderid=88, workerid=47),
+        fakedb.Build(id=31, buildrequestid=41, number=8, masterid=88, builderid=88, workerid=47),
     ]
     stepRows = [
-        fakedb.Step(id=70, number=0, name='one', buildid=30,
-                    started_at=TIME1, locks_acquired_at=TIME2, complete_at=TIME3,
-                    state_string='test', results=0),
-        fakedb.Step(id=71, number=1, name='two', buildid=30,
-                    started_at=TIME2, locks_acquired_at=TIME3, complete_at=TIME4,
-                    state_string='test', results=2,
-                    urls_json='["http://url"]',
-                    hidden=1),
-        fakedb.Step(id=72, number=2, name='three', buildid=30,
-                    started_at=TIME5),
+        fakedb.Step(
+            id=70,
+            number=0,
+            name='one',
+            buildid=30,
+            started_at=TIME1,
+            locks_acquired_at=TIME2,
+            complete_at=TIME3,
+            state_string='test',
+            results=0,
+        ),
+        fakedb.Step(
+            id=71,
+            number=1,
+            name='two',
+            buildid=30,
+            started_at=TIME2,
+            locks_acquired_at=TIME3,
+            complete_at=TIME4,
+            state_string='test',
+            results=2,
+            urls_json='["http://url"]',
+            hidden=1,
+        ),
+        fakedb.Step(id=72, number=2, name='three', buildid=30, started_at=TIME5),
         fakedb.Step(id=73, number=0, name='wrong-build', buildid=31),
     ]
     stepDicts = [
-        {'id': 70, 'buildid': 30, 'number': 0, 'name': 'one',
-         'results': 0,
-         'started_at': epoch2datetime(TIME1),
-         "locks_acquired_at": epoch2datetime(TIME2),
-         'complete_at': epoch2datetime(TIME3),
-         'state_string': 'test',
-         'urls': [],
-         'hidden': False},
-        {'id': 71, 'buildid': 30, 'number': 1, 'name': 'two',
-         'results': 2,
-         'started_at': epoch2datetime(TIME2),
-         "locks_acquired_at": epoch2datetime(TIME3),
-         'complete_at': epoch2datetime(TIME4),
-         'state_string': 'test',
-         'urls': ['http://url'],
-         'hidden': True},
-        {'id': 72, 'buildid': 30, 'number': 2, 'name': 'three',
-         'results': None,
-         'started_at': epoch2datetime(TIME5),
-         "locks_acquired_at": None,
-         'complete_at': None,
-         'state_string': '',
-         'urls': [],
-         'hidden': False},
+        {
+            'id': 70,
+            'buildid': 30,
+            'number': 0,
+            'name': 'one',
+            'results': 0,
+            'started_at': epoch2datetime(TIME1),
+            "locks_acquired_at": epoch2datetime(TIME2),
+            'complete_at': epoch2datetime(TIME3),
+            'state_string': 'test',
+            'urls': [],
+            'hidden': False,
+        },
+        {
+            'id': 71,
+            'buildid': 30,
+            'number': 1,
+            'name': 'two',
+            'results': 2,
+            'started_at': epoch2datetime(TIME2),
+            "locks_acquired_at": epoch2datetime(TIME3),
+            'complete_at': epoch2datetime(TIME4),
+            'state_string': 'test',
+            'urls': ['http://url'],
+            'hidden': True,
+        },
+        {
+            'id': 72,
+            'buildid': 30,
+            'number': 2,
+            'name': 'three',
+            'results': None,
+            'started_at': epoch2datetime(TIME5),
+            "locks_acquired_at": None,
+            'complete_at': None,
+            'state_string': '',
+            'urls': [],
+            'hidden': False,
+        },
     ]
 
     # signature tests
@@ -150,8 +177,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getStep_name(self):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[2]])
-        stepdict = yield self.db.steps.getStep(buildid=30,
-                                               name='three')
+        stepdict = yield self.db.steps.getStep(buildid=30, name='three')
         validation.verifyDbDict(self, 'stepdict', stepdict)
         self.assertEqual(stepdict['id'], 72)
 
@@ -185,32 +211,36 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_addStep_getStep(self):
         yield self.insert_test_data(self.backgroundData)
-        stepid, number, name = yield self.db.steps.addStep(buildid=30,
-                                                           name='new',
-                                                           state_string='new')
+        stepid, number, name = yield self.db.steps.addStep(
+            buildid=30, name='new', state_string='new'
+        )
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
-        self.assertEqual(stepdict, {
-            'id': stepid,
-            'buildid': 30,
-            'name': 'new',
-            'number': 0,
-            'started_at': epoch2datetime(TIME1),
-            "locks_acquired_at": None,
-            'complete_at': None,
-            'results': None,
-            'state_string': 'new',
-            'urls': [],
-            'hidden': False})
+        self.assertEqual(
+            stepdict,
+            {
+                'id': stepid,
+                'buildid': 30,
+                'name': 'new',
+                'number': 0,
+                'started_at': epoch2datetime(TIME1),
+                "locks_acquired_at": None,
+                'complete_at': None,
+                'results': None,
+                'state_string': 'new',
+                'urls': [],
+                'hidden': False,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_addStep_getStep_locks_acquired_already(self):
         yield self.insert_test_data(self.backgroundData)
-        stepid, number, name = yield self.db.steps.addStep(buildid=30,
-                                                           name='new',
-                                                           state_string='new')
+        stepid, number, name = yield self.db.steps.addStep(
+            buildid=30, name='new', state_string='new'
+        )
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=True)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
@@ -228,39 +258,44 @@ class Tests(interfaces.InterfaceTests):
                 "results": None,
                 "state_string": "new",
                 "urls": [],
-                "hidden": False
-            }
+                "hidden": False,
+            },
         )
 
     @defer.inlineCallbacks
     def test_addStep_getStep_locks_acquired_later(self):
         yield self.insert_test_data(self.backgroundData)
-        stepid, number, name = yield self.db.steps.addStep(buildid=30,
-                                                           name='new',
-                                                           state_string='new')
+        stepid, number, name = yield self.db.steps.addStep(
+            buildid=30, name='new', state_string='new'
+        )
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         yield self.db.steps.set_step_locks_acquired_at(stepid=stepid, locks_acquired_at=TIME2)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
-        self.assertEqual(stepdict, {
-            'id': stepid,
-            'buildid': 30,
-            'name': 'new',
-            'number': 0,
-            'started_at': epoch2datetime(TIME1),
-            "locks_acquired_at": epoch2datetime(TIME2),
-            'complete_at': None,
-            'results': None,
-            'state_string': 'new',
-            'urls': [],
-            'hidden': False})
+        self.assertEqual(
+            stepdict,
+            {
+                'id': stepid,
+                'buildid': 30,
+                'name': 'new',
+                'number': 0,
+                'started_at': epoch2datetime(TIME1),
+                "locks_acquired_at": epoch2datetime(TIME2),
+                'complete_at': None,
+                'results': None,
+                'state_string': 'new',
+                'urls': [],
+                'hidden': False,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_addStep_getStep_existing_step(self):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[0]])
         stepid, number, name = yield self.db.steps.addStep(
-            buildid=30, name='new', state_string='new')
+            buildid=30, name='new', state_string='new'
+        )
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (1, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
@@ -270,14 +305,18 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addStep_getStep_name_collisions(self):
-        yield self.insert_test_data(self.backgroundData + [
-            fakedb.Step(id=73, number=0, name='new', buildid=30),
-            fakedb.Step(id=74, number=1, name='new_1', buildid=30),
-            fakedb.Step(id=75, number=2, name='new_2', buildid=30),
-            fakedb.Step(id=76, number=3, name='new_step', buildid=30),
-        ])
+        yield self.insert_test_data(
+            self.backgroundData
+            + [
+                fakedb.Step(id=73, number=0, name='new', buildid=30),
+                fakedb.Step(id=74, number=1, name='new_1', buildid=30),
+                fakedb.Step(id=75, number=2, name='new_2', buildid=30),
+                fakedb.Step(id=76, number=3, name='new_step', buildid=30),
+            ]
+        )
         stepid, number, name = yield self.db.steps.addStep(
-            buildid=30, name='new', state_string='new')
+            buildid=30, name='new', state_string='new'
+        )
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (4, 'new_3'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
@@ -288,8 +327,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setStepStateString(self):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[2]])
-        yield self.db.steps.setStepStateString(stepid=72,
-                                               state_string='aaa')
+        yield self.db.steps.setStepStateString(stepid=72, state_string='aaa')
         stepdict = yield self.db.steps.getStep(stepid=72)
         self.assertEqual(stepdict['state_string'], 'aaa')
 
@@ -306,9 +344,11 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[2]])
         yield defer.gatherResults([
             # only a tiny sleep is required to see the problem.
-            self.db.steps.addURL(stepid=72, name='foo', url='bar',
-                                 _racehook=lambda: time.sleep(.01)),
-            self.db.steps.addURL(stepid=72, name='foo2', url='bar2')])
+            self.db.steps.addURL(
+                stepid=72, name='foo', url='bar', _racehook=lambda: time.sleep(0.01)
+            ),
+            self.db.steps.addURL(stepid=72, name='foo2', url='bar2'),
+        ])
 
         stepdict = yield self.db.steps.getStep(stepid=72)
 
@@ -316,22 +356,22 @@ class Tests(interfaces.InterfaceTests):
             return url['name']
 
         # order is not guaranteed though
-        self.assertEqual(sorted(stepdict['urls'], key=urlKey),
-                         sorted([{'name': 'foo', 'url': 'bar'},
-                                 {'name': 'foo2', 'url': 'bar2'}],
-                                key=urlKey))
+        self.assertEqual(
+            sorted(stepdict['urls'], key=urlKey),
+            sorted([{'name': 'foo', 'url': 'bar'}, {'name': 'foo2', 'url': 'bar2'}], key=urlKey),
+        )
 
     @defer.inlineCallbacks
     def test_addURL_no_duplicate(self):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[2]])
         yield defer.gatherResults([
             self.db.steps.addURL(stepid=72, name='foo', url='bar'),
-            self.db.steps.addURL(stepid=72, name='foo', url='bar')])
+            self.db.steps.addURL(stepid=72, name='foo', url='bar'),
+        ])
 
         stepdict = yield self.db.steps.getStep(stepid=72)
 
-        self.assertEqual(stepdict['urls'],
-                         [{'name': 'foo', 'url': 'bar'}])
+        self.assertEqual(stepdict['urls'], [{'name': 'foo', 'url': 'bar'}])
 
     @defer.inlineCallbacks
     def test_finishStep(self):
@@ -352,16 +392,19 @@ class Tests(interfaces.InterfaceTests):
 
 
 class RealTests(Tests):
-
     # the fake connector doesn't deal with this edge case
     @defer.inlineCallbacks
     def test_addStep_getStep_name_collisions_too_long(self):
-        yield self.insert_test_data(self.backgroundData + [
-            fakedb.Step(id=73, number=0, name='a' * 49, buildid=30),
-            fakedb.Step(id=74, number=1, name='a' * 48 + '_1', buildid=30),
-        ])
+        yield self.insert_test_data(
+            self.backgroundData
+            + [
+                fakedb.Step(id=73, number=0, name='a' * 49, buildid=30),
+                fakedb.Step(id=74, number=1, name='a' * 48 + '_1', buildid=30),
+            ]
+        )
         stepid, number, name = yield self.db.steps.addStep(
-            buildid=30, name='a' * 49, state_string='new')
+            buildid=30, name='a' * 49, state_string='new'
+        )
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (2, 'a' * 48 + '_2'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
@@ -371,15 +414,23 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_addStep_getStep_name_collisions_too_long_extra_digits(self):
-        yield self.insert_test_data(self.backgroundData + [
-            fakedb.Step(id=73, number=0, name='a' * 50, buildid=30),
-        ] + [fakedb.Step(id=73 + i, number=i, name='a' * 48 + (f'_{i}'), buildid=30)
-             for i in range(1, 10)
-             ] + [fakedb.Step(id=73 + i, number=i, name='a' * 47 + (f'_{i}'), buildid=30)
-                  for i in range(10, 100)
-                  ])
+        yield self.insert_test_data(
+            self.backgroundData
+            + [
+                fakedb.Step(id=73, number=0, name='a' * 50, buildid=30),
+            ]
+            + [
+                fakedb.Step(id=73 + i, number=i, name='a' * 48 + (f'_{i}'), buildid=30)
+                for i in range(1, 10)
+            ]
+            + [
+                fakedb.Step(id=73 + i, number=i, name='a' * 47 + (f'_{i}'), buildid=30)
+                for i in range(10, 100)
+            ]
+        )
         stepid, number, name = yield self.db.steps.addStep(
-            buildid=30, name='a' * 50, state_string='new')
+            buildid=30, name='a' * 50, state_string='new'
+        )
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (100, 'a' * 46 + '_100'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
@@ -389,21 +440,26 @@ class RealTests(Tests):
 
 
 class TestFakeDB(Tests, unittest.TestCase, connector_component.FakeConnectorComponentMixin):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent()
 
 
-class TestRealDB(unittest.TestCase,
-                 connector_component.ConnectorComponentMixin,
-                 RealTests):
-
+class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(
-            table_names=['steps', 'builds', 'builders', 'masters', "projects",
-                         'buildrequests', 'buildsets', 'workers'])
+            table_names=[
+                'steps',
+                'builds',
+                'builders',
+                'masters',
+                "projects",
+                'buildrequests',
+                'buildsets',
+                'workers',
+            ]
+        )
 
         self.db.steps = steps.StepsConnectorComponent(self.db)
 

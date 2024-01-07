@@ -15,7 +15,6 @@
 
 
 class RolesFromBase:
-
     def __init__(self):
         pass
 
@@ -28,7 +27,6 @@ class RolesFromBase:
 
 
 class RolesFromGroups(RolesFromBase):
-
     def __init__(self, groupPrefix=""):
         super().__init__()
         self.groupPrefix = groupPrefix
@@ -38,12 +36,11 @@ class RolesFromGroups(RolesFromBase):
         if 'groups' in userDetails:
             for group in userDetails['groups']:
                 if group.startswith(self.groupPrefix):
-                    roles.append(group[len(self.groupPrefix):])
+                    roles.append(group[len(self.groupPrefix) :])
         return roles
 
 
 class RolesFromEmails(RolesFromBase):
-
     def __init__(self, **kwargs):
         super().__init__()
         self.roles = {}
@@ -58,7 +55,6 @@ class RolesFromEmails(RolesFromBase):
 
 
 class RolesFromDomain(RolesFromEmails):
-
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -76,7 +72,6 @@ class RolesFromDomain(RolesFromEmails):
 
 
 class RolesFromOwner(RolesFromBase):
-
     def __init__(self, role):
         super().__init__()
         self.role = role
@@ -93,6 +88,7 @@ class RolesFromUsername(RolesFromBase):
         self.roles = roles
         if None in usernames:
             from buildbot import config
+
             config.error('Usernames cannot be None')
         self.usernames = usernames
 

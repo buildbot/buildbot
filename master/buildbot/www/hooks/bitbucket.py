@@ -28,7 +28,6 @@ _HEADER_EVENT = b'X-Event-Key'
 
 
 class BitBucketHandler(BaseHookHandler):
-
     def getChanges(self, request):
         """Catch a POST request from BitBucket and start a build process
 

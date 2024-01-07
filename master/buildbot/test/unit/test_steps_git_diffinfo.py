@@ -43,7 +43,8 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .log('stdio-merge-base', stderr='fatal: Not a valid object name')
-            .exit(128))
+            .exit(128)
+        )
         self.expect_log_file_stderr('stdio-merge-base', 'fatal: Not a valid object name\n')
         self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
         return self.run_step()
@@ -54,11 +55,13 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .log('stdio-merge-base', stdout='1234123412341234')
             .exit(0),
-            ExpectShell(workdir='wkdir',
-                        command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'])
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'],
+            )
             .log('stdio-diff', stderr='fatal: ambiguous argument')
             .exit(1),
-            )
+        )
         self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', 'fatal: ambiguous argument\n')
         self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
@@ -70,11 +73,13 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .log('stdio-merge-base', stdout='1234123412341234')
             .exit(0),
-            ExpectShell(workdir='wkdir',
-                        command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'])
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'],
+            )
             .log('stdio-diff', stdout='')
             .exit(0),
-            )
+        )
         self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', '')
         self.expect_outcome(result=results.SUCCESS, state_string="GitDiffInfo")
@@ -87,9 +92,13 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .log('stdio-merge-base', stdout='1234123412341234')
             .exit(0),
-            ExpectShell(workdir='wkdir',
-                        command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'])
-            .log('stdio-diff', stdout='''\
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'diff', '--no-prefix', '-U0', '1234123412341234', 'HEAD'],
+            )
+            .log(
+                'stdio-diff',
+                stdout="""\
 diff --git file1 file1
 deleted file mode 100644
 index 42f90fd..0000000
@@ -120,22 +129,24 @@ index 0000000..632e269
 +line31
 +line32
 +line33
-''')
-            .exit(0)
+""",
             )
+            .exit(0),
+        )
         self.expect_log_file('stdio-merge-base', '1234123412341234')
         self.expect_outcome(result=results.SUCCESS, state_string="GitDiffInfo")
 
         diff_info = (
-            b'[{"source_file": "file1", "target_file": "/dev/null", ' +
-            b'"is_binary": false, "is_rename": false, ' +
-            b'"hunks": [{"ss": 1, "sl": 3, "ts": 0, "tl": 0}]}, ' +
-            b'{"source_file": "file2", "target_file": "file2", ' +
-            b'"is_binary": false, "is_rename": false, ' +
-            b'"hunks": [{"ss": 4, "sl": 0, "ts": 5, "tl": 3}, ' +
-            b'{"ss": 15, "sl": 0, "ts": 19, "tl": 3}]}, ' +
-            b'{"source_file": "/dev/null", "target_file": "file3", ' +
-            b'"is_binary": false, "is_rename": false, ' +
-            b'"hunks": [{"ss": 0, "sl": 0, "ts": 1, "tl": 3}]}]')
+            b'[{"source_file": "file1", "target_file": "/dev/null", '
+            + b'"is_binary": false, "is_rename": false, '
+            + b'"hunks": [{"ss": 1, "sl": 3, "ts": 0, "tl": 0}]}, '
+            + b'{"source_file": "file2", "target_file": "file2", '
+            + b'"is_binary": false, "is_rename": false, '
+            + b'"hunks": [{"ss": 4, "sl": 0, "ts": 5, "tl": 3}, '
+            + b'{"ss": 15, "sl": 0, "ts": 19, "tl": 3}]}, '
+            + b'{"source_file": "/dev/null", "target_file": "file3", '
+            + b'"is_binary": false, "is_rename": false, '
+            + b'"hunks": [{"ss": 0, "sl": 0, "ts": 1, "tl": 3}]}]'
+        )
         self.expect_build_data('diffinfo-master', diff_info, 'GitDiffInfo')
         return self.run_step()

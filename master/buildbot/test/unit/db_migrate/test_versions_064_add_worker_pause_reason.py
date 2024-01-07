@@ -23,7 +23,6 @@ from buildbot.util import sautils
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
-
     def setUp(self):
         return self.setUpMigrateTest()
 
@@ -35,7 +34,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata.bind = conn
 
         workers = sautils.Table(
-            "workers", metadata,
+            "workers",
+            metadata,
             sa.Column("id", sa.Integer, primary_key=True),
             sa.Column("name", sa.String(50), nullable=False),
             sa.Column("info", JsonObject, nullable=False),
@@ -44,13 +44,18 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         )
         workers.create()
 
-        conn.execute(workers.insert(), [{
-            "id": 4,
-            "name": "worker1",
-            "info": "{\"key\": \"value\"}",
-            "paused": 0,
-            "graceful": 0,
-        }])
+        conn.execute(
+            workers.insert(),
+            [
+                {
+                    "id": 4,
+                    "name": "worker1",
+                    "info": "{\"key\": \"value\"}",
+                    "paused": 0,
+                    "graceful": 0,
+                }
+            ],
+        )
 
     def test_update(self):
         def setup_thd(conn):

@@ -24,12 +24,11 @@ def join_line_info(info1, info2):
     return (
         info1[0] + info2[0],
         info1[1] + [(len_text1 + index) for index in info2[1]],
-        info1[2] + info2[2]
+        info1[2] + info2[2],
     )
 
 
 class LBF(unittest.TestCase):
-
     def setUp(self):
         newline_re = r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)'
         self.lbf = lineboundaries.LineBoundaryFinder(20, newline_re)
@@ -63,14 +62,17 @@ class LBF(unittest.TestCase):
     def test_windows_newlines_folded(self):
         r"Windows' \r\n is treated as and converted to a newline"
         self.assertEqual(self.lbf.append('hello, ', 1.0), None)
-        self.assertEqual(self.lbf.append('cruel\r\n\r\nworld', 2.0),
-                         ('hello, cruel\n\n', [12, 13], [1.0, 2.0]))
+        self.assertEqual(
+            self.lbf.append('cruel\r\n\r\nworld', 2.0), ('hello, cruel\n\n', [12, 13], [1.0, 2.0])
+        )
         self.assertEqual(self.lbf.flush(), ('world\n', [5], [2.0]))
 
     def test_bare_cr_folded(self):
         r"a bare \r is treated as and converted to a newline"
-        self.assertEqual(self.lbf.append('1%\r5%\r15%\r100%\nfinished', 1.0),
-                         ('1%\n5%\n15%\n100%\n', [2, 5, 9, 14], [1.0, 1.0, 1.0, 1.0]))
+        self.assertEqual(
+            self.lbf.append('1%\r5%\r15%\r100%\nfinished', 1.0),
+            ('1%\n5%\n15%\n100%\n', [2, 5, 9, 14], [1.0, 1.0, 1.0, 1.0]),
+        )
         self.assertEqual(self.lbf.flush(), ('finished\n', [8], [1.0]))
 
     def test_backspace_folded(self):
@@ -100,9 +102,10 @@ class LBF(unittest.TestCase):
             joined_line_info = lines_info[0]
             for line_info in lines_info[1:]:
                 joined_line_info = join_line_info(joined_line_info, line_info)
-            self.assertEqual(joined_line_info,
-                             ('a\nb\nc\nd\n\ne\n', [1, 3, 5, 7, 8, 10],
-                              [2.0, 2.0, 2.0, 2.0, 2.0, 2.0]))
+            self.assertEqual(
+                joined_line_info,
+                ('a\nb\nc\nd\n\ne\n', [1, 3, 5, 7, 8, 10], [2.0, 2.0, 2.0, 2.0, 2.0, 2.0]),
+            )
 
     def test_split_terminal_control(self):
         """terminal control characters are converted"""
@@ -116,10 +119,12 @@ class LBF(unittest.TestCase):
     def test_long_lines(self):
         """long lines are split"""
         self.assertEqual(self.lbf.append('123456789012', 1.0), None)
-        self.assertEqual(self.lbf.append('123456789012', 2.0),
-                         ('1234567890121234567\n', [19], [1.0]))
-        self.assertEqual(self.lbf.append('123456789012345', 3.0),
-                         ('8901212345678901234\n', [19], [2.0]))
+        self.assertEqual(
+            self.lbf.append('123456789012', 2.0), ('1234567890121234567\n', [19], [1.0])
+        )
+        self.assertEqual(
+            self.lbf.append('123456789012345', 3.0), ('8901212345678901234\n', [19], [2.0])
+        )
         self.assertEqual(self.lbf.append('123456789012', 4.0), None)
         self.assertEqual(self.lbf.flush(), ('5123456789012\n', [13], [3.0]))
 

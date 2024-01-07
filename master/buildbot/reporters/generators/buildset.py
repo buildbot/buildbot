@@ -27,19 +27,30 @@ from .utils import BuildStatusGeneratorMixin
 
 @implementer(interfaces.IReportGenerator)
 class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
-
     wanted_event_keys = [
         ('buildsets', None, 'complete'),
     ]
 
     compare_attrs = ['formatter']
 
-    def __init__(self, mode=("failing", "passing", "warnings"),
-                 tags=None, builders=None, schedulers=None, branches=None,
-                 subject=None, add_logs=False, add_patch=False, message_formatter=None):
+    def __init__(
+        self,
+        mode=("failing", "passing", "warnings"),
+        tags=None,
+        builders=None,
+        schedulers=None,
+        branches=None,
+        subject=None,
+        add_logs=False,
+        add_patch=False,
+        message_formatter=None,
+    ):
         if subject is not None:
-            warn_deprecated('3.5.0', 'BuildSetStatusGenerator subject parameter has been ' +
-                            'deprecated: please configure subject in the message formatter')
+            warn_deprecated(
+                '3.5.0',
+                'BuildSetStatusGenerator subject parameter has been '
+                + 'deprecated: please configure subject in the message formatter',
+            )
         else:
             subject = "Buildbot %(result)s in %(title)s on %(builder)s"
 
@@ -51,20 +62,25 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
     @defer.inlineCallbacks
     def generate(self, master, reporter, key, message):
         bsid = message['bsid']
-        res = yield utils.getDetailsForBuildset(master, bsid,
-                                                want_properties=self.formatter.want_properties,
-                                                want_steps=self.formatter.want_steps,
-                                                want_previous_build=self._want_previous_build(),
-                                                want_logs=self.formatter.want_logs,
-                                                want_logs_content=self.formatter.want_logs_content)
+        res = yield utils.getDetailsForBuildset(
+            master,
+            bsid,
+            want_properties=self.formatter.want_properties,
+            want_steps=self.formatter.want_steps,
+            want_previous_build=self._want_previous_build(),
+            want_logs=self.formatter.want_logs,
+            want_logs_content=self.formatter.want_logs_content,
+        )
 
         builds = res['builds']
         buildset = res['buildset']
 
         # only include builds for which isMessageNeeded returns true
-        builds = [build for build in builds
-                  if self.is_message_needed_by_props(build) and
-                  self.is_message_needed_by_results(build)]
+        builds = [
+            build
+            for build in builds
+            if self.is_message_needed_by_props(build) and self.is_message_needed_by_results(build)
+        ]
         if not builds:
             return None
 
@@ -91,8 +107,9 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
             blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
             users.update(set(blamelist))
 
-            buildmsg = yield formatter.format_message_for_build(master, build, is_buildset=True,
-                                                                mode=self.mode, users=blamelist)
+            buildmsg = yield formatter.format_message_for_build(
+                master, build, is_buildset=True, mode=self.mode, users=blamelist
+            )
 
             msgtype, ok = self._merge_msgtype(msgtype, buildmsg['type'])
             if not ok:
@@ -109,10 +126,12 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
                 continue
 
         if subject is None and self.subject is not None:
-            subject = self.subject % {'result': statusToString(results),
-                                      'projectName': master.config.title,
-                                      'title': master.config.title,
-                                      'builder': 'whole buildset'}
+            subject = self.subject % {
+                'result': statusToString(results),
+                'projectName': master.config.title,
+                'title': master.config.title,
+                'builder': 'whole buildset',
+            }
 
         return {
             'body': body,
@@ -133,7 +152,6 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
 
 @implementer(interfaces.IReportGenerator)
 class BuildSetCombinedStatusGenerator:
-
     wanted_event_keys = [
         ("buildsets", None, "complete"),
     ]
@@ -153,7 +171,7 @@ class BuildSetCombinedStatusGenerator:
             want_properties=self.formatter.want_properties,
             want_steps=self.formatter.want_steps,
             want_logs=self.formatter.want_logs,
-            want_logs_content=self.formatter.want_logs_content
+            want_logs_content=self.formatter.want_logs_content,
         )
 
         builds = res['builds']
@@ -169,12 +187,7 @@ class BuildSetCombinedStatusGenerator:
     @defer.inlineCallbacks
     def buildset_message(self, formatter, master, reporter, buildset, builds):
         buildmsg = yield formatter.format_message_for_buildset(
-            master,
-            buildset,
-            builds,
-            is_buildset=True,
-            mode=("passing",),
-            users=[]
+            master, buildset, builds, is_buildset=True, mode=("passing",), users=[]
         )
 
         return {
@@ -187,5 +200,5 @@ class BuildSetCombinedStatusGenerator:
             "buildset": buildset,
             "users": [],
             "patches": [],
-            "logs": []
+            "logs": [],
         }

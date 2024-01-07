@@ -21,7 +21,6 @@ from buildbot.util import service
 
 
 class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-
     classes = {
         'simple': {
             'class': "buildbot.mq.simple.SimpleMQ",

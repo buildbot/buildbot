@@ -42,6 +42,6 @@ class AbsoluteSourceStampsMixin:
                 'repository': change.repository,
                 'branch': change.branch,
                 'revision': change.revision,
-                'lastChange': change.number
+                'lastChange': change.number,
             }
             yield self.setState('lastCodebases', self._lastCodebases)

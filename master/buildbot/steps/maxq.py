@@ -24,7 +24,6 @@ from buildbot.process.results import SUCCESS
 
 
 class MaxQObserver(logobserver.LogLineObserver):
-
     def __init__(self):
         super().__init__()
         self.failures = 0

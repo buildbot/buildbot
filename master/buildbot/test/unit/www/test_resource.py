@@ -22,12 +22,10 @@ from buildbot.www import resource
 
 
 class ResourceSubclass(resource.Resource):
-
     needsReconfig = True
 
 
 class Resource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
 
@@ -43,7 +41,6 @@ class Resource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 
 class RedirectResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
 

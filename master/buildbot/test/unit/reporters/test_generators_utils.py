@@ -34,14 +34,11 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
-                         unittest.TestCase, ReporterTestMixin):
-
+class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin):
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def insert_build_finished_get_props(self, results, **kwargs):
@@ -49,18 +46,33 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         yield utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
-    def create_generator(self, mode=("failing", "passing", "warnings"),
-                         tags=None, builders=None, schedulers=None, branches=None,
-                         subject="Some subject", add_logs=False, add_patch=False):
-        return BuildStatusGeneratorMixin(mode, tags, builders, schedulers, branches, subject,
-                                         add_logs, add_patch)
+    def create_generator(
+        self,
+        mode=("failing", "passing", "warnings"),
+        tags=None,
+        builders=None,
+        schedulers=None,
+        branches=None,
+        subject="Some subject",
+        add_logs=False,
+        add_patch=False,
+    ):
+        return BuildStatusGeneratorMixin(
+            mode, tags, builders, schedulers, branches, subject, add_logs, add_patch
+        )
 
     def test_generate_name(self):
-        g = self.create_generator(tags=['tag1', 'tag2'], builders=['b1', 'b2'],
-                                  schedulers=['s1', 's2'], branches=['b1', 'b2'])
-        self.assertEqual(g.generate_name(),
-                         'BuildStatusGeneratorMixin_tags_tag1+tag2_builders_b1+b2_' +
-                         'schedulers_s1+s2_branches_b1+b2failing_passing_warnings')
+        g = self.create_generator(
+            tags=['tag1', 'tag2'],
+            builders=['b1', 'b2'],
+            schedulers=['s1', 's2'],
+            branches=['b1', 'b2'],
+        )
+        self.assertEqual(
+            g.generate_name(),
+            'BuildStatusGeneratorMixin_tags_tag1+tag2_builders_b1+b2_'
+            + 'schedulers_s1+s2_branches_b1+b2failing_passing_warnings',
+        )
 
     @parameterized.expand([
         ('tags', 'tag'),
@@ -306,13 +318,13 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
             "both_same_key",
             {"k": {"kk1": "vv1"}},
             {"k": {"kk2": "vv2"}},
-            ({"k": {"kk1": "vv1", "kk2": "vv2"}}, True)
+            ({"k": {"kk1": "vv1", "kk2": "vv2"}}, True),
         ),
         (
             "both_same_key_conflict",
             {"k": {"kk1": "vv1"}},
             {"k": {"kk1": "vv2"}},
-            ({"k": {"kk1": "vv1"}}, True)
+            ({"k": {"kk1": "vv1"}}, True),
         ),
     ])
     def test_merge_info(self, name, old, new, expected_result):

@@ -48,15 +48,30 @@ class TestResult(Row):
     foreignKeys = ('builderid', 'test_result_setid', 'test_nameid', 'test_code_pathid')
     required_columns = ('builderid', 'test_result_setid', 'value')
 
-    def __init__(self, id=None, builderid=None, test_result_setid=None, test_nameid=None,
-                 test_code_pathid=None, line=None, duration_ns=None, value=None):
-        super().__init__(id=id, builderid=builderid, test_result_setid=test_result_setid,
-                         test_nameid=test_nameid, test_code_pathid=test_code_pathid,
-                         line=line, duration_ns=duration_ns, value=value)
+    def __init__(
+        self,
+        id=None,
+        builderid=None,
+        test_result_setid=None,
+        test_nameid=None,
+        test_code_pathid=None,
+        line=None,
+        duration_ns=None,
+        value=None,
+    ):
+        super().__init__(
+            id=id,
+            builderid=builderid,
+            test_result_setid=test_result_setid,
+            test_nameid=test_nameid,
+            test_code_pathid=test_code_pathid,
+            line=line,
+            duration_ns=duration_ns,
+            value=value,
+        )
 
 
 class FakeTestResultsComponent(FakeDBComponent):
-
     def setUp(self):
         self.results = {}
         self.code_paths = {}
@@ -90,10 +105,7 @@ class FakeTestResultsComponent(FakeDBComponent):
                 continue
 
             id = Row.nextId()
-            self.code_paths[id] = {
-                'builderid': builderid,
-                'path': path
-            }
+            self.code_paths[id] = {'builderid': builderid, 'path': path}
             path_to_id[path] = id
 
         return path_to_id
@@ -114,10 +126,7 @@ class FakeTestResultsComponent(FakeDBComponent):
                 continue
 
             id = Row.nextId()
-            self.names[id] = {
-                'builderid': builderid,
-                'name': name
-            }
+            self.names[id] = {'builderid': builderid, 'name': name}
             name_to_id[name] = id
 
         return name_to_id
@@ -137,8 +146,10 @@ class FakeTestResultsComponent(FakeDBComponent):
                 raise KeyError('Each of result_values must contain \'value\' key')
 
             if 'test_name' not in result_value and 'test_code_path' not in result_value:
-                raise KeyError('Each of result_values must contain at least one of '
-                               '\'test_name\' or \'test_code_path\' keys')
+                raise KeyError(
+                    'Each of result_values must contain at least one of '
+                    '\'test_name\' or \'test_code_path\' keys'
+                )
 
             if 'test_name' in result_value:
                 insert_names.add(result_value['test_name'])

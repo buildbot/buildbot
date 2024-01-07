@@ -28,12 +28,12 @@ class Master(Row):
     hashedColumns = [('name_hash', ('name',))]
 
     def __init__(self, id=None, name='some:master', name_hash=None, active=1, last_active=9998999):
-        super().__init__(id=id, name=name, name_hash=name_hash, active=active,
-                         last_active=last_active)
+        super().__init__(
+            id=id, name=name, name_hash=name_hash, active=active, last_active=last_active
+        )
 
 
 class FakeMastersComponent(FakeDBComponent):
-
     data2db = {"masterid": "id", "link": "id"}
 
     def setUp(self):
@@ -46,7 +46,7 @@ class FakeMastersComponent(FakeDBComponent):
                     "id": row.id,
                     "name": row.name,
                     "active": bool(row.active),
-                    "last_active": epoch2datetime(row.last_active)
+                    "last_active": epoch2datetime(row.last_active),
                 }
 
     def findMasterId(self, name):
@@ -58,7 +58,7 @@ class FakeMastersComponent(FakeDBComponent):
             "id": id,
             "name": name,
             "active": False,
-            "last_active": epoch2datetime(self.reactor.seconds())
+            "last_active": epoch2datetime(self.reactor.seconds()),
         }
         return defer.succeed(id)
 
@@ -67,8 +67,7 @@ class FakeMastersComponent(FakeDBComponent):
             was_active = self.masters[masterid]['active']
             self.masters[masterid]['active'] = active
             if active:
-                self.masters[masterid]['last_active'] = \
-                    epoch2datetime(self.reactor.seconds())
+                self.masters[masterid]['last_active'] = epoch2datetime(self.reactor.seconds())
             return defer.succeed(bool(was_active) != bool(active))
         else:
             return defer.succeed(False)
@@ -79,8 +78,7 @@ class FakeMastersComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def getMasters(self):
-        return defer.succeed(sorted(self.masters.values(),
-                                    key=lambda x: x['id']))
+        return defer.succeed(sorted(self.masters.values(), key=lambda x: x['id']))
 
     # test helpers
 

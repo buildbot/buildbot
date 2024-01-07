@@ -21,7 +21,6 @@ from twisted.internet import defer
 
 
 class DirsMixin:
-
     _dirs = None
 
     def setUpDirs(self, *dirs):

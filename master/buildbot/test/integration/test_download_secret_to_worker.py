@@ -29,7 +29,6 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class DownloadSecretsBase(RunMasterBase):
-
     def setUp(self):
         self.temp_dir = os.path.abspath(self.mktemp())
         os.mkdir(self.temp_dir)
@@ -38,18 +37,14 @@ class DownloadSecretsBase(RunMasterBase):
     def setup_config(self, path, data, remove=False):
         c = {}
 
-        c['schedulers'] = [
-            ForceScheduler(name="force", builderNames=["testy"])
-        ]
+        c['schedulers'] = [ForceScheduler(name="force", builderNames=["testy"])]
 
         f = BuildFactory()
         f.addStep(DownloadSecretsToWorker([(path, data)]))
         if remove:
             f.addStep(RemoveWorkerFileSecret([(path, data)]))
 
-        c['builders'] = [
-            BuilderConfig(name="testy", workernames=["local1"], factory=f)
-        ]
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
 
         yield self.setup_master(c)
 
@@ -67,7 +62,6 @@ class DownloadSecretsBase(RunMasterBase):
     ])
     @defer.inlineCallbacks
     def test_transfer_secrets(self, name, relative_to_home, remove):
-
         path = os.path.join(self.temp_dir, 'secret_path')
 
         bb_path = path

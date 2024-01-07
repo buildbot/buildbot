@@ -31,7 +31,6 @@ class ObjDict(dict):
 
 
 class StateConnectorComponent(base.DBConnectorComponent):
-
     def getObjectId(self, name, class_name):
         # defer to a cached method that only takes one parameter (a tuple)
         d = self._getObjectId((name, class_name))
@@ -45,6 +44,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
         def thd(conn):
             return self.thdGetObjectId(conn, name, class_name)
+
         return self.db.pool.do(thd)
 
     def thdGetObjectId(self, conn, name, class_name):
@@ -54,9 +54,12 @@ class StateConnectorComponent(base.DBConnectorComponent):
         self.checkLength(objects_tbl.c.class_name, class_name)
 
         def select():
-            q = sa.select([objects_tbl.c.id],
-                          whereclause=((objects_tbl.c.name == name)
-                                       & (objects_tbl.c.class_name == class_name)))
+            q = sa.select(
+                [objects_tbl.c.id],
+                whereclause=(
+                    (objects_tbl.c.name == name) & (objects_tbl.c.class_name == class_name)
+                ),
+            )
             res = conn.execute(q)
             row = res.fetchone()
             res.close()
@@ -65,9 +68,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
             return row.id
 
         def insert():
-            res = conn.execute(objects_tbl.insert(),
-                               name=name,
-                               class_name=class_name)
+            res = conn.execute(objects_tbl.insert(), name=name, class_name=class_name)
             return res.inserted_primary_key[0]
 
         # we want to try selecting, then inserting, but if the insert fails
@@ -82,8 +83,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
         try:
             return ObjDict(id=insert())
-        except (sqlalchemy.exc.IntegrityError,
-                sqlalchemy.exc.ProgrammingError):
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
             pass
 
         return ObjDict(id=select())
@@ -95,14 +95,18 @@ class StateConnectorComponent(base.DBConnectorComponent):
     def getState(self, objectid, name, default=Thunk):
         def thd(conn):
             return self.thdGetState(conn, objectid, name, default=default)
+
         return self.db.pool.do(thd)
 
     def thdGetState(self, conn, objectid, name, default=Thunk):
         object_state_tbl = self.db.model.object_state
 
-        q = sa.select([object_state_tbl.c.value_json],
-                      whereclause=((object_state_tbl.c.objectid == objectid)
-                                   & (object_state_tbl.c.name == name)))
+        q = sa.select(
+            [object_state_tbl.c.value_json],
+            whereclause=(
+                (object_state_tbl.c.objectid == objectid) & (object_state_tbl.c.name == name)
+            ),
+        )
         res = conn.execute(q)
         row = res.fetchone()
         res.close()
@@ -120,6 +124,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
     def setState(self, objectid, name, value):
         def thd(conn):
             return self.thdSetState(conn, objectid, name, value)
+
         return self.db.pool.do(thd)
 
     def thdSetState(self, conn, objectid, name, value):
@@ -134,18 +139,19 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
         def update():
             q = object_state_tbl.update(
-                whereclause=((object_state_tbl.c.objectid == objectid)
-                             & (object_state_tbl.c.name == name)))
+                whereclause=(
+                    (object_state_tbl.c.objectid == objectid) & (object_state_tbl.c.name == name)
+                )
+            )
             res = conn.execute(q, value_json=value_json)
 
             # check whether that worked
             return res.rowcount > 0
 
         def insert():
-            conn.execute(object_state_tbl.insert(),
-                         objectid=objectid,
-                         name=name,
-                         value_json=value_json)
+            conn.execute(
+                object_state_tbl.insert(), objectid=objectid, name=name, value_json=value_json
+            )
 
         # try updating; if that fails, try inserting; if that fails, then
         # we raced with another instance to insert, so let that instance
@@ -179,12 +185,15 @@ class StateConnectorComponent(base.DBConnectorComponent):
                     raise TypeError(f"Error encoding JSON for {repr(res)}") from e
                 self._test_timing_hook(conn)
                 try:
-                    conn.execute(object_state_tbl.insert(),
-                                 objectid=objectid,
-                                 name=name,
-                                 value_json=value_json)
+                    conn.execute(
+                        object_state_tbl.insert(),
+                        objectid=objectid,
+                        name=name,
+                        value_json=value_json,
+                    )
                 except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
                     # someone beat us to it - oh well return that value
                     return self.thdGetState(conn, objectid, name)
             return res
+
         return self.db.pool.do(thd)

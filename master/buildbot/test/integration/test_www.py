@@ -59,14 +59,14 @@ class BodyReader(protocol.Protocol):
 
 
 class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
-
     master = None
 
     @defer.inlineCallbacks
     def setUp(self):
         # set up a full master serving HTTP
-        yield self.setUpRealDatabase(table_names=['masters', 'objects', 'object_state'],
-                                     sqlite_memory=False)
+        yield self.setUpRealDatabase(
+            table_names=['masters', 'objects', 'object_state'], sqlite_memory=False
+        )
 
         master = fakemaster.FakeMaster(reactor)
 
@@ -89,7 +89,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             "auth": auth.NoAuth(),
             "authz": authz.Authz(),
             "avatar_methods": [],
-            "logfileName": 'http.log'
+            "logfileName": 'http.log',
         }
         master.www = wwwservice.WWWService()
         yield master.www.setServiceParent(master)
@@ -155,29 +155,46 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_masters(self):
         yield self.insert_test_data([
-            fakedb.Master(id=7, name='some:master',
-                          active=0, last_active=SOMETIME),
-            fakedb.Master(id=8, name='other:master',
-                          active=1, last_active=OTHERTIME),
+            fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
+            fakedb.Master(id=8, name='other:master', active=1, last_active=OTHERTIME),
         ])
 
         res = yield self.apiGet(self.link(b'masters'))
-        self.assertEqual(res, {
-            'masters': [
-                {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME},
-                {'active': True, 'masterid': 8, 'name': 'other:master',
-                 'last_active': OTHERTIME},
-            ],
-            'meta': {
-                'total': 2,
-            }})
+        self.assertEqual(
+            res,
+            {
+                'masters': [
+                    {
+                        'active': False,
+                        'masterid': 7,
+                        'name': 'some:master',
+                        'last_active': SOMETIME,
+                    },
+                    {
+                        'active': True,
+                        'masterid': 8,
+                        'name': 'other:master',
+                        'last_active': OTHERTIME,
+                    },
+                ],
+                'meta': {
+                    'total': 2,
+                },
+            },
+        )
 
         res = yield self.apiGet(self.link(b'masters/7'))
-        self.assertEqual(res, {
-            'masters': [
-                {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME},
-            ],
-            'meta': {
-            }})
+        self.assertEqual(
+            res,
+            {
+                'masters': [
+                    {
+                        'active': False,
+                        'masterid': 7,
+                        'name': 'some:master',
+                        'last_active': SOMETIME,
+                    },
+                ],
+                'meta': {},
+            },
+        )

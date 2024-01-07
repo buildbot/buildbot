@@ -26,9 +26,9 @@ class HttpStatusPush(ReporterBase):
     name = "HttpStatusPush"
     secrets = ["auth"]
 
-    def checkConfig(self, serverUrl, auth=None, headers=None,
-                    debug=None, verify=None, generators=None, **kwargs):
-
+    def checkConfig(
+        self, serverUrl, auth=None, headers=None, debug=None, verify=None, generators=None, **kwargs
+    ):
         if generators is None:
             generators = self._create_default_generators()
 
@@ -36,9 +36,9 @@ class HttpStatusPush(ReporterBase):
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, serverUrl, auth=None, headers=None,
-                        debug=None, verify=None, generators=None,
-                        **kwargs):
+    def reconfigService(
+        self, serverUrl, auth=None, headers=None, debug=None, verify=None, generators=None, **kwargs
+    ):
         self.debug = debug
         self.verify = verify
 
@@ -48,14 +48,12 @@ class HttpStatusPush(ReporterBase):
         yield super().reconfigService(generators=generators, **kwargs)
 
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, serverUrl, auth=auth, headers=headers,
-            debug=self.debug, verify=self.verify)
+            self.master, serverUrl, auth=auth, headers=headers, debug=self.debug, verify=self.verify
+        )
 
     def _create_default_generators(self):
         formatter = MessageFormatterFunction(lambda context: context['build'], 'json')
-        return [
-            BuildStatusGenerator(message_formatter=formatter, report_new=True)
-        ]
+        return [BuildStatusGenerator(message_formatter=formatter, report_new=True)]
 
     def is_status_2xx(self, code):
         return code // 100 == 2

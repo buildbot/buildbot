@@ -29,7 +29,6 @@ from buildbot.steps.package import util as pkgutil
 
 
 class MaxQObserver(logobserver.LogLineObserver):
-
     def __init__(self):
         super().__init__()
         self.failures = 0

@@ -76,6 +76,7 @@ class DelayWrapper:
 def patchForDelay(target_name):
     class Default:
         pass
+
     default = Default()
 
     target, attribute = _get_target(target_name)

@@ -21,7 +21,6 @@ from buildbot.process.results import CANCELLED
 
 
 class BuildStepController:
-
     """
     A controller for ``ControllableBuildStep``.
 
@@ -48,10 +47,10 @@ class BuildStepController:
 
 
 class ControllableBuildStep(BuildStep):
-
     """
     A latent worker that can be controlled by tests.
     """
+
     name = "controllableStep"
 
     def __init__(self, controller, **kwargs):

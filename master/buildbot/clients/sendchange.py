@@ -21,7 +21,6 @@ from buildbot.util import unicode2bytes
 
 
 class Sender:
-
     def __init__(self, master, auth=('change', 'changepw'), encoding='utf8'):
         self.username = unicode2bytes(auth[0])
         self.password = unicode2bytes(auth[1])
@@ -29,16 +28,39 @@ class Sender:
         self.port = int(self.port)
         self.encoding = encoding
 
-    def send(self, branch, revision, comments, files, who=None, category=None,
-             when=None, properties=None, repository='', vc=None, project='',
-             revlink='', codebase=None):
+    def send(
+        self,
+        branch,
+        revision,
+        comments,
+        files,
+        who=None,
+        category=None,
+        when=None,
+        properties=None,
+        repository='',
+        vc=None,
+        project='',
+        revlink='',
+        codebase=None,
+    ):
         if properties is None:
             properties = {}
 
-        change = {'project': project, 'repository': repository, 'who': who,
-                  'files': files, 'comments': comments, 'branch': branch,
-                  'revision': revision, 'category': category, 'when': when,
-                  'properties': properties, 'revlink': revlink, 'src': vc}
+        change = {
+            'project': project,
+            'repository': repository,
+            'who': who,
+            'files': files,
+            'comments': comments,
+            'branch': branch,
+            'revision': revision,
+            'category': category,
+            'when': when,
+            'properties': properties,
+            'revlink': revlink,
+            'src': vc,
+        }
 
         # codebase is only sent if set; this won't work with masters older than
         # 0.8.7

@@ -39,7 +39,6 @@ from buildbot.util import service
 
 
 class FakeDBConnector(service.AsyncMultiService):
-
     """
     A stand-in for C{master.db} that operates without an actual database
     backend.  This also implements a test-data interface similar to the
@@ -101,7 +100,7 @@ class FakeDBConnector(service.AsyncMultiService):
 
     def insert_test_data(self, rows):
         """Insert a list of Row instances into the database; this method can be
-        called synchronously or asynchronously (it completes immediately) """
+        called synchronously or asynchronously (it completes immediately)"""
         for row in rows:
             if self.checkForeignKeys:
                 row.checkForeignKeys(self, self.t)

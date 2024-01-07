@@ -52,6 +52,7 @@ charset.add_charset(ENCODING, charset.SHORTEST, None, ENCODING)
 
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
+
     [ESMTPSenderFactory]  # for pyflakes
 except ImportError:
     ESMTPSenderFactory = None
@@ -67,7 +68,7 @@ except ImportError:
 #    Full Name <full.name@example.net>
 #    <full.name@example.net>
 VALID_EMAIL_ADDR = r"(?:\S+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+\.?)"
-VALID_EMAIL = re.compile(fr"^(?:{VALID_EMAIL_ADDR}|(.+\s+)?<{VALID_EMAIL_ADDR}>\s*)$")
+VALID_EMAIL = re.compile(rf"^(?:{VALID_EMAIL_ADDR}|(.+\s+)?<{VALID_EMAIL_ADDR}>\s*)$")
 VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 
 
@@ -90,13 +91,24 @@ class Domain(util.ComparableMixin):
 class MailNotifier(ReporterBase):
     secrets = ["smtpUser", "smtpPassword"]
 
-    def checkConfig(self, fromaddr, relayhost="localhost", lookup=None, extraRecipients=None,
-                    sendToInterestedUsers=True, extraHeaders=None, useTls=False, useSmtps=False,
-                    smtpUser=None, smtpPassword=None, smtpPort=25,
-                    dumpMailsToLog=False, generators=None):
+    def checkConfig(
+        self,
+        fromaddr,
+        relayhost="localhost",
+        lookup=None,
+        extraRecipients=None,
+        sendToInterestedUsers=True,
+        extraHeaders=None,
+        useTls=False,
+        useSmtps=False,
+        smtpUser=None,
+        smtpPassword=None,
+        smtpPort=25,
+        dumpMailsToLog=False,
+        generators=None,
+    ):
         if ESMTPSenderFactory is None:
-            config.error("twisted-mail is not installed - cannot "
-                         "send mail")
+            config.error("twisted-mail is not installed - cannot " "send mail")
 
         if generators is None:
             generators = self._create_default_generators()
@@ -125,11 +137,22 @@ class MailNotifier(ReporterBase):
             ssl.ensureHasSSL(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, fromaddr, relayhost="localhost", lookup=None, extraRecipients=None,
-                        sendToInterestedUsers=True, extraHeaders=None, useTls=False, useSmtps=False,
-                        smtpUser=None, smtpPassword=None, smtpPort=25,
-                        dumpMailsToLog=False, generators=None):
-
+    def reconfigService(
+        self,
+        fromaddr,
+        relayhost="localhost",
+        lookup=None,
+        extraRecipients=None,
+        sendToInterestedUsers=True,
+        extraHeaders=None,
+        useTls=False,
+        useSmtps=False,
+        smtpUser=None,
+        smtpPassword=None,
+        smtpPort=25,
+        dumpMailsToLog=False,
+        generators=None,
+    ):
         if generators is None:
             generators = self._create_default_generators()
 
@@ -156,11 +179,11 @@ class MailNotifier(ReporterBase):
     def _create_default_generators(self):
         return [
             BuildStatusGenerator(
-                add_patch=True,
-                message_formatter=MessageFormatter(template_type='html')),
+                add_patch=True, message_formatter=MessageFormatter(template_type='html')
+            ),
             WorkerMissingGenerator(
-                workers='all',
-                message_formatter=MessageFormatterMissingWorker(template_type='html')),
+                workers='all', message_formatter=MessageFormatterMissingWorker(template_type='html')
+            ),
         ]
 
     def patch_to_attachment(self, patch, index):
@@ -169,8 +192,7 @@ class MailNotifier(ReporterBase):
         # convert to base64 to conform with RFC 5322 2.1.1
         del a['Content-Transfer-Encoding']
         encoders.encode_base64(a)
-        a.add_header('Content-Disposition', "attachment",
-                     filename="source patch " + str(index))
+        a.add_header('Content-Disposition', "attachment", filename="source patch " + str(index))
         return a
 
     @defer.inlineCallbacks
@@ -179,8 +201,7 @@ class MailNotifier(ReporterBase):
         type = msgdict['type']
         subject = msgdict['subject']
 
-        assert '\n' not in subject, \
-            "Subject cannot contain newlines"
+        assert '\n' not in subject, "Subject cannot contain newlines"
 
         assert type in ('plain', 'html'), f"'{type}' message type must be 'plain' or 'html'."
 
@@ -199,7 +220,7 @@ class MailNotifier(ReporterBase):
         # m['To'] is added later
 
         if patches:
-            for (i, patch) in enumerate(patches):
+            for i, patch in enumerate(patches):
                 a = self.patch_to_attachment(patch, i)
                 m.attach(a)
         if logs:
@@ -212,13 +233,11 @@ class MailNotifier(ReporterBase):
                     filename = name
 
                 text = log['content']['content']
-                a = MIMEText(text.encode(ENCODING),
-                             _charset=ENCODING)
+                a = MIMEText(text.encode(ENCODING), _charset=ENCODING)
                 # convert to base64 to conform with RFC 5322 2.1.1
                 del a['Content-Transfer-Encoding']
                 encoders.encode_base64(a)
-                a.add_header('Content-Disposition', "attachment",
-                             filename=filename)
+                a.add_header('Content-Disposition', "attachment", filename=filename)
                 m.attach(a)
 
         # @todo: is there a better way to do this?
@@ -233,10 +252,11 @@ class MailNotifier(ReporterBase):
 
             for k, v in extraHeaders.items():
                 if k in m:
-                    twlog.msg("Warning: Got header " + k +
-                              " in self.extraHeaders "
-                              "but it already exists in the Message - "
-                              "not adding it.")
+                    twlog.msg(
+                        "Warning: Got header " + k + " in self.extraHeaders "
+                        "but it already exists in the Message - "
+                        "not adding it."
+                    )
                 m[k] = v
         return m
 
@@ -259,8 +279,9 @@ class MailNotifier(ReporterBase):
         if not body.endswith(b"\n\n"):
             msgdict['body'] = body + b'\n\n'
 
-        m = yield self.createEmail(msgdict, self.master.config.title, results, builds,
-                                   patches, logs)
+        m = yield self.createEmail(
+            msgdict, self.master.config.title, results, builds, patches, logs
+        )
 
         # now, who is this message going to?
         if worker is None:
@@ -287,7 +308,7 @@ class MailNotifier(ReporterBase):
                 # Git can give emails like 'User' <user@foo.com>@foo.com so check
                 # for two @ and chop the last
                 if r.count('@') > 1:
-                    r = r[:r.rindex('@')]
+                    r = r[: r.rindex('@')]
 
                 if VALID_EMAIL.search(r):
                     recipients.add(r)
@@ -334,14 +355,21 @@ class MailNotifier(ReporterBase):
         recipients = [parseaddr(r)[1] for r in recipients]
         hostname = self.relayhost if self.useTls or useAuth else None
         sender_factory = ESMTPSenderFactory(
-            unicode2bytes(self.smtpUser), unicode2bytes(self.smtpPassword),
-            parseaddr(self.fromaddr)[1], recipients, BytesIO(s),
-            result, requireTransportSecurity=self.useTls,
-            requireAuthentication=useAuth, hostname=hostname)
+            unicode2bytes(self.smtpUser),
+            unicode2bytes(self.smtpPassword),
+            parseaddr(self.fromaddr)[1],
+            recipients,
+            BytesIO(s),
+            result,
+            requireTransportSecurity=self.useTls,
+            requireAuthentication=useAuth,
+            hostname=hostname,
+        )
 
         if self.useSmtps:
-            reactor.connectSSL(self.relayhost, self.smtpPort,
-                               sender_factory, ssl.ClientContextFactory())
+            reactor.connectSSL(
+                self.relayhost, self.smtpPort, sender_factory, ssl.ClientContextFactory()
+            )
         else:
             reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
 

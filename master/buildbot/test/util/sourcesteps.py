@@ -20,7 +20,6 @@ from buildbot.test.steps import TestBuildStepMixin
 
 
 class SourceStepMixin(TestBuildStepMixin):
-
     """
     Support for testing source steps.  Aside from the capabilities of
     L{TestBuildStepMixin}, this adds:

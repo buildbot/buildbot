@@ -30,7 +30,6 @@ class States(Names):
 
 
 class AbstractWorkerForBuilder:
-
     def __init__(self):
         self.ping_watchers = []
         self.state = None  # set in subclass
@@ -154,9 +153,9 @@ class Ping:
         self.d = defer.Deferred()
         # TODO: add a distinct 'ping' command on the worker.. using 'print'
         # for this purpose is kind of silly.
-        conn.remotePrint(message="ping").addCallbacks(self._pong,
-                                                      self._ping_failed,
-                                                      errbackArgs=(conn,))
+        conn.remotePrint(message="ping").addCallbacks(
+            self._pong, self._ping_failed, errbackArgs=(conn,)
+        )
         return self.d
 
     def _pong(self, res):
@@ -173,7 +172,6 @@ class Ping:
 
 
 class WorkerForBuilder(AbstractWorkerForBuilder):
-
     def __init__(self):
         super().__init__()
         self.state = States.DETACHED
@@ -195,7 +193,6 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
 
 
 class LatentWorkerForBuilder(AbstractWorkerForBuilder):
-
     def __init__(self, worker, builder):
         super().__init__()
         self.worker = worker

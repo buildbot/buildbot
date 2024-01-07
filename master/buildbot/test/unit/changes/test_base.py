@@ -26,9 +26,7 @@ from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 
-class TestChangeSource(changesource.ChangeSourceMixin,
-                       TestReactorMixin,
-                       unittest.TestCase):
+class TestChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase):
     timeout = 120
 
     class Subclass(base.ChangeSource):
@@ -78,9 +76,7 @@ class TestChangeSource(changesource.ChangeSourceMixin,
         self.assertFalse(cs.active)
 
 
-class TestPollingChangeSource(changesource.ChangeSourceMixin,
-                              TestReactorMixin,
-                              unittest.TestCase):
+class TestPollingChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase):
     timeout = 120
 
     class Subclass(base.PollingChangeSource):
@@ -91,8 +87,9 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
         self.setup_test_reactor()
         yield self.setUpChangeSource()
 
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern="use ReconfigurablePollingChangeSource"):
+        with assertProducesWarnings(
+            DeprecatedApiWarning, message_pattern="use ReconfigurablePollingChangeSource"
+        ):
             cs = self.Subclass(name="DummyCS")
         yield self.attachChangeSource(cs)
 
@@ -106,8 +103,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
     def test_loop_loops(self):
         # track when poll() gets called
         loops = []
-        self.changesource.poll = \
-            lambda: loops.append(self.reactor.seconds())
+        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
 
         self.changesource.pollInterval = 5
         self.startChangeSource()
@@ -118,6 +114,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
         def check(_):
             # note that it does *not* poll at time 0
             self.assertEqual(loops, [5.0, 10.0])
+
         self.reactor.callWhenRunning(d.callback, None)
         return d
 
@@ -128,6 +125,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
         def poll():
             loops.append(self.reactor.seconds())
             raise RuntimeError("oh noes")
+
         self.changesource.poll = poll
 
         self.changesource.pollInterval = 5
@@ -141,6 +139,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
             # note that it keeps looping after error
             self.assertEqual(loops, [5.0, 10.0])
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 2)
+
         self.reactor.callWhenRunning(d.callback, None)
         return d
 
@@ -150,8 +149,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         loops = []
-        self.changesource.poll = \
-            lambda: loops.append(self.reactor.seconds())
+        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
 
         self.changesource.pollInterval = 5
         self.startChangeSource()
@@ -170,8 +168,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
     def test_pollAtLaunch(self):
         # track when poll() gets called
         loops = []
-        self.changesource.poll = \
-            lambda: loops.append(self.reactor.seconds())
+        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
 
         self.changesource.pollInterval = 5
         self.changesource.pollAtLaunch = True
@@ -184,14 +181,14 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
         def check(_):
             # note that it *does* poll at time 0
             self.assertEqual(loops, [0.0, 5.0, 10.0])
+
         self.reactor.callWhenRunning(d.callback, None)
         return d
 
 
-class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
-                                            TestReactorMixin,
-                                            unittest.TestCase):
-
+class TestReconfigurablePollingChangeSource(
+    changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase
+):
     class Subclass(base.ReconfigurablePollingChangeSource):
         pass
 
@@ -213,8 +210,9 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
     @defer.inlineCallbacks
     def test_config_negative_interval(self):
         try:
-            yield self.changesource.reconfigServiceWithSibling(self.Subclass(
-                name="NegativePollInterval", pollInterval=-1, pollAtLaunch=False))
+            yield self.changesource.reconfigServiceWithSibling(
+                self.Subclass(name="NegativePollInterval", pollInterval=-1, pollAtLaunch=False)
+            )
         except ConfigErrors as e:
             self.assertEqual("interval must be >= 0: -1", e.errors[0])
 
@@ -222,8 +220,14 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
     def test_config_negative_random_delay_min(self):
         try:
             yield self.changesource.reconfigServiceWithSibling(
-                self.Subclass(name="NegativePollRandomDelayMin", pollInterval=1,
-                              pollAtLaunch=False, pollRandomDelayMin=-1, pollRandomDelayMax=1))
+                self.Subclass(
+                    name="NegativePollRandomDelayMin",
+                    pollInterval=1,
+                    pollAtLaunch=False,
+                    pollRandomDelayMin=-1,
+                    pollRandomDelayMax=1,
+                )
+            )
         except ConfigErrors as e:
             self.assertEqual("min random delay must be >= 0: -1", e.errors[0])
 
@@ -231,8 +235,14 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
     def test_config_negative_random_delay_max(self):
         try:
             yield self.changesource.reconfigServiceWithSibling(
-                self.Subclass(name="NegativePollRandomDelayMax", pollInterval=1,
-                              pollAtLaunch=False, pollRandomDelayMin=1, pollRandomDelayMax=-1))
+                self.Subclass(
+                    name="NegativePollRandomDelayMax",
+                    pollInterval=1,
+                    pollAtLaunch=False,
+                    pollRandomDelayMin=1,
+                    pollRandomDelayMax=-1,
+                )
+            )
         except ConfigErrors as e:
             self.assertEqual("max random delay must be >= 0: -1", e.errors[0])
 
@@ -240,8 +250,14 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
     def test_config_random_delay_min_gt_random_delay_max(self):
         try:
             yield self.changesource.reconfigServiceWithSibling(
-                self.Subclass(name="PollRandomDelayMinGtPollRandomDelayMax", pollInterval=1,
-                              pollAtLaunch=False, pollRandomDelayMin=2, pollRandomDelayMax=1))
+                self.Subclass(
+                    name="PollRandomDelayMinGtPollRandomDelayMax",
+                    pollInterval=1,
+                    pollAtLaunch=False,
+                    pollRandomDelayMin=2,
+                    pollRandomDelayMax=1,
+                )
+            )
         except ConfigErrors as e:
             self.assertEqual("min random delay must be <= 1: 2", e.errors[0])
 
@@ -249,8 +265,13 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
     def test_config_random_delay_max_gte_interval(self):
         try:
             yield self.changesource.reconfigServiceWithSibling(
-                self.Subclass(name="PollRandomDelayMaxGtePollInterval", pollInterval=1,
-                              pollAtLaunch=False, pollRandomDelayMax=1))
+                self.Subclass(
+                    name="PollRandomDelayMaxGtePollInterval",
+                    pollInterval=1,
+                    pollAtLaunch=False,
+                    pollRandomDelayMax=1,
+                )
+            )
         except ConfigErrors as e:
             self.assertEqual("max random delay must be < 1: 1", e.errors[0])
 
@@ -258,12 +279,12 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
     def test_loop_loops(self):
         # track when poll() gets called
         loops = []
-        self.changesource.poll = \
-            lambda: loops.append(self.reactor.seconds())
+        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
 
         yield self.startChangeSource()
-        yield self.changesource.reconfigServiceWithSibling(self.Subclass(
-            name="DummyCS", pollInterval=5, pollAtLaunch=False))
+        yield self.changesource.reconfigServiceWithSibling(
+            self.Subclass(name="DummyCS", pollInterval=5, pollAtLaunch=False)
+        )
 
         yield self.runClockFor(12)
         # note that it does *not* poll at time 0
@@ -277,11 +298,13 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
         def poll():
             loops.append(self.reactor.seconds())
             raise RuntimeError("oh noes")
+
         self.changesource.poll = poll
 
         yield self.startChangeSource()
-        yield self.changesource.reconfigServiceWithSibling(self.Subclass(
-            name="DummyCS", pollInterval=5, pollAtLaunch=False))
+        yield self.changesource.reconfigServiceWithSibling(
+            self.Subclass(name="DummyCS", pollInterval=5, pollAtLaunch=False)
+        )
 
         yield self.runClockFor(12)
         # note that it keeps looping after error
@@ -295,12 +318,12 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         loops = []
-        self.changesource.poll = \
-            lambda: loops.append(self.reactor.seconds())
+        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
 
         yield self.startChangeSource()
-        yield self.changesource.reconfigServiceWithSibling(self.Subclass(
-            name="DummyCS", pollInterval=5, pollAtLaunch=False))
+        yield self.changesource.reconfigServiceWithSibling(
+            self.Subclass(name="DummyCS", pollInterval=5, pollAtLaunch=False)
+        )
 
         yield self.runClockFor(12)
 
@@ -311,11 +334,11 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
     def test_pollAtLaunch(self):
         # track when poll() gets called
         loops = []
-        self.changesource.poll = \
-            lambda: loops.append(self.reactor.seconds())
+        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
         yield self.startChangeSource()
-        yield self.changesource.reconfigServiceWithSibling(self.Subclass(
-            name="DummyCS", pollInterval=5, pollAtLaunch=True))
+        yield self.changesource.reconfigServiceWithSibling(
+            self.Subclass(name="DummyCS", pollInterval=5, pollAtLaunch=True)
+        )
 
         yield self.runClockFor(12)
 

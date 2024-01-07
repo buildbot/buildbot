@@ -32,7 +32,6 @@ class FakeSecretReporter(HttpStatusPush):
 
 
 class SecretsConfig(RunMasterBase):
-
     @defer.inlineCallbacks
     def setup_config(self, use_interpolation):
         c = {}
@@ -42,25 +41,26 @@ class SecretsConfig(RunMasterBase):
         from buildbot.plugins import util
         from buildbot.process.factory import BuildFactory
 
-        fake_reporter = FakeSecretReporter('http://example.com/hook',
-                                           auth=('user', Interpolate('%(secret:httppasswd)s')))
+        fake_reporter = FakeSecretReporter(
+            'http://example.com/hook', auth=('user', Interpolate('%(secret:httppasswd)s'))
+        )
 
         c['services'] = [fake_reporter]
-        c['schedulers'] = [
-            schedulers.ForceScheduler(
-                name="force",
-                builderNames=["testy"])]
+        c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
-        c['secretsProviders'] = [FakeSecretStorage(secretdict={"foo": "secretvalue",
-                                                               "something": "more",
-                                                               'httppasswd': 'myhttppasswd'})]
+        c['secretsProviders'] = [
+            FakeSecretStorage(
+                secretdict={"foo": "secretvalue", "something": "more", 'httppasswd': 'myhttppasswd'}
+            )
+        ]
         f = BuildFactory()
 
         if use_interpolation:
             if os.name == "posix":
                 # on posix we can also check whether the password was passed to the command
-                command = Interpolate('echo %(secret:foo)s | ' +
-                                      'sed "s/secretvalue/The password was there/"')
+                command = Interpolate(
+                    'echo %(secret:foo)s | ' + 'sed "s/secretvalue/The password was there/"'
+                )
             else:
                 command = Interpolate('echo %(secret:foo)s')
         else:
@@ -68,10 +68,7 @@ class SecretsConfig(RunMasterBase):
 
         f.addStep(steps.ShellCommand(command=command))
 
-        c['builders'] = [
-            BuilderConfig(name="testy",
-                          workernames=["local1"],
-                          factory=f)]
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         yield self.setup_master(c)
 
         return fake_reporter

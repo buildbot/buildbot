@@ -35,20 +35,19 @@ class States(enum.Enum):
 
 @implementer(interfaces.ILatentMachine)
 class AbstractLatentMachine(Machine):
-
     DEFAULT_MISSING_TIMEOUT = 20 * 60
 
-    def checkConfig(self, name,
-                    build_wait_timeout=0,
-                    missing_timeout=DEFAULT_MISSING_TIMEOUT, **kwargs):
+    def checkConfig(
+        self, name, build_wait_timeout=0, missing_timeout=DEFAULT_MISSING_TIMEOUT, **kwargs
+    ):
         super().checkConfig(name, **kwargs)
         self.state = States.STOPPED
         self.latent_workers = []
 
     @defer.inlineCallbacks
-    def reconfigService(self, name,
-                        build_wait_timeout=0,
-                        missing_timeout=DEFAULT_MISSING_TIMEOUT, **kwargs):
+    def reconfigService(
+        self, name, build_wait_timeout=0, missing_timeout=DEFAULT_MISSING_TIMEOUT, **kwargs
+    ):
         yield super().reconfigService(name, **kwargs)
         self.build_wait_timeout = build_wait_timeout
         self.missing_timeout = missing_timeout
@@ -111,9 +110,9 @@ class AbstractLatentMachine(Machine):
             ret = False
 
         if not ret:
-            yield defer.DeferredList([worker.insubstantiate()
-                                      for worker in self.workers],
-                                     consumeErrors=True)
+            yield defer.DeferredList(
+                [worker.insubstantiate() for worker in self.workers], consumeErrors=True
+            )
         else:
             self._setMissingTimer()
 
@@ -124,8 +123,7 @@ class AbstractLatentMachine(Machine):
 
     @defer.inlineCallbacks
     def _stop(self):
-        if any(worker.building for worker in self.workers) or \
-                self.state == States.STARTING:
+        if any(worker.building for worker in self.workers) or self.state == States.STARTING:
             return None
 
         if self.state == States.STOPPING:
@@ -135,9 +133,9 @@ class AbstractLatentMachine(Machine):
         self.state = States.STOPPING
 
         # wait until workers insubstantiate, then stop
-        yield defer.DeferredList([worker.insubstantiate()
-                                  for worker in self.workers],
-                                 consumeErrors=True)
+        yield defer.DeferredList(
+            [worker.insubstantiate() for worker in self.workers], consumeErrors=True
+        )
         try:
             yield self.stop_machine()
         except Exception as e:
@@ -164,8 +162,7 @@ class AbstractLatentMachine(Machine):
 
     def _setMissingTimer(self):
         self._clearMissingTimer()
-        self._missing_timer = self.master.reactor.callLater(
-            self.missing_timeout, self._stop)
+        self._missing_timer = self.master.reactor.callLater(self.missing_timeout, self._stop)
 
     def _clearBuildWaitTimer(self):
         if self._build_wait_timer is not None:
@@ -175,8 +172,7 @@ class AbstractLatentMachine(Machine):
 
     def _setBuildWaitTimer(self):
         self._clearBuildWaitTimer()
-        self._build_wait_timer = self.master.reactor.callLater(
-            self.build_wait_timeout, self._stop)
+        self._build_wait_timer = self.master.reactor.callLater(self.build_wait_timeout, self._stop)
 
     def __repr__(self):
         return f"<AbstractLatentMachine '{self.name}' at {id(self)}>"

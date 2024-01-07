@@ -39,31 +39,27 @@ from buildbot.worker.base import Worker
 
 
 class Tests(unittest.TestCase):
-
     def getMaster(self, config_dict):
         """
         Create a started ``BuildMaster`` with the given configuration.
         """
         basedir = FilePath(self.mktemp())
         basedir.createDirectory()
-        master = BuildMaster(
-            basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
+        master = BuildMaster(basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
         master.config = master.config_loader.loadConfig()
         return master
 
     def getBaseConfig(self):
         return {
             'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local1", "local2"],
-                              factory=BuildFactory([steps.ShellCommand(command='echo hello')])),
+                BuilderConfig(
+                    name="testy",
+                    workernames=["local1", "local2"],
+                    factory=BuildFactory([steps.ShellCommand(command='echo hello')]),
+                ),
             ],
             'workers': [Worker('local' + str(i), 'pass') for i in range(3)],
-            'schedulers': [
-                ForceScheduler(
-                    name="force",
-                    builderNames=["testy"])
-            ],
+            'schedulers': [ForceScheduler(name="force", builderNames=["testy"])],
             'protocols': {'null': {}},
             'multiMaster': True,
         }
@@ -71,43 +67,60 @@ class Tests(unittest.TestCase):
     def test_basic(self):
         self.patch(config.master, "get_is_in_unit_tests", lambda: False)
         with assertProducesWarning(
-                ConfigWarning,
-                message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):
+            ConfigWarning,
+            message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic.",
+        ):
             master = self.getMaster(self.getBaseConfig())
         data = computeUsageData(master)
-        self.assertEqual(sorted(data.keys()),
-                         sorted(['versions', 'db', 'platform', 'installid', 'mq', 'plugins',
-                                 'www_plugins']))
+        self.assertEqual(
+            sorted(data.keys()),
+            sorted(['versions', 'db', 'platform', 'installid', 'mq', 'plugins', 'www_plugins']),
+        )
         self.assertEqual(data['plugins']['buildbot/worker/base/Worker'], 3)
-        self.assertEqual(sorted(data['plugins'].keys()), sorted(
-            ['buildbot/schedulers/forcesched/ForceScheduler', 'buildbot/worker/base/Worker',
-             'buildbot/steps/shell/ShellCommand', 'buildbot/config/builder/BuilderConfig']))
+        self.assertEqual(
+            sorted(data['plugins'].keys()),
+            sorted([
+                'buildbot/schedulers/forcesched/ForceScheduler',
+                'buildbot/worker/base/Worker',
+                'buildbot/steps/shell/ShellCommand',
+                'buildbot/config/builder/BuilderConfig',
+            ]),
+        )
 
     def test_full(self):
         c = self.getBaseConfig()
         c['buildbotNetUsageData'] = 'full'
         master = self.getMaster(c)
         data = computeUsageData(master)
-        self.assertEqual(sorted(data.keys()),
-                         sorted(['versions', 'db', 'installid', 'platform', 'mq', 'plugins',
-                                 'builders', 'www_plugins']))
+        self.assertEqual(
+            sorted(data.keys()),
+            sorted([
+                'versions',
+                'db',
+                'installid',
+                'platform',
+                'mq',
+                'plugins',
+                'builders',
+                'www_plugins',
+            ]),
+        )
 
     def test_custom(self):
         c = self.getBaseConfig()
 
         def myCompute(data):
             return {"db": data['db']}
+
         c['buildbotNetUsageData'] = myCompute
         master = self.getMaster(c)
         data = computeUsageData(master)
-        self.assertEqual(sorted(data.keys()),
-                         sorted(['db']))
+        self.assertEqual(sorted(data.keys()), sorted(['db']))
 
     def test_urllib(self):
         self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
 
         class FakeRequest:
-
             def __init__(self, *args, **kwargs):
                 self.args = args
                 self.kwargs = kwargs
@@ -115,7 +128,6 @@ class Tests(unittest.TestCase):
         open_url = []
 
         class urlopen:
-
             def __init__(self, r):
                 self.request = r
                 open_url.append(self)
@@ -130,16 +142,21 @@ class Tests(unittest.TestCase):
         self.patch(urllib_request, "urlopen", urlopen)
         _sendBuildbotNetUsageData({'foo': 'bar'})
         self.assertEqual(len(open_url), 1)
-        self.assertEqual(open_url[0].request.args,
-                         ('https://events.buildbot.net/events/phone_home',
-                          b'{"foo": "bar"}',
-                          {'Content-Length': 14, 'Content-Type': 'application/json'}))
+        self.assertEqual(
+            open_url[0].request.args,
+            (
+                'https://events.buildbot.net/events/phone_home',
+                b'{"foo": "bar"}',
+                {'Content-Length': 14, 'Content-Type': 'application/json'},
+            ),
+        )
 
     def test_real(self):
         if "TEST_BUILDBOTNET_USAGEDATA" not in os.environ:
             raise SkipTest(
                 "_sendBuildbotNetUsageData real test only run when environment variable"
-                " TEST_BUILDBOTNET_USAGEDATA is set")
+                " TEST_BUILDBOTNET_USAGEDATA is set"
+            )
 
         _sendBuildbotNetUsageData({'foo': 'bar'})
 

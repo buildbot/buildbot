@@ -39,8 +39,7 @@ class HTTPTunnelClient(protocol.Protocol):
         self._connectedDeferred = connectedDeferred
 
     def connectionMade(self):
-        request = "CONNECT {}:{} HTTP/1.1\r\n\r\n".format(
-            self.factory.host, self.factory.port)
+        request = "CONNECT {}:{} HTTP/1.1\r\n\r\n".format(self.factory.host, self.factory.port)
         self.transport.write(request.encode())
 
     def connectionLost(self, reason):
@@ -59,9 +58,9 @@ class HTTPTunnelClient(protocol.Protocol):
         if status != b"200":
             return self.transport.loseConnection()
 
-        self._proxyWrappedProtocol = (
-            self.factory._proxyWrappedFactory.buildProtocol(
-                self.transport.getPeer()))
+        self._proxyWrappedProtocol = self.factory._proxyWrappedFactory.buildProtocol(
+            self.transport.getPeer()
+        )
         self._proxyWrappedProtocol.makeConnection(self.transport)
         self._connectedDeferred.callback(self._proxyWrappedProtocol)
 
@@ -83,6 +82,7 @@ class HTTPTunnelFactory(protocol.ClientFactory):
     It is used as a wrapper for BotFactory, which can hence be shielded
     from all the proxy business.
     """
+
     protocol = HTTPTunnelClient
 
     def __init__(self, host, port, wrappedFactory):

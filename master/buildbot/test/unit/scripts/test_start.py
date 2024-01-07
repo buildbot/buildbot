@@ -57,7 +57,6 @@ app.setServiceParent(application)
 
 
 class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
-
     def setUp(self):
         # On slower machines with high CPU oversubscription this test may take longer to run than
         # the default timeout.

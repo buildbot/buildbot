@@ -25,7 +25,6 @@ class TestResultDict(dict):
 
 
 class TestResultsConnectorComponent(base.DBConnectorComponent):
-
     @defer.inlineCallbacks
     def _add_code_paths(self, builderid, paths):
         # returns a dictionary of path to id in the test_code_paths table.
@@ -33,20 +32,19 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
         assert isinstance(paths, set)
 
         def thd(conn):
-
             paths_to_ids = {}
             paths_table = self.db.model.test_code_paths
 
             for path_batch in self.doBatch(paths, batch_n=3000):
-
                 path_batch = set(path_batch)
 
                 while path_batch:
                     # Use expanding bindparam, because performance of sqlalchemy is very slow
                     # when filtering large sets otherwise.
                     q = paths_table.select().where(
-                        (paths_table.c.path.in_(sa.bindparam('paths', expanding=True))) &
-                        (paths_table.c.builderid == builderid))
+                        (paths_table.c.path.in_(sa.bindparam('paths', expanding=True)))
+                        & (paths_table.c.builderid == builderid)
+                    )
 
                     res = conn.execute(q, {'paths': list(path_batch)})
                     for row in res.fetchall():
@@ -55,8 +53,9 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
 
                     # paths now contains all the paths that need insertion.
                     try:
-                        insert_values = [{'builderid': builderid, 'path': path}
-                                         for path in path_batch]
+                        insert_values = [
+                            {'builderid': builderid, 'path': path} for path in path_batch
+                        ]
 
                         q = paths_table.insert().values(insert_values)
 
@@ -93,6 +92,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                 return result_spec.thd_execute(conn, q, lambda x: x['path'])
             res = conn.execute(q)
             return [row['path'] for row in res.fetchall()]
+
         res = yield self.db.pool.do(thd)
         return res
 
@@ -103,7 +103,6 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
         assert isinstance(names, set)
 
         def thd(conn):
-
             names_to_ids = {}
             names_table = self.db.model.test_names
 
@@ -113,8 +112,9 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                     # Use expanding bindparam, because performance of sqlalchemy is very slow
                     # when filtering large sets otherwise.
                     q = names_table.select().where(
-                        (names_table.c.name.in_(sa.bindparam('names', expanding=True))) &
-                        (names_table.c.builderid == builderid))
+                        (names_table.c.name.in_(sa.bindparam('names', expanding=True)))
+                        & (names_table.c.builderid == builderid)
+                    )
 
                     res = conn.execute(q, {'names': list(name_batch)})
                     for row in res.fetchall():
@@ -123,8 +123,9 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
 
                     # names now contains all the names that need insertion.
                     try:
-                        insert_values = [{'builderid': builderid, 'name': name}
-                                         for name in name_batch]
+                        insert_values = [
+                            {'builderid': builderid, 'name': name} for name in name_batch
+                        ]
 
                         q = names_table.insert().values(insert_values)
 
@@ -161,6 +162,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                 return result_spec.thd_execute(conn, q, lambda x: x['name'])
             res = conn.execute(q)
             return [row['name'] for row in res.fetchall()]
+
         res = yield self.db.pool.do(thd)
         return res
 
@@ -181,8 +183,10 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                 raise KeyError('Each of result_values must contain \'value\' key')
 
             if 'test_name' not in result_value and 'test_code_path' not in result_value:
-                raise KeyError('Each of result_values must contain at least one of '
-                               '\'test_name\' or \'test_code_path\' keys')
+                raise KeyError(
+                    'Each of result_values must contain at least one of '
+                    '\'test_name\' or \'test_code_path\' keys'
+                )
 
             if 'test_name' in result_value:
                 insert_names.add(result_value['test_name'])
@@ -238,6 +242,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             if not row:
                 return None
             return self._thd_row2dict(conn, row)
+
         res = yield self.db.pool.do(thd)
         return res
 
@@ -253,31 +258,38 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
 
             j = results_table.outerjoin(
                 code_paths_table,
-                (results_table.c.test_code_pathid == code_paths_table.c.id) &
-                (code_paths_table.c.builderid == builderid))
+                (results_table.c.test_code_pathid == code_paths_table.c.id)
+                & (code_paths_table.c.builderid == builderid),
+            )
 
             j = j.outerjoin(
                 names_table,
-                (results_table.c.test_nameid == names_table.c.id) &
-                (names_table.c.builderid == builderid))
+                (results_table.c.test_nameid == names_table.c.id)
+                & (names_table.c.builderid == builderid),
+            )
 
             q = sa.select([results_table, code_paths_table.c.path, names_table.c.name])
-            q = q.select_from(j).where((results_table.c.builderid == builderid) &
-                                       (results_table.c.test_result_setid == test_result_setid))
+            q = q.select_from(j).where(
+                (results_table.c.builderid == builderid)
+                & (results_table.c.test_result_setid == test_result_setid)
+            )
 
             if result_spec is not None:
                 return result_spec.thd_execute(conn, q, lambda x: self._thd_row2dict(conn, x))
             res = conn.execute(q)
             return [self._thd_row2dict(conn, row) for row in res.fetchall()]
+
         res = yield self.db.pool.do(thd)
         return res
 
     def _thd_row2dict(self, conn, row):
-        return TestResultDict(id=row.id,
-                              builderid=row.builderid,
-                              test_result_setid=row.test_result_setid,
-                              test_name=row.name,
-                              test_code_path=row.path,
-                              line=row.line,
-                              duration_ns=row.duration_ns,
-                              value=row.value)
+        return TestResultDict(
+            id=row.id,
+            builderid=row.builderid,
+            test_result_setid=row.test_result_setid,
+            test_name=row.name,
+            test_code_path=row.path,
+            line=row.line,
+            duration_ns=row.duration_ns,
+            value=row.value,
+        )

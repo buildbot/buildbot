@@ -37,8 +37,8 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 "name": name,
                 "name_hash": name_hash,
                 "active": 0,  # initially inactive
-                "last_active": int(self.master.reactor.seconds())
-            }
+                "last_active": int(self.master.reactor.seconds()),
+            },
         )
 
     # returns a Deferred that returns a value
@@ -48,8 +48,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             whereclause = tbl.c.id == masterid
 
             # get the old state
-            r = conn.execute(sa.select([tbl.c.active],
-                                       whereclause=whereclause))
+            r = conn.execute(sa.select([tbl.c.active], whereclause=whereclause))
             rows = r.fetchall()
             r.close()
             if not rows:
@@ -60,8 +59,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 # if we're marking inactive, then delete any links to this
                 # master
                 sch_mst_tbl = self.db.model.scheduler_masters
-                q = sch_mst_tbl.delete(
-                    whereclause=sch_mst_tbl.c.masterid == masterid)
+                q = sch_mst_tbl.delete(whereclause=sch_mst_tbl.c.masterid == masterid)
                 conn.execute(q)
 
             # set the state (unconditionally, just to be safe)
@@ -73,14 +71,14 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
             # return True if there was a change in state
             return was_active != bool(active)
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
     def getMaster(self, masterid):
         def thd(conn):
             tbl = self.db.model.masters
-            res = conn.execute(tbl.select(
-                whereclause=tbl.c.id == masterid))
+            res = conn.execute(tbl.select(whereclause=tbl.c.id == masterid))
             row = res.fetchone()
 
             rv = None
@@ -88,15 +86,15 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 rv = self._masterdictFromRow(row)
             res.close()
             return rv
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
     def getMasters(self):
         def thd(conn):
             tbl = self.db.model.masters
-            return [
-                self._masterdictFromRow(row)
-                for row in conn.execute(tbl.select()).fetchall()]
+            return [self._masterdictFromRow(row) for row in conn.execute(tbl.select()).fetchall()]
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
@@ -105,9 +103,13 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.masters
             q = tbl.update().values(active=1, last_active=0)
             conn.execute(q)
+
         return self.db.pool.do(thd)
 
     def _masterdictFromRow(self, row):
-        return MasterDict(id=row.id, name=row.name,
-                          active=bool(row.active),
-                          last_active=epoch2datetime(row.last_active))
+        return MasterDict(
+            id=row.id,
+            name=row.name,
+            active=bool(row.active),
+            last_active=epoch2datetime(row.last_active),
+        )

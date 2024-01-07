@@ -26,37 +26,39 @@ from buildbot.worker.docker import DockerBaseWorker
 log = Logger()
 
 
-class MarathonLatentWorker(CompatibleLatentWorkerMixin,
-                           DockerBaseWorker):
+class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
     """Marathon is a distributed docker container launcher for Mesos"""
+
     instance = None
     image = None
     _http = None
 
-    def checkConfig(self,
-                    name,
-                    marathon_url,
-                    image,
-                    marathon_auth=None,
-                    marathon_extra_config=None,
-                    marathon_app_prefix="buildbot-worker/",
-                    masterFQDN=None,
-                    **kwargs):
-
+    def checkConfig(
+        self,
+        name,
+        marathon_url,
+        image,
+        marathon_auth=None,
+        marathon_extra_config=None,
+        marathon_app_prefix="buildbot-worker/",
+        masterFQDN=None,
+        **kwargs,
+    ):
         super().checkConfig(name, image=image, masterFQDN=masterFQDN, **kwargs)
         HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self,
-                        name,
-                        marathon_url,
-                        image,
-                        marathon_auth=None,
-                        marathon_extra_config=None,
-                        marathon_app_prefix="buildbot-worker/",
-                        masterFQDN=None,
-                        **kwargs):
-
+    def reconfigService(
+        self,
+        name,
+        marathon_url,
+        image,
+        marathon_auth=None,
+        marathon_extra_config=None,
+        marathon_app_prefix="buildbot-worker/",
+        masterFQDN=None,
+        **kwargs,
+    ):
         # Set build_wait_timeout to 0s if not explicitly set: Starting a
         # container is almost immediate, we can afford doing so for each build.
 
@@ -65,7 +67,8 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin,
         yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
 
         self._http = yield HTTPClientService.getService(
-            self.master, marathon_url, auth=marathon_auth)
+            self.master, marathon_url, auth=marathon_auth
+        )
         if marathon_extra_config is None:
             marathon_extra_config = {}
         self.marathon_extra_config = marathon_extra_config
@@ -81,8 +84,7 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin,
     def start_instance(self, build):
         yield self.stop_instance(reportFailure=False)
 
-        image, marathon_extra_config = \
-            yield self.renderWorkerPropsOnStart(build)
+        image, marathon_extra_config = yield self.renderWorkerPropsOnStart(build)
 
         marathon_config = {
             "container": {
@@ -90,11 +92,11 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin,
                     "image": image,
                     "network": "BRIDGE",
                 },
-                "type": "DOCKER"
+                "type": "DOCKER",
             },
             "id": self.getApplicationId(),
             "instances": 1,
-            "env": self.createEnvironment()
+            "env": self.createEnvironment(),
         }
         util.dictionary_merge(marathon_config, marathon_extra_config)
         res = yield self._http.post("/v2/apps", json=marathon_config)
@@ -102,7 +104,8 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin,
         if res.code != 201:
             raise LatentWorkerFailedToSubstantiate(
                 f"Unable to create Marathon app: {self.getApplicationId()} "
-                f"{res.code}: {res_json['message']} {res_json}")
+                f"{res.code}: {res_json['message']} {res_json}"
+            )
         self.instance = res_json
         return True
 
@@ -120,4 +123,5 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin,
                 id=self.getApplicationId(),
                 code=res.code,
                 message=res_json.get('message'),
-                details=res_json)
+                details=res_json,
+            )

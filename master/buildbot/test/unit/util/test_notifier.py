@@ -27,14 +27,12 @@ from buildbot.util import Notifier
 
 
 class TestException(Exception):
-
     """
     An exception thrown in tests.
     """
 
 
 class Tests(unittest.TestCase):
-
     def test_wait(self):
         """
         Calling `Notifier.wait` returns a deferred that hasn't fired.
@@ -77,6 +75,7 @@ class Tests(unittest.TestCase):
 
         def add_new_waiter(_):
             box.append(n.wait())
+
         n.wait().addCallback(add_new_waiter)
         n.notify(object())
         self.assertNoResult(box[0])

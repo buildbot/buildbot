@@ -22,7 +22,6 @@ from buildbot.util import bytes2unicode
 
 
 class EndpointMatcherBase:
-
     def __init__(self, role, defaultDeny=True):
         self.role = role
         self.defaultDeny = defaultDeny
@@ -38,8 +37,7 @@ class EndpointMatcherBase:
         try:
             epobject, epdict = self.master.data.getEndpoint(ep)
             for klass in inspect.getmro(epobject.__class__):
-                m = getattr(
-                    self, "match_" + klass.__name__ + "_" + action, None)
+                m = getattr(self, "match_" + klass.__name__ + "_" + action, None)
                 if m is not None:
                     return m(epobject, epdict, options)
                 m = getattr(self, "match_" + klass.__name__, None)
@@ -59,7 +57,6 @@ class EndpointMatcherBase:
 
 
 class Match:
-
     def __init__(self, master, build=None, buildrequest=None, buildset=None):
         self.master = master
         self.build = build
@@ -83,8 +80,11 @@ class Match:
 
     @defer.inlineCallbacks
     def getOwnerFromBuildsetOrBuildRequest(self, buildsetorbuildrequest):
-        props = yield self.master.data.get(("buildsets", buildsetorbuildrequest['buildsetid'],
-                                            "properties"))
+        props = yield self.master.data.get((
+            "buildsets",
+            buildsetorbuildrequest['buildsetid'],
+            "properties",
+        ))
         if 'owner' in props:
             return props['owner'][0]
         return None
@@ -94,13 +94,11 @@ class Match:
 
 
 class AnyEndpointMatcher(EndpointMatcherBase):
-
     def match(self, ep, action="get", options=None):
         return defer.succeed(Match(self.master))
 
 
 class AnyControlEndpointMatcher(EndpointMatcherBase):
-
     def match(self, ep, action="", options=None):
         if bytes2unicode(action).lower() != "get":
             return defer.succeed(Match(self.master))
@@ -108,7 +106,6 @@ class AnyControlEndpointMatcher(EndpointMatcherBase):
 
 
 class StopBuildEndpointMatcher(EndpointMatcherBase):
-
     def __init__(self, builder=None, **kwargs):
         self.builder = builder
         super().__init__(**kwargs)
@@ -151,7 +148,6 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
 
 
 class ForceBuildEndpointMatcher(EndpointMatcherBase):
-
     def __init__(self, builder=None, **kwargs):
         self.builder = builder
         super().__init__(**kwargs)
@@ -173,7 +169,6 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
 
 
 class RebuildBuildEndpointMatcher(EndpointMatcherBase):
-
     def __init__(self, builder=None, **kwargs):
         self.builder = builder
         super().__init__(**kwargs)
@@ -201,16 +196,15 @@ class RebuildBuildEndpointMatcher(EndpointMatcherBase):
 
 
 class EnableSchedulerEndpointMatcher(EndpointMatcherBase):
-
     def match_SchedulerEndpoint_enable(self, epobject, epdict, options):
         return defer.succeed(Match(self.master))
+
 
 #####
 # not yet implemented
 
 
 class ViewBuildsEndpointMatcher(EndpointMatcherBase):
-
     def __init__(self, branch=None, project=None, builder=None, **kwargs):
         super().__init__(**kwargs)
         self.branch = branch
@@ -219,7 +213,6 @@ class ViewBuildsEndpointMatcher(EndpointMatcherBase):
 
 
 class BranchEndpointMatcher(EndpointMatcherBase):
-
     def __init__(self, branch, **kwargs):
         self.branch = branch
         super().__init__(**kwargs)

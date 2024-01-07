@@ -28,29 +28,33 @@ class CMake(ShellMixin, BuildStep):
     description = ['running', 'cmake']
     descriptionDone = ['cmake']
 
-    renderables = (
-        'cmake',
-        'definitions',
-        'generator',
-        'options',
-        'path'
-    )
+    renderables = ('cmake', 'definitions', 'generator', 'options', 'path')
 
     haltOnFailure = True
 
-    def __init__(self, path=None, generator=None, definitions=None,
-                 options=None, cmake=DEFAULT_CMAKE, **kwargs):
-
+    def __init__(
+        self,
+        path=None,
+        generator=None,
+        definitions=None,
+        options=None,
+        cmake=DEFAULT_CMAKE,
+        **kwargs,
+    ):
         self.path = path
         self.generator = generator
 
-        if not (definitions is None or isinstance(definitions, dict)
-                or IRenderable.providedBy(definitions)):
+        if not (
+            definitions is None
+            or isinstance(definitions, dict)
+            or IRenderable.providedBy(definitions)
+        ):
             config.error('definitions must be a dictionary or implement IRenderable')
         self.definitions = definitions
 
-        if not (options is None or isinstance(options, (list, tuple))
-                or IRenderable.providedBy(options)):
+        if not (
+            options is None or isinstance(options, (list, tuple)) or IRenderable.providedBy(options)
+        ):
             config.error('options must be a list, a tuple or implement IRenderable')
         self.options = options
 
@@ -66,9 +70,7 @@ class CMake(ShellMixin, BuildStep):
         command = [self.cmake]
 
         if self.generator:
-            command.extend([
-                '-G', self.generator
-            ])
+            command.extend(['-G', self.generator])
 
         if self.definitions is not None:
             for item in self.definitions.items():

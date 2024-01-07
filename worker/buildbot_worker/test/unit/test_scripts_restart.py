@@ -26,13 +26,11 @@ except ImportError:
     import mock
 
 
-class TestRestart(misc.IsWorkerDirMixin,
-                  misc.StdoutAssertionsMixin,
-                  unittest.TestCase):
-
+class TestRestart(misc.IsWorkerDirMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
     """
     Test buildbot_worker.scripts.restart.restart()
     """
+
     config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
 
     def setUp(self):
@@ -51,8 +49,7 @@ class TestRestart(misc.IsWorkerDirMixin,
         self.setupUpIsWorkerDir(False)
 
         # call startCommand() and check that correct exit code is returned
-        self.assertEqual(restart.restart(self.config), 1,
-                         "unexpected exit code")
+        self.assertEqual(restart.restart(self.config), 1, "unexpected exit code")
 
         # check that isWorkerDir was called with correct argument
         self.isWorkerDir.assert_called_once_with(self.config["basedir"])
@@ -70,12 +67,13 @@ class TestRestart(misc.IsWorkerDirMixin,
 
         # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
-        self.startWorker.assert_called_once_with(self.config["basedir"],
-                                                 self.config["quiet"],
-                                                 self.config["nodaemon"])
+        self.startWorker.assert_called_once_with(
+            self.config["basedir"], self.config["quiet"], self.config["nodaemon"]
+        )
 
-        self.assertStdoutEqual("no old worker process found to stop\n"
-                               "now restarting worker process..\n")
+        self.assertStdoutEqual(
+            "no old worker process found to stop\n" "now restarting worker process..\n"
+        )
 
     def test_restart(self):
         """
@@ -90,7 +88,7 @@ class TestRestart(misc.IsWorkerDirMixin,
 
         # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
-        self.startWorker.assert_called_once_with(self.config["basedir"],
-                                                 self.config["quiet"],
-                                                 self.config["nodaemon"])
+        self.startWorker.assert_called_once_with(
+            self.config["basedir"], self.config["quiet"], self.config["nodaemon"]
+        )
         self.assertStdoutEqual("now restarting worker process..\n")

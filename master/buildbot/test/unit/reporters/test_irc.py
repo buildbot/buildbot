@@ -41,13 +41,12 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
 
         def act(msg):
             self.actions.append(msg)
+
         self.contact.act = act
 
     @defer.inlineCallbacks
     def test_op_required_authz(self):
-        self.bot.authz = self.bot.expand_authz({
-            ('mute', 'unmute'): [self.USER]
-        })
+        self.bot.authz = self.bot.expand_authz({('mute', 'unmute'): [self.USER]})
         self.bot.getChannelOps = lambda channel: ['channelop']
         self.assertFalse((yield self.contact.op_required('mute')))
 
@@ -131,6 +130,7 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
 
         def groupChat(dest, msg):
             events.append((dest, msg))
+
         self.contact.bot.groupSend = groupChat
 
         self.contact.send("unmuted")
@@ -138,10 +138,13 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
         self.contact.channel.muted = True
         self.contact.send("muted")
 
-        self.assertEqual(events, [
-            ('#buildbot', 'unmuted'),
-            ('#buildbot', 'unmuted, unicode \u2603'),
-        ])
+        self.assertEqual(
+            events,
+            [
+                ('#buildbot', 'unmuted'),
+                ('#buildbot', 'unmuted, unicode \u2603'),
+            ],
+        )
 
     def test_handleAction_ignored(self):
         self.patch_act()
@@ -163,6 +166,7 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
 
         def groupDescribe(dest, msg):
             events.append((dest, msg))
+
         self.contact.bot.groupDescribe = groupDescribe
 
         self.contact.act("unmuted")
@@ -170,14 +174,16 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
         self.contact.channel.muted = True
         self.contact.act("muted")
 
-        self.assertEqual(events, [
-            ('#buildbot', 'unmuted'),
-            ('#buildbot', 'unmuted, unicode \u2603'),
-        ])
+        self.assertEqual(
+            events,
+            [
+                ('#buildbot', 'unmuted'),
+                ('#buildbot', 'unmuted, unicode \u2603'),
+            ],
+        )
 
 
 class FakeContact(service.AsyncService):
-
     def __init__(self, user, channel=None):
         super().__init__()
         self.user_id = user
@@ -193,7 +199,6 @@ class FakeContact(service.AsyncService):
 
 
 class TestIrcStatusBot(unittest.TestCase):
-
     def makeBot(self, *args, **kwargs):
         if not args:
             args = ('nick', 'pass', ['#ch'], [], False)
@@ -331,35 +336,44 @@ class TestIrcStatusBot(unittest.TestCase):
         self.assertEqual(c.actions, ['waves at nick'])
 
     def test_signedOn(self):
-        b = self.makeBot('nick', 'pass',
-                         ['#ch1', {"channel": '#ch2', "password": 'sekrits'}],
-                         ['jimmy', 'bobby'], False)
+        b = self.makeBot(
+            'nick',
+            'pass',
+            ['#ch1', {"channel": '#ch2', "password": 'sekrits'}],
+            ['jimmy', 'bobby'],
+            False,
+        )
         events = []
 
         def msg(d, m):
             events.append(('m', d, m))
+
         b.msg = msg
 
         def join(channel, key):
             events.append(('k', channel, key))
+
         b.join = join
         b.contactClass = FakeContact
 
         b.signedOn()
 
-        self.assertEqual(sorted(events), [
-            ('k', '#ch1', None),
-            ('k', '#ch2', 'sekrits'),
-            ('m', 'Nickserv', 'IDENTIFY pass'),
-        ])
-        self.assertEqual(sorted(b.contacts.keys()),
-                         # channels don't get added until joined() is called
-                         sorted([('jimmy', 'jimmy'), ('bobby', 'bobby')]))
+        self.assertEqual(
+            sorted(events),
+            [
+                ('k', '#ch1', None),
+                ('k', '#ch2', 'sekrits'),
+                ('m', 'Nickserv', 'IDENTIFY pass'),
+            ],
+        )
+        self.assertEqual(
+            sorted(b.contacts.keys()),
+            # channels don't get added until joined() is called
+            sorted([('jimmy', 'jimmy'), ('bobby', 'bobby')]),
+        )
 
     def test_register_SASL(self):
-        b = self.makeBot('nick', 'pass',
-                         ['#ch1'],
-                         ['jimmy'], False, useSASL=True)
+        b = self.makeBot('nick', 'pass', ['#ch1'], ['jimmy'], False, useSASL=True)
         events = []
 
         def sendLine(line):
@@ -367,42 +381,42 @@ class TestIrcStatusBot(unittest.TestCase):
             if line == "AUTHENTICATE PLAIN":
                 events.append(('s', "AUTHENTICATE"))
                 b.irc_AUTHENTICATE(None, None)
+
         b.sendLine = sendLine
 
         b.register("bot")
-        self.assertEqual(events, [
-            ('l', 'CAP REQ :sasl'),
-            ('l', 'NICK bot'),
-            ('l', 'USER bot foo bar :None'),
-            ('l', 'AUTHENTICATE PLAIN'),
-            ('s', 'AUTHENTICATE'),
-            ('l', 'AUTHENTICATE bmljawBuaWNrAHBhc3M='),
-            ('l', 'CAP END')
-        ])
+        self.assertEqual(
+            events,
+            [
+                ('l', 'CAP REQ :sasl'),
+                ('l', 'NICK bot'),
+                ('l', 'USER bot foo bar :None'),
+                ('l', 'AUTHENTICATE PLAIN'),
+                ('s', 'AUTHENTICATE'),
+                ('l', 'AUTHENTICATE bmljawBuaWNrAHBhc3M='),
+                ('l', 'CAP END'),
+            ],
+        )
 
     def test_register_legacy(self):
-        b = self.makeBot('nick', 'pass',
-                         ['#ch1'],
-                         ['jimmy'], False, useSASL=False)
+        b = self.makeBot('nick', 'pass', ['#ch1'], ['jimmy'], False, useSASL=False)
         events = []
 
         def sendLine(line):
             events.append(('l', line))
+
         b.sendLine = sendLine
 
         b.register("bot")
-        self.assertEqual(events, [
-            ('l', 'PASS pass'),
-            ('l', 'NICK bot'),
-            ('l', 'USER bot foo bar :None')
-        ])
+        self.assertEqual(
+            events, [('l', 'PASS pass'), ('l', 'NICK bot'), ('l', 'USER bot foo bar :None')]
+        )
 
     def test_joined(self):
         b = self.makeBot()
         b.joined('#ch1')
         b.joined('#ch2')
-        self.assertEqual(sorted(b.channels.keys()),
-                         sorted(['#ch1', '#ch2']))
+        self.assertEqual(sorted(b.channels.keys()), sorted(['#ch1', '#ch2']))
 
     def test_userLeft_or_userKicked(self):
         b = self.makeBot()
@@ -428,19 +442,18 @@ class TestIrcStatusBot(unittest.TestCase):
 
     def test_format_build_status(self):
         b = self.makeBot()
-        self.assertEquals(b.format_build_status({'results': SUCCESS}),
-                          "completed successfully")
+        self.assertEquals(b.format_build_status({'results': SUCCESS}), "completed successfully")
 
     def test_format_build_status_short(self):
         b = self.makeBot()
-        self.assertEquals(b.format_build_status({'results': SUCCESS}, True),
-                          ", Success")
+        self.assertEquals(b.format_build_status({'results': SUCCESS}, True), ", Success")
 
     def test_format_build_status_colors(self):
         b = self.makeBot()
         b.useColors = True
-        self.assertEqual(b.format_build_status({'results': SUCCESS}),
-                         "\x033completed successfully\x0f")
+        self.assertEqual(
+            b.format_build_status({'results': SUCCESS}), "\x033completed successfully\x0f"
+        )
         colors_used = set()
         status_texts = set()
         for result in ALL_RESULTS:
@@ -465,6 +478,7 @@ class TestIrcStatusBot(unittest.TestCase):
 
         def cb(n):
             names.extend(n)
+
         d.addCallback(cb)
 
         b.irc_RPL_NAMREPLY('', ('test', '=', '#channel', 'user1 user2'))
@@ -479,6 +493,7 @@ class TestIrcStatusBot(unittest.TestCase):
 
         def cb(n):
             names.extend(n)
+
         d.addCallback(cb)
 
         b.irc_RPL_NAMREPLY('', ('test', '=', '#channel', 'user1 @user2'))
@@ -487,7 +502,6 @@ class TestIrcStatusBot(unittest.TestCase):
 
 
 class TestIrcStatusFactory(unittest.TestCase):
-
     def makeFactory(self, *args, **kwargs):
         if not args:
             args = ('nick', 'pass', ['ch'], [], [], {}, {})
@@ -503,7 +517,6 @@ class TestIrcStatusFactory(unittest.TestCase):
 
 
 class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
-
     def makeIRC(self, **kwargs):
         kwargs.setdefault('host', 'localhost')
         kwargs.setdefault('nick', 'russo')
@@ -519,6 +532,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             self.factory = factory
             self.client = client
             return client
+
         self.patch(internet, 'TCPClient', TCPClient)
         return irc.IRC(**kwargs)
 
@@ -545,14 +559,17 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             port=1234,
             tags=['tags'],
             password=Interpolate('pass'),
-            notify_events={'successToFailure': 1, },
+            notify_events={
+                'successToFailure': 1,
+            },
             showBlameList=False,
             useRevisions=True,
             useSSL=False,
             useSASL=False,
             lostDelay=10,
             failedDelay=20,
-            useColors=False)
+            useColors=False,
+        )
         yield s.startService()
 
         # patch it up
@@ -564,12 +581,19 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         p = factory.buildProtocol('address')
         self.assertIdentical(p, proto_obj)
         factory.protocol.assert_called_with(
-            'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'], True,
-            {}, ['tags'], {'successToFailure': 1},
+            'nick',
+            'pass',
+            ['channels'],
+            ['pm', 'to', 'nicks'],
+            True,
+            {},
+            ['tags'],
+            {'successToFailure': 1},
             useColors=False,
             useSASL=False,
             useRevisions=True,
-            showBlameList=False)
+            showBlameList=False,
+        )
 
     def test_service(self):
         irc = self.makeIRC()
@@ -581,14 +605,12 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_allowForce_allowShutdown(self):
         s = self.makeIRC(
-            host='host',
-            nick='nick',
-            channels=['channels'],
-            allowForce=True,
-            allowShutdown=False)
+            host='host', nick='nick', channels=['channels'], allowForce=True, allowShutdown=False
+        )
         yield s.startService()
-        self.assertEqual(words.StatusBot.expand_authz(s.authz), {'FORCE': True, 'STOP': True,
-                                                                 'SHUTDOWN': False})
+        self.assertEqual(
+            words.StatusBot.expand_authz(s.authz), {'FORCE': True, 'STOP': True, 'SHUTDOWN': False}
+        )
 
     # deprecated
     def test_allowForce_with_authz(self):
@@ -598,7 +620,8 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
                 nick='nick',
                 channels=['channels'],
                 allowForce=True,
-                authz={'force': [12345]})
+                authz={'force': [12345]},
+            )
 
     # deprecated
     def test_allowShutdown_with_authz(self):
@@ -608,4 +631,5 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
                 nick='nick',
                 channels=['channels'],
                 allowForce=True,
-                authz={'': [12345]})
+                authz={'': [12345]},
+            )

@@ -25,7 +25,6 @@ from buildbot.test.util import db
 
 
 class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
-
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """
@@ -34,8 +33,7 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
     def setUp(self):
         yield self.setUpRealDatabase()
 
-        engine = enginestrategy.create_engine(self.db_url,
-                                              basedir=os.path.abspath('basedir'))
+        engine = enginestrategy.create_engine(self.db_url, basedir=os.path.abspath('basedir'))
 
         # mock out the pool, and set up the model
         self.db = mock.Mock()

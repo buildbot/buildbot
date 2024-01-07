@@ -43,7 +43,6 @@ from buildbot.util.eventual import fireEventually
 
 
 class SourceStamp:
-
     def __init__(self, branch, revision, patch, repository=''):
         self.branch = branch
         self.revision = revision
@@ -52,11 +51,10 @@ class SourceStamp:
 
 
 def output(*msg):
-    print(' '.join([str(m)for m in msg]))
+    print(' '.join([str(m) for m in msg]))
 
 
 class SourceStampExtractor:
-
     def __init__(self, treetop, branch, repository):
         self.treetop = treetop
         self.repository = repository
@@ -72,8 +70,7 @@ class SourceStampExtractor:
         command itself."""
         env = os.environ.copy()
         env['LC_ALL'] = "C"
-        d = utils.getProcessOutputAndValue(self.exe, cmd, env=env,
-                                           path=self.treetop)
+        d = utils.getProcessOutputAndValue(self.exe, cmd, env=env, path=self.treetop)
         d.addCallback(self._didvc, cmd)
         return d
 
@@ -99,8 +96,9 @@ class SourceStampExtractor:
         if not self.repository:
             self.repository = self.treetop
         # TODO: figure out the branch and project too
-        ss = SourceStamp(bytes2unicode(self.branch), self.baserev, self.patch,
-                         repository=self.repository)
+        ss = SourceStamp(
+            bytes2unicode(self.branch), self.baserev, self.patch, repository=self.repository
+        )
         return ss
 
 
@@ -113,8 +111,7 @@ class CVSExtractor(SourceStampExtractor):
         # reasonably synchronized with each other. We express everything in
         # UTC because the '%z' format specifier for strftime doesn't always
         # work.
-        self.baserev = time.strftime("%Y-%m-%d %H:%M:%S +0000",
-                                     time.gmtime(now()))
+        self.baserev = time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime(now()))
         return defer.succeed(None)
 
     def getPatch(self, res):
@@ -162,12 +159,11 @@ class SVNExtractor(SourceStampExtractor):
         # using that as a base.
 
         for line in res.split(b"\n"):
-            m = re.search(br'^Status against revision:\s+(\d+)', line)
+            m = re.search(rb'^Status against revision:\s+(\d+)', line)
             if m:
                 self.baserev = m.group(1)
                 return
-        output(
-            b"Could not find 'Status against revision' in SVN output: " + res)
+        output(b"Could not find 'Status against revision' in SVN output: " + res)
         sys.exit(1)
 
     def getPatch(self, res):
@@ -218,8 +214,13 @@ class MercurialExtractor(SourceStampExtractor):
             upstream = f"r'{self.repository}'"
         output = ''
         try:
-            output = yield self.dovc(["log", "--template", "{node}\\n", "-r",
-                                      f"max(::. - outgoing({upstream}))"])
+            output = yield self.dovc([
+                "log",
+                "--template",
+                "{node}\\n",
+                "-r",
+                f"max(::. - outgoing({upstream}))",
+            ])
         except RuntimeError:
             # outgoing() will abort if no default-push/default path is
             # configured
@@ -227,7 +228,7 @@ class MercurialExtractor(SourceStampExtractor):
                 raise
             # fall back to current working directory parent
             output = yield self.dovc(["log", "--template", "{node}\\n", "-r", "p1()"])
-        m = re.search(br'^(\w+)', output)
+        m = re.search(rb'^(\w+)', output)
         if not m:
             raise RuntimeError(f"Revision {output!r} is not in the right format")
         self.baserev = m.group(0)
@@ -251,7 +252,7 @@ class PerforceExtractor(SourceStampExtractor):
         #
         # extract the base change number
         #
-        m = re.search(br'Change (\d+)', res)
+        m = re.search(rb'Change (\d+)', res)
         if m:
             self.baserev = m.group(1)
             return
@@ -269,8 +270,7 @@ class PerforceExtractor(SourceStampExtractor):
         mpatch = ""
         found = False
         for line in diff.split("\n"):
-            m = re.search('==== //depot/' + self.branch
-                          + r'/([\w/\.\d\-_]+)#(\d+) -', line)
+            m = re.search('==== //depot/' + self.branch + r'/([\w/\.\d\-_]+)#(\d+) -', line)
             if m:
                 mpatch += f"--- {m.group(1)}#{m.group(2)}\n"
                 mpatch += f"+++ {m.group(1)}\n"
@@ -299,7 +299,7 @@ class DarcsExtractor(SourceStampExtractor):
         return d
 
     def parseStatus(self, res):
-        self.baserev = res              # the whole context file
+        self.baserev = res  # the whole context file
 
     def getPatch(self, res):
         d = self.dovc(["diff", "-u"])
@@ -338,7 +338,7 @@ class GitExtractor(SourceStampExtractor):
         for l in bytes2unicode(remotes).split("\n"):
             r = l.strip()
             if r and self.branch.startswith(r + "/"):
-                self.branch = self.branch[len(r) + 1:]
+                self.branch = self.branch[len(r) + 1 :]
                 break
 
     def readConfig(self):
@@ -380,7 +380,7 @@ class GitExtractor(SourceStampExtractor):
         # line, followed by the branch name and the SHA1.
         #
         # Branch names may contain pretty much anything but whitespace.
-        m = re.search(br'^\* (\S+)\s+([0-9a-f]{40})', res, re.MULTILINE)
+        m = re.search(rb'^\* (\S+)\s+([0-9a-f]{40})', res, re.MULTILINE)
         if m:
             self.baserev = m.group(2)
             self.branch = m.group(1)
@@ -391,8 +391,14 @@ class GitExtractor(SourceStampExtractor):
         sys.exit(1)
 
     def getPatch(self, res):
-        d = self.dovc(["diff", "--src-prefix=a/", "--dst-prefix=b/",
-                       "--no-textconv", "--no-ext-diff", self.baserev])
+        d = self.dovc([
+            "diff",
+            "--src-prefix=a/",
+            "--dst-prefix=b/",
+            "--no-textconv",
+            "--no-ext-diff",
+            self.baserev,
+        ])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
@@ -447,8 +453,19 @@ def ns(s):
     return f"{len(s)}:{s},"
 
 
-def createJobfile(jobid, branch, baserev, patch_level, patch_body, repository,
-                  project, who, comment, builderNames, properties):
+def createJobfile(
+    jobid,
+    branch,
+    baserev,
+    patch_level,
+    patch_body,
+    repository,
+    project,
+    who,
+    comment,
+    builderNames,
+    properties,
+):
     # Determine job file version from provided arguments
     try:
         bytes2unicode(patch_body)
@@ -490,7 +507,7 @@ def getTopdir(topfile, start=None):
             return here
         next = os.path.dirname(here)
         if next == here:
-            break                       # we've hit the root
+            break  # we've hit the root
         here = next
         toomany -= 1
     output(f"Unable to find topfile '{topfile}' anywhere from {start} upwards")
@@ -498,7 +515,6 @@ def getTopdir(topfile, start=None):
 
 
 class RemoteTryPP(protocol.ProcessProtocol):
-
     def __init__(self, job):
         self.job = job
         self.d = defer.Deferred()
@@ -574,8 +590,7 @@ class Try(pb.Referenceable):
             if not diff:
                 diff = None
             patch = (self.config['patchlevel'], diff)
-            ss = SourceStamp(
-                branch, baserev, patch, repository=self.getopt("repository"))
+            ss = SourceStamp(branch, baserev, patch, repository=self.getopt("repository"))
             d = defer.succeed(ss)
         else:
             vc = self.getopt("vc")
@@ -608,16 +623,27 @@ class Try(pb.Referenceable):
             if revspec is None:
                 revspec = ""
             self.jobfile = createJobfile(
-                self.bsid, ss.branch or "", revspec, patchlevel, diff,
-                ss.repository, self.project, self.who, self.comment,
-                self.builderNames, self.config.get('properties', {}))
+                self.bsid,
+                ss.branch or "",
+                revspec,
+                patchlevel,
+                diff,
+                ss.repository,
+                self.project,
+                self.who,
+                self.comment,
+                self.builderNames,
+                self.config.get('properties', {}),
+            )
 
     def fakeDeliverJob(self):
         # Display the job to be delivered, but don't perform delivery.
         ss = self.sourcestamp
-        output(f"Job:\n\tRepository: {ss.repository}\n\tProject: {self.project}\n\tBranch: "
-               f"{ss.branch}\n\tRevision: {ss.revision}\n\tBuilders: "
-               f"{self.builderNames}\n{ss.patch[1]}")
+        output(
+            f"Job:\n\tRepository: {ss.repository}\n\tProject: {self.project}\n\tBranch: "
+            f"{ss.branch}\n\tRevision: {ss.revision}\n\tBuilders: "
+            f"{self.builderNames}\n{ss.patch[1]}"
+        )
         self.buildsetStatus = FakeBuildSetStatus()
         d = defer.Deferred()
         d.callback(True)
@@ -633,8 +659,9 @@ class Try(pb.Referenceable):
         if not ssh_command:
             ssh_commands = which("ssh")
             if not ssh_commands:
-                raise RuntimeError("couldn't find ssh executable, make sure "
-                                   "it is available in the PATH")
+                raise RuntimeError(
+                    "couldn't find ssh executable, make sure " "it is available in the PATH"
+                )
 
             argv = [ssh_commands[0]]
         else:
@@ -649,8 +676,10 @@ class Try(pb.Referenceable):
                 # separators, as it's simpler to do it like this. And then we
                 # just need to get all of them together using the slice and
                 # also remove the quotes from those that were quoted.
-                argv = [string.strip(a, '"') for a in
-                        re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
+                argv = [
+                    string.strip(a, '"')
+                    for a in re.split(r"""([^" ]+|"[^"]+")""", ssh_command)[1::2]
+                ]
             else:
                 # Do use standard tokenization logic under POSIX.
                 argv = shlex.split(ssh_command)
@@ -682,10 +711,18 @@ class Try(pb.Referenceable):
         ss = self.sourcestamp
         output("Delivering job; comment=", self.comment)
 
-        self.buildsetStatus = \
-            yield remote.callRemote("try", ss.branch, ss.revision, ss.patch, ss.repository,
-                                    self.project, self.builderNames, self.who, self.comment,
-                                    self.config.get('properties', {}))
+        self.buildsetStatus = yield remote.callRemote(
+            "try",
+            ss.branch,
+            ss.revision,
+            ss.patch,
+            ss.repository,
+            self.project,
+            self.builderNames,
+            self.who,
+            self.comment,
+            self.config.get('properties', {}),
+        )
 
     def deliverJob(self):
         # returns a Deferred that fires when the job has been delivered

@@ -27,26 +27,15 @@ class Worker(Row):
     table = "workers"
 
     id_column = 'id'
-    required_columns = ('name', )
+    required_columns = ('name',)
 
     def __init__(
-        self,
-        id=None,
-        name='some:worker',
-        info=None,
-        paused=0,
-        pause_reason=None,
-        graceful=0
+        self, id=None, name='some:worker', info=None, paused=0, pause_reason=None, graceful=0
     ):
         if info is None:
             info = {"a": "b"}
         super().__init__(
-            id=id,
-            name=name,
-            info=info,
-            paused=paused,
-            pause_reason=pause_reason,
-            graceful=graceful
+            id=id, name=name, info=info, paused=paused, pause_reason=pause_reason, graceful=graceful
         )
 
 
@@ -71,7 +60,6 @@ class ConfiguredWorker(Row):
 
 
 class FakeWorkersComponent(FakeDBComponent):
-
     def setUp(self):
         self.workers = {}
         self.configured = {}
@@ -86,23 +74,19 @@ class FakeWorkersComponent(FakeDBComponent):
                     "paused": row.paused,
                     "pause_reason": row.pause_reason,
                     "graceful": row.graceful,
-                    "info": row.info
+                    "info": row.info,
                 }
             elif isinstance(row, ConfiguredWorker):
                 row.id = row.buildermasterid * 10000 + row.workerid
                 self.configured[row.id] = {
                     "buildermasterid": row.buildermasterid,
-                    "workerid": row.workerid
+                    "workerid": row.workerid,
                 }
             elif isinstance(row, ConnectedWorker):
-                self.connected[row.id] = {
-                    "masterid": row.masterid,
-                    "workerid": row.workerid
-                }
+                self.connected[row.id] = {"masterid": row.masterid, "workerid": row.workerid}
 
     def findWorkerId(self, name):
-        validation.verifyType(self.t, 'name', name,
-                              validation.IdentifierValidator(50))
+        validation.verifyType(self.t, 'name', name, validation.IdentifierValidator(50))
         for m in self.workers.values():
             if m['name'] == name:
                 return defer.succeed(m['id'])
@@ -113,7 +97,7 @@ class FakeWorkersComponent(FakeDBComponent):
             "info": {},
             "paused": 0,
             "pause_reason": None,
-            "graceful": 0
+            "graceful": 0,
         }
         return defer.succeed(id)
 
@@ -147,10 +131,10 @@ class FakeWorkersComponent(FakeDBComponent):
             builder_masters = self.db.builders.builder_masters
             workers = []
             for worker in self.workers.values():
-                configured = [cfg for cfg in self.configured.values()
-                              if cfg['workerid'] == worker['id']]
-                pairs = [builder_masters[cfg['buildermasterid']]
-                         for cfg in configured]
+                configured = [
+                    cfg for cfg in self.configured.values() if cfg['workerid'] == worker['id']
+                ]
+                pairs = [builder_masters[cfg['buildermasterid']] for cfg in configured]
                 if builderid is not None and masterid is not None:
                     if (builderid, masterid) not in pairs:
                         continue
@@ -169,9 +153,7 @@ class FakeWorkersComponent(FakeDBComponent):
         if graceful is not None:
             workers = [w for w in workers if w['graceful'] == graceful]
 
-        return defer.succeed([
-            self._mkdict(worker, builderid, masterid)
-            for worker in workers])
+        return defer.succeed([self._mkdict(worker, builderid, masterid) for worker in workers])
 
     def workerConnected(self, workerid, masterid, workerinfo):
         worker = self.workers.get(workerid)
@@ -186,31 +168,40 @@ class FakeWorkersComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def deconfigureAllWorkersForMaster(self, masterid):
-        buildermasterids = [_id for _id, (builderid, mid) in
-                            self.db.builders.builder_masters.items() if mid == masterid]
+        buildermasterids = [
+            _id
+            for _id, (builderid, mid) in self.db.builders.builder_masters.items()
+            if mid == masterid
+        ]
         for k, v in list(self.configured.items()):
             if v['buildermasterid'] in buildermasterids:
                 del self.configured[k]
 
     def workerConfigured(self, workerid, masterid, builderids):
-
-        buildermasterids = [_id for _id, (builderid, mid) in
-                            self.db.builders.builder_masters.items()
-                            if mid == masterid and builderid in builderids]
+        buildermasterids = [
+            _id
+            for _id, (builderid, mid) in self.db.builders.builder_masters.items()
+            if mid == masterid and builderid in builderids
+        ]
         if len(buildermasterids) != len(builderids):
-            raise ValueError(f"Some builders are not configured for this master: "
-                             f"builders: {builderids}, master: {masterid} "
-                             f"buildermaster:{self.db.builders.builder_masters}"
-                             )
+            raise ValueError(
+                f"Some builders are not configured for this master: "
+                f"builders: {builderids}, master: {masterid} "
+                f"buildermaster:{self.db.builders.builder_masters}"
+            )
 
-        allbuildermasterids = [_id for _id, (builderid, mid) in
-                               self.db.builders.builder_masters.items() if mid == masterid]
+        allbuildermasterids = [
+            _id
+            for _id, (builderid, mid) in self.db.builders.builder_masters.items()
+            if mid == masterid
+        ]
         for k, v in list(self.configured.items()):
             if v['buildermasterid'] in allbuildermasterids and v['workerid'] == workerid:
                 del self.configured[k]
-        self.insert_test_data([ConfiguredWorker(workerid=workerid,
-                                              buildermasterid=buildermasterid)
-                             for buildermasterid in buildermasterids])
+        self.insert_test_data([
+            ConfiguredWorker(workerid=workerid, buildermasterid=buildermasterid)
+            for buildermasterid in buildermasterids
+        ])
         return defer.succeed(None)
 
     def workerDisconnected(self, workerid, masterid):

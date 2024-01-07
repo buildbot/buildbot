@@ -32,7 +32,6 @@ TIME4 = 2004444
 
 
 class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = steps.StepEndpoint
     resourceTypeClass = steps.Step
 
@@ -44,15 +43,31 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Master(id=88),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
-            fakedb.Build(id=30, builderid=77, number=7, masterid=88,
-                         buildrequestid=82, workerid=47),
-            fakedb.Step(id=70, number=0, name='one', buildid=30,
-                        started_at=TIME1, locks_acquired_at=TIME2, complete_at=TIME3, results=0),
-            fakedb.Step(id=71, number=1, name='two', buildid=30,
-                        started_at=TIME2, locks_acquired_at=TIME3, complete_at=TIME4, results=2,
-                        urls_json='[{"name":"url","url":"http://url"}]'),
-            fakedb.Step(id=72, number=2, name='three', buildid=30,
-                        started_at=TIME4, hidden=True),
+            fakedb.Build(
+                id=30, builderid=77, number=7, masterid=88, buildrequestid=82, workerid=47
+            ),
+            fakedb.Step(
+                id=70,
+                number=0,
+                name='one',
+                buildid=30,
+                started_at=TIME1,
+                locks_acquired_at=TIME2,
+                complete_at=TIME3,
+                results=0,
+            ),
+            fakedb.Step(
+                id=71,
+                number=1,
+                name='two',
+                buildid=30,
+                started_at=TIME2,
+                locks_acquired_at=TIME3,
+                complete_at=TIME4,
+                results=2,
+                urls_json='[{"name":"url","url":"http://url"}]',
+            ),
+            fakedb.Step(id=72, number=2, name='three', buildid=30, started_at=TIME4, hidden=True),
         ])
 
     def tearDown(self):
@@ -62,19 +77,23 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_existing(self):
         step = yield self.callGet(('steps', 72))
         self.validateData(step)
-        self.assertEqual(step, {
-            'buildid': 30,
-            'complete': False,
-            'complete_at': None,
-            'name': 'three',
-            'number': 2,
-            'results': None,
-            'started_at': epoch2datetime(TIME4),
-            "locks_acquired_at": None,
-            'state_string': '',
-            'stepid': 72,
-            'urls': [],
-            'hidden': True})
+        self.assertEqual(
+            step,
+            {
+                'buildid': 30,
+                'complete': False,
+                'complete_at': None,
+                'name': 'three',
+                'number': 2,
+                'results': None,
+                'started_at': epoch2datetime(TIME4),
+                "locks_acquired_at": None,
+                'state_string': '',
+                'stepid': 72,
+                'urls': [],
+                'hidden': True,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_existing_buildid_name(self):
@@ -118,7 +137,6 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = steps.StepsEndpoint
     resourceTypeClass = steps.Step
 
@@ -130,19 +148,35 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Master(id=88),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
-            fakedb.Build(id=30, builderid=77, number=7, masterid=88,
-                         buildrequestid=82, workerid=47),
-            fakedb.Build(id=31, builderid=77, number=8, masterid=88,
-                         buildrequestid=82, workerid=47),
-            fakedb.Step(id=70, number=0, name='one', buildid=30,
-                        started_at=TIME1, locks_acquired_at=TIME2, complete_at=TIME3, results=0),
-            fakedb.Step(id=71, number=1, name='two', buildid=30,
-                        started_at=TIME2, locks_acquired_at=TIME3, complete_at=TIME4, results=2,
-                        urls_json='[{"name":"url","url":"http://url"}]'),
-            fakedb.Step(id=72, number=2, name='three', buildid=30,
-                        started_at=TIME4),
-            fakedb.Step(id=73, number=0, name='otherbuild', buildid=31,
-                        started_at=TIME3),
+            fakedb.Build(
+                id=30, builderid=77, number=7, masterid=88, buildrequestid=82, workerid=47
+            ),
+            fakedb.Build(
+                id=31, builderid=77, number=8, masterid=88, buildrequestid=82, workerid=47
+            ),
+            fakedb.Step(
+                id=70,
+                number=0,
+                name='one',
+                buildid=30,
+                started_at=TIME1,
+                locks_acquired_at=TIME2,
+                complete_at=TIME3,
+                results=0,
+            ),
+            fakedb.Step(
+                id=71,
+                number=1,
+                name='two',
+                buildid=30,
+                started_at=TIME2,
+                locks_acquired_at=TIME3,
+                complete_at=TIME4,
+                results=2,
+                urls_json='[{"name":"url","url":"http://url"}]',
+            ),
+            fakedb.Step(id=72, number=2, name='three', buildid=30, started_at=TIME4),
+            fakedb.Step(id=73, number=0, name='otherbuild', buildid=31, started_at=TIME3),
         ])
 
     def tearDown(self):
@@ -177,24 +211,22 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = steps.Step(self.master)
 
     def test_signature_addStep(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.addStep,  # fake
-            self.rtype.addStep)  # real
+            self.rtype.addStep,
+        )  # real
         def addStep(self, buildid, name):
             pass
 
     @defer.inlineCallbacks
     def test_addStep(self):
-        stepid, number, name = yield self.rtype.addStep(buildid=10,
-                                                        name='name')
+        stepid, number, name = yield self.rtype.addStep(buildid=10, name='name')
         msgBody = {
             'buildid': 10,
             'complete': False,
@@ -214,39 +246,36 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('steps', str(stepid), 'new'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(stepid)
-        self.assertEqual(step, {
-            'buildid': 10,
-            'complete_at': None,
-            'id': stepid,
-            'name': name,
-            'number': number,
-            'results': None,
-            'started_at': None,
-            "locks_acquired_at": None,
-            'state_string': 'pending',
-            'urls': [],
-            'hidden': False,
-        })
+        self.assertEqual(
+            step,
+            {
+                'buildid': 10,
+                'complete_at': None,
+                'id': stepid,
+                'name': name,
+                'number': number,
+                'results': None,
+                'started_at': None,
+                "locks_acquired_at": None,
+                'state_string': 'pending',
+                'urls': [],
+                'hidden': False,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_fake_addStep(self):
-        self.assertEqual(
-            len((yield self.master.data.updates.addStep(buildid=10,
-                                                        name='ten'))),
-            3)
+        self.assertEqual(len((yield self.master.data.updates.addStep(buildid=10, name='ten'))), 3)
 
     def test_signature_startStep(self):
-        @self.assertArgSpecMatches(
-            self.master.data.updates.startStep,
-            self.rtype.startStep)
+        @self.assertArgSpecMatches(self.master.data.updates.startStep, self.rtype.startStep)
         def addStep(self, stepid, started_at=None, locks_acquired=False):
             pass
 
     @defer.inlineCallbacks
     def test_startStep(self):
         self.reactor.advance(TIME1)
-        yield self.master.db.steps.addStep(buildid=10, name='ten',
-                                           state_string='pending')
+        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
         yield self.rtype.startStep(stepid=100)
 
         msgBody = {
@@ -268,19 +297,22 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('steps', str(100), 'started'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
-        self.assertEqual(step, {
-            'buildid': 10,
-            'complete_at': None,
-            'id': 100,
-            'name': 'ten',
-            'number': 0,
-            'results': None,
-            'started_at': epoch2datetime(TIME1),
-            "locks_acquired_at": None,
-            'state_string': 'pending',
-            'urls': [],
-            'hidden': False,
-        })
+        self.assertEqual(
+            step,
+            {
+                'buildid': 10,
+                'complete_at': None,
+                'id': 100,
+                'name': 'ten',
+                'number': 0,
+                'results': None,
+                'started_at': epoch2datetime(TIME1),
+                "locks_acquired_at": None,
+                'state_string': 'pending',
+                'urls': [],
+                'hidden': False,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_startStep_no_locks(self):
@@ -302,12 +334,10 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             "urls": [],
             "hidden": False,
         }
-        self.master.mq.assertProductions(
-            [
-                (("builds", "10", "steps", str(100), "started"), msgBody),
-                (("steps", str(100), "started"), msgBody),
-            ]
-        )
+        self.master.mq.assertProductions([
+            (("builds", "10", "steps", str(100), "started"), msgBody),
+            (("steps", str(100), "started"), msgBody),
+        ])
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
@@ -323,14 +353,13 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
                 "state_string": "pending",
                 "urls": [],
                 "hidden": False,
-            }
+            },
         )
 
     @defer.inlineCallbacks
     def test_startStep_acquire_locks(self):
         self.reactor.advance(TIME1)
-        yield self.master.db.steps.addStep(buildid=10, name='ten',
-                                           state_string='pending')
+        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
         yield self.rtype.startStep(stepid=100)
         self.reactor.advance(TIME2 - TIME1)
         self.master.mq.clearProductions()
@@ -355,31 +384,34 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('steps', str(100), 'updated'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
-        self.assertEqual(step, {
-            'buildid': 10,
-            'complete_at': None,
-            'id': 100,
-            'name': 'ten',
-            'number': 0,
-            'results': None,
-            'started_at': epoch2datetime(TIME1),
-            "locks_acquired_at": epoch2datetime(TIME2),
-            'state_string': 'pending',
-            'urls': [],
-            'hidden': False,
-        })
+        self.assertEqual(
+            step,
+            {
+                'buildid': 10,
+                'complete_at': None,
+                'id': 100,
+                'name': 'ten',
+                'number': 0,
+                'results': None,
+                'started_at': epoch2datetime(TIME1),
+                "locks_acquired_at": epoch2datetime(TIME2),
+                'state_string': 'pending',
+                'urls': [],
+                'hidden': False,
+            },
+        )
 
     def test_signature_setStepStateString(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.setStepStateString,  # fake
-            self.rtype.setStepStateString)  # real
+            self.rtype.setStepStateString,
+        )  # real
         def setStepStateString(self, stepid, state_string):
             pass
 
     @defer.inlineCallbacks
     def test_setStepStateString(self):
-        yield self.master.db.steps.addStep(buildid=10, name='ten',
-                                           state_string='pending')
+        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
         yield self.rtype.setStepStateString(stepid=100, state_string='hi')
 
         msgBody = {
@@ -401,31 +433,34 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('steps', str(100), 'updated'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
-        self.assertEqual(step, {
-            'buildid': 10,
-            'complete_at': None,
-            'id': 100,
-            'name': 'ten',
-            'number': 0,
-            'results': None,
-            'started_at': None,
-            "locks_acquired_at": None,
-            'state_string': 'hi',
-            'urls': [],
-            'hidden': False,
-        })
+        self.assertEqual(
+            step,
+            {
+                'buildid': 10,
+                'complete_at': None,
+                'id': 100,
+                'name': 'ten',
+                'number': 0,
+                'results': None,
+                'started_at': None,
+                "locks_acquired_at": None,
+                'state_string': 'hi',
+                'urls': [],
+                'hidden': False,
+            },
+        )
 
     def test_signature_finishStep(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.finishStep,  # fake
-            self.rtype.finishStep)  # real
+            self.rtype.finishStep,
+        )  # real
         def finishStep(self, stepid, results, hidden):
             pass
 
     @defer.inlineCallbacks
     def test_finishStep(self):
-        yield self.master.db.steps.addStep(buildid=10, name='ten',
-                                           state_string='pending')
+        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
         self.reactor.advance(TIME1)
         yield self.rtype.startStep(stepid=100)
         yield self.rtype.set_step_locks_acquired_at(stepid=100)
@@ -452,31 +487,34 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('steps', str(100), 'finished'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
-        self.assertEqual(step, {
-            'buildid': 10,
-            'complete_at': epoch2datetime(TIME2),
-            'id': 100,
-            'name': 'ten',
-            'number': 0,
-            'results': 9,
-            'started_at': epoch2datetime(TIME1),
-            "locks_acquired_at": epoch2datetime(TIME1),
-            'state_string': 'pending',
-            'urls': [],
-            'hidden': False,
-        })
+        self.assertEqual(
+            step,
+            {
+                'buildid': 10,
+                'complete_at': epoch2datetime(TIME2),
+                'id': 100,
+                'name': 'ten',
+                'number': 0,
+                'results': 9,
+                'started_at': epoch2datetime(TIME1),
+                "locks_acquired_at": epoch2datetime(TIME1),
+                'state_string': 'pending',
+                'urls': [],
+                'hidden': False,
+            },
+        )
 
     def test_signature_addStepURL(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.addStepURL,  # fake
-            self.rtype.addStepURL)  # real
+            self.rtype.addStepURL,
+        )  # real
         def addStepURL(self, stepid, name, url):
             pass
 
     @defer.inlineCallbacks
     def test_addStepURL(self):
-        yield self.master.db.steps.addStep(buildid=10, name='ten',
-                                           state_string='pending')
+        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
         yield self.rtype.addStepURL(stepid=100, name="foo", url="bar")
 
         msgBody = {
@@ -498,16 +536,19 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('steps', str(100), 'updated'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
-        self.assertEqual(step, {
-            'buildid': 10,
-            'complete_at': None,
-            'id': 100,
-            'name': 'ten',
-            'number': 0,
-            'results': None,
-            'started_at': None,
-            "locks_acquired_at": None,
-            'state_string': 'pending',
-            'urls': [{'name': 'foo', 'url': 'bar'}],
-            'hidden': False,
-        })
+        self.assertEqual(
+            step,
+            {
+                'buildid': 10,
+                'complete_at': None,
+                'id': 100,
+                'name': 'ten',
+                'number': 0,
+                'results': None,
+                'started_at': None,
+                "locks_acquired_at": None,
+                'state_string': 'pending',
+                'urls': [{'name': 'foo', 'url': 'bar'}],
+                'hidden': False,
+            },
+        )

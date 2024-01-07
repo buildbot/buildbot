@@ -29,7 +29,6 @@ class FakeObject(state.StateMixin):
 
 
 class TestStateMixin(TestReactorMixin, unittest.TestCase):
-
     OBJECTID = 19
 
     def setUp(self):
@@ -67,13 +66,11 @@ class TestStateMixin(TestReactorMixin, unittest.TestCase):
     def test_setState(self):
         yield self.object.setState('y', 14)
 
-        self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
-                                                y=14)
+        self.master.db.state.assertStateByClass('fake-name', 'FakeObject', y=14)
 
     @defer.inlineCallbacks
     def test_setState_existing(self):
         self.master.db.state.set_fake_state(self.object, 'x', 13)
         yield self.object.setState('x', 14)
 
-        self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
-                                                x=14)
+        self.master.db.state.assertStateByClass('fake-name', 'FakeObject', x=14)

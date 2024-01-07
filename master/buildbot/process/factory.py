@@ -43,11 +43,11 @@ def s(steptype, **kwargs):
 
 
 class BuildFactory(util.ComparableMixin):
-
     """
     @cvar  buildClass: class to use when creating builds
     @type  buildClass: L{buildbot.process.build.Build}
     """
+
     buildClass = Build
     useProgress = 1
     workdir = "build"
@@ -71,8 +71,9 @@ class BuildFactory(util.ComparableMixin):
         return b
 
     def addStep(self, step):
-        if not interfaces.IBuildStep.providedBy(step) and \
-                not interfaces.IBuildStepFactory.providedBy(step):
+        if not interfaces.IBuildStep.providedBy(
+            step
+        ) and not interfaces.IBuildStepFactory.providedBy(step):
             raise TypeError('step must be an instance of a BuildStep')
         self.steps.append(buildstep.get_factory_from_step_or_factory(step))
 
@@ -92,6 +93,7 @@ class BuildFactory(util.ComparableMixin):
         yield self
         self.addStep(RemoveWorkerFileSecret(secrets))
 
+
 # BuildFactory subclasses for common build tools
 
 
@@ -101,14 +103,17 @@ class _DefaultCommand:
 
 
 class GNUAutoconf(BuildFactory):
-
-    def __init__(self, source, configure="./configure",
-                 configureEnv=None,
-                 configureFlags=None,
-                 reconf=None,
-                 compile=_DefaultCommand,
-                 test=_DefaultCommand,
-                 distcheck=_DefaultCommand):
+    def __init__(
+        self,
+        source,
+        configure="./configure",
+        configureEnv=None,
+        configureFlags=None,
+        reconf=None,
+        compile=_DefaultCommand,
+        test=_DefaultCommand,
+        distcheck=_DefaultCommand,
+    ):
         if configureEnv is None:
             configureEnv = {}
         if configureFlags is None:
@@ -125,8 +130,7 @@ class GNUAutoconf(BuildFactory):
         if reconf is True:
             reconf = ["autoreconf", "-si"]
         if reconf is not None:
-            self.addStep(
-                ShellCommand(name="autoreconf", command=reconf, env=configureEnv))
+            self.addStep(ShellCommand(name="autoreconf", command=reconf, env=configureEnv))
 
         if configure is not None:
             # we either need to wind up with a string (which will be
@@ -151,7 +155,6 @@ class GNUAutoconf(BuildFactory):
 
 
 class CPAN(BuildFactory):
-
     def __init__(self, source, perl="perl"):
         super().__init__([source])
         self.addStep(Configure(command=[perl, "Makefile.PL"]))
@@ -160,7 +163,6 @@ class CPAN(BuildFactory):
 
 
 class Distutils(BuildFactory):
-
     def __init__(self, source, python="python", test=None):
         super().__init__([source])
         self.addStep(Compile(command=[python, "./setup.py", "build"]))
@@ -169,7 +171,6 @@ class Distutils(BuildFactory):
 
 
 class Trial(BuildFactory):
-
     """Build a python module that uses distutils and trial. Set 'tests' to
     the module in which the tests can be found, or set useTestCaseNames=True
     to always have trial figure out which tests to run (based upon which
@@ -184,10 +185,19 @@ class Trial(BuildFactory):
     randomly = False
     recurse = False
 
-    def __init__(self, source,
-                 buildpython=None, trialpython=None, trial=None,
-                 testpath=".", randomly=None, recurse=None,
-                 tests=None, useTestCaseNames=False, env=None):
+    def __init__(
+        self,
+        source,
+        buildpython=None,
+        trialpython=None,
+        trial=None,
+        testpath=".",
+        randomly=None,
+        recurse=None,
+        tests=None,
+        useTestCaseNames=False,
+        env=None,
+    ):
         super().__init__([source])
         assert tests or useTestCaseNames, "must use one or the other"
         if buildpython is None:
@@ -202,16 +212,21 @@ class Trial(BuildFactory):
             self.recurse = recurse
 
         from buildbot.steps.python_twisted import Trial
+
         buildcommand = buildpython + ["./setup.py", "build"]
         self.addStep(Compile(command=buildcommand, env=env))
-        self.addStep(Trial(
-                     python=trialpython, trial=self.trial,
-                     testpath=testpath,
-                     tests=tests, testChanges=useTestCaseNames,
-                     randomly=self.randomly,
-                     recurse=self.recurse,
-                     env=env,
-                     ))
+        self.addStep(
+            Trial(
+                python=trialpython,
+                trial=self.trial,
+                testpath=testpath,
+                tests=tests,
+                testChanges=useTestCaseNames,
+                randomly=self.randomly,
+                recurse=self.recurse,
+                env=env,
+            )
+        )
 
 
 # compatibility classes, will go away. Note that these only offer
@@ -224,51 +239,57 @@ ConfigurableBuildFactory = BuildFactory
 class BasicBuildFactory(GNUAutoconf):
     # really a "GNU Autoconf-created tarball -in-CVS tree" builder
 
-    def __init__(self, cvsroot, cvsmodule,
-                 configure=None, configureEnv=None,
-                 compile="make all",
-                 test="make check", cvsCopy=False):
+    def __init__(
+        self,
+        cvsroot,
+        cvsmodule,
+        configure=None,
+        configureEnv=None,
+        compile="make all",
+        test="make check",
+        cvsCopy=False,
+    ):
         if configureEnv is None:
             configureEnv = {}
         mode = "full"
         method = "clobber"
         if cvsCopy:
             method = "copy"
-        source = CVS(
-            cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode, method=method)
-        super().__init__(source,
-                         configure=configure, configureEnv=configureEnv,
-                         compile=compile,
-                         test=test)
+        source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode, method=method)
+        super().__init__(
+            source, configure=configure, configureEnv=configureEnv, compile=compile, test=test
+        )
 
 
 class QuickBuildFactory(BasicBuildFactory):
     useProgress = False
 
-    def __init__(self, cvsroot, cvsmodule,
-                 configure=None, configureEnv=None,
-                 compile="make all",
-                 test="make check", cvsCopy=False):
+    def __init__(
+        self,
+        cvsroot,
+        cvsmodule,
+        configure=None,
+        configureEnv=None,
+        compile="make all",
+        test="make check",
+        cvsCopy=False,
+    ):
         if configureEnv is None:
             configureEnv = {}
         mode = "incremental"
         source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
-        super().__init__(source,
-                         configure=configure, configureEnv=configureEnv,
-                         compile=compile,
-                         test=test)
+        super().__init__(
+            source, configure=configure, configureEnv=configureEnv, compile=compile, test=test
+        )
 
 
 class BasicSVN(GNUAutoconf):
-
-    def __init__(self, svnurl,
-                 configure=None, configureEnv=None,
-                 compile="make all",
-                 test="make check"):
+    def __init__(
+        self, svnurl, configure=None, configureEnv=None, compile="make all", test="make check"
+    ):
         if configureEnv is None:
             configureEnv = {}
         source = SVN(svnurl=svnurl, mode="incremental")
-        super().__init__(source,
-                         configure=configure, configureEnv=configureEnv,
-                         compile=compile,
-                         test=test)
+        super().__init__(
+            source, configure=configure, configureEnv=configureEnv, compile=compile, test=test
+        )

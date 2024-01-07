@@ -33,7 +33,6 @@ def project_db_to_data(dbdict, active=None):
 
 
 class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /projects/n:projectid
@@ -53,7 +52,6 @@ class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
 
 
 class ProjectsEndpoint(base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'projects'
     pathPatterns = """
@@ -72,10 +70,7 @@ class ProjectsEndpoint(base.Endpoint):
             dbdicts_all = yield self.master.db.projects.get_projects()
             dbdicts_active = yield self.master.db.projects.get_active_projects()
             ids_active = set(dbdict["id"] for dbdict in dbdicts_active)
-            dbdicts = [
-                dbdict for dbdict in dbdicts_all
-                if dbdict["id"] not in ids_active
-            ]
+            dbdicts = [dbdict for dbdict in dbdicts_all if dbdict["id"] not in ids_active]
 
         return [project_db_to_data(dbdict, active=active) for dbdict in dbdicts]
 
@@ -84,7 +79,6 @@ class ProjectsEndpoint(base.Endpoint):
 
 
 class Project(base.ResourceType):
-
     name = "project"
     plural = "projects"
     endpoints = [ProjectEndpoint, ProjectsEndpoint]
@@ -102,6 +96,7 @@ class Project(base.ResourceType):
         description = types.NoneOk(types.String())
         description_format = types.NoneOk(types.String())
         description_html = types.NoneOk(types.String())
+
     entityType = EntityType(name, 'Project')
 
     @defer.inlineCallbacks
@@ -116,18 +111,9 @@ class Project(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def update_project_info(
-        self,
-        projectid,
-        slug,
-        description,
-        description_format,
-        description_html
+        self, projectid, slug, description, description_format, description_html
     ):
         yield self.master.db.projects.update_project_info(
-            projectid,
-            slug,
-            description,
-            description_format,
-            description_html
+            projectid, slug, description, description_format, description_html
         )
         yield self.generate_event(projectid, "update")

@@ -23,9 +23,7 @@ from buildbot_worker.scripts import base
 from buildbot_worker.test.util import misc
 
 
-class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin,
-                      unittest.TestCase):
-
+class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
     """Test buildbot_worker.scripts.base.isWorkerDir()"""
 
     def setUp(self):
@@ -37,12 +35,14 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin,
         self.tac_file_path = os.path.join("testdir", "buildbot.tac")
 
     def assertReadErrorMessage(self, strerror):
-        expected_message = ("error reading '{0}': {1}\n"
-                            "invalid worker directory 'testdir'\n".format(
-            self.tac_file_path, strerror))
-        self.assertEqual(self.mocked_stdout.getvalue(),
-                         expected_message,
-                         "unexpected error message on stdout")
+        expected_message = (
+            "error reading '{0}': {1}\n" "invalid worker directory 'testdir'\n".format(
+                self.tac_file_path, strerror
+            )
+        )
+        self.assertEqual(
+            self.mocked_stdout.getvalue(), expected_message, "unexpected error message on stdout"
+        )
 
     def test_open_error(self):
         """Test that open() errors are handled."""
@@ -84,10 +84,12 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin,
         self.assertFalse(base.isWorkerDir("testdir"))
 
         # check that correct error message was printed to stdout
-        self.assertEqual(self.mocked_stdout.getvalue(),
-                         "unexpected content in '{0}'\n".format(self.tac_file_path) +
-                         "invalid worker directory 'testdir'\n",
-                         "unexpected error message on stdout")
+        self.assertEqual(
+            self.mocked_stdout.getvalue(),
+            "unexpected content in '{0}'\n".format(self.tac_file_path)
+            + "invalid worker directory 'testdir'\n",
+            "unexpected error message on stdout",
+        )
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)
 

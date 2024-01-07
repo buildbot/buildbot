@@ -23,7 +23,6 @@ from buildbot.schedulers import manager
 
 
 class SchedulerManager(unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.next_objectid = 13
@@ -40,6 +39,7 @@ class SchedulerManager(unittest.TestCase):
                 rv = self.objectids[k] = self.next_objectid
                 self.next_objectid += 1
             return defer.succeed(rv)
+
         self.master.db.state.getObjectId = getObjectId
 
         def getScheduler(sched_id):
@@ -59,9 +59,8 @@ class SchedulerManager(unittest.TestCase):
         return None
 
     class Sched(base.BaseScheduler):
-
         # changing sch.attr should make a scheduler look "updated"
-        compare_attrs = ('attr', )
+        compare_attrs = ('attr',)
         already_started = False
         reconfig_count = 0
 
@@ -83,7 +82,6 @@ class SchedulerManager(unittest.TestCase):
             return f"{self.__class__.__name__}(attr={self.attr})"
 
     class ReconfigSched(Sched):
-
         def reconfigServiceWithSibling(self, sibling):
             self.reconfig_count += 1
             self.attr = sibling.attr

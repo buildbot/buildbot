@@ -19,7 +19,6 @@ from buildbot.util import bbcollections
 
 
 class KeyedSets(unittest.TestCase):
-
     def setUp(self):
         self.ks = bbcollections.KeyedSets()
 
@@ -64,8 +63,7 @@ class KeyedSets(unittest.TestCase):
         self.ks.add('names', 'soda')
         popped = self.ks.pop('names')
         remaining = self.ks['names']
-        self.assertEqual((popped, remaining),
-                         (set(['pop', 'coke', 'soda']), set()))
+        self.assertEqual((popped, remaining), (set(['pop', 'coke', 'soda']), set()))
 
     def test_pop_missing(self):
         self.assertEqual(self.ks.pop('flavors'), set())

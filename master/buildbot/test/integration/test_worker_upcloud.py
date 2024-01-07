@@ -45,7 +45,8 @@ class UpcloudMaster(RunMasterBase):
         if "BBTEST_UPCLOUD_CREDS" not in os.environ:
             raise SkipTest(
                 "upcloud integration tests only run when environment variable BBTEST_UPCLOUD_CREDS"
-                " is set to valid upcloud credentials ")
+                " is set to valid upcloud credentials "
+            )
 
     @defer.inlineCallbacks
     def test_trigger(self):
@@ -65,36 +66,32 @@ def masterConfig(num_concurrent, extra_steps=None):
         extra_steps = []
     c = {}
 
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
+    c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
     triggereables = []
     for i in range(num_concurrent):
         c['schedulers'].append(
-            schedulers.Triggerable(
-                name="trigsched" + str(i),
-                builderNames=["build"]))
+            schedulers.Triggerable(name="trigsched" + str(i), builderNames=["build"])
+        )
         triggereables.append("trigsched" + str(i))
 
     f = BuildFactory()
     f.addStep(steps.ShellCommand(command='echo hello'))
-    f.addStep(steps.Trigger(schedulerNames=triggereables,
-                            waitForFinish=True,
-                            updateSourceStamp=True))
+    f.addStep(
+        steps.Trigger(schedulerNames=triggereables, waitForFinish=True, updateSourceStamp=True)
+    )
     f.addStep(steps.ShellCommand(command='echo world'))
     f2 = BuildFactory()
     f2.addStep(steps.ShellCommand(command='echo ola'))
     for step in extra_steps:
         f2.addStep(step)
     c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["upcloud0"],
-                      factory=f),
-        BuilderConfig(name="build",
-                      workernames=["upcloud" + str(i)
-                                   for i in range(num_concurrent)],
-                      factory=f2)]
+        BuilderConfig(name="testy", workernames=["upcloud0"], factory=f),
+        BuilderConfig(
+            name="build",
+            workernames=["upcloud" + str(i) for i in range(num_concurrent)],
+            factory=f2,
+        ),
+    ]
     creds = os.environ.get('BBTEST_UPCLOUD_CREDS')
     if creds is not None:
         user, password = creds.split(":")
@@ -104,8 +101,7 @@ def masterConfig(num_concurrent, extra_steps=None):
     c['workers'] = []
     for i in range(num_concurrent):
         upcloud_host_config = {
-            "user_data":
-f"""
+            "user_data": f"""
 #!/usr/bin/env bash
 groupadd -g 999 buildbot
 useradd -u 999 -g buildbot -s /bin/bash -d /buildworker -m buildbot
@@ -124,11 +120,16 @@ sudo -H -u buildbot bash -c "buildbot-worker create-worker /buildworker {masterF
 sudo -H -u buildbot bash -c "buildbot-worker start /buildworker"
 """  # noqa pylint: disable=line-too-long
         }
-        c['workers'].append(UpcloudLatentWorker('upcloud' + str(i), api_username=user,
-                                                api_password=password,
-                                                image='Debian GNU/Linux 9 (Stretch)',
-                                                hostconfig=upcloud_host_config,
-                                                masterFQDN=masterFQDN))
+        c['workers'].append(
+            UpcloudLatentWorker(
+                'upcloud' + str(i),
+                api_username=user,
+                api_password=password,
+                image='Debian GNU/Linux 9 (Stretch)',
+                hostconfig=upcloud_host_config,
+                masterFQDN=masterFQDN,
+            )
+        )
     # un comment for debugging what happens if things looks locked.
     # c['www'] = {'port': 8080}
     # if the masterFQDN is forced (proxy case), then we use 9989 default port

@@ -21,8 +21,8 @@ from buildbot.util import Notifier
 
 
 class DeferWaiter:
-    """ This class manages a set of Deferred objects and allows waiting for their completion
-    """
+    """This class manages a set of Deferred objects and allows waiting for their completion"""
+
     def __init__(self):
         self._waited_count = 0
         self._finish_notifier = Notifier()
@@ -56,12 +56,11 @@ class DeferWaiter:
 
 
 class RepeatedActionHandler:
-    """ This class handles a repeated action such as submitting keepalive requests. It integrates
-        with DeferWaiter to correctly control shutdown of such process.
+    """This class handles a repeated action such as submitting keepalive requests. It integrates
+    with DeferWaiter to correctly control shutdown of such process.
     """
 
-    def __init__(self, reactor, waiter, interval, action,
-                 start_timer_after_action_completes=False):
+    def __init__(self, reactor, waiter, interval, action, start_timer_after_action_completes=False):
         self._reactor = reactor
         self._waiter = waiter
         self._interval = interval

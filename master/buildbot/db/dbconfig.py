@@ -28,7 +28,6 @@ class FakeDBConnector:
 
 
 class FakeCacheManager:
-
     def get_cache(self, cache_name, miss_fn):
         return None
 
@@ -42,17 +41,14 @@ class FakePool:
 
 
 class DbConfig:
-
     def __init__(self, BuildmasterConfig, basedir, name="config"):
-        self.db_url = MasterConfig.getDbUrlFromConfig(
-            BuildmasterConfig, throwErrors=False)
+        self.db_url = MasterConfig.getDbUrlFromConfig(BuildmasterConfig, throwErrors=False)
         self.basedir = basedir
         self.name = name
 
     def getDb(self):
         try:
-            db_engine = enginestrategy.create_engine(self.db_url,
-                                                     basedir=self.basedir)
+            db_engine = enginestrategy.create_engine(self.db_url, basedir=self.basedir)
         except Exception:
             # db_url is probably trash. Just ignore, config.py db part will
             # create proper message
@@ -65,8 +61,7 @@ class DbConfig:
         db.model = model.Model(db)
         db.state = state.StateConnectorComponent(db)
         try:
-            self.objectid = db.state.thdGetObjectId(
-                db_engine, self.name, "DbConfig")['id']
+            self.objectid = db.state.thdGetObjectId(db_engine, self.name, "DbConfig")['id']
         except (ProgrammingError, OperationalError):
             # ProgrammingError: mysql&pg, OperationalError: sqlite
             # assume db is not initialized
@@ -77,8 +72,7 @@ class DbConfig:
     def get(self, name, default=state.StateConnectorComponent.Thunk):
         db = self.getDb()
         if db is not None:
-            ret = db.state.thdGetState(
-                db.pool.engine, self.objectid, name, default=default)
+            ret = db.state.thdGetState(db.pool.engine, self.objectid, name, default=default)
             db.pool.engine.dispose()
         else:
             if default is not state.StateConnectorComponent.Thunk:

@@ -19,6 +19,7 @@ Revision ID: 065
 Revises: 064
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -32,10 +33,14 @@ depends_on = None
 def upgrade():
     with op.batch_alter_table("buildsets") as batch_op:
         batch_op.add_column(
-            sa.Column("rebuilt_buildid", sa.Integer,
-                      sa.ForeignKey("builds.id", use_alter=True, name="rebuilt_buildid",
-                                    ondelete='SET NULL'),
-                      nullable=True),
+            sa.Column(
+                "rebuilt_buildid",
+                sa.Integer,
+                sa.ForeignKey(
+                    "builds.id", use_alter=True, name="rebuilt_buildid", ondelete='SET NULL'
+                ),
+                nullable=True,
+            ),
         )
 
 

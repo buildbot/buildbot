@@ -24,4 +24,5 @@ def skipUnlessPlatformIs(platform):
         if runtime.platformType != platform:
             test.skip = "not a {0} platform".format(platform)
         return test
+
     return closure

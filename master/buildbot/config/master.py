@@ -89,18 +89,22 @@ def loadConfigDict(basedir, configFileName):
         except SyntaxError:
             error(
                 f"encountered a SyntaxError while parsing config file:\n{traceback.format_exc()} ",
-                always_raise=True)
+                always_raise=True,
+            )
         except Exception:
             log.err(failure.Failure(), 'error while parsing config file:')
-            error(f"error while parsing config file: {sys.exc_info()[1]} (traceback in logfile)",
-                  always_raise=True)
+            error(
+                f"error while parsing config file: {sys.exc_info()[1]} (traceback in logfile)",
+                always_raise=True,
+            )
     finally:
         sys.path[:] = old_sys_path
 
     if 'BuildmasterConfig' not in localDict:
-        error(f"Configuration file {repr(filename)} does not define 'BuildmasterConfig'",
-              always_raise=True,
-              )
+        error(
+            f"Configuration file {repr(filename)} does not define 'BuildmasterConfig'",
+            always_raise=True,
+        )
 
     return filename, localDict['BuildmasterConfig']
 
@@ -124,7 +128,6 @@ class FileLoader(ComparableMixin):
 
 
 class MasterConfig(util.ComparableMixin):
-
     def __init__(self):
         # local import to avoid circular imports
         from buildbot.process import properties
@@ -237,7 +240,7 @@ class MasterConfig(util.ComparableMixin):
             'properties': kwargs.get('properties', {}),
             'repository': kwargs.get('repository', ''),
             'project': kwargs.get('project', ''),
-            'codebase': kwargs.get('codebase', None)
+            'codebase': kwargs.get('codebase', None),
         }
 
     @classmethod
@@ -292,31 +295,33 @@ class MasterConfig(util.ComparableMixin):
             interfaces.IConfigurator(configurator).configure(config_dict)
 
     def load_global(self, filename, config_dict):
-        def copy_param(name, alt_key=None,
-                       check_type=None, check_type_name=None, can_be_callable=False):
+        def copy_param(
+            name, alt_key=None, check_type=None, check_type_name=None, can_be_callable=False
+        ):
             if name in config_dict:
                 v = config_dict[name]
             elif alt_key and alt_key in config_dict:
                 warn_deprecated(
                     "3.9.0",
-                    f"Configuration dictionary key {alt_key} is deprecated. Use {name} instead."
+                    f"Configuration dictionary key {alt_key} is deprecated. Use {name} instead.",
                 )
                 v = config_dict[alt_key]
             else:
                 return
-            if v is not None and check_type and not (
-                    isinstance(v, check_type) or (can_be_callable and callable(v))):
+            if (
+                v is not None
+                and check_type
+                and not (isinstance(v, check_type) or (can_be_callable and callable(v)))
+            ):
                 error(f"c['{name}'] must be {check_type_name}")
             else:
                 setattr(self, name, v)
 
         def copy_int_param(name, alt_key=None):
-            copy_param(name, alt_key=alt_key,
-                       check_type=int, check_type_name='an int')
+            copy_param(name, alt_key=alt_key, check_type=int, check_type_name='an int')
 
         def copy_str_param(name, alt_key=None):
-            copy_param(name, alt_key=alt_key,
-                       check_type=(str,), check_type_name='a string')
+            copy_param(name, alt_key=alt_key, check_type=(str,), check_type_name='a string')
 
         copy_str_param('title', alt_key='projectName')
 
@@ -324,17 +329,22 @@ class MasterConfig(util.ComparableMixin):
         if len(self.title) > max_title_len:
             # Warn if the title length limiting logic in www/base/src/app/app.route.js
             # would hide the title.
-            warnings.warn('WARNING: Title is too long to be displayed. ' +
-                          '"Buildbot" will be used instead.',
-                          category=ConfigWarning)
+            warnings.warn(
+                'WARNING: Title is too long to be displayed. ' + '"Buildbot" will be used instead.',
+                category=ConfigWarning,
+            )
 
         copy_str_param('titleURL', alt_key='projectURL')
         copy_str_param('buildbotURL')
 
         def copy_str_or_callable_param(name, alt_key=None):
-            copy_param(name, alt_key=alt_key,
-                       check_type=(str,), check_type_name='a string or callable',
-                       can_be_callable=True)
+            copy_param(
+                name,
+                alt_key=alt_key,
+                check_type=(str,),
+                check_type_name='a string or callable',
+                can_be_callable=True,
+            )
 
         if "buildbotNetUsageData" not in config_dict:
             if get_is_in_unit_tests():
@@ -348,25 +358,27 @@ class MasterConfig(util.ComparableMixin):
                     'Only installation software version info and plugin usage is sent.\n'
                     'You can `opt-out` by setting this variable to None.\n'
                     'Or `opt-in` for more information by setting it to "full".\n',
-                    category=ConfigWarning)
+                    category=ConfigWarning,
+                )
         copy_str_or_callable_param('buildbotNetUsageData')
 
         copy_int_param('changeHorizon')
         copy_int_param('logCompressionLimit')
 
-        self.logCompressionMethod = config_dict.get(
-            'logCompressionMethod', 'gz')
+        self.logCompressionMethod = config_dict.get('logCompressionMethod', 'gz')
         if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4'):
-            error(
-                "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
+            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
 
         if self.logCompressionMethod == "lz4":
             try:
                 import lz4  # pylint: disable=import-outside-toplevel
+
                 [lz4]
             except ImportError:
-                error("To set c['logCompressionMethod'] to 'lz4' "
-                      "you must install the lz4 library ('pip install lz4')")
+                error(
+                    "To set c['logCompressionMethod'] to 'lz4' "
+                    "you must install the lz4 library ('pip install lz4')"
+                )
 
         copy_int_param('logMaxSize')
         copy_int_param('logMaxTailSize')
@@ -379,17 +391,14 @@ class MasterConfig(util.ComparableMixin):
             self.properties.update(properties, filename)
 
         collapseRequests = config_dict.get('collapseRequests')
-        if (collapseRequests not in (None, True, False)
-                and not callable(collapseRequests)):
+        if collapseRequests not in (None, True, False) and not callable(collapseRequests):
             error("collapseRequests must be a callable, True, or False")
         else:
             self.collapseRequests = collapseRequests
 
         codebaseGenerator = config_dict.get('codebaseGenerator')
-        if (codebaseGenerator is not None and
-                not callable(codebaseGenerator)):
-            error(
-                "codebaseGenerator must be a callable accepting a dict and returning a str")
+        if codebaseGenerator is not None and not callable(codebaseGenerator):
+            error("codebaseGenerator must be a callable accepting a dict and returning a str")
         else:
             self.codebaseGenerator = codebaseGenerator
 
@@ -424,8 +433,10 @@ class MasterConfig(util.ComparableMixin):
             self.multiMaster = config_dict["multiMaster"]
 
         if 'debugPassword' in config_dict:
-            log.msg("the 'debugPassword' parameter is unused and "
-                    "can be removed from the configuration file")
+            log.msg(
+                "the 'debugPassword' parameter is unused and "
+                "can be removed from the configuration file"
+            )
 
         if 'manhole' in config_dict:
             # we don't check that this is a manhole instance, since that
@@ -445,8 +456,7 @@ class MasterConfig(util.ComparableMixin):
         if not isinstance(validation, dict):
             error("c['validation'] must be a dictionary")
         else:
-            unknown_keys = (
-                set(validation.keys()) - set(self.validation.keys()))
+            unknown_keys = set(validation.keys()) - set(self.validation.keys())
             if unknown_keys:
                 error(f"unrecognized validation key(s): {', '.join(unknown_keys)}")
             else:
@@ -454,7 +464,6 @@ class MasterConfig(util.ComparableMixin):
 
     @staticmethod
     def getDbUrlFromConfig(config_dict, throwErrors=True):
-
         if 'db' in config_dict:
             db = config_dict['db']
             if set(db.keys()) - set(['db_url']) and throwErrors:
@@ -474,6 +483,7 @@ class MasterConfig(util.ComparableMixin):
 
     def load_mq(self, filename, config_dict):
         from buildbot.mq import connector  # avoid circular imports
+
         if 'mq' in config_dict:
             self.mq.update(config_dict['mq'])
 
@@ -513,7 +523,7 @@ class MasterConfig(util.ComparableMixin):
             if not isinstance(caches, dict):
                 error("c['caches'] must be a dictionary")
             else:
-                for (name, value) in caches.items():
+                for name, value in caches.items():
                     if not isinstance(value, int):
                         error(f"value for cache size '{name}' must be an integer")
                         return
@@ -571,6 +581,7 @@ class MasterConfig(util.ComparableMixin):
                 return p
             error(f"{repr(p)} is not a project config (in c['projects']")
             return None
+
         self.projects = [mapper(p) for p in projects]
 
     def load_builders(self, filename, config_dict):
@@ -591,13 +602,16 @@ class MasterConfig(util.ComparableMixin):
             else:
                 error(f"{repr(b)} is not a builder config (in c['builders']")
             return None
+
         builders = [mapper(b) for b in builders]
 
         for builder in builders:
             if builder and os.path.isabs(builder.builddir):
                 warnings.warn(
-                    (f"Absolute path '{builder.builddir}' for builder may cause mayhem. "
-                     "Perhaps you meant to specify workerbuilddir instead."),
+                    (
+                        f"Absolute path '{builder.builddir}' for builder may cause mayhem. "
+                        "Perhaps you meant to specify workerbuilddir instead."
+                    ),
                     category=ConfigWarning,
                 )
 
@@ -741,8 +755,10 @@ class MasterConfig(util.ComparableMixin):
         cookie_expiration_time = www_cfg.get('cookie_expiration_time')
         if cookie_expiration_time is not None:
             if not isinstance(cookie_expiration_time, datetime.timedelta):
-                error('Invalid www["cookie_expiration_time"] configuration should '
-                      'be a datetime.timedelta')
+                error(
+                    'Invalid www["cookie_expiration_time"] configuration should '
+                    'be a datetime.timedelta'
+                )
 
         self.www.update(www_cfg)
 
@@ -752,8 +768,10 @@ class MasterConfig(util.ComparableMixin):
         self.services = {}
         for _service in config_dict['services']:
             if not isinstance(_service, util_service.BuildbotService):
-                error(f"{type(_service)} object should be an instance of "
-                      "buildbot.util.service.BuildbotService")
+                error(
+                    f"{type(_service)} object should be an instance of "
+                    "buildbot.util.service.BuildbotService"
+                )
 
                 continue
 
@@ -847,8 +865,10 @@ class MasterConfig(util.ComparableMixin):
         for b in self.builders:
             unknowns = set(b.workernames) - workernames
             if unknowns:
-                error(f"builder '{b.name}' uses unknown workers "
-                      f"{', '.join(repr(u) for u in unknowns)}")
+                error(
+                    f"builder '{b.name}' uses unknown workers "
+                    f"{', '.join(repr(u) for u in unknowns)}"
+                )
             if b.name in seen_names:
                 error(f"duplicate builder name '{b.name}'")
             seen_names.add(b.name)

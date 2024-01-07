@@ -19,6 +19,7 @@ Revision ID: 063
 Revises: 062
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -36,9 +37,10 @@ def upgrade():
 
     metadata = sa.MetaData()
     steps_tbl = sautils.Table(
-        'steps', metadata,
+        'steps',
+        metadata,
         sa.Column("started_at", sa.Integer),
-        sa.Column("locks_acquired_at", sa.Integer)
+        sa.Column("locks_acquired_at", sa.Integer),
     )
 
     op.execute(steps_tbl.update(values={steps_tbl.c.locks_acquired_at: steps_tbl.c.started_at}))

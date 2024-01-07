@@ -33,7 +33,6 @@ OTHERTIME = 1249016870
 
 
 class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = masters.MasterEndpoint
     resourceTypeClass = masters.Master
 
@@ -41,10 +40,8 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.master.name = "myname"
         self.db.insert_test_data([
-            fakedb.Master(id=13, name='some:master', active=False,
-                          last_active=SOMETIME),
-            fakedb.Master(id=14, name='other:master', active=False,
-                          last_active=SOMETIME),
+            fakedb.Master(id=13, name='some:master', active=False, last_active=SOMETIME),
+            fakedb.Master(id=14, name='other:master', active=False, last_active=SOMETIME),
             fakedb.Builder(id=23, name='bldr1'),
             fakedb.BuilderMaster(builderid=23, masterid=13),
             fakedb.Builder(id=24, name='bldr2'),
@@ -87,7 +84,6 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = masters.MastersEndpoint
     resourceTypeClass = masters.Master
 
@@ -95,10 +91,8 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.master.name = "myname"
         self.db.insert_test_data([
-            fakedb.Master(id=13, name='some:master', active=False,
-                          last_active=SOMETIME),
-            fakedb.Master(id=14, name='other:master', active=True,
-                          last_active=OTHERTIME),
+            fakedb.Master(id=13, name='some:master', active=False, last_active=SOMETIME),
+            fakedb.Master(id=14, name='other:master', active=True, last_active=OTHERTIME),
             fakedb.Builder(id=22),
             fakedb.BuilderMaster(masterid=13, builderid=22),
         ])
@@ -113,8 +107,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         for m in masters:
             self.validateData(m)
 
-        self.assertEqual(sorted([m['masterid'] for m in masters]),
-                         [13, 14])
+        self.assertEqual(sorted([m['masterid'] for m in masters]), [13, 14])
 
     @defer.inlineCallbacks
     def test_get_builderid(self):
@@ -123,8 +116,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         for m in masters:
             self.validateData(m)
 
-        self.assertEqual(sorted([m['masterid'] for m in masters]),
-                         [13])
+        self.assertEqual(sorted([m['masterid'] for m in masters]), [13])
 
     @defer.inlineCallbacks
     def test_get_builderid_missing(self):
@@ -134,17 +126,16 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = masters.Master(self.master)
 
     def test_signature_masterActive(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.masterActive,  # fake
-            self.rtype.masterActive)  # real
+            self.rtype.masterActive,
+        )  # real
         def masterActive(self, name, masterid):
             pass
 
@@ -153,27 +144,23 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.reactor.advance(60)
 
         self.master.db.insert_test_data([
-            fakedb.Master(id=13, name='myname', active=0,
-                          last_active=0),
-            fakedb.Master(id=14, name='other', active=1,
-                          last_active=0),
-            fakedb.Master(id=15, name='other2', active=1,
-                          last_active=0),
+            fakedb.Master(id=13, name='myname', active=0, last_active=0),
+            fakedb.Master(id=14, name='other', active=1, last_active=0),
+            fakedb.Master(id=15, name='other2', active=1, last_active=0),
         ])
 
         # initial checkin
         yield self.rtype.masterActive(name='myname', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
-        self.assertEqual(master, {
-            "id": 13,
-            "name": 'myname',
-            "active": True,
-            "last_active": epoch2datetime(60)
-        })
-        self.assertEqual(self.master.mq.productions, [
-            (('masters', '13', 'started'),
-             {"masterid": 13, "name": 'myname', "active": True}),
-        ])
+        self.assertEqual(
+            master, {"id": 13, "name": 'myname', "active": True, "last_active": epoch2datetime(60)}
+        )
+        self.assertEqual(
+            self.master.mq.productions,
+            [
+                (('masters', '13', 'started'), {"masterid": 13, "name": 'myname', "active": True}),
+            ],
+        )
         self.master.mq.productions = []
 
         # updated checkin time, re-activation
@@ -181,22 +168,22 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         yield self.master.db.masters.markMasterInactive(13)
         yield self.rtype.masterActive('myname', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
-        self.assertEqual(master, {
-            "id": 13,
-            "name": 'myname',
-            "active": True,
-            "last_active": epoch2datetime(120)
-        })
-        self.assertEqual(self.master.mq.productions, [
-            (('masters', '13', 'started'),
-             {"masterid": 13, "name": 'myname', "active": True}),
-        ])
+        self.assertEqual(
+            master, {"id": 13, "name": 'myname', "active": True, "last_active": epoch2datetime(120)}
+        )
+        self.assertEqual(
+            self.master.mq.productions,
+            [
+                (('masters', '13', 'started'), {"masterid": 13, "name": 'myname', "active": True}),
+            ],
+        )
         self.master.mq.productions = []
 
     def test_signature_masterStopped(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.masterStopped,  # fake
-            self.rtype.masterStopped)  # real
+            self.rtype.masterStopped,
+        )  # real
         def masterStopped(self, name, masterid):
             pass
 
@@ -205,22 +192,19 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.reactor.advance(60)
 
         self.master.db.insert_test_data([
-            fakedb.Master(id=13, name='aname', active=1,
-                          last_active=self.reactor.seconds()),
+            fakedb.Master(id=13, name='aname', active=1, last_active=self.reactor.seconds()),
         ])
 
         self.rtype._masterDeactivated = mock.Mock()
         yield self.rtype.masterStopped(name='aname', masterid=13)
-        self.rtype._masterDeactivated. \
-            assert_called_with(13, 'aname')
+        self.rtype._masterDeactivated.assert_called_with(13, 'aname')
 
     @defer.inlineCallbacks
     def test_masterStopped_already(self):
         self.reactor.advance(60)
 
         self.master.db.insert_test_data([
-            fakedb.Master(id=13, name='aname', active=0,
-                          last_active=0),
+            fakedb.Master(id=13, name='aname', active=0, last_active=0),
         ])
 
         self.rtype._masterDeactivated = mock.Mock()
@@ -230,7 +214,8 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     def test_signature_expireMasters(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.expireMasters,  # fake
-            self.rtype.expireMasters)  # real
+            self.rtype.expireMasters,
+        )  # real
         def expireMasters(self, forceHouseKeeping=False):
             pass
 
@@ -239,10 +224,8 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.reactor.advance(60)
 
         self.master.db.insert_test_data([
-            fakedb.Master(id=14, name='other', active=1,
-                          last_active=0),
-            fakedb.Master(id=15, name='other', active=1,
-                          last_active=0),
+            fakedb.Master(id=14, name='other', active=1, last_active=0),
+            fakedb.Master(id=15, name='other', active=1, last_active=0),
         ])
 
         self.rtype._masterDeactivated = mock.Mock()
@@ -253,41 +236,39 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         yield self.master.db.masters.markMasterInactive(15)
         yield self.rtype.expireMasters()
         master = yield self.master.db.masters.getMaster(14)
-        self.assertEqual(master, {
-            "id": 14,
-            "name": 'other',
-            "active": False,
-            "last_active": epoch2datetime(0)
-        })
-        self.rtype._masterDeactivated. \
-            assert_called_with(14, 'other')
+        self.assertEqual(
+            master, {"id": 14, "name": 'other', "active": False, "last_active": epoch2datetime(0)}
+        )
+        self.rtype._masterDeactivated.assert_called_with(14, 'other')
 
     @defer.inlineCallbacks
     def test_masterDeactivated(self):
         self.master.db.insert_test_data([
-            fakedb.Master(id=14, name='other', active=0,
-                          last_active=0),
-
+            fakedb.Master(id=14, name='other', active=0, last_active=0),
             # set up a running build with some steps
             fakedb.Builder(id=77, name='b1'),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
-            fakedb.BuildRequestClaim(brid=82, masterid=14,
-                                     claimed_at=SOMETIME),
-            fakedb.Build(id=13, builderid=77, masterid=14, workerid=13,
-                         buildrequestid=82, number=3, results=None),
+            fakedb.BuildRequestClaim(brid=82, masterid=14, claimed_at=SOMETIME),
+            fakedb.Build(
+                id=13,
+                builderid=77,
+                masterid=14,
+                workerid=13,
+                buildrequestid=82,
+                number=3,
+                results=None,
+            ),
             fakedb.Step(id=200, buildid=13),
             fakedb.Log(id=2000, stepid=200, num_lines=2),
-            fakedb.LogChunk(logid=2000, first_line=1, last_line=2,
-                            content='ab\ncd')
+            fakedb.LogChunk(logid=2000, first_line=1, last_line=2, content='ab\ncd'),
         ])
 
         # mock out the _masterDeactivated methods this will call
         for rtype in 'builder', 'scheduler', 'changesource':
             rtype_obj = getattr(self.master.data.rtypes, rtype)
-            m = mock.Mock(name=f'{rtype}._masterDeactivated',
-                          spec=rtype_obj._masterDeactivated)
+            m = mock.Mock(name=f'{rtype}._masterDeactivated', spec=rtype_obj._masterDeactivated)
             m.side_effect = lambda masterid: defer.succeed(None)
             rtype_obj._masterDeactivated = m
 
@@ -299,21 +280,19 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
         yield self.rtype._masterDeactivated(14, 'other')
 
-        self.master.data.rtypes.builder._masterDeactivated. \
-            assert_called_with(masterid=14)
-        self.master.data.rtypes.scheduler._masterDeactivated. \
-            assert_called_with(masterid=14)
-        self.master.data.rtypes.changesource._masterDeactivated. \
-            assert_called_with(masterid=14)
+        self.master.data.rtypes.builder._masterDeactivated.assert_called_with(masterid=14)
+        self.master.data.rtypes.scheduler._masterDeactivated.assert_called_with(masterid=14)
+        self.master.data.rtypes.changesource._masterDeactivated.assert_called_with(masterid=14)
 
         # see that we finished off that build and its steps and logs
         updates = self.master.data.updates
         updates.finishLog.assert_called_with(logid=2000)
-        updates.finishStep.assert_called_with(
-            stepid=200, results=RETRY, hidden=False)
+        updates.finishStep.assert_called_with(stepid=200, results=RETRY, hidden=False)
         updates.finishBuild.assert_called_with(buildid=13, results=RETRY)
 
-        self.assertEqual(self.master.mq.productions, [
-            (('masters', '14', 'stopped'),
-             {"masterid": 14, "name": 'other', "active": False}),
-        ])
+        self.assertEqual(
+            self.master.mq.productions,
+            [
+                (('masters', '14', 'stopped'), {"masterid": 14, "name": 'other', "active": False}),
+            ],
+        )

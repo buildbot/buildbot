@@ -106,8 +106,7 @@ CHILDCAPTURE_MAX_BLOCKS = 200
 class BBService(win32serviceutil.ServiceFramework):
     _svc_name_ = 'BuildBot'
     _svc_display_name_ = _svc_name_
-    _svc_description_ = 'Manages local buildbot workers and masters - ' \
-                        'see https://buildbot.net'
+    _svc_description_ = 'Manages local buildbot workers and masters - ' 'see https://buildbot.net'
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
@@ -130,8 +129,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # (We use the py2exe option that magically bundles the .pyd files
         # into the .zip file - so servicemanager.pyd doesn't exist.)
         if is_frozen and servicemanager.RunningAsService():
-            msg_file = os.path.join(os.path.dirname(sys.executable),
-                                    "buildbot.msg")
+            msg_file = os.path.join(os.path.dirname(sys.executable), "buildbot.msg")
             if os.path.isfile(msg_file):
                 servicemanager.Initialize("BuildBot", msg_file)
             else:
@@ -178,13 +176,14 @@ class BBService(win32serviceutil.ServiceFramework):
             dir_string = os.pathsep.join(self.args[1:])
             save_dirs = True
         else:
-            dir_string = win32serviceutil.GetServiceCustomOption(self,
-                                                                 "directories")
+            dir_string = win32serviceutil.GetServiceCustomOption(self, "directories")
             save_dirs = False
 
         if not dir_string:
-            self.error("You must specify the buildbot directories as "
-                       "parameters to the service.\nStopping the service.")
+            self.error(
+                "You must specify the buildbot directories as "
+                "parameters to the service.\nStopping the service."
+            )
             return False
 
         dirs = dir_string.split(os.pathsep)
@@ -197,13 +196,11 @@ class BBService(win32serviceutil.ServiceFramework):
                 msg = "Directory '{0}' is not a buildbot dir - ignoring".format(d)
                 self.warning(msg)
         if not self.dirs:
-            self.error("No valid buildbot directories were specified.\n"
-                       "Stopping the service.")
+            self.error("No valid buildbot directories were specified.\n" "Stopping the service.")
             return False
         if save_dirs:
             dir_string = os.pathsep.join(self.dirs)
-            win32serviceutil.SetServiceCustomOption(self, "directories",
-                                                    dir_string)
+            win32serviceutil.SetServiceCustomOption(self, "directories", dir_string)
         return True
 
     def SvcStop(self):
@@ -239,32 +236,37 @@ class BBService(win32serviceutil.ServiceFramework):
         while child_infos:
             handles = [self.hWaitStop] + [i[1] for i in child_infos]
 
-            rc = win32event.WaitForMultipleObjects(handles,
-                                                   0,  # bWaitAll
-                                                   win32event.INFINITE)
+            rc = win32event.WaitForMultipleObjects(
+                handles,
+                0,  # bWaitAll
+                win32event.INFINITE,
+            )
             if rc == win32event.WAIT_OBJECT_0:
                 # user sent a stop service request
                 break
             # A child process died.  For now, just log the output
             # and forget the process.
             index = rc - win32event.WAIT_OBJECT_0 - 1
-            bbdir, dead_handle, _, output_blocks = \
-                child_infos[index]
+            bbdir, dead_handle, _, output_blocks = child_infos[index]
             status = win32process.GetExitCodeProcess(dead_handle)
             output = "".join(output_blocks)
             if not output:
-                output = ("The child process generated no output. "
-                          "Please check the twistd.log file in the "
-                          "indicated directory.")
+                output = (
+                    "The child process generated no output. "
+                    "Please check the twistd.log file in the "
+                    "indicated directory."
+                )
 
-            self.warning("BuildBot for directory {0!r} terminated with "
-                         "exit code {1}.\n{2}".format(bbdir, status, output))
+            self.warning(
+                "BuildBot for directory {0!r} terminated with " "exit code {1}.\n{2}".format(
+                    bbdir, status, output
+                )
+            )
 
             del child_infos[index]
 
             if not child_infos:
-                self.warning("All BuildBot child processes have "
-                             "terminated.  Service stopping.")
+                self.warning("All BuildBot child processes have " "terminated.  Service stopping.")
 
         # Either no child processes left, or stop event set.
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
@@ -284,8 +286,9 @@ class BBService(win32serviceutil.ServiceFramework):
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
             # If necessary, kill it
             if win32process.GetExitCodeProcess(h) == win32con.STILL_ACTIVE:
-                self.warning("BuildBot process at {0!r} failed to terminate - "
-                             "killing it".format(bbdir))
+                self.warning(
+                    "BuildBot process at {0!r} failed to terminate - " "killing it".format(bbdir)
+                )
                 win32api.TerminateProcess(h, 3)
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
 
@@ -311,10 +314,11 @@ class BBService(win32serviceutil.ServiceFramework):
     def logmsg(self, event):
         # log a service event using servicemanager.LogMsg
         try:
-            servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
-                                  event,
-                                  (self._svc_name_,
-                                   " ({0})".format(self._svc_display_name_)))
+            servicemanager.LogMsg(
+                servicemanager.EVENTLOG_INFORMATION_TYPE,
+                event,
+                (self._svc_name_, " ({0})".format(self._svc_display_name_)),
+            )
         except win32api.error as details:
             # Failed to write a log entry - most likely problem is
             # that the event log is full.  We don't want this to kill us
@@ -354,8 +358,9 @@ class BBService(win32serviceutil.ServiceFramework):
         hOutReadTemp, hOutWrite = self.newPipe()
         pid = win32api.GetCurrentProcess()
         # This one is duplicated as inheritable.
-        hErrWrite = win32api.DuplicateHandle(pid, hOutWrite, pid, 0, 1,
-                                             win32con.DUPLICATE_SAME_ACCESS)
+        hErrWrite = win32api.DuplicateHandle(
+            pid, hOutWrite, pid, 0, 1, win32con.DUPLICATE_SAME_ACCESS
+        )
 
         # These are non-inheritable duplicates.
         hOutRead = self.dup(hOutReadTemp)
@@ -366,8 +371,7 @@ class BBService(win32serviceutil.ServiceFramework):
         si.hStdInput = hInputRead
         si.hStdOutput = hOutWrite
         si.hStdError = hErrWrite
-        si.dwFlags = win32process.STARTF_USESTDHANDLES | \
-            win32process.STARTF_USESHOWWINDOW
+        si.dwFlags = win32process.STARTF_USESTDHANDLES | win32process.STARTF_USESHOWWINDOW
         si.wShowWindow = win32con.SW_HIDE
 
         # pass True to allow handles to be inherited.  Inheritance is
@@ -375,8 +379,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # circumstances of a service process.
         create_flags = win32process.CREATE_NEW_CONSOLE
         # info is (hProcess, hThread, pid, tid)
-        info = win32process.CreateProcess(None, cmd, None, None, True,
-                                          create_flags, None, None, si)
+        info = win32process.CreateProcess(None, cmd, None, None, True, create_flags, None, None, si)
         # (NOTE: these really aren't necessary for Python - they are closed
         # as soon as they are collected)
         hOutWrite.Close()
@@ -387,8 +390,7 @@ class BBService(win32serviceutil.ServiceFramework):
 
         # start a thread collecting output
         blocks = []
-        t = threading.Thread(target=self.redirectCaptureThread,
-                             args=(hOutRead, blocks))
+        t = threading.Thread(target=self.redirectCaptureThread, args=(hOutRead, blocks))
         t.start()
         return info[0], t, blocks
 
@@ -422,8 +424,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # it can be closed in the parent.  close the original pipe in
         # the process.
         pid = win32api.GetCurrentProcess()
-        dup = win32api.DuplicateHandle(pid, pipe, pid, 0, 0,
-                                       win32con.DUPLICATE_SAME_ACCESS)
+        dup = win32api.DuplicateHandle(pid, pipe, pid, 0, 0, win32con.DUPLICATE_SAME_ACCESS)
         pipe.Close()
         return dup
 
@@ -513,11 +514,17 @@ def ConfigureLogOnAsAServicePolicy(accountName):
             privileges = []
 
         if SE_SERVICE_LOGON_RIGHT in privileges:
-            print("Account {}({}) has granted {} privilege.".format(accountName, sid,
-                                                                    SE_SERVICE_LOGON_RIGHT))
+            print(
+                "Account {}({}) has granted {} privilege.".format(
+                    accountName, sid, SE_SERVICE_LOGON_RIGHT
+                )
+            )
         else:
-            print(("error: Account {}({}) does not have {} privilege."
-                   ).format(accountName, sid, SE_SERVICE_LOGON_RIGHT))
+            print(
+                ("error: Account {}({}) does not have {} privilege.").format(
+                    accountName, sid, SE_SERVICE_LOGON_RIGHT
+                )
+            )
 
 
 # A custom install function.
@@ -526,6 +533,7 @@ def ConfigureLogOnAsAServicePolicy(accountName):
 def CustomInstall(opts):
     # Register this process with the Windows Firewaall
     import pythoncom
+
     try:
         RegisterWithFirewall(sys.executable, "BuildBot")
     except pythoncom.com_error as why:
@@ -537,6 +545,7 @@ def CustomInstall(opts):
             userName = val
     ConfigureLogOnAsAServicePolicy(userName)
 
+
 # Magic code to allow shutdown.  Note that this code is executed in
 # the *child* process, by way of the service process executing us with
 # special cmdline args (which includes the service stop handle!)
@@ -545,9 +554,7 @@ def CustomInstall(opts):
 def _RunChild(runfn):
     del sys.argv[1]  # The --spawn arg.
     # Create a new thread that just waits for the event to be signalled.
-    t = threading.Thread(target=_WaitForShutdown,
-                         args=(int(sys.argv[1]), )
-                         )
+    t = threading.Thread(target=_WaitForShutdown, args=(int(sys.argv[1]),))
     del sys.argv[1]  # The stop handle
     # This child process will be sent a console handler notification as
     # users log off, or as the system shuts down.  We want to ignore these
@@ -558,6 +565,7 @@ def _RunChild(runfn):
         # process is never attached to a console the user can press the
         # key in!
         return True
+
     win32api.SetConsoleCtrlHandler(ConsoleHandler, True)
     t.setDaemon(True)  # we don't want to wait for this to stop!
     t.start()
@@ -575,14 +583,16 @@ def _WaitForShutdown(h):
     print("Shutdown requested")
 
     from twisted.internet import reactor
+
     reactor.callLater(0, reactor.stop)
 
 
 def DetermineRunner(bbdir):
-    '''Checks if the given directory is a buildbot worker or a master and
-    returns the appropriate run function.'''
+    """Checks if the given directory is a buildbot worker or a master and
+    returns the appropriate run function."""
     try:
         import buildbot_worker.scripts.runner
+
         tacfile = os.path.join(bbdir, 'buildbot.tac')
 
         if os.path.exists(tacfile):
@@ -596,7 +606,9 @@ def DetermineRunner(bbdir):
         pass
 
     import buildbot.scripts.runner
+
     return buildbot.scripts.runner.run
+
 
 # This function is also called by the py2exe startup code.
 
@@ -609,8 +621,7 @@ def HandleCommandLine():
         # Fourth arg is the config directory to use for the buildbot worker
         _RunChild(DetermineRunner(sys.argv[5]))
     else:
-        win32serviceutil.HandleCommandLine(BBService,
-                                           customOptionHandler=CustomInstall)
+        win32serviceutil.HandleCommandLine(BBService, customOptionHandler=CustomInstall)
 
 
 if __name__ == '__main__':

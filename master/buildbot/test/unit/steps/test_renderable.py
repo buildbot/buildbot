@@ -28,10 +28,9 @@ class TestBuildStep(BuildStep):
         return 0
 
 
-class TestBuildStepNameIsRenderable(TestBuildStepMixin, unittest.TestCase,
-                                    TestReactorMixin,
-                                    configmixin.ConfigErrorsMixin):
-
+class TestBuildStepNameIsRenderable(
+    TestBuildStepMixin, unittest.TestCase, TestReactorMixin, configmixin.ConfigErrorsMixin
+):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()

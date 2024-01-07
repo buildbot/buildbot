@@ -52,6 +52,4 @@ class SecretDetails:
         return f'{self._source} {self._key}: {self.value!r}'
 
     def __eq__(self, other):
-        return (self._source == other._source and
-                self.key == other.key and
-                self.value == other.value)
+        return self._source == other._source and self.key == other.key and self.value == other.value

@@ -21,7 +21,6 @@ from buildbot.util.ssfilter import _create_property_filters
 
 
 class ChangeFilter(ComparableMixin):
-
     # NOTE: If users use a filter_fn, we have no way to determine whether it has
     # changed at reconfig, so the scheduler will always be restarted.  That's as
     # good as Python can do.
@@ -67,7 +66,7 @@ class ChangeFilter(ComparableMixin):
         property_eq=None,
         property_not_eq=None,
         property_re=None,
-        property_not_re=None
+        property_not_re=None,
     ):
         self.filter_fn = filter_fn
         self.project_fn = project_fn
@@ -77,11 +76,7 @@ class ChangeFilter(ComparableMixin):
         self.codebase_fn = codebase_fn
 
         self.filters = _create_filters(
-            project,
-            project_not_eq,
-            project_re,
-            project_not_re,
-            'project'
+            project, project_not_eq, project_re, project_not_re, 'project'
         )
         self.filters += _create_filters(
             repository,
@@ -112,11 +107,7 @@ class ChangeFilter(ComparableMixin):
             'codebase',
         )
         self.property_filters = _create_property_filters(
-            property_eq,
-            property_not_eq,
-            property_re,
-            property_not_re,
-            'property'
+            property_eq, property_not_eq, property_re, property_not_re, 'property'
         )
 
     def filter_change(self, change):
@@ -165,8 +156,7 @@ class ChangeFilter(ComparableMixin):
         return f"<{self.__class__.__name__} on {' and '.join(self._get_repr_filters())}>"
 
     @staticmethod
-    def fromSchedulerConstructorArgs(change_filter=None,
-                                     branch=NotABranch, categories=None):
+    def fromSchedulerConstructorArgs(change_filter=None, branch=NotABranch, categories=None):
         """
         Static method to create a filter based on constructor args
         change_filter, branch, and categories; use default values @code{None},
@@ -179,9 +169,8 @@ class ChangeFilter(ComparableMixin):
 
         # use a change_filter, if given one
         if change_filter:
-            if (branch is not NotABranch or categories is not None):
-                raise RuntimeError("cannot specify both change_filter and "
-                                   "branch or categories")
+            if branch is not NotABranch or categories is not None:
+                raise RuntimeError("cannot specify both change_filter and " "branch or categories")
             return change_filter
         elif branch is not NotABranch or categories:
             # build a change filter from the deprecated category and branch

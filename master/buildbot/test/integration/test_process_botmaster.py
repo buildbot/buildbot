@@ -24,7 +24,6 @@ from buildbot.test.util.integration import RunFakeMasterTestCase
 
 
 class Tests(RunFakeMasterTestCase):
-
     @defer.inlineCallbacks
     def do_terminates_ping_on_shutdown(self, quick_mode):
         """
@@ -34,9 +33,7 @@ class Tests(RunFakeMasterTestCase):
 
         config_dict = {
             'builders': [
-                BuilderConfig(name="testy",
-                              workernames=['local'],
-                              factory=BuildFactory()),
+                BuilderConfig(name="testy", workernames=['local'], factory=BuildFactory()),
             ],
             'workers': [controller.worker],
             'protocols': {'null': {}},

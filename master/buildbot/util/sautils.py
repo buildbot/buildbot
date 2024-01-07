@@ -29,8 +29,7 @@ from sqlalchemy.sql.expression import Executable
 
 
 class InsertFromSelect(Executable, ClauseElement):
-    _execution_options = \
-        Executable._execution_options.union({'autocommit': True})
+    _execution_options = Executable._execution_options.union({'autocommit': True})
 
     def __init__(self, table, select):
         self.table = table
@@ -39,17 +38,21 @@ class InsertFromSelect(Executable, ClauseElement):
 
 @compiler.compiles(InsertFromSelect)
 def _visit_insert_from_select(element, compiler, **kw):
-    return (f"INSERT INTO {compiler.process(element.table, asfrom=True)} "
-            f"{compiler.process(element.select)}")
+    return (
+        f"INSERT INTO {compiler.process(element.table, asfrom=True)} "
+        f"{compiler.process(element.select)}"
+    )
 
 
 def sa_version():
     if hasattr(sa, '__version__'):
+
         def tryint(s):
             try:
                 return int(s)
             except (ValueError, TypeError):
                 return -1
+
         return tuple(map(tryint, sa.__version__.split('.')))
     return (0, 0, 0)  # "it's old"
 

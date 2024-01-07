@@ -27,12 +27,26 @@ from buildbot.process.results import statusToString
 
 
 class BuildStatusGeneratorMixin(util.ComparableMixin):
+    possible_modes = (
+        "change",
+        "failing",
+        "passing",
+        "problem",
+        "warnings",
+        "exception",
+        "cancelled",
+    )
 
-    possible_modes = ("change", "failing", "passing", "problem", "warnings", "exception",
-                      "cancelled")
-
-    compare_attrs = ['mode', 'tags', 'builders', 'schedulers', 'branches', 'subject', 'add_logs',
-                     'add_patch']
+    compare_attrs = [
+        'mode',
+        'tags',
+        'builders',
+        'schedulers',
+        'branches',
+        'subject',
+        'add_logs',
+        'add_patch',
+    ]
 
     def __init__(self, mode, tags, builders, schedulers, branches, subject, add_logs, add_patch):
         self.mode = self._compute_shortcut_modes(mode)
@@ -134,8 +148,10 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         if msgtype is None:
             return new_msgtype, True
         if msgtype != new_msgtype:
-            log.msg(f'{self}: Incompatible message types for multiple builds '
-                    f'({msgtype} and {new_msgtype}). Ignoring')
+            log.msg(
+                f'{self}: Incompatible message types for multiple builds '
+                f'({msgtype} and {new_msgtype}). Ignoring'
+            )
             return msgtype, False
 
         return msgtype, True
@@ -157,8 +173,10 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         if isinstance(body, list) and isinstance(new_body, list):
             return body + new_body, True
 
-        log.msg(f'{self}: Incompatible message body types for multiple builds '
-                f'({type(body)} and {type(new_body)}). Ignoring')
+        log.msg(
+            f'{self}: Incompatible message body types for multiple builds '
+            f'({type(body)} and {type(new_body)}). Ignoring'
+        )
         return body, False
 
     def _merge_extra_info(self, info, new_info):
@@ -185,8 +203,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         ss_list = build['buildset']['sourcestamps']
 
-        return [ss['patch'] for ss in ss_list
-                if 'patch' in ss and ss['patch'] is not None]
+        return [ss['patch'] for ss in ss_list if 'patch' in ss and ss['patch'] is not None]
 
     @defer.inlineCallbacks
     def build_message(self, formatter, master, reporter, build):
@@ -196,17 +213,20 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         users = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
 
-        buildmsg = yield formatter.format_message_for_build(master, build, is_buildset=False,
-                                                            mode=self.mode, users=users)
+        buildmsg = yield formatter.format_message_for_build(
+            master, build, is_buildset=False, mode=self.mode, users=users
+        )
 
         results = build['results']
 
         subject = buildmsg['subject']
         if subject is None and self.subject is not None:
-            subject = self.subject % {'result': statusToString(results),
-                                      'projectName': master.config.title,
-                                      'title': master.config.title,
-                                      'builder': build['builder']['name']}
+            subject = self.subject % {
+                'result': statusToString(results),
+                'projectName': master.config.title,
+                'title': master.config.title,
+                'builder': build['builder']['name'],
+            }
 
         return {
             'body': buildmsg['body'],
@@ -241,8 +261,10 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         for m in self._compute_shortcut_modes(mode):
             if m not in self.possible_modes:
                 if m == "all":
-                    config.error("mode 'all' is not valid in an iterator and must be "
-                                 "passed in as a separate string")
+                    config.error(
+                        "mode 'all' is not valid in an iterator and must be "
+                        "passed in as a separate string"
+                    )
                 else:
                     config.error(f"mode {m} is not a valid mode")
 
@@ -253,8 +275,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
     def _compute_shortcut_modes(self, mode):
         if isinstance(mode, str):
             if mode == "all":
-                mode = ("failing", "passing", "warnings",
-                        "exception", "cancelled")
+                mode = ("failing", "passing", "warnings", "exception", "cancelled")
             elif mode == "warnings":
                 mode = ("failing", "warnings")
             else:

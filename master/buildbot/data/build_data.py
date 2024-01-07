@@ -21,7 +21,6 @@ from buildbot.data import types
 
 
 class Db2DataMixin:
-
     def db2data(self, dbdict):
         data = {
             'buildid': dbdict['buildid'],
@@ -34,7 +33,6 @@ class Db2DataMixin:
 
 
 class BuildDatasNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data
@@ -55,7 +53,6 @@ class BuildDatasNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpo
 
 
 class BuildDataNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data/i:name
@@ -74,7 +71,6 @@ class BuildDataNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoi
 
 
 class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.RAW
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data/i:name/value
@@ -91,13 +87,14 @@ class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
         if not dbdict:
             return None
 
-        return {'raw': dbdict['value'],
-                'mime-type': 'application/octet-stream',
-                'filename': dbdict['name']}
+        return {
+            'raw': dbdict['value'],
+            'mime-type': 'application/octet-stream',
+            'filename': dbdict['name'],
+        }
 
 
 class BuildData(base.ResourceType):
-
     name = "build_data"
     plural = "build_data"
     endpoints = [BuildDatasNoValueEndpoint, BuildDataNoValueEndpoint, BuildDataEndpoint]
@@ -109,6 +106,7 @@ class BuildData(base.ResourceType):
         length = types.Integer()
         value = types.NoneOk(types.Binary())
         source = types.String()
+
     entityType = EntityType(name, 'BuildData')
 
     @base.updateMethod

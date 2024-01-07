@@ -95,7 +95,6 @@ def disconnect_master_side_worker(worker):
 
 
 class SeverWorkerConnectionMixin:
-
     _connection_severed = False
     _severed_deferreds = None
 
@@ -127,44 +126,48 @@ class SeverWorkerConnectionMixin:
 
         def remotePrint(message):
             return register_deferred()
+
         self.worker.conn.remotePrint = remotePrint
 
         def remoteGetWorkerInfo():
             return register_deferred()
+
         self.worker.conn.remoteGetWorkerInfo = remoteGetWorkerInfo
 
         def remoteSetBuilderList(builders):
             return register_deferred()
+
         self.worker.conn.remoteSetBuilderList = remoteSetBuilderList
 
-        def remoteStartCommand(remoteCommand, builderName, commandId,
-                               commandName, args):
+        def remoteStartCommand(remoteCommand, builderName, commandId, commandName, args):
             return register_deferred()
+
         self.worker.conn.remoteStartCommand = remoteStartCommand
 
         def remoteShutdown():
             return register_deferred()
+
         self.worker.conn.remoteShutdown = remoteShutdown
 
         def remoteStartBuild(builderName):
             return register_deferred()
+
         self.worker.conn.remoteStartBuild = remoteStartBuild
 
         def remoteInterruptCommand(builderName, commandId, why):
             return register_deferred()
+
         self.worker.conn.remoteInterruptCommand = remoteInterruptCommand
 
 
 class WorkerController(SeverWorkerConnectionMixin):
-
     """
     A controller for a ``Worker``.
 
     https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
     """
 
-    def __init__(self, case, name, build_wait_timeout=600,
-                 worker_class=None, **kwargs):
+    def __init__(self, case, name, build_wait_timeout=600, worker_class=None, **kwargs):
         if worker_class is None:
             worker_class = Worker
 

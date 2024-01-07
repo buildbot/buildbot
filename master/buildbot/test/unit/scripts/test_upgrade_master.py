@@ -39,14 +39,11 @@ def mkconfig(**kwargs):
     return config
 
 
-class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
-                        unittest.TestCase):
-
+class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
     def setUp(self):
         # createMaster is decorated with @in_reactor, so strip that decoration
         # since the master is already running
-        self.patch(upgrade_master, 'upgradeMaster',
-                   upgrade_master.upgradeMaster._orig)
+        self.patch(upgrade_master, 'upgradeMaster', upgrade_master.upgradeMaster._orig)
         self.setUpDirs('test')
         self.setUpStdoutAssertions()
 
@@ -56,20 +53,24 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         def checkBasedir(config):
             self.calls.append('checkBasedir')
             return basedirOk
+
         self.patch(base, 'checkBasedir', checkBasedir)
 
         def loadConfig(config, configFileName='master.cfg'):
             self.calls.append('loadConfig')
             return config_master.MasterConfig() if configOk else False
+
         self.patch(base, 'loadConfig', loadConfig)
 
         def upgradeFiles(config):
             self.calls.append('upgradeFiles')
+
         self.patch(upgrade_master, 'upgradeFiles', upgradeFiles)
 
         def upgradeDatabase(config, master_cfg):
             self.assertIsInstance(master_cfg, config_master.MasterConfig)
             self.calls.append('upgradeDatabase')
+
         self.patch(upgrade_master, 'upgradeDatabase', upgradeDatabase)
 
     # tests
@@ -105,11 +106,13 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertEqual(rv, 1)
 
 
-class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
-                                 misc.StdoutAssertionsMixin,
-                                 TestReactorMixin,
-                                 unittest.TestCase):
-
+class TestUpgradeMasterFunctions(
+    www.WwwTestMixin,
+    dirs.DirsMixin,
+    misc.StdoutAssertionsMixin,
+    TestReactorMixin,
+    unittest.TestCase,
+):
     def setUp(self):
         self.setup_test_reactor()
         self.setUpDirs('test')
@@ -146,8 +149,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_installFile_existing_differing_overwrite(self):
         self.writeFile('test/srcfile', 'source data')
         self.writeFile('test/destfile', 'dest data')
-        upgrade_master.installFile(mkconfig(), 'test/destfile', 'test/srcfile',
-                                   overwrite=True)
+        upgrade_master.installFile(mkconfig(), 'test/destfile', 'test/srcfile', overwrite=True)
         self.assertEqual(self.readFile('test/destfile'), 'source data')
         self.assertFalse(os.path.exists('test/destfile.new'))
         self.assertInStdout('overwriting')
@@ -162,14 +164,13 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
 
     def test_installFile_quiet(self):
         self.writeFile('test/srcfile', 'source data')
-        upgrade_master.installFile(mkconfig(quiet=True), 'test/destfile',
-                                   'test/srcfile')
+        upgrade_master.installFile(mkconfig(quiet=True), 'test/destfile', 'test/srcfile')
         self.assertWasQuiet()
 
     def test_upgradeFiles(self):
         upgrade_master.upgradeFiles(mkconfig())
         for f in [
-                'test/master.cfg.sample',
+            'test/master.cfg.sample',
         ]:
             self.assertTrue(os.path.exists(f), f"{f} not found")
         self.assertInStdout('upgrading basedir')
@@ -186,13 +187,15 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.patch(connector.DBConnector, 'setup', setup)
         upgrade = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(model.Model, 'upgrade', upgrade)
-        setAllMastersActiveLongTimeAgo = mock.Mock(
-            side_effect=lambda **kwargs: defer.succeed(None))
-        self.patch(masters.MastersConnectorComponent,
-                   'setAllMastersActiveLongTimeAgo', setAllMastersActiveLongTimeAgo)
+        setAllMastersActiveLongTimeAgo = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
+        self.patch(
+            masters.MastersConnectorComponent,
+            'setAllMastersActiveLongTimeAgo',
+            setAllMastersActiveLongTimeAgo,
+        )
         yield upgrade_master.upgradeDatabase(
-            mkconfig(basedir='test', quiet=True),
-            config_master.MasterConfig())
+            mkconfig(basedir='test', quiet=True), config_master.MasterConfig()
+        )
         setup.asset_called_with(check_version=False, verbose=False)
         upgrade.assert_called_with()
         self.assertWasQuiet()
@@ -202,13 +205,13 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
         self.patch(sys, 'stderr', StringIO())
-        upgrade = mock.Mock(
-            side_effect=lambda **kwargs: defer.fail(Exception("o noz")))
+        upgrade = mock.Mock(side_effect=lambda **kwargs: defer.fail(Exception("o noz")))
         self.patch(model.Model, 'upgrade', upgrade)
         ret = yield upgrade_master._upgradeMaster(
-            mkconfig(basedir='test', quiet=True),
-            config_master.MasterConfig())
+            mkconfig(basedir='test', quiet=True), config_master.MasterConfig()
+        )
         self.assertEqual(ret, 1)
-        self.assertIn("problem while upgrading!:\nTraceback (most recent call last):\n",
-                      sys.stderr.getvalue())
+        self.assertIn(
+            "problem while upgrading!:\nTraceback (most recent call last):\n", sys.stderr.getvalue()
+        )
         self.assertIn("o noz", sys.stderr.getvalue())

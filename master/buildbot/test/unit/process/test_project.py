@@ -21,7 +21,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 
 
 class ProjectConfigTests(ConfigErrorsMixin, unittest.TestCase):
-
     def test_description_wrong_format(self):
         with self.assertRaisesConfigError("project description format must be None"):
             Project(name="a", description_format="unknown")

@@ -189,11 +189,11 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
 
 
 class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
-
-    '''A command that knows about pylint output.
+    """A command that knows about pylint output.
     It is a good idea to add --output-format=parseable to your
     command, since it includes the filename in the message.
-    '''
+    """
+
     name = "pylint"
     description = "running pylint"
     descriptionDone = "pylint"
@@ -228,11 +228,13 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
     _flunkingIssues = ("F", "E")  # msg categories that cause FAILURE
 
     _msgtypes_re_str = f"(?P<errtype>[{''.join(list(_MESSAGES))}])"
-    _default_line_re = re.compile(fr'^{_msgtypes_re_str}(\d+)?: *\d+(, *\d+)?:.+')
-    _default_2_0_0_line_re = \
-        re.compile(fr'^(?P<path>[^:]+):(?P<line>\d+):\d+: *{_msgtypes_re_str}(\d+)?:.+')
+    _default_line_re = re.compile(rf'^{_msgtypes_re_str}(\d+)?: *\d+(, *\d+)?:.+')
+    _default_2_0_0_line_re = re.compile(
+        rf'^(?P<path>[^:]+):(?P<line>\d+):\d+: *{_msgtypes_re_str}(\d+)?:.+'
+    )
     _parseable_line_re = re.compile(
-        fr'(?P<path>[^:]+):(?P<line>\d+): \[{_msgtypes_re_str}(\d+)?(\([a-z-]+\))?[,\]] .+')
+        rf'(?P<path>[^:]+):(?P<line>\d+): \[{_msgtypes_re_str}(\d+)?(\([a-z-]+\))?[,\]] .+'
+    )
 
     def __init__(self, store_results=True, **kwargs):
         kwargs = self.setupShellMixin(kwargs)
@@ -288,8 +290,9 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
             self.counts[msgtype] += 1
 
             if self._store_results and path is not None:
-                self.addTestResult(self._result_setid, line, test_name=None, test_code_path=path,
-                                   line=line_number)
+                self.addTestResult(
+                    self._result_setid, line, test_name=None, test_code_path=path, line=line_number
+                )
 
     def getResultSummary(self):
         summary = ' '.join(self.descriptionDone)
@@ -334,8 +337,7 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
 
 
 class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
-
-    ''' A Step to build sphinx documentation '''
+    """A Step to build sphinx documentation"""
 
     name = "sphinx"
     description = "running sphinx"
@@ -343,10 +345,18 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
 
     haltOnFailure = True
 
-    def __init__(self, sphinx_sourcedir='.', sphinx_builddir=None,
-                 sphinx_builder=None, sphinx='sphinx-build', tags=None,
-                 defines=None, strict_warnings=False, mode='incremental', **kwargs):
-
+    def __init__(
+        self,
+        sphinx_sourcedir='.',
+        sphinx_builddir=None,
+        sphinx_builder=None,
+        sphinx='sphinx-build',
+        tags=None,
+        defines=None,
+        strict_warnings=False,
+        mode='incremental',
+        **kwargs,
+    ):
         if tags is None:
             tags = []
 
@@ -358,8 +368,7 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
             config.error("Sphinx argument sphinx_builddir is required")
 
         if mode not in ('incremental', 'full'):
-            config.error("Sphinx argument mode has to be 'incremental' or" +
-                         "'full' is required")
+            config.error("Sphinx argument mode has to be 'incremental' or" + "'full' is required")
 
         self.success = False
 
@@ -379,8 +388,7 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
             if defines[key] is None:
                 command.extend(['-D', key])
             elif isinstance(defines[key], bool):
-                command.extend(['-D',
-                                f'{key}={defines[key] and 1 or 0}'])
+                command.extend(['-D', f'{key}={defines[key] and 1 or 0}'])
             else:
                 command.extend(['-D', f'{key}={defines[key]}'])
 
@@ -403,8 +411,7 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
 
         while True:
             _, line = yield
-            if line.startswith('build succeeded') or \
-               line.startswith('no targets are out of date.'):
+            if line.startswith('build succeeded') or line.startswith('no targets are out of date.'):
                 self.success = True
             elif line.startswith('Warning, treated as error:'):
                 next_is_warning = True

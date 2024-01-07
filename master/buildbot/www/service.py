@@ -82,13 +82,17 @@ class BuildbotSession(server.Session):
 
     def _fromToken(self, token):
         try:
-            decoded = jwt.decode(token, self.site.session_secret, algorithms=[
-                                 SESSION_SECRET_ALGORITHM])
+            decoded = jwt.decode(
+                token, self.site.session_secret, algorithms=[SESSION_SECRET_ALGORITHM]
+            )
         except jwt.exceptions.ExpiredSignatureError as e:
             raise KeyError(str(e)) from e
         except jwt.exceptions.InvalidSignatureError as e:
-            log.msg(e, "Web request has been rejected."
-                    "Signature verification failed while decoding JWT.")
+            log.msg(
+                e,
+                "Web request has been rejected."
+                "Signature verification failed while decoding JWT.",
+            )
             raise KeyError(str(e)) from e
         except Exception as e:
             log.err(e, "while decoding JWT session")
@@ -112,16 +116,14 @@ class BuildbotSession(server.Session):
             cookieString = b"TWISTED_SECURE_SESSION"
 
         cookiename = b"_".join([cookieString] + request.sitepath)
-        request.addCookie(cookiename, self.uid, path=b"/",
-                          secure=secure)
+        request.addCookie(cookiename, self.uid, path=b"/", secure=secure)
 
     def expire(self):
         # caller must still call self.updateSession() to actually expire it
         self._defaultValue()
 
     def notifyOnExpire(self, callback):
-        raise NotImplementedError(
-            "BuildbotSession can't support notify on session expiration")
+        raise NotImplementedError("BuildbotSession can't support notify on session expiration")
 
     def touch(self):
         pass
@@ -137,15 +139,15 @@ class BuildbotSession(server.Session):
             'user_info': self.user_info,
             # Note that we use JWT standard 'exp' field to implement session expiration
             # we completely bypass twisted.web session expiration mechanisms
-            'exp': calendar.timegm(datetime.datetime.timetuple(exp))}
+            'exp': calendar.timegm(datetime.datetime.timetuple(exp)),
+        }
 
         return jwt.encode(claims, self.site.session_secret, algorithm=SESSION_SECRET_ALGORITHM)
 
 
 class BuildbotSite(server.Site):
-
-    """ A custom Site for Buildbot needs.
-        Supports rotating logs, and JWT sessions
+    """A custom Site for Buildbot needs.
+    Supports rotating logs, and JWT sessions
     """
 
     def __init__(self, root, logPath, rotateLength, maxRotatedFiles):
@@ -157,7 +159,8 @@ class BuildbotSite(server.Site):
     def _openLogFile(self, path):
         self._nativeize = True
         return LogFile.fromFullPath(
-            path, rotateLength=self.rotateLength, maxRotatedFiles=self.maxRotatedFiles)
+            path, rotateLength=self.rotateLength, maxRotatedFiles=self.maxRotatedFiles
+        )
 
     def getResourceFor(self, request):
         request.responseHeaders.removeHeader('Server')
@@ -280,9 +283,11 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             current_version = parse_version(twisted.__version__)
             if current_version < parse_version("22.10.0"):
                 from twisted.web.resource import NoResource
+
                 plugin_root = NoResource()
             else:
                 from twisted.web.pages import notFound
+
                 plugin_root = notFound()
             root.putChild(b"plugins", plugin_root)
 
@@ -316,15 +321,19 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.configPlugins(root, new_config)
         # /
         if self.base_plugin_name == 'base':
-            root.putChild(b'', wwwconfig.IndexResource(
-                self.master,
-                self.apps.get(self.base_plugin_name).static_dir
-            ))
+            root.putChild(
+                b'',
+                wwwconfig.IndexResource(
+                    self.master, self.apps.get(self.base_plugin_name).static_dir
+                ),
+            )
         else:
-            root.putChild(b'', wwwconfig.IndexResourceReact(
-                self.master,
-                self.apps.get(self.base_plugin_name).static_dir
-            ))
+            root.putChild(
+                b'',
+                wwwconfig.IndexResourceReact(
+                    self.master, self.apps.get(self.base_plugin_name).static_dir
+                ),
+            )
 
         # /auth
         root.putChild(b'auth', auth.AuthRootResource(self.master))
@@ -351,23 +360,26 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # FIXME: this does not work with reconfig
         change_hook_auth = new_config.www.get('change_hook_auth')
         if change_hook_auth is not None:
-            resource_obj = self.setupProtectedResource(
-                resource_obj, change_hook_auth)
+            resource_obj = self.setupProtectedResource(resource_obj, change_hook_auth)
         root.putChild(b"change_hook", resource_obj)
 
         self.root = root
 
-        rotateLength = new_config.www.get(
-            'logRotateLength') or self.master.log_rotation.rotateLength
-        maxRotatedFiles = new_config.www.get(
-            'maxRotatedFiles') or self.master.log_rotation.maxRotatedFiles
+        rotateLength = (
+            new_config.www.get('logRotateLength') or self.master.log_rotation.rotateLength
+        )
+        maxRotatedFiles = (
+            new_config.www.get('maxRotatedFiles') or self.master.log_rotation.maxRotatedFiles
+        )
 
         httplog = None
         if new_config.www['logfileName']:
             httplog = os.path.abspath(
-                os.path.join(self.master.basedir, new_config.www['logfileName']))
-        self.site = BuildbotSite(root, logPath=httplog, rotateLength=rotateLength,
-                                 maxRotatedFiles=maxRotatedFiles)
+                os.path.join(self.master.basedir, new_config.www['logfileName'])
+            )
+        self.site = BuildbotSite(
+            root, logPath=httplog, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles
+        )
 
         self.site.sessionFactory = None
 
@@ -397,8 +409,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     @defer.inlineCallbacks
     def makeSessionSecret(self):
         state = self.master.db.state
-        objectid = yield state.getObjectId(
-            "www", "buildbot.www.service.WWWService")
+        objectid = yield state.getObjectId("www", "buildbot.www.service.WWWService")
 
         def create_session_secret():
             # Bootstrap: We need to create a key, that will be shared with other masters
@@ -407,14 +418,14 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # we encode that in hex for db storage convenience
             return bytes2unicode(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
 
-        session_secret = yield state.atomicCreateState(objectid, "session_secret",
-                                                       create_session_secret)
+        session_secret = yield state.atomicCreateState(
+            objectid, "session_secret", create_session_secret
+        )
         self.site.setSessionSecret(session_secret)
 
     def setupProtectedResource(self, resource_obj, checkers):
         @implementer(IRealm)
         class SimpleRealm:
-
             """
             A realm which gives out L{ChangeHookResource} instances for authenticated
             users.

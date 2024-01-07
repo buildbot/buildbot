@@ -31,6 +31,7 @@ from buildbot.test.util import misc
 
 try:
     import lz4
+
     [lz4]
     hasLz4 = True
 except ImportError:
@@ -52,21 +53,26 @@ def patch_environ(case, key, value):
     def cleanup():
         os.environ.clear()
         os.environ.update(old_environ)
+
     os.environ[key] = value
     case.addCleanup(cleanup)
 
 
-class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
-                    TestReactorMixin, unittest.TestCase):
-
+class TestCleanupDb(
+    misc.StdoutAssertionsMixin, dirs.DirsMixin, TestReactorMixin, unittest.TestCase
+):
     def setUp(self):
         self.setup_test_reactor()
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
-            f.write(textwrap.dedent("""
+            f.write(
+                textwrap.dedent(
+                    """
                 from twisted.application import service
                 application = service.Application('buildmaster')
-            """))
+            """
+                )
+            )
         self.setUpStdoutAssertions()
         self.ensureNoSqliteMemory()
 
@@ -77,21 +83,28 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         # test may use mysql or pg if configured in env
         envkey = "BUILDBOT_TEST_DB_URL"
         if envkey not in os.environ or os.environ[envkey] == 'sqlite://':
-            patch_environ(self, envkey,
-                          "sqlite:///" + os.path.abspath(os.path.join("basedir", "state.sqlite")))
+            patch_environ(
+                self,
+                envkey,
+                "sqlite:///" + os.path.abspath(os.path.join("basedir", "state.sqlite")),
+            )
 
     def createMasterCfg(self, extraconfig=""):
         db_url = db.resolve_test_index_in_db_url(os.environ["BUILDBOT_TEST_DB_URL"])
 
         with open(os.path.join('basedir', 'master.cfg'), 'wt', encoding='utf-8') as f:
-            f.write(textwrap.dedent(f"""
+            f.write(
+                textwrap.dedent(
+                    f"""
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
                 c['db_url'] = {repr(db_url)}
                 c['buildbotNetUsageData'] = None
                 c['multiMaster'] = True  # don't complain for no builders
                 {extraconfig}
-            """))
+            """
+                )
+            )
 
     @defer.inlineCallbacks
     def test_cleanup_not_basedir(self):
@@ -107,12 +120,10 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
     @defer.inlineCallbacks
     def test_cleanup_bad_config2(self):
-
         self.createMasterCfg(extraconfig="++++ # syntaxerror")
         res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
         self.assertEqual(res, 1)
-        self.assertInStdout(
-            "encountered a SyntaxError while parsing config file:")
+        self.assertInStdout("encountered a SyntaxError while parsing config file:")
         # config logs an error via log.err, we must eat it or trial will
         # complain
         self.flushLoggedErrors()
@@ -127,14 +138,21 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
 
 class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()
 
         table_names = [
-            'logs', 'logchunks', 'steps', 'builds', 'projects', 'builders',
-            'masters', 'buildrequests', 'buildsets', 'workers'
+            'logs',
+            'logchunks',
+            'steps',
+            'builds',
+            'projects',
+            'builders',
+            'masters',
+            'buildrequests',
+            'buildsets',
+            'workers',
         ]
 
         self.master = fakemaster.make_master(self, wantRealReactor=True)
@@ -177,7 +195,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
                 q = q.where(tbl.c.logid == logid)
                 return conn.execute(q).fetchone()[0]
+
             lengths[mode] = yield self.master.db.pool.do(thd)
 
-        self.assertDictAlmostEqual(
-            lengths, {'raw': 5999, 'bz2': 44, 'lz4': 40, 'gz': 31})
+        self.assertDictAlmostEqual(lengths, {'raw': 5999, 'bz2': 44, 'lz4': 40, 'gz': 31})

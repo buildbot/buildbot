@@ -58,16 +58,17 @@ def read_bz2(data):
 
 
 class LogsConnectorComponent(base.DBConnectorComponent):
-
     # Postgres and MySQL will both allow bigger sizes than this.  The limit
     # for MySQL appears to be max_packet_size (default 1M).
     # note that MAX_CHUNK_SIZE is equal to BUFFER_SIZE in buildbot_worker.runprocess
     MAX_CHUNK_SIZE = 65536  # a chunk may not be bigger than this
     MAX_CHUNK_LINES = 1000  # a chunk may not have more lines than this
-    COMPRESSION_MODE = {"raw": {"id": 0, "dumps": lambda x: x, "read": lambda x: x},
-                        "gz": {"id": 1, "dumps": dumps_gzip, "read": read_gzip},
-                        "bz2": {"id": 2, "dumps": dumps_bz2, "read": read_bz2},
-                        "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4}}
+    COMPRESSION_MODE = {
+        "raw": {"id": 0, "dumps": lambda x: x, "read": lambda x: x},
+        "gz": {"id": 1, "dumps": dumps_gzip, "read": read_gzip},
+        "bz2": {"id": 2, "dumps": dumps_bz2, "read": read_bz2},
+        "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4},
+    }
     COMPRESSION_BYID = dict((x["id"], x) for x in COMPRESSION_MODE.values())
     total_raw_bytes = 0
     total_compressed_bytes = 0
@@ -84,6 +85,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 rv = self._logdictFromRow(row)
             res.close()
             return rv
+
         return self.db.pool.do(thd_getLog)
 
     def getLog(self, logid):
@@ -103,6 +105,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             q = q.order_by(tbl.c.id)
             res = conn.execute(q)
             return [self._logdictFromRow(row) for row in res.fetchall()]
+
         return self.db.pool.do(thdGetLogs)
 
     # returns a Deferred that returns a value
@@ -110,8 +113,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         def thdGetLogLines(conn):
             # get a set of chunks that completely cover the requested range
             tbl = self.db.model.logchunks
-            q = sa.select([tbl.c.first_line, tbl.c.last_line,
-                           tbl.c.content, tbl.c.compressed])
+            q = sa.select([tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed])
             q = q.where(tbl.c.logid == logid)
             q = q.where(tbl.c.first_line <= last_line)
             q = q.where(tbl.c.last_line >= first_line)
@@ -120,8 +122,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             for row in conn.execute(q):
                 # Retrieve associated "reader" and extract the data
                 # Note that row.content is stored as bytes, and our caller expects unicode
-                data = self.COMPRESSION_BYID[
-                    row.compressed]["read"](row.content)
+                data = self.COMPRESSION_BYID[row.compressed]["read"](row.content)
                 content = data.decode('utf-8')
 
                 if row.first_line < first_line:
@@ -129,7 +130,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     count = first_line - row.first_line
                     for _ in range(count):
                         idx = content.index('\n', idx + 1)
-                    content = content[idx + 1:]
+                    content = content[idx + 1 :]
                 if row.last_line > last_line:
                     idx = len(content) + 1
                     count = row.last_line - last_line
@@ -138,6 +139,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     content = content[:idx]
                 rv.append(content)
             return '\n'.join(rv) + '\n' if rv else ''
+
         return self.db.pool.do(thdGetLogLines)
 
     # returns a Deferred that returns a value
@@ -146,17 +148,21 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
         def thdAddLog(conn):
             try:
-                r = conn.execute(self.db.model.logs.insert(), {
-                    "name": name,
-                    "slug": slug,
-                    "stepid": stepid,
-                    "complete": 0,
-                    "num_lines": 0,
-                    "type": type
-                })
+                r = conn.execute(
+                    self.db.model.logs.insert(),
+                    {
+                        "name": name,
+                        "slug": slug,
+                        "stepid": stepid,
+                        "complete": 0,
+                        "num_lines": 0,
+                        "type": type,
+                    },
+                )
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 raise KeyError(f"log with slug '{slug!r}' already exists in this step") from e
+
         return self.db.pool.do(thdAddLog)
 
     def thdCompressChunk(self, chunk):
@@ -165,8 +171,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         self.total_raw_bytes += len(chunk)
         # Do we have to compress the chunk?
         if self.master.config.logCompressionMethod != "raw":
-            compressed_mode = self.COMPRESSION_MODE[
-                self.master.config.logCompressionMethod]
+            compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
             compressed_chunk = compressed_mode["dumps"](chunk)
             # Is it useful to compress the chunk?
             if len(chunk) > len(compressed_chunk):
@@ -185,16 +190,21 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             last_line = chunk_first_line + chunk.count(b'\n')
 
             chunk, compressed_id = self.thdCompressChunk(chunk)
-            conn.execute(self.db.model.logchunks.insert(), {
-                "logid": logid,
-                "first_line": chunk_first_line,
-                "last_line": last_line,
-                "content": chunk,
-                "compressed": compressed_id
-            }).close()
+            conn.execute(
+                self.db.model.logchunks.insert(),
+                {
+                    "logid": logid,
+                    "first_line": chunk_first_line,
+                    "last_line": last_line,
+                    "content": chunk,
+                    "compressed": compressed_id,
+                },
+            ).close()
             chunk_first_line = last_line + 1
-        conn.execute(self.db.model.logs.update(whereclause=self.db.model.logs.c.id == logid),
-                     num_lines=last_line + 1).close()
+        conn.execute(
+            self.db.model.logs.update(whereclause=self.db.model.logs.c.id == logid),
+            num_lines=last_line + 1,
+        ).close()
         return first_line, last_line
 
     def thdAppendLog(self, conn, logid, content):
@@ -211,10 +221,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         if not num_lines:
             return None  # ignore a missing log
 
-        return self.thdSplitAndAppendChunk(conn=conn,
-                                           logid=logid,
-                                           content=content,
-                                           first_line=num_lines[0])
+        return self.thdSplitAndAppendChunk(
+            conn=conn, logid=logid, content=content, first_line=num_lines[0]
+        )
 
     # returns a Deferred that returns a value
     def appendLog(self, logid, content):
@@ -235,12 +244,12 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         # find the last newline before the limit
         i = content.rfind(b'\n', 0, self.MAX_CHUNK_SIZE)
         if i != -1:
-            return content[:i], content[i + 1:]
+            return content[:i], content[i + 1 :]
 
         log.msg(f'truncating long line for log {logid}')
 
         # first, truncate this down to something that decodes correctly
-        truncline = content[:self.MAX_CHUNK_SIZE]
+        truncline = content[: self.MAX_CHUNK_SIZE]
         while truncline:
             try:
                 truncline.decode('utf-8')
@@ -252,7 +261,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         i = content.find(b'\n', self.MAX_CHUNK_SIZE)
         if i == -1:
             return truncline, None
-        return truncline, content[i + 1:]
+        return truncline, content[i + 1 :]
 
     # returns a Deferred that returns None
     def finishLog(self, logid):
@@ -260,14 +269,19 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.logs
             q = tbl.update(whereclause=tbl.c.id == logid)
             conn.execute(q, complete=1)
+
         return self.db.pool.do(thdfinishLog)
 
     @defer.inlineCallbacks
     def compressLog(self, logid, force=False):
         def thdcompressLog(conn):
             tbl = self.db.model.logchunks
-            q = sa.select([tbl.c.first_line, tbl.c.last_line, sa.func.length(tbl.c.content),
-                           tbl.c.compressed])
+            q = sa.select([
+                tbl.c.first_line,
+                tbl.c.last_line,
+                sa.func.length(tbl.c.content),
+                tbl.c.compressed,
+            ])
             q = q.where(tbl.c.logid == logid)
             q = q.order_by(tbl.c.first_line)
 
@@ -282,8 +296,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # first pass, we fetch the full list of chunks (without content) and find out
             # the chunk groups which could use some gathering.
             for row in rows:
-                if (todo_length + row.length_1 > self.MAX_CHUNK_SIZE or
-                        (row.last_line - todo_first_line) > self.MAX_CHUNK_LINES):
+                if (
+                    todo_length + row.length_1 > self.MAX_CHUNK_SIZE
+                    or (row.last_line - todo_first_line) > self.MAX_CHUNK_LINES
+                ):
                     if todo_numchunks > 1 or (force and todo_numchunks):
                         # this group is worth re-compressing
                         todo_gather_list.append((todo_first_line, todo_last_line))
@@ -310,8 +326,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             for todo_first_line, todo_last_line in todo_gather_list:
                 # decompress this group of chunks. Note that the content is binary bytes.
                 # no need to decode anything as we are going to put in back stored as bytes anyway
-                q = sa.select(
-                    [tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed])
+                q = sa.select([tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed])
                 q = q.where(tbl.c.logid == logid)
                 q = q.where(tbl.c.first_line >= todo_first_line)
                 q = q.where(tbl.c.last_line <= todo_last_line)
@@ -321,8 +336,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 for row in rows:
                     if chunk:
                         chunk += b"\n"
-                    chunk += self.COMPRESSION_BYID[row.compressed][
-                        "read"](row.content)
+                    chunk += self.COMPRESSION_BYID[row.compressed]["read"](row.content)
                 rows.close()
 
                 # Transaction is necessary so that readers don't see disappeared chunks
@@ -337,13 +351,16 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
                 # and we recompress them in one big chunk
                 chunk, compressed_id = self.thdCompressChunk(chunk)
-                conn.execute(tbl.insert(), {
-                    "logid": logid,
-                    "first_line": todo_first_line,
-                    "last_line": todo_last_line,
-                    "content": chunk,
-                    "compressed": compressed_id
-                }).close()
+                conn.execute(
+                    tbl.insert(),
+                    {
+                        "logid": logid,
+                        "first_line": todo_first_line,
+                        "last_line": todo_last_line,
+                        "content": chunk,
+                        "compressed": compressed_id,
+                    },
+                ).close()
                 transaction.commit()
 
             # calculate how many bytes we saved
@@ -388,8 +405,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             if stepid_max:
                 res = conn.execute(
                     model.logs.update()
-                    .where(sa.and_(model.logs.c.stepid <= stepid_max,
-                                   model.logs.c.type != 'd'))
+                    .where(sa.and_(model.logs.c.stepid <= stepid_max, model.logs.c.type != 'd'))
                     .values(type='d')
                 )
                 res.close()
@@ -415,6 +431,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             count2 = res.fetchone()[0]
             res.close()
             return count1 - count2
+
         return self.db.pool.do(thddeleteOldLogs)
 
     def _logdictFromRow(self, row):

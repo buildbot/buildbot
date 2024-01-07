@@ -16,7 +16,6 @@
 Source step code for Monotone
 """
 
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -30,17 +29,16 @@ from buildbot.steps.source.base import Source
 
 
 class Monotone(Source):
-
-    """ Class for Monotone with all smarts """
+    """Class for Monotone with all smarts"""
 
     name = 'monotone'
 
     renderables = ['repourl']
     possible_methods = ('clobber', 'copy', 'fresh', 'clean')
 
-    def __init__(self, repourl=None, branch=None, progress=False,
-                 mode='incremental', method=None, **kwargs):
-
+    def __init__(
+        self, repourl=None, branch=None, progress=False, mode='incremental', method=None, **kwargs
+    ):
         self.repourl = repourl
         self.method = method
         self.mode = mode
@@ -138,20 +136,28 @@ class Monotone(Source):
 
     @defer.inlineCallbacks
     def copy(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {
-            'dir': self.workdir,
-            'logEnviron': self.logEnviron,
-            'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand(
+            'rmdir',
+            {
+                'dir': self.workdir,
+                'logEnviron': self.logEnviron,
+                'timeout': self.timeout,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
         self.workdir = 'source'
         yield self.mode_incremental()
-        cmd = remotecommand.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir': 'build',
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand(
+            'cpdir',
+            {
+                'fromdir': 'source',
+                'todir': 'build',
+                'logEnviron': self.logEnviron,
+                'timeout': self.timeout,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -160,11 +166,13 @@ class Monotone(Source):
 
     @defer.inlineCallbacks
     def checkMonotone(self):
-        cmd = remotecommand.RemoteShellCommand(self.workdir,
-                                               ['mtn', '--version'],
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout)
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir,
+            ['mtn', '--version'],
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
         return cmd.rc == 0
@@ -176,8 +184,7 @@ class Monotone(Source):
         if not ignore_ignored:
             commands.append(['mtn', 'ls', 'ignored'])
         for cmd in commands:
-            stdout = yield self._dovccmd(cmd, workdir=self.workdir,
-                                         collectStdout=True)
+            stdout = yield self._dovccmd(cmd, workdir=self.workdir, collectStdout=True)
             if not stdout:
                 continue
             for filename in stdout.strip().split('\n'):
@@ -209,8 +216,7 @@ class Monotone(Source):
         if self.revision:
             command.extend(['--revision', self.revision])
         command.extend(['--branch', self.branch])
-        return self._dovccmd(command, workdir='.',
-                             abandonOnFailure=abandonOnFailure)
+        return self._dovccmd(command, workdir='.', abandonOnFailure=abandonOnFailure)
 
     def _update(self, abandonOnFailure=False):
         command = ['mtn', 'update']
@@ -219,8 +225,7 @@ class Monotone(Source):
         else:
             command.extend(['--revision', 'h:' + self.branch])
         command.extend(['--branch', self.branch])
-        return self._dovccmd(command, workdir=self.workdir,
-                             abandonOnFailure=abandonOnFailure)
+        return self._dovccmd(command, workdir=self.workdir, abandonOnFailure=abandonOnFailure)
 
     def _pull(self, abandonOnFailure=False):
         command = ['mtn', 'pull', self.sourcedata, '--db', self.database]
@@ -228,8 +233,7 @@ class Monotone(Source):
             command.extend(['--ticker=dot'])
         else:
             command.extend(['--ticker=none'])
-        d = self._dovccmd(command, workdir='.',
-                          abandonOnFailure=abandonOnFailure)
+        d = self._dovccmd(command, workdir='.', abandonOnFailure=abandonOnFailure)
         return d
 
     @defer.inlineCallbacks
@@ -255,9 +259,9 @@ class Monotone(Source):
 
     @defer.inlineCallbacks
     def parseGotRevision(self):
-        stdout = yield self._dovccmd(['mtn', 'automate', 'select', 'w:'],
-                                     workdir=self.workdir,
-                                     collectStdout=True)
+        stdout = yield self._dovccmd(
+            ['mtn', 'automate', 'select', 'w:'], workdir=self.workdir, collectStdout=True
+        )
         revision = stdout.strip()
         if len(revision) != 40:
             raise buildstep.BuildStepFailed()
@@ -266,21 +270,30 @@ class Monotone(Source):
         return 0
 
     @defer.inlineCallbacks
-    def _dovccmd(self, command, workdir,
-                 collectStdout=False, initialStdin=None, decodeRC=None,
-                 abandonOnFailure=True):
+    def _dovccmd(
+        self,
+        command,
+        workdir,
+        collectStdout=False,
+        initialStdin=None,
+        decodeRC=None,
+        abandonOnFailure=True,
+    ):
         if not command:
             raise ValueError("No command specified")
 
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
-        cmd = remotecommand.RemoteShellCommand(workdir, command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               collectStdout=collectStdout,
-                                               initialStdin=initialStdin,
-                                               decodeRC=decodeRC)
+        cmd = remotecommand.RemoteShellCommand(
+            workdir,
+            command,
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+            collectStdout=collectStdout,
+            initialStdin=initialStdin,
+            decodeRC=decodeRC,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -298,16 +311,15 @@ class Monotone(Source):
         db_needs_init = False
         if db_exists:
             stdout = yield self._dovccmd(
-                ['mtn', 'db', 'info', '--db', self.database],
-                workdir='.',
-                collectStdout=True)
+                ['mtn', 'db', 'info', '--db', self.database], workdir='.', collectStdout=True
+            )
             if stdout.find("migration needed") >= 0:
                 log.msg("Older format database found, migrating it")
-                yield self._dovccmd(['mtn', 'db', 'migrate', '--db',
-                                     self.database],
-                                    workdir='.')
-            elif stdout.find("too new, cannot use") >= 0 or \
-                    stdout.find("database has no tables") >= 0:
+                yield self._dovccmd(['mtn', 'db', 'migrate', '--db', self.database], workdir='.')
+            elif (
+                stdout.find("too new, cannot use") >= 0
+                or stdout.find("database has no tables") >= 0
+            ):
                 # The database is of a newer format which the worker's
                 # mtn version can not handle. Drop it and pull again
                 # with that monotone version installed on the

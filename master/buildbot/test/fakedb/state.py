@@ -34,14 +34,13 @@ class Object(Row):
 class ObjectState(Row):
     table = "object_state"
 
-    required_columns = ('objectid', )
+    required_columns = ('objectid',)
 
     def __init__(self, objectid=None, name='nam', value_json='{}'):
         super().__init__(objectid=objectid, name=name, value_json=value_json)
 
 
 class FakeStateComponent(FakeDBComponent):
-
     def setUp(self):
         self.objects = {}
         self.states = {}
@@ -117,13 +116,11 @@ class FakeStateComponent(FakeDBComponent):
             self.t.assertFalse(k in state, f"{k} in {state}")
         for k, v in kwargs.items():
             self.t.assertIn(k, state)
-            self.t.assertEqual(json.loads(state[k]), v,
-                               f"state is {repr(state)}")
+            self.t.assertEqual(json.loads(state[k]), v, f"state is {repr(state)}")
 
     def assertStateByClass(self, name, class_name, **kwargs):
         objectid = self.objects[(name, class_name)]
         state = self.states[objectid]
         for k, v in kwargs.items():
             self.t.assertIn(k, state)
-            self.t.assertEqual(json.loads(state[k]), v,
-                               f"state is {repr(state)}")
+            self.t.assertEqual(json.loads(state[k]), v, f"state is {repr(state)}")

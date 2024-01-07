@@ -31,7 +31,6 @@ from buildbot.util import flatten
 
 @implementer(IProperties)
 class Properties(util.ComparableMixin):
-
     """
     I represent a set of properties that can be interpolated into various
     strings in buildsteps.
@@ -157,9 +156,7 @@ class Properties(util.ComparableMixin):
         return self.properties.copy()
 
     def __repr__(self):
-        return ('Properties(**' +
-                repr(dict((k, v[0]) for k, v in self.properties.items())) +
-                ')')
+        return 'Properties(**' + repr(dict((k, v[0]) for k, v in self.properties.items())) + ')'
 
     def update(self, dict, source, runtime=False):
         """Update this object from a dictionary, with an explicit source specified."""
@@ -167,7 +164,7 @@ class Properties(util.ComparableMixin):
             self.setProperty(k, v, source, runtime=runtime)
 
     def updateFromProperties(self, other):
-        """Update this object based on another object; the other object's """
+        """Update this object based on another object; the other object's"""
         self.properties.update(other.properties)
         self.runtime.update(other.runtime)
 
@@ -226,7 +223,6 @@ class Properties(util.ComparableMixin):
 
 
 class PropertiesMixin:
-
     """
     A mixin to add L{IProperties} methods to a class which does not implement
     the full interface, only getProperties() function.
@@ -262,7 +258,6 @@ class PropertiesMixin:
 
 @implementer(IRenderable)
 class RenderableOperatorsMixin:
-
     """
     Properties and Interpolate instances can be manipulated with standard operators.
     """
@@ -336,11 +331,11 @@ class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):
 
 
 class _PropertyMap:
-
     """
     Privately-used mapping object to implement WithProperties' substitutions,
     including the rendering of None as ''.
     """
+
     colon_minus_re = re.compile(r"(.*):-(.*)")
     colon_tilde_re = re.compile(r"(.*):~(.*)")
     colon_plus_re = re.compile(r"(.*):\+(.*)")
@@ -406,13 +401,12 @@ class _PropertyMap:
         return rv
 
     def add_temporary_value(self, key, val):
-        'Add a temporary value (to support keyword arguments to WithProperties)'
+        "Add a temporary value (to support keyword arguments to WithProperties)"
         self.temp_vals[key] = val
 
 
 @implementer(IRenderable)
 class WithProperties(util.ComparableMixin):
-
     """
     This is a marker class, used fairly widely to indicate that we
     want to interpolate build properties.
@@ -430,7 +424,8 @@ class WithProperties(util.ComparableMixin):
                     raise ValueError(f'Value for lambda substitution "{key}" must be callable.')
         elif lambda_subs:
             raise ValueError(
-                'WithProperties takes either positional or keyword substitutions, not both.')
+                'WithProperties takes either positional or keyword substitutions, not both.'
+            )
 
     def getRenderingFor(self, build):
         pmap = _PropertyMap(build.getProperties())
@@ -447,12 +442,12 @@ class WithProperties(util.ComparableMixin):
 
 
 class _NotHasKey(util.ComparableMixin):
-
     """A marker for missing ``hasKey`` parameter.
 
     To withstand ``deepcopy``, ``reload`` and pickle serialization round trips,
     check it with ``==`` or ``!=``.
     """
+
     compare_attrs = ()
 
 
@@ -463,13 +458,11 @@ _notHasKey = _NotHasKey()
 
 @implementer(IRenderable)
 class _Lookup(util.ComparableMixin):
+    compare_attrs = ('value', 'index', 'default', 'defaultWhenFalse', 'hasKey', 'elideNoneAs')
 
-    compare_attrs = (
-        'value', 'index', 'default', 'defaultWhenFalse', 'hasKey', 'elideNoneAs')
-
-    def __init__(self, value, index, default=None,
-                 defaultWhenFalse=True, hasKey=_notHasKey,
-                 elideNoneAs=None):
+    def __init__(
+        self, value, index, default=None, defaultWhenFalse=True, hasKey=_notHasKey, elideNoneAs=None
+    ):
         self.value = value
         self.index = index
         self.default = default
@@ -524,7 +517,6 @@ def _getInterpolationList(fmtstring):
 
 @implementer(IRenderable)
 class _PropertyDict:
-
     def getRenderingFor(self, build):
         return build.getProperties()
 
@@ -534,7 +526,6 @@ _thePropertyDict = _PropertyDict()
 
 @implementer(IRenderable)
 class _WorkerPropertyDict:
-
     def getRenderingFor(self, build):
         return build.getBuild().getWorkerInfo()
 
@@ -544,7 +535,6 @@ _theWorkerPropertyDict = _WorkerPropertyDict()
 
 @implementer(IRenderable)
 class _SecretRenderer:
-
     def __init__(self, secret_name):
         self.secret_name = secret_name
 
@@ -552,9 +542,11 @@ class _SecretRenderer:
     def getRenderingFor(self, properties):
         secretsSrv = properties.master.namedServices.get("secrets")
         if not secretsSrv:
-            error_message = "secrets service not started, need to configure" \
-                            " SecretManager in c['services'] to use 'secrets'" \
-                            "in Interpolate"
+            error_message = (
+                "secrets service not started, need to configure"
+                " SecretManager in c['services'] to use 'secrets'"
+                "in Interpolate"
+            )
             raise KeyError(error_message)
         credsservice = properties.master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secret_name)
@@ -565,13 +557,11 @@ class _SecretRenderer:
 
 
 class Secret(_SecretRenderer):
-
     def __repr__(self):
         return f"Secret({self.secret_name})"
 
 
 class _SecretIndexer:
-
     def __contains__(self, password):
         return True
 
@@ -581,7 +571,6 @@ class _SecretIndexer:
 
 @implementer(IRenderable)
 class _SourceStampDict(util.ComparableMixin):
-
     compare_attrs = ('codebase',)
 
     def __init__(self, codebase):
@@ -596,7 +585,6 @@ class _SourceStampDict(util.ComparableMixin):
 
 @implementer(IRenderable)
 class _Lazy(util.ComparableMixin):
-
     compare_attrs = ('value',)
 
     def __init__(self, value):
@@ -611,7 +599,6 @@ class _Lazy(util.ComparableMixin):
 
 @implementer(IRenderable)
 class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
-
     """
     This is a marker class, used fairly widely to indicate that we
     want to interpolate build properties.
@@ -626,8 +613,9 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         self.args = args
         self.kwargs = kwargs
         if self.args and self.kwargs:
-            config.error("Interpolate takes either positional or keyword "
-                         "substitutions, not both.")
+            config.error(
+                "Interpolate takes either positional or keyword " "substitutions, not both."
+            )
         if not self.args:
             self.interpolations = {}
             self._parse(fmtstring)
@@ -669,8 +657,9 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
                 codebase, attr = arg.split(":", 1)
                 repl = None
             except ValueError:
-                config.error("Must specify both codebase and attribute for "
-                             f"src Interpolation '{arg}'")
+                config.error(
+                    "Must specify both codebase and attribute for " f"src Interpolation '{arg}'"
+                )
                 return {}, None, None
 
         if not Interpolate.identifier_re.match(codebase):
@@ -732,27 +721,28 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
                 if parenCount < 0:
                     raise ValueError
             if parenCount == 0 and val == delim:
-                return arg[0:i], arg[i + 1:]
+                return arg[0:i], arg[i + 1 :]
         return arg
 
     def _parseColon_minus(self, d, kw, repl):
-        return _Lookup(d, kw,
-                       default=Interpolate(repl, **self.kwargs),
-                       defaultWhenFalse=False,
-                       elideNoneAs='')
+        return _Lookup(
+            d, kw, default=Interpolate(repl, **self.kwargs), defaultWhenFalse=False, elideNoneAs=''
+        )
 
     def _parseColon_tilde(self, d, kw, repl):
-        return _Lookup(d, kw,
-                       default=Interpolate(repl, **self.kwargs),
-                       defaultWhenFalse=True,
-                       elideNoneAs='')
+        return _Lookup(
+            d, kw, default=Interpolate(repl, **self.kwargs), defaultWhenFalse=True, elideNoneAs=''
+        )
 
     def _parseColon_plus(self, d, kw, repl):
-        return _Lookup(d, kw,
-                       hasKey=Interpolate(repl, **self.kwargs),
-                       default='',
-                       defaultWhenFalse=False,
-                       elideNoneAs='')
+        return _Lookup(
+            d,
+            kw,
+            hasKey=Interpolate(repl, **self.kwargs),
+            default='',
+            defaultWhenFalse=False,
+            elideNoneAs='',
+        )
 
     def _parseColon_ternary(self, d, kw, repl, defaultWhenFalse=False):
         delim = repl[0]
@@ -762,14 +752,19 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         try:
             truePart, falsePart = self._splitBalancedParen(delim, repl[1:])
         except ValueError:
-            config.error(f"invalid Interpolate ternary expression '{repl[1:]}' "
-                         f"with delimiter '{repl[0]}'")
+            config.error(
+                f"invalid Interpolate ternary expression '{repl[1:]}' "
+                f"with delimiter '{repl[0]}'"
+            )
             return None
-        return _Lookup(d, kw,
-                       hasKey=Interpolate(truePart, **self.kwargs),
-                       default=Interpolate(falsePart, **self.kwargs),
-                       defaultWhenFalse=defaultWhenFalse,
-                       elideNoneAs='')
+        return _Lookup(
+            d,
+            kw,
+            hasKey=Interpolate(truePart, **self.kwargs),
+            default=Interpolate(falsePart, **self.kwargs),
+            defaultWhenFalse=defaultWhenFalse,
+            elideNoneAs='',
+        )
 
     def _parseColon_ternary_hash(self, d, kw, repl):
         return self._parseColon_ternary(d, kw, repl, defaultWhenFalse=True)
@@ -786,7 +781,7 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
                     ("~", self._parseColon_tilde),
                     ("+", self._parseColon_plus),
                     ("?", self._parseColon_ternary),
-                    ("#?", self._parseColon_ternary_hash)
+                    ("#?", self._parseColon_ternary_hash),
                 ]:
                     junk, matches, tail = repl.partition(pattern)
                     if not junk and matches:
@@ -799,18 +794,15 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
         props = build.getProperties()
         if self.args:
             d = props.render(self.args)
-            d.addCallback(lambda args:
-                          self.fmtstring % tuple(args))
+            d.addCallback(lambda args: self.fmtstring % tuple(args))
         else:
             d = props.render(self.interpolations)
-            d.addCallback(lambda res:
-                          self.fmtstring % res)
+            d.addCallback(lambda res: self.fmtstring % res)
         return d
 
 
 @implementer(IRenderable)
 class Property(RenderableOperatorsMixin, util.ComparableMixin):
-
     """
     An instance of this class renders a property of a build.
     """
@@ -841,6 +833,7 @@ class Property(RenderableOperatorsMixin, util.ComparableMixin):
                 if rv:
                     return rv
                 return props.render(self.default)
+
             return d
 
         if props.hasProperty(self.key):
@@ -850,7 +843,6 @@ class Property(RenderableOperatorsMixin, util.ComparableMixin):
 
 @implementer(IRenderable)
 class FlattenList(RenderableOperatorsMixin, util.ComparableMixin):
-
     """
     An instance of this class flattens all nested lists in a list
     """
@@ -871,6 +863,7 @@ class FlattenList(RenderableOperatorsMixin, util.ComparableMixin):
         @d.addCallback
         def flat(r):
             return flatten(r, self.types)
+
         return d
 
     def __add__(self, b):
@@ -881,7 +874,6 @@ class FlattenList(RenderableOperatorsMixin, util.ComparableMixin):
 
 @implementer(IRenderable)
 class _Renderer(util.ComparableMixin):
-
     compare_attrs = ('fn',)
 
     def __init__(self, fn):
@@ -918,7 +910,6 @@ def renderer(fn):
 
 @implementer(IRenderable)
 class _DefaultRenderer:
-
     """
     Default IRenderable adaptor. Calls .getRenderingFor if available, otherwise
     returns argument unchanged.
@@ -939,7 +930,6 @@ registerAdapter(_DefaultRenderer, object, IRenderable)
 
 @implementer(IRenderable)
 class _ListRenderer:
-
     """
     List IRenderable adaptor. Maps Build.render over the list.
     """
@@ -956,7 +946,6 @@ registerAdapter(_ListRenderer, list, IRenderable)
 
 @implementer(IRenderable)
 class _TupleRenderer:
-
     """
     Tuple IRenderable adaptor. Maps Build.render over the tuple.
     """
@@ -975,14 +964,12 @@ registerAdapter(_TupleRenderer, tuple, IRenderable)
 
 @implementer(IRenderable)
 class _DictRenderer:
-
     """
     Dict IRenderable adaptor. Maps Build.render over the keys and values in the dict.
     """
 
     def __init__(self, value):
-        self.value = _ListRenderer(
-            [_TupleRenderer((k, v)) for k, v in value.items()])
+        self.value = _ListRenderer([_TupleRenderer((k, v)) for k, v in value.items()])
 
     def getRenderingFor(self, build):
         d = self.value.getRenderingFor(build)
@@ -995,15 +982,13 @@ registerAdapter(_DictRenderer, dict, IRenderable)
 
 @implementer(IRenderable)
 class Transform:
-
     """
     A renderable that combines other renderables' results using an arbitrary function.
     """
 
     def __init__(self, function, *args, **kwargs):
         if not callable(function) and not IRenderable.providedBy(function):
-            config.error(
-                "function given to Transform neither callable nor renderable")
+            config.error("function given to Transform neither callable nor renderable")
 
         self._function = function
         self._args = args

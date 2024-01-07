@@ -33,24 +33,23 @@ class Cppcheck(ShellMixin, BuildStep):
     descriptionDone = ["cppcheck"]
     flunkingIssues = ('error',)
 
-    MESSAGES = (
-        'error', 'warning', 'style', 'performance', 'portability', 'information')
+    MESSAGES = ('error', 'warning', 'style', 'performance', 'portability', 'information')
 
     renderables = ('binary', 'source', 'extra_args')
 
     def __init__(self, *args, **kwargs):
-
-        for name, default in [('binary', 'cppcheck'),
-                              ('source', ['.']),
-                              ('enable', []),
-                              ('inconclusive', False),
-                              ('extra_args', [])]:
+        for name, default in [
+            ('binary', 'cppcheck'),
+            ('source', ['.']),
+            ('enable', []),
+            ('inconclusive', False),
+            ('extra_args', []),
+        ]:
             setattr(self, name, kwargs.pop(name, default))
 
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(*args, **kwargs)
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
 
         self.counts = {}
         summaries = self.summaries = {}
@@ -59,8 +58,7 @@ class Cppcheck(ShellMixin, BuildStep):
             summaries[m] = []
 
     def _log_consumer(self):
-        line_re = re.compile(
-                fr"(?:\[.+\]: )?\((?P<severity>{'|'.join(self.MESSAGES)})\) .+")
+        line_re = re.compile(rf"(?:\[.+\]: )?\((?P<severity>{'|'.join(self.MESSAGES)})\) .+")
 
         while True:
             _, line = yield

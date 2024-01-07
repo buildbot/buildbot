@@ -19,6 +19,7 @@ Revision ID: 060
 Revises: 059
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -44,10 +45,12 @@ def upgrade():
 
     with op.batch_alter_table("builders") as batch_op:
         batch_op.add_column(
-            sa.Column('projectid', sa.Integer,
-                      sa.ForeignKey('projects.id', name="fk_builders_projectid",
-                                    ondelete='SET NULL'),
-                      nullable=True),
+            sa.Column(
+                'projectid',
+                sa.Integer,
+                sa.ForeignKey('projects.id', name="fk_builders_projectid", ondelete='SET NULL'),
+                nullable=True,
+            ),
         )
 
     op.create_index('builders_projectid', "builders", ["projectid"])

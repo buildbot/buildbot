@@ -25,8 +25,15 @@ from buildbot.interfaces import IWorker
 from buildbot.plugins.db import get_plugins
 
 __all__ = [
-    'changes', 'schedulers', 'steps', 'util', 'reporters', 'statistics',
-    'worker', 'secrets', 'webhooks'
+    'changes',
+    'schedulers',
+    'steps',
+    'util',
+    'reporters',
+    'statistics',
+    'worker',
+    'secrets',
+    'webhooks',
 ]
 
 

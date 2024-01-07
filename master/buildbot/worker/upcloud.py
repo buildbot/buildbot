@@ -38,19 +38,40 @@ DEFAULT_MEMORY_AMOUNT = 512
 class UpcloudLatentWorker(AbstractLatentWorker):
     instance = None
 
-    def checkConfig(self, name, password=None, api_username=None, api_password=None, image=None,
-                    hostconfig=None, base_url=DEFAULT_BASE_URL, masterFQDN=None, **kwargs):
-
+    def checkConfig(
+        self,
+        name,
+        password=None,
+        api_username=None,
+        api_password=None,
+        image=None,
+        hostconfig=None,
+        base_url=DEFAULT_BASE_URL,
+        masterFQDN=None,
+        **kwargs,
+    ):
         if image is None or api_username is None or api_password is None:
-            config.error("UpcloudLatentWorker: You need to specify at least"
-                         " an image name, zone, api_username and api_password")
+            config.error(
+                "UpcloudLatentWorker: You need to specify at least"
+                " an image name, zone, api_username and api_password"
+            )
 
         AbstractLatentWorker.checkConfig(self, name, password, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(self, name, password=None, zone=None, api_username=None, api_password=None,
-                        image=None, hostconfig=None, base_url=DEFAULT_BASE_URL, masterFQDN=None,
-                        **kwargs):
+    def reconfigService(
+        self,
+        name,
+        password=None,
+        zone=None,
+        api_username=None,
+        api_password=None,
+        image=None,
+        hostconfig=None,
+        base_url=DEFAULT_BASE_URL,
+        masterFQDN=None,
+        **kwargs,
+    ):
         if password is None:
             password = self.getRandomPass()
         if masterFQDN is None:
@@ -60,9 +81,12 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         if hostconfig is None:
             hostconfig = {}
         self.hostconfig = hostconfig
-        self.client = yield HTTPClientService.getService(self.master, base_url,
-                                                         auth=(api_username, api_password),
-                                                         debug=kwargs.get('debug', False))
+        self.client = yield HTTPClientService.getService(
+            self.master,
+            base_url,
+            auth=(api_username, api_password),
+            debug=kwargs.get('debug', False),
+        )
         masterName = util.unicode2bytes(self.master.name)
         self.masterhash = hashlib.sha1(masterName).hexdigest()[:6]
         yield AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
@@ -93,8 +117,10 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         image_uuid = yield self._resolve_image(image)
 
         if image_uuid is None:
-            log.msg(f"{self.__class__.__name__} {self.workername}: Instance creation failed: "
-                    f"Cannot find template {image}")
+            log.msg(
+                f"{self.__class__.__name__} {self.workername}: Instance creation failed: "
+                f"Cannot find template {image}"
+            )
             raise LatentWorkerFailedToSubstantiate(self.getContainerName(), 'resolving image')
 
         # compose json
@@ -112,15 +138,16 @@ class UpcloudLatentWorker(AbstractLatentWorker):
                 },
                 "password_delivery": "none",
                 "storage_devices": {
-                    "storage_device": [{
-                        "action": "clone",
-                        "storage": image_uuid,
-                        "title": self.getContainerName(),
-                        "size": hostconfig.get("os_disk_size",
-                            DEFAULT_OS_DISK_SIZE),
-                        "tier": "maxiops",
-                    }],
-                }
+                    "storage_device": [
+                        {
+                            "action": "clone",
+                            "storage": image_uuid,
+                            "title": self.getContainerName(),
+                            "size": hostconfig.get("os_disk_size", DEFAULT_OS_DISK_SIZE),
+                            "tier": "maxiops",
+                        }
+                    ],
+                },
             }
         }
 
@@ -134,8 +161,10 @@ class UpcloudLatentWorker(AbstractLatentWorker):
 
         if result.code // 100 != 2:
             reason = yield result.content()
-            log.msg(f"{self.__class__.__name__} {self.workername}: Instance creation failed: "
-                    f"{result.code} {reason}")
+            log.msg(
+                f"{self.__class__.__name__} {self.workername}: Instance creation failed: "
+                f"{result.code} {reason}"
+            )
             self.failed_to_start(req['server']['hostname'], 'starting')
 
         instance = yield result.json()
@@ -148,8 +177,10 @@ class UpcloudLatentWorker(AbstractLatentWorker):
 
         result = yield self.client.get(f'/server/{self.instance["uuid"]}')
         instance = yield result.json()
-        log.msg(f'{self.__class__.__name__} {self.workername}: Instance {self.instance["Id"]} '
-                f'created (root password {self.instance["password"]})')
+        log.msg(
+            f'{self.__class__.__name__} {self.workername}: Instance {self.instance["Id"]} '
+            f'created (root password {self.instance["password"]})'
+        )
         # include root password as worker property
         self.properties.setProperty("root_password", self.instance['password'], "Worker")
         return [self.instance["Id"], image]
@@ -170,18 +201,20 @@ class UpcloudLatentWorker(AbstractLatentWorker):
             # instance never attached, and it's because, somehow, we never
             # started.
             return
-        log.msg(f'{self.__class__.__name__} {self.workername}: Stopping instance '
-                f'{self.instance["Id"]}...')
-        result = yield self.client.post(f'/server/{self.instance["uuid"]}/stop', json={
-            "stop_server": {
-                "stop_type": "hard",
-                "timeout": "1"
-            }}
+        log.msg(
+            f'{self.__class__.__name__} {self.workername}: Stopping instance '
+            f'{self.instance["Id"]}...'
+        )
+        result = yield self.client.post(
+            f'/server/{self.instance["uuid"]}/stop',
+            json={"stop_server": {"stop_type": "hard", "timeout": "1"}},
         )
         if result.code // 100 != 2:
             reason = yield result.content()
-            reason = (f'{self.__class__.__name__} {self.workername} failed to stop instance '
-                      f'{self.instance["Id"]} ({self._state()}): {reason.decode()}')
+            reason = (
+                f'{self.__class__.__name__} {self.workername} failed to stop instance '
+                f'{self.instance["Id"]} ({self._state()}): {reason.decode()}'
+            )
             self.instance = None
             raise RuntimeError(reason)
         while (yield self._state()) not in ["stopped", "absent"]:
@@ -191,7 +224,9 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         result = yield self.client.delete(f'/server/{self.instance["uuid"]}?storages=1')
         if result.code // 100 != 2:
             reason = yield result.content()
-            reason = (f'{self.__class__.__name__} {self.workername} failed to delete instance '
-                      f'{self.instance["Id"]} ({self._state()}): {reason.decode()}')
+            reason = (
+                f'{self.__class__.__name__} {self.workername} failed to delete instance '
+                f'{self.instance["Id"]} ({self._state()}): {reason.decode()}'
+            )
             self.instance = None
             raise RuntimeError(reason)

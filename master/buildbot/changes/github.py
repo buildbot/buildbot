@@ -29,18 +29,21 @@ from buildbot.util.state import StateMixin
 log = Logger()
 
 HOSTED_BASE_URL = "https://api.github.com"
-link_urls = {
-    "https": "clone_url",
-    "svn": "svn_url",
-    "git": "git_url",
-    "ssh": "ssh_url"
-}
+link_urls = {"https": "clone_url", "svn": "svn_url", "git": "git_url", "ssh": "ssh_url"}
 
 
-class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
-                              StateMixin, PullRequestMixin):
-    compare_attrs = ("owner", "repo", "token", "branches", "pollInterval",
-                     "category", "project", "pollAtLaunch", "name")
+class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin, PullRequestMixin):
+    compare_attrs = (
+        "owner",
+        "repo",
+        "token",
+        "branches",
+        "pollInterval",
+        "category",
+        "project",
+        "pollAtLaunch",
+        "name",
+    )
     db_class_name = 'GitHubPullrequestPoller'
     property_basename = "github"
 
@@ -50,40 +53,43 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
             kwargs["name"] = "GitHubPullrequestPoller:" + owner + "/" + repo
         super().__init__(owner, repo, **kwargs)
 
-    def checkConfig(self,
-                    owner,
-                    repo,
-                    branches=None,
-                    category='pull',
-                    project=None,
-                    baseURL=None,
-                    pullrequest_filter=True,
-                    token=None,
-                    magic_link=False,
-                    repository_type="https",
-                    github_property_whitelist=None,
-                    **kwargs):
+    def checkConfig(
+        self,
+        owner,
+        repo,
+        branches=None,
+        category='pull',
+        project=None,
+        baseURL=None,
+        pullrequest_filter=True,
+        token=None,
+        magic_link=False,
+        repository_type="https",
+        github_property_whitelist=None,
+        **kwargs,
+    ):
         if repository_type not in ["https", "svn", "git", "ssh"]:
-            config.error(
-                "repository_type must be one of {https, svn, git, ssh}")
+            config.error("repository_type must be one of {https, svn, git, ssh}")
         super().checkConfig(name=self.name, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(self,
-                        owner,
-                        repo,
-                        branches=None,
-                        pollInterval=10 * 60,
-                        category=None,
-                        project=None,
-                        baseURL=None,
-                        pullrequest_filter=True,
-                        token=None,
-                        pollAtLaunch=False,
-                        magic_link=False,
-                        repository_type="https",
-                        github_property_whitelist=None,
-                        **kwargs):
+    def reconfigService(
+        self,
+        owner,
+        repo,
+        branches=None,
+        pollInterval=10 * 60,
+        category=None,
+        project=None,
+        baseURL=None,
+        pullrequest_filter=True,
+        token=None,
+        pollAtLaunch=False,
+        magic_link=False,
+        repository_type="https",
+        github_property_whitelist=None,
+        **kwargs,
+    ):
         yield super().reconfigService(name=self.name, **kwargs)
 
         if baseURL is None:
@@ -100,7 +106,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
             github_property_whitelist = []
 
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, headers=http_headers)
+            self.master, baseURL, headers=http_headers
+        )
 
         self.token = token
         self.owner = owner
@@ -117,59 +124,62 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         else:
             self.pullrequest_filter = lambda _: pullrequest_filter
 
-        self.category = category if callable(category) else bytes2unicode(
-            category)
+        self.category = category if callable(category) else bytes2unicode(category)
         self.project = bytes2unicode(project)
 
     def describe(self):
-        return ("GitHubPullrequestPoller watching the "
-                f"GitHub repository {self.owner}/{self.repo}")
+        return "GitHubPullrequestPoller watching the " f"GitHub repository {self.owner}/{self.repo}"
 
     @defer.inlineCallbacks
     def _getPullInformation(self, pull_number):
-        result = yield self._http.get('/'.join(
-            ['/repos', self.owner, self.repo, 'pulls', str(pull_number)]))
+        result = yield self._http.get(
+            '/'.join(['/repos', self.owner, self.repo, 'pulls', str(pull_number)])
+        )
         my_json = yield result.json()
         return my_json
 
     @defer.inlineCallbacks
     def _getPulls(self):
-        log.debug("GitHubPullrequestPoller: polling "
-                  f"GitHub repository {self.owner}/{self.repo}, branches: {self.branches}")
-        result = yield self._http.get('/'.join(
-            ['/repos', self.owner, self.repo, 'pulls']))
+        log.debug(
+            "GitHubPullrequestPoller: polling "
+            f"GitHub repository {self.owner}/{self.repo}, branches: {self.branches}"
+        )
+        result = yield self._http.get('/'.join(['/repos', self.owner, self.repo, 'pulls']))
         my_json = yield result.json()
         if result.code != 200:
             message = my_json.get('message', 'unknown')
-            log.error(f"GitHubPullrequestPoller error {result.code} '{message}' "
-                      f"while loading {result.url}")
+            log.error(
+                f"GitHubPullrequestPoller error {result.code} '{message}' "
+                f"while loading {result.url}"
+            )
             return []
         return my_json
 
     @defer.inlineCallbacks
     def _getFiles(self, prnumber):
-        result = yield self._http.get("/".join([
-            '/repos', self.owner, self.repo, 'pulls', str(prnumber), 'files'
-        ]))
+        result = yield self._http.get(
+            "/".join(['/repos', self.owner, self.repo, 'pulls', str(prnumber), 'files'])
+        )
         my_json = yield result.json()
 
         return [f["filename"] for f in my_json]
 
     @defer.inlineCallbacks
     def _getCommitters(self, prnumber):
-        result = yield self._http.get("/".join([
-            '/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'
-        ]))
+        result = yield self._http.get(
+            "/".join(['/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'])
+        )
         my_json = yield result.json()
 
-        return [[c["commit"]["committer"]["name"],
-                 c["commit"]["committer"]["email"]] for c in my_json]
+        return [
+            [c["commit"]["committer"]["name"], c["commit"]["committer"]["email"]] for c in my_json
+        ]
 
     @defer.inlineCallbacks
     def _getAuthors(self, prnumber):
-        result = yield self._http.get("/".join([
-            '/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'
-        ]))
+        result = yield self._http.get(
+            "/".join(['/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'])
+        )
         my_json = yield result.json()
 
         return [[a["commit"]["author"]["name"], a["commit"]["author"]["email"]] for a in my_json]
@@ -192,8 +202,9 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
     @defer.inlineCallbacks
     def _getStateObjectId(self):
         # Return a deferred for object id in state db.
-        result = yield self.master.db.state.getObjectId(f'{self.owner}/{self.repo}',
-                                                        self.db_class_name)
+        result = yield self.master.db.state.getObjectId(
+            f'{self.owner}/{self.repo}', self.db_class_name
+        )
         return result
 
     @defer.inlineCallbacks
@@ -207,8 +218,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
             # Check to see if the branch is set or matches
             if self.branches is not None and base_branch not in self.branches:
                 continue
-            if (self.pullrequest_filter is not None and
-                    not self.pullrequest_filter(pr)):
+            if self.pullrequest_filter is not None and not self.pullrequest_filter(pr):
                 continue
             current = yield self._getCurrentRev(prnumber)
             if not current or current[0:12] != revision[0:12]:
@@ -223,8 +233,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     repo = pr['head']['repo'][self.repository_type]
                 revlink = pr['html_url']
                 comments = pr['body']
-                updated = datetime.strptime(pr['updated_at'],
-                                            '%Y-%m-%dT%H:%M:%SZ')
+                updated = datetime.strptime(pr['updated_at'], '%Y-%m-%dT%H:%M:%SZ')
                 # update database
                 yield self._setCurrentRev(prnumber, revision)
 
@@ -234,16 +243,22 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 commits = pr['commits']
 
                 dl = defer.DeferredList(
-                     [self._getAuthors(prnumber), self._getCommitters(prnumber),
-                      self._getFiles(prnumber)],
-                     consumeErrors=True)
+                    [
+                        self._getAuthors(prnumber),
+                        self._getCommitters(prnumber),
+                        self._getFiles(prnumber),
+                    ],
+                    consumeErrors=True,
+                )
 
                 results = yield dl
                 failures = [r[1] for r in results if not r[0]]
                 if failures:
                     for failure in failures:
-                        log.error("while processing changes for "
-                                  f"Pullrequest {prnumber} revision {revision}: {failure}")
+                        log.error(
+                            "while processing changes for "
+                            f"Pullrequest {prnumber} revision {revision}: {failure}"
+                        )
                     # Fail on the first error!
                     failures[0].raiseException()
                 [authors, committers, files] = [r[1] for r in results]
@@ -259,7 +274,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     revision=bytes2unicode(revision),
                     revlink=bytes2unicode(revlink),
                     comments=f"GitHub Pull Request #{prnumber} "
-                             f"({commits} commit{'s' if commits > 0 else ''})\n{title}\n{comments}",
+                    f"({commits} commit{'s' if commits > 0 else ''})\n{title}\n{comments}",
                     when_timestamp=datetime2epoch(updated),
                     branch=bytes2unicode(branch),
                     category=self.category,
@@ -270,7 +285,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                         'pullrequesturl': revlink,
                         **self.extractProperties(pr),
                     },
-                    src='git')
+                    src='git',
+                )
 
     @defer.inlineCallbacks
     def poll(self):

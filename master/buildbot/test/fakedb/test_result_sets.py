@@ -27,16 +27,34 @@ class TestResultSet(Row):
     foreignKeys = ('builderid', 'buildid', 'stepid')
     required_columns = ('builderid', 'buildid', 'stepid', 'category', 'value_unit', 'complete')
 
-    def __init__(self, id=None, builderid=None, buildid=None, stepid=None, description=None,
-                 category=None, value_unit=None, tests_passed=None, tests_failed=None,
-                 complete=None):
-        super().__init__(id=id, builderid=builderid, buildid=buildid, stepid=stepid,
-                         description=description, category=category, value_unit=value_unit,
-                         tests_passed=tests_passed, tests_failed=tests_failed, complete=complete)
+    def __init__(
+        self,
+        id=None,
+        builderid=None,
+        buildid=None,
+        stepid=None,
+        description=None,
+        category=None,
+        value_unit=None,
+        tests_passed=None,
+        tests_failed=None,
+        complete=None,
+    ):
+        super().__init__(
+            id=id,
+            builderid=builderid,
+            buildid=buildid,
+            stepid=stepid,
+            description=description,
+            category=category,
+            value_unit=value_unit,
+            tests_passed=tests_passed,
+            tests_failed=tests_failed,
+            complete=complete,
+        )
 
 
 class FakeTestResultSetsComponent(FakeDBComponent):
-
     def setUp(self):
         self.result_sets = {}
 
@@ -57,7 +75,7 @@ class FakeTestResultSetsComponent(FakeDBComponent):
             'value_unit': value_unit,
             'tests_failed': None,
             'tests_passed': None,
-            'complete': False
+            'complete': False,
         }
         return defer.succeed(id)
 
@@ -73,8 +91,9 @@ class FakeTestResultSetsComponent(FakeDBComponent):
         return defer.succeed(self._row2dict(self.result_sets[test_result_setid]))
 
     # returns a Deferred
-    def getTestResultSets(self, builderid, buildid=None, stepid=None, complete=None,
-                          result_spec=None):
+    def getTestResultSets(
+        self, builderid, buildid=None, stepid=None, complete=None, result_spec=None
+    ):
         ret = []
         for row in self.result_sets.values():
             if row['builderid'] != builderid:
@@ -96,11 +115,13 @@ class FakeTestResultSetsComponent(FakeDBComponent):
     def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
         if test_result_setid not in self.result_sets:
             raise TestResultSetAlreadyCompleted(
-                f'Test result set {test_result_setid} is already completed or does not exist')
+                f'Test result set {test_result_setid} is already completed or does not exist'
+            )
         row = self.result_sets[test_result_setid]
         if row['complete'] != 0:
             raise TestResultSetAlreadyCompleted(
-                f'Test result set {test_result_setid} is already completed or does not exist')
+                f'Test result set {test_result_setid} is already completed or does not exist'
+            )
         row['complete'] = 1
         if tests_passed is not None:
             row['tests_passed'] = tests_passed

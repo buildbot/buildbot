@@ -28,7 +28,6 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -146,7 +145,6 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
 
 
 class TestBotMaster(TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -164,25 +162,26 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigServiceWithBuildbotConfig(self):
         # check that reconfigServiceBuilders is called.
-        self.patch(self.botmaster, 'reconfigProjects',
-                   mock.Mock(side_effect=lambda c: defer.succeed(None)))
-        self.patch(self.botmaster, 'reconfigServiceBuilders',
-                   mock.Mock(side_effect=lambda c: defer.succeed(None)))
-        self.patch(self.botmaster, 'maybeStartBuildsForAllBuilders',
-                   mock.Mock())
+        self.patch(
+            self.botmaster, 'reconfigProjects', mock.Mock(side_effect=lambda c: defer.succeed(None))
+        )
+        self.patch(
+            self.botmaster,
+            'reconfigServiceBuilders',
+            mock.Mock(side_effect=lambda c: defer.succeed(None)),
+        )
+        self.patch(self.botmaster, 'maybeStartBuildsForAllBuilders', mock.Mock())
 
         new_config = mock.Mock()
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
 
         self.botmaster.reconfigServiceBuilders.assert_called_with(new_config)
         self.botmaster.reconfigProjects.assert_called_with(new_config)
-        self.assertTrue(
-            self.botmaster.maybeStartBuildsForAllBuilders.called)
+        self.assertTrue(self.botmaster.maybeStartBuildsForAllBuilders.called)
 
     @defer.inlineCallbacks
     def test_reconfigServiceBuilders_add_remove(self):
-        bc = config.BuilderConfig(name='bldr', factory=factory.BuildFactory(),
-                                  workername='f')
+        bc = config.BuilderConfig(name='bldr', factory=factory.BuildFactory(), workername='f')
         self.new_config.builders = [bc]
 
         yield self.botmaster.reconfigServiceBuilders(self.new_config)

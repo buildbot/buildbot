@@ -23,7 +23,6 @@ special cases that Buildbot needs.  Those include:
 
 """
 
-
 import os
 
 import sqlalchemy as sa
@@ -36,13 +35,11 @@ from twisted.python import log
 
 
 class ReconnectingListener:
-
     def __init__(self):
         self.retried = False
 
 
 class Strategy:
-
     def set_up(self, u, engine):
         pass
 
@@ -55,9 +52,9 @@ class Strategy:
 
 
 class SqlLiteStrategy(Strategy):
-
     def set_up(self, u, engine):
         """Special setup for sqlite engines"""
+
         def connect_listener_enable_fk(connection, record):
             # fk must be enabled for all connections
             if not getattr(engine, "fk_disabled", False):
@@ -67,6 +64,7 @@ class SqlLiteStrategy(Strategy):
         sa.event.listen(engine.pool, 'connect', connect_listener_enable_fk)
         # try to enable WAL logging
         if u.database:
+
             def connect_listener(connection, record):
                 connection.execute("pragma checkpoint_fullfsync = off")
 
@@ -96,6 +94,7 @@ class MySQLStrategy(Strategy):
 
     def set_up(self, u, engine):
         """Special setup for mysql engines"""
+
         # add the reconnecting PoolListener that will detect a
         # disconnected connection and automatically start a new
         # one.  This provides a measure of additional safety over
@@ -116,9 +115,11 @@ class MySQLStrategy(Strategy):
         sa.event.listen(engine.pool, 'checkout', checkout_listener)
 
     def should_retry(self, ex):
-        return any([self.is_disconnect(ex.orig.args),
-                    self.is_deadlock(ex.orig.args),
-                    super().should_retry(ex)])
+        return any([
+            self.is_disconnect(ex.orig.args),
+            self.is_deadlock(ex.orig.args),
+            super().should_retry(ex),
+        ])
 
 
 def sa_url_set_attr(u, attr, value):
@@ -136,7 +137,6 @@ def special_case_sqlite(u, kwargs):
 
     # when given a database path, stick the basedir in there
     if u.database:
-
         # Use NullPool instead of the sqlalchemy-0.6.8-default
         # SingletonThreadPool for sqlite to suppress the error in
         # http://groups.google.com/group/sqlalchemy/msg/f8482e4721a89589,
@@ -182,21 +182,17 @@ def special_case_mysql(u, kwargs):
     # default to the MyISAM storage engine
     storage_engine = query.pop('storage_engine', 'MyISAM')
 
-    kwargs['connect_args'] = {
-        'init_command': f'SET default_storage_engine={storage_engine}'
-    }
+    kwargs['connect_args'] = {'init_command': f'SET default_storage_engine={storage_engine}'}
 
     if 'use_unicode' in query:
         if query['use_unicode'] != "True":
-            raise TypeError("Buildbot requires use_unicode=True " +
-                            "(and adds it automatically)")
+            raise TypeError("Buildbot requires use_unicode=True " + "(and adds it automatically)")
     else:
         query['use_unicode'] = "True"
 
     if 'charset' in query:
         if query['charset'] != "utf8":
-            raise TypeError("Buildbot requires charset=utf8 " +
-                            "(and adds it automatically)")
+            raise TypeError("Buildbot requires charset=utf8 " + "(and adds it automatically)")
     else:
         query['charset'] = 'utf8'
 
@@ -232,8 +228,7 @@ def create_engine(name_or_url, **kwargs):
     # calculate the maximum number of connections from the pool parameters,
     # if it hasn't already been specified
     if max_conns is None:
-        max_conns = kwargs.get(
-            'pool_size', 5) + kwargs.get('max_overflow', 10)
+        max_conns = kwargs.get('pool_size', 5) + kwargs.get('max_overflow', 10)
     driver_strategy = get_drivers_strategy(u.drivername)
     engine = sa.create_engine(u, **kwargs)
     driver_strategy.set_up(u, engine)

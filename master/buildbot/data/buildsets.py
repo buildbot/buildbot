@@ -30,7 +30,6 @@ from buildbot.util import epoch2datetime
 
 
 class Db2DataMixin:
-
     @defer.inlineCallbacks
     def db2data(self, bsdict):
         if not bsdict:
@@ -56,9 +55,10 @@ class Db2DataMixin:
         def getSs(ssid):
             ss = yield self.master.data.get(('sourcestamps', str(ssid)))
             sourcestamps.append(ss)
-        yield defer.DeferredList([getSs(id)
-                                  for id in bsdict['sourcestamps']],
-                                 fireOnOneErrback=True, consumeErrors=True)
+
+        yield defer.DeferredList(
+            [getSs(id) for id in bsdict['sourcestamps']], fireOnOneErrback=True, consumeErrors=True
+        )
 
         buildset['sourcestamps'] = sourcestamps
         return buildset
@@ -73,12 +73,11 @@ class Db2DataMixin:
         'complete_at': 'buildsets.complete_at',
         'results': 'buildsets.results',
         'parent_buildid': 'buildsets.parent_buildid',
-        'parent_relationship': 'buildsets.parent_relationship'
+        'parent_relationship': 'buildsets.parent_relationship',
     }
 
 
 class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /buildsets/n:bsid
@@ -92,7 +91,6 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /buildsets
@@ -104,20 +102,17 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
         complete = resultSpec.popBooleanFilter('complete')
         resultSpec.fieldMapping = self.fieldMapping
         buildsets = yield self.master.db.buildsets.getBuildsets(
-            complete=complete,
-            resultSpec=resultSpec
+            complete=complete, resultSpec=resultSpec
         )
 
         buildsets = yield defer.gatherResults(
-            [self.db2data(bs) for bs in buildsets],
-            consumeErrors=True
+            [self.db2data(bs) for bs in buildsets], consumeErrors=True
         )
 
         return buildsets
 
 
 class Buildset(base.ResourceType):
-
     name = "buildset"
     plural = "buildsets"
     endpoints = [BuildsetEndpoint, BuildsetsEndpoint]
@@ -135,18 +130,29 @@ class Buildset(base.ResourceType):
         complete = types.Boolean()
         complete_at = types.NoneOk(types.Integer())
         results = types.NoneOk(types.Integer())
-        sourcestamps = types.List(
-            of=sourcestampsapi.SourceStamp.entityType)
+        sourcestamps = types.List(of=sourcestampsapi.SourceStamp.entityType)
         parent_buildid = types.NoneOk(types.Integer())
         parent_relationship = types.NoneOk(types.String())
+
     entityType = EntityType(name, 'Buildset')
     subresources = ["Property"]
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
-                    properties=None, builderids=None, external_idstring=None, rebuilt_buildid=None,
-                    parent_buildid=None, parent_relationship=None, priority=0):
+    def addBuildset(
+        self,
+        waited_for,
+        scheduler=None,
+        sourcestamps=None,
+        reason='',
+        properties=None,
+        builderids=None,
+        external_idstring=None,
+        rebuilt_buildid=None,
+        parent_buildid=None,
+        parent_relationship=None,
+        priority=0,
+    ):
         if sourcestamps is None:
             sourcestamps = []
         if properties is None:
@@ -155,12 +161,18 @@ class Buildset(base.ResourceType):
             builderids = []
         submitted_at = int(self.master.reactor.seconds())
         bsid, brids = yield self.master.db.buildsets.addBuildset(
-            sourcestamps=sourcestamps, reason=reason, rebuilt_buildid=rebuilt_buildid,
-            properties=properties, builderids=builderids,
-            waited_for=waited_for, external_idstring=external_idstring,
+            sourcestamps=sourcestamps,
+            reason=reason,
+            rebuilt_buildid=rebuilt_buildid,
+            properties=properties,
+            builderids=builderids,
+            waited_for=waited_for,
+            external_idstring=external_idstring,
             submitted_at=epoch2datetime(submitted_at),
-            parent_buildid=parent_buildid, parent_relationship=parent_relationship,
-            priority=priority)
+            parent_buildid=parent_buildid,
+            parent_relationship=parent_relationship,
+            priority=priority,
+        )
 
         yield BuildRequestCollapser(self.master, list(brids.values())).collapse()
 
@@ -168,9 +180,7 @@ class Buildset(base.ResourceType):
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = []
         for ssid in bsdict['sourcestamps']:
-            sourcestamps.append(
-                (yield self.master.data.get(('sourcestamps', str(ssid)))).copy()
-            )
+            sourcestamps.append((yield self.master.data.get(('sourcestamps', str(ssid)))).copy())
 
         # notify about the component build requests
         brResource = self.master.data.getResourceType("buildrequest")
@@ -188,7 +198,7 @@ class Buildset(base.ResourceType):
             "complete_at": None,
             "results": None,
             "scheduler": scheduler,
-            "sourcestamps": sourcestamps
+            "sourcestamps": sourcestamps,
         }
         # TODO: properties=properties)
         self.produceEvent(msg, "new")
@@ -205,8 +215,7 @@ class Buildset(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def maybeBuildsetComplete(self, bsid):
-        brdicts = yield self.master.db.buildrequests.getBuildRequests(
-            bsid=bsid, complete=False)
+        brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid, complete=False)
 
         # if there are incomplete buildrequests, bail out
         if brdicts:
@@ -217,8 +226,7 @@ class Buildset(base.ResourceType):
         # figure out the overall results of the buildset:
         cumulative_results = SUCCESS
         for brdict in brdicts:
-            cumulative_results = worst_status(
-                cumulative_results, brdict['results'])
+            cumulative_results = worst_status(cumulative_results, brdict['results'])
 
         # get a copy of the buildset
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
@@ -235,8 +243,9 @@ class Buildset(base.ResourceType):
         # mark it as completed in the database
         complete_at = epoch2datetime(int(self.master.reactor.seconds()))
         try:
-            yield self.master.db.buildsets.completeBuildset(bsid, cumulative_results,
-                                                            complete_at=complete_at)
+            yield self.master.db.buildsets.completeBuildset(
+                bsid, cumulative_results, complete_at=complete_at
+            )
         except AlreadyCompleteError:
             return
         # get the sourcestamps for the message
@@ -245,9 +254,7 @@ class Buildset(base.ResourceType):
         sourcestamps = []
         for ssid in bsdict['sourcestamps']:
             sourcestamps.append(
-                copy.deepcopy(
-                    (yield self.master.data.get(('sourcestamps', str(ssid))))
-                )
+                copy.deepcopy((yield self.master.data.get(('sourcestamps', str(ssid)))))
             )
 
         msg = {

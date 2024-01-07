@@ -22,7 +22,6 @@ from buildbot.util import sautils
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
-
     def setUp(self):
         return self.setUpMigrateTest()
 
@@ -35,7 +34,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
         # buildid foreign key is removed for the purposes of the test
         steps = sautils.Table(
-            'steps', metadata,
+            'steps',
+            metadata,
             sa.Column('id', sa.Integer, primary_key=True),
             sa.Column('number', sa.Integer, nullable=False),
             sa.Column('name', sa.String(50), nullable=False),
@@ -49,18 +49,23 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         )
         steps.create()
 
-        conn.execute(steps.insert(), [{
-            "id": 4,
-            "number": 123,
-            "name": "step",
-            "buildid": 12,
-            "started_at": 1690848000,
-            "complete_at": 1690848030,
-            "state_string": "state",
-            "results": 0,
-            "urls_json": "",
-            "hidden": 0,
-        }])
+        conn.execute(
+            steps.insert(),
+            [
+                {
+                    "id": 4,
+                    "number": 123,
+                    "name": "step",
+                    "buildid": 12,
+                    "started_at": 1690848000,
+                    "complete_at": 1690848030,
+                    "state_string": "state",
+                    "results": 0,
+                    "urls_json": "",
+                    "hidden": 0,
+                }
+            ],
+        )
 
     def test_update(self):
         def setup_thd(conn):

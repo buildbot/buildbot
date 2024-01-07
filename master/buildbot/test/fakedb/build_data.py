@@ -28,12 +28,12 @@ class BuildData(Row):
     binary_columns = ('value',)
 
     def __init__(self, id=None, buildid=None, name=None, value=None, source=None):
-        super().__init__(id=id, buildid=buildid, name=name, value=value, source=source,
-                         length=len(value))
+        super().__init__(
+            id=id, buildid=buildid, name=name, value=value, source=source, length=len(value)
+        )
 
 
 class FakeBuildDataComponent(FakeDBComponent):
-
     def setUp(self):
         self.build_data = {}
 
@@ -64,7 +64,7 @@ class FakeBuildDataComponent(FakeDBComponent):
             'name': name,
             'value': value,
             'length': len(value),
-            'source': source
+            'source': source,
         }
 
     # returns a Deferred
@@ -95,8 +95,10 @@ class FakeBuildDataComponent(FakeDBComponent):
     def deleteOldBuildData(self, older_than_timestamp):
         buildids_to_keep = []
         for build_dict in self.db.builds.builds.values():
-            if build_dict['complete_at'] is None or \
-                    build_dict['complete_at'] >= older_than_timestamp:
+            if (
+                build_dict['complete_at'] is None
+                or build_dict['complete_at'] >= older_than_timestamp
+            ):
                 buildids_to_keep.append(build_dict['id'])
 
         count_before = len(self.build_data)

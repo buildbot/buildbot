@@ -25,11 +25,11 @@ from buildbot.warnings import DeprecatedApiWarning
 
 
 class LBF(unittest.TestCase):
-
     def setUp(self):
         self.callbacks = []
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern="does not accept callback anymore"):
+        with assertProducesWarnings(
+            DeprecatedApiWarning, message_pattern="does not accept callback anymore"
+        ):
             self.lbf = lineboundaries.LineBoundaryFinder(self._callback)
 
     def _callback(self, wholeLines):
@@ -162,7 +162,6 @@ class LBF(unittest.TestCase):
 
 
 class LBFNoCallback(unittest.TestCase):
-
     def setUp(self):
         self.lbf = lineboundaries.LineBoundaryFinder()
 

@@ -45,10 +45,21 @@ def sendchange(config):
 
     s = sendchange_client.Sender(master, auth, encoding=encoding)
     try:
-        yield s.send(branch, revision, comments, files, who=who,
-                     category=category, when=when, properties=properties,
-                     repository=repository, vc=vc, project=project, revlink=revlink,
-                     codebase=codebase)
+        yield s.send(
+            branch,
+            revision,
+            comments,
+            files,
+            who=who,
+            category=category,
+            when=when,
+            properties=properties,
+            repository=repository,
+            vc=vc,
+            project=project,
+            revlink=revlink,
+            codebase=codebase,
+        )
     except Exception:
         print("change not sent:")
         traceback.print_exc(file=sys.stdout)

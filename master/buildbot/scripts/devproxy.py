@@ -61,8 +61,7 @@ class DevProxy:
                 app.router.add_static('/' + plugin, staticdir)
         staticdir = self.staticdir = self.apps.get('base').static_dir
         loader = jinja2.FileSystemLoader(staticdir)
-        self.jinja = jinja2.Environment(
-            loader=loader, undefined=jinja2.StrictUndefined)
+        self.jinja = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
         app.router.add_static('/', staticdir)
         conn = aiohttp.TCPConnector(limit=self.MAX_CONNECTIONS, verify_ssl=not self.unsafe_ssl)
         self.session = aiohttp.ClientSession(connector=conn, trust_env=True, cookies=cookies)
@@ -86,9 +85,7 @@ class DevProxy:
         ws_server = aiohttp.web.WebSocketResponse()
         await ws_server.prepare(req)
 
-        async with self.session.ws_connect(
-            self.next_url + "/ws", headers=req.headers
-        ) as ws_client:
+        async with self.session.ws_connect(self.next_url + "/ws", headers=req.headers) as ws_client:
 
             async def ws_forward(ws_from, ws_to):
                 async for msg in ws_from:
@@ -108,11 +105,9 @@ class DevProxy:
 
             # keep forwarding websocket data in both directions
             await asyncio.wait(
-                [
-                    ws_forward(ws_server, ws_client),
-                    ws_forward(ws_client, ws_server)
-                ],
-                return_when=asyncio.FIRST_COMPLETED)
+                [ws_forward(ws_server, ws_client), ws_forward(ws_client, ws_server)],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
         return ws_server
 
     async def proxy_handler(self, req):
@@ -123,13 +118,12 @@ class DevProxy:
         try:
             # note that req.content is a StreamReader, so the data is streamed
             # and not fully loaded in memory (unlike with python-requests)
-            async with method(upstream_url,
-                              headers=headers,
-                              params=query,
-                              allow_redirects=False,
-                              data=req.content) as request:
+            async with method(
+                upstream_url, headers=headers, params=query, allow_redirects=False, data=req.content
+            ) as request:
                 response = aiohttp.web.StreamResponse(
-                    status=request.status, headers=request.headers)
+                    status=request.status, headers=request.headers
+                )
                 writer = await response.prepare(req)
                 while True:
                     chunk = await request.content.readany()
@@ -142,8 +136,9 @@ class DevProxy:
             return self.connection_error(e)
 
     def connection_error(self, error):
-        return aiohttp.web.Response(text=f'Unable to connect to upstream server {self.next_url} '
-                                         f'({error!s})', status=502)
+        return aiohttp.web.Response(
+            text=f'Unable to connect to upstream server {self.next_url} ' f'({error!s})', status=502
+        )
 
     async def fetch_config_from_upstream(self):
         async with self.session.get(self.next_url) as request:
@@ -154,8 +149,7 @@ class DevProxy:
         start_delimiter = b'angular.module("buildbot_config", []).constant("config", '
         start_index = index.index(start_delimiter)
         last_index = index.index(b')</script></html>')
-        self.config = json.loads(
-            index[start_index + len(start_delimiter):last_index].decode())
+        self.config = json.loads(index[start_index + len(start_delimiter) : last_index].decode())
 
         # keep the original config, but remove the plugins that we don't know
         for plugin in list(self.config['plugins'].keys()):
@@ -172,12 +166,17 @@ class DevProxy:
 
     async def index_handler(self, req):
         tpl = self.jinja.get_template('index.html')
-        index = tpl.render(configjson=json.dumps(self.config),
-                           custom_templates={},
-                           config=self.config)
+        index = tpl.render(
+            configjson=json.dumps(self.config), custom_templates={}, config=self.config
+        )
         return aiohttp.web.Response(body=index, content_type='text/html')
 
 
 def devproxy(config):
-    DevProxy(config['port'], config['buildbot_url'],
-             config['plugins'], config['unsafe_ssl'], config['auth_cookie'])
+    DevProxy(
+        config['port'],
+        config['buildbot_url'],
+        config['plugins'],
+        config['unsafe_ssl'],
+        config['auth_cookie'],
+    )

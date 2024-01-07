@@ -38,15 +38,13 @@ debug_logging = False
 
 
 class P4PollerError(Exception):
-
     """Something went wrong with the poll. This is used as a distinctive
     exception type so that unit tests can detect and ignore it."""
 
 
 class TicketLoginProtocol(protocol.ProcessProtocol):
-
-    """ Twisted process protocol to run `p4 login` and enter our password
-        in the stdin."""
+    """Twisted process protocol to run `p4 login` and enter our password
+    in the stdin."""
 
     def __init__(self, stdin, p4base):
         self.deferred = defer.Deferred()
@@ -80,8 +78,8 @@ class TicketLoginProtocol(protocol.ProcessProtocol):
 
 def get_simple_split(branchfile):
     """Splits the branchfile argument and assuming branch is
-       the first path component in branchfile, will return
-       branch and file else None."""
+    the first path component in branchfile, will return
+    branch and file else None."""
 
     index = branchfile.find('/')
     if index == -1:
@@ -91,20 +89,36 @@ def get_simple_split(branchfile):
 
 
 class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
-
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
 
-    compare_attrs = ("p4port", "p4user", "p4passwd", "p4base", "p4bin", "pollInterval",
-                     "pollAtLaunch", "server_tz", "pollRandomDelayMin", "pollRandomDelayMax")
+    compare_attrs = (
+        "p4port",
+        "p4user",
+        "p4passwd",
+        "p4base",
+        "p4bin",
+        "pollInterval",
+        "pollAtLaunch",
+        "server_tz",
+        "pollRandomDelayMin",
+        "pollRandomDelayMax",
+    )
 
-    env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
-                "P4CHARSET", "P4CONFIG", "P4TICKETS", "PATH", "HOME"]
+    env_vars = [
+        "P4CLIENT",
+        "P4PORT",
+        "P4PASSWD",
+        "P4USER",
+        "P4CHARSET",
+        "P4CONFIG",
+        "P4TICKETS",
+        "PATH",
+        "HOME",
+    ]
 
-    changes_line_re = re.compile(
-        r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
-    describe_header_re = re.compile(
-        r"Change \d+ by (?P<who>\S+)@\S+ on (?P<when>.+)$")
+    changes_line_re = re.compile(r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
+    describe_header_re = re.compile(r"Change \d+ by (?P<who>\S+)@\S+ on (?P<when>.+)$")
     file_re = re.compile(r"^\.\.\. (?P<path>[^#]+)#\d+ [/\w]+$")
     datefmt = '%Y/%m/%d %H:%M:%S'
 
@@ -115,17 +129,34 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
     def __init__(self, **kwargs):
         name = kwargs.get("name", None)
         if name is None:
-            kwargs['name'] = self.build_name(name, kwargs.get('p4port', None),
-                                             kwargs.get('p4base', '//'))
+            kwargs['name'] = self.build_name(
+                name, kwargs.get('p4port', None), kwargs.get('p4base', '//')
+            )
         super().__init__(**kwargs)
 
-    def checkConfig(self, p4port=None, p4user=None, p4passwd=None, p4base="//", p4bin="p4",
-                    split_file=lambda branchfile: (None, branchfile), pollInterval=60 * 10,
-                    histmax=None, pollinterval=-2, encoding="utf8", project=None, name=None,
-                    use_tickets=False, ticket_login_interval=60 * 60 * 24, server_tz=None,
-                    pollAtLaunch=False, revlink=lambda branch, revision: (""),
-                    resolvewho=lambda who: (who), pollRandomDelayMin=0, pollRandomDelayMax=0):
-
+    def checkConfig(
+        self,
+        p4port=None,
+        p4user=None,
+        p4passwd=None,
+        p4base="//",
+        p4bin="p4",
+        split_file=lambda branchfile: (None, branchfile),
+        pollInterval=60 * 10,
+        histmax=None,
+        pollinterval=-2,
+        encoding="utf8",
+        project=None,
+        name=None,
+        use_tickets=False,
+        ticket_login_interval=60 * 60 * 24,
+        server_tz=None,
+        pollAtLaunch=False,
+        revlink=lambda branch, revision: (""),
+        resolvewho=lambda who: (who),
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0,
+    ):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
@@ -144,19 +175,38 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         if server_tz is not None and dateutil.tz.gettz(server_tz) is None:
             raise P4PollerError(f"Failed to get timezone from server_tz string '{server_tz}'")
 
-        super().checkConfig(name=name, pollInterval=pollInterval,
-                            pollAtLaunch=pollAtLaunch,
-                            pollRandomDelayMin=pollRandomDelayMin,
-                            pollRandomDelayMax=pollRandomDelayMax)
+        super().checkConfig(
+            name=name,
+            pollInterval=pollInterval,
+            pollAtLaunch=pollAtLaunch,
+            pollRandomDelayMin=pollRandomDelayMin,
+            pollRandomDelayMax=pollRandomDelayMax,
+        )
 
     @defer.inlineCallbacks
-    def reconfigService(self, p4port=None, p4user=None, p4passwd=None, p4base="//", p4bin="p4",
-                        split_file=lambda branchfile: (None, branchfile), pollInterval=60 * 10,
-                        histmax=None, pollinterval=-2, encoding="utf8", project=None, name=None,
-                        use_tickets=False, ticket_login_interval=60 * 60 * 24, server_tz=None,
-                        pollAtLaunch=False, revlink=lambda branch, revision: (""),
-                        resolvewho=lambda who: (who), pollRandomDelayMin=0, pollRandomDelayMax=0):
-
+    def reconfigService(
+        self,
+        p4port=None,
+        p4user=None,
+        p4passwd=None,
+        p4base="//",
+        p4bin="p4",
+        split_file=lambda branchfile: (None, branchfile),
+        pollInterval=60 * 10,
+        histmax=None,
+        pollinterval=-2,
+        encoding="utf8",
+        project=None,
+        name=None,
+        use_tickets=False,
+        ticket_login_interval=60 * 60 * 24,
+        server_tz=None,
+        pollAtLaunch=False,
+        revlink=lambda branch, revision: (""),
+        resolvewho=lambda who: (who),
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0,
+    ):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
@@ -182,10 +232,13 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
         self._ticket_login_counter = 0
 
-        yield super().reconfigService(name=name, pollInterval=pollInterval,
-                                      pollAtLaunch=pollAtLaunch,
-                                      pollRandomDelayMin=pollRandomDelayMin,
-                                      pollRandomDelayMax=pollRandomDelayMax)
+        yield super().reconfigService(
+            name=name,
+            pollInterval=pollInterval,
+            pollAtLaunch=pollAtLaunch,
+            pollRandomDelayMin=pollRandomDelayMin,
+            pollRandomDelayMax=pollRandomDelayMax,
+        )
 
     def build_name(self, name, p4port, p4base):
         if name is not None:
@@ -202,17 +255,22 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
     @defer.inlineCallbacks
     def _get_process_output(self, args):
-        env = {e: os.environ.get(e)
-               for e in self.env_vars if os.environ.get(e)}
-        res, out = yield runprocess.run_process(self.master.reactor, [self.p4bin] + args,
-                                                env=env, collect_stderr=False,
-                                                stderr_is_error=True)
+        env = {e: os.environ.get(e) for e in self.env_vars if os.environ.get(e)}
+        res, out = yield runprocess.run_process(
+            self.master.reactor,
+            [self.p4bin] + args,
+            env=env,
+            collect_stderr=False,
+            stderr_is_error=True,
+        )
         if res != 0:
             raise P4PollerError(f'Failed to run {self.p4bin}')
         return out
 
     def _acquireTicket(self, protocol):
-        command = [self.p4bin, ]
+        command = [
+            self.p4bin,
+        ]
         if self.p4port:
             command.extend(['-p', self.p4port])
         if self.p4user:
@@ -229,8 +287,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             if self._ticket_login_counter <= 0:
                 # Re-acquire the ticket and reset the counter.
                 log.msg(f"P4Poller: (re)acquiring P4 ticket for {self.p4base}...")
-                protocol = TicketLoginProtocol(
-                    self.p4passwd + "\n", self.p4base)
+                protocol = TicketLoginProtocol(self.p4passwd + "\n", self.p4base)
                 self._acquireTicket(protocol)
                 yield protocol.deferred
 
@@ -332,8 +389,8 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                     raise P4PollerError(f"Invalid file line: {repr(line)}")
                 path = m.group('path')
                 if path.startswith(self.p4base):
-                    branch, file = self.split_file(path[len(self.p4base):])
-                    if (branch is None and file is None):
+                    branch, file = self.split_file(path[len(self.p4base) :])
+                    if branch is None and file is None:
                         continue
                     if branch in branch_files:
                         branch_files[branch].append(file)
@@ -350,6 +407,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                     when_timestamp=when,
                     branch=branch,
                     project=self.project,
-                    revlink=self.revlink_callable(branch, str(num)))
+                    revlink=self.revlink_callable(branch, str(num)),
+                )
 
             self.last_change = num

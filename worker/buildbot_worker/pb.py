@@ -51,15 +51,40 @@ class UnknownCommand(pb.Error):
 
 
 class ProtocolCommandPb(ProtocolCommandBase):
-    def __init__(self, unicode_encoding, worker_basedir, basedir, buffer_size, buffer_timeout,
-                 max_line_length, newline_re, builder_is_running, on_command_complete,
-                 on_lost_remote_step, command, command_id, args, command_ref):
+    def __init__(
+        self,
+        unicode_encoding,
+        worker_basedir,
+        basedir,
+        buffer_size,
+        buffer_timeout,
+        max_line_length,
+        newline_re,
+        builder_is_running,
+        on_command_complete,
+        on_lost_remote_step,
+        command,
+        command_id,
+        args,
+        command_ref,
+    ):
         self.basedir = basedir
         self.command_ref = command_ref
-        ProtocolCommandBase.__init__(self, unicode_encoding, worker_basedir, buffer_size,
-                                     buffer_timeout, max_line_length, newline_re,
-                                     builder_is_running, on_command_complete, on_lost_remote_step,
-                                     command, command_id, args)
+        ProtocolCommandBase.__init__(
+            self,
+            unicode_encoding,
+            worker_basedir,
+            buffer_size,
+            buffer_timeout,
+            max_line_length,
+            newline_re,
+            builder_is_running,
+            on_command_complete,
+            on_lost_remote_step,
+            command,
+            command_id,
+            args,
+        )
 
     def protocol_args_setup(self, command, args):
         if command == "mkdir":
@@ -69,8 +94,7 @@ class ProtocolCommandPb(ProtocolCommandBase):
         if command == "rmdir":
             args['paths'] = []
             if isinstance(args['dir'], list):
-                args['paths'] = [os.path.join(self.basedir, dir)
-                                 for dir in args['dir']]
+                args['paths'] = [os.path.join(self.basedir, dir) for dir in args['dir']]
             else:
                 args['paths'] = [os.path.join(self.basedir, args['dir'])]
             del args['dir']
@@ -99,20 +123,23 @@ class ProtocolCommandPb(ProtocolCommandBase):
             args['workdir'] = os.path.join(self.basedir, args['workdir'])
 
         if command == "uploadFile":
-            args["path"] = os.path.join(self.basedir, args['workdir'],
-                                        os.path.expanduser(args['workersrc']))
+            args["path"] = os.path.join(
+                self.basedir, args['workdir'], os.path.expanduser(args['workersrc'])
+            )
             del args['workdir']
             del args['workersrc']
 
         if command == "uploadDirectory":
-            args['path'] = os.path.join(self.basedir, args['workdir'],
-                                        os.path.expanduser(args['workersrc']))
+            args['path'] = os.path.join(
+                self.basedir, args['workdir'], os.path.expanduser(args['workersrc'])
+            )
             del args['workdir']
             del args['workersrc']
 
         if command == "downloadFile":
-            args['path'] = os.path.join(self.basedir, args['workdir'],
-                                        os.path.expanduser(args['workerdest']))
+            args['path'] = os.path.join(
+                self.basedir, args['workdir'], os.path.expanduser(args['workerdest'])
+            )
             del args['workdir']
             del args['workerdest']
 
@@ -192,8 +219,9 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
     # is severed.
     remote = None
 
-    def __init__(self, name, unicode_encoding, buffer_size, buffer_timeout, max_line_length,
-                 newline_re):
+    def __init__(
+        self, name, unicode_encoding, buffer_size, buffer_timeout, max_line_length, newline_re
+    ):
         # service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
         self.unicode_encoding = unicode_encoding
@@ -218,8 +246,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
     def setBuilddir(self, builddir):
         assert self.parent
         self.builddir = builddir
-        self.basedir = os.path.join(bytes2unicode(self.bot.basedir),
-                                    bytes2unicode(self.builddir))
+        self.basedir = os.path.join(bytes2unicode(self.bot.basedir), bytes2unicode(self.builddir))
         if not os.path.isdir(self.basedir):
             os.makedirs(self.basedir)
 
@@ -240,8 +267,11 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         self.remote.notifyOnDisconnect(self.lostRemote)
 
     def remote_print(self, message):
-        log.msg("WorkerForBuilder.remote_print({0}): message from master: {1}".format(
-                self.name, message))
+        log.msg(
+            "WorkerForBuilder.remote_print({0}): message from master: {1}".format(
+                self.name, message
+            )
+        )
 
     def lostRemote(self, remote):
         log.msg("lost remote")
@@ -278,15 +308,24 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         def on_command_complete():
             self.protocol_command = None
 
-        self.protocol_command = self.ProtocolCommand(self.unicode_encoding, self.bot.basedir,
-                                                     self.basedir, self.buffer_size,
-                                                     self.buffer_timeout, self.max_line_length,
-                                                     self.newline_re, self.running,
-                                                     on_command_complete,
-                                                     self.lostRemoteStep, command, command_id, args,
-                                                     command_ref)
+        self.protocol_command = self.ProtocolCommand(
+            self.unicode_encoding,
+            self.bot.basedir,
+            self.basedir,
+            self.buffer_size,
+            self.buffer_timeout,
+            self.max_line_length,
+            self.newline_re,
+            self.running,
+            on_command_complete,
+            self.lostRemoteStep,
+            command,
+            command_id,
+            args,
+            command_ref,
+        )
 
-        log.msg(u"(command {0}): startCommand:{1}".format(command_id, command))
+        log.msg("(command {0}): startCommand:{1}".format(command_id, command))
         self.protocol_command.protocol_notify_on_disconnect()
         d = self.protocol_command.command.doStart()
         d.addCallback(lambda res: None)
@@ -328,17 +367,25 @@ class BotPbLike(BotBase):
         wanted_names = {name for (name, builddir) in wanted}
         wanted_dirs = {builddir for (name, builddir) in wanted}
         wanted_dirs.add('info')
-        for (name, builddir) in wanted:
+        for name, builddir in wanted:
             b = self.builders.get(name, None)
             if b:
                 if b.builddir != builddir:
-                    log.msg("changing builddir for builder {0} from {1} to {2}".format(
-                            name, b.builddir, builddir))
+                    log.msg(
+                        "changing builddir for builder {0} from {1} to {2}".format(
+                            name, b.builddir, builddir
+                        )
+                    )
                     b.setBuilddir(builddir)
             else:
-                b = self.WorkerForBuilder(name, self.unicode_encoding, self.buffer_size,
-                                          self.buffer_timeout, self.max_line_length,
-                                          self.newline_re)
+                b = self.WorkerForBuilder(
+                    name,
+                    self.unicode_encoding,
+                    self.buffer_size,
+                    self.buffer_timeout,
+                    self.max_line_length,
+                    self.newline_re,
+                )
                 b.setServiceParent(self)
                 b.setBuilddir(builddir)
                 self.builders[name] = b
@@ -348,8 +395,8 @@ class BotPbLike(BotBase):
         to_remove = list(set(self.builders.keys()) - wanted_names)
         if to_remove:
             yield defer.gatherResults([
-                defer.maybeDeferred(self.builders[name].disownServiceParent)
-                for name in to_remove])
+                defer.maybeDeferred(self.builders[name].disownServiceParent) for name in to_remove
+            ])
 
         # and *then* remove them from the builder list
         for name in to_remove:
@@ -360,17 +407,20 @@ class BotPbLike(BotBase):
             if os.path.isdir(os.path.join(self.basedir, dir)):
                 if dir not in wanted_dirs:
                     if self.delete_leftover_dirs:
-                        log.msg("Deleting directory '{0}' that is not being "
-                                "used by the buildmaster".format(dir))
+                        log.msg(
+                            "Deleting directory '{0}' that is not being "
+                            "used by the buildmaster".format(dir)
+                        )
                         try:
                             shutil.rmtree(dir)
                         except OSError as e:
-                            log.msg("Cannot remove directory '{0}': "
-                                    "{1}".format(dir, e))
+                            log.msg("Cannot remove directory '{0}': " "{1}".format(dir, e))
                     else:
-                        log.msg("I have a leftover directory '{0}' that is not "
-                                "being used by the buildmaster: you can delete "
-                                "it now".format(dir))
+                        log.msg(
+                            "I have a leftover directory '{0}' that is not "
+                            "being used by the buildmaster: you can delete "
+                            "it now".format(dir)
+                        )
 
         defer.returnValue(retval)
 
@@ -380,10 +430,15 @@ class BotPb(BotPbLike, pb.Referenceable):
 
 
 if sys.version_info >= (3, 6):
+
     class BotMsgpack(BotBase):
         def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
-            BotBase.__init__(self, basedir, unicode_encoding=unicode_encoding,
-                             delete_leftover_dirs=delete_leftover_dirs)
+            BotBase.__init__(
+                self,
+                basedir,
+                unicode_encoding=unicode_encoding,
+                delete_leftover_dirs=delete_leftover_dirs,
+            )
             self.protocol_commands = {}
 
         @defer.inlineCallbacks
@@ -399,8 +454,7 @@ if sys.version_info >= (3, 6):
             # connection to the master has been lost.
             for protocol_command in self.protocol_commands:
                 protocol_command.builder_is_running = False
-                log.msg("stopCommand: halting current command {0}".format(
-                        protocol_command.command))
+                log.msg("stopCommand: halting current command {0}".format(protocol_command.command))
                 protocol_command.command.doInterrupt()
             self.protocol_commands = {}
 
@@ -425,15 +479,24 @@ if sys.version_info >= (3, 6):
             def on_command_complete():
                 del self.protocol_commands[command_id]
 
-            protocol_command = ProtocolCommandMsgpack(self.unicode_encoding, self.basedir,
-                                                      self.buffer_size, self.buffer_timeout,
-                                                      self.max_line_length, self.newline_re,
-                                                      self.running, on_command_complete,
-                                                      protocol, command_id, command, args)
+            protocol_command = ProtocolCommandMsgpack(
+                self.unicode_encoding,
+                self.basedir,
+                self.buffer_size,
+                self.buffer_timeout,
+                self.max_line_length,
+                self.newline_re,
+                self.running,
+                on_command_complete,
+                protocol,
+                command_id,
+                command,
+                args,
+            )
 
             self.protocol_commands[command_id] = protocol_command
 
-            log.msg(u" startCommand:{0} [id {1}]".format(command, command_id))
+            log.msg(" startCommand:{0} [id {1}]".format(command, command_id))
             protocol_command.protocol_notify_on_disconnect()
             d = protocol_command.command.doStart()
             d.addCallback(lambda res: None)
@@ -450,8 +513,10 @@ if sys.version_info >= (3, 6):
                 log.msg(" .. but none was running")
                 return
             d = self.protocol_commands[command_id].flush_command_output()
-            d.addErrback(self.protocol_commands[command_id]._ack_failed,
-                         "ProtocolCommandMsgpack.flush_command_output")
+            d.addErrback(
+                self.protocol_commands[command_id]._ack_failed,
+                "ProtocolCommandMsgpack.flush_command_output",
+            )
             self.protocol_commands[command_id].command.doInterrupt()
 
 
@@ -472,6 +537,7 @@ class BotFactory(AutoLoginPBFactory):
     buildmaster host, port and maxDelay are accepted for backwards
     compatibility only.
     """
+
     keepaliveInterval = None  # None = do not use keepalives
     keepaliveTimer = None
     perspective = None
@@ -499,8 +565,11 @@ class BotFactory(AutoLoginPBFactory):
             if not self.keepaliveInterval:
                 self.keepaliveInterval = 10 * 60
         if self.keepaliveInterval:
-            log.msg("sending application-level keepalives every {0} seconds".format(
-                    self.keepaliveInterval))
+            log.msg(
+                "sending application-level keepalives every {0} seconds".format(
+                    self.keepaliveInterval
+                )
+            )
             self.startTimers()
 
     def startTimers(self):
@@ -533,12 +602,14 @@ class BotFactory(AutoLoginPBFactory):
                 self._active_keepalives -= 1
                 self._checkNotifyShutdown()
 
-        self.keepaliveTimer = self._reactor.callLater(self.keepaliveInterval,
-                                                      doKeepalive)
+        self.keepaliveTimer = self._reactor.callLater(self.keepaliveInterval, doKeepalive)
 
     def _checkNotifyShutdown(self):
-        if self._active_keepalives == 0 and self._shutting_down and \
-                self._shutdown_notifier is not None:
+        if (
+            self._active_keepalives == 0
+            and self._shutting_down
+            and self._shutdown_notifier is not None
+        ):
             self._shutdown_notifier.notify(None)
             self._shutdown_notifier = None
 
@@ -574,17 +645,33 @@ class Worker(WorkerBase):
 
     maxdelay is deprecated in favor of using twisted's backoffPolicy.
     """
-    def __init__(self, buildmaster_host, port, name, passwd, basedir,
-                 keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
-                 maxdelay=None, numcpus=None, unicode_encoding=None, protocol='pb', useTls=None,
-                 allow_shutdown=None, maxRetries=None, connection_string=None,
-                 delete_leftover_dirs=False, proxy_connection_string=None):
 
+    def __init__(
+        self,
+        buildmaster_host,
+        port,
+        name,
+        passwd,
+        basedir,
+        keepalive,
+        usePTY=None,
+        keepaliveTimeout=None,
+        umask=None,
+        maxdelay=None,
+        numcpus=None,
+        unicode_encoding=None,
+        protocol='pb',
+        useTls=None,
+        allow_shutdown=None,
+        maxRetries=None,
+        connection_string=None,
+        delete_leftover_dirs=False,
+        proxy_connection_string=None,
+    ):
         assert usePTY is None, "worker-side usePTY is not supported anymore"
-        assert (connection_string is None or
-                (buildmaster_host, port) == (None, None)), (
-                    "If you want to supply a connection string, "
-                    "then set host and port to None")
+        assert connection_string is None or (buildmaster_host, port) == (None, None), (
+            "If you want to supply a connection string, " "then set host and port to None"
+        )
 
         if protocol == 'pb':
             bot_class = BotPb
@@ -598,8 +685,14 @@ class Worker(WorkerBase):
             raise ValueError('Unknown protocol {}'.format(protocol))
 
         WorkerBase.__init__(
-            self, name, basedir, bot_class, umask=umask, unicode_encoding=unicode_encoding,
-            delete_leftover_dirs=delete_leftover_dirs)
+            self,
+            name,
+            basedir,
+            bot_class,
+            umask=umask,
+            unicode_encoding=unicode_encoding,
+            delete_leftover_dirs=delete_leftover_dirs,
+        )
         if keepalive == 0:
             keepalive = None
 
@@ -633,6 +726,7 @@ class Worker(WorkerBase):
                 ws_conn_string = "ws://{}:{}".format(buildmaster_host, port)
             else:
                 from urllib.parse import urlparse
+
                 parsed_url = urlparse(connection_string)
                 ws_conn_string = "ws://{}:{}".format(parsed_url.hostname, parsed_url.port)
 
@@ -653,11 +747,13 @@ class Worker(WorkerBase):
             return '{}:host={}:port={}'.format(
                 connection_type,
                 host.replace(':', r'\:'),  # escape ipv6 addresses
-                port)
+                port,
+            )
 
         assert not (proxy_connection_string and connection_string), (
             "If you want to use HTTP tunneling, then supply build master "
-            "host and port rather than a connection string")
+            "host and port rather than a connection string"
+        )
 
         if proxy_connection_string:
             log.msg("Using HTTP tunnel to connect through proxy")
@@ -684,8 +780,7 @@ class Worker(WorkerBase):
             log.msg("Setting up SIGHUP handler to initiate shutdown")
             signal.signal(signal.SIGHUP, self._handleSIGHUP)
         elif self.allow_shutdown == 'file':
-            log.msg("Watching {0}'s mtime to initiate shutdown".format(
-                    self.shutdown_file))
+            log.msg("Watching {0}'s mtime to initiate shutdown".format(self.shutdown_file))
             if os.path.exists(self.shutdown_file):
                 self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
             self.shutdown_loop = loop = task.LoopingCall(self._checkShutdownFile)
@@ -704,10 +799,11 @@ class Worker(WorkerBase):
         return self.gracefulShutdown()
 
     def _checkShutdownFile(self):
-        if os.path.exists(self.shutdown_file) and \
-                os.path.getmtime(self.shutdown_file) > self.shutdown_mtime:
-            log.msg("Initiating shutdown because {0} was touched".format(
-                    self.shutdown_file))
+        if (
+            os.path.exists(self.shutdown_file)
+            and os.path.getmtime(self.shutdown_file) > self.shutdown_mtime
+        ):
+            log.msg("Initiating shutdown because {0} was touched".format(self.shutdown_file))
             self.gracefulShutdown()
 
             # In case the shutdown fails, update our mtime so we don't keep
@@ -723,15 +819,15 @@ class Worker(WorkerBase):
             reactor.stop()
             return None
 
-        log.msg(
-            "Telling the master we want to shutdown after any running builds are finished")
+        log.msg("Telling the master we want to shutdown after any running builds are finished")
         d = self.bf.perspective.callRemote("shutdown")
 
         def _shutdownfailed(err):
             if err.check(AttributeError):
                 log.msg(
                     "Master does not support worker initiated shutdown.  Upgrade master to 0.8.3"
-                    "or later to use this feature.")
+                    "or later to use this feature."
+                )
             else:
                 log.msg('callRemote("shutdown") failed')
                 log.err(err)

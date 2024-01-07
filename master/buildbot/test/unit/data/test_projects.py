@@ -30,7 +30,6 @@ from buildbot.test.util import interfaces
 
 
 class ProjectEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = projects.ProjectEndpoint
     resourceTypeClass = projects.Project
 
@@ -73,7 +72,6 @@ class ProjectEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = projects.ProjectsEndpoint
     resourceTypeClass = projects.Project
 
@@ -103,7 +101,8 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         result_spec = None
         if active_filter is not None:
             result_spec = resultspec.OptimisedResultSpec(
-                filters=[resultspec.Filter('active', 'eq', [active_filter])])
+                filters=[resultspec.Filter('active', 'eq', [active_filter])]
+            )
 
         projects = yield self.callGet(('projects',), resultSpec=result_spec)
 
@@ -114,12 +113,10 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = projects.Project(self.master)
         yield self.master.db.insert_test_data([
             fakedb.Project(id=13, name="fake_project"),
@@ -128,7 +125,8 @@ class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     def test_signature_find_project_id(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.find_project_id,  # fake
-            self.rtype.find_project_id)  # real
+            self.rtype.find_project_id,
+        )  # real
         def find_project_id(self, name):
             pass
 
@@ -141,12 +139,7 @@ class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     def test_signature_update_project_info(self):
         @self.assertArgSpecMatches(self.master.data.updates.update_project_info)
         def update_project_info(
-            self,
-            projectid,
-            slug,
-            description,
-            description_format,
-            description_html
+            self, projectid, slug, description, description_format, description_html
         ):
             pass
 
@@ -160,11 +153,16 @@ class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             "html desc",
         )
         projects = yield self.master.db.projects.get_projects()
-        self.assertEqual(projects, [{
-            "id": 13,
-            "name": "fake_project",
-            "slug": "slug13",
-            "description": "project13 desc",
-            "description_format": "format",
-            "description_html": "html desc",
-        }])
+        self.assertEqual(
+            projects,
+            [
+                {
+                    "id": 13,
+                    "name": "fake_project",
+                    "slug": "slug13",
+                    "description": "project13 desc",
+                    "description_format": "format",
+                    "description_html": "html desc",
+                }
+            ],
+        )

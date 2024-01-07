@@ -22,11 +22,11 @@ from buildbot_worker.util import rewrap
 
 
 class Follower(object):
-
     def follow(self):
         from twisted.internet import reactor
 
         from buildbot_worker.scripts.logwatcher import LogWatcher
+
         self.rc = 0
         print("Following twistd.log until startup finished..")
         lw = LogWatcher("twistd.log")
@@ -37,6 +37,7 @@ class Follower(object):
 
     def _success(self, processtype):
         from twisted.internet import reactor
+
         print("The {0} appears to have (re)started correctly.".format(processtype))
         self.rc = 0
         reactor.stop()
@@ -45,8 +46,11 @@ class Follower(object):
         from twisted.internet import reactor
 
         from buildbot_worker.scripts.logwatcher import WorkerTimeoutError
+
         if why.check(WorkerTimeoutError):
-            print(rewrap("""\
+            print(
+                rewrap(
+                    """\
                 The worker took more than 10 seconds to start and/or connect
                 to the buildmaster, so we were unable to confirm that it
                 started and connected correctly.
@@ -59,12 +63,18 @@ class Follower(object):
                    'Failure: twisted.cred.error.UnauthorizedLogin'
                 then your worker might be using the wrong botname or password.
                 Please correct these problems and then restart the worker.
-                """))
+                """
+                )
+            )
         else:
-            print(rewrap("""\
+            print(
+                rewrap(
+                    """\
                 Unable to confirm that the worker started correctly.
                 You may need to stop it, fix the config file, and restart.
-                """))
+                """
+                )
+            )
             print(why)
         self.rc = 1
         reactor.stop()
@@ -102,6 +112,7 @@ def startWorker(basedir, quiet, nodaemon):
 
     # we probably can't do this os.fork under windows
     from twisted.python.runtime import platformType
+
     if platformType == "win32":
         return launch(nodaemon)
 
@@ -126,10 +137,13 @@ def launch(nodaemon):
     # on windows.
     from twisted.python.runtime import platformType
     from twisted.scripts.twistd import run
-    argv = ["twistd",
-            "--no_save",
-            "--logfile=twistd.log",  # windows doesn't use the same default
-            "--python=buildbot.tac"]
+
+    argv = [
+        "twistd",
+        "--no_save",
+        "--logfile=twistd.log",  # windows doesn't use the same default
+        "--python=buildbot.tac",
+    ]
     if nodaemon:
         argv.extend(["--nodaemon"])
         if platformType != 'win32':

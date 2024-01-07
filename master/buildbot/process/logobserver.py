@@ -21,7 +21,6 @@ from buildbot import interfaces
 
 @implementer(interfaces.ILogObserver)
 class LogObserver:
-
     def setStep(self, step):
         self.step = step
 
@@ -97,7 +96,6 @@ class LogLineObserver(LogObserver):
 
 
 class LineConsumerLogObserver(LogLineObserver):
-
     def __init__(self, consumerFunction):
         super().__init__()
         self.generator = None
@@ -140,7 +138,6 @@ class OutputProgressObserver(LogObserver):
 
 
 class BufferLogObserver(LogObserver):
-
     def __init__(self, wantStdout=True, wantStderr=False):
         super().__init__()
         self.stdout = [] if wantStdout else None

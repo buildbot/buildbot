@@ -27,13 +27,13 @@ class SchedulerAlreadyClaimedError(Exception):
 
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
-
     # returns a Deferred that returns None
     def enable(self, schedulerid, v):
         def thd(conn):
             tbl = self.db.model.schedulers
             q = tbl.update(whereclause=tbl.c.id == schedulerid)
             conn.execute(q, enabled=int(v))
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
@@ -42,28 +42,28 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
             upd_q = tbl.update(
-                ((tbl.c.schedulerid == schedulerid) &
-                 (tbl.c.changeid == sa.bindparam('wc_changeid'))))
+                (
+                    (tbl.c.schedulerid == schedulerid)
+                    & (tbl.c.changeid == sa.bindparam('wc_changeid'))
+                )
+            )
             for changeid, important in classifications.items():
                 transaction = conn.begin()
                 # convert the 'important' value into an integer, since that
                 # is the column type
                 imp_int = int(bool(important))
                 try:
-                    conn.execute(ins_q,
-                                 schedulerid=schedulerid,
-                                 changeid=changeid,
-                                 important=imp_int).close()
-                except (sqlalchemy.exc.ProgrammingError,
-                        sqlalchemy.exc.IntegrityError):
+                    conn.execute(
+                        ins_q, schedulerid=schedulerid, changeid=changeid, important=imp_int
+                    ).close()
+                except (sqlalchemy.exc.ProgrammingError, sqlalchemy.exc.IntegrityError):
                     transaction.rollback()
                     transaction = conn.begin()
                     # insert failed, so try an update
-                    conn.execute(upd_q,
-                                 wc_changeid=changeid,
-                                 important=imp_int).close()
+                    conn.execute(upd_q, wc_changeid=changeid, important=imp_int).close()
 
                 transaction.commit()
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
@@ -75,12 +75,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 wc = wc & (sch_ch_tbl.c.changeid < less_than)
             q = sch_ch_tbl.delete(whereclause=wc)
             conn.execute(q).close()
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def getChangeClassifications(self, schedulerid, branch=-1,
-                                 repository=-1, project=-1,
-                                 codebase=-1):
+    def getChangeClassifications(
+        self, schedulerid, branch=-1, repository=-1, project=-1, codebase=-1
+    ):
         # -1 here stands for "argument not given", since None has meaning
         # as a branch
         def thd(conn):
@@ -103,14 +104,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             # if we need to filter further append those, as well as a join
             # on changeid (but just once for that one)
             if extra_wheres:
-                wc &= (sch_ch_tbl.c.changeid == ch_tbl.c.changeid)
+                wc &= sch_ch_tbl.c.changeid == ch_tbl.c.changeid
                 for w in extra_wheres:
                     wc &= w
 
-            q = sa.select(
-                [sch_ch_tbl.c.changeid, sch_ch_tbl.c.important],
-                whereclause=wc)
+            q = sa.select([sch_ch_tbl.c.changeid, sch_ch_tbl.c.important], whereclause=wc)
             return {r.changeid: bool(r.important) for r in conn.execute(q)}
+
         return self.db.pool.do(thd)
 
     def findSchedulerId(self, name):
@@ -119,7 +119,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
-            insert_values={"name": name, "name_hash": name_hash}
+            insert_values={"name": name, "name_hash": name_hash},
         )
 
     # returns a Deferred that returns None
@@ -129,8 +129,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
             # handle the masterid=None case to get it out of the way
             if masterid is None:
-                q = sch_mst_tbl.delete(
-                    whereclause=sch_mst_tbl.c.schedulerid == schedulerid)
+                q = sch_mst_tbl.delete(whereclause=sch_mst_tbl.c.schedulerid == schedulerid)
                 conn.execute(q).close()
                 return None
 
@@ -141,12 +140,14 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this scheduler, but who?
                 join = self.db.model.masters.outerjoin(
-                    sch_mst_tbl,
-                    (self.db.model.masters.c.id == sch_mst_tbl.c.masterid))
+                    sch_mst_tbl, (self.db.model.masters.c.id == sch_mst_tbl.c.masterid)
+                )
 
-                q = sa.select([self.db.model.masters.c.name,
-                               sch_mst_tbl.c.masterid], from_obj=join, whereclause=(
-                    sch_mst_tbl.c.schedulerid == schedulerid))
+                q = sa.select(
+                    [self.db.model.masters.c.name, sch_mst_tbl.c.masterid],
+                    from_obj=join,
+                    whereclause=(sch_mst_tbl.c.schedulerid == schedulerid),
+                )
                 row = conn.execute(q).fetchone()
                 # ok, that was us, so we just do nothing
                 if row['masterid'] == masterid:
@@ -173,8 +174,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             if masterid is not None and active is not None and not active:
                 return []
 
-            join = sch_tbl.outerjoin(sch_mst_tbl,
-                                     (sch_tbl.c.id == sch_mst_tbl.c.schedulerid))
+            join = sch_tbl.outerjoin(sch_mst_tbl, (sch_tbl.c.id == sch_mst_tbl.c.schedulerid))
 
             # if we're given a _schedulerid, select only that row
             wc = None
@@ -189,17 +189,20 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 elif active is not None:
                     wc = sch_mst_tbl.c.masterid == NULL
 
-            q = sa.select([sch_tbl.c.id, sch_tbl.c.name, sch_tbl.c.enabled,
-                           sch_mst_tbl.c.masterid],
-                          from_obj=join, whereclause=wc)
+            q = sa.select(
+                [sch_tbl.c.id, sch_tbl.c.name, sch_tbl.c.enabled, sch_mst_tbl.c.masterid],
+                from_obj=join,
+                whereclause=wc,
+            )
 
             return [
                 {
                     "id": row.id,
                     "name": row.name,
                     "enabled": bool(row.enabled),
-                    "masterid": row.masterid
+                    "masterid": row.masterid,
                 }
                 for row in conn.execute(q).fetchall()
             ]
+
         return self.db.pool.do(thd)

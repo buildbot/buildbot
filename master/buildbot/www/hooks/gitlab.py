@@ -31,9 +31,7 @@ _HEADER_GITLAB_TOKEN = b'X-Gitlab-Token'
 
 
 class GitLabHandler(BaseHookHandler):
-
-    def _process_change(self, payload, user, repo, repo_url, event,
-                        codebase=None):
+    def _process_change(self, payload, user, repo, repo_url, event, codebase=None):
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -118,35 +116,40 @@ class GitLabHandler(BaseHookHandler):
             log.msg(f"GitLab MR#{attrs['iid']}: Ignoring because state is {state}")
             return []
         action = attrs['action']
-        if not re.match('^(open|reopen)$', action) and \
-                not (action == "update" and "oldrev" in attrs):
-            log.msg(f"GitLab MR#{attrs['iid']}: Ignoring because action {action} was not open or "
-                    "reopen or an update that added code")
+        if not re.match('^(open|reopen)$', action) and not (
+            action == "update" and "oldrev" in attrs
+        ):
+            log.msg(
+                f"GitLab MR#{attrs['iid']}: Ignoring because action {action} was not open or "
+                "reopen or an update that added code"
+            )
             return []
 
-        changes = [{
-            'author': f"{commit['author']['name']} <{commit['author']['email']}>",
-            'files': [],  # @todo use rest API
-            'comments': f"MR#{attrs['iid']}: {attrs['title']}\n\n{attrs['description']}",
-            'revision': commit['id'],
-            'when_timestamp': when_timestamp,
-            'branch': attrs['target_branch'],
-            'repository': repo_url,
-            'project': project,
-            'category': event,
-            'revlink': attrs['url'],
-            'properties': {
-                'source_branch': attrs['source_branch'],
-                'source_project_id': attrs['source_project_id'],
-                'source_repository': attrs['source']['git_http_url'],
-                'source_git_ssh_url': attrs['source']['git_ssh_url'],
-                'target_branch': attrs['target_branch'],
-                'target_project_id': attrs['target_project_id'],
-                'target_repository': attrs['target']['git_http_url'],
-                'target_git_ssh_url': attrs['target']['git_ssh_url'],
-                'event': event,
-            },
-        }]
+        changes = [
+            {
+                'author': f"{commit['author']['name']} <{commit['author']['email']}>",
+                'files': [],  # @todo use rest API
+                'comments': f"MR#{attrs['iid']}: {attrs['title']}\n\n{attrs['description']}",
+                'revision': commit['id'],
+                'when_timestamp': when_timestamp,
+                'branch': attrs['target_branch'],
+                'repository': repo_url,
+                'project': project,
+                'category': event,
+                'revlink': attrs['url'],
+                'properties': {
+                    'source_branch': attrs['source_branch'],
+                    'source_project_id': attrs['source_project_id'],
+                    'source_repository': attrs['source']['git_http_url'],
+                    'source_git_ssh_url': attrs['source']['git_ssh_url'],
+                    'target_branch': attrs['target_branch'],
+                    'target_project_id': attrs['target_project_id'],
+                    'target_repository': attrs['target']['git_http_url'],
+                    'target_git_ssh_url': attrs['target']['git_ssh_url'],
+                    'event': event,
+                },
+            }
+        ]
         if codebase is not None:
             changes[0]['codebase'] = codebase
         return changes
@@ -183,30 +186,32 @@ class GitLabHandler(BaseHookHandler):
         project = mr['target']['name']
 
         log.msg(f"Found notes on MR#{mr['iid']}: {attrs['note']}")
-        changes = [{
-            'author': f"{commit['author']['name']} <{commit['author']['email']}>",
-            'files': [],  # not provided by rest API
-            'comments': f"MR#{mr['iid']}: {mr['title']}\n\n{mr['description']}",
-            'revision': commit['id'],
-            'when_timestamp': when_timestamp,
-            'branch': mr['target_branch'],
-            'repository': repo_url,
-            'project': project,
-            'category': event,
-            'revlink': mr['url'],
-            'properties': {
-                'source_branch': mr['source_branch'],
-                'source_project_id': mr['source_project_id'],
-                'source_repository': mr['source']['git_http_url'],
-                'source_git_ssh_url': mr['source']['git_ssh_url'],
-                'target_branch': mr['target_branch'],
-                'target_project_id': mr['target_project_id'],
-                'target_repository': mr['target']['git_http_url'],
-                'target_git_ssh_url': mr['target']['git_ssh_url'],
-                'event': event,
-                'comments': attrs['note'],
-            },
-        }]
+        changes = [
+            {
+                'author': f"{commit['author']['name']} <{commit['author']['email']}>",
+                'files': [],  # not provided by rest API
+                'comments': f"MR#{mr['iid']}: {mr['title']}\n\n{mr['description']}",
+                'revision': commit['id'],
+                'when_timestamp': when_timestamp,
+                'branch': mr['target_branch'],
+                'repository': repo_url,
+                'project': project,
+                'category': event,
+                'revlink': mr['url'],
+                'properties': {
+                    'source_branch': mr['source_branch'],
+                    'source_project_id': mr['source_project_id'],
+                    'source_repository': mr['source']['git_http_url'],
+                    'source_git_ssh_url': mr['source']['git_ssh_url'],
+                    'target_branch': mr['target_branch'],
+                    'target_project_id': mr['target_project_id'],
+                    'target_repository': mr['target']['git_http_url'],
+                    'target_git_ssh_url': mr['target']['git_ssh_url'],
+                    'event': event,
+                    'comments': attrs['note'],
+                },
+            }
+        ]
         if codebase is not None:
             changes[0]['codebase'] = codebase
         return changes
@@ -248,13 +253,14 @@ class GitLabHandler(BaseHookHandler):
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
             changes = self._process_change(
-                payload, user, repo, repo_url, event_type, codebase=codebase)
+                payload, user, repo, repo_url, event_type, codebase=codebase
+            )
         elif event_type == 'merge_request':
-            changes = self._process_merge_request_change(
-                payload, event_type, codebase=codebase)
+            changes = self._process_merge_request_change(payload, event_type, codebase=codebase)
         elif event_type == 'note':
             changes = self._process_note_addition_to_merge_request(
-                payload, event_type, codebase=codebase)
+                payload, event_type, codebase=codebase
+            )
         else:
             changes = []
         if changes:

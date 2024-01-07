@@ -44,7 +44,6 @@ def find_distribution_info(entry_point_name, entry_point_group):
 
 
 class _PluginEntry:
-
     def __init__(self, group, entry, loader):
         self._group = group
         self._entry = entry
@@ -89,7 +88,6 @@ class _PluginEntry:
 
 
 class _PluginEntryProxy(_PluginEntry):
-
     """Proxy for specific entry with custom group name.
 
     Used to provided access to the same entry from different namespaces.
@@ -147,7 +145,8 @@ class _NSNode:
                     raise PluginDBError(
                         f'Duplicate entry point for "{child.group}:{child.name}".\n'
                         f'  Previous definition {child.info}\n'
-                        f'  This definition {entry.info}')
+                        f'  This definition {entry.info}'
+                    )
             else:
                 self._children[key] = entry
         else:
@@ -198,8 +197,7 @@ class _NSNode:
                 result.append((key, child.info))
             else:
                 result.extend([
-                    (f'{key}.{name}', value)
-                    for name, value in child.info_all().items()
+                    (f'{key}.{name}', value) for name, value in child.info_all().items()
                 ])
         return result
 
@@ -208,7 +206,6 @@ class _NSNode:
 
 
 class _Plugins:
-
     """
     represent plugins within a namespace
     """
@@ -236,7 +233,8 @@ class _Plugins:
             except Invalid as e:
                 raise PluginDBError(
                     f'Plugin {self._group}:{entry.name} does not implement '
-                    f'{self._interface.__name__}: {str(e)}') from e
+                    f'{self._interface.__name__}: {str(e)}'
+                ) from e
         return result
 
     @property
@@ -245,9 +243,7 @@ class _Plugins:
             self._real_tree = _NSNode()
             entries = entry_points_get(entry_points(), self._group)
             for entry in entries:
-                self._real_tree.add(entry.name,
-                                    _PluginEntry(self._group, entry,
-                                                 self._load_entry))
+                self._real_tree.add(entry.name, _PluginEntry(self._group, entry, self._load_entry))
         return self._real_tree
 
     def load(self):
@@ -293,7 +289,6 @@ class _Plugins:
 
 
 class _PluginDB:
-
     """
     Plugin infrastructure support for Buildbot
     """

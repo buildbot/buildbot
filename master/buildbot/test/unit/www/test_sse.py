@@ -29,7 +29,6 @@ from buildbot.www import sse
 
 
 class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         self.master = master = self.make_master(url=b'h:/a/b/')
@@ -52,8 +51,7 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         request = self.request
         self.request = None
         uuid = self.readUUID(request)
-        self.render_resource(self.sse, b'/add/' +
-                             unicode2bytes(uuid) + b"/changes/*/*")
+        self.render_resource(self.sse, b'/add/' + unicode2bytes(uuid) + b"/changes/*/*")
         self.assertReceivesChangeNewMessage(request)
         self.assertEqual(self.request.finished, True)
         self.assertEqual(request.finished, False)
@@ -65,12 +63,10 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.render_resource(self.sse, b'/listen')
         request = self.request
         uuid = self.readUUID(request)
-        self.render_resource(self.sse, b'/add/' +
-                             unicode2bytes(uuid) + b"/changes/*/*")
+        self.render_resource(self.sse, b'/add/' + unicode2bytes(uuid) + b"/changes/*/*")
         self.assertReceivesChangeNewMessage(request)
         self.assertEqual(request.finished, False)
-        self.render_resource(self.sse, b'/remove/' +
-                             unicode2bytes(uuid) + b"/changes/*/*")
+        self.render_resource(self.sse, b'/remove/' + unicode2bytes(uuid) + b"/changes/*/*")
         with self.assertRaises(AssertionError):
             self.assertReceivesChangeNewMessage(request)
 
@@ -98,8 +94,7 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         for line in request.written.splitlines():
             if line.find(b":") > 0:
                 k, v = line.split(b": ", 1)
-                self.assertTrue(k not in kw, k + b" in " +
-                                unicode2bytes(str(kw)))
+                self.assertTrue(k not in kw, k + b" in " + unicode2bytes(str(kw)))
                 kw[k] = v
             else:
                 self.assertEqual(line, b"")
@@ -114,14 +109,15 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         return kw[b"data"]
 
     def assertReceivesChangeNewMessage(self, request):
-        self.master.mq.callConsumer(
-            ("changes", "500", "new"), test_changes.Change.changeEvent)
+        self.master.mq.callConsumer(("changes", "500", "new"), test_changes.Change.changeEvent)
         kw = self.readEvent(request)
         self.assertEqual(kw[b"event"], b"event")
         msg = json.loads(bytes2unicode(kw[b"data"]))
         self.assertEqual(msg["key"], ['changes', '500', 'new'])
-        self.assertEqual(msg["message"], json.loads(
-            json.dumps(test_changes.Change.changeEvent, default=self._toJson)))
+        self.assertEqual(
+            msg["message"],
+            json.loads(json.dumps(test_changes.Change.changeEvent, default=self._toJson)),
+        )
 
     def _toJson(self, obj):
         if isinstance(obj, datetime.datetime):

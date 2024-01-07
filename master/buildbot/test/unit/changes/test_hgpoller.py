@@ -29,10 +29,9 @@ LINESEP_BYTES = os.linesep.encode("ascii")
 PATHSEP_BYTES = os.pathsep.encode("ascii")
 
 
-class TestHgPollerBase(MasterRunProcessMixin,
-                       changesource.ChangeSourceMixin,
-                       TestReactorMixin,
-                       unittest.TestCase):
+class TestHgPollerBase(
+    MasterRunProcessMixin, changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase
+):
     usetimestamps = True
     branches = None
     bookmarks = None
@@ -54,13 +53,14 @@ class TestHgPollerBase(MasterRunProcessMixin,
         def _isRepositoryReady():
             return self.repo_ready
 
-        self.poller = hgpoller.HgPoller(self.remote_repo,
-                                        usetimestamps=self.usetimestamps,
-                                        workdir='/some/dir',
-                                        branches=self.branches,
-                                        bookmarks=self.bookmarks,
-                                        revlink=lambda branch, revision:
-                                            self.remote_hgweb.format(revision))
+        self.poller = hgpoller.HgPoller(
+            self.remote_repo,
+            usetimestamps=self.usetimestamps,
+            workdir='/some/dir',
+            branches=self.branches,
+            bookmarks=self.bookmarks,
+            revlink=lambda branch, revision: self.remote_hgweb.format(revision),
+        )
         yield self.poller.setServiceParent(self.master)
         self.poller._isRepositoryReady = _isRepositoryReady
 
@@ -83,13 +83,18 @@ class TestHgPollerBranches(TestHgPollerBase):
     @defer.inlineCallbacks
     def test_poll_initial(self):
         self.expect_commands(
-            ExpectMasterShell(['hg', 'pull', '-b', 'one', '-b', 'two', 'ssh://example.com/foo/baz'])
-            .workdir('/some/dir'),
-
+            ExpectMasterShell([
+                'hg',
+                'pull',
+                '-b',
+                'one',
+                '-b',
+                'two',
+                'ssh://example.com/foo/baz',
+            ]).workdir('/some/dir'),
             ExpectMasterShell(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
             .stdout(b"73591"),
-
             ExpectMasterShell(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
             .stdout(b"22341"),
@@ -110,31 +115,49 @@ class TestHgPollerBranches(TestHgPollerBase):
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
         self.expect_commands(
-            ExpectMasterShell(['hg', 'pull', '-b', 'one', '-b', 'two', 'ssh://example.com/foo/baz'])
-            .workdir('/some/dir'),
-
+            ExpectMasterShell([
+                'hg',
+                'pull',
+                '-b',
+                'one',
+                '-b',
+                'two',
+                'ssh://example.com/foo/baz',
+            ]).workdir('/some/dir'),
             ExpectMasterShell(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
-            .workdir('/some/dir').stdout(b'6' + LINESEP_BYTES),
-
+            .workdir('/some/dir')
+            .stdout(b'6' + LINESEP_BYTES),
             ExpectMasterShell(['hg', 'log', '-r', '4::6', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
             .stdout(LINESEP_BYTES.join([b'4:1aaa5', b'6:784bd'])),
-
-            ExpectMasterShell(['hg', 'log', '-r', '784bd',
-                          '--template={date|hgdate}' + os.linesep +
-                          '{author}' + os.linesep +
-                          "{files % '{file}" +
-                          os.pathsep + "'}" +
-                          os.linesep + '{desc|strip}'])
+            ExpectMasterShell([
+                'hg',
+                'log',
+                '-r',
+                '784bd',
+                '--template={date|hgdate}'
+                + os.linesep
+                + '{author}'
+                + os.linesep
+                + "{files % '{file}"
+                + os.pathsep
+                + "'}"
+                + os.linesep
+                + '{desc|strip}',
+            ])
             .workdir('/some/dir')
-            .stdout(LINESEP_BYTES.join([b'1273258009.0 -7200',
-                                        b'Joe Test <joetest@example.org>',
-                                        b'file1 file2',
-                                        b'Comment',
-                                        b''])),
-
+            .stdout(
+                LINESEP_BYTES.join([
+                    b'1273258009.0 -7200',
+                    b'Joe Test <joetest@example.org>',
+                    b'file1 file2',
+                    b'Comment',
+                    b'',
+                ])
+            ),
             ExpectMasterShell(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
-            .workdir('/some/dir').stdout(b'3' + LINESEP_BYTES),
+            .workdir('/some/dir')
+            .stdout(b'3' + LINESEP_BYTES),
         )
 
         yield self.poller._setCurrentRev(3, 'two')
@@ -156,14 +179,21 @@ class TestHgPollerBookmarks(TestHgPollerBase):
     @defer.inlineCallbacks
     def test_poll_initial(self):
         self.expect_commands(
-            ExpectMasterShell(['hg', 'pull', '-B', 'one', '-B', 'two', 'ssh://example.com/foo/baz'])
-            .workdir('/some/dir'),
-
+            ExpectMasterShell([
+                'hg',
+                'pull',
+                '-B',
+                'one',
+                '-B',
+                'two',
+                'ssh://example.com/foo/baz',
+            ]).workdir('/some/dir'),
             ExpectMasterShell(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
-            .workdir('/some/dir').stdout(b"73591"),
-
+            .workdir('/some/dir')
+            .stdout(b"73591"),
             ExpectMasterShell(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
-            .workdir('/some/dir').stdout(b"22341"),
+            .workdir('/some/dir')
+            .stdout(b"22341"),
         )
 
         # do the poll
@@ -181,28 +211,54 @@ class TestHgPollerBookmarks(TestHgPollerBase):
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
         self.expect_commands(
-            ExpectMasterShell(['hg', 'pull', '-B', 'one', '-B', 'two', 'ssh://example.com/foo/baz'])
-            .workdir('/some/dir'),
-
+            ExpectMasterShell([
+                'hg',
+                'pull',
+                '-B',
+                'one',
+                '-B',
+                'two',
+                'ssh://example.com/foo/baz',
+            ]).workdir('/some/dir'),
             ExpectMasterShell(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
-            .workdir('/some/dir').stdout(b'6' + LINESEP_BYTES),
-
+            .workdir('/some/dir')
+            .stdout(b'6' + LINESEP_BYTES),
             ExpectMasterShell(['hg', 'log', '-r', '4::6', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
-            .stdout(LINESEP_BYTES.join([b'4:1aaa5', b'6:784bd', ])),
-
-            ExpectMasterShell(['hg', 'log', '-r', '784bd',
-                          '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep +
-                          "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}'])
+            .stdout(
+                LINESEP_BYTES.join([
+                    b'4:1aaa5',
+                    b'6:784bd',
+                ])
+            ),
+            ExpectMasterShell([
+                'hg',
+                'log',
+                '-r',
+                '784bd',
+                '--template={date|hgdate}'
+                + os.linesep
+                + '{author}'
+                + os.linesep
+                + "{files % '{file}"
+                + os.pathsep
+                + "'}"
+                + os.linesep
+                + '{desc|strip}',
+            ])
             .workdir('/some/dir')
-            .stdout(LINESEP_BYTES.join([b'1273258009.0 -7200',
-                                        b'Joe Test <joetest@example.org>',
-                                        b'file1 file2',
-                                        b'Comment',
-                                        b''])),
-
+            .stdout(
+                LINESEP_BYTES.join([
+                    b'1273258009.0 -7200',
+                    b'Joe Test <joetest@example.org>',
+                    b'file1 file2',
+                    b'Comment',
+                    b'',
+                ])
+            ),
             ExpectMasterShell(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
-            .workdir('/some/dir').stdout(b'3' + LINESEP_BYTES),
+            .workdir('/some/dir')
+            .stdout(b'3' + LINESEP_BYTES),
         )
 
         yield self.poller._setCurrentRev(3, 'two')
@@ -228,9 +284,10 @@ class TestHgPoller(TestHgPollerBase):
         This allows to test a bit more if expected GPO are issued, be it
         by obscure failures due to the result not being given.
         """
+
         def matchesSubcommand(bin, given_args, **kwargs):
-            return bin == commandName and tuple(
-                given_args[:len(expected_args)]) == expected_args
+            return bin == commandName and tuple(given_args[: len(expected_args)]) == expected_args
+
         return matchesSubcommand
 
     def test_describe(self):
@@ -240,13 +297,11 @@ class TestHgPoller(TestHgPollerBase):
         self.assertEqual(self.remote_repo, self.poller.name)
 
         # and one with explicit name...
-        other = hgpoller.HgPoller(
-            self.remote_repo, name="MyName", workdir='/some/dir')
+        other = hgpoller.HgPoller(self.remote_repo, name="MyName", workdir='/some/dir')
         self.assertEqual("MyName", other.name)
 
         # and one with explicit branches...
-        other = hgpoller.HgPoller(
-            self.remote_repo, branches=["b1", "b2"], workdir='/some/dir')
+        other = hgpoller.HgPoller(self.remote_repo, branches=["b1", "b2"], workdir='/some/dir')
         self.assertEqual(self.remote_repo + "_b1_b2", other.name)
 
     def test_hgbin_default(self):
@@ -261,10 +316,9 @@ class TestHgPoller(TestHgPollerBase):
         self.add_run_process_expect_env(expected_env)
         self.expect_commands(
             ExpectMasterShell(['hg', 'init', '/some/dir']),
-
-            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
-            .workdir('/some/dir'),
-
+            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz']).workdir(
+                '/some/dir'
+            ),
             ExpectMasterShell(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
             .stdout(b"73591"),
@@ -284,12 +338,12 @@ class TestHgPoller(TestHgPollerBase):
         # climb (good enough for now, ideally it should even go to the common
         # ancestor)
         self.expect_commands(
-            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
-            .workdir('/some/dir'),
-
+            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz']).workdir(
+                '/some/dir'
+            ),
             ExpectMasterShell(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
-            .stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES)
+            .stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES),
         )
 
         yield self.poller._setCurrentRev(3)
@@ -302,26 +356,40 @@ class TestHgPoller(TestHgPollerBase):
     def test_poll_regular(self):
         # normal operation. There's a previous revision, we get a new one.
         self.expect_commands(
-            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
-            .workdir('/some/dir'),
-
+            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz']).workdir(
+                '/some/dir'
+            ),
             ExpectMasterShell(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
             .workdir('/some/dir')
             .stdout(b'5' + LINESEP_BYTES),
-
             ExpectMasterShell(['hg', 'log', '-r', '4::5', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
             .stdout(LINESEP_BYTES.join([b'4:1aaa5', b'5:784bd'])),
-
-            ExpectMasterShell(['hg', 'log', '-r', '784bd',
-                          '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep +
-                          "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}'])
+            ExpectMasterShell([
+                'hg',
+                'log',
+                '-r',
+                '784bd',
+                '--template={date|hgdate}'
+                + os.linesep
+                + '{author}'
+                + os.linesep
+                + "{files % '{file}"
+                + os.pathsep
+                + "'}"
+                + os.linesep
+                + '{desc|strip}',
+            ])
             .workdir('/some/dir')
-            .stdout(LINESEP_BYTES.join([b'1273258009.0 -7200',
-                                        b'Joe Test <joetest@example.org>',
-                                        b'file1 file2',
-                                        b'Comment for rev 5',
-                                        b''])),
+            .stdout(
+                LINESEP_BYTES.join([
+                    b'1273258009.0 -7200',
+                    b'Joe Test <joetest@example.org>',
+                    b'file1 file2',
+                    b'Comment for rev 5',
+                    b'',
+                ])
+            ),
         )
 
         yield self.poller._setCurrentRev(4)
@@ -338,29 +406,43 @@ class TestHgPoller(TestHgPollerBase):
     def test_poll_force_push(self):
         #  There's a previous revision, but not linked with new rev
         self.expect_commands(
-            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
-            .workdir('/some/dir'),
-
+            ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz']).workdir(
+                '/some/dir'
+            ),
             ExpectMasterShell(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
-            .workdir('/some/dir').stdout(b'5' + LINESEP_BYTES),
-
+            .workdir('/some/dir')
+            .stdout(b'5' + LINESEP_BYTES),
             ExpectMasterShell(['hg', 'log', '-r', '4::5', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
             .stdout(b""),
-
             ExpectMasterShell(['hg', 'log', '-r', '5', '--template={rev}:{node}\\n'])
             .workdir('/some/dir')
             .stdout(LINESEP_BYTES.join([b'5:784bd'])),
-
-            ExpectMasterShell(['hg', 'log', '-r', '784bd',
-                          '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep +
-                          "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}'])
+            ExpectMasterShell([
+                'hg',
+                'log',
+                '-r',
+                '784bd',
+                '--template={date|hgdate}'
+                + os.linesep
+                + '{author}'
+                + os.linesep
+                + "{files % '{file}"
+                + os.pathsep
+                + "'}"
+                + os.linesep
+                + '{desc|strip}',
+            ])
             .workdir('/some/dir')
-            .stdout(LINESEP_BYTES.join([b'1273258009.0 -7200',
-                                        b'Joe Test <joetest@example.org>',
-                                        b'file1 file2',
-                                        b'Comment for rev 5',
-                                        b''])),
+            .stdout(
+                LINESEP_BYTES.join([
+                    b'1273258009.0 -7200',
+                    b'Joe Test <joetest@example.org>',
+                    b'file1 file2',
+                    b'Comment for rev 5',
+                    b'',
+                ])
+            ),
         )
 
         yield self.poller._setCurrentRev(4)
@@ -375,6 +457,6 @@ class TestHgPoller(TestHgPollerBase):
 
 
 class HgPollerNoTimestamp(TestHgPoller):
-    """ Test HgPoller() without parsing revision commit timestamp """
+    """Test HgPoller() without parsing revision commit timestamp"""
 
     usetimestamps = False

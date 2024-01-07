@@ -25,7 +25,6 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class TestMetricBase(TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         self.observer = metrics.MetricLogObserver()
@@ -41,7 +40,6 @@ class TestMetricBase(TestReactorMixin, unittest.TestCase):
 
 
 class TestMetricCountEvent(TestMetricBase):
-
     def testIncrement(self):
         metrics.MetricCountEvent.log('num_widgets', 1)
         report = self.observer.asDict()
@@ -77,7 +75,6 @@ class TestMetricCountEvent(TestMetricBase):
 
 
 class TestMetricTimeEvent(TestMetricBase):
-
     def testManualEvent(self):
         metrics.MetricTimeEvent.log('foo_time', 0.001)
         report = self.observer.asDict()
@@ -122,6 +119,7 @@ class TestMetricTimeEvent(TestMetricBase):
         def foo():
             clock.advance(5)
             return "foo!"
+
         foo()
         report = self.observer.asDict()
         self.assertEqual(report['timers']['foo_time'], 5)
@@ -131,12 +129,10 @@ class TestMetricTimeEvent(TestMetricBase):
         for i in data:
             metrics.MetricTimeEvent.log('foo_time', i)
         report = self.observer.asDict()
-        self.assertEqual(
-            report['timers']['foo_time'], sum(data) / float(len(data)))
+        self.assertEqual(report['timers']['foo_time'], sum(data) / float(len(data)))
 
 
 class TestPeriodicChecks(TestMetricBase):
-
     def testPeriodicCheck(self):
         # fake out that there's no garbage (since we can't rely on Python
         # not having any garbage while running tests)
@@ -168,12 +164,12 @@ class TestPeriodicChecks(TestMetricBase):
 
     def testGetRSS(self):
         self.assertTrue(metrics._get_rss() > 0)
+
     if sys.platform != 'linux':
         testGetRSS.skip = "only available on linux platforms"
 
 
 class TestReconfig(TestMetricBase):
-
     def testReconfig(self):
         observer = self.observer
         new_config = self.master.config
@@ -220,7 +216,6 @@ class TestReconfig(TestMetricBase):
 
 
 class _LogObserver:
-
     def __init__(self):
         self.events = []
 
@@ -229,7 +224,6 @@ class _LogObserver:
 
 
 class TestReports(unittest.TestCase):
-
     def testMetricCountReport(self):
         handler = metrics.MetricCountHandler(None)
         handler.handle({}, metrics.MetricCountEvent('num_foo', 1))
@@ -246,9 +240,9 @@ class TestReports(unittest.TestCase):
 
     def testMetricAlarmReport(self):
         handler = metrics.MetricAlarmHandler(None)
-        handler.handle({}, metrics.MetricAlarmEvent(
-            'alarm_foo', msg='Uh oh', level=metrics.ALARM_WARN))
+        handler.handle(
+            {}, metrics.MetricAlarmEvent('alarm_foo', msg='Uh oh', level=metrics.ALARM_WARN)
+        )
 
         self.assertEqual("WARN alarm_foo: Uh oh", handler.report())
-        self.assertEqual(
-            {"alarms": {"alarm_foo": ("WARN", "Uh oh")}}, handler.asDict())
+        self.assertEqual({"alarms": {"alarm_foo": ("WARN", "Uh oh")}}, handler.asDict())

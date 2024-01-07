@@ -25,7 +25,6 @@ from buildbot.util import service
 
 
 class DeferredStartStop(service.AsyncService):
-
     def startService(self):
         self.d = defer.Deferred()
         return self.d
@@ -36,7 +35,6 @@ class DeferredStartStop(service.AsyncService):
 
 
 class AsyncMultiService(unittest.TestCase):
-
     def setUp(self):
         self.svc = service.AsyncMultiService()
 
@@ -240,8 +238,7 @@ class ClusteredBuildbotService(unittest.TestCase):
             self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC)
 
         self.assertEqual(1, self.svc._getServiceId.call_count)
-        self.assertEqual(
-            1 + NUMBER_OF_POLLS, self.svc._claimService.call_count)
+        self.assertEqual(1 + NUMBER_OF_POLLS, self.svc._claimService.call_count)
 
     def test_start_ClaimSucceeds(self):
         self.setServiceClaimable(self.svc, defer.succeed(True))
@@ -539,7 +536,6 @@ class ClusteredBuildbotService(unittest.TestCase):
 
 
 class MyService(service.BuildbotService):
-
     def checkConfig(self, foo, a=None):
         if a is None:
             config.error("a must be specified")
@@ -565,7 +561,6 @@ def makeFakeMaster():
 
 
 class BuildbotService(unittest.TestCase):
-
     def setUp(self):
         self.master = makeFakeMaster()
 
@@ -581,17 +576,20 @@ class BuildbotService(unittest.TestCase):
     @defer.inlineCallbacks
     def testNominal(self):
         yield self.prepareService()
-        self.assertEqual(
-            self.master.namedServices["basic"].config, ((1,), {"a": 2}))
+        self.assertEqual(self.master.namedServices["basic"].config, ((1,), {"a": 2}))
 
     @defer.inlineCallbacks
     def testConfigDict(self):
         serv = yield self.prepareService()
-        self.assertEqual(serv.getConfigDict(), {
-            'args': (1,),
-            'class': 'buildbot.test.unit.util.test_service.MyService',
-            'kwargs': {'a': 2},
-            'name': 'basic'})
+        self.assertEqual(
+            serv.getConfigDict(),
+            {
+                'args': (1,),
+                'class': 'buildbot.test.unit.util.test_service.MyService',
+                'kwargs': {'a': 2},
+                'name': 'basic',
+            },
+        )
 
     def testNoName(self):
         with self.assertRaises(ValueError):
@@ -603,7 +601,6 @@ class BuildbotService(unittest.TestCase):
 
 
 class BuildbotServiceManager(unittest.TestCase):
-
     def setUp(self):
         self.master = makeFakeMaster()
 
@@ -621,8 +618,7 @@ class BuildbotServiceManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testNominal(self):
         yield self.prepareService()
-        self.assertEqual(
-            self.manager.namedServices["basic"].config, ((1,), {"a": 2}))
+        self.assertEqual(self.manager.namedServices["basic"].config, ((1,), {"a": 2}))
 
     @defer.inlineCallbacks
     def testReconfigNoChange(self):
@@ -709,13 +705,20 @@ class BuildbotServiceManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testConfigDict(self):
         yield self.prepareService()
-        self.assertEqual(self.manager.getConfigDict(), {
-            'childs': [{
-                'args': (1,),
-                'class': 'buildbot.test.unit.util.test_service.MyService',
-                'kwargs': {'a': 2},
-                'name': 'basic'}],
-            'name': 'services'})
+        self.assertEqual(
+            self.manager.getConfigDict(),
+            {
+                'childs': [
+                    {
+                        'args': (1,),
+                        'class': 'buildbot.test.unit.util.test_service.MyService',
+                        'kwargs': {'a': 2},
+                        'name': 'basic',
+                    }
+                ],
+                'name': 'services',
+            },
+        )
 
     @defer.inlineCallbacks
     def testRenderSecrets(self):
@@ -728,8 +731,9 @@ class BuildbotServiceManager(unittest.TestCase):
     def testRenderSecrets2Args(self):
         yield self.prepareService()
         service = self.manager.namedServices['basic']
-        test, test2 = yield service.renderSecrets(Interpolate('test_string'),
-                                                  'ok_for_non_renderable')
+        test, test2 = yield service.renderSecrets(
+            Interpolate('test_string'), 'ok_for_non_renderable'
+        )
         self.assertEqual(test, 'test_string')
         self.assertEqual(test2, 'ok_for_non_renderable')
 

@@ -21,7 +21,6 @@ assert defaultdict
 
 
 class KeyedSets:
-
     def __init__(self):
         self.d = {}
 

@@ -24,7 +24,6 @@ from buildbot.util import sautils
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
-
     def setUp(self):
         return self.setUpMigrateTest()
 
@@ -36,7 +35,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata.bind = conn
 
         builders = sautils.Table(
-            'builders', metadata,
+            'builders',
+            metadata,
             sa.Column('id', sa.Integer, primary_key=True),
             sa.Column('name', sa.Text, nullable=False),
             sa.Column('description', sa.Text, nullable=True),
@@ -45,13 +45,18 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         )
         builders.create()
 
-        conn.execute(builders.insert(), [{
-            "id": 3,
-            "name": "foo",
-            "description": "foo_description",
-            "projectid": None,
-            "name_hash": hashlib.sha1(b'foo').hexdigest()
-        }])
+        conn.execute(
+            builders.insert(),
+            [
+                {
+                    "id": 3,
+                    "name": "foo",
+                    "description": "foo_description",
+                    "projectid": None,
+                    "name_hash": hashlib.sha1(b'foo').hexdigest(),
+                }
+            ],
+        )
 
     def test_update(self):
         def setup_thd(conn):
@@ -68,7 +73,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             q = sa.select([
                 builders.c.name,
                 builders.c.description_format,
-                builders.c.description_html
+                builders.c.description_html,
             ])
 
             num_rows = 0

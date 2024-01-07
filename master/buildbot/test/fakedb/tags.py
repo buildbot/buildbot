@@ -30,7 +30,6 @@ class Tag(Row):
 
 
 class FakeTagsComponent(FakeDBComponent):
-
     def setUp(self):
         self.tags = {}
 

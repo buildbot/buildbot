@@ -25,7 +25,6 @@ from buildbot.worker import local
 
 
 class TestLocalWorker(TestReactorMixin, unittest.TestCase):
-
     try:
         from buildbot_worker.bot import LocalWorker as _  # noqa
     except ImportError:
@@ -45,22 +44,26 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
-        old = self.createWorker('bot',
-                                max_builds=2,
-                                notify_on_missing=['me@me.com'],
-                                missing_timeout=120,
-                                properties={'a': 'b'})
-        new = self.createWorker('bot', configured=False,
-                                max_builds=3,
-                                notify_on_missing=['her@me.com'],
-                                missing_timeout=121,
-                                workdir=os.path.abspath('custom'),
-                                properties={'a': 'c'})
+        old = self.createWorker(
+            'bot',
+            max_builds=2,
+            notify_on_missing=['me@me.com'],
+            missing_timeout=120,
+            properties={'a': 'b'},
+        )
+        new = self.createWorker(
+            'bot',
+            configured=False,
+            max_builds=3,
+            notify_on_missing=['her@me.com'],
+            missing_timeout=121,
+            workdir=os.path.abspath('custom'),
+            properties={'a': 'c'},
+        )
 
         old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))
         yield old.startService()
-        self.assertEqual(
-            old.remote_worker.bot.basedir, os.path.abspath('basedir/workers/bot'))
+        self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('basedir/workers/bot'))
 
         yield old.reconfigServiceWithSibling(new)
 
@@ -71,17 +74,18 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(old.registration.updates, ['bot'])
         self.assertTrue(old.updateWorker.called)
         # make sure that we can provide an absolute path
-        self.assertEqual(
-            old.remote_worker.bot.basedir, os.path.abspath('custom'))
+        self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('custom'))
         yield old.stopService()
 
     @defer.inlineCallbacks
     def test_workerinfo(self):
-        wrk = self.createWorker('bot',
-                                max_builds=2,
-                                notify_on_missing=['me@me.com'],
-                                missing_timeout=120,
-                                properties={'a': 'b'})
+        wrk = self.createWorker(
+            'bot',
+            max_builds=2,
+            notify_on_missing=['me@me.com'],
+            missing_timeout=120,
+            properties={'a': 'b'},
+        )
         yield wrk.startService()
         info = yield wrk.conn.remoteGetWorkerInfo()
         self.assertIn("worker_commands", info)
