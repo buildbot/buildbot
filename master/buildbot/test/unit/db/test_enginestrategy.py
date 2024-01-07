@@ -111,7 +111,7 @@ class BuildbotCreateEngineTest(unittest.TestCase):
         self.assertEqual(
             [str(u), max_conns, self.filter_kwargs(kwargs)],
             [
-                "mysql://user:pass@host:1234/dbname?" "charset=utf8&use_unicode=True",
+                "mysql://user:pass@host:1234/dbname?charset=utf8&use_unicode=True",
                 None,
                 self.mysql_kwargs,
             ],

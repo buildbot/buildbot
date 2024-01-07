@@ -83,13 +83,13 @@ class EC2LatentWorker(AbstractLatentWorker):
         **kwargs,
     ):
         if not boto3:
-            config.error("The python module 'boto3' is needed to use a " "EC2LatentWorker")
+            config.error("The python module 'boto3' is needed to use a EC2LatentWorker")
 
         if keypair_name is None:
-            config.error("EC2LatentWorker: 'keypair_name' parameter must be " "specified")
+            config.error("EC2LatentWorker: 'keypair_name' parameter must be specified")
 
         if security_name is None and not subnet_id:
-            config.error("EC2LatentWorker: 'security_name' parameter must be " "specified")
+            config.error("EC2LatentWorker: 'security_name' parameter must be specified")
 
         if volumes is None:
             volumes = []
@@ -120,7 +120,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 for element in valid_ami_owners:
                     if not isinstance(element, int):
                         raise ValueError(
-                            'valid_ami_owners should be int or iterable ' 'of ints', element
+                            'valid_ami_owners should be int or iterable of ints', element
                         )
         if valid_ami_location_regex is not None:
             if not isinstance(valid_ami_location_regex, str):
@@ -129,7 +129,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             valid_ami_location_regex = re.compile(valid_ami_location_regex)
         if spot_instance and price_multiplier is None and max_spot_price is None:
             raise ValueError(
-                'You must provide either one, or both, of ' 'price_multiplier or max_spot_price'
+                'You must provide either one, or both, of price_multiplier or max_spot_price'
             )
         self.valid_ami_owners = None
         if valid_ami_owners:
@@ -159,7 +159,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 if os.path.exists(default_path):
                     aws_id_file_path = default_path
             if aws_id_file_path:
-                log.msg('WARNING: EC2LatentWorker is using deprecated ' 'aws_id file')
+                log.msg('WARNING: EC2LatentWorker is using deprecated aws_id file')
                 with open(aws_id_file_path, 'r', encoding='utf-8') as aws_file:
                     identifier = aws_file.readline().strip()
                     secret_identifier = aws_file.readline().strip()

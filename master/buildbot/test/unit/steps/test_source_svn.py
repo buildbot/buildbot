@@ -160,7 +160,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir', command=['svn', 'update', '--non-interactive', '--no-auth-cache']
@@ -184,7 +184,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir', command=['svn', 'update', '--non-interactive', '--no-auth-cache']
@@ -215,7 +215,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir', command=['svn', 'update', '--non-interactive', '--no-auth-cache']
@@ -256,7 +256,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--random',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -311,7 +311,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--random',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -506,7 +506,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -557,7 +557,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--random',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -611,7 +611,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--random',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -669,7 +669,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--random',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -772,7 +772,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     'infinite',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -885,7 +885,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     'infinite',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -941,7 +941,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -982,7 +982,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1014,7 +1014,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1109,7 +1109,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1148,7 +1148,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1190,7 +1190,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='source/app',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='source/app',
@@ -1219,7 +1219,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='source',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='source',
@@ -1252,7 +1252,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='source',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='source', command=['svn', 'update', '--non-interactive', '--no-auth-cache']
@@ -1294,7 +1294,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='source',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='source', command=['svn', 'update', '--non-interactive', '--no-auth-cache']
@@ -1366,7 +1366,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='source',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='source', command=['svn', 'update', '--non-interactive', '--no-auth-cache']
@@ -1423,7 +1423,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 timeout=1,
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='source',
@@ -1455,7 +1455,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='source',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='source',
@@ -1508,7 +1508,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     ('obfuscated', 'svn_password', 'XXXXXX'),
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='source',
@@ -1575,7 +1575,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 ],
                 env={'abc': '123'},
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1631,7 +1631,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 ],
                 log_environ=False,
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1685,7 +1685,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--random',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1793,7 +1793,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='source',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='source', command=['svn', 'update', '--non-interactive', '--no-auth-cache']
@@ -1820,7 +1820,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='wkdir',
                 command=['svn', 'info', '--xml', '--non-interactive', '--no-auth-cache'],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1889,7 +1889,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--random',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1938,7 +1938,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--random',
                 ],
             )
-            .stdout('<?xml version="1.0"?>' '<url>http://svn.local/app/trunk</url>')
+            .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
             .exit(0),
             ExpectShell(
                 workdir='wkdir',

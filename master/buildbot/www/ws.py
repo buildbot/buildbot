@@ -92,7 +92,7 @@ class WsProtocol(WebSocketServerProtocol):
                 self.is_graphql = False
             elif self.is_graphql:
                 return self.send_error(
-                    error="missing 'type' in websocket frame when" " already started using graphql",
+                    error="missing 'type' in websocket frame when already started using graphql",
                     code=400,
                     _id=None,
                 )

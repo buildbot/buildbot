@@ -218,7 +218,7 @@ class GitLabStatusPush(ReporterBase):
                         f'{sourcestamp["repository"]} at {sha}: {message}'
                     )
                 elif self.verbose:
-                    log.msg(f'Status "{state}" sent for ' f'{sourcestamp["repository"]} at {sha}.')
+                    log.msg(f'Status "{state}" sent for {sourcestamp["repository"]} at {sha}.')
             except Exception as e:
                 log.err(
                     e,

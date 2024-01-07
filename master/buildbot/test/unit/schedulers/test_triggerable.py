@@ -368,7 +368,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
                         'builderNames': None,
                         'priority': None,
                         'properties': {'scheduler': ('n', 'Scheduler')},
-                        'reason': "The Triggerable scheduler named 'n' triggered " "this build",
+                        'reason': "The Triggerable scheduler named 'n' triggered this build",
                         'sourcestamps': [
                             {
                                 'branch': 'default',
@@ -402,7 +402,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
                         'builderNames': None,
                         'priority': None,
                         'properties': {'scheduler': ('n', 'Scheduler')},
-                        'reason': "The Triggerable scheduler named 'n' triggered " "this build",
+                        'reason': "The Triggerable scheduler named 'n' triggered this build",
                         'sourcestamps': [],
                         'waited_for': True,
                     },

@@ -108,7 +108,7 @@ class MailNotifier(ReporterBase):
         generators=None,
     ):
         if ESMTPSenderFactory is None:
-            config.error("twisted-mail is not installed - cannot " "send mail")
+            config.error("twisted-mail is not installed - cannot send mail")
 
         if generators is None:
             generators = self._create_default_generators()

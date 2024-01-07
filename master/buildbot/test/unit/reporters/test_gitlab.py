@@ -216,7 +216,7 @@ class TestGitLabStatusPush(
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged(
-            r"Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot:" r" project not found"
+            r"Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot: project not found"
         )
 
     @defer.inlineCallbacks

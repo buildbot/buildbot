@@ -41,7 +41,6 @@ from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process import results
 from buildbot.process.locks import get_real_locks_from_accesses
-
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import ALL_RESULTS
@@ -285,13 +284,13 @@ class BuildStep(
 
         if kwargs:
             config.error(
-                f"{self.__class__}.__init__ got unexpected keyword argument(s) " f"{list(kwargs)}"
+                f"{self.__class__}.__init__ got unexpected keyword argument(s) {list(kwargs)}"
             )
         self._pendingLogObservers = []
 
         if not isinstance(self.name, str) and not IRenderable.providedBy(self.name):
             config.error(
-                f"BuildStep name must be a string or a renderable object: " f"{repr(self.name)}"
+                f"BuildStep name must be a string or a renderable object: {repr(self.name)}"
             )
 
         check_param_length(

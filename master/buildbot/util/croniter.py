@@ -95,7 +95,7 @@ class croniter:
 
     MAX_VALUE_PER_INDEX = (60, 24, 31, 12, 7, 60)
 
-    bad_length = 'Exactly 5 or 6 columns has to be specified for iterator' 'expression.'
+    bad_length = 'Exactly 5 or 6 columns has to be specified for iteratorexpression.'
 
     def __init__(self, expr_format, start_time=time()):
         if isinstance(start_time, datetime):
@@ -244,7 +244,7 @@ class croniter:
         nth_weekday_of_month = self.nth_weekday_of_month.copy()
 
         if ret_type not in (float, datetime):
-            raise TypeError("Invalid ret_type, only 'float' or 'datetime' " "is acceptable.")
+            raise TypeError("Invalid ret_type, only 'float' or 'datetime' is acceptable.")
 
         if expanded[2][0] != '*' and expanded[4][0] != '*':
             bak = expanded[4]

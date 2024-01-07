@@ -169,7 +169,7 @@ class P4(Source):
                 self.p4passwd_arg = ('obfuscated', self.p4passwd, 'XXXXXX')
             else:
                 self.p4passwd_arg = self.p4passwd
-                log.msg("Worker does not understand obfuscation; " "p4 password will be logged")
+                log.msg("Worker does not understand obfuscation; p4 password will be logged")
 
         if self.use_tickets and self.p4passwd:
             yield self._acquireTicket()

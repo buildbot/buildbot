@@ -1157,7 +1157,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertFalse(self.step.method_return_value)
         self.assertEqual(
             self.step.getLog('stdio').header,
-            'NOTE: never mind\n' 'program finished with exit code 1\n',
+            'NOTE: never mind\nprogram finished with exit code 1\n',
         )
 
     def test_glob(self):

@@ -30,7 +30,7 @@ class LRUCache:
     """
 
     __slots__ = (
-        'max_size max_queue miss_fn queue cache weakrefs ' 'refcount hits refhits misses'.split()
+        'max_size max_queue miss_fn queue cache weakrefs refcount hits refhits misses'.split()
     )
     sentinel = object()
     QUEUE_SIZE_FACTOR = 10

@@ -176,7 +176,7 @@ class Connection(base.Connection, pb.Avatar):
 
             # Probably this is deprecated buildslave.
             log.msg(
-                "Worker.getWorkerInfo is unavailable - falling back to " "deprecated buildslave API"
+                "Worker.getWorkerInfo is unavailable - falling back to deprecated buildslave API"
             )
 
             try:

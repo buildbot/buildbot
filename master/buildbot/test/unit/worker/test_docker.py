@@ -542,7 +542,7 @@ class testDockerPyStreamLogs(unittest.TestCase):
     def testMultipleLines(self):
         self.compare(
             ["Fetched 8298 kB in 3s (2096 kB/s)", "Reading package lists..."],
-            '{"stream": "Fetched 8298 kB in 3s (2096 kB/s)\\nReading ' 'package lists..."}\r\n',
+            '{"stream": "Fetched 8298 kB in 3s (2096 kB/s)\\nReading package lists..."}\r\n',
         )
 
     def testError(self):

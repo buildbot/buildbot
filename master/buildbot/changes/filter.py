@@ -170,7 +170,7 @@ class ChangeFilter(ComparableMixin):
         # use a change_filter, if given one
         if change_filter:
             if branch is not NotABranch or categories is not None:
-                raise RuntimeError("cannot specify both change_filter and " "branch or categories")
+                raise RuntimeError("cannot specify both change_filter and branch or categories")
             return change_filter
         elif branch is not NotABranch or categories:
             # build a change filter from the deprecated category and branch

@@ -69,7 +69,7 @@ warnings.filterwarnings('ignore', "'U' mode is deprecated", DeprecationWarning)
 # twisted.python.filepath and trial are using bytes file paths when
 # the "native" file path (Unicode) should be used on Windows.
 warnings.filterwarnings(
-    'ignore', "The Windows bytes API has been " "deprecated, use Unicode filenames instead"
+    'ignore', "The Windows bytes API has been deprecated, use Unicode filenames instead"
 )
 # moto warning v1.0.0
 warnings.filterwarnings('ignore', "Flags not at the start of the expression")
@@ -111,7 +111,7 @@ warnings.filterwarnings('ignore', ".*time.clock has been deprecated in Python 3.
 # ignore an attrs API warning for APIs used in dependencies
 warnings.filterwarnings(
     'ignore',
-    ".*The usage of `cmp` is deprecated and will be removed " "on or after.*",
+    ".*The usage of `cmp` is deprecated and will be removed on or after.*",
     DeprecationWarning,
 )
 
@@ -178,7 +178,7 @@ warnings.filterwarnings(
 # See https://github.com/graphql-python/graphql-core/issues/211
 warnings.filterwarnings(
     'ignore',
-    "'typing.ByteString' is deprecated and slated for removal in " "Python 3.14",
+    "'typing.ByteString' is deprecated and slated for removal in Python 3.14",
     category=DeprecationWarning,
 )
 

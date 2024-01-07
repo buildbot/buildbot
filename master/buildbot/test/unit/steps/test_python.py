@@ -345,7 +345,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .stdout('W0311: 11: Bad indentation.\n' 'C0111:  1:funcName: Missing docstring\n')
+            .stdout('W0311: 11: Bad indentation.\nC0111:  1:funcName: Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         )
         self.expect_outcome(
@@ -361,7 +361,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .stdout('W0311: 11,0: Bad indentation.\n' 'C0111:  3,10:foo123: Missing docstring\n')
+            .stdout('W0311: 11,0: Bad indentation.\nC0111:  3,10:foo123: Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         )
         self.expect_outcome(
@@ -401,9 +401,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .stdout(
-                'test.py:9: [W] Bad indentation.\n' 'test.py:3: [C, foo123] Missing docstring\n'
-            )
+            .stdout('test.py:9: [W] Bad indentation.\ntest.py:3: [C, foo123] Missing docstring\n')
             .exit((python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         )
         self.expect_outcome(

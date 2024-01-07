@@ -1059,7 +1059,7 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
     def testModeConfError(self):
         with self.assertRaisesRegex(
             config.ConfigErrors,
-            "StringDownload step's mode must be an integer or None," " got 'not-a-number'",
+            "StringDownload step's mode must be an integer or None, got 'not-a-number'",
         ):
             transfer.StringDownload("string", "file", mode="not-a-number")
 

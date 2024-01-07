@@ -708,7 +708,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change["branch"], "master")
         self.assertEqual(
             change["revlink"],
-            "http://github.com/defunkt/github/commit/" "41a212ee83ca127e3c8cf465891ab7216a705f59",
+            "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
         )
 
         change = self.changeHook.master.data.updates.changesAdded[1]
@@ -723,7 +723,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change["branch"], "master")
         self.assertEqual(
             change["revlink"],
-            "http://github.com/defunkt/github/commit/" "de8251ff97ee194a289832576287d6f8ad74e3d0",
+            "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
         )
         self.assertEqual(change["properties"]["event"], "push")
 
@@ -763,7 +763,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change["branch"], "master")
         self.assertEqual(
             change["revlink"],
-            "http://github.com/defunkt/github/commit/" "41a212ee83ca127e3c8cf465891ab7216a705f59",
+            "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
         )
         self.assertEqual(change["properties"]["github_distinct"], False)
 
@@ -779,7 +779,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change["branch"], "master")
         self.assertEqual(
             change["revlink"],
-            "http://github.com/defunkt/github/commit/" "de8251ff97ee194a289832576287d6f8ad74e3d0",
+            "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
         )
 
     @defer.inlineCallbacks
@@ -1350,7 +1350,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
         self.assertEqual(change["branch"], "master")
         self.assertEqual(
             change["revlink"],
-            "http://github.com/defunkt/github/commit/" "41a212ee83ca127e3c8cf465891ab7216a705f59",
+            "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
         )
 
         change = self.changeHook.master.data.updates.changesAdded[1]
@@ -1365,7 +1365,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
         self.assertEqual(change["branch"], "master")
         self.assertEqual(
             change["revlink"],
-            "http://github.com/defunkt/github/commit/" "de8251ff97ee194a289832576287d6f8ad74e3d0",
+            "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
         )
 
     @defer.inlineCallbacks

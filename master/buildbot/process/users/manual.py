@@ -191,9 +191,9 @@ class CommandlineUserManager(service.AsyncMultiService):
 
     def __init__(self, username=None, passwd=None, port=None):
         super().__init__()
-        assert username and passwd, (
-            "A username and password pair must be given " "to connect and use `buildbot user`"
-        )
+        assert (
+            username and passwd
+        ), "A username and password pair must be given to connect and use `buildbot user`"
         self.username = username
         self.passwd = passwd
 

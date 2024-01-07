@@ -192,7 +192,7 @@ class TelegramContact(Contact):
             self.send(f'This {self.channel.chat_info.get("type", "group")} ID is `{self.chat_id}`.')
 
     command_GETID.usage = (
-        "getid - get user and chat ID that can be put in the master " "configuration file"
+        "getid - get user and chat ID that can be put in the master configuration file"
     )
 
     @defer.inlineCallbacks

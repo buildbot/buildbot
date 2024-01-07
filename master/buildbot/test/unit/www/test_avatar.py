@@ -570,7 +570,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
         res = yield self.render_resource(self.rsrc, b'/?username=defunkt')
         self.assertEqual(
-            res, {"redirected": b'https://avatars3.githubusercontent.com/' b'u/42424242?v=4&s=32'}
+            res, {"redirected": b'https://avatars3.githubusercontent.com/u/42424242?v=4&s=32'}
         )
 
     @defer.inlineCallbacks
@@ -609,12 +609,12 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
         res = yield self.render_resource(self.rsrc, b'/?username=defunkt')
         self.assertEqual(
-            res, {"redirected": b'https://avatars3.githubusercontent.com/' b'u/42424242?v=4&s=32'}
+            res, {"redirected": b'https://avatars3.githubusercontent.com/u/42424242?v=4&s=32'}
         )
         # Second request will give same result but without an HTTP request
         res = yield self.render_resource(self.rsrc, b'/?username=defunkt')
         self.assertEqual(
-            res, {"redirected": b'https://avatars3.githubusercontent.com/' b'u/42424242?v=4&s=32'}
+            res, {"redirected": b'https://avatars3.githubusercontent.com/u/42424242?v=4&s=32'}
         )
 
     @defer.inlineCallbacks
@@ -628,7 +628,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
         res = yield self.render_resource(self.rsrc, b'/?email=defunkt@defunkt.com')
         self.assertEqual(
-            res, {"redirected": b'https://avatars3.githubusercontent.com/' b'u/42424242?v=4&s=32'}
+            res, {"redirected": b'https://avatars3.githubusercontent.com/u/42424242?v=4&s=32'}
         )
 
     @defer.inlineCallbacks
@@ -649,12 +649,12 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             commit_search_endpoint,
             content_json=github_commit_search_reply,
             headers={
-                'Accept': 'application/vnd.github.v3+json,' 'application/vnd.github.cloak-preview'
+                'Accept': 'application/vnd.github.v3+json,application/vnd.github.cloak-preview'
             },
         )
         res = yield self.render_resource(self.rsrc, b'/?email=defunkt@defunkt.com')
         self.assertEqual(
-            res, {"redirected": b'https://avatars3.githubusercontent.com/' b'u/42424242?v=4&s=32'}
+            res, {"redirected": b'https://avatars3.githubusercontent.com/u/42424242?v=4&s=32'}
         )
 
     @defer.inlineCallbacks
@@ -675,7 +675,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             commit_search_endpoint,
             content_json=github_commit_search_no_user_reply,
             headers={
-                'Accept': 'application/vnd.github.v3+json,' 'application/vnd.github.cloak-preview'
+                'Accept': 'application/vnd.github.v3+json,application/vnd.github.cloak-preview'
             },
         )
         res = yield self.render_resource(self.rsrc, b'/?email=defunkt@defunkt.com')
@@ -699,7 +699,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             commit_search_endpoint,
             content_json=github_commit_search_not_found_reply,
             headers={
-                'Accept': 'application/vnd.github.v3+json,' 'application/vnd.github.cloak-preview'
+                'Accept': 'application/vnd.github.v3+json,application/vnd.github.cloak-preview'
             },
         )
         res = yield self.render_resource(self.rsrc, b'/?email=notfound@defunkt.com')
@@ -715,14 +715,14 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             headers={'Accept': 'application/vnd.github.v3+json'},
         )
         commit_search_endpoint = (
-            '/search/commits?' 'per_page=1&q=author-email%3Aerror%40defunkt.com&sort=committer-date'
+            '/search/commits?per_page=1&q=author-email%3Aerror%40defunkt.com&sort=committer-date'
         )
         self._http.expect(
             'get',
             commit_search_endpoint,
             code=500,
             headers={
-                'Accept': 'application/vnd.github.v3+json,' 'application/vnd.github.cloak-preview'
+                'Accept': 'application/vnd.github.v3+json,application/vnd.github.cloak-preview'
             },
         )
         res = yield self.render_resource(self.rsrc, b'/?email=error@defunkt.com')
@@ -782,5 +782,5 @@ class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCas
         )
         res = yield self.render_resource(self.rsrc, b'/?username=defunkt')
         self.assertEqual(
-            res, {'redirected': b'https://avatars3.githubusercontent.com/' b'u/42424242?v=4&s=32'}
+            res, {'redirected': b'https://avatars3.githubusercontent.com/u/42424242?v=4&s=32'}
         )

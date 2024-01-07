@@ -106,7 +106,7 @@ CHILDCAPTURE_MAX_BLOCKS = 200
 class BBService(win32serviceutil.ServiceFramework):
     _svc_name_ = 'BuildBot'
     _svc_display_name_ = _svc_name_
-    _svc_description_ = 'Manages local buildbot workers and masters - ' 'see https://buildbot.net'
+    _svc_description_ = 'Manages local buildbot workers and masters - see https://buildbot.net'
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
@@ -196,7 +196,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 msg = "Directory '{0}' is not a buildbot dir - ignoring".format(d)
                 self.warning(msg)
         if not self.dirs:
-            self.error("No valid buildbot directories were specified.\n" "Stopping the service.")
+            self.error("No valid buildbot directories were specified.\nStopping the service.")
             return False
         if save_dirs:
             dir_string = os.pathsep.join(self.dirs)
@@ -258,7 +258,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 )
 
             self.warning(
-                "BuildBot for directory {0!r} terminated with " "exit code {1}.\n{2}".format(
+                "BuildBot for directory {0!r} terminated with exit code {1}.\n{2}".format(
                     bbdir, status, output
                 )
             )
@@ -266,7 +266,7 @@ class BBService(win32serviceutil.ServiceFramework):
             del child_infos[index]
 
             if not child_infos:
-                self.warning("All BuildBot child processes have " "terminated.  Service stopping.")
+                self.warning("All BuildBot child processes have terminated.  Service stopping.")
 
         # Either no child processes left, or stop event set.
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
@@ -287,7 +287,7 @@ class BBService(win32serviceutil.ServiceFramework):
             # If necessary, kill it
             if win32process.GetExitCodeProcess(h) == win32con.STILL_ACTIVE:
                 self.warning(
-                    "BuildBot process at {0!r} failed to terminate - " "killing it".format(bbdir)
+                    "BuildBot process at {0!r} failed to terminate - killing it".format(bbdir)
                 )
                 win32api.TerminateProcess(h, 3)
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)

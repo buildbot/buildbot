@@ -74,9 +74,7 @@ def _dict_diff(d1, d2):
 
 def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
     if exp_command != got_command:
-        return (
-            f'Expected command type {exp_command} got {got_command}. Expected args ' f'{exp_args!r}'
-        )
+        return f'Expected command type {exp_command} got {got_command}. Expected args {exp_args!r}'
     if exp_args == got_args:
         return ""
     text = ""
@@ -900,7 +898,7 @@ class TestBuildStepMixin:
                 self.assertEqual(
                     properties.getPropertySource(pn),
                     ps,
-                    f"property {pn!r} source has source " f"{properties.getPropertySource(pn)!r}",
+                    f"property {pn!r} source has source {properties.getPropertySource(pn)!r}",
                 )
 
         for pn in self.exp_missing_properties:

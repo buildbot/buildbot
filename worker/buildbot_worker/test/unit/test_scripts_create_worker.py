@@ -137,7 +137,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
         )
         self.assertTrue(
             globals_dict['application'] is application_mock,
-            "defined \"application\" variable in .tac file is not " "Application instance",
+            "defined \"application\" variable in .tac file is not Application instance",
         )
 
     def test_default_tac_contents(self):
@@ -188,7 +188,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
         test that using special characters in options strings won't break
         generated TAC file.
         """
-        test_string = "\"\" & | ^ # @ \\& \\| \\^ \\# \\@ \\n" " \x07 \" \\\" ' \\' ''"
+        test_string = "\"\" & | ^ # @ \\& \\| \\^ \\# \\@ \\n \x07 \" \\\" ' \\' ''"
         options = self.options.copy()
         options["basedir"] = test_string
         options["host"] = test_string
@@ -545,7 +545,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
             self.assertWasQuiet()
         else:
             self.assertStdoutEqual(
-                "not touching existing buildbot.tac\n" "creating buildbot.tac.new instead\n"
+                "not touching existing buildbot.tac\ncreating buildbot.tac.new instead\n"
             )
 
     def testDiffTacFile(self):
@@ -816,7 +816,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, TestDefaultOptionsMixin, unit
         self.assertEqual(create_worker.createWorker(self.options), 1, "unexpected exit code")
 
         # check that correct error message was printed on stdout
-        self.assertStdoutEqual("err-msg\n" "failed to configure worker in bdir\n")
+        self.assertStdoutEqual("err-msg\nfailed to configure worker in bdir\n")
 
     def testMinArgs(self):
         """

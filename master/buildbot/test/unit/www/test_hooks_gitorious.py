@@ -90,9 +90,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change["revision"], 'df5744f7bc8663b39717f87742dc94f52ccbf4dd')
         self.assertEqual(change["comments"], "added a place to put the docstring for Book")
         self.assertEqual(change["branch"], "new_look")
-        revlink = (
-            "http://gitorious.org/q/mainline/commit/" "df5744f7bc8663b39717f87742dc94f52ccbf4dd"
-        )
+        revlink = "http://gitorious.org/q/mainline/commit/df5744f7bc8663b39717f87742dc94f52ccbf4dd"
         self.assertEqual(change["revlink"], revlink)
 
     @defer.inlineCallbacks

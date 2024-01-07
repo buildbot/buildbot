@@ -87,7 +87,7 @@ class SVN(Source):
             if not self.workerVersionIsOlderThan('shell', '2.16'):
                 self.password = ('obfuscated', self.password, 'XXXXXX')
             else:
-                log.msg("Worker does not understand obfuscation; " "svn password will be logged")
+                log.msg("Worker does not understand obfuscation; svn password will be logged")
 
         installed = yield self.checkSvn()
         if not installed:
@@ -312,7 +312,7 @@ class SVN(Source):
             try:
                 revision = stdout_xml.getElementsByTagName('entry')[0].attributes['revision'].value
             except (KeyError, IndexError) as e:
-                msg = "SVN.parseGotRevision unable to detect revision in" " output of svn info"
+                msg = "SVN.parseGotRevision unable to detect revision in output of svn info"
                 log.msg(msg)
                 raise buildstep.BuildStepFailed() from e
 

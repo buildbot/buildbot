@@ -167,7 +167,7 @@ class BaseParameter:
             for arg in args:
                 if not self.regex.match(arg):
                     raise ValidationError(
-                        f"{self.label}:'{arg}' does not match pattern " f"'{self.regex.pattern}'"
+                        f"{self.label}:'{arg}' does not match pattern '{self.regex.pattern}'"
                     )
         if self.maxsize is not None:
             for arg in args:
@@ -298,7 +298,7 @@ class ChoiceStringParameter(BaseParameter):
     def parse_from_arg(self, s):
         if self.strict and s not in self.choices:
             raise ValidationError(
-                f"'{s}' does not belong to list of available choices " f"'{self.choices}'"
+                f"'{s}' does not belong to list of available choices '{self.choices}'"
             )
         return s
 
@@ -712,7 +712,7 @@ class ForceScheduler(base.BaseScheduler):
             self.reason = reason
         else:
             config.error(
-                f"ForceScheduler '{name}': reason must be a StringParameter: " f"{repr(reason)}"
+                f"ForceScheduler '{name}': reason must be a StringParameter: {repr(reason)}"
             )
 
         if properties is None:
@@ -727,7 +727,7 @@ class ForceScheduler(base.BaseScheduler):
             self.username = username
         else:
             config.error(
-                f"ForceScheduler '{name}': username must be a StringParameter: " f"{repr(username)}"
+                f"ForceScheduler '{name}': username must be a StringParameter: {repr(username)}"
             )
 
         self.forcedProperties = []
@@ -769,7 +769,7 @@ class ForceScheduler(base.BaseScheduler):
             self.priority = priority
         else:
             config.error(
-                f"ForceScheduler '{name}': priority must be a IntParameter: " f"{repr(priority)}"
+                f"ForceScheduler '{name}': priority must be a IntParameter: {repr(priority)}"
             )
 
         if properties:

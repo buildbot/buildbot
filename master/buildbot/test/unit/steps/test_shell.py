@@ -542,7 +542,7 @@ class WarningCountingShellCommand(
         self.setup_step(shell.WarningCountingShellCommand(command=['make']))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=["make"])
-            .stdout('normal: foo\nwarning: blarg!\n' 'also normal\nWARNING: blarg!\n')
+            .stdout('normal: foo\nwarning: blarg!\nalso normal\nWARNING: blarg!\n')
             .exit(0)
         )
         self.expect_outcome(result=WARNINGS)

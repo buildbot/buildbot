@@ -288,7 +288,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         """
         opts = runner.CreateWorkerOptions()
         with self.assertRaisesRegex(
-            usage.UsageError, "invalid master port 'apple', " "needs to be a number"
+            usage.UsageError, "invalid master port 'apple', needs to be a number"
         ):
             opts.validateMasterArgument("host:apple")
 
@@ -459,7 +459,7 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
         exception = self.assertRaises(SystemExit, runner.run)
         self.assertEqual(exception.code, 1, "unexpected exit code")
         self.assertStdoutEqual(
-            "command:  usage-error-message\n\n" "GeneralUsage\n",
+            "command:  usage-error-message\n\nGeneralUsage\n",
             "unexpected error message on stdout",
         )
 
@@ -478,6 +478,6 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # check that we get error message for a sub-option
         self.assertStdoutEqual(
-            "command:  usage-error-message\n\n" "SubOptionUsage\n",
+            "command:  usage-error-message\n\nSubOptionUsage\n",
             "unexpected error message on stdout",
         )

@@ -138,7 +138,7 @@ class TestReactor(NonReactor, CoreReactor, Clock):
             if isinstance(r, defer.Deferred):
                 yield r
         except Exception as e:
-            log.msg('Unhandled exception from deferred when doing ' 'TestReactor.advance()', e)
+            log.msg('Unhandled exception from deferred when doing TestReactor.advance()', e)
             raise
 
     def callLater(self, when, what, *a, **kw):

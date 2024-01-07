@@ -87,7 +87,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                     unk = set(attrs) - known_keys
                     if unk:
                         config.error(
-                            f"Unknown codebase keys {', '.join(unk)} " f"for codebase {codebase}"
+                            f"Unknown codebase keys {', '.join(unk)} for codebase {codebase}"
                         )
 
         self.codebases = codebases

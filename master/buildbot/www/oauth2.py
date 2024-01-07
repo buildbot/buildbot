@@ -274,7 +274,7 @@ class GitHubAuth(OAuth2Auth):
     def post(self, session, query):
         if self.debug:
             log.info(
-                '{klass} GraphQL POST Request: {endpoint} -> ' 'DATA:\n----\n{data}\n----',
+                '{klass} GraphQL POST Request: {endpoint} -> DATA:\n----\n{data}\n----',
                 klass=self.__class__.__name__,
                 endpoint=self.apiResourceEndpoint,
                 data=query,

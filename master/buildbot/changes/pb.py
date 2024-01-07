@@ -133,7 +133,7 @@ class PBChangeSource(base.ChangeSource):
     def reconfigServiceWithBuildbotConfig(self, new_config):
         port = self._calculatePort(new_config)
         if not port:
-            config.error("No port specified for PBChangeSource, and no " "worker port configured")
+            config.error("No port specified for PBChangeSource, and no worker port configured")
 
         # and, if it's changed, re-register
         if port != self.registered_port and self.isActive():

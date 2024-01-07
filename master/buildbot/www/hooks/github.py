@@ -73,7 +73,7 @@ class GitHubEventHandler(PullRequestMixin):
             self.github_api_endpoint = DEFAULT_GITHUB_API_URL
 
         if self._strict and not self._secret:
-            raise ValueError('Strict mode is requested ' 'while no secret is provided')
+            raise ValueError('Strict mode is requested while no secret is provided')
         self.debug = debug
         self.verify = verify
 

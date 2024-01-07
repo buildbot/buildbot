@@ -137,7 +137,7 @@ class DevProxy:
 
     def connection_error(self, error):
         return aiohttp.web.Response(
-            text=f'Unable to connect to upstream server {self.next_url} ' f'({error!s})', status=502
+            text=f'Unable to connect to upstream server {self.next_url} ({error!s})', status=502
         )
 
     async def fetch_config_from_upstream(self):

@@ -35,10 +35,8 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Tes
         self.tac_file_path = os.path.join("testdir", "buildbot.tac")
 
     def assertReadErrorMessage(self, strerror):
-        expected_message = (
-            "error reading '{0}': {1}\n" "invalid worker directory 'testdir'\n".format(
-                self.tac_file_path, strerror
-            )
+        expected_message = "error reading '{0}': {1}\ninvalid worker directory 'testdir'\n".format(
+            self.tac_file_path, strerror
         )
         self.assertEqual(
             self.mocked_stdout.getvalue(), expected_message, "unexpected error message on stdout"

@@ -52,7 +52,7 @@ class RepoURL(unittest.TestCase):
 
     def test_parse3(self):
         self.oneTest(
-            {'a': "repo download test/bla 564/12 repo download " "test/bla 564/2 test/foo 5/1"},
+            {'a': "repo download test/bla 564/12 repo download test/bla 564/2 test/foo 5/1"},
             ["test/bla 564/12", "test/bla 564/2", "test/foo 5/1"],
         )
         self.oneTest({'a': "repo download test/bla 564/12"}, ["test/bla 564/12"])

@@ -99,7 +99,7 @@ class FakeRequest(Mock):
             return self.deferred
         elif isinstance(result, str):
             raise ValueError(
-                f"{resource.render!r} should return bytes, not {type(result)}: " f"{result!r}"
+                f"{resource.render!r} should return bytes, not {type(result)}: {result!r}"
             )
         elif result is server.NOT_DONE_YET:
             return self.deferred

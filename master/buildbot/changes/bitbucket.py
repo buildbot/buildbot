@@ -128,7 +128,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         response = yield self._getChanges()
         if response.code != 200:
             log.err(
-                f"{self.__class__.__name__}: error {response.code} " f"while loading {response.url}"
+                f"{self.__class__.__name__}: error {response.code} while loading {response.url}"
             )
             return
 

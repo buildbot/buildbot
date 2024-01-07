@@ -150,10 +150,10 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         super().checkConfig(name, password, image, masterFQDN, **kwargs)
 
         if docker_py_version < parse_version("4.0.0"):
-            config.error("The python module 'docker>=4.0' is needed to use a" " DockerLatentWorker")
+            config.error("The python module 'docker>=4.0' is needed to use a DockerLatentWorker")
         if not image and not dockerfile:
             config.error(
-                "DockerLatentWorker: You need to specify at least" " an image name, or a dockerfile"
+                "DockerLatentWorker: You need to specify at least an image name, or a dockerfile"
             )
 
         # Following block is only for checking config errors,

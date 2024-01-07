@@ -158,7 +158,7 @@ class BitbucketServerStatusPush(ReporterBase):
 
                 if res.code not in (HTTP_PROCESSED,):
                     content = yield res.content()
-                    log.msg(f"{res.code}: Unable to send Bitbucket Server status: " f"{content}")
+                    log.msg(f"{res.code}: Unable to send Bitbucket Server status: {content}")
                 elif self.verbose:
                     log.msg(f'Status "{state}" sent for {sha}.')
             except Exception as e:
@@ -199,7 +199,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         if not base_url:
             config.error("Parameter base_url has to be given")
         if token is not None and auth is not None:
-            config.error("Only one authentication method can be given " "(token or auth)")
+            config.error("Only one authentication method can be given (token or auth)")
 
     @defer.inlineCallbacks
     def reconfigService(

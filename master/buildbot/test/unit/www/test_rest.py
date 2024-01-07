@@ -815,7 +815,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         yield self.render_control_resource(
             self.rsrc,
             b'/test',
-            requestJson='{"jsonrpc": "2.0", "method": "foo",' '"id":"abcdef", "params": {}}',
+            requestJson='{"jsonrpc": "2.0", "method": "foo","id":"abcdef", "params": {}}',
             content_type='application/x-www-form-urlencoded',
         )
         self.assertJsonRpcError(

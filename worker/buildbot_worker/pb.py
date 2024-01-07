@@ -414,7 +414,7 @@ class BotPbLike(BotBase):
                         try:
                             shutil.rmtree(dir)
                         except OSError as e:
-                            log.msg("Cannot remove directory '{0}': " "{1}".format(dir, e))
+                            log.msg("Cannot remove directory '{0}': {1}".format(dir, e))
                     else:
                         log.msg(
                             "I have a leftover directory '{0}' that is not "
@@ -669,9 +669,10 @@ class Worker(WorkerBase):
         proxy_connection_string=None,
     ):
         assert usePTY is None, "worker-side usePTY is not supported anymore"
-        assert connection_string is None or (buildmaster_host, port) == (None, None), (
-            "If you want to supply a connection string, " "then set host and port to None"
-        )
+        assert connection_string is None or (buildmaster_host, port) == (
+            None,
+            None,
+        ), "If you want to supply a connection string, then set host and port to None"
 
         if protocol == 'pb':
             bot_class = BotPb

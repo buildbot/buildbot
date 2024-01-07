@@ -22,7 +22,6 @@ from twisted.python.versions import Version
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
-
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
 from buildbot.process.properties import WithProperties
@@ -233,7 +232,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
     warnCount = 0
     warningPattern = '(?i).*warning[: ].*'
     # The defaults work for GNU Make.
-    directoryEnterPattern = "make.*: Entering directory " "[\u2019\"`'](.*)[\u2019'`\"]"
+    directoryEnterPattern = "make.*: Entering directory [\u2019\"`'](.*)[\u2019'`\"]"
     directoryLeavePattern = "make.*: Leaving directory"
     suppressionFile = None
 

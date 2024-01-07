@@ -35,7 +35,7 @@ from buildbot.util import unicode2bytes
 # with one builders and a shellcommand step, and a MailNotifier
 class NotifierMaster(RunMasterBase):
     if not ESMTPSenderFactory:
-        skip = "twisted-mail unavailable, " "see: https://twistedmatrix.com/trac/ticket/8770"
+        skip = "twisted-mail unavailable, see: https://twistedmatrix.com/trac/ticket/8770"
 
     @defer.inlineCallbacks
     def create_master_config(self, build_set_summary=False):

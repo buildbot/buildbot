@@ -94,7 +94,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         if os_auth_args is None:
             if os_auth_url is None:
                 config.error(
-                    "Missing os_auth_url OpenStackLatentWorker " "and os_auth_args not provided."
+                    "Missing os_auth_url OpenStackLatentWorker and os_auth_args not provided."
                 )
             if os_username is None or os_password is None:
                 config.error(
@@ -309,7 +309,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
             instance = self.novaclient.servers.get(instance.id)
         except NotFound as e:
             log.msg(
-                '{class_name} {name} instance {instance.id} ' '({instance.name}) never found',
+                '{class_name} {name} instance {instance.id} ({instance.name}) never found',
                 class_name=self.__class__.__name__,
                 name=self.workername,
                 instance=instance,

@@ -412,7 +412,7 @@ class RunMasterBase(unittest.TestCase):
             expectedLog = [expectedLog]
         if not isinstance(expectedLog, list):
             raise RuntimeError(
-                'The expectedLog argument must be either string or a list of ' 'strings'
+                'The expectedLog argument must be either string or a list of strings'
             )
 
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)

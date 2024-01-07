@@ -788,7 +788,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     if twisted.version.major <= 9 and sys.version_info[:2] >= (2, 7):
         test_handleJobFile_exception.skip = (
-            "flushLoggedErrors does not work correctly on 9.0.0 " "and earlier with Python-2.7"
+            "flushLoggedErrors does not work correctly on 9.0.0 and earlier with Python-2.7"
         )
 
     @defer.inlineCallbacks

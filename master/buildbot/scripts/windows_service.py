@@ -106,7 +106,7 @@ CHILDCAPTURE_MAX_BLOCKS = 200
 class BBService(win32serviceutil.ServiceFramework):
     _svc_name_ = 'BuildBot'
     _svc_display_name_ = _svc_name_
-    _svc_description_ = 'Manages local buildbot workers and masters - ' 'see http://buildbot.net'
+    _svc_description_ = 'Manages local buildbot workers and masters - see http://buildbot.net'
 
     def __init__(self, args):
         super().__init__(args)
@@ -196,7 +196,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 msg = f"Directory '{d}' is not a buildbot dir - ignoring"
                 self.warning(msg)
         if not self.dirs:
-            self.error("No valid buildbot directories were specified.\n" "Stopping the service.")
+            self.error("No valid buildbot directories were specified.\nStopping the service.")
             return False
         if save_dirs:
             dir_string = os.pathsep.join(self.dirs)
@@ -264,7 +264,7 @@ class BBService(win32serviceutil.ServiceFramework):
             del child_infos[index]
 
             if not child_infos:
-                self.warning("All BuildBot child processes have " "terminated.  Service stopping.")
+                self.warning("All BuildBot child processes have terminated.  Service stopping.")
 
         # Either no child processes left, or stop event set.
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)

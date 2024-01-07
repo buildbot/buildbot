@@ -631,5 +631,5 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         return self.doPoll.stop()
 
     def describe(self):
-        msg = "GerritEventLogPoller watching the remote " "Gerrit repository {}"
+        msg = "GerritEventLogPoller watching the remote Gerrit repository {}"
         return msg.format(self.name)

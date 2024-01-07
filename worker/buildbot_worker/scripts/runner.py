@@ -116,7 +116,7 @@ class CreateWorkerOptions(MakerBase):
             "umask",
             None,
             "None",
-            "controls permissions of generated files. " "Use --umask=0o22 to be world-readable",
+            "controls permissions of generated files. Use --umask=0o22 to be world-readable",
         ],
         ["maxdelay", None, 300, "Maximum time between connection attempts"],
         ["maxretries", None, 'None', "Maximum number of retries before worker shutdown"],
@@ -126,13 +126,13 @@ class CreateWorkerOptions(MakerBase):
             "log-count",
             "l",
             "10",
-            "limit the number of kept old twisted log files " "(None for unlimited)",
+            "limit the number of kept old twisted log files (None for unlimited)",
         ],
         [
             "allow-shutdown",
             "a",
             None,
-            "Allows the worker to initiate a graceful shutdown. One of " "'signal' or 'file'",
+            "Allows the worker to initiate a graceful shutdown. One of 'signal' or 'file'",
         ],
         ["protocol", None, "pb", "Protocol to be used when creating master-worker connection"],
         [
@@ -199,7 +199,7 @@ class CreateWorkerOptions(MakerBase):
         try:
             port = int(port)
         except ValueError:
-            raise usage.UsageError("invalid master port '{}', " "needs to be a number".format(port))
+            raise usage.UsageError("invalid master port '{}', needs to be a number".format(port))
 
         return master, port
 
@@ -230,12 +230,10 @@ class CreateWorkerOptions(MakerBase):
 
         for argument in ["log-count", "maxretries", "umask", "numcpus"]:
             if not re.match(r'^((0o)\d+|0|[1-9]\d*)$', self[argument]) and self[argument] != 'None':
-                raise usage.UsageError(
-                    "{} parameter needs to be a number" " or None".format(argument)
-                )
+                raise usage.UsageError("{} parameter needs to be a number or None".format(argument))
 
         if self['allow-shutdown'] not in [None, 'signal', 'file']:
-            raise usage.UsageError("allow-shutdown needs to be one of" " 'signal' or 'file'")
+            raise usage.UsageError("allow-shutdown needs to be one of 'signal' or 'file'")
 
 
 class Options(usage.Options):

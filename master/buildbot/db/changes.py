@@ -77,7 +77,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         assert repository is not None, "repository must be a string, not None"
 
         if is_dir is not None:
-            log.msg("WARNING: change source is providing deprecated " "value is_dir (ignored)")
+            log.msg("WARNING: change source is providing deprecated value is_dir (ignored)")
         if when_timestamp is None:
             when_timestamp = epoch2datetime(self.master.reactor.seconds())
 
@@ -86,7 +86,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         # verify that source is 'Change' for each property
         for pv in properties.values():
-            assert pv[1] == 'Change', "properties must be qualified with" "source 'Change'"
+            assert pv[1] == 'Change', "properties must be qualified withsource 'Change'"
 
         ch_tbl = self.db.model.changes
 

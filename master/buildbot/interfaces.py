@@ -169,7 +169,7 @@ class ILatentWorker(IWorker):
 
     substantiated = Attribute(
         'Substantiated',
-        'Whether the latent worker is currently ' 'substantiated with a real instance.',
+        'Whether the latent worker is currently substantiated with a real instance.',
     )
 
     def substantiate():

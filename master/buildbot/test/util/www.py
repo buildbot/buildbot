@@ -127,7 +127,7 @@ class RequiresWwwMixin:
     if not [ep for ep in entry_points_get(entry_points(), 'buildbot.www') if ep.name == 'base']:
         if 'BUILDBOT_TEST_REQUIRE_WWW' in os.environ:
             raise RuntimeError(
-                '$BUILDBOT_TEST_REQUIRE_WWW is set but ' 'buildbot-www is not installed'
+                '$BUILDBOT_TEST_REQUIRE_WWW is set but buildbot-www is not installed'
             )
         skip = 'buildbot-www not installed'
 

@@ -131,7 +131,7 @@ class DBThreadPool:
                     "'Database is locked' errors.  Consider upgrading."
                 )
                 if vers < (3, 6, 19):
-                    log_msg("NOTE: this old version of SQLite is not " "supported.")
+                    log_msg("NOTE: this old version of SQLite is not supported.")
                     raise RuntimeError("unsupported SQLite version")
         self._start_evt = self.reactor.callWhenRunning(self._start)
 

@@ -706,7 +706,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change['project'], 'Continuous Integration')
         self.assertEqual(change['revision'], '793d4754230023d85532f9a38dba3290f959beb4')
         self.assertEqual(
-            change['comments'], 'Bitbucket Cloud commit ' '793d4754230023d85532f9a38dba3290f959beb4'
+            change['comments'], 'Bitbucket Cloud commit 793d4754230023d85532f9a38dba3290f959beb4'
         )
         self.assertEqual(
             change['revlink'],
@@ -737,7 +737,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change['project'], 'Continuous Integration')
         self.assertEqual(change['comments'], 'Bitbucket Cloud Pull Request #21')
         self.assertEqual(
-            change['revlink'], 'http://localhost:7990/projects/' 'CI/repos/py-repo/pull-requests/21'
+            change['revlink'], 'http://localhost:7990/projects/CI/repos/py-repo/pull-requests/21'
         )
         self.assertEqual(change['revision'], 'a87e21f7433d8c16ac7be7413483fbb76c72a8ba')
         self.assertDictSubset(bitbucketPRproperties, change["properties"])

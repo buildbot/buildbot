@@ -660,7 +660,7 @@ class Try(pb.Referenceable):
             ssh_commands = which("ssh")
             if not ssh_commands:
                 raise RuntimeError(
-                    "couldn't find ssh executable, make sure " "it is available in the PATH"
+                    "couldn't find ssh executable, make sure it is available in the PATH"
                 )
 
             argv = [ssh_commands[0]]

@@ -361,6 +361,6 @@ class Trigger(BuildStep):
                 count = self._result_list.count(status)
                 if count:
                     summary = summary + (
-                        f", {self._result_list.count(status)} " f"{statusToString(status, count)}"
+                        f", {self._result_list.count(status)} {statusToString(status, count)}"
                     )
         return {'step': f"triggered {', '.join(self.triggeredNames)}{summary}"}

@@ -43,7 +43,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
             from subunit import TestProtocolServer
         except ImportError as e:
             raise ImportError(
-                "subunit is not importable, but is required for " "SubunitLogObserver support."
+                "subunit is not importable, but is required for SubunitLogObserver support."
             ) from e
         self.PROGRESS_CUR = PROGRESS_CUR
         self.PROGRESS_SET = PROGRESS_SET

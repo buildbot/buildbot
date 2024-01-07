@@ -1047,7 +1047,7 @@ class Contact:
 
     def command_SOURCE(self, args, **kwargs):
         "the source code for buildbot"
-        self.send("My source can be found at " "https://github.com/buildbot/buildbot")
+        self.send("My source can be found at https://github.com/buildbot/buildbot")
 
     command_SOURCE.usage = "source - the source code for Buildbot"
 

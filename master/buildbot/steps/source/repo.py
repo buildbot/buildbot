@@ -119,7 +119,7 @@ class Repo(Source):
     cherry_pick_error_re = re.compile(
         r"|".join([
             r"Automatic cherry-pick failed",
-            r"error: " r"fatal: " r"possibly due to conflict resolution.",
+            r"error: fatal: possibly due to conflict resolution.",
         ])
     )
     re_change = re.compile(r".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
@@ -425,7 +425,7 @@ class Repo(Source):
                         match2 = self.re_head.match(line)
                 if match1 and match2:
                     self.repo_downloaded += (
-                        f"{match1.group(1)}/{match1.group(2)} " f"{match2.group(1)} "
+                        f"{match1.group(1)}/{match1.group(2)} {match2.group(1)} "
                     )
 
         self.setProperty("repo_downloaded", self.repo_downloaded, "Source")

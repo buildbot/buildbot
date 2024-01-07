@@ -492,7 +492,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.cfg.load_global(self.filename, {'codebaseGenerator': 'dummy'})
 
         self.assertConfigError(
-            errors, "codebaseGenerator must be a callable " "accepting a dict and returning a str"
+            errors, "codebaseGenerator must be a callable accepting a dict and returning a str"
         )
 
     def test_load_global_logMaxSize(self):

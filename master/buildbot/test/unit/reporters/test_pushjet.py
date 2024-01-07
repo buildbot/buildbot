@@ -80,7 +80,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
         secret = os.environ.get('TEST_PUSHJET_SECRET')
         if secret is None:
             raise SkipTest(
-                "real pushjet test runs only if the variable " "TEST_PUSHJET_SECRET is defined"
+                "real pushjet test runs only if the variable TEST_PUSHJET_SECRET is defined"
             )
         _http = yield httpclientservice.HTTPClientService.getService(
             self.master, 'https://api.pushjet.io'

@@ -178,7 +178,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                         ei = exp_info[name]
                         if gi != ei:
                             diff.append(
-                                f"index {name} on table {tbl.name} differs: " f"got {gi}; exp {ei}"
+                                f"index {name} on table {tbl.name} differs: got {gi}; exp {ei}"
                             )
             if diff:
                 return "\n".join(diff)
@@ -192,7 +192,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             # this test on such platforms.  We still get the advantage of trying
             # the upgrade, at any rate.
             raise unittest.SkipTest(
-                "model comparison skipped: bugs in schema " "reflection on this sqlite version"
+                "model comparison skipped: bugs in schema reflection on this sqlite version"
             ) from e
 
         if diff:

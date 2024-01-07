@@ -62,7 +62,7 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
         [
             "develop",
             "d",
-            "link to buildbot dir rather than copy, with no " "JS optimization (UNIX only)",
+            "link to buildbot dir rather than copy, with no JS optimization (UNIX only)",
         ],
         ["replace", "r", "Replace any modified files without confirmation."],
     ]
@@ -103,7 +103,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
         [
             "develop",
             "d",
-            "link to buildbot dir rather than copy, with no " "JS optimization (UNIX only)",
+            "link to buildbot dir rather than copy, with no JS optimization (UNIX only)",
         ],
         ["no-logrotate", "n", "Do not permit buildmaster rotate logs by itself"],
     ]
@@ -268,7 +268,7 @@ class SendChangeOptions(base.SubcommandOptions):
             "vc",
             "s",
             None,
-            "The VC system in use, one of: cvs, svn, darcs, hg, " "bzr, git, mtn, p4",
+            "The VC system in use, one of: cvs, svn, darcs, hg, bzr, git, mtn, p4",
         ),
         ("project", "P", '', "Project specifier"),
         ("branch", "b", None, "Branch specifier"),
@@ -364,26 +364,26 @@ class TryOptions(base.SubcommandOptions):
             "diff",
             None,
             None,
-            "Filename of a patch to use instead of scanning a local tree. " "Use '-' for stdin.",
+            "Filename of a patch to use instead of scanning a local tree. Use '-' for stdin.",
         ],
         [
             "patchlevel",
             "p",
             0,
-            "Number of slashes to remove from patch pathnames, " "like the -p option to 'patch'",
+            "Number of slashes to remove from patch pathnames, like the -p option to 'patch'",
         ],
         ["baserev", None, None, "Base revision to use instead of scanning a local tree."],
         [
             "vc",
             None,
             None,
-            "The VC system in use, one of: bzr, cvs, darcs, git, hg, " "mtn, p4, svn",
+            "The VC system in use, one of: bzr, cvs, darcs, git, hg, mtn, p4, svn",
         ],
         [
             "branch",
             None,
             None,
-            "The branch in use, for VC systems that can't figure it out " "themselves",
+            "The branch in use, for VC systems that can't figure it out themselves",
         ],
         ["repository", None, None, "Repository to use, instead of path to working directory."],
         ["builder", "b", None, "Run the trial build on this Builder. Can be used multiple times."],
@@ -492,7 +492,7 @@ class TryOptions(base.SubcommandOptions):
 
         if self['connect'] == 'pb':
             if not self['master']:
-                raise usage.UsageError("master location must be specified" "for 'pb' connections")
+                raise usage.UsageError("master location must be specifiedfor 'pb' connections")
             validateMasterOption(self['master'])
 
 
@@ -639,7 +639,7 @@ class UserOptions(base.SubcommandOptions):
 
         op = self.get('op')
         if not op:
-            raise usage.UsageError("you must specify an operation: add, " "remove, update, get")
+            raise usage.UsageError("you must specify an operation: add, remove, update, get")
         if op not in ['add', 'remove', 'update', 'get']:
             raise usage.UsageError(f"bad op {repr(op)}, use 'add', 'remove', 'update', " "or 'get'")
 
@@ -650,11 +650,9 @@ class UserOptions(base.SubcommandOptions):
         bb_password = self.get('bb_password')
         if bb_username or bb_password:
             if op != 'update':
-                raise usage.UsageError("bb_username and bb_password only work " "with update")
+                raise usage.UsageError("bb_username and bb_password only work with update")
             if not bb_username or not bb_password:
-                raise usage.UsageError(
-                    "Must specify both bb_username and " "bb_password or neither."
-                )
+                raise usage.UsageError("Must specify both bb_username and bb_password or neither.")
 
         info = self.get('info')
         ids = self.get('ids')
@@ -665,7 +663,7 @@ class UserOptions(base.SubcommandOptions):
 
         if op in ('add', 'update'):
             if ids:
-                raise usage.UsageError("cannot use --ids with 'add' or " "'update'")
+                raise usage.UsageError("cannot use --ids with 'add' or 'update'")
             self._checkValidTypes(info)
             if op == 'update':
                 for user in info:
@@ -678,11 +676,11 @@ class UserOptions(base.SubcommandOptions):
                 for user in info:
                     if 'identifier' in user:
                         raise usage.UsageError(
-                            "identifier found in add info, " "use: --info=type=value,type=value,.."
+                            "identifier found in add info, use: --info=type=value,type=value,.."
                         )
         if op in ('remove', 'get'):
             if info:
-                raise usage.UsageError("cannot use --info with 'remove' " "or 'get'")
+                raise usage.UsageError("cannot use --info with 'remove' or 'get'")
 
 
 class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):

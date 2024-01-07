@@ -421,7 +421,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             # CopiedFailure cannot be raised back, this make debug difficult
             if isinstance(maybeFailure, pb.CopiedFailure):
                 maybeFailure.value = RemoteException(
-                    f"{maybeFailure.type}: {maybeFailure.value}" f"\n{maybeFailure.traceback}"
+                    f"{maybeFailure.type}: {maybeFailure.value}\n{maybeFailure.traceback}"
                 )
                 maybeFailure.type = RemoteException
             maybeFailure.raiseException()

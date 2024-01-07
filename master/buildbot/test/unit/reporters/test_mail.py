@@ -254,7 +254,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
         return self.do_test_sendToInterestedUsers(
             lookup="example.org",
             exp_called_with=['Big Bob <bob@mayhem.net>', 'narrator@example.org'],
-            exp_TO='"=?utf-8?q?Big_Bob?=" <bob@mayhem.net>, ' 'narrator@example.org',
+            exp_TO='"=?utf-8?q?Big_Bob?=" <bob@mayhem.net>, narrator@example.org',
         )
 
     def test_buildMessage_sendToInterestedUsers_no_lookup(self):

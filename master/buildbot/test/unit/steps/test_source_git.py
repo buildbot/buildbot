@@ -1330,9 +1330,7 @@ class TestGit(
                 ],
             ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD'])
-            .stderr(
-                "fatal: Could not parse object " "'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n"
-            )
+            .stderr("fatal: Could not parse object 'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n")
             .exit(128),
         )
         self.expect_outcome(result=FAILURE)

@@ -47,10 +47,10 @@ class Bzr(Source):
         self.method = method
         super().__init__(**kwargs)
         if repourl and baseURL:
-            raise ValueError("you must provide exactly one of repourl and" " baseURL")
+            raise ValueError("you must provide exactly one of repourl and baseURL")
 
         if repourl is None and baseURL is None:
-            raise ValueError("you must provide at least one of repourl and" " baseURL")
+            raise ValueError("you must provide at least one of repourl and baseURL")
 
         if baseURL is not None and defaultBranch is None:
             raise ValueError("you must provide defaultBranch with baseURL")

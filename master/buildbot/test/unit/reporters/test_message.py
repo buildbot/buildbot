@@ -148,7 +148,7 @@ class TestMessageFormatting(unittest.TestCase):
         ]
         self.assertEqual(
             message.get_message_source_stamp_text(stamps),
-            "Build Source Stamp 'a': HEAD\n" "Build Source Stamp 'b': HEAD\n",
+            "Build Source Stamp 'a': HEAD\nBuild Source Stamp 'b': HEAD\n",
         )
 
     def test_get_message_source_stamp_text_with_props(self):

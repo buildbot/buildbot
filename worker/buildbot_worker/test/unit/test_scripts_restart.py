@@ -72,7 +72,7 @@ class TestRestart(misc.IsWorkerDirMixin, misc.StdoutAssertionsMixin, unittest.Te
         )
 
         self.assertStdoutEqual(
-            "no old worker process found to stop\n" "now restarting worker process..\n"
+            "no old worker process found to stop\nnow restarting worker process..\n"
         )
 
     def test_restart(self):

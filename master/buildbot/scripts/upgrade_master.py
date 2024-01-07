@@ -63,7 +63,7 @@ def upgradeFiles(config):
     webdir = os.path.join(config['basedir'], "public_html")
     if os.path.exists(webdir):
         print("Notice: public_html is not used starting from Buildbot 0.9.0")
-        print("        consider using third party HTTP server for serving " "static files")
+        print("        consider using third party HTTP server for serving static files")
 
     installFile(
         config,

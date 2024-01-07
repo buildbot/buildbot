@@ -49,7 +49,7 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
         self.assertFalse(lru.inv_failed, "invariant failed; see logs")
         if hasattr(self, 'lru'):
             log.msg(
-                f"hits: {self.lru.hits}; misses: {self.lru.misses}; " f"refhits: {self.lru.refhits}"
+                f"hits: {self.lru.hits}; misses: {self.lru.misses}; refhits: {self.lru.refhits}"
             )
 
     # tests
