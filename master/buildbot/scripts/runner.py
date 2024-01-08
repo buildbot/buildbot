@@ -492,7 +492,7 @@ class TryOptions(base.SubcommandOptions):
 
         if self['connect'] == 'pb':
             if not self['master']:
-                raise usage.UsageError("master location must be specifiedfor 'pb' connections")
+                raise usage.UsageError("master location must be specified for 'pb' connections")
             validateMasterOption(self['master'])
 
 

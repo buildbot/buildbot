@@ -86,7 +86,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         # verify that source is 'Change' for each property
         for pv in properties.values():
-            assert pv[1] == 'Change', "properties must be qualified withsource 'Change'"
+            assert pv[1] == 'Change', "properties must be qualified with source 'Change'"
 
         ch_tbl = self.db.model.changes
 
